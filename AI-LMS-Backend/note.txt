@@ -1,0 +1,60 @@
+-Request: Nhận dữ liệu từ người dùng gửi lên
+ - query: localhost:3000/search?keyword=điện thoại
+-->keyword = request.query.keyword
+ -qua params
+ -qua body
+ -qua headers: ví dụ gửi token
+   sử dụng request.headers
+====================================================
+   Middleware
+   Middlewarefun(request, response, next)=>{
+    
+   }
+
+====================================================
+require: boolean => bắt buộc phải nhập(áp dụng cho tất cả các kiểu dữ liệu)
+unique: boolean => giá trị phải duy nhất(thông thường áp dụng cho kiểu dữ liệu string, number)
+enum: => xác định giá trị cho field(áp dụng cho kiểu dữ liệu string, number)
+default: any => giá trị mặc định nếu người dùng không cung cấp giá trị cho field đó
+String:
+   minLength: number => độ dài tối thiểu của chuỗi
+   maxLength: number => độ dài tối đa của chuỗi
+   match: RegExp => giá trị phải khớp với biểu thức chính quy
+   trim: boolean => loại bỏ khoảng trắng ở đầu và cuối chuỗi
+   lowercase: boolean => chuyển đổi chuỗi thành chữ thường
+   uppercase: boolean => chuyển đổi chuỗi thành chữ hoa
+Number:
+   min: number => giá trị tối thiểu của số
+   max: number => giá trị tối đa của số
+
+==============================================================
+chức năng đăng ký
+- chuẩn hóa database
+- validate dữ liệu
+- mã hóa mật khẩu 
+- lưu vào database
+
+================================================================
+chức năng đăng nhập
+bước 1:  kiểm tra email có tồn tại không -> nếu có thì kiểm tra mật khẩu có đúng không(bước 2)
+                                  -> nếu không có thì trả về lỗi
+bước 2: check xem mật khẩu có đúng không -> nếu đúng thì tạo token và trả về cho client(bước 3)
+                                  -> nếu không đúng thì trả về lỗi
+bước 3: tạo token và trả về cho client
+bước 4: client lưu token vào localStorage hoặc cookie để sử dụng cho các lần đăng nhập tiếp theo
+
+================================================================
+Phân quyền
+- dùng trong Middleware
+1. Lấy token từ authorization header
+1. Kiển tra token có hợp lệ không. -> nếu không tồn tại->phản hồi bạn cần đăng nhập
+3. Xác minh xem token có hợp lệ không -> nếu không hợp lệ -> yêu cầu đăng nhập lại
+4. Nếu token hợp lệ -> có thể sử dụng next() để tiếp tục xử lý yêu cầu
+================================================================
+- Các phép so sánh cơ bản trong mongoose
+$gt: lớn hơn
+$gte: lớn hơn hoặc bằng
+$lt: nhỏ hơn
+$lte: nhỏ hơn hoặc bằng
+$in: [Mảng] nằm trong một Mảng
+$nin: [Mảng] không nằm trong một Mảng

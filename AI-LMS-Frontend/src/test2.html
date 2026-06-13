@@ -1,0 +1,685 @@
+<!doctype html>
+
+<html class="light" lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>LMS Scholar - Dashboard</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Hanken+Grotesk:wght@600;700&amp;family=JetBrains+Mono&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+      rel="stylesheet"
+    />
+    <script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "surface-container-highest": "#d3e4fe",
+              "inverse-on-surface": "#eaf1ff",
+              secondary: "#565e74",
+              "on-secondary-fixed": "#131b2e",
+              "surface-dim": "#cbdbf5",
+              "tertiary-fixed": "#e0e3e5",
+              "primary-fixed-dim": "#c3c0ff",
+              outline: "#777587",
+              "on-secondary-container": "#5c647a",
+              "surface-container-low": "#eff4ff",
+              "surface-tint": "#4d44e3",
+              "tertiary-fixed-dim": "#c4c7c9",
+              "on-tertiary": "#ffffff",
+              "inverse-primary": "#c3c0ff",
+              "on-error-container": "#93000a",
+              "inverse-surface": "#213145",
+              error: "#ba1a1a",
+              "surface-variant": "#d3e4fe",
+              "primary-container": "#4f46e5",
+              "on-primary-fixed-variant": "#3323cc",
+              tertiary: "#46494b",
+              "on-tertiary-fixed": "#191c1e",
+              "on-primary": "#ffffff",
+              "on-error": "#ffffff",
+              "on-surface-variant": "#464555",
+              "on-secondary": "#ffffff",
+              primary: "#3525cd",
+              "secondary-fixed": "#dae2fd",
+              background: "#f8f9ff",
+              "on-primary-fixed": "#0f0069",
+              "surface-container-lowest": "#ffffff",
+              "surface-container": "#e5eeff",
+              "tertiary-container": "#5e6163",
+              "on-primary-container": "#dad7ff",
+              surface: "#f8f9ff",
+              "on-secondary-fixed-variant": "#3f465c",
+              "surface-bright": "#f8f9ff",
+              "secondary-fixed-dim": "#bec6e0",
+              "on-surface": "#0b1c30",
+              "error-container": "#ffdad6",
+              "on-background": "#0b1c30",
+              "surface-container-high": "#dce9ff",
+              "primary-fixed": "#e2dfff",
+              "secondary-container": "#dae2fd",
+              "on-tertiary-fixed-variant": "#444749",
+              "outline-variant": "#c7c4d8",
+              "on-tertiary-container": "#dadcde",
+            },
+            borderRadius: {
+              DEFAULT: "0.125rem",
+              lg: "0.25rem",
+              xl: "0.5rem",
+              full: "0.75rem",
+            },
+            fontFamily: {
+              "body-lg": ["Inter"],
+              "headline-lg-mobile": ["Hanken Grotesk"],
+              "label-md": ["Inter"],
+              "display-lg": ["Hanken Grotesk"],
+              "body-md": ["Inter"],
+              "headline-md": ["Hanken Grotesk"],
+              "headline-lg": ["Hanken Grotesk"],
+              "body-sm": ["Inter"],
+              "code-sm": ["JetBrains Mono"],
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+      body {
+        font-family: "Inter", sans-serif;
+        background-color: #f8f9ff;
+      }
+      .material-symbols-outlined {
+        font-variation-settings:
+          "FILL" 0,
+          "wght" 400,
+          "GRAD" 0,
+          "opsz" 24;
+      }
+      .ai-gradient-border {
+        position: relative;
+        background: #fff;
+        background-clip: padding-box;
+        border: 2px solid transparent;
+      }
+      .ai-gradient-border::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        z-index: -1;
+        margin: -2px;
+        border-radius: inherit;
+        background: linear-gradient(to right, #4f46e5, #3b82f6);
+        animation: border-flow 3s linear infinite;
+      }
+      @keyframes border-flow {
+        0% {
+          filter: hue-rotate(0deg);
+        }
+        100% {
+          filter: hue-rotate(360deg);
+        }
+      }
+      .progress-ring__circle {
+        transition: stroke-dashoffset 0.35s;
+        transform: rotate(-90deg);
+        transform-origin: 50% 50%;
+      }
+    </style>
+  </head>
+  <body class="text-on-surface">
+    <!-- SideNavBar Component -->
+    <aside
+      class="fixed left-0 top-0 h-screen w-[280px] bg-surface-container-lowest border-r border-outline-variant flex flex-col h-full py-6 px-4 z-50 transition-transform md:translate-x-0 -translate-x-full"
+      id="sidebar"
+    >
+      <div class="flex items-center gap-3 mb-10 px-2">
+        <img
+          alt="Logo"
+          class="w-10 h-10 object-contain"
+          src="https://lh3.googleusercontent.com/aida/AP1WRLvagpzKtenUGkwvil3flrlIoVX_D0iCWi-3VslBm3FkRhANSzVIsUi1Cz99-VHB0rcjFN3qbRILR21PAmzAgTe7Uh4SQbnwzWJmJmNtFxaZM27JkknDwT91s80qhaUAbUGFEPZblkjmK0D-GvCscUXP2Eqt_Bz2L7w_Ww_RrgcvcEz5VGXCtnVL_OXcvU3o0kHJntd54PGRJuaxLXdnR2ejPUqBd6zU44o6yObVmaqPNFfCrz9GD_Ac3VPA"
+        />
+        <div>
+          <h1 class="font-headline-md text-headline-md font-bold text-primary">
+            LMS Scholar
+          </h1>
+          <p
+            class="font-body-sm text-body-sm text-on-surface-variant leading-none"
+          >
+            AI-Powered Learning
+          </p>
+        </div>
+      </div>
+      <nav class="flex-1 space-y-2">
+        <!-- Active State: Dashboard -->
+        <a
+          class="flex items-center gap-3 px-4 py-3 text-primary bg-secondary-container rounded-xl font-bold transition-all duration-150 ease-in-out active:scale-95"
+          href="#"
+        >
+          <span
+            class="material-symbols-outlined"
+            style="font-variation-settings: &quot;FILL&quot; 1"
+            >dashboard</span
+          >
+          <span class="font-body-md text-body-md">Dashboard</span>
+        </a>
+        <a
+          class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-low transition-colors rounded-xl transition-all duration-150 ease-in-out active:scale-95"
+          href="#"
+        >
+          <span class="material-symbols-outlined">school</span>
+          <span class="font-body-md text-body-md">Lớp học của tôi</span>
+        </a>
+        <a
+          class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-low transition-colors rounded-xl transition-all duration-150 ease-in-out active:scale-95"
+          href="#"
+        >
+          <span class="material-symbols-outlined">edit_note</span>
+          <span class="font-body-md text-body-md">Làm bài tập</span>
+        </a>
+        <a
+          class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-low transition-colors rounded-xl transition-all duration-150 ease-in-out active:scale-95"
+          href="#"
+        >
+          <span class="material-symbols-outlined">quiz</span>
+          <span class="font-body-md text-body-md">Thi trực tuyến</span>
+        </a>
+        <a
+          class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-low transition-colors rounded-xl transition-all duration-150 ease-in-out active:scale-95"
+          href="#"
+        >
+          <span class="material-symbols-outlined">forum</span>
+          <span class="font-body-md text-body-md">Nhắn tin</span>
+        </a>
+      </nav>
+      <div class="mt-auto pt-6 border-t border-outline-variant space-y-4">
+        <div class="bg-primary-container p-4 rounded-xl text-white">
+          <p class="font-label-md text-label-md font-bold mb-2">
+            Upgrade to Pro
+          </p>
+          <p class="text-xs opacity-90 mb-3">
+            Mở khóa tính năng AI nâng cao và gia sư 1:1.
+          </p>
+          <button
+            class="w-full py-2 bg-white text-primary font-bold rounded-lg text-sm hover:bg-opacity-90 transition-all"
+          >
+            Nâng cấp ngay
+          </button>
+        </div>
+        <div class="space-y-1">
+          <a
+            class="flex items-center gap-3 px-4 py-2 text-on-surface-variant hover:bg-surface-container-low transition-colors rounded-lg"
+            href="#"
+          >
+            <span class="material-symbols-outlined">settings</span>
+            <span class="font-body-sm text-body-sm">Cài đặt</span>
+          </a>
+          <a
+            class="flex items-center gap-3 px-4 py-2 text-error hover:bg-error-container/20 transition-colors rounded-lg"
+            href="#"
+          >
+            <span class="material-symbols-outlined">logout</span>
+            <span class="font-body-sm text-body-sm">Đăng xuất</span>
+          </a>
+        </div>
+      </div>
+    </aside>
+    <!-- Main Viewport -->
+    <main class="md:ml-[280px] min-h-screen flex flex-col">
+      <!-- Page Content -->
+      <div class="mt-16 p-4 md:p-8 max-w-[1280px] w-full mx-auto space-y-8">
+        <!-- Welcome Header -->
+        <section
+          class="flex flex-col md:flex-row md:items-end justify-between gap-4"
+        >
+          <div>
+            <h2 class="font-headline-lg text-headline-lg text-on-surface">
+              Chào mừng trở lại, Minh Anh! 👋
+            </h2>
+            <p class="font-body-md text-body-md text-on-surface-variant">
+              Bạn đã hoàn thành 85% mục tiêu học tập tuần này. Tiếp tục phát huy
+              nhé!
+            </p>
+          </div>
+          <div class="flex gap-3">
+            <div class="flex -space-x-2">
+              <img
+                alt="Student"
+                class="w-8 h-8 rounded-full border-2 border-surface"
+                data-alt="Close-up portrait of a diverse female student with a warm, encouraging smile, set against a blurred academic background with soft morning sunlight filtering through library windows. The image style is professional and high-key, aligning with a modern educational aesthetic."
+                src="https://lh3.googleusercontent.com/aida-public/AB6AXuBkQFxlJRTq8GL9fEZbHjA7Hc3jgJXxkKh1syAgR1lbJ4LHb6gEmXTueRbg4z90fzPh5dW1BCO886wPgWR-14JDQ4YcFII_wf3ScBfMuhxIv-6ZvZBY8JvqS4ejzaByjOs20chmkZ9jtycHZ-gRbauxuTQ2CN-nlhCbtaCiwtiugSZ0KscDgbQ23FSJoH_b8hvNXk3Ul3tQQR2xliBOyMYXAHeisMuZPZ6_3O6s7DHwA4j4cwbe4Y3OHwc7wLja71jezmhLsWWSUrtq"
+              />
+              <img
+                alt="Student"
+                class="w-8 h-8 rounded-full border-2 border-surface"
+                data-alt="A focused young male student wearing modern spectacles, looking thoughtfully at a digital tablet, illuminated by a clean blueish screen light in a minimalist study space. The overall color palette is composed of cool grays and soft blues to maintain professional LMS visual consistency."
+                src="https://lh3.googleusercontent.com/aida-public/AB6AXuCVNNzlGhy-GGItcerFxHk-epZGSAkBK1agzSvWs0mQJQd3cFAJxOn2qR-UcnymQJvT3f3dWfahGjZLN_Gb4FAnJ32kY79JW6MofSaohYHr3KeR6KfQM6o7u00zWrZXBXzocMcES_hS8YCw1zMpeTnWegTbOCuh3SbOy2HCGmwe4kYrWZzDU9ZPWVFKKxvlTo03haIlWcByJeBvDXWaa7oLbT1mjgUWLXCVJ4ge656MyWrUiJpwOFLZPKJYkXESAOVp6bYyIyVltXY9"
+              />
+              <div
+                class="w-8 h-8 rounded-full border-2 border-surface bg-secondary-container flex items-center justify-center text-[10px] font-bold text-primary"
+              >
+                +12
+              </div>
+            </div>
+            <p class="text-xs text-on-surface-variant self-center font-medium">
+              Bạn học cùng đang trực tuyến
+            </p>
+          </div>
+        </section>
+        <!-- Analytics Dashboard -->
+        <section class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <!-- Card 1: Tiến độ học tập -->
+          <div
+            class="bg-surface-container-lowest border border-outline-variant p-6 rounded-2xl flex items-center justify-between hover:shadow-lg transition-all duration-300"
+          >
+            <div class="space-y-1">
+              <p class="text-on-surface-variant text-sm font-medium">
+                Tiến độ học tập
+              </p>
+              <h3 class="text-3xl font-bold text-on-surface">78%</h3>
+              <p
+                class="text-xs text-success flex items-center gap-1 text-green-600"
+              >
+                <span class="material-symbols-outlined text-sm"
+                  >trending_up</span
+                >
+                +5% so với tháng trước
+              </p>
+            </div>
+            <div class="relative w-20 h-20">
+              <svg class="w-full h-full">
+                <circle
+                  class="text-surface-container-high"
+                  cx="40"
+                  cy="40"
+                  fill="transparent"
+                  r="32"
+                  stroke="currentColor"
+                  stroke-width="8"
+                ></circle>
+                <circle
+                  class="text-primary progress-ring__circle"
+                  cx="40"
+                  cy="40"
+                  fill="transparent"
+                  r="32"
+                  stroke="currentColor"
+                  stroke-dasharray="201"
+                  stroke-dashoffset="44"
+                  stroke-linecap="round"
+                  stroke-width="8"
+                ></circle>
+              </svg>
+              <span
+                class="absolute inset-0 flex items-center justify-center text-xs font-bold text-primary"
+                >78%</span
+              >
+            </div>
+          </div>
+          <!-- Card 2: Điểm số -->
+          <div
+            class="bg-surface-container-lowest border border-outline-variant p-6 rounded-2xl flex flex-col justify-between hover:shadow-lg transition-all duration-300"
+          >
+            <div class="flex justify-between items-start">
+              <div class="space-y-1">
+                <p class="text-on-surface-variant text-sm font-medium">
+                  Điểm trung bình (GPA)
+                </p>
+                <h3 class="text-3xl font-bold text-on-surface">8.4</h3>
+              </div>
+              <div class="p-2 bg-secondary-container/50 rounded-lg">
+                <span class="material-symbols-outlined text-primary"
+                  >analytics</span
+                >
+              </div>
+            </div>
+            <div class="mt-4 h-12 flex items-end gap-1">
+              <!-- Mock Sparkline -->
+              <div
+                class="flex-1 bg-primary/20 rounded-t-sm"
+                style="height: 40%"
+              ></div>
+              <div
+                class="flex-1 bg-primary/30 rounded-t-sm"
+                style="height: 60%"
+              ></div>
+              <div
+                class="flex-1 bg-primary/40 rounded-t-sm"
+                style="height: 55%"
+              ></div>
+              <div
+                class="flex-1 bg-primary/60 rounded-t-sm"
+                style="height: 80%"
+              ></div>
+              <div
+                class="flex-1 bg-primary/80 rounded-t-sm"
+                style="height: 70%"
+              ></div>
+              <div
+                class="flex-1 bg-primary rounded-t-sm"
+                style="height: 100%"
+              ></div>
+            </div>
+          </div>
+          <!-- Card 3: Kỹ năng cần cải thiện -->
+          <div
+            class="bg-surface-container-lowest border border-outline-variant p-6 rounded-2xl hover:shadow-lg transition-all duration-300"
+          >
+            <p class="text-on-surface-variant text-sm font-medium mb-4">
+              Kỹ năng cần cải thiện
+            </p>
+            <div class="space-y-3">
+              <div class="flex items-center justify-between">
+                <span class="text-sm font-body-md">Giải thuật tìm kiếm</span>
+                <span
+                  class="px-2 py-1 bg-error-container text-error text-[10px] font-bold rounded"
+                  >Cần luyện tập</span
+                >
+              </div>
+              <div class="w-full bg-surface-container-high h-1.5 rounded-full">
+                <div class="bg-error w-1/3 h-full rounded-full"></div>
+              </div>
+              <div class="flex items-center justify-between">
+                <span class="text-sm font-body-md">Kiến trúc Vi xử lý</span>
+                <span
+                  class="px-2 py-1 bg-secondary-container text-on-secondary-container text-[10px] font-bold rounded"
+                  >Đang học</span
+                >
+              </div>
+              <div class="w-full bg-surface-container-high h-1.5 rounded-full">
+                <div class="bg-primary/50 w-1/2 h-full rounded-full"></div>
+              </div>
+            </div>
+          </div>
+        </section>
+        <!-- AI Features & To-Do Layout -->
+        <section class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <!-- AI Features Widget -->
+          <div class="lg:col-span-2 space-y-6">
+            <div class="flex items-center justify-between">
+              <h3
+                class="font-headline-md text-headline-md text-on-surface flex items-center gap-2"
+              >
+                <span class="material-symbols-outlined text-primary"
+                  >auto_awesome</span
+                >
+                Trợ lý AI Scholar
+              </h3>
+              <a class="text-primary text-sm font-bold hover:underline" href="#"
+                >Khám phá tất cả</a
+              >
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div
+                class="ai-gradient-border p-6 rounded-3xl group cursor-pointer hover:-translate-y-1 transition-all"
+              >
+                <div
+                  class="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform"
+                >
+                  <span
+                    class="material-symbols-outlined text-primary text-3xl"
+                    style="font-variation-settings: &quot;FILL&quot; 1"
+                    >smart_toy</span
+                  >
+                </div>
+                <h4 class="font-bold text-lg mb-2">AI Chatbot</h4>
+                <p class="text-sm text-on-surface-variant mb-4">
+                  Hỏi đáp kiến thức 24/7, giải bài tập và giải thích khái niệm
+                  phức tạp.
+                </p>
+                <button
+                  class="flex items-center gap-2 text-primary font-bold text-sm"
+                >
+                  Bắt đầu hỏi
+                  <span class="material-symbols-outlined text-sm"
+                    >arrow_forward</span
+                  >
+                </button>
+              </div>
+              <div
+                class="bg-surface-container-lowest border border-outline-variant p-6 rounded-3xl group cursor-pointer hover:border-primary/50 hover:-translate-y-1 transition-all"
+              >
+                <div
+                  class="w-12 h-12 bg-secondary-container/50 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform"
+                >
+                  <span class="material-symbols-outlined text-primary text-3xl"
+                    >auto_stories</span
+                  >
+                </div>
+                <h4 class="font-bold text-lg mb-2">AI Summary</h4>
+                <p class="text-sm text-on-surface-variant mb-4">
+                  Tóm tắt nội dung bài giảng, video và tài liệu dài chỉ trong
+                  vài giây.
+                </p>
+                <button
+                  class="flex items-center gap-2 text-primary font-bold text-sm"
+                >
+                  Tải tài liệu lên
+                  <span class="material-symbols-outlined text-sm"
+                    >upload_file</span
+                  >
+                </button>
+              </div>
+            </div>
+            <div
+              class="bg-primary/5 p-8 rounded-3xl border border-primary/10 relative overflow-hidden"
+            >
+              <div class="relative z-10">
+                <h4 class="font-bold text-xl mb-2 text-primary">
+                  Lộ trình học tập cá nhân hóa
+                </h4>
+                <p
+                  class="text-on-surface-variant max-w-md text-sm leading-relaxed"
+                >
+                  AI đã phân tích kết quả bài thi hôm qua và đề xuất 3 bài luyện
+                  tập mới để củng cố kiến thức về Hệ điều hành.
+                </p>
+                <button
+                  class="mt-6 bg-primary text-white px-6 py-3 rounded-xl font-bold hover:shadow-lg transition-all active:scale-95"
+                >
+                  Xem lộ trình mới
+                </button>
+              </div>
+              <span
+                class="material-symbols-outlined absolute -right-8 -bottom-8 text-primary/10 text-[200px] select-none"
+                >insights</span
+              >
+            </div>
+          </div>
+          <!-- To-Do / Upcoming Section -->
+          <div class="space-y-6">
+            <h3 class="font-headline-md text-headline-md text-on-surface">
+              Việc cần làm
+            </h3>
+            <div
+              class="bg-surface-container-lowest border border-outline-variant rounded-2xl overflow-hidden divide-y divide-outline-variant"
+            >
+              <!-- Task Item -->
+              <div
+                class="p-4 hover:bg-surface-container-low transition-colors group"
+              >
+                <div class="flex items-start gap-3">
+                  <div class="mt-1">
+                    <span class="material-symbols-outlined text-primary"
+                      >event_note</span
+                    >
+                  </div>
+                  <div class="flex-1">
+                    <h5
+                      class="text-sm font-bold text-on-surface group-hover:text-primary transition-colors"
+                    >
+                      Bài tập: Giải thuật sắp xếp
+                    </h5>
+                    <p class="text-xs text-on-surface-variant mb-3">
+                      Môn: Cấu trúc dữ liệu &amp; Giải thuật
+                    </p>
+                    <div class="flex items-center justify-between">
+                      <div
+                        class="flex items-center gap-1.5 px-2 py-0.5 bg-error-container text-error rounded text-[10px] font-bold uppercase"
+                      >
+                        <span class="material-symbols-outlined text-[12px]"
+                          >schedule</span
+                        >
+                        Còn 2 giờ
+                      </div>
+                      <button
+                        class="text-[10px] font-bold text-primary uppercase hover:underline"
+                      >
+                        Nộp bài
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <!-- Task Item -->
+              <div
+                class="p-4 hover:bg-surface-container-low transition-colors group"
+              >
+                <div class="flex items-start gap-3">
+                  <div class="mt-1 text-amber-500">
+                    <span class="material-symbols-outlined">quiz</span>
+                  </div>
+                  <div class="flex-1">
+                    <h5
+                      class="text-sm font-bold text-on-surface group-hover:text-primary transition-colors"
+                    >
+                      Kiểm tra: Database Design
+                    </h5>
+                    <p class="text-xs text-on-surface-variant mb-3">
+                      Môn: Hệ quản trị CSDL
+                    </p>
+                    <div class="flex items-center justify-between">
+                      <div
+                        class="flex items-center gap-1.5 px-2 py-0.5 bg-secondary-container text-on-secondary-container rounded text-[10px] font-bold uppercase"
+                      >
+                        <span class="material-symbols-outlined text-[12px]"
+                          >calendar_today</span
+                        >
+                        Ngày mai
+                      </div>
+                      <button
+                        class="text-[10px] font-bold text-on-surface-variant uppercase hover:underline"
+                      >
+                        Chi tiết
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <!-- Task Item -->
+              <div
+                class="p-4 hover:bg-surface-container-low transition-colors group"
+              >
+                <div class="flex items-start gap-3">
+                  <div class="mt-1 text-green-600">
+                    <span class="material-symbols-outlined">assignment</span>
+                  </div>
+                  <div class="flex-1">
+                    <h5
+                      class="text-sm font-bold text-on-surface group-hover:text-primary transition-colors"
+                    >
+                      Lab 4: Linux Commands
+                    </h5>
+                    <p class="text-xs text-on-surface-variant mb-3">
+                      Môn: Hệ điều hành
+                    </p>
+                    <div class="flex items-center justify-between">
+                      <div
+                        class="flex items-center gap-1.5 px-2 py-0.5 bg-secondary-container text-on-secondary-container rounded text-[10px] font-bold uppercase"
+                      >
+                        <span class="material-symbols-outlined text-[12px]"
+                          >calendar_today</span
+                        >
+                        3 ngày nữa
+                      </div>
+                      <button
+                        class="text-[10px] font-bold text-on-surface-variant uppercase hover:underline"
+                      >
+                        Chi tiết
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <button
+              class="w-full py-4 border-2 border-dashed border-outline-variant rounded-2xl text-on-surface-variant font-bold text-sm hover:border-primary hover:text-primary transition-all flex items-center justify-center gap-2"
+            >
+              <span class="material-symbols-outlined">add_task</span>
+              Thêm việc mới
+            </button>
+          </div>
+        </section>
+      </div>
+      <!-- Mobile Bottom Nav (Suppressed for desktop via side nav) -->
+      <nav
+        class="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-outline-variant flex justify-around items-center h-16 px-2 z-40"
+      >
+        <a class="flex flex-col items-center gap-1 text-primary" href="#">
+          <span
+            class="material-symbols-outlined"
+            style="font-variation-settings: &quot;FILL&quot; 1"
+            >dashboard</span
+          >
+          <span class="text-[10px] font-bold">Trang chủ</span>
+        </a>
+        <a
+          class="flex flex-col items-center gap-1 text-on-surface-variant"
+          href="#"
+        >
+          <span class="material-symbols-outlined">school</span>
+          <span class="text-[10px]">Lớp học</span>
+        </a>
+        <a
+          class="flex flex-col items-center gap-1 text-on-surface-variant"
+          href="#"
+        >
+          <span class="material-symbols-outlined">edit_note</span>
+          <span class="text-[10px]">Bài tập</span>
+        </a>
+        <a
+          class="flex flex-col items-center gap-1 text-on-surface-variant"
+          href="#"
+        >
+          <span class="material-symbols-outlined">forum</span>
+          <span class="text-[10px]">Nhắn tin</span>
+        </a>
+      </nav>
+    </main>
+    <script>
+      // Progress ring logic
+      document.querySelectorAll(".progress-ring__circle").forEach((circle) => {
+        const radius = circle.r.baseVal.value;
+        const circumference = radius * 2 * Math.PI;
+        circle.style.strokeDasharray = `${circumference} ${circumference}`;
+        const offset = circumference - (78 / 100) * circumference;
+        circle.style.strokeDashoffset = offset;
+      });
+
+      // Floating Action Button logic for Dashboard
+      const fab = document.createElement("button");
+      fab.className =
+        "fixed bottom-24 right-8 w-14 h-14 bg-primary text-white rounded-full shadow-2xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all z-50 md:bottom-8";
+      fab.innerHTML =
+        '<span class="material-symbols-outlined text-3xl">smart_toy</span>';
+      fab.title = "Hỏi AI Scholar";
+      document.body.appendChild(fab);
+
+      fab.addEventListener("click", () => {
+        alert("AI Assistant is initializing...");
+      });
+    </script>
+  </body>
+</html>
