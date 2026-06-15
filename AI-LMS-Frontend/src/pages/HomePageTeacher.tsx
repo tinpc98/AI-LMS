@@ -1,334 +1,762 @@
-import React from "react";
-
+import React, { useState } from "react";
+import "./HomePage.css";
+// ==========================================================================
+// TYPES & INTERFACES
+// ==========================================================================
+interface ClassItem {
+  id: string;
+  name: string;
+  code: string;
+  size: number;
+  progress: number;
+  nextClass: string;
+  attendanceStatus: "chua_diem_danh" | "da_diem_danh";
+  iconClass: "toan" | "tin" | "ly";
+  icon: string;
+}
 export default function HomePageTeacher() {
+  // ==========================================================================
+  // STATE MANAGEMENT
+  // ==========================================================================
+  const [classes, setClasses] = useState<ClassItem[]>([
+    {
+      id: "c1",
+      name: "Lớp 10A1 - Toán học",
+      code: "TOAN10",
+      size: 45,
+      progress: 65,
+      nextClass: "Thứ 2, 08:00 AM",
+      attendanceStatus: "chua_diem_danh",
+      iconClass: "toan",
+      icon: "functions",
+    },
+    {
+      id: "c2",
+      name: "Lớp 11B2 - Tin học",
+      code: "TIN11",
+      size: 38,
+      progress: 42,
+      nextClass: "Thứ 3, 10:15 AM",
+      attendanceStatus: "chua_diem_danh",
+      iconClass: "tin",
+      icon: "computer",
+    },
+    {
+      id: "c3",
+      name: "Lớp 12C3 - Vật lý",
+      code: "LY12",
+      size: 42,
+      progress: 88,
+      nextClass: "Thứ 4, 01:30 PM",
+      attendanceStatus: "chua_diem_danh",
+      iconClass: "ly",
+      icon: "science",
+    },
+    {
+      id: "c4",
+      name: "Lớp 12A2 - Toán nâng cao",
+      code: "TOAN12NC",
+      size: 40,
+      progress: 74,
+      nextClass: "Thứ 5, 08:00 AM",
+      attendanceStatus: "chua_diem_danh",
+      iconClass: "toan",
+      icon: "calculate",
+    },
+    {
+      id: "c5",
+      name: "Lớp 10B3 - Lập trình C++",
+      code: "CPP10",
+      size: 35,
+      progress: 50,
+      nextClass: "Thứ 6, 02:00 PM",
+      attendanceStatus: "chua_diem_danh",
+      iconClass: "tin",
+      icon: "code",
+    },
+    {
+      id: "c6",
+      name: "Lớp 11C1 - Vật lý Cơ bản",
+      code: "LY11",
+      size: 39,
+      progress: 30,
+      nextClass: "Thứ 7, 09:30 AM",
+      attendanceStatus: "chua_diem_danh",
+      iconClass: "ly",
+      icon: "bolt",
+    },
+  ]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [isDarkTheme, setIsDarkTheme] = useState(false);
+  const itemsPerPage = 3;
+  // Modals visibility state
+  const [modalType, setModalType] = useState<"class" | "homework" | "exam" | null>(null);
+  // Form Fields
+  const [newClassName, setNewClassName] = useState("");
+  const [newClassCode, setNewClassCode] = useState("");
+  const [newClassSize, setNewClassSize] = useState("40");
+  const [newClassSchedule, setNewClassSchedule] = useState("Thứ 2, 08:00 AM");
+  const [hwTitle, setHwTitle] = useState("");
+  const [hwClassSelect, setHwClassSelect] = useState("");
+  const [hwDeadline, setHwDeadline] = useState("Ngày mai");
+  const [examTitle, setExamTitle] = useState("");
+  const [examClassSelect, setExamClassSelect] = useState("");
+  const [examQuestions, setExamQuestions] = useState("20");
+  // Toast
+  const [toast, setToast] = useState<{ message: string; type: "success" | "info" | "error" } | null>(null);
+  const triggerToast = (message: string, type: "success" | "info" | "error" = "success") => {
+    setToast({ message, type });
+    setTimeout(() => {
+      setToast(null);
+    }, 3000);
+  };
+  // ==========================================================================
+  // HANDLERS
+  // ==========================================================================
+  const handleAttendance = (id: string) => {
+    setClasses((prev) =>
+      prev.map((c) => {
+        if (c.id === id) {
+          const wasChecked = c.attendanceStatus === "da_diem_danh";
+          const nextStatus = wasChecked ? "chua_diem_danh" : "da_diem_danh";
+          const nextSize = wasChecked ? c.size - 1 : c.size + 1; // attendance increment simulation
+          triggerToast(
+            !wasChecked
+              ? `Điểm danh thành công lớp: ${c.name}. Sĩ số trực tuyến: ${nextSize}!`
+              : `Đã hủy điểm danh lớp: ${c.name}`,
+            "success"
+          );
+          return { ...c, attendanceStatus: nextStatus, size: nextSize };
+        }
+        return c;
+      })
+    );
+  };
+  const handleCreateClassSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newClassName.trim() || !newClassCode.trim() || !newClassSchedule.trim()) {
+      triggerToast("Vui lòng điền đầy đủ thông tin!", "error");
+      return;
+    }
+    const newClass: ClassItem = {
+      id: "c-" + Date.now(),
+      name: newClassName,
+      code: newClassCode.toUpperCase(),
+      size: parseInt(newClassSize) || 40,
+      progress: 0,
+      nextClass: newClassSchedule,
+      attendanceStatus: "chua_diem_danh",
+      iconClass: newClassName.toLowerCase().includes("tin") ? "tin" : newClassName.toLowerCase().includes("lý") ? "ly" : "toan",
+      icon: newClassName.toLowerCase().includes("tin") ? "computer" : newClassName.toLowerCase().includes("lý") ? "science" : "functions",
+    };
+    setClasses((prev) => [newClass, ...prev]);
+    setModalType(null);
+    setNewClassName("");
+    setNewClassCode("");
+    triggerToast(`Đã tạo thành công lớp học học phần: ${newClassName}!`, "success");
+  };
+  const handleCreateHomeworkSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!hwTitle.trim()) {
+      triggerToast("Vui lòng điền tên bài tập cần giao!", "error");
+      return;
+    }
+    setModalType(null);
+    setHwTitle("");
+    triggerToast(`Đã giao bài tập về nhà mới cho lớp: ${hwClassSelect || classes[0]?.name}!`, "success");
+  };
+  const handleCreateExamSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!examTitle.trim()) {
+      triggerToast("Vui lòng điền tên đề kiểm tra!", "error");
+      return;
+    }
+    setModalType(null);
+    setExamTitle("");
+    triggerToast(`Đã công bố đề kiểm tra "${examTitle}" (${examQuestions} câu)!`, "success");
+  };
+  // Filter & Pagination Calculations
+  const query = searchQuery.toLowerCase().trim();
+  const filteredClasses = classes.filter(
+    (c) => c.name.toLowerCase().includes(query) || c.code.toLowerCase().includes(query)
+  );
+  const totalItems = filteredClasses.length;
+  const totalPages = Math.ceil(totalItems / itemsPerPage) || 1;
+  const clampedPage = Math.min(currentPage, totalPages);
+  const startIndex = (clampedPage - 1) * itemsPerPage;
+  const paginatedClasses = filteredClasses.slice(startIndex, startIndex + itemsPerPage);
   return (
-    <main className="md:ml-[280px] p-margin-desktop max-w-max-content-width mx-auto">
-      {/* Welcome Header */}
-      <div className="mb-10">
-        <h2 className="font-headline-lg text-headline-lg text-on-surface">
-          Chào buổi sáng, Thầy A
-        </h2>
-        <p className="font-body-md text-body-md text-on-surface-variant mt-2">
-          Dưới đây là tóm tắt hoạt động giảng dạy của bạn trong ngày hôm nay.
-        </p>
-      </div>
+    <div className={`lms-theme-wrapper ${isDarkTheme ? "dark" : ""}`}>
+      <div className="lms-app">
+        {/* ==========================================================================
+           SIDEBAR (Desktop)
+           ========================================================================== */}
+        <aside className="lms-sidebar">
+          <div className="lms-logo-container">
+            <div className="lms-logo-icon">
+              <span className="material-symbols-outlined icon-filled">school</span>
+            </div>
+            <span className="lms-logo-text">Scholar LMS</span>
+          </div>
+          <nav className="lms-nav-menu">
+            <li className="lms-nav-item active">
+              <a href="#">
+                <span className="material-symbols-outlined icon-filled">dashboard</span>
+                <span>Trang chủ</span>
+              </a>
+            </li>
+            <li className="lms-nav-item">
+              <a href="#">
+                <span className="material-symbols-outlined">school</span>
+                <span>Lớp học của tôi</span>
+              </a>
+            </li>
+            <li className="lms-nav-item">
+              <a href="#">
+                <span className="material-symbols-outlined">edit_note</span>
+                <span>Chấm điểm</span>
+              </a>
+            </li>
+            <li className="lms-nav-item">
+              <a href="#">
+                <span className="material-symbols-outlined">forum</span>
+                <span>Hộp thư thoại</span>
+              </a>
+            </li>
+          </nav>
+          <div className="lms-sidebar-footer">
+            <div className="lms-profile-widget">
+              <img
+                className="lms-avatar"
+                src="https://lh3.googleusercontent.com/aida-public/AB6AXuCVNNzlGhy-GGItcerFxHk-epZGSAkBK1agzSvWs0mQJQd3cFAJxOn2qR-UcnymQJvT3f3dWfahGjZLN_Gb4FAnJ32kY79JW6MofSaohYHr3KeR6KfQM6o7u00zWrZXBXzocMcES_hS8YCw1zMpeTnWegTbOCuh3SbOy2HCGmwe4kYrWZzDU9ZPWVFKKxvlTo03haIlWcByJeBvDXWaa7oLbT1mjgUWLXCVJ4ge656MyWrUiJpwOFLZPKJYkXESAOVp6bYyIyVltXY9"
+                alt="Avatar teacher"
+              />
+              <div className="lms-profile-info">
+                <span className="lms-profile-name">Nguyễn An</span>
+                <span className="lms-profile-role">Giảng viên chính</span>
+              </div>
+            </div>
+          </div>
+        </aside>
+        {/* ==========================================================================
+           MAIN LAYOUT
+           ========================================================================== */}
+        <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
 
-      {/* Analytics Section: Bento Grid Style */}
-      <section className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-        {/* Analytics Card 1 */}
-        <div className="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant hover:border-primary/30 hover:shadow-md transition-all group">
-          <div className="flex justify-between items-start mb-4">
-            <div className="p-2 bg-primary/10 rounded-lg text-primary">
+          {/* Top Header */}
+          <header className="lms-header">
+            <div className="lms-header-left">
+              <span className="lms-role-badge">Giảng Viên</span>
+            </div>
+            <div className="lms-header-right">
+              {/* Theme switcher */}
+              <button
+                onClick={() => {
+                  setIsDarkTheme(!isDarkTheme);
+                  triggerToast(`Đã đổi sang chế độ giao diện ${!isDarkTheme ? "Tối" : "Sáng"}!`, "info");
+                }}
+                className="lms-icon-btn"
+                title="Đổi giao diện sáng/tối"
+              >
+                <span className="material-symbols-outlined">{isDarkTheme ? "light_mode" : "dark_mode"}</span>
+              </button>
+              <button className="lms-icon-btn" title="Thông báo mới">
+                <span className="material-symbols-outlined">notifications</span>
+                <span className="lms-badge-dot"></span>
+              </button>
+            </div>
+          </header>
+          {/* Page Content */}
+          <main className="lms-main">
+
+            {/* Welcome Header */}
+            <section className="lms-welcome-section">
+              <div>
+                <h2 className="lms-welcome-title">Chào buổi sáng, Thầy Nguyễn An! ☕</h2>
+                <p className="lms-welcome-subtitle">
+                  Dưới đây là tóm tắt hoạt động giảng dạy của bạn trong ngày hôm nay.
+                </p>
+              </div>
+            </section>
+            {/* Bento Stats Grid */}
+            <section className="lms-bento-grid">
+
+              {/* Stat Card 1: GPA */}
+              <div className="lms-card lms-progress-circle-box">
+                <div className="lms-progress-text-info">
+                  <span className="lms-progress-label">Điểm trung bình lớp</span>
+                  <div style={{ display: "flex", alignItems: "baseline", gap: "4px" }}>
+                    <span className="lms-progress-val-large">8.5</span>
+                    <span style={{ fontSize: "12px", color: "var(--lms-text-muted)" }}>/ 10.0</span>
+                  </div>
+                  <span className="lms-progress-trend">
+                    <span className="material-symbols-outlined text-[16px]">trending_up</span>
+                    +0.4 so với đầu kỳ
+                  </span>
+                </div>
+                <div className="lms-ring-svg-container">
+                  <svg className="lms-ring-svg" width="80" height="80" style={{ transform: "rotate(-90deg)" }}>
+                    <circle className="lms-ring-bg" cx="40" cy="40" fill="transparent" r="32" strokeWidth="5" />
+                    <circle
+                      className="lms-ring-fill"
+                      cx="40"
+                      cy="40"
+                      fill="transparent"
+                      r="32"
+                      strokeWidth="5"
+                      strokeLinecap="round"
+                      style={{
+                        strokeDashoffset: 201 - (201 * 85) / 100
+                      }}
+                    />
+                  </svg>
+                  <span className="lms-ring-text-center">8.5</span>
+                </div>
+              </div>
+              {/* Stat Card 2: Homework Rate */}
+              <div className="lms-card lms-progress-circle-box">
+                <div className="lms-progress-text-info">
+                  <span className="lms-progress-label">Tỷ lệ hoàn thành bài tập</span>
+                  <span className="lms-progress-val-large">92%</span>
+                  <span className="lms-progress-trend" style={{ color: "var(--lms-sky)" }}>Ổn định ở mức cao</span>
+                </div>
+                <div className="lms-ring-svg-container">
+                  <svg className="lms-ring-svg" width="80" height="80" style={{ transform: "rotate(-90deg)" }}>
+                    <circle className="lms-ring-bg" cx="40" cy="40" fill="transparent" r="32" strokeWidth="5" />
+                    <circle
+                      className="lms-ring-fill"
+                      cx="40"
+                      cy="40"
+                      fill="transparent"
+                      r="32"
+                      strokeWidth="5"
+                      strokeLinecap="round"
+                      style={{
+                        stroke: "var(--lms-sky)",
+                        strokeDashoffset: 201 - (201 * 92) / 100
+                      }}
+                    />
+                  </svg>
+                  <span className="lms-ring-text-center" style={{ color: "var(--lms-sky)" }}>92%</span>
+                </div>
+              </div>
+              {/* Stat Card 3: Online Attendance */}
+              <div className="lms-card lms-progress-circle-box">
+                <div className="lms-progress-text-info">
+                  <span className="lms-progress-label">Tỷ lệ online trực tuyến</span>
+                  <span className="lms-progress-val-large">95%</span>
+                  <span className="lms-progress-trend" style={{ color: "var(--lms-success)" }}>
+                    <span style={{ width: "6px", height: "6px", backgroundColor: "var(--lms-success)", borderRadius: "50%", display: "inline-block", animation: "ping 1.5s infinite" }}></span>
+                    Lớp đang trực tuyến
+                  </span>
+                </div>
+                <div className="lms-ring-svg-container">
+                  <svg className="lms-ring-svg" width="80" height="80" style={{ transform: "rotate(-90deg)" }}>
+                    <circle className="lms-ring-bg" cx="40" cy="40" fill="transparent" r="32" strokeWidth="5" />
+                    <circle
+                      className="lms-ring-fill"
+                      cx="40"
+                      cy="40"
+                      fill="transparent"
+                      r="32"
+                      strokeWidth="5"
+                      strokeLinecap="round"
+                      style={{
+                        stroke: "var(--lms-success)",
+                        strokeDashoffset: 201 - (201 * 95) / 100
+                      }}
+                    />
+                  </svg>
+                  <span className="lms-ring-text-center" style={{ color: "var(--lms-success)" }}>95%</span>
+                </div>
+              </div>
+            </section>
+            {/* Quick Actions Section */}
+            <section style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+              <h3 className="lms-section-title">Thao tác nhanh</h3>
+              <div className="lms-action-grid">
+
+                {/* Button: Create class */}
+                <button
+                  onClick={() => setModalType("class")}
+                  className="lms-action-card brand"
+                >
+                  <div className="lms-action-card-text">
+                    <h4 className="lms-action-card-title">Tạo lớp học</h4>
+                    <p className="lms-action-card-desc">Thiết lập thêm một lớp học học phần mới</p>
+                  </div>
+                  <span className="material-symbols-outlined lms-action-card-bg-icon">add_business</span>
+                </button>
+                {/* Button: Create homework */}
+                <button
+                  onClick={() => setModalType("homework")}
+                  className="lms-action-card secondary"
+                >
+                  <div className="lms-action-card-text">
+                    <h4 className="lms-action-card-title">Giao bài tập</h4>
+                    <p className="lms-action-card-desc">Giao nhiệm vụ tự học cho học sinh</p>
+                  </div>
+                  <span className="material-symbols-outlined lms-action-card-bg-icon">edit_document</span>
+                </button>
+                {/* Button: Create exam */}
+                <button
+                  onClick={() => setModalType("exam")}
+                  className="lms-action-card tertiary"
+                >
+                  <div className="lms-action-card-text">
+                    <h4 className="lms-action-card-title">Tạo đề thi</h4>
+                    <p className="lms-action-card-desc">Kiểm tra đánh giá năng lực học sinh</p>
+                  </div>
+                  <span className="material-symbols-outlined lms-action-card-bg-icon">assignment_turned_in</span>
+                </button>
+              </div>
+            </section>
+            {/* Active Classes Table Section */}
+            <section className="lms-table-card">
+              <div className="lms-table-header" style={{ padding: "24px 24px 18px", borderBottom: "1px solid var(--lms-card-border)" }}>
+                <h3 className="lms-section-title">Lớp học đang hoạt động</h3>
+
+                {/* Search filter input */}
+                <div className="lms-search-wrapper">
+                  <input
+                    type="text"
+                    placeholder="Tìm kiếm lớp học..."
+                    value={searchQuery}
+                    onChange={(e) => {
+                      setSearchQuery(e.target.value);
+                      setCurrentPage(1);
+                    }}
+                    className="lms-search-input"
+                  />
+                  <span className="material-symbols-outlined lms-search-icon">search</span>
+                </div>
+              </div>
+              <div className="lms-table-responsive">
+                <table className="lms-table">
+                  <thead>
+                    <tr>
+                      <th>Tên lớp học</th>
+                      <th>Mã lớp</th>
+                      <th>Sĩ số</th>
+                      <th>Tiến độ bài học</th>
+                      <th>Bài học tiếp theo</th>
+                      <th style={{ textAlign: "right" }}>Thao tác</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {paginatedClasses.map((cls) => (
+                      <tr key={cls.id}>
+                        <td>
+                          <div className="lms-class-info">
+                            <div className={`lms-class-icon-box ${cls.iconClass}`}>
+                              <span className="material-symbols-outlined">{cls.icon}</span>
+                            </div>
+                            <span className="lms-class-name">{cls.name}</span>
+                          </div>
+                        </td>
+                        <td>
+                          <code style={{ fontSize: "11px", backgroundColor: "var(--lms-bg-secondary)", padding: "3px 6px", borderRadius: "4px" }}>{cls.code}</code>
+                        </td>
+                        <td>{cls.size} học sinh</td>
+                        <td>
+                          <div className="lms-table-progress-container">
+                            <div className="lms-table-progress-bg">
+                              <div className="lms-table-progress-fill" style={{ width: `${cls.progress}%` }}></div>
+                            </div>
+                            <span className="lms-table-progress-text">{cls.progress}%</span>
+                          </div>
+                        </td>
+                        <td>
+                          <span className="lms-schedule-badge">{cls.nextClass}</span>
+                        </td>
+                        <td style={{ textAlign: "right" }}>
+                          <button
+                            onClick={() => handleAttendance(cls.id)}
+                            className={`lms-table-btn ${cls.attendanceStatus === "da_diem_danh" ? "checked" : ""}`}
+                          >
+                            {cls.attendanceStatus === "da_diem_danh" ? "Đã điểm danh" : "Điểm danh"}
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                    {paginatedClasses.length === 0 && (
+                      <tr>
+                        <td colSpan={6} style={{ textAlign: "center", padding: "40px", color: "var(--lms-text-muted)", fontSize: "12px" }}>
+                          Không tìm thấy lớp học nào phù hợp!
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+              {/* Pagination Controls */}
+              <div className="lms-pagination">
+                <div className="lms-pagination-controls">
+                  <button
+                    onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+                    disabled={clampedPage === 1}
+                    className="lms-page-btn"
+                  >
+                    <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>chevron_left</span>
+                  </button>
+
+                  {Array.from({ length: totalPages }).map((_, i) => (
+                    <button
+                      key={i}
+                      onClick={() => setCurrentPage(i + 1)}
+                      className={`lms-page-btn ${clampedPage === i + 1 ? "active" : ""}`}
+                    >
+                      {i + 1}
+                    </button>
+                  ))}
+                  <button
+                    onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
+                    disabled={clampedPage === totalPages}
+                    className="lms-page-btn"
+                  >
+                    <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>chevron_right</span>
+                  </button>
+                </div>
+              </div>
+            </section>
+          </main>
+          {/* Mobile bottom nav */}
+          <nav className="lms-mobile-nav">
+            <button className="lms-mobile-item active">
+              <span className="material-symbols-outlined icon-filled">home</span>
+              <span>Trang chủ</span>
+            </button>
+            <button className="lms-mobile-item">
               <span className="material-symbols-outlined">school</span>
-            </div>
-            <span className="flex items-center text-emerald-600 text-body-sm font-bold gap-1 bg-emerald-50 px-2 py-1 rounded">
-              <span className="material-symbols-outlined text-[18px]">
-                trending_up
-              </span>
-              +0.4
-            </span>
-          </div>
-          <h3 className="font-label-md text-label-md text-on-surface-variant">
-            Điểm trung bình lớp
-          </h3>
-          <div className="flex items-baseline gap-2 mt-2">
-            <span className="font-headline-lg text-headline-lg font-bold">
-              8.5
-            </span>
-            <span className="font-body-sm text-on-surface-variant">/ 10.0</span>
-          </div>
-          <div className="mt-4 h-1 w-full bg-surface-container rounded-full overflow-hidden">
-            <div className="h-full bg-primary w-[85%]"></div>
-          </div>
-        </div>
-
-        {/* Analytics Card 2 */}
-        <div className="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant hover:border-primary/30 hover:shadow-md transition-all group">
-          <div className="flex justify-between items-start mb-4">
-            <div className="p-2 bg-secondary/10 rounded-lg text-secondary">
-              <span className="material-symbols-outlined">task_alt</span>
-            </div>
-            <div className="relative flex items-center justify-center w-12 h-12">
-              <svg className="w-full h-full transform -rotate-90">
-                <circle
-                  className="text-surface-container"
-                  cx="24"
-                  cy="24"
-                  fill="transparent"
-                  r="20"
-                  stroke="currentColor"
-                  strokeWidth="4"
-                ></circle>
-                <circle
-                  className="text-secondary"
-                  cx="24"
-                  cy="24"
-                  fill="transparent"
-                  r="20"
-                  stroke="currentColor"
-                  strokeDasharray="125.6"
-                  strokeDashoffset="10"
-                  strokeWidth="4"
-                ></circle>
-              </svg>
-              <span className="absolute text-[10px] font-bold">92%</span>
-            </div>
-          </div>
-          <h3 className="font-label-md text-label-md text-on-surface-variant">
-            Tỷ lệ hoàn thành bài tập
-          </h3>
-          <div className="flex items-baseline gap-2 mt-2">
-            <span className="font-headline-lg text-headline-lg font-bold">
-              92%
-            </span>
-            <span className="font-body-sm text-on-surface-variant text-emerald-600">
-              Ổn định
-            </span>
-          </div>
-        </div>
-
-        {/* Analytics Card 3 */}
-        <div className="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant hover:border-primary/30 hover:shadow-md transition-all group overflow-hidden">
-          <div className="flex justify-between items-start mb-4">
-            <div className="p-2 bg-tertiary/10 rounded-lg text-tertiary">
-              <span className="material-symbols-outlined">query_stats</span>
-            </div>
-            <div className="flex gap-1 items-end h-10">
-              <div className="w-2 bg-primary/20 rounded-t h-4"></div>
-              <div className="w-2 bg-primary/40 rounded-t h-6"></div>
-              <div className="w-2 bg-primary/30 rounded-t h-5"></div>
-              <div className="w-2 bg-primary/60 rounded-t h-8"></div>
-              <div className="w-2 bg-primary rounded-t h-10"></div>
-            </div>
-          </div>
-          <h3 className="font-label-md text-label-md text-on-surface-variant">
-            Tỷ lệ tham gia học
-          </h3>
-          <div className="flex items-baseline gap-2 mt-2">
-            <span className="font-headline-lg text-headline-lg font-bold">
-              95%
-            </span>
-            <span className="flex items-center gap-1">
-              <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
-              <span className="font-body-sm text-emerald-600">Trực tuyến</span>
-            </span>
-          </div>
-        </div>
-      </section>
-
-      {/* Quick Actions Section */}
-      <section className="mb-10">
-        <h3 className="font-headline-md text-headline-md text-on-surface mb-6">
-          Thao tác nhanh
-        </h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <button className="active:scale-95 ai-glow group relative flex items-center justify-between p-8 bg-primary text-on-primary rounded-2xl overflow-hidden transition-all hover:scale-[1.02] shadow-lg">
-            <div className="z-10 text-left">
-              <p className="font-headline-md text-headline-md mb-1">
-                Tạo lớp học
-              </p>
-              <p className="font-body-sm opacity-80">
-                Thiết lập môi trường học mới
-              </p>
-            </div>
-            <span className="material-symbols-outlined text-[64px] opacity-20 group-hover:scale-110 transition-transform">
-              add_business
-            </span>
-          </button>
-
-          <button className="active:scale-95 ai-glow group relative flex items-center justify-between p-8 bg-secondary text-on-secondary rounded-2xl overflow-hidden transition-all hover:scale-[1.02] shadow-lg">
-            <div className="z-10 text-left">
-              <p className="font-headline-md text-headline-md mb-1">
-                Tạo bài tập
-              </p>
-              <p className="font-body-sm opacity-80">
-                Giao nhiệm vụ cho sinh viên
-              </p>
-            </div>
-            <span className="material-symbols-outlined text-[64px] opacity-20 group-hover:scale-110 transition-transform">
-              edit_document
-            </span>
-          </button>
-
-          <button className="active:scale-95 ai-glow group relative flex items-center justify-between p-8 bg-tertiary-container text-on-tertiary-container rounded-2xl overflow-hidden transition-all hover:scale-[1.02] shadow-lg">
-            <div className="z-10 text-left">
-              <p className="font-headline-md text-headline-md mb-1">
-                Tạo đề thi
-              </p>
-              <p className="font-body-sm opacity-80">
-                Kiểm tra đánh giá năng lực
-              </p>
-            </div>
-            <span className="material-symbols-outlined text-[64px] opacity-20 group-hover:scale-110 transition-transform">
-              assignment_turned_in
-            </span>
-          </button>
-        </div>
-      </section>
-
-      {/* Active Classes Table */}
-      <section className="bg-surface-container-lowest rounded-xl border border-outline-variant overflow-hidden">
-        <div className="px-6 py-4 border-b border-outline-variant flex justify-between items-center">
-          <h3 className="font-headline-md text-headline-md text-on-surface">
-            Lớp học đang hoạt động
-          </h3>
-          <button className="text-primary font-label-md text-label-md flex items-center gap-1 hover:underline active:scale-95">
-            Xem tất cả{" "}
-            <span className="material-symbols-outlined text-sm">
-              arrow_forward
-            </span>
-          </button>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="bg-surface-container-low/50">
-                <th className="px-6 py-4 font-label-md text-label-md text-on-surface-variant">
-                  Tên lớp học
-                </th>
-                <th className="px-6 py-4 font-label-md text-label-md text-on-surface-variant">
-                  Sĩ số
-                </th>
-                <th className="px-6 py-4 font-label-md text-label-md text-on-surface-variant">
-                  Tiến độ
-                </th>
-                <th className="px-6 py-4 font-label-md text-label-md text-on-surface-variant">
-                  Bài học tiếp theo
-                </th>
-                <th className="px-6 py-4 font-label-md text-label-md text-on-surface-variant text-right">
-                  Thao tác
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-outline-variant">
-              {/* Row 1 */}
-              <tr className="hover:bg-surface-container-low transition-colors group">
-                <td className="px-6 py-5">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded bg-primary/10 flex items-center justify-center text-primary">
-                      <span className="material-symbols-outlined">
-                        functions
-                      </span>
-                    </div>
-                    <span className="font-label-md text-on-surface font-bold">
-                      Lớp 10A1 - Toán học
-                    </span>
-                  </div>
-                </td>
-                <td className="px-6 py-5 font-body-md">45 học sinh</td>
-                <td className="px-6 py-5">
-                  <div className="flex items-center gap-3">
-                    <div className="flex-grow bg-surface-container h-2 rounded-full overflow-hidden w-24">
-                      <div className="bg-primary h-full w-[65%]"></div>
-                    </div>
-                    <span className="text-body-sm font-bold">65%</span>
-                  </div>
-                </td>
-                <td className="px-6 py-5">
-                  <span className="px-3 py-1 bg-surface-container text-on-surface-variant text-[12px] rounded-full">
-                    Thứ 2, 08:00 AM
-                  </span>
-                </td>
-                <td className="px-6 py-5 text-right">
-                  <button className="px-4 py-2 bg-secondary/10 text-secondary hover:bg-secondary hover:text-on-secondary rounded-lg font-label-md text-label-md transition-all active:scale-95">
-                    Điểm danh
-                  </button>
-                </td>
-              </tr>
-
-              {/* Row 2 */}
-              <tr className="hover:bg-surface-container-low transition-colors group">
-                <td className="px-6 py-5">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded bg-secondary/10 flex items-center justify-center text-secondary">
-                      <span className="material-symbols-outlined">
-                        computer
-                      </span>
-                    </div>
-                    <span className="font-label-md text-on-surface font-bold">
-                      Lớp 11B2 - Tin học
-                    </span>
-                  </div>
-                </td>
-                <td className="px-6 py-5 font-body-md">38 học sinh</td>
-                <td className="px-6 py-5">
-                  <div className="flex items-center gap-3">
-                    <div className="flex-grow bg-surface-container h-2 rounded-full overflow-hidden w-24">
-                      <div className="bg-secondary h-full w-[42%]"></div>
-                    </div>
-                    <span className="text-body-sm font-bold">42%</span>
-                  </div>
-                </td>
-                <td className="px-6 py-5">
-                  <span className="px-3 py-1 bg-surface-container text-on-surface-variant text-[12px] rounded-full">
-                    Thứ 3, 10:15 AM
-                  </span>
-                </td>
-                <td className="px-6 py-5 text-right">
-                  <button className="px-4 py-2 bg-secondary/10 text-secondary hover:bg-secondary hover:text-on-secondary rounded-lg font-label-md text-label-md transition-all active:scale-95">
-                    Điểm danh
-                  </button>
-                </td>
-              </tr>
-
-              {/* Row 3 */}
-              <tr className="hover:bg-surface-container-low transition-colors group">
-                <td className="px-6 py-5">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded bg-tertiary/10 flex items-center justify-center text-tertiary">
-                      <span className="material-symbols-outlined">science</span>
-                    </div>
-                    <span className="font-label-md text-on-surface font-bold">
-                      Lớp 12C3 - Vật lý
-                    </span>
-                  </div>
-                </td>
-                <td className="px-6 py-5 font-body-md">42 học sinh</td>
-                <td className="px-6 py-5">
-                  <div className="flex items-center gap-3">
-                    <div className="flex-grow bg-surface-container h-2 rounded-full overflow-hidden w-24">
-                      <div className="bg-tertiary h-full w-[88%]"></div>
-                    </div>
-                    <span className="text-body-sm font-bold">88%</span>
-                  </div>
-                </td>
-                <td className="px-6 py-5">
-                  <span className="px-3 py-1 bg-surface-container text-on-surface-variant text-[12px] rounded-full">
-                    Thứ 4, 01:30 PM
-                  </span>
-                </td>
-                <td className="px-6 py-5 text-right">
-                  <button className="px-4 py-2 bg-secondary/10 text-secondary hover:bg-secondary hover:text-on-secondary rounded-lg font-label-md text-label-md transition-all active:scale-95">
-                    Điểm danh
-                  </button>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-        <div className="px-6 py-4 bg-surface-container-low/30 border-t border-outline-variant flex justify-center">
-          <nav className="flex items-center gap-2">
-            <button
-              className="p-2 hover:bg-surface-container rounded-lg disabled:opacity-30 active:scale-95"
-              disabled
-            >
-              <span className="material-symbols-outlined">chevron_left</span>
+              <span>Lớp học</span>
             </button>
-            <button className="w-8 h-8 flex items-center justify-center bg-primary text-on-primary rounded-lg font-bold active:scale-95">
-              1
+            <button className="lms-mobile-item">
+              <span className="material-symbols-outlined">edit_note</span>
+              <span>Chấm điểm</span>
             </button>
-            <button className="w-8 h-8 flex items-center justify-center hover:bg-surface-container rounded-lg active:scale-95">
-              2
-            </button>
-            <button className="w-8 h-8 flex items-center justify-center hover:bg-surface-container rounded-lg active:scale-95">
-              3
-            </button>
-            <button className="p-2 hover:bg-surface-container rounded-lg active:scale-95">
-              <span className="material-symbols-outlined">chevron_right</span>
+            <button className="lms-mobile-item">
+              <span className="material-symbols-outlined">forum</span>
+              <span>Hộp thư</span>
             </button>
           </nav>
         </div>
-      </section>
-    </main>
+        {/* ==========================================================================
+           MODALS (Quick Actions Form popups)
+           ========================================================================== */}
+
+        {/* 1. Create Class Modal */}
+        {modalType === "class" && (
+          <div className="lms-modal-overlay">
+            <div className="lms-modal">
+              <div className="lms-modal-header">
+                <span className="lms-modal-title">Thiết lập lớp học mới</span>
+                <button onClick={() => setModalType(null)} className="lms-modal-close">
+                  <span className="material-symbols-outlined">close</span>
+                </button>
+              </div>
+
+              <form onSubmit={handleCreateClassSubmit} className="lms-modal-body">
+                <div className="lms-form-group">
+                  <label>Tên môn học / lớp học</label>
+                  <input
+                    type="text"
+                    placeholder="Ví dụ: Lớp 11A3 - Giải tích"
+                    value={newClassName}
+                    onChange={(e) => setNewClassName(e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="lms-form-group">
+                  <label>Mã lớp học phần</label>
+                  <input
+                    type="text"
+                    placeholder="Ví dụ: TOAN11GT"
+                    value={newClassCode}
+                    onChange={(e) => setNewClassCode(e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="lms-form-group">
+                  <label>Sĩ số lớp dự kiến</label>
+                  <input
+                    type="number"
+                    value={newClassSize}
+                    onChange={(e) => setNewClassSize(e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="lms-form-group">
+                  <label>Lịch dạy tiếp theo</label>
+                  <input
+                    type="text"
+                    value={newClassSchedule}
+                    onChange={(e) => setNewClassSchedule(e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="lms-modal-footer">
+                  <button
+                    type="button"
+                    onClick={() => setModalType(null)}
+                    className="lms-btn cancel"
+                  >
+                    Hủy bỏ
+                  </button>
+                  <button
+                    type="submit"
+                    className="lms-btn confirm"
+                  >
+                    Xác nhận
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+        {/* 2. Create Homework Modal */}
+        {modalType === "homework" && (
+          <div className="lms-modal-overlay">
+            <div className="lms-modal">
+              <div className="lms-modal-header">
+                <span className="lms-modal-title">Giao bài tập về nhà</span>
+                <button onClick={() => setModalType(null)} className="lms-modal-close">
+                  <span className="material-symbols-outlined">close</span>
+                </button>
+              </div>
+
+              <form onSubmit={handleCreateHomeworkSubmit} className="lms-modal-body">
+                <div className="lms-form-group">
+                  <label>Tên bài tập / nhiệm vụ tự học</label>
+                  <input
+                    type="text"
+                    placeholder="Ví dụ: Đọc chương 3 và làm bài tập 1, 2"
+                    value={hwTitle}
+                    onChange={(e) => setHwTitle(e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="lms-form-group">
+                  <label>Chọn lớp giao bài</label>
+                  <select
+                    value={hwClassSelect}
+                    onChange={(e) => setHwClassSelect(e.target.value)}
+                  >
+                    {classes.map((c) => (
+                      <option key={c.id} value={c.name}>{c.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="lms-form-group">
+                  <label>Hạn nộp bài</label>
+                  <select
+                    value={hwDeadline}
+                    onChange={(e) => setHwDeadline(e.target.value)}
+                  >
+                    <option value="Còn 4 giờ">Trong ngày hôm nay (4 giờ nữa)</option>
+                    <option value="Ngày mai">Ngày mai</option>
+                    <option value="3 ngày nữa">3 ngày nữa</option>
+                    <option value="Tuần sau">Tuần sau</option>
+                  </select>
+                </div>
+                <div className="lms-modal-footer">
+                  <button
+                    type="button"
+                    onClick={() => setModalType(null)}
+                    className="lms-btn cancel"
+                  >
+                    Hủy bỏ
+                  </button>
+                  <button
+                    type="submit"
+                    className="lms-btn confirm"
+                    style={{ backgroundColor: "var(--lms-sky)" }}
+                  >
+                    Giao bài tập
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+        {/* 3. Create Exam Modal */}
+        {modalType === "exam" && (
+          <div className="lms-modal-overlay">
+            <div className="lms-modal">
+              <div className="lms-modal-header">
+                <span className="lms-modal-title">Tạo đề thi trắc nghiệm mới</span>
+                <button onClick={() => setModalType(null)} className="lms-modal-close">
+                  <span className="material-symbols-outlined">close</span>
+                </button>
+              </div>
+
+              <form onSubmit={handleCreateExamSubmit} className="lms-modal-body">
+                <div className="lms-form-group">
+                  <label>Tên đề thi / bài kiểm tra</label>
+                  <input
+                    type="text"
+                    placeholder="Ví dụ: Kiểm tra 15 phút số 3"
+                    value={examTitle}
+                    onChange={(e) => setExamTitle(e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="lms-form-group">
+                  <label>Lớp đánh giá học vụ</label>
+                  <select
+                    value={examClassSelect}
+                    onChange={(e) => setExamClassSelect(e.target.value)}
+                  >
+                    {classes.map((c) => (
+                      <option key={c.id} value={c.name}>{c.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="lms-form-group">
+                  <label>Số lượng câu hỏi trắc nghiệm</label>
+                  <input
+                    type="number"
+                    value={examQuestions}
+                    onChange={(e) => setExamQuestions(e.target.value)}
+                    min="5"
+                    max="100"
+                    required
+                  />
+                </div>
+                <div className="lms-modal-footer">
+                  <button
+                    type="button"
+                    onClick={() => setModalType(null)}
+                    className="lms-btn cancel"
+                  >
+                    Hủy bỏ
+                  </button>
+                  <button
+                    type="submit"
+                    className="lms-btn confirm"
+                    style={{ backgroundColor: "var(--lms-text-primary)" }}
+                  >
+                    Tạo đề thi
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+        {/* ==========================================================================
+           TOAST SYSTEM
+           ========================================================================== */}
+        {toast && (
+          <div className="lms-toast-container">
+            <div className={`lms-toast ${toast.type}`}>
+              <span className="material-symbols-outlined lms-toast-icon">
+                {toast.type === "success" ? "check_circle" : toast.type === "info" ? "info" : "error"}
+              </span>
+              <span>{toast.message}</span>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
   );
 }
