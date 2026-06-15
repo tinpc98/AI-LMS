@@ -2,27 +2,24 @@ import { useState } from "react";
 import { Route, Routes } from "react-router-dom";
 
 import "./App.css";
-import HeaderTeacher from "./component/HeaderTeacher";
-import SidebarTeacher from "./component/SidebarTeacher";
-import HomePageTeacher from "./pages/HomePageTeacher";
-import SidebarStudent from "./component/SidebarStudent";
-import HeaderStudent from "./component/HeaderStudent";
-import HomePageStudent from "./pages/HomePageStudent";
+import HomeLayoutTeacher from "./component/HomeLayoutTeacher";
+import RegistrationPage from "./pages/RegistrationPage";
+import LoginPage from "./pages/LoginPage";
+import HomeLayoutStudent from "./component/HomeLayoutStudent";
 
 function App() {
   return (
-    // <>
-    //   <SidebarTeacher />
-    //   <HeaderTeacher />
-    //   <Routes>
-    //     <Route path="/" element={<HomePageTeacher />} />
-    //   </Routes>
-    // </>
     <>
-      <SidebarStudent />
-      <HeaderStudent />
+      {/* <Routes>
+        <Route path="/" element={<HomeLayoutTeacher />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegistrationPage />} />
+      </Routes> */}
+
       <Routes>
-        <Route path="/" element={<HomePageStudent />} />
+        <Route path="/" element={<HomeLayoutStudent />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegistrationPage />} />
       </Routes>
     </>
   );
