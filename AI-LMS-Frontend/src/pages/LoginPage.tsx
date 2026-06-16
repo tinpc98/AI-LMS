@@ -2,6 +2,9 @@ import React, { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { Link, useNavigate } from "react-router-dom";
 import type User from "../interface/userInterface.tsx";
+// FIX LỖI: Import authApi để dùng tầng gọi API tập trung
+import { authApi } from "../api/authApi";
+import axios from "axios";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -14,34 +17,37 @@ const Login = () => {
   useEffect(() => {
     const token = localStorage.getItem("accessToken");
     if (token) {
-      navigate("/");
+      navigate("/"); // Nếu đã đăng nhập thì đá về trang chủ luôn
     }
-  }, []);
+  }, [navigate]);
 
+  // Hàm xử lý khi Form hợp lệ
   const onValid = async (data: User) => {
     try {
-      const res = await fetch(`http://localhost:3000/signin`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
+      // Gọi qua authApi tập trung bằng Axios
+      const res = await authApi.login({
+        email: data.email,
+        password: data.password,
       });
-      const result = await res.json();
-      if (!res.ok) {
-        throw new Error(result.mesage || "Đăng nhập thất bại");
-      }
+
+      const result = res.data;
 
       localStorage.setItem("accessToken", result.accessToken);
-      alert("Đăng nhập thành công");
+
+      alert(result.message || "Đăng nhập thành công rực rỡ!");
       navigate("/");
-    } catch (error) {
-      console.log(error);
-      alert("Có lỗi xảy ra");
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error)) {
+        console.log("Lỗi đăng nhập:", error);
+        // Thông báo lỗi từ tầng Validation/Authentication của Backend đẩy về
+        const serverMessage = error.response?.data?.message || "Email hoặc mật khẩu không chính xác!";
+        alert(serverMessage);
+      }
     }
   };
+
   const onError = (err: unknown) => {
-    console.log(err);
+    console.log("Form dữ liệu không hợp lệ tại Client:", err);
   };
 
   return (
@@ -60,7 +66,7 @@ const Login = () => {
       {/* Main Content Form */}
       <main className="flex-grow flex items-center justify-center px-4 py-10 z-10">
         <div className="w-full max-w-[400px]">
-          {/* Form Card (Sử dụng hiệu ứng kính mờ của Tailwind) */}
+          {/* Form Card */}
           <div className="bg-white/80 backdrop-blur-md p-6 rounded-2xl shadow-sm border border-gray-100">
             {/* Header Form */}
             <div className="text-center mb-6">
@@ -78,11 +84,11 @@ const Login = () => {
                   Email
                 </label>
                 <div className="relative">
-                  {/* <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-lg">mail</span> */}
                   <input
-                    className="w-full bg-gray-50/50 border border-gray-200 rounded-xl py-2 pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all outline-none"
+                    className="w-full bg-gray-50/50 border border-gray-200 rounded-xl py-2 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all outline-none"
                     id="email"
                     type="email"
+                    placeholder="example@edusynth.ai"
                     {...register("email", {
                       required: "Bạn chưa nhập Email",
                       minLength: {
@@ -95,9 +101,10 @@ const Login = () => {
                       },
                     })}
                   />
-                  {errors.email && <p className="text-red-500 text-sm">{errors.email.message}</p>}
+                  {errors.email && <p className="text-red-500 text-xs mt-1 px-0.5">{errors.email.message}</p>}
                 </div>
               </div>
+
               {/* Password Field */}
               <div className="space-y-1">
                 <div className="flex justify-between items-center px-0.5">
@@ -109,12 +116,12 @@ const Login = () => {
                   </a>
                 </div>
                 <div className="relative">
-                  {/* <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-lg">lock</span> */}
                   <input
-                    className="w-full bg-gray-50/50 border border-gray-200 rounded-xl py-2 pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all outline-none"
+                    className="w-full bg-gray-50/50 border border-gray-200 rounded-xl py-2 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all outline-none"
                     id="password"
                     type="password"
-                  {...register("password", {
+                    placeholder="••••••••"
+                    {...register("password", {
                       required: "Bạn chưa nhập mật khẩu",
                       minLength: {
                         value: 6,
@@ -122,7 +129,7 @@ const Login = () => {
                       },
                     })}
                   />
-                  {errors.password && <p className="text-red-500 text-sm">{errors.password.message}</p>}
+                  {errors.password && <p className="text-red-500 text-xs mt-1 px-0.5">{errors.password.message}</p>}
                 </div>
               </div>
 
@@ -133,7 +140,6 @@ const Login = () => {
                   type="submit"
                 >
                   Đăng nhập
-                  <span className="material-symbols-outlined text-base"></span>
                 </button>
               </div>
             </form>
@@ -147,9 +153,12 @@ const Login = () => {
               <div className="flex-grow border-t border-gray-100" />
             </div>
 
-            {/* Nút đăng nhập bên thứ 3 (Google & Facebook làm nhỏ gọn lại) */}
+            {/* Nút đăng nhập Google & Facebook */}
             <div className="grid grid-cols-2 gap-3">
-              <button className="flex items-center justify-center gap-2 bg-gray-50 border border-gray-200/70 rounded-xl py-2 hover:bg-gray-100 transition-colors active:scale-[0.98] cursor-pointer">
+              <button
+                type="button"
+                className="flex items-center justify-center gap-2 bg-gray-50 border border-gray-200/70 rounded-xl py-2 hover:bg-gray-100 transition-colors active:scale-[0.98] cursor-pointer"
+              >
                 <svg className="w-4 h-4" viewBox="0 0 24 24">
                   <path
                     d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -170,7 +179,10 @@ const Login = () => {
                 </svg>
                 <span className="text-xs font-medium text-gray-700">Google</span>
               </button>
-              <button className="flex items-center justify-center gap-2 bg-gray-50 border border-gray-200/70 rounded-xl py-2 hover:bg-gray-100 transition-colors active:scale-[0.98] cursor-pointer">
+              <button
+                type="button"
+                className="flex items-center justify-center gap-2 bg-gray-50 border border-gray-200/70 rounded-xl py-2 hover:bg-gray-100 transition-colors active:scale-[0.98] cursor-pointer"
+              >
                 <svg className="w-4 h-4" fill="#1877F2" viewBox="0 0 24 24">
                   <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
                 </svg>
@@ -182,10 +194,9 @@ const Login = () => {
             <div className="mt-5 text-center border-t border-gray-100 pt-4">
               <p className="text-xs text-gray-500">
                 Bạn chưa có tài khoản?
-                <Link to="/register">
-                  <a className="text-indigo-600 font-semibold hover:underline ml-1" href="#">
-                    Đăng ký ngay
-                  </a>
+                {/* FIX LỖI: Sửa lại thẻ Link chuẩn cấu trúc, loại bỏ thẻ a thừa lồng bên trong */}
+                <Link to="/register" className="text-indigo-600 font-semibold hover:underline ml-1">
+                  Đăng ký ngay
                 </Link>
               </p>
             </div>
@@ -209,7 +220,7 @@ const Login = () => {
       {/* Footer bản auth mỏng gọn */}
       <footer className="w-full py-4 bg-white border-t border-gray-100">
         <div className="max-w-7xl mx-auto px-6 flex flex-col sm:flex-row justify-between items-center gap-2">
-          <p className="text-[11px] text-gray-400">© 2024 LUXE RETAIL. Bảo lưu mọi quyền.</p>
+          <p className="text-[11px] text-gray-400">© 2026 EDUSYNTH AI. Bảo lưu mọi quyền.</p>
           <div className="flex gap-4">
             <span className="material-symbols-outlined text-gray-400 text-base cursor-pointer hover:text-indigo-600 transition-colors">
               language

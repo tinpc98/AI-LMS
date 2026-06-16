@@ -10,11 +10,24 @@ dotenv.config();
 const app = express();
 const port = process.env.PORT || 5000; // Linh hoạt lấy port từ .env, nếu không có sẽ dùng 5000
 
+// Lấy danh sách origin từ biến môi trường FRONTEND_ORIGINS (comma-separated).
+// Ví dụ: FRONTEND_ORIGINS=http://localhost:5173,http://localhost:5174
+const allowedOrigins = (process.env.FRONTEND_ORIGINS || 'http://localhost:5173,http://127.0.0.1:5173')
+  .split(',')
+  .map((u) => u.trim())
+  .filter(Boolean);
+
 app.use(
   cors({
-    origin: ["http://localhost:5173", "http://127.0.0.1:5173"], // Các URL của Frontend được phép gọi tới
-    methods: ["GET", "POST", "PUT", "DELETE"], // Các phương thức HTTP được chấp nhận
-    credentials: true, // Cho phép gửi cookie / token nếu sau này hệ thống cần
+    origin: (origin, cb) => {
+      // Nếu origin không cung cấp (ví dụ Postman, same-origin), cho phép
+      if (!origin) return cb(null, true);
+      if (allowedOrigins.includes(origin)) return cb(null, true);
+      return cb(new Error('Origin không được phép bởi CORS'));
+    },
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    credentials: true,
+    allowedHeaders: ["Content-Type", "Authorization"],
   }),
 );
 
