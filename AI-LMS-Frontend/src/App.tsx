@@ -10,12 +10,6 @@ import HomeLayoutStudent from "./components/HomeLayoutStudent";
 function App() {
   return (
     <>
-      {/* <Routes>
-        <Route path="/" element={<HomeLayoutTeacher />} />
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/register" element={<RegistrationPage />} />
-      </Routes> */}
-
       <Routes>
         <Route path="/" element={<HomeLayoutStudent />} />
         <Route path="/login" element={<LoginPage />} />

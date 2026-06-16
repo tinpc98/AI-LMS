@@ -1,305 +1,243 @@
-import React, { useState, useEffect } from "react";
-import { authApi } from "../api/authApi"; 
+import React from "react";
+import { useForm } from "react-hook-form";
+import { Link, useNavigate } from "react-router-dom";
+import { authApi } from "../api/authApi"; // Đảm bảo import đúng file API tập trung của em
+import type User from "../interface/userInterface";
 
-const headingStyle = {};
-const iconStyle = {};
+const Register = () => {
+  const navigate = useNavigate();
+  const {
+    register,
+    handleSubmit,
+    watch,
+    formState: { errors, isSubmitting },
+  } = useForm<User>();
 
-export default function RegistrationPage() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState(''); // Thêm state kiểm tra lại pass
-  const [fullName, setFullName] = useState('');
-  const [role, setRole] = useState('student'); // Mặc định là học sinh
-  
-  // Khai báo bổ sung các biến UI bị thiếu trong code cũ
-  const [showPassword, setShowPassword] = useState(false);
-  const [errors, setErrors] = useState<Record<string, string>>({});
-  const [serverMessage, setServerMessage] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [glowPosition, setGlowPosition] = useState({ x: 0, y: 0 });
-
-  const validateForm = () => {
-    const nextErrors: Record<string, string> = {};
-    const trimmedFullName = fullName.trim();
-    const trimmedEmail = email.trim();
-
-    if (!trimmedFullName) {
-      nextErrors.fullName = 'Họ và tên là bắt buộc.';
-    } else if (trimmedFullName.length < 3) {
-      nextErrors.fullName = 'Họ và tên tối thiểu 3 ký tự.';
+  // Hàm xử lý khi dữ liệu form hợp lệ và vượt qua lớp Validate ở FE
+  const onValid = async (data: User) => {
+    try {
+      // Sử dụng API tập trung đã cấu hình cổng 5000 thay vì fetch thủ công
+      const response = await authApi.register(data);
+      
+      // Nếu Backend trả về thành công (Thường là status 201 Created)
+      alert(response.data?.message || "Đăng ký tài khoản thành công!");
+      navigate("/login");
+    } catch (error: unknown) {
+      console.error("Lỗi đăng ký:", error);
+      // Hứng thông báo lỗi chính xác từ tầng Validate/Check trùng của Backend trả về
+      const serverMessage = (error as { response?: { data?: { message?: string } } }).response?.data?.message || "Đăng ký thất bại, vui lòng thử lại sau!";
+      alert(serverMessage);
     }
-
-    if (!trimmedEmail) {
-      nextErrors.email = 'Email là bắt buộc.';
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
-      nextErrors.email = 'Email không hợp lệ.';
-    }
-
-    if (!password) {
-      nextErrors.password = 'Mật khẩu là bắt buộc.';
-    } else if (password.length < 8) {
-      nextErrors.password = 'Mật khẩu phải có ít nhất 8 ký tự.';
-    }
-
-    if (!confirmPassword) {
-      nextErrors.confirmPassword = 'Xác nhận mật khẩu là bắt buộc.';
-    } else if (password !== confirmPassword) {
-      nextErrors.confirmPassword = 'Mật khẩu xác nhận không trùng khớp.';
-    }
-
-    return nextErrors;
   };
 
-  // Hiệu ứng chuột chạy theo hiệu ứng Glow (nếu có dùng)
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      setGlowPosition({ x: e.clientX / 20, y: e.clientY / 20 });
-    };
-    window.addEventListener("mousemove", handleMouseMove);
-    return () => window.removeEventListener("mousemove", handleMouseMove);
-  }, []);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setServerMessage(null);
-
-    const validationErrors = validateForm();
-    if (Object.keys(validationErrors).length > 0) {
-      setErrors(validationErrors);
-      return;
-    }
-
-    setErrors({});
-    setIsSubmitting(true);
-
-    try {
-      const response = await authApi.register({
-        email: email.trim(),
-        password,
-        fullName: fullName.trim(),
-        role,
-      });
-
-      setServerMessage(response.data.message || 'Đăng ký thành công!');
-    } catch (error: any) {
-      const serverError = error.response?.data?.message || 'Đăng ký thất bại, thử lại sau!';
-      setServerMessage(serverError);
-    } finally {
-      setIsSubmitting(false);
-    }
-  }; 
+  const onError = (err: unknown) => {
+    console.log("Lớp Validate FE phát hiện lỗi nhập liệu:", err);
+  };
 
   return (
-    <div
-      className="bg-surface-container-low min-h-screen flex flex-col items-center justify-center relative overflow-x-hidden p-margin-mobile md:p-margin-desktop"
-      style={{ fontFamily: "'Inter', sans-serif" }}
-    >
-      {/* AI Glow Effect */}
-      <div
-        className="absolute top-[-50%] left-[-50%] w-[200%] h-[200%] pointer-events-none z-0"
-        style={{
-          background:
-            "radial-gradient(circle, rgba(79, 70, 229, 0.05) 0%, rgba(255, 255, 255, 0) 70%)",
-          transform: `translate(${glowPosition.x}px, ${glowPosition.y}px)`,
-          transition: "transform 0.1s ease-out",
-        }}
-      />
-
-      {/* Main Registration Card */}
-      <main className="w-full max-w-md bg-surface-container-lowest border border-outline-variant rounded-lg shadow-sm p-8 md:p-10 z-10 transition-all duration-300 hover:border-primary-fixed-dim">
-        {/* Header & Logo */}
-        <div className="flex flex-col items-center mb-10 text-center">
-          <div className="w-16 h-16 mb-4 overflow-hidden rounded-xl bg-primary-container/10 flex items-center justify-center">
-            <img
-              alt="EduSynth AI Logo"
-              className="w-12 h-12 object-contain"
-              src="https://lh3.googleusercontent.com/aida/AP1WRLvagpzKtenUGkwvil3flrlIoVX_D0iCWi-3VslBm3FkRhANSzVIsUi1Cz99-VHB0rcjFN3qbRILR21PAmzAgTe7Uh4SQbnwzWJmJmNtFxaZM27JkknDwT91s80qhaUAbUGFEPZblkjmK0D-GvCscUXP2Eqt_Bz2L7w_Ww_RrgcvcEz5VGXCtnVL_OXcvU3o0kHJntd54PGRJuaxLXdnR2ejPUqBd6zU44o6yObVmaqPNFfCrz9GD_Ac3VPA"
-            />
-          </div>
-          <h2 className="text-primary font-bold text-headline-md mb-2" style={headingStyle}>
-            EduSynth AI
-          </h2>
-          <h1 className="text-on-surface font-semibold text-headline-md" style={headingStyle}>
-            Tạo tài khoản mới
-          </h1>
-        </div>
-
-        {/* Registration Form */}
-        {/* FIX LỖI 2: Thay đổi onSubmit sang hàm handleSubmit chính xác */}
-        <form className="space-y-5" onSubmit={handleSubmit}>
+    <div className="bg-gray-50 min-h-screen flex flex-col justify-between antialiased text-gray-800 font-sans">
+      {/* Main Container */}
+      <main className="flex-grow flex items-center justify-center py-10 px-4">
+        <div className="w-full max-w-md">
           
-          {/* Name */}
-          <div className="space-y-1.5">
-            <label className="block text-label-md text-on-surface-variant" htmlFor="fullname">
-              Họ và tên
-            </label>
-            {/* FIX LỖI 3: Thêm value và onChange */}
-            <input
-              className="w-full px-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-lg text-body-md focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:border-primary outline-none transition-all duration-150"
-              id="fullname"
-              name="fullname"
-              placeholder="Nguyễn Văn A"
-              type="text"
-              required
-              value={fullName}
-              onChange={(e) => {
-                setFullName(e.target.value);
-                setErrors((prev) => ({ ...prev, fullName: '' }));
-              }}
-            />
-            {errors.fullName && (
-              <p className="text-danger text-sm mt-1">{errors.fullName}</p>
-            )}
+          {/* Brand Identity / Header */}
+          <div className="text-center mb-6">
+            <h1 className="text-2xl font-bold text-indigo-600 tracking-tight">EduSynth AI</h1>
+            <h2 className="text-xl font-semibold text-gray-900 mt-1">Tạo tài khoản mới</h2>
+            <p className="text-xs text-gray-500 mt-1.5">Bắt đầu trải nghiệm môi trường học tập đẳng cấp công nghệ AI</p>
           </div>
 
-          {/* Email */}
-          <div className="space-y-1.5">
-            <label className="block text-label-md text-on-surface-variant" htmlFor="email">
-              Email
-            </label>
-            {/* FIX LỖI 3: Thêm value và onChange */}
-            <input
-              className="w-full px-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-lg text-body-md focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:border-primary outline-none transition-all duration-150"
-              id="email"
-              name="email"
-              placeholder="example@edusynth.ai"
-              type="email"
-              required
-              value={email}
-              onChange={(e) => {
-                setEmail(e.target.value);
-                setErrors((prev) => ({ ...prev, email: '' }));
-              }}
-            />
-            {errors.email && (
-              <p className="text-danger text-sm mt-1">{errors.email}</p>
-            )}
-          </div>
-
-          {/* Role Selection */}
-          <div className="space-y-1.5">
-            <label className="block text-label-md text-on-surface-variant" htmlFor="role">
-              Chức vụ
-            </label>
-            <div className="relative">
-              {/* FIX LỖI 3: Thêm value và onChange cho select */}
-              <select
-                className="w-full appearance-none px-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-lg text-body-md focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:border-primary outline-none transition-all duration-150 cursor-pointer"
-                id="role"
-                name="role"
-                value={role}
-                onChange={(e) => setRole(e.target.value)}
-              >
-                <option value="student">Học sinh</option>
-                <option value="teacher">Giáo viên</option>
-              </select>
-              <div className="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none text-on-surface-variant">
-                <span className="material-symbols-outlined text-lg" style={iconStyle}>
-                  expand_more
-                </span>
+          {/* Registration Form Card */}
+          <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+            <form className="space-y-4" onSubmit={handleSubmit(onValid, onError)}>
+              
+              {/* Name Field */}
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold text-gray-500 block uppercase tracking-wider" htmlFor="fullName">
+                  Họ và tên
+                </label>
+                <input
+                  id="fullName"
+                  type="text"
+                  placeholder="Nguyễn Văn A"
+                  className={`w-full px-4 py-2 text-sm border rounded-xl focus:outline-none focus:ring-2 transition-all bg-gray-50/50 ${
+                    errors.fullName ? "border-red-500 focus:ring-red-500/20" : "border-gray-200 focus:ring-indigo-500/20 focus:border-indigo-500"
+                  }`}
+                  {...register("fullName", { required: "Bạn chưa nhập Họ và tên" })}
+                />
+                {errors.fullName && <p className="text-red-500 text-xs mt-0.5">{errors.fullName.message}</p>}
               </div>
-            </div>
-          </div>
 
-          {/* Password */}
-          <div className="space-y-1.5">
-            <label className="block text-label-md text-on-surface-variant" htmlFor="password">
-              Mật khẩu
-            </label>
-            <div className="relative group">
-              {/* FIX LỖI 3: Thêm value và onChange */}
-              <input
-                className="w-full px-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-lg text-body-md focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:border-primary outline-none transition-all duration-150"
-                id="password"
-                name="password"
-                placeholder="••••••••"
-                type={showPassword ? 'text' : 'password'}
-                required
-                value={password}
-                onChange={(e) => {
-                  setPassword(e.target.value);
-                  setErrors((prev) => ({ ...prev, password: '' }));
-                }}
-              />
-            {errors.password && (
-              <p className="text-danger text-sm mt-1">{errors.password}</p>
-            )}
-              <button
-                className="absolute inset-y-0 right-0 flex items-center px-3 text-outline hover:text-primary transition-colors"
-                onClick={() => setShowPassword(!showPassword)}
-                type="button"
-              >
-                <span className="material-symbols-outlined text-lg" style={iconStyle}>
-                  {showPassword ? "visibility_off" : "visibility"}
-                </span>
+              {/* Email Field */}
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold text-gray-500 block uppercase tracking-wider" htmlFor="email">
+                  Email
+                </label>
+                <input
+                  id="email"
+                  type="email"
+                  placeholder="example@edusynth.ai"
+                  className={`w-full px-4 py-2 text-sm border rounded-xl focus:outline-none focus:ring-2 transition-all bg-gray-50/50 ${
+                    errors.email ? "border-red-500 focus:ring-red-500/20" : "border-gray-200 focus:ring-indigo-500/20 focus:border-indigo-500"
+                  }`}
+                  {...register("email", {
+                    required: "Bạn chưa nhập Email",
+                    pattern: {
+                      value: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
+                      message: "Email không đúng định dạng (Ví dụ: vidu@gmail.com)",
+                    },
+                  })}
+                />
+                {errors.email && <p className="text-red-500 text-xs mt-0.5">{errors.email.message}</p>}
+              </div>
+
+              {/* Phone Field */}
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold text-gray-500 block uppercase tracking-wider" htmlFor="phone">
+                  Số điện thoại
+                </label>
+                <input
+                  id="phone"
+                  type="tel"
+                  placeholder="0912345678"
+                  className={`w-full px-4 py-2 text-sm border rounded-xl focus:outline-none focus:ring-2 transition-all bg-gray-50/50 ${
+                    errors.phone ? "border-red-500 focus:ring-red-500/20" : "border-gray-200 focus:ring-indigo-500/20 focus:border-indigo-500"
+                  }`}
+                  {...register("phone", {
+                    required: "Bạn chưa nhập số điện thoại",
+                    pattern: {
+                      value: /^[0-9]{10}$/,
+                      message: "Số điện thoại phải chứa chính xác 10 chữ số",
+                    },
+                  })}
+                />
+                {errors.phone && <p className="text-red-500 text-xs mt-0.5">{errors.phone.message}</p>}
+              </div>
+
+              {/* Password Field */}
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold text-gray-500 block uppercase tracking-wider" htmlFor="password">
+                  Mật khẩu
+                </label>
+                <input
+                  id="password"
+                  type="password"
+                  placeholder="••••••••"
+                  className={`w-full px-4 py-2 text-sm border rounded-xl focus:outline-none focus:ring-2 transition-all bg-gray-50/50 ${
+                    errors.password ? "border-red-500 focus:ring-red-500/20" : "border-gray-200 focus:ring-indigo-500/20 focus:border-indigo-500"
+                  }`}
+                  {...register("password", {
+                    required: "Bạn chưa nhập mật khẩu",
+                    minLength: {
+                      value: 6,
+                      message: "Mật khẩu phải nhập tối thiểu 6 ký tự",
+                    },
+                  })}
+                />
+                {errors.password && <p className="text-red-500 text-xs mt-0.5">{errors.password.message}</p>}
+              </div>
+
+              {/* Confirm Password Field */}
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold text-gray-500 block uppercase tracking-wider" htmlFor="confirmPassword">
+                  Xác nhận mật khẩu
+                </label>
+                <input
+                  id="confirmPassword"
+                  type="password"
+                  placeholder="••••••••"
+                  className={`w-full px-4 py-2 text-sm border rounded-xl focus:outline-none focus:ring-2 transition-all bg-gray-50/50 ${
+                    errors.confirmPassword ? "border-red-500 focus:ring-red-500/20" : "border-gray-200 focus:ring-indigo-500/20 focus:border-indigo-500"
+                  }`}
+                  {...register("confirmPassword", {
+                    required: "Bạn chưa xác nhận mật khẩu",
+                    validate: (value) => value === watch("password") || "Mật khẩu xác nhận không trùng khớp",
+                  })}
+                />
+                {errors.confirmPassword && <p className="text-red-500 text-xs mt-0.5">{errors.confirmPassword.message}</p>}
+              </div>
+
+              {/* Terms & Conditions */}
+              <div className="flex items-start pt-1">
+                <div className="flex items-center h-4">
+                  <input
+                    id="terms"
+                    type="checkbox"
+                    required
+                    className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500/20 cursor-pointer"
+                  />
+                </div>
+                <div className="ml-2">
+                  <label className="text-xs text-gray-500 leading-tight block cursor-pointer" htmlFor="terms">
+                    Tôi đồng ý với các{" "}
+                    <a className="text-indigo-600 font-semibold hover:underline" href="#terms-link">
+                      Điều khoản dịch vụ
+                    </a>{" "}
+                    và{" "}
+                    <a className="text-indigo-600 font-semibold hover:underline" href="#privacy-link">
+                      Chính sách bảo mật
+                    </a>.
+                  </label>
+                </div>
+              </div>
+
+              {/* Submit Button */}
+              <div className="pt-2">
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="w-full bg-indigo-600 text-white py-2.5 px-4 rounded-xl text-sm font-semibold shadow-sm hover:bg-indigo-700 active:scale-[0.99] transition-all disabled:bg-indigo-400 disabled:scale-100 disabled:cursor-not-allowed cursor-pointer"
+                >
+                  {isSubmitting ? "Đang xử lý..." : "Đăng ký ngay"}
+                </button>
+              </div>
+            </form>
+
+            {/* Social Registration */}
+            <div className="mt-4 grid grid-cols-2 gap-3">
+              <button type="button" className="flex items-center justify-center gap-2 bg-gray-50 border border-gray-200/70 rounded-xl py-2 hover:bg-gray-100 transition-colors active:scale-[0.98] cursor-pointer">
+                <svg className="w-4 h-4" viewBox="0 0 24 24">
+                  <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
+                  <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
+                  <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05" />
+                  <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
+                </svg>
+                <span className="text-xs font-medium text-gray-700">Google</span>
+              </button>
+              <button type="button" className="flex items-center justify-center gap-2 bg-gray-50 border border-gray-200/70 rounded-xl py-2 hover:bg-gray-100 transition-colors active:scale-[0.98] cursor-pointer">
+                <svg className="w-4 h-4" fill="#1877F2" viewBox="0 0 24 24">
+                  <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+                </svg>
+                <span className="text-xs font-medium text-gray-700">Facebook</span>
               </button>
             </div>
-          </div>
 
-          {/* Confirm Password */}
-          <div className="space-y-1.5">
-            <label className="block text-label-md text-on-surface-variant" htmlFor="confirm-password">
-              Xác nhận mật khẩu
-            </label>
-            {/* FIX LỖI 3: Thêm value và onChange */}
-            <input
-              className="w-full px-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-lg text-body-md focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:border-primary outline-none transition-all duration-150"
-              id="confirm-password"
-              name="confirm-password"
-              placeholder="••••••••"
-              type="password"
-              required
-              value={confirmPassword}
-              onChange={(e) => {
-                setConfirmPassword(e.target.value);
-                setErrors((prev) => ({ ...prev, confirmPassword: '' }));
-              }}
-            />
-            {errors.confirmPassword && (
-              <p className="text-danger text-sm mt-1">{errors.confirmPassword}</p>
-            )}
-          </div>
-
-          {/* Submit Action */}
-          {serverMessage && (
-            <div className="rounded-md bg-surface-container-high p-3 text-body-sm text-on-surface-variant">
-              {serverMessage}
+            {/* Navigation to Login */}
+            <div className="mt-5 text-center border-t border-gray-100 pt-4">
+              <p className="text-xs text-gray-500">
+                Đã có tài khoản?
+                <Link to="/login" className="text-indigo-600 font-semibold hover:underline ml-1">
+                  Đăng nhập ngay
+                </Link>
+              </p>
             </div>
-          )}
-          <div className="pt-4">
-            <button
-              className="w-full py-4 bg-primary text-on-primary font-semibold rounded-lg shadow-sm hover:bg-primary/90 active:scale-[0.98] transition-all duration-200 flex items-center justify-center gap-2 group"
-              type="submit"
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? 'Đang xử lý...' : 'Đăng ký'}
-              <span className="material-symbols-outlined text-lg group-hover:translate-x-1 transition-transform" style={iconStyle}>
-                arrow_forward
-              </span>
-            </button>
           </div>
-        </form>
 
-        {/* Footer Link */}
-        <div className="mt-8 pt-6 border-t border-outline-variant text-center">
-          <p className="text-body-sm text-on-surface-variant">
-            Đã có tài khoản?
-            <a className="text-primary font-semibold hover:underline decoration-2 underline-offset-4 ml-1 transition-all" href="#">
-              Đăng nhập
-            </a>
-          </p>
+          {/* Micro-interactions Indicators */}
+          <div className="mt-5 grid grid-cols-3 gap-2 opacity-30 px-4">
+            <div className="h-0.5 bg-indigo-600 rounded-full" />
+            <div className="h-0.5 bg-gray-200 rounded-full" />
+            <div className="h-0.5 bg-gray-200 rounded-full" />
+          </div>
         </div>
       </main>
 
-      {/* Page Decoration */}
-      <div className="mt-12 text-center opacity-50 z-10 hidden md:block">
-        <p className="text-on-surface-variant text-xs flex items-center justify-center gap-2">
-          <span className="material-symbols-outlined text-sm" style={iconStyle}>
-            verified_user
-          </span>
-          Môi trường học tập bảo mật bởi trí tuệ nhân tạo
-        </p>
-      </div>
+      {/* Footer nhỏ gọn */}
+      <footer className="py-4 text-center text-[11px] text-gray-400 border-t border-gray-100/50">
+        © 2026 EDUSYNTH AI. Bảo lưu mọi quyền.
+      </footer>
     </div>
   );
-}
+};
+
+export default Register;

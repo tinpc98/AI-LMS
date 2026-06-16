@@ -1,303 +1,227 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect } from "react";
+import { useForm } from "react-hook-form";
+import { Link, useNavigate } from "react-router-dom";
+import type User from "../interface/userInterface.tsx";
 
-export default function LoginPage() {
-  const [showPassword, setShowPassword] = useState<boolean>(false);
-  const [submitting, setSubmitting] = useState<boolean>(false);
-  const [submissionResult, setSubmissionResult] = useState<string | null>(null);
-  const [progressWidth, setProgressWidth] = useState<number>(75);
+const Login = () => {
+  const navigate = useNavigate();
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<User>();
 
-  // Hiệu ứng thanh tiến trình AI ngẫu nhiên
   useEffect(() => {
-    const interval = setInterval(() => {
-      const randomWidth = Math.floor(Math.random() * (95 - 65 + 1) + 65);
-      setProgressWidth(randomWidth);
-    }, 3000);
-    return () => clearInterval(interval);
+    const token = localStorage.getItem("accessToken");
+    if (token) {
+      navigate("/");
+    }
   }, []);
 
-  const togglePasswordVisibility = () => {
-    setShowPassword(!showPassword);
+  const onValid = async (data: User) => {
+    try {
+      const res = await fetch(`http://localhost:3000/signin`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
+      const result = await res.json();
+      if (!res.ok) {
+        throw new Error(result.mesage || "Đăng nhập thất bại");
+      }
+
+      localStorage.setItem("accessToken", result.accessToken);
+      alert("Đăng nhập thành công");
+      navigate("/");
+    } catch (error) {
+      console.log(error);
+      alert("Có lỗi xảy ra");
+    }
   };
-
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    setSubmitting(true);
-    setSubmissionResult(null);
-
-    // Mô phỏng gọi API
-    setTimeout(() => {
-      setSubmissionResult("success");
-      setTimeout(() => {
-        setSubmitting(false);
-        setSubmissionResult(null);
-      }, 1500);
-    }, 1000);
-  };
-
-  const iconStyle = {
-    fontVariationSettings: "'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24",
+  const onError = (err: unknown) => {
+    console.log(err);
   };
 
   return (
-    <div className="bg-surface text-on-surface min-h-screen flex items-center justify-center p-4 md:p-8">
-      <main className="w-full max-w-[1100px] min-h-[640px] bg-surface-container-lowest rounded-xl overflow-hidden flex flex-col md:flex-row custom-shadow border border-outline-variant transition-all duration-300">
-        {/* Left Side: Decorative Panel (Desktop Only) */}
-        <section className="hidden md:flex md:w-1/2 relative bg-primary-fixed overflow-hidden flex-col justify-between p-12">
-          {/* Background Decorative Elements */}
-          <div className="absolute top-0 right-0 w-full h-full opacity-20 pointer-events-none">
-            <div className="absolute top-[-10%] right-[-10%] w-[80%] h-[80%] bg-primary rounded-full blur-[120px]"></div>
-            <div className="absolute bottom-[-10%] left-[-10%] w-[60%] h-[60%] bg-secondary-fixed rounded-full blur-[100px]"></div>
-          </div>
+    <div className="bg-gray-50 min-h-screen flex flex-col justify-between antialiased text-gray-800 relative overflow-hidden">
+      {/* Các khối màu gradient trang trí chìm phía sau nền */}
+      <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[40%] bg-indigo-200/40 opacity-50 blur-[120px] rounded-full pointer-events-none" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[40%] bg-purple-200/30 opacity-50 blur-[120px] rounded-full pointer-events-none" />
 
-          <div className="relative z-10">
-            <div className="flex items-center gap-3 mb-8">
-              <img
-                alt="EduSynth AI Logo"
-                className="w-10 h-10 object-contain"
-                src="https://lh3.googleusercontent.com/aida/AP1WRLvagpzKtenUGkwvil3flrlIoVX_D0iCWi-3VslBm3FkRhANSzVIsUi1Cz99-VHB0rcjFN3qbRILR21PAmzAgTe7Uh4SQbnwzWJmJmNtFxaZM27JkknDwT91s80qhaUAbUGFEPZblkjmK0D-GvCscUXP2Eqt_Bz2L7w_Ww_RrgcvcEz5VGXCtnVL_OXcvU3o0kHJntd54PGRJuaxLXdnR2ejPUqBd6zU44o6yObVmaqPNFfCrz9GD_Ac3VPA"
-              />
-              <span className="font-headline-md text-headline-md font-bold text-primary">
-                EduSynth AI
-              </span>
-            </div>
-            <h1 className="font-display-lg text-display-lg text-primary leading-tight mb-6">
-              Khai phá <br /> tri thức cùng AI.
-            </h1>
-            <p className="font-body-lg text-body-lg text-on-surface-variant max-w-sm">
-              Trải nghiệm hệ thống quản lý học tập thế hệ mới, tối ưu hóa lộ
-              trình cá nhân bằng trí tuệ nhân tạo.
-            </p>
-          </div>
+      <style
+        dangerouslySetInnerHTML={{
+          __html:
+            "\n .material-symbols-outlined {\n font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20;\n }\n ",
+        }}
+      />
 
-          <div className="relative z-10">
-            <div className="p-6 glass-panel rounded-xl border border-white/40 custom-shadow">
-              <div className="flex items-center gap-4 mb-4">
-                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                  <span
-                    className="material-symbols-outlined text-primary"
-                    style={iconStyle}
-                  >
-                    auto_awesome
-                  </span>
-                </div>
-                <div className="font-label-md text-label-md text-on-surface">
-                  AI Trợ lý học tập
-                </div>
-              </div>
-              <div className="h-2 w-full bg-surface-container rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-primary rounded-full transition-all duration-1000 ease-in-out"
-                  style={{ width: `${progressWidth}%` }}
-                ></div>
-              </div>
-              <div className="mt-2 text-right font-body-sm text-body-sm text-on-surface-variant italic">
-                Đang phân tích lộ trình học tập...
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Right Side: Login Form */}
-        <section className="w-full md:w-1/2 p-8 md:p-16 flex flex-col justify-center">
-          {/* Mobile Logo */}
-          <div className="md:hidden flex items-center justify-center gap-3 mb-8">
-            <img
-              alt="EduSynth AI Logo"
-              className="w-12 h-12"
-              src="https://lh3.googleusercontent.com/aida/AP1WRLvagpzKtenUGkwvil3flrlIoVX_D0iCWi-3VslBm3FkRhANSzVIsUi1Cz99-VHB0rcjFN3qbRILR21PAmzAgTe7Uh4SQbnwzWJmJmNtFxaZM27JkknDwT91s80qhaUAbUGFEPZblkjmK0D-GvCscUXP2Eqt_Bz2L7w_Ww_RrgcvcEz5VGXCtnVL_OXcvU3o0kHJntd54PGRJuaxLXdnR2ejPUqBd6zU44o6yObVmaqPNFfCrz9GD_Ac3VPA"
-            />
-            <span className="font-headline-md text-headline-md font-bold text-primary">
-              EduSynth AI
-            </span>
-          </div>
-
-          <div className="max-w-md mx-auto w-full">
-            <div className="mb-10">
-              <h2 className="font-headline-lg text-headline-lg text-on-surface mb-2">
-                Chào mừng trở lại
-              </h2>
-              <p className="font-body-md text-body-md text-on-surface-variant">
-                Vui lòng đăng nhập để tiếp tục việc học của bạn.
-              </p>
+      {/* Main Content Form */}
+      <main className="flex-grow flex items-center justify-center px-4 py-10 z-10">
+        <div className="w-full max-w-[400px]">
+          {/* Form Card (Sử dụng hiệu ứng kính mờ của Tailwind) */}
+          <div className="bg-white/80 backdrop-blur-md p-6 rounded-2xl shadow-sm border border-gray-100">
+            {/* Header Form */}
+            <div className="text-center mb-6">
+              <h1 className="text-xl font-bold text-gray-900 tracking-tight">Chào mừng trở lại</h1>
+              <p className="text-xs text-gray-500 mt-1">Vui lòng đăng nhập vào tài khoản của bạn</p>
             </div>
 
-            <form className="space-y-6" onSubmit={handleLogin}>
+            <form className="space-y-4" onSubmit={handleSubmit(onValid, onError)}>
               {/* Email Field */}
-              <div className="space-y-2">
+              <div className="space-y-1">
                 <label
-                  className="font-label-md text-label-md text-on-surface-variant block"
+                  className="text-[10px] font-bold text-gray-500 block uppercase tracking-wider px-0.5"
                   htmlFor="email"
                 >
-                  Địa chỉ Email
+                  Email
                 </label>
-                <div className="relative group">
-                  <span
-                    className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline group-focus-within:text-primary transition-colors"
-                    style={iconStyle}
-                  >
-                    mail
-                  </span>
+                <div className="relative">
+                  {/* <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-lg">mail</span> */}
                   <input
-                    className="w-full pl-10 pr-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all font-body-md text-body-md"
+                    className="w-full bg-gray-50/50 border border-gray-200 rounded-xl py-2 pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all outline-none"
                     id="email"
-                    placeholder="name@company.com"
-                    required
                     type="email"
+                    {...register("email", {
+                      required: "Bạn chưa nhập Email",
+                      minLength: {
+                        value: 6,
+                        message: "Nhập tối thiểu 6 ký tự",
+                      },
+                      pattern: {
+                        value: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
+                        message: "Email không đúng định dạng (Ví dụ: ví_dụ@gmail.com)",
+                      },
+                    })}
                   />
+                  {errors.email && <p className="text-red-500 text-sm">{errors.email.message}</p>}
                 </div>
               </div>
-
               {/* Password Field */}
-              <div className="space-y-2">
-                <label
-                  className="font-label-md text-label-md text-on-surface-variant block"
-                  htmlFor="password"
-                >
-                  Mật khẩu
-                </label>
-                <div className="relative group">
-                  <span
-                    className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline group-focus-within:text-primary transition-colors"
-                    style={iconStyle}
-                  >
-                    lock
-                  </span>
-                  <input
-                    className="w-full pl-10 pr-12 py-3 bg-surface-container-lowest border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all font-body-md text-body-md"
-                    id="password"
-                    placeholder="••••••••"
-                    required
-                    type={showPassword ? "text" : "password"}
-                  />
-                  <button
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-outline hover:text-on-surface transition-colors p-1"
-                    onClick={togglePasswordVisibility}
-                    type="button"
-                  >
-                    <span
-                      className="material-symbols-outlined"
-                      style={iconStyle}
-                    >
-                      {showPassword ? "visibility_off" : "visibility"}
-                    </span>
-                  </button>
+              <div className="space-y-1">
+                <div className="flex justify-between items-center px-0.5">
+                  <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider" htmlFor="password">
+                    Mật khẩu
+                  </label>
+                  <a className="text-[11px] font-medium text-indigo-600 hover:underline" href="#">
+                    Quên mật khẩu?
+                  </a>
                 </div>
-              </div>
-
-              {/* Options Row */}
-              <div className="flex items-center justify-between">
-                <label className="flex items-center gap-2 cursor-pointer group">
-                  <div className="relative flex items-center justify-center">
-                    <input
-                      className="peer appearance-none w-5 h-5 border border-outline-variant rounded focus:ring-2 focus:ring-primary/20 checked:bg-primary checked:border-primary transition-all cursor-pointer"
-                      type="checkbox"
-                    />
-                    <span
-                      className="material-symbols-outlined absolute text-white text-[16px] hidden peer-checked:block pointer-events-none"
-                      style={iconStyle}
-                    >
-                      check
-                    </span>
-                  </div>
-                  <span className="font-body-sm text-body-sm text-on-surface-variant group-hover:text-on-surface transition-colors">
-                    Ghi nhớ đăng nhập
-                  </span>
-                </label>
-                <a
-                  className="font-label-md text-label-md text-primary hover:underline transition-all"
-                  href="#"
-                >
-                  Quên mật khẩu?
-                </a>
+                <div className="relative">
+                  {/* <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-lg">lock</span> */}
+                  <input
+                    className="w-full bg-gray-50/50 border border-gray-200 rounded-xl py-2 pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all outline-none"
+                    id="password"
+                    type="password"
+                  {...register("password", {
+                      required: "Bạn chưa nhập mật khẩu",
+                      minLength: {
+                        value: 6,
+                        message: "Nhập tối thiểu 6 ký tự",
+                      },
+                    })}
+                  />
+                  {errors.password && <p className="text-red-500 text-sm">{errors.password.message}</p>}
+                </div>
               </div>
 
               {/* Submit Button */}
-              <button
-                className={`w-full py-3 px-6 rounded-lg font-label-md text-label-md text-white shadow-lg shadow-primary/20 transition-all active:scale-[0.98] flex items-center justify-center gap-2
-                                    ${submissionResult === "success" ? "bg-[#34A853] hover:bg-[#34A853]/90" : "bg-primary hover:bg-primary-container"}
-                                `}
-                type="submit"
-                disabled={submitting}
-              >
-                {submitting ? (
-                  <>
-                    <span
-                      className="material-symbols-outlined animate-spin text-[20px]"
-                      style={iconStyle}
-                    >
-                      sync
-                    </span>
-                    Đang kết nối...
-                  </>
-                ) : submissionResult === "success" ? (
-                  "Thành công!"
-                ) : (
-                  <>
-                    Đăng nhập
-                    <span
-                      className="material-symbols-outlined text-[20px]"
-                      style={iconStyle}
-                    >
-                      login
-                    </span>
-                  </>
-                )}
-              </button>
+              <div className="pt-2">
+                <button
+                  className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm py-2.5 rounded-xl shadow-sm active:scale-[0.99] transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                  type="submit"
+                >
+                  Đăng nhập
+                  <span className="material-symbols-outlined text-base"></span>
+                </button>
+              </div>
             </form>
 
-            {/* Divider */}
-            <div className="relative my-8">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-outline-variant"></div>
-              </div>
-              <div className="relative flex justify-center text-body-sm">
-                <span className="px-4 bg-surface-container-lowest text-on-surface-variant uppercase tracking-wider">
-                  Hoặc đăng nhập bằng
-                </span>
-              </div>
+            {/* Thanh chia đường kẻ Hoặc */}
+            <div className="flex items-center my-5">
+              <div className="flex-grow border-t border-gray-100" />
+              <span className="px-3 text-[10px] text-gray-400 font-medium uppercase tracking-widest">
+                Hoặc tiếp tục với
+              </span>
+              <div className="flex-grow border-t border-gray-100" />
             </div>
 
-            {/* Social Login */}
-            <button
-              className="w-full flex items-center justify-center gap-3 py-3 px-6 border border-outline-variant rounded-lg font-label-md text-label-md text-on-surface hover:bg-surface-container-low transition-all active:scale-[0.98]"
-              type="button"
-            >
-              <svg className="w-5 h-5" viewBox="0 0 24 24">
-                <path
-                  d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                  fill="#4285F4"
-                ></path>
-                <path
-                  d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                  fill="#34A853"
-                ></path>
-                <path
-                  d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"
-                  fill="#FBBC05"
-                ></path>
-                <path
-                  d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                  fill="#EA4335"
-                ></path>
-              </svg>
-              Google
-            </button>
+            {/* Nút đăng nhập bên thứ 3 (Google & Facebook làm nhỏ gọn lại) */}
+            <div className="grid grid-cols-2 gap-3">
+              <button className="flex items-center justify-center gap-2 bg-gray-50 border border-gray-200/70 rounded-xl py-2 hover:bg-gray-100 transition-colors active:scale-[0.98] cursor-pointer">
+                <svg className="w-4 h-4" viewBox="0 0 24 24">
+                  <path
+                    d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                    fill="#4285F4"
+                  />
+                  <path
+                    d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                    fill="#34A853"
+                  />
+                  <path
+                    d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"
+                    fill="#FBBC05"
+                  />
+                  <path
+                    d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                    fill="#EA4335"
+                  />
+                </svg>
+                <span className="text-xs font-medium text-gray-700">Google</span>
+              </button>
+              <button className="flex items-center justify-center gap-2 bg-gray-50 border border-gray-200/70 rounded-xl py-2 hover:bg-gray-100 transition-colors active:scale-[0.98] cursor-pointer">
+                <svg className="w-4 h-4" fill="#1877F2" viewBox="0 0 24 24">
+                  <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+                </svg>
+                <span className="text-xs font-medium text-gray-700">Facebook</span>
+              </button>
+            </div>
 
-            {/* Footer Link */}
-            <div className="mt-10 text-center">
-              <p className="font-body-md text-body-md text-on-surface-variant">
-                Chưa có tài khoản?
-                <a
-                  className="text-primary font-bold hover:underline ml-1"
-                  href="#"
-                >
-                  Đăng ký ngay
-                </a>
+            {/* Điều hướng chuyển sang Đăng ký */}
+            <div className="mt-5 text-center border-t border-gray-100 pt-4">
+              <p className="text-xs text-gray-500">
+                Bạn chưa có tài khoản?
+                <Link to="/register">
+                  <a className="text-indigo-600 font-semibold hover:underline ml-1" href="#">
+                    Đăng ký ngay
+                  </a>
+                </Link>
               </p>
             </div>
           </div>
-        </section>
+
+          {/* Các link phụ dưới form */}
+          <div className="mt-5 flex justify-center gap-6">
+            <a className="text-[11px] text-gray-400 hover:text-gray-600 transition-colors" href="#">
+              Điều khoản
+            </a>
+            <a className="text-[11px] text-gray-400 hover:text-gray-600 transition-colors" href="#">
+              Chính sách
+            </a>
+            <a className="text-[11px] text-gray-400 hover:text-gray-600 transition-colors" href="#">
+              Hỗ trợ
+            </a>
+          </div>
+        </div>
       </main>
+
+      {/* Footer bản auth mỏng gọn */}
+      <footer className="w-full py-4 bg-white border-t border-gray-100">
+        <div className="max-w-7xl mx-auto px-6 flex flex-col sm:flex-row justify-between items-center gap-2">
+          <p className="text-[11px] text-gray-400">© 2024 LUXE RETAIL. Bảo lưu mọi quyền.</p>
+          <div className="flex gap-4">
+            <span className="material-symbols-outlined text-gray-400 text-base cursor-pointer hover:text-indigo-600 transition-colors">
+              language
+            </span>
+            <span className="material-symbols-outlined text-gray-400 text-base cursor-pointer hover:text-indigo-600 transition-colors">
+              dark_mode
+            </span>
+          </div>
+        </div>
+      </footer>
     </div>
   );
-}
+};
+
+export default Login;
