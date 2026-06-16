@@ -2,10 +2,10 @@ import { useState } from "react";
 import { Route, Routes } from "react-router-dom";
 
 import "./App.css";
-import HomeLayoutTeacher from "./component/HomeLayoutTeacher";
+import HomeLayoutTeacher from "./components/HomeLayoutTeacher";
 import RegistrationPage from "./pages/RegistrationPage";
 import LoginPage from "./pages/LoginPage";
-import HomeLayoutStudent from "./component/HomeLayoutStudent";
+import HomeLayoutStudent from "./components/HomeLayoutStudent";
 
 function App() {
   return (
