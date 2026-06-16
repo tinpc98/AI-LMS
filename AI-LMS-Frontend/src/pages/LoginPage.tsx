@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { Link, useNavigate } from "react-router-dom";
 import type User from "../interface/userInterface.tsx";
@@ -8,22 +8,31 @@ import axios from "axios";
 
 const Login = () => {
   const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(false); // Nâng cấp UX: Trạng thái chờ API
+
   const {
     register,
     handleSubmit,
     formState: { errors },
   } = useForm<User>();
 
+  // Nâng cấp: Tự động điều hướng thông minh dựa trên cả token lẫn role cũ
   useEffect(() => {
     const token = localStorage.getItem("accessToken");
-    if (token) {
-      navigate("/"); // Nếu đã đăng nhập thì đá về trang chủ luôn
+    const savedRole = localStorage.getItem("userRole"); // Lấy thêm role đã lưu
+    if (token && savedRole) {
+      if (savedRole === "student") navigate("/");
+      else if (savedRole === "teacher") navigate("/teacher");
+      else if (savedRole === "admin") navigate("/admin");
+      else navigate("/");
     }
   }, [navigate]);
 
   // Hàm xử lý khi Form hợp lệ
   const onValid = async (data: User) => {
     try {
+      setIsLoading(true); // Bật trạng thái loading khi bắt đầu bắn API
+
       // Gọi qua authApi tập trung bằng Axios
       const res = await authApi.login({
         email: data.email,
@@ -32,17 +41,43 @@ const Login = () => {
 
       const result = res.data;
 
+      // Lưu Token thông hành
       localStorage.setItem("accessToken", result.accessToken);
 
+      const loggedInUser = result.data;
+      const role = loggedInUser?.role;
+
+      if (role) {
+        localStorage.setItem("userRole", role);
+      }
+
       alert(result.message || "Đăng nhập thành công rực rỡ!");
-      navigate("/");
+
+      // Phân quyền điều hướng (Authorization)
+      switch (role) {
+        case "student":
+          navigate("/");
+          break;
+        case "teacher":
+          navigate("/teacher");
+          break;
+        case "admin":
+          navigate("/admin");
+          break;
+        default:
+          navigate("/");
+          break;
+      }
     } catch (error: unknown) {
       if (axios.isAxiosError(error)) {
         console.log("Lỗi đăng nhập:", error);
-        // Thông báo lỗi từ tầng Validation/Authentication của Backend đẩy về
         const serverMessage = error.response?.data?.message || "Email hoặc mật khẩu không chính xác!";
         alert(serverMessage);
+      } else {
+        alert("Đã xảy ra lỗi hệ thống không xác định.");
       }
+    } finally {
+      setIsLoading(false); // Tắt trạng thái loading dù thành công hay thất bại
     }
   };
 
@@ -138,6 +173,7 @@ const Login = () => {
                 <button
                   className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm py-2.5 rounded-xl shadow-sm active:scale-[0.99] transition-all flex items-center justify-center gap-1.5 cursor-pointer"
                   type="submit"
+                  disabled={isLoading} // Vô hiệu hóa nút khi đang loading
                 >
                   Đăng nhập
                 </button>

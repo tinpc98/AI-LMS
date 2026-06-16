@@ -31,9 +31,9 @@ const renderSafeMarkdown = (text: string) => {
 };
 
 export default function HomePageStudent() {
-  // ==========================================================================
+  // Phân quyền (Authorization)
+  
   // STATE MANAGEMENT
-  // ==========================================================================
   const [todos, setTodos] = useState<Todo[]>([
     {
       id: "t1",

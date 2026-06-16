@@ -5,4 +5,5 @@ export default interface User{
     email: string,
     password: string,
     confirmPassword: string,
+    role: "student" | "teacher" | "admin";
 }
