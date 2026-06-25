@@ -1,0 +1,22 @@
+ai-lms-project/
+├── client/
+│ ├── public/ # Chứa file tĩnh (index.html, favicon, images)
+│ ├── src/
+│ │ ├── assets/ # CSS toàn cục (Tailwind), hình ảnh, icons
+│ │ ├── components/ # Các UI Components dùng chung
+│ │ │ ├── common/ # Button, Input, Modal, Table...
+│ │ │ ├── layout/ # Sidebar, Header, Navbar...
+│ │ │ └── exam/ # Component riêng cho thi (CountdownTimer, CameraTracker)
+│ │ ├── pages/ # Các trang giao diện chính
+│ │ │ ├── admin/ # Trang quản trị của Admin
+│ │ │ ├── teacher/ # Teacher Dashboard, Class Management...
+│ │ │ ├── student/ # Student Dashboard, Exam Room, Learning Space...
+│ │ │ └── auth/ # Login, Register, Forgot Password
+│ │ ├── store/ # Redux Store quản lý state (user, examState)
+│ │ ├── api/ # Nơi gọi API (axios configs, api endpoints)
+│ │ ├── hooks/ # Custom hooks (useAuth, useAntiCheat, useSocket)
+│ │ ├── utils/ # Các hàm tiện ích (formatDate, calculateScore)
+│ │ ├── App.tsx # Component gốc, chứa React Router
+│ │ └── main.tsx # File entry point
+│ ├── package.json
+│ └── tailwind.config.js
