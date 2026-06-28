@@ -109,17 +109,14 @@ export default function HomePageStudent() {
   // ==========================================================================
   // TOAST HANDLER
   // ==========================================================================
-  const triggerToast = useCallback(
-    (message: string, type: "success" | "info" | "error" = "success") => {
-      if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+  const triggerToast = useCallback((message: string, type: "success" | "info" | "error" = "success") => {
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
 
-      setToast({ message, type });
-      toastTimerRef.current = setTimeout(() => {
-        setToast(null);
-      }, 3000);
-    },
-    [],
-  );
+    setToast({ message, type });
+    toastTimerRef.current = setTimeout(() => {
+      setToast(null);
+    }, 3000);
+  }, []);
 
   // ==========================================================================
   // HANDLERS (useCallback Optimized)
@@ -130,12 +127,7 @@ export default function HomePageStudent() {
         prev.map((t) => {
           if (t.id === id) {
             const nextCompleted = !t.completed;
-            triggerToast(
-              nextCompleted
-                ? `Đã hoàn thành: ${t.title}! 🎉`
-                : `Đã mở lại: ${t.title}`,
-              "success",
-            );
+            triggerToast(nextCompleted ? `Đã hoàn thành: ${t.title}! 🎉` : `Đã mở lại: ${t.title}`, "success");
             return { ...t, completed: nextCompleted };
           }
           return t;
@@ -201,31 +193,22 @@ export default function HomePageStudent() {
       if (!text.trim()) return;
 
       const userMsgId = "user-" + Date.now();
-      setChatHistory((prev) => [
-        ...prev,
-        { id: userMsgId, sender: "user", text },
-      ]);
+      setChatHistory((prev) => [...prev, { id: userMsgId, sender: "user", text }]);
       setAiTyping(true);
 
       if (aiTimerRef.current) clearTimeout(aiTimerRef.current);
 
       aiTimerRef.current = setTimeout(() => {
         setAiTyping(false);
-        let response =
-          "Mình đã lưu lại câu hỏi. Mình đề xuất bạn xem thêm bài giảng và tài liệu PDF tương ứng.";
+        let response = "Mình đã lưu lại câu hỏi. Mình đề xuất bạn xem thêm bài giảng và tài liệu PDF tương ứng.";
 
         const query = text.toLowerCase();
         if (query.includes("chao") || query.includes("hello")) {
-          response =
-            "Chào Minh Anh! Mình có thể giúp gì cho mục tiêu học tập tuần này của bạn?";
+          response = "Chào Minh Anh! Mình có thể giúp gì cho mục tiêu học tập tuần này của bạn?";
         } else if (query.includes("linux") || query.includes("hệ điều hành")) {
           response =
             "Đối với **Linux**, các câu lệnh cần ghi nhớ bao gồm `ls` (liệt kê file), `cd` (di chuyển), và `grep` (tìm kiếm). Bạn có muốn mình soạn bài tập trắc nghiệm ngắn về Linux không?";
-        } else if (
-          query.includes("db") ||
-          query.includes("database") ||
-          query.includes("csdl")
-        ) {
+        } else if (query.includes("db") || query.includes("database") || query.includes("csdl")) {
           response =
             "Về chuẩn hóa **Database Design**, hãy ghi nhớ 3 mức chuẩn:\n1. **1NF:** Giá trị nguyên tố.\n2. **2NF:** Không có phụ thuộc bộ phận vào khóa chính.\n3. **3NF:** Không có phụ thuộc bắc cầu vào khóa chính.";
         } else if (query.includes("gpa") || query.includes("điểm")) {
@@ -234,10 +217,7 @@ export default function HomePageStudent() {
         }
 
         const aiMsgId = "ai-" + Date.now();
-        setChatHistory((prev) => [
-          ...prev,
-          { id: aiMsgId, sender: "ai", text: response },
-        ]);
+        setChatHistory((prev) => [...prev, { id: aiMsgId, sender: "ai", text: response }]);
         triggerToast("Trợ lý AI vừa phản hồi!", "info");
       }, 1500);
     },
@@ -247,34 +227,27 @@ export default function HomePageStudent() {
   // Dynamic values
   const totalTodos = todos.length;
   const completedTodos = todos.filter((t) => t.completed).length;
-  const todoProgress =
-    totalTodos > 0 ? Math.round((completedTodos / totalTodos) * 100) : 0;
+  const todoProgress = totalTodos > 0 ? Math.round((completedTodos / totalTodos) * 100) : 0;
   const gpaData = [7.2, 7.8, 8.0, 8.5, 8.2, 8.4];
-  const activeGpaIndex =
-    hoveredGpaIndex !== null ? hoveredGpaIndex : gpaData.length - 1;
+  const activeGpaIndex = hoveredGpaIndex !== null ? hoveredGpaIndex : gpaData.length - 1;
   const activeGpa = gpaData[activeGpaIndex];
 
   return (
     <div className={`lms-theme-wrapper ${isDarkTheme ? "dark" : ""}`}>
       <div className="lms-app">
         {/* SIDEBAR */}
-        <aside className="lms-sidebar">
+        {/* <aside className="lms-sidebar">
           <div className="lms-logo-container">
             <div className="lms-logo-icon">
-              <span className="material-symbols-outlined icon-filled">
-                school
-              </span>
+              <span className="material-symbols-outlined icon-filled">school</span>
             </div>
             <span className="lms-logo-text">Scholar LMS</span>
           </div>
           <nav className="lms-nav-menu">
-            {/* FIX: Thêm cặp thẻ ul bọc ngoài các thẻ li để tránh lỗi Semantic HTML */}
             <ul>
               <li className="lms-nav-item active">
                 <a href="#dashboard">
-                  <span className="material-symbols-outlined icon-filled">
-                    dashboard
-                  </span>
+                  <span className="material-symbols-outlined icon-filled">dashboard</span>
                   <span>Trang chủ</span>
                 </a>
               </li>
@@ -311,7 +284,7 @@ export default function HomePageStudent() {
               </div>
             </div>
           </div>
-        </aside>
+        </aside> */}
 
         {/* MAIN LAYOUT */}
         <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
@@ -323,17 +296,12 @@ export default function HomePageStudent() {
               <button
                 onClick={() => {
                   setIsDarkTheme(!isDarkTheme);
-                  triggerToast(
-                    `Đã đổi sang chế độ giao diện ${!isDarkTheme ? "Tối" : "Sáng"}!`,
-                    "info",
-                  );
+                  triggerToast(`Đã đổi sang chế độ giao diện ${!isDarkTheme ? "Tối" : "Sáng"}!`, "info");
                 }}
                 className="lms-icon-btn"
                 title="Đổi giao diện sáng/tối"
               >
-                <span className="material-symbols-outlined">
-                  {isDarkTheme ? "light_mode" : "dark_mode"}
-                </span>
+                <span className="material-symbols-outlined">{isDarkTheme ? "light_mode" : "dark_mode"}</span>
               </button>
               <button className="lms-icon-btn" title="Thông báo mới">
                 <span className="material-symbols-outlined">notifications</span>
@@ -345,12 +313,9 @@ export default function HomePageStudent() {
           <main className="lms-main">
             <section className="lms-welcome-section">
               <div>
-                <h2 className="lms-welcome-title">
-                  Chào mừng trở lại, Minh Anh! 👋
-                </h2>
+                <h2 className="lms-welcome-title">Chào mừng trở lại, Minh Anh! 👋</h2>
                 <p className="lms-welcome-subtitle">
-                  Bạn đã hoàn thành {todoProgress}% mục tiêu bài tập được giao.
-                  Cố gắng giữ phong độ nhé!
+                  Bạn đã hoàn thành {todoProgress}% mục tiêu bài tập được giao. Cố gắng giữ phong độ nhé!
                 </p>
               </div>
             </section>
@@ -362,28 +327,14 @@ export default function HomePageStudent() {
                   <span className="lms-progress-label">Tiến độ học tập</span>
                   <span className="lms-progress-val-large">78%</span>
                   <span className="lms-progress-trend">
-                    <span className="material-symbols-outlined text-[16px]">
-                      trending_up
-                    </span>
+                    <span className="material-symbols-outlined text-[16px]">trending_up</span>
                     +5% so với tháng trước
                   </span>
                 </div>
 
                 <div className="lms-ring-svg-container">
-                  <svg
-                    className="lms-ring-svg"
-                    width="80"
-                    height="80"
-                    style={{ transform: "rotate(-90deg)" }}
-                  >
-                    <circle
-                      className="lms-ring-bg"
-                      cx="40"
-                      cy="40"
-                      fill="transparent"
-                      r="32"
-                      strokeWidth="5"
-                    />
+                  <svg className="lms-ring-svg" width="80" height="80" style={{ transform: "rotate(-90deg)" }}>
+                    <circle className="lms-ring-bg" cx="40" cy="40" fill="transparent" r="32" strokeWidth="5" />
                     <circle
                       className="lms-ring-fill"
                       cx="40"
@@ -410,12 +361,8 @@ export default function HomePageStudent() {
                         gap: "2px",
                       }}
                     >
-                      <span className="lms-progress-label">
-                        GPA Kỳ {activeGpaIndex + 1}
-                      </span>
-                      <span className="lms-progress-val-large">
-                        {activeGpa.toFixed(1)}
-                      </span>
+                      <span className="lms-progress-label">GPA Kỳ {activeGpaIndex + 1}</span>
+                      <span className="lms-progress-val-large">{activeGpa.toFixed(1)}</span>
                     </div>
                     <span className="lms-gpa-tag">Học bạ</span>
                   </div>
@@ -430,13 +377,8 @@ export default function HomePageStudent() {
                           onMouseEnter={() => setHoveredGpaIndex(idx)}
                           onMouseLeave={() => setHoveredGpaIndex(null)}
                         >
-                          <div
-                            className="lms-chart-bar-fill"
-                            style={{ height: `${(val / 10) * 40}px` }}
-                          ></div>
-                          <span className="lms-chart-tooltip">
-                            {val.toFixed(1)}
-                          </span>
+                          <div className="lms-chart-bar-fill" style={{ height: `${(val / 10) * 40}px` }}></div>
+                          <span className="lms-chart-tooltip">{val.toFixed(1)}</span>
                         </div>
                       );
                     })}
@@ -453,25 +395,17 @@ export default function HomePageStudent() {
                   justifyContent: "space-between",
                 }}
               >
-                <span
-                  className="lms-progress-label"
-                  style={{ marginBottom: "12px", display: "block" }}
-                >
+                <span className="lms-progress-label" style={{ marginBottom: "12px", display: "block" }}>
                   Kỹ năng học tập
                 </span>
                 <div className="lms-skills-list">
                   <div className="lms-skill-row">
                     <div className="lms-skill-header">
                       <span>Giải thuật tìm kiếm</span>
-                      <span className="lms-skill-badge error">
-                        Cần luyện tập
-                      </span>
+                      <span className="lms-skill-badge error">Cần luyện tập</span>
                     </div>
                     <div className="lms-progress-track">
-                      <div
-                        className="lms-progress-fill error"
-                        style={{ width: "33%" }}
-                      ></div>
+                      <div className="lms-progress-fill error" style={{ width: "33%" }}></div>
                     </div>
                   </div>
                   <div className="lms-skill-row">
@@ -480,10 +414,7 @@ export default function HomePageStudent() {
                       <span className="lms-skill-badge brand">Đang học</span>
                     </div>
                     <div className="lms-progress-track">
-                      <div
-                        className="lms-progress-fill brand"
-                        style={{ width: "60%" }}
-                      ></div>
+                      <div className="lms-progress-fill brand" style={{ width: "60%" }}></div>
                     </div>
                   </div>
                 </div>
@@ -495,33 +426,22 @@ export default function HomePageStudent() {
               <div className="lms-card">
                 <div className="lms-section-header">
                   <h3 className="lms-section-title">
-                    <span className="material-symbols-outlined lms-pulse-icon icon-filled">
-                      auto_awesome
-                    </span>
+                    <span className="material-symbols-outlined lms-pulse-icon icon-filled">auto_awesome</span>
                     Trợ lý AI Scholar
                   </h3>
                 </div>
                 <div className="lms-ai-cards-grid">
-                  <div
-                    onClick={() => setIsChatOpen(true)}
-                    className="lms-ai-card"
-                  >
+                  <div onClick={() => setIsChatOpen(true)} className="lms-ai-card">
                     <div className="lms-ai-card-icon">
-                      <span className="material-symbols-outlined">
-                        smart_toy
-                      </span>
+                      <span className="material-symbols-outlined">smart_toy</span>
                     </div>
                     <h4 className="lms-ai-card-title">Hỏi đáp AI Chat</h4>
                     <p className="lms-ai-card-desc">
-                      Hỏi đáp kiến thức học thuật 24/7, hướng dẫn giải bài tập
-                      và làm rõ lý thuyết.
+                      Hỏi đáp kiến thức học thuật 24/7, hướng dẫn giải bài tập và làm rõ lý thuyết.
                     </p>
                     <span className="lms-ai-card-link">
                       Trò chuyện ngay
-                      <span
-                        className="material-symbols-outlined"
-                        style={{ fontSize: "14px" }}
-                      >
+                      <span className="material-symbols-outlined" style={{ fontSize: "14px" }}>
                         arrow_forward
                       </span>
                     </span>
@@ -543,24 +463,15 @@ export default function HomePageStudent() {
                         color: "var(--lms-sky)",
                       }}
                     >
-                      <span className="material-symbols-outlined">
-                        auto_stories
-                      </span>
+                      <span className="material-symbols-outlined">auto_stories</span>
                     </div>
                     <h4 className="lms-ai-card-title">Tóm tắt AI Summary</h4>
                     <p className="lms-ai-card-desc">
-                      Tóm tắt bài giảng dài, tài liệu học tập PDF thành các gạch
-                      đầu dòng trong vài giây.
+                      Tóm tắt bài giảng dài, tài liệu học tập PDF thành các gạch đầu dòng trong vài giây.
                     </p>
-                    <span
-                      className="lms-ai-card-link"
-                      style={{ color: "var(--lms-sky)" }}
-                    >
+                    <span className="lms-ai-card-link" style={{ color: "var(--lms-sky)" }}>
                       Tải tài liệu lên
-                      <span
-                        className="material-symbols-outlined"
-                        style={{ fontSize: "14px" }}
-                      >
+                      <span className="material-symbols-outlined" style={{ fontSize: "14px" }}>
                         upload_file
                       </span>
                     </span>
@@ -569,29 +480,22 @@ export default function HomePageStudent() {
 
                 <div className="lms-roadmap-banner">
                   <div className="lms-roadmap-text">
-                    <h4 className="lms-roadmap-title">
-                      Lộ trình học tập cá nhân hóa
-                    </h4>
+                    <h4 className="lms-roadmap-title">Lộ trình học tập cá nhân hóa</h4>
                     <p className="lms-roadmap-desc">
-                      AI Scholar gợi ý bạn nên tập trung củng cố 3 bài tập mới
-                      về chủ đề <b>Kiến trúc Hệ điều hành</b> dựa trên kết quả
-                      thi tuần qua.
+                      AI Scholar gợi ý bạn nên tập trung củng cố 3 bài tập mới về chủ đề <b>Kiến trúc Hệ điều hành</b>{" "}
+                      dựa trên kết quả thi tuần qua.
                     </p>
                   </div>
                   <button
                     onClick={() => {
                       setIsChatOpen(true);
-                      handleSendChatMessage(
-                        "Giải thích lộ trình cá nhân hóa môn Hệ điều hành",
-                      );
+                      handleSendChatMessage("Giải thích lộ trình cá nhân hóa môn Hệ điều hành");
                     }}
                     className="lms-roadmap-btn"
                   >
                     Xem lộ trình mới
                   </button>
-                  <span className="material-symbols-outlined lms-roadmap-bg-icon">
-                    insights
-                  </span>
+                  <span className="material-symbols-outlined lms-roadmap-bg-icon">insights</span>
                 </div>
               </div>
 
@@ -618,23 +522,12 @@ export default function HomePageStudent() {
                         aria-label="Toggle Todo"
                       />
                       <div className="lms-todo-details">
-                        <h5
-                          className={`lms-todo-title ${todo.completed ? "completed" : ""}`}
-                        >
-                          {todo.title}
-                        </h5>
+                        <h5 className={`lms-todo-title ${todo.completed ? "completed" : ""}`}>{todo.title}</h5>
                         <p className="lms-todo-subj">{todo.subject}</p>
                         <div className="lms-todo-footer">
-                          <span
-                            className={`lms-todo-deadline ${todo.deadlineType}`}
-                          >
-                            {todo.deadline}
-                          </span>
+                          <span className={`lms-todo-deadline ${todo.deadlineType}`}>{todo.deadline}</span>
                           {!todo.completed && (
-                            <button
-                              onClick={() => handleSubmitTodo(todo.id)}
-                              className="lms-todo-btn"
-                            >
+                            <button onClick={() => handleSubmitTodo(todo.id)} className="lms-todo-btn">
                               Nộp bài
                             </button>
                           )}
@@ -655,10 +548,7 @@ export default function HomePageStudent() {
                     </div>
                   )}
                 </ul>
-                <button
-                  onClick={() => setIsTodoModalOpen(true)}
-                  className="lms-dashed-btn"
-                >
+                <button onClick={() => setIsTodoModalOpen(true)} className="lms-dashed-btn">
                   <span className="material-symbols-outlined">add_task</span>
                   Thêm việc mới
                 </button>
@@ -672,9 +562,7 @@ export default function HomePageStudent() {
             <ul>
               <li className="lms-mobile-item active">
                 <button type="button">
-                  <span className="material-symbols-outlined icon-filled">
-                    home
-                  </span>
+                  <span className="material-symbols-outlined icon-filled">home</span>
                   <span>Trang chủ</span>
                 </button>
               </li>
@@ -704,15 +592,10 @@ export default function HomePageStudent() {
         <div className={`lms-drawer ${isChatOpen ? "open" : ""}`}>
           <div className="lms-drawer-header">
             <div className="lms-drawer-title-box">
-              <span className="material-symbols-outlined text-xl icon-filled lms-pulse-icon">
-                auto_awesome
-              </span>
+              <span className="material-symbols-outlined text-xl icon-filled lms-pulse-icon">auto_awesome</span>
               <span>AI Scholar Assistant</span>
             </div>
-            <button
-              onClick={() => setIsChatOpen(false)}
-              className="lms-close-btn"
-            >
+            <button onClick={() => setIsChatOpen(false)} className="lms-close-btn">
               <span className="material-symbols-outlined">close</span>
             </button>
           </div>
@@ -734,22 +617,13 @@ export default function HomePageStudent() {
             <div ref={chatEndRef} />
           </div>
           <div className="lms-drawer-tags">
-            <span
-              onClick={() => handleSendChatMessage("Các lệnh Linux cơ bản")}
-              className="lms-suggest-tag"
-            >
+            <span onClick={() => handleSendChatMessage("Các lệnh Linux cơ bản")} className="lms-suggest-tag">
               Lệnh Linux
             </span>
-            <span
-              onClick={() => handleSendChatMessage("Mức chuẩn hóa CSDL")}
-              className="lms-suggest-tag"
-            >
+            <span onClick={() => handleSendChatMessage("Mức chuẩn hóa CSDL")} className="lms-suggest-tag">
               Chuẩn CSDL
             </span>
-            <span
-              onClick={() => handleSendChatMessage("GPA hiện tại và gợi ý")}
-              className="lms-suggest-tag"
-            >
+            <span onClick={() => handleSendChatMessage("GPA hiện tại và gợi ý")} className="lms-suggest-tag">
               GPA hiện tại
             </span>
           </div>
@@ -776,10 +650,7 @@ export default function HomePageStudent() {
               }}
               className="lms-send-btn"
             >
-              <span
-                className="material-symbols-outlined"
-                style={{ fontSize: "16px" }}
-              >
+              <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>
                 send
               </span>
             </button>
@@ -787,15 +658,9 @@ export default function HomePageStudent() {
         </div>
 
         {/* Floating AI Orb */}
-        <button
-          onClick={() => setIsChatOpen(true)}
-          className="lms-ai-trigger"
-          aria-label="Open AI Assistant"
-        >
+        <button onClick={() => setIsChatOpen(true)} className="lms-ai-trigger" aria-label="Open AI Assistant">
           <span className="lms-ai-pulse"></span>
-          <span className="material-symbols-outlined text-2xl">
-            auto_awesome
-          </span>
+          <span className="material-symbols-outlined text-2xl">auto_awesome</span>
         </button>
 
         {/* ADD TODO MODAL */}
@@ -804,10 +669,7 @@ export default function HomePageStudent() {
             <div className="lms-modal">
               <div className="lms-modal-header">
                 <span className="lms-modal-title">Thêm việc cần làm mới</span>
-                <button
-                  onClick={() => setIsTodoModalOpen(false)}
-                  className="lms-modal-close"
-                >
+                <button onClick={() => setIsTodoModalOpen(false)} className="lms-modal-close">
                   <span className="material-symbols-outlined">close</span>
                 </button>
               </div>
@@ -834,10 +696,7 @@ export default function HomePageStudent() {
                 </div>
                 <div className="lms-form-group">
                   <label>Thời hạn hoàn thành</label>
-                  <select
-                    value={newTodoDeadline}
-                    onChange={(e) => setNewTodoDeadline(e.target.value)}
-                  >
+                  <select value={newTodoDeadline} onChange={(e) => setNewTodoDeadline(e.target.value)}>
                     <option value="Còn 1 giờ">Gấp (1 giờ nữa)</option>
                     <option value="Còn 4 giờ">Trong ngày (4 giờ nữa)</option>
                     <option value="Ngày mai">Ngày mai</option>
@@ -846,11 +705,7 @@ export default function HomePageStudent() {
                   </select>
                 </div>
                 <div className="lms-modal-footer">
-                  <button
-                    type="button"
-                    onClick={() => setIsTodoModalOpen(false)}
-                    className="lms-btn cancel"
-                  >
+                  <button type="button" onClick={() => setIsTodoModalOpen(false)} className="lms-btn cancel">
                     Hủy bỏ
                   </button>
                   <button type="submit" className="lms-btn confirm">
@@ -867,11 +722,7 @@ export default function HomePageStudent() {
           <div className="lms-toast-container">
             <div className={`lms-toast ${toast.type}`}>
               <span className="material-symbols-outlined lms-toast-icon">
-                {toast.type === "success"
-                  ? "check_circle"
-                  : toast.type === "info"
-                    ? "info"
-                    : "error"}
+                {toast.type === "success" ? "check_circle" : toast.type === "info" ? "info" : "error"}
               </span>
               <span>{toast.message}</span>
             </div>
