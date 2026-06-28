@@ -30,9 +30,9 @@ function App() {
         <Route index element={<HomePageStudent />} />
         <Route path="classroomdetail" element={<ClassroomDetail />} />
         <Route path="myclasses" element={<MyClasses />} />
+        <Route path="studentassignment" element={<StudentAssignment />} />
       </Route>
       <Route path="lessonview" element={<LessonView />} />
-      <Route path="studentassignment" element={<StudentAssignment />} />
       <Route path="exam" element={<ExamPage />} />
 
       {/* ================= TEACHER ROUTES ================= */}
