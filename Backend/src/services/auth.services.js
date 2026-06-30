@@ -1,15 +1,15 @@
 import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken"; 
+import jwt from "jsonwebtoken";
 import User from "../models/user.models.js";
 
 export const registerService = async (userData) => {
   const { email, password, fullName, role } = userData;
-  
+
   // Chuẩn hóa dữ liệu đầu vào (Xóa khoảng trắng, đưa về chữ thường)
   const normalizedEmail = String(email).trim().toLowerCase();
   const normalizedFullName = String(fullName).trim();
-  const allowedRoles = ["student", "teacher"];
-  const userRole = allowedRoles.includes(role) ? role : "student";
+  const allowedRoles = ["Student", "Teacher", "Admin"];
+  const userRole = allowedRoles.includes(role) ? role : "Student";
 
   const existingUser = await User.findOne({ email: normalizedEmail });
   if (existingUser) {
@@ -31,7 +31,6 @@ export const registerService = async (userData) => {
   return newUser;
 };
 
-
 export const loginService = async (email, password) => {
   // FIX LỖI 2: Chuẩn hóa email đầu vào giống luồng Register để tìm kiếm chính xác tuyệt đối
   const normalizedEmail = String(email).trim().toLowerCase();
@@ -40,19 +39,23 @@ export const loginService = async (email, password) => {
   const user = await User.findOne({ email: normalizedEmail });
   if (!user) {
     throw new Error("Tài khoản hoặc email không tồn tại trên hệ thống!");
+    error.status(401);
+    throw error;
   }
 
   // Bước 2: Đối chiếu mật khẩu thô người dùng nhập với mật khẩu đã băm (hash) trong DB
   const isMatch = await bcrypt.compare(password, user.password);
   if (!isMatch) {
     throw new Error("Mật khẩu không chính xác, vui lòng thử lại!");
+    error.status(401);
+    throw error;
   }
 
   // Bước 3: Tạo Access Token (Thẻ thông hành) thời hạn 1 ngày
   const accessToken = jwt.sign(
     { id: user._id, email: user.email, role: user.role },
     process.env.JWT_SECRET || "123456", // Chìa khóa bí mật để xác thực lấy từ file .env
-    { expiresIn: "1d" }
+    { expiresIn: "1d" },
   );
 
   // Bước 4: Trả dữ liệu sạch về cho Controller

@@ -13,8 +13,8 @@ const userSchema = new Schema(
     password: { type: String, required: true },
     role: {
       type: String,
-      enum: ["student", "teacher"],
-      default: "student",
+      enum: ["Student", "Teacher", "Admin"],
+      default: "Student",
     },
   },
   {
@@ -22,5 +22,5 @@ const userSchema = new Schema(
   },
 );
 
-const User = model("user", userSchema);
+const User = model("User", userSchema);
 export default User;
