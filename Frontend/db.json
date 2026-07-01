@@ -1,0 +1,92 @@
+{
+  "myClasses": [
+    {
+      "id": "class_math10_adv",
+      "title": "Toán học 10",
+      "subtitle": "Nâng cao",
+      "teacher": {
+        "name": "Thầy Trần Hoàng Nam",
+        "avatarUrl": "https://api.lms.com/assets/avatars/tran-hoang-nam.jpg"
+      },
+      "schedule": {
+        "days": ["T2", "T4"],
+        "time": "08:00 - 09:30"
+      },
+      "progress": 65,
+      "isAiRecommended": true,
+      "thumbnailUrl": "https://lh3.googleusercontent.com/aida-public/AB6AXuBhbEkoHvrsCTB7ST1zlXzRbepF8dIvQjtTaSrmIYWTPdkA8ASmYemmZ-1lWrzqhbaYpPJUbxhKxtb0QIG4ih_Tv3W6sLmIJ0OnxcMb5uSNVRkNxUIu-8dJvu13g__3HY8NaOybuEDPGURur79kDSmiuZUyA7U3pEIq_jWFIYMQjAke2CgKtU-zXGpq-u2ufKp81ExxEX7ybKXkWOVCwejNxxOKGlvpzh3JNZm7I7uPCp7i_WDwS38ZjLBp0QAdQZ4uP6cevkAfplGQ"
+    },
+    {
+      "id": "class_phys10_mech",
+      "title": "Vật lý 10",
+      "subtitle": "Cơ học",
+      "teacher": {
+        "name": "Cô Lê Minh Anh",
+        "avatarUrl": "https://api.lms.com/assets/avatars/le-minh-anh.jpg"
+      },
+      "schedule": {
+        "days": ["T3", "T5"],
+        "time": "14:00 - 15:30"
+      },
+      "progress": 42,
+      "isAiRecommended": false,
+      "thumbnailUrl": "https://lh3.googleusercontent.com/aida-public/AB6AXuBhbEkoHvrsCTB7ST1zlXzRbepF8dIvQjtTaSrmIYWTPdkA8ASmYemmZ-1lWrzqhbaYpPJUbxhKxtb0QIG4ih_Tv3W6sLmIJ0OnxcMb5uSNVRkNxUIu-8dJvu13g__3HY8NaOybuEDPGURur79kDSmiuZUyA7U3pEIq_jWFIYMQjAke2CgKtU-zXGpq-u2ufKp81ExxEX7ybKXkWOVCwejNxxOKGlvpzh3JNZm7I7uPCp7i_WDwS38ZjLBp0QAdQZ4uP6cevkAfplGQ"
+    },
+    {
+      "id": "class_lit10_mod",
+      "title": "Ngữ văn 10",
+      "subtitle": "Hiện đại",
+      "teacher": {
+        "name": "Cô Nguyễn Thu Hà",
+        "avatarUrl": "https://api.lms.com/assets/avatars/nguyen-thu-ha.jpg"
+      },
+      "schedule": {
+        "days": ["T4", "T6"],
+        "time": "09:45 - 11:15"
+      },
+      "progress": 88,
+      "isAiRecommended": false,
+      "thumbnailUrl": "https://lh3.googleusercontent.com/aida-public/AB6AXuBhbEkoHvrsCTB7ST1zlXzRbepF8dIvQjtTaSrmIYWTPdkA8ASmYemmZ-1lWrzqhbaYpPJUbxhKxtb0QIG4ih_Tv3W6sLmIJ0OnxcMb5uSNVRkNxUIu-8dJvu13g__3HY8NaOybuEDPGURur79kDSmiuZUyA7U3pEIq_jWFIYMQjAke2CgKtU-zXGpq-u2ufKp81ExxEX7ybKXkWOVCwejNxxOKGlvpzh3JNZm7I7uPCp7i_WDwS38ZjLBp0QAdQZ4uP6cevkAfplGQ"
+    },
+    {
+      "id": "class_eng_ielts",
+      "title": "Tiếng Anh",
+      "subtitle": "IELTS Focus",
+      "teacher": {
+        "name": "Thầy James Nguyễn",
+        "avatarUrl": "https://api.lms.com/assets/avatars/james-nguyen.jpg"
+      },
+      "schedule": {
+        "days": ["T3", "T7"],
+        "time": "18:30 - 20:00"
+      },
+      "progress": 0,
+      "isAiRecommended": false,
+      "thumbnailUrl": "https://lh3.googleusercontent.com/aida-public/AB6AXuBhbEkoHvrsCTB7ST1zlXzRbepF8dIvQjtTaSrmIYWTPdkA8ASmYemmZ-1lWrzqhbaYpPJUbxhKxtb0QIG4ih_Tv3W6sLmIJ0OnxcMb5uSNVRkNxUIu-8dJvu13g__3HY8NaOybuEDPGURur79kDSmiuZUyA7U3pEIq_jWFIYMQjAke2CgKtU-zXGpq-u2ufKp81ExxEX7ybKXkWOVCwejNxxOKGlvpzh3JNZm7I7uPCp7i_WDwS38ZjLBp0QAdQZ4uP6cevkAfplGQ"
+    }
+  ],
+  "currentLesson": {
+    "id": "les_002",
+    "classId": "class_phys10_mech",
+    "title": "Bài 2: Động lực học chất điểm",
+    "subject": "Vật lý 10",
+    "mediaType": "video",
+    "mediaUrl": "https://api.lms.com/assets/videos/dynamics-lesson2.mp4",
+    "aiAssistantContext": "Nội dung bao gồm 3 định luật New-ton, các lực cơ học (lực ma sát, lực đàn hồi, trọng lực) và phương pháp chiếu hệ trục tọa độ."
+  },
+  "examData": {
+    "id": "exam_midterm_math10",
+    "title": "Bài thi Giữa kỳ: Toán học 10 Nâng cao",
+    "durationSeconds": 600,
+    "maxCheatAttempts": 3,
+    "questions": [
+      {
+        "id": "q_001",
+        "type": "multiple_choice",
+        "text": "Cho phương trình bậc hai $x^2 - 2(m+1)x + m^2 + 4 = 0$. Tìm tất cả các giá trị của tham số m để phương trình có hai nghiệm phân biệt thỏa mãn điều kiện $x_1^2 + x_2^2 = 12$?",
+        "options": ["A. m = 1 hoặc m = -2", "B. m = 2 hoặc m = 0", "C. m = 0 hoặc m = -3", "D. Không tồn tại m"],
+        "correctAnswer": "A"
+      }
+    ]
+  }
+}

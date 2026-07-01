@@ -36,7 +36,7 @@ const SidebarStudent = () => {
             <span className="font-body-md text-body-md">Trang chủ</span>
           </Link>
           <Link
-            to="/classroomdetail"
+            to="/myclasses"
             className="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-low transition-colors rounded-xl transition-all duration-150 ease-in-out active:scale-95"
           >
             <span className="material-symbols-outlined">school</span>

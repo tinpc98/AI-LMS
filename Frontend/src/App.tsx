@@ -8,7 +8,6 @@ import RegistrationPage from "./pages/auth/RegistrationPage";
 // Student Components
 import HomeLayoutStudent from "./components/layout/HomeLayoutStudent";
 import ExamPage from "./pages/students/ExamPage";
-import ClassroomDetail from "./pages/students/ClassroomDetail";
 import LessonView from "./pages/students/LessonView";
 import MyClasses from "./pages/students/MyClasses";
 import StudentAssignment from "./pages/students/StudentAssignment";
@@ -28,7 +27,6 @@ function App() {
       {/* ================= STUDENT ROUTES ================= */}
       <Route path="/" element={<HomeLayoutStudent />}>
         <Route index element={<HomePageStudent />} />
-        <Route path="classroomdetail" element={<ClassroomDetail />} />
         <Route path="myclasses" element={<MyClasses />} />
         <Route path="studentassignment" element={<StudentAssignment />} />
       </Route>
