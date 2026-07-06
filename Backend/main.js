@@ -4,6 +4,7 @@ import cors from "cors"; // Thêm thư viện cấu hình cho phép Frontend g�
 import { connectDB } from "./src/config/database.js";
 import UserRouter from "./src/routers/user.routes.js";
 import ClassRouter from "./src/routers/class.router.js";
+import LessonRouter from "./src/routers/lesson.routes.js";
 
 // Kích hoạt cấu hình file .env
 dotenv.config();
@@ -40,7 +41,7 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use("/api/auth", UserRouter);
 app.use("/api/classes", ClassRouter);
-
+app.use("/api/lesson", LessonRouter);
 app.get("/", (req, res) => {
   res
     .status(200)
@@ -59,9 +60,7 @@ connectDB()
     app.listen(port, () => {
       console.log(`==================================================`);
       console.log(`🚀 Server đang chạy ngon lành tại cổng: ${port}`);
-      console.log(
-        `🔗 Endpoint test: http://localhost:${port}/api/auth/register`,
-      );
+      console.log(`🔗 Endpoint test: http://localhost:${port}`);
       console.log(`==================================================`);
     });
   })
