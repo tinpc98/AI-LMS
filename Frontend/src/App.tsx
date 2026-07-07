@@ -14,8 +14,13 @@ import StudentAssignment from "./pages/students/StudentAssignment";
 import HomePageStudent from "./pages/students/HomePageStudent";
 
 // Teacher Components
-
-// import QuestionBankContent from "./pages/teachers/QuestionBank";
+import HomePageTeacher from "./pages/teachers/HomePageTeacher";
+import QuestionBank from "./pages/teachers/QuestionBank";
+import ClassroomDetail from "./pages/teachers/ClassroomDetail";
+import ClassManagement from "./pages/teachers/ClassroomManagement";
+import ExamDetai from "./pages/teachers/ExamDetai";
+import LessonManagement from "./pages/teachers/LessonManagement";
+import HomeLayoutTeacher from "./components/layout/HomeLayoutTeacher";
 
 function App() {
   return (
@@ -34,10 +39,14 @@ function App() {
       <Route path="exam" element={<ExamPage />} />
 
       {/* ================= TEACHER ROUTES ================= */}
-      {/* <Route path="/teacher" element={<TeacherLayout />}>
-        <Route index element={<TeacherHome />} /> 
-        <Route path="question-bank" element={<QuestionBankContent />} /> 
-      </Route> */}
+      <Route path="/teacher" element={<HomeLayoutTeacher />}>
+        <Route index element={<HomePageTeacher />} />
+        <Route path="classroomdetail" element={<ClassroomDetail />} />
+        <Route path="classroom-management" element={<ClassManagement />} />
+        <Route path="examdetail" element={<ExamDetai />} />
+        <Route path="lessonManagement" element={<LessonManagement />} />
+      </Route>
+      <Route path="question-bank" element={<QuestionBank />} />
 
       {/* ================= ADMIN ROUTES ================= */}
       {/* <Route path="/admin" element={<AdminLayout />}>

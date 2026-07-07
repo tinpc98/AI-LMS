@@ -1,6 +1,6 @@
 import React from "react";
 
-const ClassManagementContent = () => {
+const ClassManagement = () => {
   return (
     <main className="ml-[280px] flex-1 flex flex-col relative min-w-0 pt-16">
       {/* Content Canvas */}
@@ -8,9 +8,7 @@ const ClassManagementContent = () => {
         {/* Page Header Section */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
           <div>
-            <h2 className="font-headline-lg text-headline-lg text-on-surface mb-1">
-              Quản lý lớp học
-            </h2>
+            <h2 className="font-headline-lg text-headline-lg text-on-surface mb-1">Quản lý lớp học</h2>
             <p className="font-body-md text-body-md text-on-surface-variant">
               Theo dõi và quản lý hiệu suất giảng dạy trong học kỳ này.
             </p>
@@ -24,12 +22,8 @@ const ClassManagementContent = () => {
         {/* Filters Area */}
         <div className="flex flex-wrap items-center gap-4 mb-8 bg-surface-container-low p-4 rounded-2xl border border-outline-variant/30">
           <div className="flex items-center gap-2">
-            <span className="material-symbols-outlined text-on-surface-variant">
-              filter_list
-            </span>
-            <span className="font-label-md text-label-md text-on-surface">
-              Bộ lọc:
-            </span>
+            <span className="material-symbols-outlined text-on-surface-variant">filter_list</span>
+            <span className="font-label-md text-label-md text-on-surface">Bộ lọc:</span>
           </div>
           <select className="bg-surface border-outline-variant rounded-lg font-label-md text-label-md px-4 py-2 focus:ring-primary focus:border-primary">
             <option>Học kỳ 1 (2023-2024)</option>
@@ -41,9 +35,7 @@ const ClassManagementContent = () => {
             <option>Trạng thái: Đã kết thúc</option>
             <option>Tất cả trạng thái</option>
           </select>
-          <div className="ml-auto text-on-surface-variant font-body-sm text-body-sm italic">
-            Hiển thị 6 lớp học
-          </div>
+          <div className="ml-auto text-on-surface-variant font-body-sm text-body-sm italic">Hiển thị 6 lớp học</div>
         </div>
 
         {/* Class Grid */}
@@ -56,49 +48,31 @@ const ClassManagementContent = () => {
                 Active
               </div>
               <div className="absolute bottom-4 left-4">
-                <p className="text-white font-label-md text-xs uppercase tracking-wider opacity-80">
-                  MATH-10A1-XQ
-                </p>
-                <h3 className="text-white font-headline-md text-lg">
-                  Lớp 10A1 - Toán học
-                </h3>
+                <p className="text-white font-label-md text-xs uppercase tracking-wider opacity-80">MATH-10A1-XQ</p>
+                <h3 className="text-white font-headline-md text-lg">Lớp 10A1 - Toán học</h3>
               </div>
             </div>
             <div className="p-5 space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="flex items-center gap-2">
-                  <span className="material-symbols-outlined text-primary text-lg">
-                    groups
-                  </span>
+                  <span className="material-symbols-outlined text-primary text-lg">groups</span>
                   <div>
-                    <p className="text-[10px] text-on-surface-variant uppercase font-bold">
-                      Sĩ số
-                    </p>
+                    <p className="text-[10px] text-on-surface-variant uppercase font-bold">Sĩ số</p>
                     <p className="font-label-md text-on-surface">42 học sinh</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="material-symbols-outlined text-primary text-lg">
-                    calendar_today
-                  </span>
+                  <span className="material-symbols-outlined text-primary text-lg">calendar_today</span>
                   <div>
-                    <p className="text-[10px] text-on-surface-variant uppercase font-bold">
-                      Lịch học
-                    </p>
-                    <p className="font-label-md text-on-surface">
-                      Thứ 2, Thứ 4
-                    </p>
+                    <p className="text-[10px] text-on-surface-variant uppercase font-bold">Lịch học</p>
+                    <p className="font-label-md text-on-surface">Thứ 2, Thứ 4</p>
                   </div>
                 </div>
               </div>
               <div className="space-y-1.5">
                 <div className="flex justify-between items-end">
-                  <span className="font-label-md text-label-md text-on-surface-variant">
-                    Tiến độ giáo trình
-                  </span>
-                  <span className="font-code-sm text-code-sm text-primary">
-                    65%
-                  </span>
+                  <span className="font-label-md text-label-md text-on-surface-variant">Tiến độ giáo trình</span>
+                  <span className="font-code-sm text-code-sm text-primary">65%</span>
                 </div>
                 <div className="w-full bg-surface-container-high h-2 rounded-full overflow-hidden">
                   <div className="bg-primary h-full w-[65%] rounded-full shadow-[0_0_8px_rgba(79,70,229,0.4)]"></div>
@@ -126,46 +100,30 @@ const ClassManagementContent = () => {
                 <p className="text-on-secondary-container font-label-md text-xs uppercase tracking-wider opacity-80">
                   PHYS-12B2-ADV
                 </p>
-                <h3 className="text-on-secondary-container font-headline-md text-lg">
-                  Lớp 12B2 - Vật Lý
-                </h3>
+                <h3 className="text-on-secondary-container font-headline-md text-lg">Lớp 12B2 - Vật Lý</h3>
               </div>
             </div>
             <div className="p-5 space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="flex items-center gap-2">
-                  <span className="material-symbols-outlined text-primary text-lg">
-                    groups
-                  </span>
+                  <span className="material-symbols-outlined text-primary text-lg">groups</span>
                   <div>
-                    <p className="text-[10px] text-on-surface-variant uppercase font-bold">
-                      Sĩ số
-                    </p>
+                    <p className="text-[10px] text-on-surface-variant uppercase font-bold">Sĩ số</p>
                     <p className="font-label-md text-on-surface">38 học sinh</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="material-symbols-outlined text-primary text-lg">
-                    calendar_today
-                  </span>
+                  <span className="material-symbols-outlined text-primary text-lg">calendar_today</span>
                   <div>
-                    <p className="text-[10px] text-on-surface-variant uppercase font-bold">
-                      Lịch học
-                    </p>
-                    <p className="font-label-md text-on-surface">
-                      Thứ 3, Thứ 6
-                    </p>
+                    <p className="text-[10px] text-on-surface-variant uppercase font-bold">Lịch học</p>
+                    <p className="font-label-md text-on-surface">Thứ 3, Thứ 6</p>
                   </div>
                 </div>
               </div>
               <div className="space-y-1.5">
                 <div className="flex justify-between items-end">
-                  <span className="font-label-md text-label-md text-on-surface-variant">
-                    Tiến độ giáo trình
-                  </span>
-                  <span className="font-code-sm text-code-sm text-primary">
-                    82%
-                  </span>
+                  <span className="font-label-md text-label-md text-on-surface-variant">Tiến độ giáo trình</span>
+                  <span className="font-code-sm text-code-sm text-primary">82%</span>
                 </div>
                 <div className="w-full bg-surface-container-high h-2 rounded-full overflow-hidden">
                   <div className="bg-primary h-full w-[82%] rounded-full shadow-[0_0_8px_rgba(79,70,229,0.4)]"></div>
@@ -190,49 +148,31 @@ const ClassManagementContent = () => {
                 Active
               </div>
               <div className="absolute bottom-4 left-4">
-                <p className="text-white font-label-md text-xs uppercase tracking-wider opacity-80">
-                  CHEM-11A5-ST
-                </p>
-                <h3 className="text-white font-headline-md text-lg">
-                  Lớp 11A5 - Hóa học
-                </h3>
+                <p className="text-white font-label-md text-xs uppercase tracking-wider opacity-80">CHEM-11A5-ST</p>
+                <h3 className="text-white font-headline-md text-lg">Lớp 11A5 - Hóa học</h3>
               </div>
             </div>
             <div className="p-5 space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="flex items-center gap-2">
-                  <span className="material-symbols-outlined text-primary text-lg">
-                    groups
-                  </span>
+                  <span className="material-symbols-outlined text-primary text-lg">groups</span>
                   <div>
-                    <p className="text-[10px] text-on-surface-variant uppercase font-bold">
-                      Sĩ số
-                    </p>
+                    <p className="text-[10px] text-on-surface-variant uppercase font-bold">Sĩ số</p>
                     <p className="font-label-md text-on-surface">45 học sinh</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="material-symbols-outlined text-primary text-lg">
-                    calendar_today
-                  </span>
+                  <span className="material-symbols-outlined text-primary text-lg">calendar_today</span>
                   <div>
-                    <p className="text-[10px] text-on-surface-variant uppercase font-bold">
-                      Lịch học
-                    </p>
-                    <p className="font-label-md text-on-surface">
-                      Thứ 5, Thứ 7
-                    </p>
+                    <p className="text-[10px] text-on-surface-variant uppercase font-bold">Lịch học</p>
+                    <p className="font-label-md text-on-surface">Thứ 5, Thứ 7</p>
                   </div>
                 </div>
               </div>
               <div className="space-y-1.5">
                 <div className="flex justify-between items-end">
-                  <span className="font-label-md text-label-md text-on-surface-variant">
-                    Tiến độ giáo trình
-                  </span>
-                  <span className="font-code-sm text-code-sm text-primary">
-                    30%
-                  </span>
+                  <span className="font-label-md text-label-md text-on-surface-variant">Tiến độ giáo trình</span>
+                  <span className="font-code-sm text-code-sm text-primary">30%</span>
                 </div>
                 <div className="w-full bg-surface-container-high h-2 rounded-full overflow-hidden">
                   <div className="bg-primary h-full w-[30%] rounded-full shadow-[0_0_8px_rgba(79,70,229,0.4)]"></div>
@@ -256,49 +196,31 @@ const ClassManagementContent = () => {
                 Active
               </div>
               <div className="absolute bottom-4 left-4">
-                <p className="text-white font-label-md text-xs uppercase tracking-wider opacity-80">
-                  BIO-10C1-BS
-                </p>
-                <h3 className="text-white font-headline-md text-lg">
-                  Lớp 10C1 - Sinh học
-                </h3>
+                <p className="text-white font-label-md text-xs uppercase tracking-wider opacity-80">BIO-10C1-BS</p>
+                <h3 className="text-white font-headline-md text-lg">Lớp 10C1 - Sinh học</h3>
               </div>
             </div>
             <div className="p-5 space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="flex items-center gap-2">
-                  <span className="material-symbols-outlined text-primary text-lg">
-                    groups
-                  </span>
+                  <span className="material-symbols-outlined text-primary text-lg">groups</span>
                   <div>
-                    <p className="text-[10px] text-on-surface-variant uppercase font-bold">
-                      Sĩ số
-                    </p>
+                    <p className="text-[10px] text-on-surface-variant uppercase font-bold">Sĩ số</p>
                     <p className="font-label-md text-on-surface">40 học sinh</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="material-symbols-outlined text-primary text-lg">
-                    calendar_today
-                  </span>
+                  <span className="material-symbols-outlined text-primary text-lg">calendar_today</span>
                   <div>
-                    <p className="text-[10px] text-on-surface-variant uppercase font-bold">
-                      Lịch học
-                    </p>
-                    <p className="font-label-md text-on-surface">
-                      Thứ 4, Thứ 6
-                    </p>
+                    <p className="text-[10px] text-on-surface-variant uppercase font-bold">Lịch học</p>
+                    <p className="font-label-md text-on-surface">Thứ 4, Thứ 6</p>
                   </div>
                 </div>
               </div>
               <div className="space-y-1.5">
                 <div className="flex justify-between items-end">
-                  <span className="font-label-md text-label-md text-on-surface-variant">
-                    Tiến độ giáo trình
-                  </span>
-                  <span className="font-code-sm text-code-sm text-primary">
-                    48%
-                  </span>
+                  <span className="font-label-md text-label-md text-on-surface-variant">Tiến độ giáo trình</span>
+                  <span className="font-code-sm text-code-sm text-primary">48%</span>
                 </div>
                 <div className="w-full bg-surface-container-high h-2 rounded-full overflow-hidden">
                   <div className="bg-primary h-full w-[48%] rounded-full shadow-[0_0_8px_rgba(79,70,229,0.4)]"></div>
@@ -322,47 +244,31 @@ const ClassManagementContent = () => {
                 Ended
               </div>
               <div className="absolute bottom-4 left-4">
-                <p className="text-white font-label-md text-xs uppercase tracking-wider opacity-80">
-                  HIST-12D3-OLD
-                </p>
-                <h3 className="text-white font-headline-md text-lg">
-                  Lớp 12D3 - Lịch sử
-                </h3>
+                <p className="text-white font-label-md text-xs uppercase tracking-wider opacity-80">HIST-12D3-OLD</p>
+                <h3 className="text-white font-headline-md text-lg">Lớp 12D3 - Lịch sử</h3>
               </div>
             </div>
             <div className="p-5 space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="flex items-center gap-2">
-                  <span className="material-symbols-outlined text-primary text-lg">
-                    groups
-                  </span>
+                  <span className="material-symbols-outlined text-primary text-lg">groups</span>
                   <div>
-                    <p className="text-[10px] text-on-surface-variant uppercase font-bold">
-                      Sĩ số
-                    </p>
+                    <p className="text-[10px] text-on-surface-variant uppercase font-bold">Sĩ số</p>
                     <p className="font-label-md text-on-surface">35 học sinh</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="material-symbols-outlined text-primary text-lg">
-                    calendar_today
-                  </span>
+                  <span className="material-symbols-outlined text-primary text-lg">calendar_today</span>
                   <div>
-                    <p className="text-[10px] text-on-surface-variant uppercase font-bold">
-                      Lịch học
-                    </p>
+                    <p className="text-[10px] text-on-surface-variant uppercase font-bold">Lịch học</p>
                     <p className="font-label-md text-on-surface">Hoàn thành</p>
                   </div>
                 </div>
               </div>
               <div className="space-y-1.5">
                 <div className="flex justify-between items-end">
-                  <span className="font-label-md text-label-md text-on-surface-variant">
-                    Tiến độ giáo trình
-                  </span>
-                  <span className="font-code-sm text-code-sm text-success">
-                    100%
-                  </span>
+                  <span className="font-label-md text-label-md text-on-surface-variant">Tiến độ giáo trình</span>
+                  <span className="font-code-sm text-code-sm text-success">100%</span>
                 </div>
                 <div className="w-full bg-surface-container-high h-2 rounded-full overflow-hidden">
                   <div className="bg-primary h-full w-[100%] rounded-full shadow-[0_0_8px_rgba(79,70,229,0.4)]"></div>
@@ -385,9 +291,7 @@ const ClassManagementContent = () => {
               <span className="material-symbols-outlined text-4xl">add</span>
             </div>
             <div className="text-center">
-              <p className="font-headline-md text-lg text-on-surface">
-                Thêm lớp học mới
-              </p>
+              <p className="font-headline-md text-lg text-on-surface">Thêm lớp học mới</p>
               <p className="font-body-sm text-body-sm text-on-surface-variant px-4">
                 Tạo không gian học tập mới và bắt đầu bài giảng của bạn.
               </p>
@@ -407,4 +311,4 @@ const ClassManagementContent = () => {
   );
 };
 
-export default ClassManagementContent;
+export default ClassManagement;

@@ -91,9 +91,7 @@ export default function HomePageTeacher() {
   const [isDarkTheme, setIsDarkTheme] = useState(false);
   const itemsPerPage = 3;
   // Modals visibility state
-  const [modalType, setModalType] = useState<
-    "class" | "homework" | "exam" | null
-  >(null);
+  const [modalType, setModalType] = useState<"class" | "homework" | "exam" | null>(null);
   // Form Fields
   const [newClassName, setNewClassName] = useState("");
   const [newClassCode, setNewClassCode] = useState("");
@@ -110,10 +108,7 @@ export default function HomePageTeacher() {
     message: string;
     type: "success" | "info" | "error";
   } | null>(null);
-  const triggerToast = (
-    message: string,
-    type: "success" | "info" | "error" = "success",
-  ) => {
+  const triggerToast = (message: string, type: "success" | "info" | "error" = "success") => {
     setToast({ message, type });
     setTimeout(() => {
       setToast(null);
@@ -143,11 +138,7 @@ export default function HomePageTeacher() {
   };
   const handleCreateClassSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (
-      !newClassName.trim() ||
-      !newClassCode.trim() ||
-      !newClassSchedule.trim()
-    ) {
+    if (!newClassName.trim() || !newClassCode.trim() || !newClassSchedule.trim()) {
       triggerToast("Vui lòng điền đầy đủ thông tin!", "error");
       return;
     }
@@ -174,10 +165,7 @@ export default function HomePageTeacher() {
     setModalType(null);
     setNewClassName("");
     setNewClassCode("");
-    triggerToast(
-      `Đã tạo thành công lớp học học phần: ${newClassName}!`,
-      "success",
-    );
+    triggerToast(`Đã tạo thành công lớp học học phần: ${newClassName}!`, "success");
   };
   const handleCreateHomeworkSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -187,10 +175,7 @@ export default function HomePageTeacher() {
     }
     setModalType(null);
     setHwTitle("");
-    triggerToast(
-      `Đã giao bài tập về nhà mới cho lớp: ${hwClassSelect || classes[0]?.name}!`,
-      "success",
-    );
+    triggerToast(`Đã giao bài tập về nhà mới cho lớp: ${hwClassSelect || classes[0]?.name}!`, "success");
   };
   const handleCreateExamSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -200,33 +185,25 @@ export default function HomePageTeacher() {
     }
     setModalType(null);
     setExamTitle("");
-    triggerToast(
-      `Đã công bố đề kiểm tra "${examTitle}" (${examQuestions} câu)!`,
-      "success",
-    );
+    triggerToast(`Đã công bố đề kiểm tra "${examTitle}" (${examQuestions} câu)!`, "success");
   };
   // Filter & Pagination Calculations
   const query = searchQuery.toLowerCase().trim();
   const filteredClasses = classes.filter(
-    (c) =>
-      c.name.toLowerCase().includes(query) ||
-      c.code.toLowerCase().includes(query),
+    (c) => c.name.toLowerCase().includes(query) || c.code.toLowerCase().includes(query),
   );
   const totalItems = filteredClasses.length;
   const totalPages = Math.ceil(totalItems / itemsPerPage) || 1;
   const clampedPage = Math.min(currentPage, totalPages);
   const startIndex = (clampedPage - 1) * itemsPerPage;
-  const paginatedClasses = filteredClasses.slice(
-    startIndex,
-    startIndex + itemsPerPage,
-  );
+  const paginatedClasses = filteredClasses.slice(startIndex, startIndex + itemsPerPage);
   return (
     <div className={`lms-theme-wrapper ${isDarkTheme ? "dark" : ""}`}>
       <div className="lms-app">
         {/* ==========================================================================
            SIDEBAR (Desktop)
            ========================================================================== */}
-        <aside className="lms-sidebar">
+        {/* <aside className="lms-sidebar">
           <div className="lms-logo-container">
             <div className="lms-logo-icon">
               <span className="material-symbols-outlined icon-filled">
@@ -276,7 +253,7 @@ export default function HomePageTeacher() {
               </div>
             </div>
           </div>
-        </aside>
+        </aside> */}
         {/* ==========================================================================
            MAIN LAYOUT
            ========================================================================== */}
@@ -291,17 +268,12 @@ export default function HomePageTeacher() {
               <button
                 onClick={() => {
                   setIsDarkTheme(!isDarkTheme);
-                  triggerToast(
-                    `Đã đổi sang chế độ giao diện ${!isDarkTheme ? "Tối" : "Sáng"}!`,
-                    "info",
-                  );
+                  triggerToast(`Đã đổi sang chế độ giao diện ${!isDarkTheme ? "Tối" : "Sáng"}!`, "info");
                 }}
                 className="lms-icon-btn"
                 title="Đổi giao diện sáng/tối"
               >
-                <span className="material-symbols-outlined">
-                  {isDarkTheme ? "light_mode" : "dark_mode"}
-                </span>
+                <span className="material-symbols-outlined">{isDarkTheme ? "light_mode" : "dark_mode"}</span>
               </button>
               <button className="lms-icon-btn" title="Thông báo mới">
                 <span className="material-symbols-outlined">notifications</span>
@@ -314,12 +286,9 @@ export default function HomePageTeacher() {
             {/* Welcome Header */}
             <section className="lms-welcome-section">
               <div>
-                <h2 className="lms-welcome-title">
-                  Chào buổi sáng, Thầy Nguyễn An! ☕
-                </h2>
+                <h2 className="lms-welcome-title">Chào buổi sáng, Thầy Nguyễn An! ☕</h2>
                 <p className="lms-welcome-subtitle">
-                  Dưới đây là tóm tắt hoạt động giảng dạy của bạn trong ngày hôm
-                  nay.
+                  Dưới đây là tóm tắt hoạt động giảng dạy của bạn trong ngày hôm nay.
                 </p>
               </div>
             </section>
@@ -328,9 +297,7 @@ export default function HomePageTeacher() {
               {/* Stat Card 1: GPA */}
               <div className="lms-card lms-progress-circle-box">
                 <div className="lms-progress-text-info">
-                  <span className="lms-progress-label">
-                    Điểm trung bình lớp
-                  </span>
+                  <span className="lms-progress-label">Điểm trung bình lớp</span>
                   <div
                     style={{
                       display: "flex",
@@ -349,27 +316,13 @@ export default function HomePageTeacher() {
                     </span>
                   </div>
                   <span className="lms-progress-trend">
-                    <span className="material-symbols-outlined text-[16px]">
-                      trending_up
-                    </span>
+                    <span className="material-symbols-outlined text-[16px]">trending_up</span>
                     +0.4 so với đầu kỳ
                   </span>
                 </div>
                 <div className="lms-ring-svg-container">
-                  <svg
-                    className="lms-ring-svg"
-                    width="80"
-                    height="80"
-                    style={{ transform: "rotate(-90deg)" }}
-                  >
-                    <circle
-                      className="lms-ring-bg"
-                      cx="40"
-                      cy="40"
-                      fill="transparent"
-                      r="32"
-                      strokeWidth="5"
-                    />
+                  <svg className="lms-ring-svg" width="80" height="80" style={{ transform: "rotate(-90deg)" }}>
+                    <circle className="lms-ring-bg" cx="40" cy="40" fill="transparent" r="32" strokeWidth="5" />
                     <circle
                       className="lms-ring-fill"
                       cx="40"
@@ -389,32 +342,15 @@ export default function HomePageTeacher() {
               {/* Stat Card 2: Homework Rate */}
               <div className="lms-card lms-progress-circle-box">
                 <div className="lms-progress-text-info">
-                  <span className="lms-progress-label">
-                    Tỷ lệ hoàn thành bài tập
-                  </span>
+                  <span className="lms-progress-label">Tỷ lệ hoàn thành bài tập</span>
                   <span className="lms-progress-val-large">92%</span>
-                  <span
-                    className="lms-progress-trend"
-                    style={{ color: "var(--lms-sky)" }}
-                  >
+                  <span className="lms-progress-trend" style={{ color: "var(--lms-sky)" }}>
                     Ổn định ở mức cao
                   </span>
                 </div>
                 <div className="lms-ring-svg-container">
-                  <svg
-                    className="lms-ring-svg"
-                    width="80"
-                    height="80"
-                    style={{ transform: "rotate(-90deg)" }}
-                  >
-                    <circle
-                      className="lms-ring-bg"
-                      cx="40"
-                      cy="40"
-                      fill="transparent"
-                      r="32"
-                      strokeWidth="5"
-                    />
+                  <svg className="lms-ring-svg" width="80" height="80" style={{ transform: "rotate(-90deg)" }}>
+                    <circle className="lms-ring-bg" cx="40" cy="40" fill="transparent" r="32" strokeWidth="5" />
                     <circle
                       className="lms-ring-fill"
                       cx="40"
@@ -429,10 +365,7 @@ export default function HomePageTeacher() {
                       }}
                     />
                   </svg>
-                  <span
-                    className="lms-ring-text-center"
-                    style={{ color: "var(--lms-sky)" }}
-                  >
+                  <span className="lms-ring-text-center" style={{ color: "var(--lms-sky)" }}>
                     92%
                   </span>
                 </div>
@@ -440,14 +373,9 @@ export default function HomePageTeacher() {
               {/* Stat Card 3: Online Attendance */}
               <div className="lms-card lms-progress-circle-box">
                 <div className="lms-progress-text-info">
-                  <span className="lms-progress-label">
-                    Tỷ lệ online trực tuyến
-                  </span>
+                  <span className="lms-progress-label">Tỷ lệ online trực tuyến</span>
                   <span className="lms-progress-val-large">95%</span>
-                  <span
-                    className="lms-progress-trend"
-                    style={{ color: "var(--lms-success)" }}
-                  >
+                  <span className="lms-progress-trend" style={{ color: "var(--lms-success)" }}>
                     <span
                       style={{
                         width: "6px",
@@ -462,20 +390,8 @@ export default function HomePageTeacher() {
                   </span>
                 </div>
                 <div className="lms-ring-svg-container">
-                  <svg
-                    className="lms-ring-svg"
-                    width="80"
-                    height="80"
-                    style={{ transform: "rotate(-90deg)" }}
-                  >
-                    <circle
-                      className="lms-ring-bg"
-                      cx="40"
-                      cy="40"
-                      fill="transparent"
-                      r="32"
-                      strokeWidth="5"
-                    />
+                  <svg className="lms-ring-svg" width="80" height="80" style={{ transform: "rotate(-90deg)" }}>
+                    <circle className="lms-ring-bg" cx="40" cy="40" fill="transparent" r="32" strokeWidth="5" />
                     <circle
                       className="lms-ring-fill"
                       cx="40"
@@ -490,65 +406,39 @@ export default function HomePageTeacher() {
                       }}
                     />
                   </svg>
-                  <span
-                    className="lms-ring-text-center"
-                    style={{ color: "var(--lms-success)" }}
-                  >
+                  <span className="lms-ring-text-center" style={{ color: "var(--lms-success)" }}>
                     95%
                   </span>
                 </div>
               </div>
             </section>
             {/* Quick Actions Section */}
-            <section
-              style={{ display: "flex", flexDirection: "column", gap: "12px" }}
-            >
+            <section style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
               <h3 className="lms-section-title">Thao tác nhanh</h3>
               <div className="lms-action-grid">
                 {/* Button: Create class */}
-                <button
-                  onClick={() => setModalType("class")}
-                  className="lms-action-card brand"
-                >
+                <button onClick={() => setModalType("class")} className="lms-action-card brand">
                   <div className="lms-action-card-text">
                     <h4 className="lms-action-card-title">Tạo lớp học</h4>
-                    <p className="lms-action-card-desc">
-                      Thiết lập thêm một lớp học học phần mới
-                    </p>
+                    <p className="lms-action-card-desc">Thiết lập thêm một lớp học học phần mới</p>
                   </div>
-                  <span className="material-symbols-outlined lms-action-card-bg-icon">
-                    add_business
-                  </span>
+                  <span className="material-symbols-outlined lms-action-card-bg-icon">add_business</span>
                 </button>
                 {/* Button: Create homework */}
-                <button
-                  onClick={() => setModalType("homework")}
-                  className="lms-action-card secondary"
-                >
+                <button onClick={() => setModalType("homework")} className="lms-action-card secondary">
                   <div className="lms-action-card-text">
                     <h4 className="lms-action-card-title">Giao bài tập</h4>
-                    <p className="lms-action-card-desc">
-                      Giao nhiệm vụ tự học cho học sinh
-                    </p>
+                    <p className="lms-action-card-desc">Giao nhiệm vụ tự học cho học sinh</p>
                   </div>
-                  <span className="material-symbols-outlined lms-action-card-bg-icon">
-                    edit_document
-                  </span>
+                  <span className="material-symbols-outlined lms-action-card-bg-icon">edit_document</span>
                 </button>
                 {/* Button: Create exam */}
-                <button
-                  onClick={() => setModalType("exam")}
-                  className="lms-action-card tertiary"
-                >
+                <button onClick={() => setModalType("exam")} className="lms-action-card tertiary">
                   <div className="lms-action-card-text">
                     <h4 className="lms-action-card-title">Tạo đề thi</h4>
-                    <p className="lms-action-card-desc">
-                      Kiểm tra đánh giá năng lực học sinh
-                    </p>
+                    <p className="lms-action-card-desc">Kiểm tra đánh giá năng lực học sinh</p>
                   </div>
-                  <span className="material-symbols-outlined lms-action-card-bg-icon">
-                    assignment_turned_in
-                  </span>
+                  <span className="material-symbols-outlined lms-action-card-bg-icon">assignment_turned_in</span>
                 </button>
               </div>
             </section>
@@ -575,9 +465,7 @@ export default function HomePageTeacher() {
                     }}
                     className="lms-search-input"
                   />
-                  <span className="material-symbols-outlined lms-search-icon">
-                    search
-                  </span>
+                  <span className="material-symbols-outlined lms-search-icon">search</span>
                 </div>
               </div>
               <div className="lms-table-responsive">
@@ -597,12 +485,8 @@ export default function HomePageTeacher() {
                       <tr key={cls.id}>
                         <td>
                           <div className="lms-class-info">
-                            <div
-                              className={`lms-class-icon-box ${cls.iconClass}`}
-                            >
-                              <span className="material-symbols-outlined">
-                                {cls.icon}
-                              </span>
+                            <div className={`lms-class-icon-box ${cls.iconClass}`}>
+                              <span className="material-symbols-outlined">{cls.icon}</span>
                             </div>
                             <span className="lms-class-name">{cls.name}</span>
                           </div>
@@ -623,29 +507,20 @@ export default function HomePageTeacher() {
                         <td>
                           <div className="lms-table-progress-container">
                             <div className="lms-table-progress-bg">
-                              <div
-                                className="lms-table-progress-fill"
-                                style={{ width: `${cls.progress}%` }}
-                              ></div>
+                              <div className="lms-table-progress-fill" style={{ width: `${cls.progress}%` }}></div>
                             </div>
-                            <span className="lms-table-progress-text">
-                              {cls.progress}%
-                            </span>
+                            <span className="lms-table-progress-text">{cls.progress}%</span>
                           </div>
                         </td>
                         <td>
-                          <span className="lms-schedule-badge">
-                            {cls.nextClass}
-                          </span>
+                          <span className="lms-schedule-badge">{cls.nextClass}</span>
                         </td>
                         <td style={{ textAlign: "right" }}>
                           <button
                             onClick={() => handleAttendance(cls.id)}
                             className={`lms-table-btn ${cls.attendanceStatus === "da_diem_danh" ? "checked" : ""}`}
                           >
-                            {cls.attendanceStatus === "da_diem_danh"
-                              ? "Đã điểm danh"
-                              : "Điểm danh"}
+                            {cls.attendanceStatus === "da_diem_danh" ? "Đã điểm danh" : "Điểm danh"}
                           </button>
                         </td>
                       </tr>
@@ -676,10 +551,7 @@ export default function HomePageTeacher() {
                     disabled={clampedPage === 1}
                     className="lms-page-btn"
                   >
-                    <span
-                      className="material-symbols-outlined"
-                      style={{ fontSize: "16px" }}
-                    >
+                    <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>
                       chevron_left
                     </span>
                   </button>
@@ -694,16 +566,11 @@ export default function HomePageTeacher() {
                     </button>
                   ))}
                   <button
-                    onClick={() =>
-                      setCurrentPage((p) => Math.min(p + 1, totalPages))
-                    }
+                    onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
                     disabled={clampedPage === totalPages}
                     className="lms-page-btn"
                   >
-                    <span
-                      className="material-symbols-outlined"
-                      style={{ fontSize: "16px" }}
-                    >
+                    <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>
                       chevron_right
                     </span>
                   </button>
@@ -714,9 +581,7 @@ export default function HomePageTeacher() {
           {/* Mobile bottom nav */}
           <nav className="lms-mobile-nav">
             <button className="lms-mobile-item active">
-              <span className="material-symbols-outlined icon-filled">
-                home
-              </span>
+              <span className="material-symbols-outlined icon-filled">home</span>
               <span>Trang chủ</span>
             </button>
             <button className="lms-mobile-item">
@@ -743,18 +608,12 @@ export default function HomePageTeacher() {
             <div className="lms-modal">
               <div className="lms-modal-header">
                 <span className="lms-modal-title">Thiết lập lớp học mới</span>
-                <button
-                  onClick={() => setModalType(null)}
-                  className="lms-modal-close"
-                >
+                <button onClick={() => setModalType(null)} className="lms-modal-close">
                   <span className="material-symbols-outlined">close</span>
                 </button>
               </div>
 
-              <form
-                onSubmit={handleCreateClassSubmit}
-                className="lms-modal-body"
-              >
+              <form onSubmit={handleCreateClassSubmit} className="lms-modal-body">
                 <div className="lms-form-group">
                   <label>Tên môn học / lớp học</label>
                   <input
@@ -794,11 +653,7 @@ export default function HomePageTeacher() {
                   />
                 </div>
                 <div className="lms-modal-footer">
-                  <button
-                    type="button"
-                    onClick={() => setModalType(null)}
-                    className="lms-btn cancel"
-                  >
+                  <button type="button" onClick={() => setModalType(null)} className="lms-btn cancel">
                     Hủy bỏ
                   </button>
                   <button type="submit" className="lms-btn confirm">
@@ -815,18 +670,12 @@ export default function HomePageTeacher() {
             <div className="lms-modal">
               <div className="lms-modal-header">
                 <span className="lms-modal-title">Giao bài tập về nhà</span>
-                <button
-                  onClick={() => setModalType(null)}
-                  className="lms-modal-close"
-                >
+                <button onClick={() => setModalType(null)} className="lms-modal-close">
                   <span className="material-symbols-outlined">close</span>
                 </button>
               </div>
 
-              <form
-                onSubmit={handleCreateHomeworkSubmit}
-                className="lms-modal-body"
-              >
+              <form onSubmit={handleCreateHomeworkSubmit} className="lms-modal-body">
                 <div className="lms-form-group">
                   <label>Tên bài tập / nhiệm vụ tự học</label>
                   <input
@@ -839,10 +688,7 @@ export default function HomePageTeacher() {
                 </div>
                 <div className="lms-form-group">
                   <label>Chọn lớp giao bài</label>
-                  <select
-                    value={hwClassSelect}
-                    onChange={(e) => setHwClassSelect(e.target.value)}
-                  >
+                  <select value={hwClassSelect} onChange={(e) => setHwClassSelect(e.target.value)}>
                     {classes.map((c) => (
                       <option key={c.id} value={c.name}>
                         {c.name}
@@ -852,31 +698,18 @@ export default function HomePageTeacher() {
                 </div>
                 <div className="lms-form-group">
                   <label>Hạn nộp bài</label>
-                  <select
-                    value={hwDeadline}
-                    onChange={(e) => setHwDeadline(e.target.value)}
-                  >
-                    <option value="Còn 4 giờ">
-                      Trong ngày hôm nay (4 giờ nữa)
-                    </option>
+                  <select value={hwDeadline} onChange={(e) => setHwDeadline(e.target.value)}>
+                    <option value="Còn 4 giờ">Trong ngày hôm nay (4 giờ nữa)</option>
                     <option value="Ngày mai">Ngày mai</option>
                     <option value="3 ngày nữa">3 ngày nữa</option>
                     <option value="Tuần sau">Tuần sau</option>
                   </select>
                 </div>
                 <div className="lms-modal-footer">
-                  <button
-                    type="button"
-                    onClick={() => setModalType(null)}
-                    className="lms-btn cancel"
-                  >
+                  <button type="button" onClick={() => setModalType(null)} className="lms-btn cancel">
                     Hủy bỏ
                   </button>
-                  <button
-                    type="submit"
-                    className="lms-btn confirm"
-                    style={{ backgroundColor: "var(--lms-sky)" }}
-                  >
+                  <button type="submit" className="lms-btn confirm" style={{ backgroundColor: "var(--lms-sky)" }}>
                     Giao bài tập
                   </button>
                 </div>
@@ -889,21 +722,13 @@ export default function HomePageTeacher() {
           <div className="lms-modal-overlay">
             <div className="lms-modal">
               <div className="lms-modal-header">
-                <span className="lms-modal-title">
-                  Tạo đề thi trắc nghiệm mới
-                </span>
-                <button
-                  onClick={() => setModalType(null)}
-                  className="lms-modal-close"
-                >
+                <span className="lms-modal-title">Tạo đề thi trắc nghiệm mới</span>
+                <button onClick={() => setModalType(null)} className="lms-modal-close">
                   <span className="material-symbols-outlined">close</span>
                 </button>
               </div>
 
-              <form
-                onSubmit={handleCreateExamSubmit}
-                className="lms-modal-body"
-              >
+              <form onSubmit={handleCreateExamSubmit} className="lms-modal-body">
                 <div className="lms-form-group">
                   <label>Tên đề thi / bài kiểm tra</label>
                   <input
@@ -916,10 +741,7 @@ export default function HomePageTeacher() {
                 </div>
                 <div className="lms-form-group">
                   <label>Lớp đánh giá học vụ</label>
-                  <select
-                    value={examClassSelect}
-                    onChange={(e) => setExamClassSelect(e.target.value)}
-                  >
+                  <select value={examClassSelect} onChange={(e) => setExamClassSelect(e.target.value)}>
                     {classes.map((c) => (
                       <option key={c.id} value={c.name}>
                         {c.name}
@@ -939,11 +761,7 @@ export default function HomePageTeacher() {
                   />
                 </div>
                 <div className="lms-modal-footer">
-                  <button
-                    type="button"
-                    onClick={() => setModalType(null)}
-                    className="lms-btn cancel"
-                  >
+                  <button type="button" onClick={() => setModalType(null)} className="lms-btn cancel">
                     Hủy bỏ
                   </button>
                   <button
@@ -965,11 +783,7 @@ export default function HomePageTeacher() {
           <div className="lms-toast-container">
             <div className={`lms-toast ${toast.type}`}>
               <span className="material-symbols-outlined lms-toast-icon">
-                {toast.type === "success"
-                  ? "check_circle"
-                  : toast.type === "info"
-                    ? "info"
-                    : "error"}
+                {toast.type === "success" ? "check_circle" : toast.type === "info" ? "info" : "error"}
               </span>
               <span>{toast.message}</span>
             </div>
