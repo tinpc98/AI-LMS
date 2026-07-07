@@ -1,7 +1,7 @@
 import axios from "axios";
 import React, { useEffect, useState } from "react";
-import type { IMyClass } from "../../interface/myClassInterface";
-import JoinClassModal from "../../components/features/JoinClassModel";
+import type { IMyClass } from "../../interface/ClassInterface";
+import JoinClassModel from "../../components/features/JoinClassModel";
 
 const MyClassesContent = () => {
   const [myClasses, setMyClasses] = useState<IMyClass[]>([]);
@@ -54,7 +54,7 @@ const MyClassesContent = () => {
 
   return (
     <>
-      <JoinClassModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
+      <JoinClassModel isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
 
       <main className="ml-[280px] min-h-screen flex flex-col pt-8">
         {/* Content Canvas */}
