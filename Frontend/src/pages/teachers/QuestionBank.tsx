@@ -1,17 +1,15 @@
 import React from "react";
 
-const QuestionBankContent = () => {
+const QuestionBank = () => {
   return (
     <div className="p-8 max-w-[1280px] mx-auto">
       {/* Hero Header */}
       <section className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-10">
         <div>
-          <h2 className="text-headline-lg font-headline-lg text-on-surface mb-2">
-            Ngân hàng câu hỏi
-          </h2>
+          <h2 className="text-headline-lg font-headline-lg text-on-surface mb-2">Ngân hàng câu hỏi</h2>
           <p className="text-body-md text-on-surface-variant max-w-2xl">
-            Quản lý hệ thống câu hỏi đa phương thức. Sử dụng AI để tạo nhanh các
-            bộ câu hỏi từ giáo trình hoặc tài liệu PDF chỉ trong vài giây.
+            Quản lý hệ thống câu hỏi đa phương thức. Sử dụng AI để tạo nhanh các bộ câu hỏi từ giáo trình hoặc tài liệu
+            PDF chỉ trong vài giây.
           </p>
         </div>
         <div className="flex gap-3">
@@ -46,12 +44,8 @@ const QuestionBankContent = () => {
             </span>
             <span className="text-label-md text-primary font-bold">+12%</span>
           </div>
-          <p className="text-display-lg font-display-lg text-on-surface">
-            1,284
-          </p>
-          <p className="text-label-md text-on-surface-variant uppercase tracking-wider">
-            Tổng số câu hỏi
-          </p>
+          <p className="text-display-lg font-display-lg text-on-surface">1,284</p>
+          <p className="text-label-md text-on-surface-variant uppercase tracking-wider">Tổng số câu hỏi</p>
         </div>
         <div className="bg-surface p-6 rounded-xl border border-outline-variant hover:shadow-md transition-shadow">
           <div className="flex justify-between items-start mb-4">
@@ -63,9 +57,7 @@ const QuestionBankContent = () => {
             </span>
           </div>
           <p className="text-display-lg font-display-lg text-on-surface">24</p>
-          <p className="text-label-md text-on-surface-variant uppercase tracking-wider">
-            Danh mục/Môn học
-          </p>
+          <p className="text-label-md text-on-surface-variant uppercase tracking-wider">Danh mục/Môn học</p>
         </div>
         <div className="bg-surface p-6 rounded-xl border border-outline-variant hover:shadow-md transition-shadow">
           <div className="flex justify-between items-start mb-4">
@@ -79,9 +71,7 @@ const QuestionBankContent = () => {
             <span className="text-label-md text-primary font-bold">60%</span>
           </div>
           <p className="text-display-lg font-display-lg text-on-surface">856</p>
-          <p className="text-label-md text-on-surface-variant uppercase tracking-wider">
-            Tạo bởi AI
-          </p>
+          <p className="text-label-md text-on-surface-variant uppercase tracking-wider">Tạo bởi AI</p>
         </div>
         <div className="bg-surface p-6 rounded-xl border border-outline-variant hover:shadow-md transition-shadow">
           <div className="flex justify-between items-start mb-4">
@@ -92,21 +82,15 @@ const QuestionBankContent = () => {
               check_circle
             </span>
           </div>
-          <p className="text-display-lg font-display-lg text-on-surface">
-            1,120
-          </p>
-          <p className="text-label-md text-on-surface-variant uppercase tracking-wider">
-            Đã phê duyệt
-          </p>
+          <p className="text-display-lg font-display-lg text-on-surface">1,120</p>
+          <p className="text-label-md text-on-surface-variant uppercase tracking-wider">Đã phê duyệt</p>
         </div>
       </section>
 
       {/* Filters Bar */}
       <section className="bg-surface p-4 rounded-xl border border-outline-variant mb-6 flex flex-wrap gap-4 items-center">
         <div className="flex-grow min-w-[200px]">
-          <label className="block text-label-md font-label-md text-on-surface-variant mb-1">
-            Môn học
-          </label>
+          <label className="block text-label-md font-label-md text-on-surface-variant mb-1">Môn học</label>
           <select className="w-full bg-surface-container-low border-outline-variant rounded-lg text-body-sm focus:ring-primary focus:border-primary">
             <option>Tất cả môn học</option>
             <option>Toán học</option>
@@ -115,9 +99,7 @@ const QuestionBankContent = () => {
           </select>
         </div>
         <div className="w-40">
-          <label className="block text-label-md font-label-md text-on-surface-variant mb-1">
-            Khối lớp
-          </label>
+          <label className="block text-label-md font-label-md text-on-surface-variant mb-1">Khối lớp</label>
           <select className="w-full bg-surface-container-low border-outline-variant rounded-lg text-body-sm focus:ring-primary focus:border-primary">
             <option>Tất cả</option>
             <option>Khối 10</option>
@@ -126,9 +108,7 @@ const QuestionBankContent = () => {
           </select>
         </div>
         <div className="w-40">
-          <label className="block text-label-md font-label-md text-on-surface-variant mb-1">
-            Độ khó
-          </label>
+          <label className="block text-label-md font-label-md text-on-surface-variant mb-1">Độ khó</label>
           <select className="w-full bg-surface-container-low border-outline-variant rounded-lg text-body-sm focus:ring-primary focus:border-primary">
             <option>Tất cả</option>
             <option>Dễ</option>
@@ -137,9 +117,7 @@ const QuestionBankContent = () => {
           </select>
         </div>
         <div className="w-48">
-          <label className="block text-label-md font-label-md text-on-surface-variant mb-1">
-            Loại câu hỏi
-          </label>
+          <label className="block text-label-md font-label-md text-on-surface-variant mb-1">Loại câu hỏi</label>
           <select className="w-full bg-surface-container-low border-outline-variant rounded-lg text-body-sm focus:ring-primary focus:border-primary">
             <option>Tất cả</option>
             <option>Trắc nghiệm</option>
@@ -184,16 +162,12 @@ const QuestionBankContent = () => {
                 <p className="text-body-md font-bold text-on-surface line-clamp-1">
                   Cho hàm số f(x) = ax^3 + bx^2 + cx + d...
                 </p>
-                <p className="text-body-sm text-on-surface-variant">
-                  ID: Q-10293 • Cập nhật 2 giờ trước
-                </p>
+                <p className="text-body-sm text-on-surface-variant">ID: Q-10293 • Cập nhật 2 giờ trước</p>
               </td>
               <td className="px-6 py-5">
                 <div className="flex flex-col">
                   <span className="text-body-sm text-on-surface">Toán học</span>
-                  <span className="text-[12px] text-on-surface-variant">
-                    Lớp 12 • Giải tích
-                  </span>
+                  <span className="text-[12px] text-on-surface-variant">Lớp 12 • Giải tích</span>
                 </div>
               </td>
               <td className="px-6 py-5">
@@ -213,10 +187,7 @@ const QuestionBankContent = () => {
                     className="p-2 hover:bg-surface-container-low rounded-lg transition-colors text-primary"
                     title="Xem trước"
                   >
-                    <span
-                      className="material-symbols-outlined"
-                      data-icon="visibility"
-                    >
+                    <span className="material-symbols-outlined" data-icon="visibility">
                       visibility
                     </span>
                   </button>
@@ -224,10 +195,7 @@ const QuestionBankContent = () => {
                     className="p-2 hover:bg-surface-container-low rounded-lg transition-colors text-secondary"
                     title="Chỉnh sửa"
                   >
-                    <span
-                      className="material-symbols-outlined"
-                      data-icon="edit"
-                    >
+                    <span className="material-symbols-outlined" data-icon="edit">
                       edit
                     </span>
                   </button>
@@ -235,10 +203,7 @@ const QuestionBankContent = () => {
                     className="p-2 hover:bg-error-container hover:text-error rounded-lg transition-colors"
                     title="Xóa"
                   >
-                    <span
-                      className="material-symbols-outlined"
-                      data-icon="delete"
-                    >
+                    <span className="material-symbols-outlined" data-icon="delete">
                       delete
                     </span>
                   </button>
@@ -251,16 +216,12 @@ const QuestionBankContent = () => {
                 <p className="text-body-md font-bold text-on-surface line-clamp-1">
                   Nêu định luật II Newton và cho ví dụ minh họa trong thực tế.
                 </p>
-                <p className="text-body-sm text-on-surface-variant">
-                  ID: Q-10294 • Cập nhật 5 giờ trước
-                </p>
+                <p className="text-body-sm text-on-surface-variant">ID: Q-10294 • Cập nhật 5 giờ trước</p>
               </td>
               <td className="px-6 py-5">
                 <div className="flex flex-col">
                   <span className="text-body-sm text-on-surface">Vật lý</span>
-                  <span className="text-[12px] text-on-surface-variant">
-                    Lớp 10 • Cơ học
-                  </span>
+                  <span className="text-[12px] text-on-surface-variant">Lớp 10 • Cơ học</span>
                 </div>
               </td>
               <td className="px-6 py-5">
@@ -280,10 +241,7 @@ const QuestionBankContent = () => {
                     className="p-2 hover:bg-surface-container-low rounded-lg transition-colors text-primary"
                     title="Xem trước"
                   >
-                    <span
-                      className="material-symbols-outlined"
-                      data-icon="visibility"
-                    >
+                    <span className="material-symbols-outlined" data-icon="visibility">
                       visibility
                     </span>
                   </button>
@@ -291,10 +249,7 @@ const QuestionBankContent = () => {
                     className="p-2 hover:bg-surface-container-low rounded-lg transition-colors text-secondary"
                     title="Chỉnh sửa"
                   >
-                    <span
-                      className="material-symbols-outlined"
-                      data-icon="edit"
-                    >
+                    <span className="material-symbols-outlined" data-icon="edit">
                       edit
                     </span>
                   </button>
@@ -302,10 +257,7 @@ const QuestionBankContent = () => {
                     className="p-2 hover:bg-error-container hover:text-error rounded-lg transition-colors"
                     title="Xóa"
                   >
-                    <span
-                      className="material-symbols-outlined"
-                      data-icon="delete"
-                    >
+                    <span className="material-symbols-outlined" data-icon="delete">
                       delete
                     </span>
                   </button>
@@ -327,18 +279,12 @@ const QuestionBankContent = () => {
                     Complete the sentence with the correct tense: "If I..."
                   </p>
                 </div>
-                <p className="text-body-sm text-on-surface-variant">
-                  ID: Q-10295 • Cập nhật 1 ngày trước
-                </p>
+                <p className="text-body-sm text-on-surface-variant">ID: Q-10295 • Cập nhật 1 ngày trước</p>
               </td>
               <td className="px-6 py-5">
                 <div className="flex flex-col">
-                  <span className="text-body-sm text-on-surface">
-                    Tiếng Anh
-                  </span>
-                  <span className="text-[12px] text-on-surface-variant">
-                    Lớp 11 • Ngữ pháp
-                  </span>
+                  <span className="text-body-sm text-on-surface">Tiếng Anh</span>
+                  <span className="text-[12px] text-on-surface-variant">Lớp 11 • Ngữ pháp</span>
                 </div>
               </td>
               <td className="px-6 py-5">
@@ -358,10 +304,7 @@ const QuestionBankContent = () => {
                     className="p-2 hover:bg-surface-container-low rounded-lg transition-colors text-primary"
                     title="Xem trước"
                   >
-                    <span
-                      className="material-symbols-outlined"
-                      data-icon="visibility"
-                    >
+                    <span className="material-symbols-outlined" data-icon="visibility">
                       visibility
                     </span>
                   </button>
@@ -369,10 +312,7 @@ const QuestionBankContent = () => {
                     className="p-2 hover:bg-surface-container-low rounded-lg transition-colors text-secondary"
                     title="Chỉnh sửa"
                   >
-                    <span
-                      className="material-symbols-outlined"
-                      data-icon="edit"
-                    >
+                    <span className="material-symbols-outlined" data-icon="edit">
                       edit
                     </span>
                   </button>
@@ -380,10 +320,7 @@ const QuestionBankContent = () => {
                     className="p-2 hover:bg-error-container hover:text-error rounded-lg transition-colors"
                     title="Xóa"
                   >
-                    <span
-                      className="material-symbols-outlined"
-                      data-icon="delete"
-                    >
+                    <span className="material-symbols-outlined" data-icon="delete">
                       delete
                     </span>
                   </button>
@@ -395,24 +332,17 @@ const QuestionBankContent = () => {
 
         {/* Pagination */}
         <div className="p-4 bg-surface-container-low border-t border-outline-variant flex justify-between items-center">
-          <p className="text-body-sm text-on-surface-variant">
-            Hiển thị 1-10 trên 1,284 câu hỏi
-          </p>
+          <p className="text-body-sm text-on-surface-variant">Hiển thị 1-10 trên 1,284 câu hỏi</p>
           <div className="flex gap-2">
             <button
               className="p-2 border border-outline-variant rounded-lg hover:bg-surface transition-colors disabled:opacity-50"
               disabled
             >
-              <span
-                className="material-symbols-outlined"
-                data-icon="chevron_left"
-              >
+              <span className="material-symbols-outlined" data-icon="chevron_left">
                 chevron_left
               </span>
             </button>
-            <button className="px-4 py-2 bg-primary text-on-primary rounded-lg font-bold text-body-sm">
-              1
-            </button>
+            <button className="px-4 py-2 bg-primary text-on-primary rounded-lg font-bold text-body-sm">1</button>
             <button className="px-4 py-2 hover:bg-surface-container-high rounded-lg text-body-sm transition-colors">
               2
             </button>
@@ -424,10 +354,7 @@ const QuestionBankContent = () => {
               129
             </button>
             <button className="p-2 border border-outline-variant rounded-lg hover:bg-surface transition-colors">
-              <span
-                className="material-symbols-outlined"
-                data-icon="chevron_right"
-              >
+              <span className="material-symbols-outlined" data-icon="chevron_right">
                 chevron_right
               </span>
             </button>
@@ -438,4 +365,4 @@ const QuestionBankContent = () => {
   );
 };
 
-export default QuestionBankContent;
+export default QuestionBank;

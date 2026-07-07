@@ -1,6 +1,6 @@
 import React from "react";
 
-const ClassroomDetailContent = () => {
+const ClassroomDetail = () => {
   return (
     <main className="md:ml-[280px] min-h-screen flex flex-col">
       {/* TopNavBar (Classroom Detail) */}
@@ -10,9 +10,7 @@ const ClassroomDetailContent = () => {
             <span className="material-symbols-outlined">menu</span>
           </button>
           <div className="hidden lg:flex items-center bg-surface-container-low border border-outline-variant px-4 py-2 rounded-full w-96 gap-3">
-            <span className="material-symbols-outlined text-outline">
-              search
-            </span>
+            <span className="material-symbols-outlined text-outline">search</span>
             <input
               className="bg-transparent border-none focus:ring-0 text-body-sm w-full outline-none"
               placeholder="Search lessons, members..."
@@ -88,20 +86,14 @@ const ClassroomDetailContent = () => {
               <span className="text-white/70 text-body-sm">•</span>
               <span className="text-white/90 text-body-sm">Grade 10</span>
             </div>
-            <h2 className="text-white font-headline-lg text-headline-lg mb-2">
-              Lớp 10A1 - Toán học
-            </h2>
+            <h2 className="text-white font-headline-lg text-headline-lg mb-2">Lớp 10A1 - Toán học</h2>
             <div className="flex items-center gap-6">
               <div className="flex items-center gap-2 text-white/80">
                 <span className="material-symbols-outlined text-sm">key</span>
-                <span className="font-code-sm text-code-sm uppercase tracking-widest">
-                  MATH-10A1-XQ
-                </span>
+                <span className="font-code-sm text-code-sm uppercase tracking-widest">MATH-10A1-XQ</span>
               </div>
               <div className="flex items-center gap-2 text-white/80">
-                <span className="material-symbols-outlined text-sm">
-                  groups
-                </span>
+                <span className="material-symbols-outlined text-sm">groups</span>
                 <span className="text-body-sm">42 Students</span>
               </div>
             </div>
@@ -115,12 +107,8 @@ const ClassroomDetailContent = () => {
         <div className="tab-pane" id="lessons-content">
           <div className="flex items-center justify-between mb-8">
             <div>
-              <h3 className="font-headline-md text-headline-md text-on-surface">
-                Bài giảng hiện tại
-              </h3>
-              <p className="text-on-surface-variant text-body-sm">
-                Manage and organize your mathematics curriculum.
-              </p>
+              <h3 className="font-headline-md text-headline-md text-on-surface">Bài giảng hiện tại</h3>
+              <p className="text-on-surface-variant text-body-sm">Manage and organize your mathematics curriculum.</p>
             </div>
             <button className="bg-primary text-white px-6 py-3 rounded-xl font-label-md flex items-center gap-2 hover:shadow-lg transition-all active:scale-95">
               <span className="material-symbols-outlined">add</span>
@@ -133,23 +121,17 @@ const ClassroomDetailContent = () => {
             <div className="bg-surface-container-lowest border border-outline-variant p-6 rounded-2xl hover:border-primary-container hover:shadow-md transition-all group">
               <div className="flex justify-between items-start mb-4">
                 <div className="w-12 h-12 bg-secondary-container rounded-xl flex items-center justify-center text-secondary">
-                  <span
-                    className="material-symbols-outlined"
-                    style={{ fontVariationSettings: "'FILL' 1" }}
-                  >
+                  <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>
                     functions
                   </span>
                 </div>
-                <span className="text-label-md bg-green-50 text-green-700 px-3 py-1 rounded-full">
-                  Đã xuất bản
-                </span>
+                <span className="text-label-md bg-green-50 text-green-700 px-3 py-1 rounded-full">Đã xuất bản</span>
               </div>
               <h4 className="font-bold text-lg mb-2 group-hover:text-primary transition-colors">
                 Chương 1: Mệnh đề và Tập hợp
               </h4>
               <p className="text-on-surface-variant text-body-sm mb-6 line-clamp-2">
-                Khám phá các khái niệm cơ bản về logic toán học và cách biểu
-                diễn tập hợp.
+                Khám phá các khái niệm cơ bản về logic toán học và cách biểu diễn tập hợp.
               </p>
               <div className="flex items-center justify-between pt-4 border-t border-outline-variant/30">
                 <div className="flex -space-x-2">
@@ -164,10 +146,7 @@ const ClassroomDetailContent = () => {
                   </div>
                 </div>
                 <button className="text-primary font-bold text-label-md flex items-center gap-1">
-                  Chi tiết{" "}
-                  <span className="material-symbols-outlined text-sm">
-                    arrow_forward
-                  </span>
+                  Chi tiết <span className="material-symbols-outlined text-sm">arrow_forward</span>
                 </button>
               </div>
             </div>
@@ -176,23 +155,17 @@ const ClassroomDetailContent = () => {
             <div className="bg-surface-container-lowest border border-outline-variant p-6 rounded-2xl hover:border-primary-container hover:shadow-md transition-all group">
               <div className="flex justify-between items-start mb-4">
                 <div className="w-12 h-12 bg-primary-container/10 rounded-xl flex items-center justify-center text-primary">
-                  <span
-                    className="material-symbols-outlined"
-                    style={{ fontVariationSettings: "'FILL' 1" }}
-                  >
+                  <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>
                     show_chart
                   </span>
                 </div>
-                <span className="text-label-md bg-blue-50 text-blue-700 px-3 py-1 rounded-full">
-                  Đang học
-                </span>
+                <span className="text-label-md bg-blue-50 text-blue-700 px-3 py-1 rounded-full">Đang học</span>
               </div>
               <h4 className="font-bold text-lg mb-2 group-hover:text-primary transition-colors">
                 Chương 2: Hàm số bậc nhất và bậc hai
               </h4>
               <p className="text-on-surface-variant text-body-sm mb-6 line-clamp-2">
-                Phân tích đồ thị và ứng dụng thực tế của các loại hàm số đa
-                thức.
+                Phân tích đồ thị và ứng dụng thực tế của các loại hàm số đa thức.
               </p>
               <div className="flex items-center justify-between pt-4 border-t border-outline-variant/30">
                 <div className="flex -space-x-2">
@@ -200,10 +173,7 @@ const ClassroomDetailContent = () => {
                   <div className="w-8 h-8 rounded-full border-2 border-white bg-slate-300"></div>
                 </div>
                 <button className="text-primary font-bold text-label-md flex items-center gap-1">
-                  Chi tiết{" "}
-                  <span className="material-symbols-outlined text-sm">
-                    arrow_forward
-                  </span>
+                  Chi tiết <span className="material-symbols-outlined text-sm">arrow_forward</span>
                 </button>
               </div>
             </div>
@@ -213,17 +183,13 @@ const ClassroomDetailContent = () => {
               <div className="absolute top-0 right-0 w-24 h-24 bg-primary/5 -mr-12 -mt-12 rounded-full"></div>
               <div className="flex justify-between items-start mb-4">
                 <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center text-primary">
-                  <span className="material-symbols-outlined">
-                    auto_awesome
-                  </span>
+                  <span className="material-symbols-outlined">auto_awesome</span>
                 </div>
                 <span className="text-label-md bg-primary/10 text-primary px-3 py-1 rounded-full font-bold">
                   AI Gợi ý
                 </span>
               </div>
-              <h4 className="font-bold text-lg mb-2">
-                Chương 3: Phương trình & Hệ phương trình
-              </h4>
+              <h4 className="font-bold text-lg mb-2">Chương 3: Phương trình & Hệ phương trình</h4>
               <p className="text-on-surface-variant text-body-sm mb-6">
                 AI đề xuất dựa trên tiến độ học tập của lớp 10A1 tuần vừa qua.
               </p>
@@ -237,9 +203,7 @@ const ClassroomDetailContent = () => {
         {/* Tab Content: Members (Hidden by default) */}
         <div className="tab-pane hidden" id="members-content">
           <div className="flex items-center justify-between mb-8">
-            <h3 className="font-headline-md text-headline-md text-on-surface">
-              Danh sách học sinh (42)
-            </h3>
+            <h3 className="font-headline-md text-headline-md text-on-surface">Danh sách học sinh (42)</h3>
             <div className="flex gap-3">
               <button className="bg-surface-container-high text-on-surface-variant px-4 py-2 rounded-lg font-label-md flex items-center gap-2 hover:bg-surface-container-highest transition-colors">
                 <span className="material-symbols-outlined">how_to_reg</span>
@@ -256,15 +220,9 @@ const ClassroomDetailContent = () => {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-surface-container border-b border-outline-variant">
-                  <th className="px-6 py-4 font-label-md text-on-surface-variant uppercase text-xs">
-                    Student Name
-                  </th>
-                  <th className="px-6 py-4 font-label-md text-on-surface-variant uppercase text-xs">
-                    Student ID
-                  </th>
-                  <th className="px-6 py-4 font-label-md text-on-surface-variant uppercase text-xs">
-                    Attendance
-                  </th>
+                  <th className="px-6 py-4 font-label-md text-on-surface-variant uppercase text-xs">Student Name</th>
+                  <th className="px-6 py-4 font-label-md text-on-surface-variant uppercase text-xs">Student ID</th>
+                  <th className="px-6 py-4 font-label-md text-on-surface-variant uppercase text-xs">Attendance</th>
                   <th className="px-6 py-4 font-label-md text-on-surface-variant uppercase text-xs text-right">
                     Actions
                   </th>
@@ -279,15 +237,11 @@ const ClassroomDetailContent = () => {
                       </div>
                       <div>
                         <p className="font-bold text-on-surface">Trần Nam</p>
-                        <p className="text-xs text-on-surface-variant">
-                          nam.tran@school.edu.vn
-                        </p>
+                        <p className="text-xs text-on-surface-variant">nam.tran@school.edu.vn</p>
                       </div>
                     </div>
                   </td>
-                  <td className="px-6 py-4 text-body-sm font-code-sm">
-                    STU00124
-                  </td>
+                  <td className="px-6 py-4 text-body-sm font-code-sm">STU00124</td>
                   <td className="px-6 py-4">
                     <span className="bg-green-50 text-green-700 px-2 py-1 rounded text-xs font-bold uppercase tracking-wider">
                       98% Regular
@@ -295,9 +249,7 @@ const ClassroomDetailContent = () => {
                   </td>
                   <td className="px-6 py-4 text-right">
                     <button className="text-on-surface-variant hover:text-primary p-2">
-                      <span className="material-symbols-outlined">
-                        more_vert
-                      </span>
+                      <span className="material-symbols-outlined">more_vert</span>
                     </button>
                   </td>
                 </tr>
@@ -309,15 +261,11 @@ const ClassroomDetailContent = () => {
                       </div>
                       <div>
                         <p className="font-bold text-on-surface">Lê Hoa</p>
-                        <p className="text-xs text-on-surface-variant">
-                          hoa.le@school.edu.vn
-                        </p>
+                        <p className="text-xs text-on-surface-variant">hoa.le@school.edu.vn</p>
                       </div>
                     </div>
                   </td>
-                  <td className="px-6 py-4 text-body-sm font-code-sm">
-                    STU00125
-                  </td>
+                  <td className="px-6 py-4 text-body-sm font-code-sm">STU00125</td>
                   <td className="px-6 py-4">
                     <span className="bg-green-50 text-green-700 px-2 py-1 rounded text-xs font-bold uppercase tracking-wider">
                       95% Regular
@@ -325,9 +273,7 @@ const ClassroomDetailContent = () => {
                   </td>
                   <td className="px-6 py-4 text-right">
                     <button className="text-on-surface-variant hover:text-primary p-2">
-                      <span className="material-symbols-outlined">
-                        more_vert
-                      </span>
+                      <span className="material-symbols-outlined">more_vert</span>
                     </button>
                   </td>
                 </tr>
@@ -339,15 +285,11 @@ const ClassroomDetailContent = () => {
                       </div>
                       <div>
                         <p className="font-bold text-on-surface">Phạm Văn</p>
-                        <p className="text-xs text-on-surface-variant">
-                          van.pham@school.edu.vn
-                        </p>
+                        <p className="text-xs text-on-surface-variant">van.pham@school.edu.vn</p>
                       </div>
                     </div>
                   </td>
-                  <td className="px-6 py-4 text-body-sm font-code-sm">
-                    STU00126
-                  </td>
+                  <td className="px-6 py-4 text-body-sm font-code-sm">STU00126</td>
                   <td className="px-6 py-4">
                     <span className="bg-error-container text-error px-2 py-1 rounded text-xs font-bold uppercase tracking-wider">
                       82% Critical
@@ -355,28 +297,20 @@ const ClassroomDetailContent = () => {
                   </td>
                   <td className="px-6 py-4 text-right">
                     <button className="text-on-surface-variant hover:text-primary p-2">
-                      <span className="material-symbols-outlined">
-                        more_vert
-                      </span>
+                      <span className="material-symbols-outlined">more_vert</span>
                     </button>
                   </td>
                 </tr>
               </tbody>
             </table>
             <div className="bg-surface-container-low px-6 py-4 flex items-center justify-between border-t border-outline-variant">
-              <span className="text-body-sm text-on-surface-variant">
-                Showing 3 of 42 members
-              </span>
+              <span className="text-body-sm text-on-surface-variant">Showing 3 of 42 members</span>
               <div className="flex gap-2">
                 <button className="w-8 h-8 border border-outline-variant flex items-center justify-center rounded-lg hover:bg-surface-container-high">
-                  <span className="material-symbols-outlined text-sm">
-                    chevron_left
-                  </span>
+                  <span className="material-symbols-outlined text-sm">chevron_left</span>
                 </button>
                 <button className="w-8 h-8 border border-outline-variant flex items-center justify-center rounded-lg hover:bg-surface-container-high">
-                  <span className="material-symbols-outlined text-sm">
-                    chevron_right
-                  </span>
+                  <span className="material-symbols-outlined text-sm">chevron_right</span>
                 </button>
               </div>
             </div>
@@ -386,13 +320,10 @@ const ClassroomDetailContent = () => {
         {/* Tab Content: Assignments (Hidden by default) */}
         <div className="tab-pane hidden" id="assignments-content">
           <div className="flex items-center justify-between mb-8">
-            <h3 className="font-headline-md text-headline-md text-on-surface">
-              Quản lý Bài tập & Thi
-            </h3>
+            <h3 className="font-headline-md text-headline-md text-on-surface">Quản lý Bài tập & Thi</h3>
             <div className="flex gap-4">
               <button className="bg-white border border-outline-variant text-on-surface-variant px-6 py-2 rounded-xl font-label-md flex items-center gap-2">
-                <span className="material-symbols-outlined">filter_list</span>{" "}
-                Lọc
+                <span className="material-symbols-outlined">filter_list</span> Lọc
               </button>
               <button className="bg-primary text-white px-6 py-2 rounded-xl font-label-md flex items-center gap-2">
                 <span className="material-symbols-outlined">add</span> Tạo mới
@@ -407,19 +338,13 @@ const ClassroomDetailContent = () => {
                   <span className="material-symbols-outlined">assignment</span>
                 </div>
                 <div>
-                  <h5 className="font-bold text-on-surface">
-                    Bài tập về nhà: Giải phương trình lượng giác
-                  </h5>
-                  <p className="text-body-sm text-on-surface-variant">
-                    Deadline: 20/10/2023 • 23:59
-                  </p>
+                  <h5 className="font-bold text-on-surface">Bài tập về nhà: Giải phương trình lượng giác</h5>
+                  <p className="text-body-sm text-on-surface-variant">Deadline: 20/10/2023 • 23:59</p>
                   <div className="mt-2 flex items-center gap-2">
                     <div className="w-48 h-2 bg-surface-container rounded-full overflow-hidden">
                       <div className="w-3/4 h-full bg-primary"></div>
                     </div>
-                    <span className="text-xs font-bold text-on-surface-variant">
-                      32/42 đã nộp
-                    </span>
+                    <span className="text-xs font-bold text-on-surface-variant">32/42 đã nộp</span>
                   </div>
                 </div>
               </div>
@@ -440,12 +365,8 @@ const ClassroomDetailContent = () => {
                   <span className="material-symbols-outlined">timer</span>
                 </div>
                 <div>
-                  <h5 className="font-bold text-on-surface">
-                    Kiểm tra giữa kỳ - Toán Giải tích
-                  </h5>
-                  <p className="text-body-sm text-on-surface-variant">
-                    Thời gian: 90 phút • Trực tuyến
-                  </p>
+                  <h5 className="font-bold text-on-surface">Kiểm tra giữa kỳ - Toán Giải tích</h5>
+                  <p className="text-body-sm text-on-surface-variant">Thời gian: 90 phút • Trực tuyến</p>
                   <span className="inline-block mt-2 px-2 py-0.5 bg-orange-100 text-orange-700 text-[10px] font-bold rounded uppercase">
                     Upcoming
                   </span>
@@ -472,12 +393,9 @@ const ClassroomDetailContent = () => {
                   #
                 </div>
                 <div>
-                  <h4 className="font-bold text-on-surface">
-                    Thảo luận Lớp 10A1
-                  </h4>
+                  <h4 className="font-bold text-on-surface">Thảo luận Lớp 10A1</h4>
                   <p className="text-xs text-green-600 flex items-center gap-1">
-                    <span className="w-2 h-2 bg-green-500 rounded-full"></span>{" "}
-                    12 thành viên trực tuyến
+                    <span className="w-2 h-2 bg-green-500 rounded-full"></span> 12 thành viên trực tuyến
                   </p>
                 </div>
               </div>
@@ -500,13 +418,10 @@ const ClassroomDetailContent = () => {
                 <div className="max-w-[70%]">
                   <div className="flex items-center gap-2 mb-1">
                     <span className="font-bold text-sm">Trần Nam</span>
-                    <span className="text-xs text-on-surface-variant">
-                      09:42 AM
-                    </span>
+                    <span className="text-xs text-on-surface-variant">09:42 AM</span>
                   </div>
                   <div className="bg-white p-4 rounded-2xl rounded-tl-none border border-outline-variant shadow-sm text-body-sm">
-                    Thầy ơi, bài toán chương 2 câu 5 em chưa hiểu lắm ạ. Có thể
-                    hướng dẫn lại không thầy?
+                    Thầy ơi, bài toán chương 2 câu 5 em chưa hiểu lắm ạ. Có thể hướng dẫn lại không thầy?
                   </div>
                 </div>
               </div>
@@ -518,16 +433,11 @@ const ClassroomDetailContent = () => {
                 </div>
                 <div className="max-w-[70%] text-right">
                   <div className="flex items-center justify-end gap-2 mb-1">
-                    <span className="text-xs text-on-surface-variant">
-                      09:45 AM
-                    </span>
-                    <span className="font-bold text-sm text-primary">
-                      Bạn (Giáo viên)
-                    </span>
+                    <span className="text-xs text-on-surface-variant">09:45 AM</span>
+                    <span className="font-bold text-sm text-primary">Bạn (Giáo viên)</span>
                   </div>
                   <div className="bg-primary text-white p-4 rounded-2xl rounded-tr-none shadow-sm text-body-sm text-left">
-                    Chào Nam, câu đó cần áp dụng định lý Vi-et. Thầy sẽ gửi tài
-                    liệu bổ trợ vào nhóm nhé.
+                    Chào Nam, câu đó cần áp dụng định lý Vi-et. Thầy sẽ gửi tài liệu bổ trợ vào nhóm nhé.
                   </div>
                 </div>
               </div>
@@ -556,9 +466,7 @@ const ClassroomDetailContent = () => {
                 />
                 <div className="flex gap-2">
                   <button className="text-on-surface-variant hover:text-primary">
-                    <span className="material-symbols-outlined">
-                      sentiment_satisfied
-                    </span>
+                    <span className="material-symbols-outlined">sentiment_satisfied</span>
                   </button>
                   <button className="bg-primary text-white p-2 rounded-xl active:scale-90 transition-transform">
                     <span className="material-symbols-outlined">send</span>
@@ -572,10 +480,7 @@ const ClassroomDetailContent = () => {
 
       {/* Floating Action Button */}
       <button className="fixed bottom-8 right-8 bg-primary text-white flex items-center gap-3 px-6 py-4 rounded-full shadow-2xl hover:bg-primary-container hover:scale-105 active:scale-95 transition-all z-50 group">
-        <span
-          className="material-symbols-outlined"
-          style={{ fontVariationSettings: "'FILL' 1" }}
-        >
+        <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>
           videocam
         </span>
         <span className="font-bold text-label-md">Học trực tuyến</span>
@@ -585,4 +490,4 @@ const ClassroomDetailContent = () => {
   );
 };
 
-export default ClassroomDetailContent;
+export default ClassroomDetail;
