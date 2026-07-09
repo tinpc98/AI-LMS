@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { classApi } from "../../api/classApi";
 import CreateClassModal from "../../components/features/CreateClassModal";
 import type { IClass } from "../../interface/classInterface";
@@ -32,7 +32,7 @@ const ClassManagement = () => {
   // --- CÁC HÀM XỬ LÝ SỰ KIỆN CHO NÚT BẤM MỚI ---
   const handleGoToClass = (classId: string) => {
     console.log("Điều hướng vào lớp học có ID:", classId);
-    navigate(`/teacher/classroomdetail?classId=${classId}`);
+    navigate(`/teacher/classroom-detail/${classId}`);
   };
 
   const handleEditClass = (cls: IClass) => {

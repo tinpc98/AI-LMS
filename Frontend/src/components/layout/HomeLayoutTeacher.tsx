@@ -1,4 +1,3 @@
-import React from "react";
 import SidebarTeacher from "./SidebarTeacher";
 // import HeaderTeacher from "./HeaderTeacher";
 // import HomePageTeacher from "../../pages/teachers/HomePageTeacher";

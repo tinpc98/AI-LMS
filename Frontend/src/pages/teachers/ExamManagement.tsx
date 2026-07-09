@@ -1,5 +1,3 @@
-import React from "react";
-
 const ExamManagement = () => {
   return (
     <main className="ml-[280px] pt-16 min-h-screen">

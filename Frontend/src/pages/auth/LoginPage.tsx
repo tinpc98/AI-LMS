@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { Link, useNavigate } from "react-router-dom";
-import type User from "../../interface/userInterface.tsx";
+import type User from "../../interface/userInterface";
 // FIX LỖI: Import authApi để dùng tầng gọi API tập trung
 import { authApi } from "../../api/authApi.ts";
 import axios from "axios";
@@ -71,9 +71,7 @@ const Login = () => {
     } catch (error: unknown) {
       if (axios.isAxiosError(error)) {
         console.log("Lỗi đăng nhập:", error);
-        const serverMessage =
-          error.response?.data?.message ||
-          "Email hoặc mật khẩu không chính xác!";
+        const serverMessage = error.response?.data?.message || "Email hoặc mật khẩu không chính xác!";
         alert(serverMessage);
       } else {
         alert("Đã xảy ra lỗi hệ thống không xác định.");
@@ -107,18 +105,11 @@ const Login = () => {
           <div className="bg-white/80 backdrop-blur-md p-6 rounded-2xl shadow-sm border border-gray-100">
             {/* Header Form */}
             <div className="text-center mb-6">
-              <h1 className="text-xl font-bold text-gray-900 tracking-tight">
-                Chào mừng trở lại
-              </h1>
-              <p className="text-xs text-gray-500 mt-1">
-                Vui lòng đăng nhập vào tài khoản của bạn
-              </p>
+              <h1 className="text-xl font-bold text-gray-900 tracking-tight">Chào mừng trở lại</h1>
+              <p className="text-xs text-gray-500 mt-1">Vui lòng đăng nhập vào tài khoản của bạn</p>
             </div>
 
-            <form
-              className="space-y-4"
-              onSubmit={handleSubmit(onValid, onError)}
-            >
+            <form className="space-y-4" onSubmit={handleSubmit(onValid, onError)}>
               {/* Email Field */}
               <div className="space-y-1">
                 <label
@@ -140,34 +131,22 @@ const Login = () => {
                         message: "Nhập tối thiểu 6 ký tự",
                       },
                       pattern: {
-                        value:
-                          /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
-                        message:
-                          "Email không đúng định dạng (Ví dụ: ví_dụ@gmail.com)",
+                        value: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
+                        message: "Email không đúng định dạng (Ví dụ: ví_dụ@gmail.com)",
                       },
                     })}
                   />
-                  {errors.email && (
-                    <p className="text-red-500 text-xs mt-1 px-0.5">
-                      {errors.email.message}
-                    </p>
-                  )}
+                  {errors.email && <p className="text-red-500 text-xs mt-1 px-0.5">{errors.email.message}</p>}
                 </div>
               </div>
 
               {/* Password Field */}
               <div className="space-y-1">
                 <div className="flex justify-between items-center px-0.5">
-                  <label
-                    className="text-[10px] font-bold text-gray-500 uppercase tracking-wider"
-                    htmlFor="password"
-                  >
+                  <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider" htmlFor="password">
                     Mật khẩu
                   </label>
-                  <a
-                    className="text-[11px] font-medium text-indigo-600 hover:underline"
-                    href="#"
-                  >
+                  <a className="text-[11px] font-medium text-indigo-600 hover:underline" href="#">
                     Quên mật khẩu?
                   </a>
                 </div>
@@ -185,11 +164,7 @@ const Login = () => {
                       },
                     })}
                   />
-                  {errors.password && (
-                    <p className="text-red-500 text-xs mt-1 px-0.5">
-                      {errors.password.message}
-                    </p>
-                  )}
+                  {errors.password && <p className="text-red-500 text-xs mt-1 px-0.5">{errors.password.message}</p>}
                 </div>
               </div>
 
@@ -238,9 +213,7 @@ const Login = () => {
                     fill="#EA4335"
                   />
                 </svg>
-                <span className="text-xs font-medium text-gray-700">
-                  Google
-                </span>
+                <span className="text-xs font-medium text-gray-700">Google</span>
               </button>
               <button
                 type="button"
@@ -249,9 +222,7 @@ const Login = () => {
                 <svg className="w-4 h-4" fill="#1877F2" viewBox="0 0 24 24">
                   <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
                 </svg>
-                <span className="text-xs font-medium text-gray-700">
-                  Facebook
-                </span>
+                <span className="text-xs font-medium text-gray-700">Facebook</span>
               </button>
             </div>
 
@@ -260,10 +231,7 @@ const Login = () => {
               <p className="text-xs text-gray-500">
                 Bạn chưa có tài khoản?
                 {/* FIX LỖI: Sửa lại thẻ Link chuẩn cấu trúc, loại bỏ thẻ a thừa lồng bên trong */}
-                <Link
-                  to="/register"
-                  className="text-indigo-600 font-semibold hover:underline ml-1"
-                >
+                <Link to="/register" className="text-indigo-600 font-semibold hover:underline ml-1">
                   Đăng ký ngay
                 </Link>
               </p>
@@ -272,22 +240,13 @@ const Login = () => {
 
           {/* Các link phụ dưới form */}
           <div className="mt-5 flex justify-center gap-6">
-            <a
-              className="text-[11px] text-gray-400 hover:text-gray-600 transition-colors"
-              href="#"
-            >
+            <a className="text-[11px] text-gray-400 hover:text-gray-600 transition-colors" href="#">
               Điều khoản
             </a>
-            <a
-              className="text-[11px] text-gray-400 hover:text-gray-600 transition-colors"
-              href="#"
-            >
+            <a className="text-[11px] text-gray-400 hover:text-gray-600 transition-colors" href="#">
               Chính sách
             </a>
-            <a
-              className="text-[11px] text-gray-400 hover:text-gray-600 transition-colors"
-              href="#"
-            >
+            <a className="text-[11px] text-gray-400 hover:text-gray-600 transition-colors" href="#">
               Hỗ trợ
             </a>
           </div>
@@ -297,9 +256,7 @@ const Login = () => {
       {/* Footer bản auth mỏng gọn */}
       <footer className="w-full py-4 bg-white border-t border-gray-100">
         <div className="max-w-7xl mx-auto px-6 flex flex-col sm:flex-row justify-between items-center gap-2">
-          <p className="text-[11px] text-gray-400">
-            © 2026 EDUSYNTH AI. Bảo lưu mọi quyền.
-          </p>
+          <p className="text-[11px] text-gray-400">© 2026 EDUSYNTH AI. Bảo lưu mọi quyền.</p>
           <div className="flex gap-4">
             <span className="material-symbols-outlined text-gray-400 text-base cursor-pointer hover:text-indigo-600 transition-colors">
               language

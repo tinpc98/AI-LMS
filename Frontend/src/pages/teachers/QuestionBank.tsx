@@ -1,5 +1,3 @@
-import React from "react";
-
 const QuestionBank = () => {
   return (
     <div className="p-8 max-w-[1280px] mx-auto">

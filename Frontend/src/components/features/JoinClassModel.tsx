@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import axios from "axios";
 import { classApi } from "../../api/classApi";
 import type { IClass } from "../../interface/classInterface";

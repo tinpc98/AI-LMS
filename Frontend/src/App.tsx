@@ -21,6 +21,7 @@ import ClassManagement from "./pages/teachers/ClassroomManagement";
 import ExamDetai from "./pages/teachers/ExamDetai";
 import LessonManagement from "./pages/teachers/LessonManagement";
 import HomeLayoutTeacher from "./components/layout/HomeLayoutTeacher";
+import ClassDetail from "./pages/students/ClassDetail";
 
 function App() {
   return (
@@ -35,15 +36,16 @@ function App() {
         <Route path="myclasses" element={<MyClasses />} />
         <Route path="studentassignment" element={<StudentAssignment />} />
       </Route>
+      <Route path="classdetail/:classId" element={<ClassDetail />} />
       <Route path="lessonview" element={<LessonView />} />
       <Route path="exam" element={<ExamPage />} />
 
       {/* ================= TEACHER ROUTES ================= */}
       <Route path="/teacher" element={<HomeLayoutTeacher />}>
         <Route index element={<HomePageTeacher />} />
-        <Route path="classroomdetail" element={<ClassroomDetail />} />
+        <Route path="classroom-detail/:classId" element={<ClassroomDetail />} />
         <Route path="classroom-management" element={<ClassManagement />} />
-        <Route path="examdetail" element={<ExamDetai />} />
+        <Route path="examdetail/:examId" element={<ExamDetai />} />
         <Route path="lessonManagement" element={<LessonManagement />} />
       </Route>
       <Route path="question-bank" element={<QuestionBank />} />

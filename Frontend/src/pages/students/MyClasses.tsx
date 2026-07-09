@@ -1,8 +1,9 @@
 import axios from "axios";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import JoinClassModel from "../../components/features/JoinClassModel";
 import { classApi } from "../../api/classApi";
 import type { IClass } from "../../interface/classInterface";
+import { useNavigate } from "react-router-dom";
 
 const MyClassesContent = () => {
   const [myClasses, setMyClasses] = useState<IClass[]>([]);
@@ -11,14 +12,14 @@ const MyClassesContent = () => {
 
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
 
+  const navigate = useNavigate();
+
   const getAllMyClasses = async (isMounted: boolean) => {
     try {
       if (isMounted) {
         setIsLoading(true);
         setErrorMessage("");
       }
-
-      // Response thật có dạng { message, data: [...] } -> phải lấy res.data.data
       const res = await classApi.getMyClasses();
       const classList = res.data?.data;
 
@@ -59,10 +60,13 @@ const MyClassesContent = () => {
   }, []);
 
   const handleJoined = (joinedClass: IClass) => {
-    // Thêm lớp vừa tham gia vào danh sách hiển thị ngay, không cần load lại trang
     setMyClasses((prev) => [joinedClass, ...prev]);
   };
 
+  const handleGoToClass = (classId: string) => {
+    console.log("Điều hướng vào lớp học có ID:", classId);
+    navigate(`/classdetail/${classId}`);
+  };
   return (
     <>
       <JoinClassModel isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onJoined={handleJoined} />
@@ -141,7 +145,10 @@ const MyClassesContent = () => {
                     </div>
                   </div>
 
-                  <button className="w-full py-3 bg-surface-container-low text-primary border border-primary-container/20 rounded-lg font-bold hover:bg-primary-container/10 transition-all active:scale-[0.98] flex items-center justify-center gap-2">
+                  <button
+                    onClick={() => handleGoToClass(myclass._id)}
+                    className="w-full py-3 bg-surface-container-low text-primary border border-primary-container/20 rounded-lg font-bold hover:bg-primary-container/10 transition-all active:scale-[0.98] flex items-center justify-center gap-2"
+                  >
                     <span>Vào lớp học</span>
                     <span className="material-symbols-outlined text-[20px]">arrow_forward</span>
                   </button>

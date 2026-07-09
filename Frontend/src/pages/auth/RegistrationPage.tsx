@@ -1,8 +1,7 @@
-import React from "react";
 import { useForm } from "react-hook-form";
 import { Link, useNavigate } from "react-router-dom";
 import { authApi } from "../../api/authApi";
-import type User from "../interface/userInterface";
+import type User from "../../interface/userInterface";
 import axios from "axios";
 
 const Register = () => {
@@ -11,11 +10,10 @@ const Register = () => {
   const {
     register,
     handleSubmit,
-    watch,
+    getValues,
     formState: { errors, isSubmitting }, // Dùng trực tiếp isSubmitting xịn của useForm
   } = useForm<User>();
 
-  const passwordValue = watch("password");
   // Hàm xử lý khi dữ liệu form hợp lệ
   const onValid = async (data: User) => {
     try {
@@ -35,9 +33,7 @@ const Register = () => {
     } catch (error: unknown) {
       if (axios.isAxiosError(error)) {
         console.log("Lỗi đăng ký:", error);
-        const serverMessage =
-          error.response?.data?.message ||
-          "Đăng ký thất bại, vui lòng thử lại!";
+        const serverMessage = error.response?.data?.message || "Đăng ký thất bại, vui lòng thử lại!";
         alert(serverMessage);
       }
     }
@@ -53,23 +49,14 @@ const Register = () => {
         <div className="w-full max-w-md">
           {/* Brand Identity / Header */}
           <div className="text-center mb-6">
-            <h1 className="text-2xl font-bold text-indigo-600 tracking-tight">
-              EduSynth AI
-            </h1>
-            <h2 className="text-xl font-semibold text-gray-900 mt-1">
-              Tạo tài khoản mới
-            </h2>
-            <p className="text-xs text-gray-500 mt-1.5">
-              Bắt đầu trải nghiệm môi trường học tập đẳng cấp công nghệ AI
-            </p>
+            <h1 className="text-2xl font-bold text-indigo-600 tracking-tight">EduSynth AI</h1>
+            <h2 className="text-xl font-semibold text-gray-900 mt-1">Tạo tài khoản mới</h2>
+            <p className="text-xs text-gray-500 mt-1.5">Bắt đầu trải nghiệm môi trường học tập đẳng cấp công nghệ AI</p>
           </div>
 
           {/* Registration Form Card */}
           <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
-            <form
-              className="space-y-4"
-              onSubmit={handleSubmit(onValid, onError)}
-            >
+            <form className="space-y-4" onSubmit={handleSubmit(onValid, onError)}>
               {/* Name Field */}
               <div className="space-y-1">
                 <label
@@ -91,19 +78,12 @@ const Register = () => {
                     required: "Bạn chưa nhập Họ và tên",
                   })}
                 />
-                {errors.fullName && (
-                  <p className="text-red-500 text-xs mt-0.5">
-                    {errors.fullName.message}
-                  </p>
-                )}
+                {errors.fullName && <p className="text-red-500 text-xs mt-0.5">{errors.fullName.message}</p>}
               </div>
 
               {/* Email Field */}
               <div className="space-y-1">
-                <label
-                  className="text-[10px] font-bold text-gray-500 block uppercase tracking-wider"
-                  htmlFor="email"
-                >
+                <label className="text-[10px] font-bold text-gray-500 block uppercase tracking-wider" htmlFor="email">
                   Email
                 </label>
                 <input
@@ -119,24 +99,16 @@ const Register = () => {
                     required: "Bạn chưa nhập Email",
                     pattern: {
                       value: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
-                      message:
-                        "Email không đúng định dạng (Ví dụ: vidu@gmail.com)",
+                      message: "Email không đúng định dạng (Ví dụ: vidu@gmail.com)",
                     },
                   })}
                 />
-                {errors.email && (
-                  <p className="text-red-500 text-xs mt-0.5">
-                    {errors.email.message}
-                  </p>
-                )}
+                {errors.email && <p className="text-red-500 text-xs mt-0.5">{errors.email.message}</p>}
               </div>
 
               {/* Phone Field */}
               <div className="space-y-1">
-                <label
-                  className="text-[10px] font-bold text-gray-500 block uppercase tracking-wider"
-                  htmlFor="phone"
-                >
+                <label className="text-[10px] font-bold text-gray-500 block uppercase tracking-wider" htmlFor="phone">
                   Số điện thoại
                 </label>
                 <input
@@ -156,11 +128,7 @@ const Register = () => {
                     },
                   })}
                 />
-                {errors.phone && (
-                  <p className="text-red-500 text-xs mt-0.5">
-                    {errors.phone.message}
-                  </p>
-                )}
+                {errors.phone && <p className="text-red-500 text-xs mt-0.5">{errors.phone.message}</p>}
               </div>
 
               {/* Password Field */}
@@ -188,11 +156,7 @@ const Register = () => {
                     },
                   })}
                 />
-                {errors.password && (
-                  <p className="text-red-500 text-xs mt-0.5">
-                    {errors.password.message}
-                  </p>
-                )}
+                {errors.password && <p className="text-red-500 text-xs mt-0.5">{errors.password.message}</p>}
               </div>
 
               {/* Confirm Password Field */}
@@ -214,15 +178,11 @@ const Register = () => {
                   }`}
                   {...register("confirmPassword", {
                     required: "Bạn chưa xác nhận mật khẩu",
-                    validate: (value) =>
-                      value === passwordValue ||
-                      "Mật khẩu xác nhận không trùng khớp",
+                    validate: (value) => value === getValues("password") || "Mật khẩu xác nhận không trùng khớp",
                   })}
                 />
                 {errors.confirmPassword && (
-                  <p className="text-red-500 text-xs mt-0.5">
-                    {errors.confirmPassword.message}
-                  </p>
+                  <p className="text-red-500 text-xs mt-0.5">{errors.confirmPassword.message}</p>
                 )}
               </div>
 
@@ -233,26 +193,17 @@ const Register = () => {
                     id="terms"
                     type="checkbox"
                     className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500/20 cursor-pointer"
-                    {...register("name", { required: true })}
+                    {...register("terms", { required: "Bạn phải đồng ý điều khoản" })}
                   />
                 </div>
                 <div className="ml-2">
-                  <label
-                    className="text-xs text-gray-500 leading-tight block cursor-pointer"
-                    htmlFor="terms"
-                  >
+                  <label className="text-xs text-gray-500 leading-tight block cursor-pointer" htmlFor="terms">
                     Tôi đồng ý với các{" "}
-                    <a
-                      className="text-indigo-600 font-semibold hover:underline"
-                      href="#terms-link"
-                    >
+                    <a className="text-indigo-600 font-semibold hover:underline" href="#terms-link">
                       Điều khoản dịch vụ
                     </a>{" "}
                     và{" "}
-                    <a
-                      className="text-indigo-600 font-semibold hover:underline"
-                      href="#privacy-link"
-                    >
+                    <a className="text-indigo-600 font-semibold hover:underline" href="#privacy-link">
                       Chính sách bảo mật
                     </a>
                     .
@@ -296,9 +247,7 @@ const Register = () => {
                     fill="#EA4335"
                   />
                 </svg>
-                <span className="text-xs font-medium text-gray-700">
-                  Google
-                </span>
+                <span className="text-xs font-medium text-gray-700">Google</span>
               </button>
               <button
                 type="button"
@@ -307,9 +256,7 @@ const Register = () => {
                 <svg className="w-4 h-4" fill="#1877F2" viewBox="0 0 24 24">
                   <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
                 </svg>
-                <span className="text-xs font-medium text-gray-700">
-                  Facebook
-                </span>
+                <span className="text-xs font-medium text-gray-700">Facebook</span>
               </button>
             </div>
 
@@ -317,10 +264,7 @@ const Register = () => {
             <div className="mt-5 text-center border-t border-gray-100 pt-4">
               <p className="text-xs text-gray-500">
                 Đã có tài khoản?
-                <Link
-                  to="/login"
-                  className="text-indigo-600 font-semibold hover:underline ml-1"
-                >
+                <Link to="/login" className="text-indigo-600 font-semibold hover:underline ml-1">
                   Đăng nhập ngay
                 </Link>
               </p>
