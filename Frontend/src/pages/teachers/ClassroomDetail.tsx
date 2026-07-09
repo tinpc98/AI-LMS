@@ -18,6 +18,7 @@ export default function ClassroomDetail() {
   const [errorMsg, setErrorMsg] = useState("");
 
   // --- States UI điều khiển hệ thống ---
+  const [editingLesson, setEditingLesson] = useState<ILesson | null>(null);
   const [activeTab, setActiveTab] = useState("lessons");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [chatInput, setChatInput] = useState("");
@@ -59,6 +60,11 @@ export default function ClassroomDetail() {
   const handleLessonCreated = (newLesson: ILesson) => {
     setLessons((prev) => [...prev, newLesson]);
     setIsModalOpen(false);
+  };
+
+  const handleLessonUpdated = (updatedLesson: ILesson) => {
+    setLessons((prev) => prev.map((l) => (l._id === updatedLesson._id ? updatedLesson : l)));
+    setEditingLesson(null);
   };
 
   const handleDeleteLesson = async (id: string) => {
@@ -225,8 +231,11 @@ export default function ClassroomDetail() {
                   </p>
                 </div>
                 <button
-                  onClick={() => setIsModalOpen(true)}
-                  className="bg-[#3525cd] text-white px-5 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-2 hover:shadow-md transition-all active:scale-95 flex-shrink-0"
+                  onClick={() => {
+                    setEditingLesson(null); // Đảm bảo trạng thái tạo mới khi bấm nút này
+                    setIsModalOpen(true);
+                  }}
+                  className="bg-[#3525cd] text-white px-5 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-2 hover:bg-[#281baf] hover:shadow-md transition-all active:scale-95 flex-shrink-0"
                 >
                   <span className="material-symbols-outlined text-lg">add</span>
                   Tạo bài giảng
@@ -237,16 +246,13 @@ export default function ClassroomDetail() {
                 <div className="border-2 border-dashed border-outline-variant rounded-2xl p-16 text-center text-on-surface-variant bg-white">
                   <span className="material-symbols-outlined text-4xl text-outline mb-2">menu_book</span>
                   <p className="text-sm font-medium">Chưa có bài giảng nào được đăng tải.</p>
-                  <p className="text-xs text-outline mt-1">
-                    Bấm nút "Tạo bài giảng" phía trên để thiết lập bài đầu tiên.
-                  </p>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {lessons.map((lesson) => (
                     <div
                       key={lesson._id}
-                      className="bg-white border border-outline-variant p-5 rounded-2xl hover:shadow-md transition-all flex flex-col justify-between group"
+                      className="bg-white border border-outline-variant p-5 rounded-2xl hover:shadow-md transition-all flex flex-col justify-between group animate-fade-in"
                     >
                       <div>
                         <div className="flex items-start justify-between gap-2 mb-3">
@@ -261,7 +267,6 @@ export default function ClassroomDetail() {
                           <p className="text-on-surface-variant text-xs line-clamp-2 mb-4">{lesson.description}</p>
                         )}
 
-                        {/* File và Video Url đính kèm */}
                         <div className="space-y-1.5 mb-4">
                           {lesson.videoUrl && (
                             <a
@@ -270,8 +275,8 @@ export default function ClassroomDetail() {
                               rel="noreferrer"
                               className="flex items-center gap-1.5 text-primary text-xs font-bold hover:underline"
                             >
-                              <span className="material-symbols-outlined text-base">play_circle</span>
-                              Xem video hướng dẫn
+                              <span className="material-symbols-outlined text-base">play_circle</span> Xem video hướng
+                              dẫn
                             </a>
                           )}
                           {lesson.attachments &&
@@ -283,24 +288,36 @@ export default function ClassroomDetail() {
                                 rel="noreferrer"
                                 className="flex items-center gap-1.5 text-on-surface-variant text-xs hover:text-primary truncate"
                               >
-                                <span className="material-symbols-outlined text-base text-outline">attach_file</span>
+                                <span className="material-symbols-outlined text-base text-outline">attach_file</span>{" "}
                                 <span className="truncate">{file.name}</span>
                               </a>
                             ))}
                         </div>
                       </div>
 
+                      {/* Chân Card: Nơi đặt cặp nút Sửa & Xóa */}
                       <div className="flex items-center justify-between pt-3 border-t border-outline-variant/40 mt-auto">
                         <span className="text-[11px] text-outline font-medium">
                           Ngày tạo: {new Date(lesson.createdAt).toLocaleDateString("vi-VN")}
                         </span>
-                        <button
-                          onClick={() => handleDeleteLesson(lesson._id)}
-                          className="text-error hover:bg-error-container/10 p-2 rounded-lg transition-colors"
-                          title="Xóa bài giảng"
-                        >
-                          <span className="material-symbols-outlined text-lg">delete</span>
-                        </button>
+                        <div className="flex items-center gap-1">
+                          {/* NÚT SỬA BÀI GIẢNG */}
+                          <button
+                            onClick={() => setEditingLesson(lesson)}
+                            className="text-primary hover:bg-primary/10 p-2 rounded-lg transition-colors"
+                            title="Sửa bài giảng"
+                          >
+                            <span className="material-symbols-outlined text-lg">edit</span>
+                          </button>
+                          {/* NÚT XÓA BÀI GIẢNG */}
+                          <button
+                            onClick={() => handleDeleteLesson(lesson._id)}
+                            className="text-error hover:bg-error-container/10 p-2 rounded-lg transition-colors"
+                            title="Xóa bài giảng"
+                          >
+                            <span className="material-symbols-outlined text-lg">delete</span>
+                          </button>
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -498,12 +515,17 @@ export default function ClassroomDetail() {
         </div>
       </main>
 
-      {/* MODAL TẠO BÀI GIẢNG MỚI */}
+      {/* MODAL ĐIỀU KHIỂN TẬP TRUNG (Mở khi Tạo MỚI HOẶC SỬA) */}
       <CreateLessonModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        isOpen={isModalOpen || !!editingLesson}
+        onClose={() => {
+          setIsModalOpen(false);
+          setEditingLesson(null);
+        }}
         classId={classId!}
+        lessonData={editingLesson} // Truyền dữ liệu bài giảng đang chỉnh sửa vào đây (nếu có)
         onCreated={handleLessonCreated}
+        onUpdated={handleLessonUpdated} // Thêm callback khi cập nhật thành công
       />
     </div>
   );
