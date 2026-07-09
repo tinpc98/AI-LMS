@@ -19,7 +19,7 @@ const Login = () => {
   // Nâng cấp: Tự động điều hướng thông minh dựa trên cả token lẫn role cũ
   useEffect(() => {
     const token = localStorage.getItem("accessToken");
-    const savedRole = localStorage.getItem("userRole"); // Lấy thêm role đã lưu
+    const savedRole = localStorage.getItem("userRole")?.toLowerCase(); // Chuẩn hóa role về lowercase
     if (token && savedRole) {
       if (savedRole === "student") navigate("/");
       else if (savedRole === "teacher") navigate("/teacher");
@@ -45,28 +45,23 @@ const Login = () => {
       localStorage.setItem("accessToken", result.accessToken);
 
       const loggedInUser = result.data;
-      const role = loggedInUser?.role;
+      const normalizedRole = String(loggedInUser?.role || "").toLowerCase();
 
-      if (role) {
-        localStorage.setItem("userRole", role);
+      if (normalizedRole) {
+        localStorage.setItem("userRole", normalizedRole);
       }
 
       alert(result.message || "Đăng nhập thành công rực rỡ!");
 
       // Phân quyền điều hướng (Authorization)
-      switch (role) {
-        case "student":
-          navigate("/");
-          break;
-        case "teacher":
-          navigate("/teacher");
-          break;
-        case "admin":
-          navigate("/admin");
-          break;
-        default:
-          navigate("/");
-          break;
+      if (normalizedRole === "teacher") {
+        navigate("/teacher");
+      } else if (normalizedRole === "student") {
+        navigate("/");
+      } else if (normalizedRole === "admin") {
+        navigate("/admin");
+      } else {
+        navigate("/");
       }
     } catch (error: unknown) {
       if (axios.isAxiosError(error)) {
