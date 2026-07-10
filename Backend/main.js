@@ -5,6 +5,7 @@ import { connectDB } from "./src/config/database.js";
 import UserRouter from "./src/routers/user.routes.js";
 import ClassRouter from "./src/routers/class.router.js";
 import LessonRouter from "./src/routers/lesson.routes.js";
+import assignmentRouter from "./src/routers/assignment.routes.js";
 
 // Kích hoạt cấu hình file .env
 dotenv.config();
@@ -47,6 +48,7 @@ app.get("/", (req, res) => {
     .status(200)
     .json({ message: "Server EduSynth AI đang hoạt động ổn định!" });
 });
+app.use("/api/assignments", assignmentRouter);
 
 // Xử lý lỗi 404 cho các đường dẫn không tồn tại
 app.use((req, res) => {

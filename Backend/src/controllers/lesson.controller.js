@@ -14,7 +14,7 @@ const uploadToCloudinary = (fileBuffer, originalName) => {
         resolve({
           name: originalName,
           url: result.secure_url,
-          publicId: result.public_id, // Đã sửa lại thành snake_case chuẩn của Cloudinary
+          publicId: result.public_id,
         });
       },
     );
@@ -22,12 +22,21 @@ const uploadToCloudinary = (fileBuffer, originalName) => {
   });
 };
 //============================================================\
-//Tạo bài giảng
+// Quản lý Bài giảng
 const lessonController = {
-  // 1. TẠO BÀI GIẢNG (Giáo viên điền text + dán link YouTube + đính kèm file)
+  // 1. TẠO BÀI GIẢNG
   createLesson: async (req, res) => {
     try {
-      const { title, description, videoUrl, classId } = req.body;
+      // Bổ sung lấy order, isPublished, duration từ body
+      const {
+        title,
+        description,
+        videoUrl,
+        classId,
+        order,
+        isPublished,
+        duration,
+      } = req.body;
       const teacherId = req.user.id;
 
       if (!title || !classId) {
@@ -35,6 +44,7 @@ const lessonController = {
           .status(400)
           .json({ message: "Thiếu thông tin bắt buộc: Tiêu đề hoặc ClassId" });
       }
+
       let attachments = [];
       if (req.files && req.files.length > 0) {
         const uploadPromises = req.files.map((file) =>
@@ -42,6 +52,12 @@ const lessonController = {
         );
         attachments = await Promise.all(uploadPromises);
       }
+
+      // Xử lý ép kiểu dữ liệu từ form-data (vì form-data gửi mọi thứ dưới dạng String)
+      const parsedOrder = order ? Number(order) : 0;
+      const parsedDuration = duration ? Number(duration) : 0;
+      const parsedIsPublished = isPublished === "false" ? false : true; // Mặc định là true trừ khi gửi rõ chữ 'false'
+
       const newLesson = new Lesson({
         title,
         description,
@@ -49,7 +65,11 @@ const lessonController = {
         attachments,
         classId,
         teacherId,
+        order: parsedOrder,
+        isPublished: parsedIsPublished,
+        duration: parsedDuration,
       });
+
       await newLesson.save();
       return res
         .status(201)
@@ -61,11 +81,24 @@ const lessonController = {
       });
     }
   },
+
   // 2. LẤY DANH SÁCH BÀI GIẢNG THEO LỚP
   getLessonsByClass: async (req, res) => {
     try {
       const { classId } = req.params;
-      const lessons = await Lesson.find({ classId }).sort({ createdAt: 1 });
+
+      // Khởi tạo query tìm kiếm
+      const query = { classId };
+
+      // [Thực chiến] Phân quyền hiển thị: Học sinh chỉ thấy bài đã Publish
+      // Nếu req.user.role là 'student' (hoặc tuỳ cách bạn đặt tên role), thì thêm điều kiện này
+      if (req.user && req.user.role !== "teacher") {
+        query.isPublished = true;
+      }
+
+      // Cập nhật sắp xếp: Ưu tiên xếp theo trường order trước, trùng order thì xếp theo ngày tạo
+      const lessons = await Lesson.find(query).sort({ order: 1, createdAt: 1 });
+
       return res.status(200).json({ lessons });
     } catch (error) {
       return res.status(500).json({
@@ -74,11 +107,13 @@ const lessonController = {
       });
     }
   },
+
   // 3. CẬP NHẬT BÀI GIẢNG
   updateLesson: async (req, res) => {
     try {
       const { id } = req.params;
-      const { title, description, videoUrl } = req.body;
+      const { title, description, videoUrl, order, isPublished, duration } =
+        req.body;
       const teacherId = req.user.id;
 
       const lesson = await Lesson.findOne({ _id: id, teacherId });
@@ -89,10 +124,20 @@ const lessonController = {
         });
       }
 
+      // Cập nhật các trường cơ bản
       if (title) lesson.title = title;
       if (description) lesson.description = description;
       if (videoUrl !== undefined) lesson.videoUrl = videoUrl;
 
+      // Cập nhật và ép kiểu các trường nâng cấp
+      if (order !== undefined) lesson.order = Number(order);
+      if (duration !== undefined) lesson.duration = Number(duration);
+      if (isPublished !== undefined) {
+        lesson.isPublished =
+          isPublished === "false" ? false : Boolean(isPublished);
+      }
+
+      // Xử lý upload file mới (nếu có)
       if (req.files && req.files.length > 0) {
         const uploadPromises = req.files.map((file) =>
           uploadToCloudinary(file.buffer, file.originalname),
@@ -146,4 +191,5 @@ const lessonController = {
     }
   },
 };
+
 export default lessonController;
