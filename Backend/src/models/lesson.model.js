@@ -14,7 +14,7 @@ const lessonSchema = new mongoose.Schema(
     videoUrl: {
       type: String,
       trim: true,
-      default: "", // Lưu link YouTube do giáo viên dán vào
+      default: "",
     },
     attachments: [
       {
@@ -23,6 +23,21 @@ const lessonSchema = new mongoose.Schema(
         publicId: { type: String, required: true },
       },
     ],
+    // --- CÁC TRƯỜNG BỔ SUNG THỰC CHIẾN ---
+    order: {
+      type: Number,
+      default: 0,
+      // Khi FE gọi tạo bài, có thể truyền order vào để xếp vị trí
+    },
+    isPublished: {
+      type: Boolean,
+      default: true, // Mặc định tạo ra là hiển thị luôn (hoặc false tuỳ bạn)
+    },
+    duration: {
+      type: Number, // Lưu thời gian học dự kiến (tính bằng phút)
+      default: 0,
+    },
+    // --------------------------------------
     classId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Class",

@@ -1,0 +1,17 @@
+-src
+    - controller
+        - auth.controller.js
+        - class.controller.js
+        - lesson.controller.js
+        - assignment.controller.js (giáo viên upload bài tập)
+    - model
+        - assignment.model.js
+        - submission.model.js
+        - class.model.js
+        - lesson.model.js
+        - user.model.js
+    - router
+        - class.router.js
+        - lesson.model.js
+        - user.model.js
+        - assignment.routes.js
