@@ -58,12 +58,14 @@ export default function ClassroomDetail() {
   }, [loadClassroom]);
 
   const handleLessonCreated = (newLesson: ILesson) => {
-    setLessons((prev) => [...prev, newLesson]);
+    setLessons((prev) => [...prev, newLesson].sort((a, b) => a.order - b.order));
     setIsModalOpen(false);
   };
 
   const handleLessonUpdated = (updatedLesson: ILesson) => {
-    setLessons((prev) => prev.map((l) => (l._id === updatedLesson._id ? updatedLesson : l)));
+    setLessons((prev) =>
+      prev.map((l) => (l._id === updatedLesson._id ? updatedLesson : l)).sort((a, b) => a.order - b.order),
+    );
     setEditingLesson(null);
   };
 

@@ -57,7 +57,12 @@ export default function ClassDetail() {
         ]);
 
         setClassInfo(classRes.data.data);
-        setLessons(lessonRes.data.lessons);
+
+        const publishedLessons = (lessonRes.data.lessons as ILesson[])
+          .filter((l) => l.isPublished)
+          .sort((a, b) => a.order - b.order);
+
+        setLessons(publishedLessons);
       } catch (error: unknown) {
         if (axios.isAxiosError(error)) {
           setErrorMsg(error.response?.data?.message || "Không thể tải dữ liệu lớp học.");

@@ -1,4 +1,8 @@
-// Frontend/src/interface/classInterface.tsx
+export interface IStudentSummary {
+  _id: string;
+  fullName: string;
+  email: string;
+}
 export interface IClass {
   _id: string;
   className: string;
@@ -9,7 +13,7 @@ export interface IClass {
     fullName: string;
     email: string;
   };
-  students: string[];
+  students: IStudentSummary[];
   status: "active" | "completed";
   createdAt: string;
 }

@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
+// Frontend/src/components/features/CreateLessonModal.tsx
+import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { lessonApi } from "../../api/lessonApi";
 import type { ILesson } from "../../interface/lessonInterface";
@@ -8,85 +8,73 @@ interface Props {
   isOpen: boolean;
   onClose: () => void;
   classId: string;
-  lessonData?: ILesson | null; // Thêm prop dữ liệu bài giảng cũ
+  lessonData?: ILesson | null;
   onCreated: (lesson: ILesson) => void;
-  onUpdated?: (lesson: ILesson) => void; // Thêm callback cập nhật bài giảng
-}
-
-interface IFormInputs {
-  title: string;
-  description?: string;
-  videoUrl?: string;
+  onUpdated?: (lesson: ILesson) => void;
 }
 
 export default function CreateLessonModal({ isOpen, onClose, classId, lessonData, onCreated, onUpdated }: Props) {
+  const isEditMode = !!lessonData;
+
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [videoUrl, setVideoUrl] = useState("");
+  const [duration, setDuration] = useState<number>(0);
+  const [isPublished, setIsPublished] = useState(true);
   const [files, setFiles] = useState<File[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
 
-  const {
-    register,
-    handleSubmit,
-    reset,
-    formState: { errors },
-  } = useForm<IFormInputs>();
-
-  // Tự động nạp hoặc dọn sạch dữ liệu vào Form khi đóng/mở hoặc chuyển chế độ Tạo/Sửa
+  // Đồng bộ form mỗi khi mở modal / đổi bài giảng đang sửa
   useEffect(() => {
     if (isOpen) {
-      if (lessonData) {
-        reset({
-          title: lessonData.title,
-          description: lessonData.description || "",
-          videoUrl: lessonData.videoUrl || "",
-        });
-      } else {
-        reset({ title: "", description: "", videoUrl: "" });
-      }
+      setTitle(lessonData?.title ?? "");
+      setDescription(lessonData?.description ?? "");
+      setVideoUrl(lessonData?.videoUrl ?? "");
+      setDuration(lessonData?.duration ?? 0);
+      setIsPublished(lessonData?.isPublished ?? true);
       setFiles([]);
       setErrorMsg("");
     }
-  }, [isOpen, lessonData, reset]);
+  }, [isOpen, lessonData]);
 
   if (!isOpen) return null;
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFiles(Array.from(e.target.files ?? []).slice(0, 5));
-  };
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!title.trim()) return;
 
-  const removeFile = (indexToRemove: number) => {
-    setFiles((prev) => prev.filter((_, idx) => idx !== indexToRemove));
-  };
-
-  const onSubmitForm = async (data: IFormInputs) => {
     try {
       setIsSubmitting(true);
       setErrorMsg("");
 
-      if (lessonData) {
-        // --- LOGIC CHỈNH SỬA (Cập nhật bài giảng đã có) ---
+      if (isEditMode && lessonData) {
         const res = await lessonApi.updateLesson(lessonData._id, {
-          title: data.title.trim(),
-          description: data.description?.trim() || undefined,
-          videoUrl: data.videoUrl?.trim() || undefined,
-          files, // Gửi các file tải lên bổ sung lên Server nếu Backend hỗ trợ
+          title: title.trim(),
+          description: description.trim(),
+          videoUrl: videoUrl.trim(),
+          duration,
+          isPublished,
+          files,
         });
-        if (onUpdated) onUpdated(res.data.lesson);
+        onUpdated?.(res.data.lesson); // BE trả về { lesson: {...} }
       } else {
-        // --- LOGIC TẠO MỚI ---
         const res = await lessonApi.createLesson({
-          title: data.title.trim(),
-          description: data.description?.trim() || undefined,
-          videoUrl: data.videoUrl?.trim() || undefined,
+          title: title.trim(),
+          description: description.trim() || undefined,
+          videoUrl: videoUrl.trim() || undefined,
           classId,
           files,
+          duration,
+          isPublished,
         });
         onCreated(res.data.lesson);
       }
-      onClose();
     } catch (error: unknown) {
       if (axios.isAxiosError(error)) {
-        setErrorMsg(error.response?.data?.message || "Thao tác bài giảng thất bại.");
+        setErrorMsg(
+          error.response?.data?.message || (isEditMode ? "Cập nhật bài giảng thất bại." : "Tạo bài giảng thất bại."),
+        );
       }
     } finally {
       setIsSubmitting(false);
@@ -96,137 +84,118 @@ export default function CreateLessonModal({ isOpen, onClose, classId, lessonData
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
       <div className="absolute inset-0" onClick={onClose}></div>
-      <div className="relative w-full max-w-lg p-6 bg-white rounded-2xl shadow-xl z-10 flex flex-col gap-4 max-h-[90vh] overflow-y-auto border border-outline-variant">
-        {/* Tiêu đề linh hoạt theo chế độ Tạo/Sửa */}
-        <div className="flex items-center justify-between border-b border-outline-variant pb-3">
-          <div className="flex items-center gap-2">
-            <span className="material-symbols-outlined text-primary">{lessonData ? "edit_note" : "add_box"}</span>
-            <h3 className="text-xl font-bold text-on-surface" style={{ fontFamily: "Hanken Grotesk" }}>
-              {lessonData ? "Chỉnh sửa bài giảng" : "Tạo bài giảng mới"}
-            </h3>
-          </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="text-on-surface-variant hover:text-on-surface p-1 rounded-full hover:bg-surface-container transition-colors"
-          >
+
+      <div className="relative w-full max-w-lg p-6 bg-white rounded-2xl shadow-xl z-10 flex flex-col gap-4 max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between border-b pb-3">
+          <h3 className="text-xl font-bold text-gray-900">{isEditMode ? "Sửa bài giảng" : "Tạo bài giảng mới"}</h3>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 p-1 rounded-full hover:bg-gray-100">
             <span className="material-symbols-outlined">close</span>
           </button>
         </div>
 
-        <form onSubmit={handleSubmit(onSubmitForm)} className="flex flex-col gap-4">
-          <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider">
-              Tiêu đề bài giảng *
-            </label>
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          <div className="flex flex-col gap-2">
+            <label className="text-sm font-semibold text-gray-700">Tiêu đề bài giảng</label>
             <input
               type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
               placeholder="Ví dụ: Chương 1 - Mệnh đề và Tập hợp"
-              className={`w-full px-4 py-2.5 border rounded-xl outline-none text-on-surface text-sm transition-all ${
-                errors.title
-                  ? "border-error focus:ring-2 focus:ring-error"
-                  : "border-outline-variant bg-surface-container-low focus:ring-2 focus:ring-primary"
-              }`}
-              {...register("title", {
-                required: "Tiêu đề không được để trống",
-                validate: (v) => !!v.trim() || "Tiêu đề không hợp lệ",
-              })}
+              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-black"
+              required
+              autoFocus
             />
-            {errors.title && <span className="text-xs font-semibold text-error mt-0.5">{errors.title.message}</span>}
           </div>
 
-          <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider">
-              Mô tả (không bắt buộc)
-            </label>
+          <div className="flex flex-col gap-2">
+            <label className="text-sm font-semibold text-gray-700">Mô tả (không bắt buộc)</label>
             <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
               rows={3}
-              placeholder="Mô tả ngắn gọn mục tiêu bài giảng..."
-              className="w-full px-4 py-2.5 border border-outline-variant bg-surface-container-low rounded-xl focus:ring-2 focus:ring-primary outline-none text-on-surface text-sm transition-all resize-none"
-              {...register("description")}
+              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-black resize-none"
             />
           </div>
 
-          <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider">
-              Đường dẫn Video (YouTube / Drive...)
-            </label>
-            <div className="relative flex items-center">
-              <span className="material-symbols-outlined absolute left-3 text-outline text-lg">link</span>
-              <input
-                type="text"
-                placeholder="https://youtube.com/watch?v=..."
-                className="w-full pl-10 pr-4 py-2.5 border border-outline-variant bg-surface-container-low rounded-xl focus:ring-2 focus:ring-primary outline-none text-on-surface text-sm transition-all"
-                {...register("videoUrl", {
-                  pattern: {
-                    value: /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([\/\w .-]*)*\/?.*$/,
-                    message: "URL sai định dạng",
-                  },
-                })}
-              />
-            </div>
-            {errors.videoUrl && (
-              <span className="text-xs font-semibold text-error mt-0.5">{errors.videoUrl.message}</span>
-            )}
+          <div className="flex flex-col gap-2">
+            <label className="text-sm font-semibold text-gray-700">Link video (YouTube...)</label>
+            <input
+              type="url"
+              value={videoUrl}
+              onChange={(e) => setVideoUrl(e.target.value)}
+              placeholder="https://youtube.com/..."
+              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-black"
+            />
           </div>
 
-          {/* Upload file */}
-          <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider">
-              {lessonData ? "Tải lên tệp mới bổ sung (Tối đa 5 files)" : "Tài liệu đính kèm (Tối đa 5 files)"}
-            </label>
-            <div className="relative border-2 border-dashed border-outline-variant hover:border-primary/50 rounded-xl p-4 transition-colors bg-surface-container-low flex flex-col items-center justify-center cursor-pointer group">
-              <input
-                type="file"
-                multiple
-                accept=".pdf,.doc,.docx,image/*"
-                onChange={handleFileChange}
-                className="absolute inset-0 opacity-0 cursor-pointer z-20"
-              />
-              <span className="material-symbols-outlined text-outline group-hover:text-primary transition-colors text-3xl mb-1">
-                cloud_upload
-              </span>
-              <p className="text-xs font-semibold text-on-surface-variant">Nhập để chọn tệp tin</p>
-            </div>
+          <div className="flex flex-col gap-2">
+            <label className="text-sm font-semibold text-gray-700">Thời lượng học dự kiến (phút)</label>
+            <input
+              type="number"
+              min={0}
+              value={duration}
+              onChange={(e) => setDuration(Number(e.target.value))}
+              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-black"
+            />
+          </div>
 
-            {/* Hiển thị danh sách file đang chọn */}
-            {files.length > 0 && (
-              <div className="mt-2 space-y-1 bg-surface-container-high/40 p-2 rounded-xl border border-outline-variant/40">
-                {files.map((file, idx) => (
-                  <div
-                    key={idx}
-                    className="flex items-center justify-between text-xs text-on-surface-variant px-2 py-1 bg-white border border-outline-variant rounded-lg"
-                  >
-                    <span className="truncate max-w-[280px]">{file.name}</span>
-                    <button
-                      type="button"
-                      onClick={() => removeFile(idx)}
-                      className="text-error p-1 hover:bg-error-container/10 rounded"
-                    >
-                      <span className="material-symbols-outlined text-sm">delete</span>
-                    </button>
-                  </div>
+          {isEditMode && lessonData!.attachments.length > 0 && (
+            <div className="flex flex-col gap-1">
+              <label className="text-sm font-semibold text-gray-700">Tệp đính kèm hiện có</label>
+              <ul className="text-xs text-gray-500 list-disc pl-4">
+                {lessonData!.attachments.map((f) => (
+                  <li key={f.publicId}>{f.name}</li>
                 ))}
-              </div>
+              </ul>
+            </div>
+          )}
+
+          <div className="flex flex-col gap-2">
+            <label className="text-sm font-semibold text-gray-700">
+              {isEditMode ? "Thêm tệp mới (không bắt buộc)" : "Tệp đính kèm (tối đa 5 file, ≤10MB/file)"}
+            </label>
+            <input
+              type="file"
+              multiple
+              accept=".pdf,.doc,.docx,image/*"
+              onChange={(e) => setFiles(Array.from(e.target.files ?? []).slice(0, 5))}
+              className="w-full text-sm text-gray-600"
+            />
+            {files.length > 0 && (
+              <ul className="text-xs text-gray-500 list-disc pl-4">
+                {files.map((f) => (
+                  <li key={f.name}>{f.name}</li>
+                ))}
+              </ul>
             )}
           </div>
 
-          {errorMsg && <p className="text-xs text-error font-medium">{errorMsg}</p>}
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={isPublished}
+              onChange={(e) => setIsPublished(e.target.checked)}
+              className="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+            />
+            <span className="text-sm font-semibold text-gray-700">Hiển thị cho học sinh (Công khai)</span>
+          </label>
 
-          <div className="flex items-center justify-end gap-3 pt-3 border-t border-outline-variant mt-2">
+          {errorMsg && <p className="text-sm text-red-500">{errorMsg}</p>}
+
+          <div className="flex items-center justify-end gap-3 pt-2 border-t">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-sm font-semibold text-on-surface-variant bg-surface-container hover:bg-surface-container-high rounded-xl transition-colors"
+              className="px-4 py-2.5 text-sm font-semibold text-gray-700 bg-gray-100 rounded-xl hover:bg-gray-200"
             >
               Hủy bỏ
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
-              className="px-5 py-2 flex items-center gap-2 text-sm font-bold text-white bg-[#3525cd] disabled:bg-primary/40 rounded-xl hover:bg-[#2a1db4] shadow-sm active:scale-[0.98] transition-all"
+              className="px-5 py-2.5 text-sm font-semibold text-white bg-indigo-600 rounded-xl hover:bg-indigo-700 shadow-sm disabled:bg-indigo-300"
             >
-              {isSubmitting ? "Đang xử lý..." : lessonData ? "Lưu thay đổi" : "Tạo bài giảng"}
+              {isSubmitting ? "Đang lưu..." : isEditMode ? "Lưu thay đổi" : "Tạo bài giảng"}
             </button>
           </div>
         </form>

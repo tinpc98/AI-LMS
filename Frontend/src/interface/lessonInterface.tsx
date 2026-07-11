@@ -1,3 +1,4 @@
+// Frontend/src/interface/lessonInterface.tsx
 export interface ILessonAttachment {
   name: string;
   url: string;
@@ -10,6 +11,9 @@ export interface ILesson {
   description?: string;
   videoUrl?: string;
   attachments: ILessonAttachment[];
+  order: number;
+  isPublished: boolean;
+  duration: number; // phút
   classId: string;
   teacherId: string;
   createdAt: string;
@@ -22,4 +26,7 @@ export interface ICreateLessonPayload {
   videoUrl?: string;
   classId: string;
   files?: File[];
+  order?: number;
+  isPublished?: boolean;
+  duration?: number;
 }
