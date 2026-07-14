@@ -1,5 +1,3 @@
-import React from "react";
-
 const ExamDetai = () => {
   return (
     <main className="ml-[280px] pt-16 h-screen flex flex-col">

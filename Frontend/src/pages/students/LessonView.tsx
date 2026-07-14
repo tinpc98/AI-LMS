@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 
-const LessonPage: React.FC = () => {
+const LessonPage = () => {
   const [isToastVisible, setIsToastVisible] = useState(false);
 
   useEffect(() => {
@@ -25,10 +25,7 @@ const LessonPage: React.FC = () => {
                   alt="Video thumbnail"
                 />
                 <button className="w-20 h-20 rounded-full bg-primary/90 text-white flex items-center justify-center backdrop-blur hover:scale-110 transition-transform">
-                  <span
-                    className="material-symbols-outlined text-4xl"
-                    style={{ fontVariationSettings: "'FILL' 1" }}
-                  >
+                  <span className="material-symbols-outlined text-4xl" style={{ fontVariationSettings: "'FILL' 1" }}>
                     play_arrow
                   </span>
                 </button>
@@ -44,8 +41,7 @@ const LessonPage: React.FC = () => {
                 Introduction to Retrieval-Augmented Generation (RAG)
               </h2>
               <p className="text-on-surface-variant font-body-md mt-2">
-                Giới thiệu về cách kết hợp các mô hình ngôn ngữ lớn với cơ sở dữ
-                liệu tri thức riêng tư.
+                Giới thiệu về cách kết hợp các mô hình ngôn ngữ lớn với cơ sở dữ liệu tri thức riêng tư.
               </p>
             </div>
           </div>
@@ -54,9 +50,7 @@ const LessonPage: React.FC = () => {
         {/* Right Section: AI Chatbot Panel */}
         <aside className="w-full md:w-[30%] h-full flex flex-col bg-surface border-l border-outline-variant">
           <div className="p-6 border-b border-outline-variant flex items-center justify-between bg-surface-container-low">
-            <h3 className="font-label-md text-label-md font-bold">
-              AI Study Assistant
-            </h3>
+            <h3 className="font-label-md text-label-md font-bold">AI Study Assistant</h3>
           </div>
 
           <div className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar bg-surface/50">
@@ -81,12 +75,8 @@ const LessonPage: React.FC = () => {
         <div className="fixed bottom-6 right-6 z-50 transition-all duration-500">
           <div className="bg-white/90 backdrop-blur-lg border border-primary/20 p-4 rounded-xl shadow-2xl flex items-center gap-4">
             <div>
-              <p className="text-xs font-bold text-primary uppercase">
-                AI Insight
-              </p>
-              <p className="text-sm text-on-surface">
-                Bạn đã xem hết 25% bài học.
-              </p>
+              <p className="text-xs font-bold text-primary uppercase">AI Insight</p>
+              <p className="text-sm text-on-surface">Bạn đã xem hết 25% bài học.</p>
             </div>
             <button onClick={() => setIsToastVisible(false)}>
               <span className="material-symbols-outlined text-lg">close</span>

@@ -1,7 +1,7 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import axios from "axios";
 import { classApi } from "../../api/classApi";
-import type { IClass } from "../../interface/ClassInterface";
+import type { IClass } from "../../interface/classInterface";
 
 interface Props {
   isOpen: boolean;

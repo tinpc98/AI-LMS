@@ -1,493 +1,534 @@
-import React from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useParams, Link } from "react-router-dom";
+import axios from "axios";
+import { classApi } from "../../api/classApi";
+import { lessonApi } from "../../api/lessonApi";
+import type { IClass } from "../../interface/classInterface";
+import type { ILesson } from "../../interface/lessonInterface";
+import CreateLessonModal from "../../components/features/CreateLessonModal";
 
-const ClassroomDetail = () => {
+export default function ClassroomDetail() {
+  const { classId } = useParams<{ classId: string }>();
+  const isMounted = useRef(false);
+
+  // --- States Logic thực tế ---
+  const [classInfo, setClassInfo] = useState<IClass | null>(null);
+  const [lessons, setLessons] = useState<ILesson[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
+
+  // --- States UI điều khiển hệ thống ---
+  const [editingLesson, setEditingLesson] = useState<ILesson | null>(null);
+  const [activeTab, setActiveTab] = useState("lessons");
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [chatInput, setChatInput] = useState("");
+
+  const loadClassroom = useCallback(async () => {
+    if (!classId) return;
+    setIsLoading(true);
+    setErrorMsg("");
+
+    try {
+      const [classRes, lessonRes] = await Promise.all([
+        classApi.getClassById(classId),
+        lessonApi.getLessonsByClass(classId),
+      ]);
+
+      if (isMounted.current) {
+        setClassInfo(classRes.data.data);
+        setLessons(lessonRes.data.lessons);
+      }
+    } catch (error: unknown) {
+      if (isMounted.current && axios.isAxiosError(error)) {
+        setErrorMsg(error.response?.data?.message || "Không thể tải dữ liệu lớp học.");
+      }
+    } finally {
+      if (isMounted.current) {
+        setIsLoading(false);
+      }
+    }
+  }, [classId]);
+
+  useEffect(() => {
+    isMounted.current = true;
+    void Promise.resolve().then(loadClassroom);
+    return () => {
+      isMounted.current = false;
+    };
+  }, [loadClassroom]);
+
+  const handleLessonCreated = (newLesson: ILesson) => {
+    setLessons((prev) => [...prev, newLesson].sort((a, b) => a.order - b.order));
+    setIsModalOpen(false);
+  };
+
+  const handleLessonUpdated = (updatedLesson: ILesson) => {
+    setLessons((prev) =>
+      prev.map((l) => (l._id === updatedLesson._id ? updatedLesson : l)).sort((a, b) => a.order - b.order),
+    );
+    setEditingLesson(null);
+  };
+
+  const handleDeleteLesson = async (id: string) => {
+    if (!confirm("Xóa bài giảng này? Hành động không thể hoàn tác.")) return;
+    try {
+      await lessonApi.deleteLesson(id);
+      setLessons((prev) => prev.filter((l) => l._id !== id));
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error)) {
+        alert(error.response?.data?.message || "Xóa bài giảng thất bại.");
+      }
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-surface">
+        <div className="flex flex-col items-center gap-2">
+          <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-sm text-on-surface-variant font-medium">Đang tải dữ liệu lớp học...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (errorMsg || !classInfo) {
+    return (
+      <main className="min-h-screen flex flex-col items-center justify-center gap-4 bg-surface px-4">
+        <span className="material-symbols-outlined text-4xl text-error">error</span>
+        <p className="text-error font-medium text-center">{errorMsg || "Không tìm thấy lớp học."}</p>
+        <Link
+          to="/teacher/classroom-management"
+          className="text-primary font-bold hover:underline flex items-center gap-1 text-sm"
+        >
+          <span className="material-symbols-outlined text-base">arrow_back</span> Quay lại quản lý lớp học
+        </Link>
+      </main>
+    );
+  }
+
   return (
-    <main className="md:ml-[280px] min-h-screen flex flex-col">
-      {/* TopNavBar (Classroom Detail) */}
-      <header className="h-20 bg-surface border-b border-outline-variant flex items-center justify-between px-margin-desktop sticky top-0 z-40 backdrop-blur-md bg-opacity-90">
-        <div className="flex items-center gap-6 flex-1">
-          <button className="md:hidden text-on-surface-variant">
-            <span className="material-symbols-outlined">menu</span>
-          </button>
-          <div className="hidden lg:flex items-center bg-surface-container-low border border-outline-variant px-4 py-2 rounded-full w-96 gap-3">
-            <span className="material-symbols-outlined text-outline">search</span>
-            <input
-              className="bg-transparent border-none focus:ring-0 text-body-sm w-full outline-none"
-              placeholder="Search lessons, members..."
-              type="text"
-            />
+    <div className="bg-surface font-body-md text-on-surface min-h-screen flex">
+      {/* Nhúng font và cấu trúc CSS bổ trợ */}
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono&display=swap');
+      `}</style>
+
+      {/* 1. SIDE NAVIGATION BAR (TEACHER PORTAL) */}
+      <aside className="fixed left-0 top-0 h-screen w-[280px] bg-surface-container-lowest border-r border-outline-variant flex flex-col py-8 px-4 z-50 hidden md:flex">
+        <div className="mb-8 px-2 flex items-center gap-3">
+          <div className="w-10 h-10 bg-primary flex items-center justify-center rounded-lg">
+            <span className="material-symbols-outlined text-white" style={{ fontVariationSettings: "'FILL' 1" }}>
+              school
+            </span>
+          </div>
+          <div>
+            <h1 className="text-lg font-bold text-primary" style={{ fontFamily: "Hanken Grotesk" }}>
+              AI-LMS Pro
+            </h1>
+            <p className="text-on-surface-variant text-xs">Teacher Portal</p>
           </div>
         </div>
 
-        <nav className="flex items-center gap-8 h-full">
-          <a
-            className="tab-link text-primary border-b-2 border-primary h-full flex items-center font-bold px-2"
-            data-tab="lessons"
-            href="#"
+        <nav className="flex-1 space-y-1">
+          <Link
+            to="/teacher/dashboard"
+            className="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-high transition-colors rounded-lg group"
           >
-            Lessons
-          </a>
-          <a
-            className="tab-link text-on-surface-variant hover:text-primary transition-all h-full flex items-center px-2"
-            data-tab="members"
-            href="#"
+            <span className="material-symbols-outlined group-hover:text-primary">dashboard</span>
+            <span className="text-sm font-medium">Dashboard</span>
+          </Link>
+          <Link
+            to="/teacher/classroom-management"
+            className="flex items-center gap-3 px-4 py-3 text-primary font-bold border-r-4 border-primary bg-surface-container rounded-lg"
           >
-            Members
-          </a>
-          <a
-            className="tab-link text-on-surface-variant hover:text-primary transition-all h-full flex items-center px-2"
-            data-tab="assignments"
-            href="#"
+            <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>
+              groups
+            </span>
+            <span className="text-sm font-medium">Class Management</span>
+          </Link>
+          <Link
+            to="/teacher/lessons"
+            className="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-high transition-colors rounded-lg group"
           >
-            Assignments
-          </a>
-          <a
-            className="tab-link text-on-surface-variant hover:text-primary transition-all h-full flex items-center px-2"
-            data-tab="chat"
-            href="#"
-          >
-            Class Chat
-          </a>
+            <span className="material-symbols-outlined group-hover:text-primary">book</span>
+            <span className="text-sm font-medium">Lessons</span>
+          </Link>
         </nav>
+      </aside>
 
-        <div className="flex items-center gap-4 ml-8">
-          <button className="p-2 text-on-surface-variant hover:bg-surface-container rounded-full transition-opacity active:opacity-80 relative">
-            <span className="material-symbols-outlined">notifications</span>
-            <span className="absolute top-2 right-2 w-2 h-2 bg-error rounded-full"></span>
-          </button>
-          <button className="p-2 text-on-surface-variant hover:bg-surface-container rounded-full transition-opacity active:opacity-80">
-            <span className="material-symbols-outlined">history_edu</span>
-          </button>
-          <div className="w-10 h-10 rounded-full bg-surface-container-high overflow-hidden border border-outline-variant">
-            <img
-              alt="Teacher Profile Picture"
-              className="w-full h-full object-cover"
-              src="https://lh3.googleusercontent.com/aida-public/AB6AXuBtpMK47CGOiNU6U-a3P7DpCWw4uVNQF-A9BxaBX7vtW1ZHzwlCCiZ0HPViL7bM_PClyS_ABnNugPt76psSQ2aKHPLeKsfv2tAfiHwXGb9XNAAa_FoaezZLjEuekw76UgyoACCqzQEHk2NgXHjiAnMEi8kiN1TDKYfQx-uFfJzYMhwT-ln5G_Fr0N6eRVzKdTTrmubMhlof3KFpRpsgpo0QtVnW4WKpWGJw7x4LjuVTSkNozywK9LLaJ6okbCfyEJLyhTZUEGzxRuKF"
-            />
-          </div>
-        </div>
-      </header>
+      {/* 2. MAIN CONTENT WRAPPER */}
+      <main className="flex-1 md:ml-[280px] min-h-screen flex flex-col min-w-0">
+        {/* TOP NAV BAR - Tích hợp Thông tin lớp gọn gàng & Thanh chuyển Tab */}
+        <header className="bg-surface border-b border-outline-variant sticky top-0 z-40 backdrop-blur-md bg-opacity-90 px-6 sm:px-8 flex flex-col justify-between pt-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 w-full pb-3">
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 text-xs text-on-surface-variant mb-1">
+                <Link to="/teacher/classroom-management" className="hover:text-primary transition-colors">
+                  Quản lý lớp học
+                </Link>
+                <span>/</span>
+                <span className="text-on-surface truncate font-medium">{classInfo.className}</span>
+              </div>
+              <h2
+                className="text-2xl font-bold tracking-tight text-on-surface truncate"
+                style={{ fontFamily: "Hanken Grotesk" }}
+              >
+                {classInfo.className}
+              </h2>
+            </div>
 
-      {/* Content Canvas */}
-      <div className="flex-1 px-margin-desktop py-8 max-w-max-content-width mx-auto w-full">
-        {/* Hero Header */}
-        <section className="relative rounded-3xl overflow-hidden mb-12 group">
-          <div className="absolute inset-0 bg-gradient-to-r from-on-surface/80 to-transparent z-10"></div>
-          <img
-            alt="Classroom Cover"
-            className="w-full h-64 object-cover group-hover:scale-105 transition-transform duration-700"
-            src="https://lh3.googleusercontent.com/aida-public/AB6AXuDUVDlZ7DIaScGj9T-kdiKcsWgvwG1TmzVPX7XuPHSo_ETL1AGde0LWF9NjiH34SiRAVUyJMRhyqagkBtzZbgHaWjkEYgShEcho4GlL6dZPx3IRQzL3no_CQEVYEgawyl8DK-zYbA3RiC3ULtuy6mnplJbWAq8M2g3hrkc2bgJcK6iRJIhOO8LjNUCaY8uPTgC6Q5_HBFD89ViIfa2ax8CSTMO_rVeleyT_iA8uBOHjTWxfAKqmkjORvjRlYwMHrVb8vsY2YWhu5Ib7"
-          />
-          <div className="absolute inset-0 z-20 p-10 flex flex-col justify-end">
-            <div className="flex items-center gap-2 mb-2">
-              <span className="bg-primary/20 backdrop-blur-md text-white px-3 py-1 rounded-full text-label-md font-medium border border-white/20">
-                Active Semester
+            {/* Các badge thông tin & nút Dạy Trực Tuyến nhanh gọn */}
+            <div className="flex items-center gap-3 flex-wrap sm:flex-nowrap">
+              <span className="bg-secondary-container text-on-secondary-container px-3 py-1 rounded-full text-xs font-bold font-mono">
+                Mã lớp: {classInfo.joinCode}
               </span>
-              <span className="text-white/70 text-body-sm">•</span>
-              <span className="text-white/90 text-body-sm">Grade 10</span>
-            </div>
-            <h2 className="text-white font-headline-lg text-headline-lg mb-2">Lớp 10A1 - Toán học</h2>
-            <div className="flex items-center gap-6">
-              <div className="flex items-center gap-2 text-white/80">
-                <span className="material-symbols-outlined text-sm">key</span>
-                <span className="font-code-sm text-code-sm uppercase tracking-widest">MATH-10A1-XQ</span>
-              </div>
-              <div className="flex items-center gap-2 text-white/80">
+              <span className="bg-surface-container-high text-on-surface-variant px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1">
                 <span className="material-symbols-outlined text-sm">groups</span>
-                <span className="text-body-sm">42 Students</span>
-              </div>
-            </div>
-          </div>
-          <button className="absolute top-6 right-6 z-20 bg-white/10 hover:bg-white/20 backdrop-blur-md p-3 rounded-full text-white transition-colors">
-            <span className="material-symbols-outlined">edit</span>
-          </button>
-        </section>
-
-        {/* Tab Content: Lessons (Default) */}
-        <div className="tab-pane" id="lessons-content">
-          <div className="flex items-center justify-between mb-8">
-            <div>
-              <h3 className="font-headline-md text-headline-md text-on-surface">Bài giảng hiện tại</h3>
-              <p className="text-on-surface-variant text-body-sm">Manage and organize your mathematics curriculum.</p>
-            </div>
-            <button className="bg-primary text-white px-6 py-3 rounded-xl font-label-md flex items-center gap-2 hover:shadow-lg transition-all active:scale-95">
-              <span className="material-symbols-outlined">add</span>
-              Tạo bài giảng
-            </button>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {/* Lesson Card */}
-            <div className="bg-surface-container-lowest border border-outline-variant p-6 rounded-2xl hover:border-primary-container hover:shadow-md transition-all group">
-              <div className="flex justify-between items-start mb-4">
-                <div className="w-12 h-12 bg-secondary-container rounded-xl flex items-center justify-center text-secondary">
-                  <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>
-                    functions
-                  </span>
-                </div>
-                <span className="text-label-md bg-green-50 text-green-700 px-3 py-1 rounded-full">Đã xuất bản</span>
-              </div>
-              <h4 className="font-bold text-lg mb-2 group-hover:text-primary transition-colors">
-                Chương 1: Mệnh đề và Tập hợp
-              </h4>
-              <p className="text-on-surface-variant text-body-sm mb-6 line-clamp-2">
-                Khám phá các khái niệm cơ bản về logic toán học và cách biểu diễn tập hợp.
-              </p>
-              <div className="flex items-center justify-between pt-4 border-t border-outline-variant/30">
-                <div className="flex -space-x-2">
-                  <div className="w-8 h-8 rounded-full border-2 border-white bg-slate-200 flex items-center justify-center text-[10px] font-bold">
-                    JD
-                  </div>
-                  <div className="w-8 h-8 rounded-full border-2 border-white bg-slate-300 flex items-center justify-center text-[10px] font-bold">
-                    AS
-                  </div>
-                  <div className="w-8 h-8 rounded-full border-2 border-white bg-slate-400 flex items-center justify-center text-[10px] font-bold text-white">
-                    +8
-                  </div>
-                </div>
-                <button className="text-primary font-bold text-label-md flex items-center gap-1">
-                  Chi tiết <span className="material-symbols-outlined text-sm">arrow_forward</span>
-                </button>
-              </div>
-            </div>
-
-            {/* Lesson Card 2 */}
-            <div className="bg-surface-container-lowest border border-outline-variant p-6 rounded-2xl hover:border-primary-container hover:shadow-md transition-all group">
-              <div className="flex justify-between items-start mb-4">
-                <div className="w-12 h-12 bg-primary-container/10 rounded-xl flex items-center justify-center text-primary">
-                  <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>
-                    show_chart
-                  </span>
-                </div>
-                <span className="text-label-md bg-blue-50 text-blue-700 px-3 py-1 rounded-full">Đang học</span>
-              </div>
-              <h4 className="font-bold text-lg mb-2 group-hover:text-primary transition-colors">
-                Chương 2: Hàm số bậc nhất và bậc hai
-              </h4>
-              <p className="text-on-surface-variant text-body-sm mb-6 line-clamp-2">
-                Phân tích đồ thị và ứng dụng thực tế của các loại hàm số đa thức.
-              </p>
-              <div className="flex items-center justify-between pt-4 border-t border-outline-variant/30">
-                <div className="flex -space-x-2">
-                  <div className="w-8 h-8 rounded-full border-2 border-white bg-slate-200"></div>
-                  <div className="w-8 h-8 rounded-full border-2 border-white bg-slate-300"></div>
-                </div>
-                <button className="text-primary font-bold text-label-md flex items-center gap-1">
-                  Chi tiết <span className="material-symbols-outlined text-sm">arrow_forward</span>
-                </button>
-              </div>
-            </div>
-
-            {/* Lesson Card 3 (AI Recommendation) */}
-            <div className="bg-surface-container-lowest border border-dashed border-primary/40 p-6 rounded-2xl relative overflow-hidden group">
-              <div className="absolute top-0 right-0 w-24 h-24 bg-primary/5 -mr-12 -mt-12 rounded-full"></div>
-              <div className="flex justify-between items-start mb-4">
-                <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center text-primary">
-                  <span className="material-symbols-outlined">auto_awesome</span>
-                </div>
-                <span className="text-label-md bg-primary/10 text-primary px-3 py-1 rounded-full font-bold">
-                  AI Gợi ý
+                {classInfo.students?.length ?? 0} học sinh
+              </span>
+              <button className="bg-[#ba1a1a] text-white text-xs font-bold px-4 py-2 rounded-xl flex items-center gap-2 shadow-md hover:bg-[#a01212] active:scale-95 transition-all opacity-100">
+                <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>
+                  videocam
                 </span>
-              </div>
-              <h4 className="font-bold text-lg mb-2">Chương 3: Phương trình & Hệ phương trình</h4>
-              <p className="text-on-surface-variant text-body-sm mb-6">
-                AI đề xuất dựa trên tiến độ học tập của lớp 10A1 tuần vừa qua.
-              </p>
-              <button className="w-full bg-white border border-primary text-primary py-2 rounded-lg font-label-md hover:bg-primary hover:text-white transition-all">
-                Tạo ngay
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Tab Content: Members (Hidden by default) */}
-        <div className="tab-pane hidden" id="members-content">
-          <div className="flex items-center justify-between mb-8">
-            <h3 className="font-headline-md text-headline-md text-on-surface">Danh sách học sinh (42)</h3>
-            <div className="flex gap-3">
-              <button className="bg-surface-container-high text-on-surface-variant px-4 py-2 rounded-lg font-label-md flex items-center gap-2 hover:bg-surface-container-highest transition-colors">
-                <span className="material-symbols-outlined">how_to_reg</span>
-                Điểm danh
-              </button>
-              <button className="bg-primary text-white px-4 py-2 rounded-lg font-label-md flex items-center gap-2 hover:opacity-90 transition-opacity">
-                <span className="material-symbols-outlined">mail</span>
-                Nhắn tin
+                <span>Dạy trực tuyến</span>
               </button>
             </div>
           </div>
 
-          <div className="bg-surface-container-lowest border border-outline-variant rounded-2xl overflow-hidden">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-surface-container border-b border-outline-variant">
-                  <th className="px-6 py-4 font-label-md text-on-surface-variant uppercase text-xs">Student Name</th>
-                  <th className="px-6 py-4 font-label-md text-on-surface-variant uppercase text-xs">Student ID</th>
-                  <th className="px-6 py-4 font-label-md text-on-surface-variant uppercase text-xs">Attendance</th>
-                  <th className="px-6 py-4 font-label-md text-on-surface-variant uppercase text-xs text-right">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-outline-variant/30">
-                <tr className="hover:bg-surface-container-low transition-colors">
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold text-xs">
-                        TN
-                      </div>
-                      <div>
-                        <p className="font-bold text-on-surface">Trần Nam</p>
-                        <p className="text-xs text-on-surface-variant">nam.tran@school.edu.vn</p>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 text-body-sm font-code-sm">STU00124</td>
-                  <td className="px-6 py-4">
-                    <span className="bg-green-50 text-green-700 px-2 py-1 rounded text-xs font-bold uppercase tracking-wider">
-                      98% Regular
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 text-right">
-                    <button className="text-on-surface-variant hover:text-primary p-2">
-                      <span className="material-symbols-outlined">more_vert</span>
-                    </button>
-                  </td>
-                </tr>
-                <tr className="hover:bg-surface-container-low transition-colors">
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-pink-100 flex items-center justify-center text-pink-700 font-bold text-xs">
-                        LH
-                      </div>
-                      <div>
-                        <p className="font-bold text-on-surface">Lê Hoa</p>
-                        <p className="text-xs text-on-surface-variant">hoa.le@school.edu.vn</p>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 text-body-sm font-code-sm">STU00125</td>
-                  <td className="px-6 py-4">
-                    <span className="bg-green-50 text-green-700 px-2 py-1 rounded text-xs font-bold uppercase tracking-wider">
-                      95% Regular
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 text-right">
-                    <button className="text-on-surface-variant hover:text-primary p-2">
-                      <span className="material-symbols-outlined">more_vert</span>
-                    </button>
-                  </td>
-                </tr>
-                <tr className="hover:bg-surface-container-low transition-colors">
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center text-orange-700 font-bold text-xs">
-                        PV
-                      </div>
-                      <div>
-                        <p className="font-bold text-on-surface">Phạm Văn</p>
-                        <p className="text-xs text-on-surface-variant">van.pham@school.edu.vn</p>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 text-body-sm font-code-sm">STU00126</td>
-                  <td className="px-6 py-4">
-                    <span className="bg-error-container text-error px-2 py-1 rounded text-xs font-bold uppercase tracking-wider">
-                      82% Critical
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 text-right">
-                    <button className="text-on-surface-variant hover:text-primary p-2">
-                      <span className="material-symbols-outlined">more_vert</span>
-                    </button>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-            <div className="bg-surface-container-low px-6 py-4 flex items-center justify-between border-t border-outline-variant">
-              <span className="text-body-sm text-on-surface-variant">Showing 3 of 42 members</span>
-              <div className="flex gap-2">
-                <button className="w-8 h-8 border border-outline-variant flex items-center justify-center rounded-lg hover:bg-surface-container-high">
-                  <span className="material-symbols-outlined text-sm">chevron_left</span>
-                </button>
-                <button className="w-8 h-8 border border-outline-variant flex items-center justify-center rounded-lg hover:bg-surface-container-high">
-                  <span className="material-symbols-outlined text-sm">chevron_right</span>
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
+          {/* Hệ thống Tabs chuyển màn hình chức năng */}
+          <nav className="flex items-center gap-6 h-12 overflow-x-auto whitespace-nowrap scrollbar-none">
+            {[
+              { id: "lessons", label: "Bài giảng", icon: "book" },
+              { id: "members", label: "Học sinh", icon: "groups" },
+              { id: "assignments", label: "Bài tập & Đề thi", icon: "assignment" },
+              { id: "chat", label: "Thảo luận nhóm", icon: "chat" },
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`h-full flex items-center gap-2 border-b-2 text-sm font-semibold px-1 transition-all ${
+                  activeTab === tab.id
+                    ? "text-primary border-primary"
+                    : "text-on-surface-variant border-transparent hover:text-primary"
+                }`}
+              >
+                <span className="material-symbols-outlined text-lg">{tab.icon}</span>
+                {tab.label}
+              </button>
+            ))}
+          </nav>
+        </header>
 
-        {/* Tab Content: Assignments (Hidden by default) */}
-        <div className="tab-pane hidden" id="assignments-content">
-          <div className="flex items-center justify-between mb-8">
-            <h3 className="font-headline-md text-headline-md text-on-surface">Quản lý Bài tập & Thi</h3>
-            <div className="flex gap-4">
-              <button className="bg-white border border-outline-variant text-on-surface-variant px-6 py-2 rounded-xl font-label-md flex items-center gap-2">
-                <span className="material-symbols-outlined">filter_list</span> Lọc
-              </button>
-              <button className="bg-primary text-white px-6 py-2 rounded-xl font-label-md flex items-center gap-2">
-                <span className="material-symbols-outlined">add</span> Tạo mới
-              </button>
-            </div>
-          </div>
-          <div className="space-y-4">
-            {/* Assignment Item */}
-            <div className="bg-surface-container-lowest border border-outline-variant p-6 rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-4">
-              <div className="flex items-start gap-4">
-                <div className="w-12 h-12 bg-secondary-container rounded-full flex items-center justify-center text-primary">
-                  <span className="material-symbols-outlined">assignment</span>
-                </div>
+        {/* CANVAS NỘI DUNG CHÍNH (Thay đổi linh hoạt theo Tab active) */}
+        <div className="flex-1 p-6 sm:p-8 max-w-[1280px] w-full mx-auto box-border">
+          {/* TAB 1: QUẢN LÝ BÀI GIẢNG */}
+          {activeTab === "lessons" && (
+            <div className="space-y-6">
+              <div className="flex items-center justify-between gap-4">
                 <div>
-                  <h5 className="font-bold text-on-surface">Bài tập về nhà: Giải phương trình lượng giác</h5>
-                  <p className="text-body-sm text-on-surface-variant">Deadline: 20/10/2023 • 23:59</p>
-                  <div className="mt-2 flex items-center gap-2">
-                    <div className="w-48 h-2 bg-surface-container rounded-full overflow-hidden">
-                      <div className="w-3/4 h-full bg-primary"></div>
+                  <h3 className="text-lg font-bold tracking-tight">Bài giảng đã đăng ({lessons.length})</h3>
+                  <p className="text-xs text-on-surface-variant">
+                    Tải lên tài liệu PDF hoặc bài giảng video để học sinh ôn tập học liệu.
+                  </p>
+                </div>
+                <button
+                  onClick={() => {
+                    setEditingLesson(null); // Đảm bảo trạng thái tạo mới khi bấm nút này
+                    setIsModalOpen(true);
+                  }}
+                  className="bg-[#3525cd] text-white px-5 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-2 hover:bg-[#281baf] hover:shadow-md transition-all active:scale-95 flex-shrink-0"
+                >
+                  <span className="material-symbols-outlined text-lg">add</span>
+                  Tạo bài giảng
+                </button>
+              </div>
+
+              {lessons.length === 0 ? (
+                <div className="border-2 border-dashed border-outline-variant rounded-2xl p-16 text-center text-on-surface-variant bg-white">
+                  <span className="material-symbols-outlined text-4xl text-outline mb-2">menu_book</span>
+                  <p className="text-sm font-medium">Chưa có bài giảng nào được đăng tải.</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {lessons.map((lesson) => (
+                    <div
+                      key={lesson._id}
+                      className="bg-white border border-outline-variant p-5 rounded-2xl hover:shadow-md transition-all flex flex-col justify-between group animate-fade-in"
+                    >
+                      <div>
+                        <div className="flex items-start justify-between gap-2 mb-3">
+                          <h4 className="font-bold text-base line-clamp-1 group-hover:text-primary transition-colors">
+                            {lesson.title}
+                          </h4>
+                          <span className="text-[10px] bg-surface-container-high px-2 py-0.5 rounded text-on-surface-variant font-medium flex-shrink-0">
+                            {lesson.videoUrl ? "Video" : "Tài liệu"}
+                          </span>
+                        </div>
+                        {lesson.description && (
+                          <p className="text-on-surface-variant text-xs line-clamp-2 mb-4">{lesson.description}</p>
+                        )}
+
+                        <div className="space-y-1.5 mb-4">
+                          {lesson.videoUrl && (
+                            <a
+                              href={lesson.videoUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="flex items-center gap-1.5 text-primary text-xs font-bold hover:underline"
+                            >
+                              <span className="material-symbols-outlined text-base">play_circle</span> Xem video hướng
+                              dẫn
+                            </a>
+                          )}
+                          {lesson.attachments &&
+                            lesson.attachments.map((file) => (
+                              <a
+                                key={file.publicId}
+                                href={file.url}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="flex items-center gap-1.5 text-on-surface-variant text-xs hover:text-primary truncate"
+                              >
+                                <span className="material-symbols-outlined text-base text-outline">attach_file</span>{" "}
+                                <span className="truncate">{file.name}</span>
+                              </a>
+                            ))}
+                        </div>
+                      </div>
+
+                      {/* Chân Card: Nơi đặt cặp nút Sửa & Xóa */}
+                      <div className="flex items-center justify-between pt-3 border-t border-outline-variant/40 mt-auto">
+                        <span className="text-[11px] text-outline font-medium">
+                          Ngày tạo: {new Date(lesson.createdAt).toLocaleDateString("vi-VN")}
+                        </span>
+                        <div className="flex items-center gap-1">
+                          {/* NÚT SỬA BÀI GIẢNG */}
+                          <button
+                            onClick={() => setEditingLesson(lesson)}
+                            className="text-primary hover:bg-primary/10 p-2 rounded-lg transition-colors"
+                            title="Sửa bài giảng"
+                          >
+                            <span className="material-symbols-outlined text-lg">edit</span>
+                          </button>
+                          {/* NÚT XÓA BÀI GIẢNG */}
+                          <button
+                            onClick={() => handleDeleteLesson(lesson._id)}
+                            className="text-error hover:bg-error-container/10 p-2 rounded-lg transition-colors"
+                            title="Xóa bài giảng"
+                          >
+                            <span className="material-symbols-outlined text-lg">delete</span>
+                          </button>
+                        </div>
+                      </div>
                     </div>
-                    <span className="text-xs font-bold text-on-surface-variant">32/42 đã nộp</span>
-                  </div>
+                  ))}
                 </div>
-              </div>
-              <div className="flex items-center gap-3">
-                <button className="px-4 py-2 text-primary font-bold hover:bg-primary/10 rounded-lg transition-colors">
-                  Chấm điểm
-                </button>
-                <button className="px-4 py-2 border border-outline-variant rounded-lg hover:bg-surface-container transition-colors">
-                  Chi tiết
-                </button>
-              </div>
+              )}
             </div>
+          )}
 
-            {/* Exam Item */}
-            <div className="bg-surface-container-lowest border border-outline-variant p-6 rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-4">
-              <div className="flex items-start gap-4">
-                <div className="w-12 h-12 bg-error-container/20 rounded-full flex items-center justify-center text-error">
-                  <span className="material-symbols-outlined">timer</span>
-                </div>
+          {/* TAB 2: DANH SÁCH THÀNH VIÊN (HỌC SINH) */}
+          {activeTab === "members" && (
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
                 <div>
-                  <h5 className="font-bold text-on-surface">Kiểm tra giữa kỳ - Toán Giải tích</h5>
-                  <p className="text-body-sm text-on-surface-variant">Thời gian: 90 phút • Trực tuyến</p>
-                  <span className="inline-block mt-2 px-2 py-0.5 bg-orange-100 text-orange-700 text-[10px] font-bold rounded uppercase">
-                    Upcoming
-                  </span>
-                </div>
-              </div>
-              <div className="flex items-center gap-3">
-                <button className="px-4 py-2 bg-primary-container/10 text-primary font-bold rounded-lg transition-colors">
-                  Thiết lập đề
-                </button>
-                <button className="px-4 py-2 border border-outline-variant rounded-lg hover:bg-surface-container transition-colors">
-                  Xem trước
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Tab Content: Chat (Hidden by default) */}
-        <div className="tab-pane hidden" id="chat-content">
-          <div className="bg-surface-container-lowest border border-outline-variant rounded-3xl h-[600px] flex flex-col overflow-hidden">
-            <div className="p-6 border-b border-outline-variant flex items-center justify-between bg-surface-container-low">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-primary-container text-white rounded-full flex items-center justify-center font-bold">
-                  #
-                </div>
-                <div>
-                  <h4 className="font-bold text-on-surface">Thảo luận Lớp 10A1</h4>
-                  <p className="text-xs text-green-600 flex items-center gap-1">
-                    <span className="w-2 h-2 bg-green-500 rounded-full"></span> 12 thành viên trực tuyến
+                  <h3 className="text-lg font-bold tracking-tight">
+                    Danh sách lớp học ({classInfo.students?.length ?? 0} thành viên)
+                  </h3>
+                  <p className="text-xs text-on-surface-variant">
+                    Theo dõi chuyên cần và danh sách tài khoản học sinh đã tham gia lớp.
                   </p>
                 </div>
               </div>
-              <div className="flex gap-2">
-                <button className="p-2 text-on-surface-variant hover:bg-surface-container rounded-lg">
-                  <span className="material-symbols-outlined">search</span>
+
+              <div className="bg-white border border-outline-variant rounded-2xl overflow-hidden shadow-sm">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse min-w-[600px]">
+                    <thead>
+                      <tr className="bg-surface-container border-b border-outline-variant">
+                        <th className="px-6 py-3.5 text-xs font-bold uppercase tracking-wider text-on-surface-variant">
+                          Học sinh
+                        </th>
+                        <th className="px-6 py-3.5 text-xs font-bold uppercase tracking-wider text-on-surface-variant">
+                          Mã số học sinh
+                        </th>
+                        <th className="px-6 py-3.5 text-xs font-bold uppercase tracking-wider text-on-surface-variant">
+                          Trạng thái chuyên cần
+                        </th>
+                        <th className="px-6 py-3.5 text-xs font-bold uppercase tracking-wider text-on-surface-variant text-right">
+                          Hành động
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-outline-variant/30">
+                      {classInfo.students && classInfo.students.length === 0 ? (
+                        <tr>
+                          <td colSpan={4} className="px-6 py-12 text-center text-xs text-on-surface-variant">
+                            Chưa có học sinh nào tham gia lớp học bằng mã code.
+                          </td>
+                        </tr>
+                      ) : (
+                        classInfo.students.map((student: any, index: number) => (
+                          <tr key={student._id || index} className="hover:bg-surface-container-low transition-colors">
+                            <td className="px-6 py-4">
+                              <div className="flex items-center gap-3">
+                                <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold text-xs">
+                                  {student.fullName?.substring(0, 2).toUpperCase() || "ST"}
+                                </div>
+                                <div>
+                                  <p className="font-bold text-sm text-on-surface">{student.fullName || "Ẩn danh"}</p>
+                                  <p className="text-xs text-on-surface-variant">{student.email}</p>
+                                </div>
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 text-xs font-mono">STU-00{100 + index}</td>
+                            <td className="px-6 py-4">
+                              <span className="bg-green-50 text-green-700 px-2 py-0.5 rounded text-[11px] font-bold uppercase">
+                                98% Đều đặn
+                              </span>
+                            </td>
+                            <td className="px-6 py-4 text-right">
+                              <button className="text-on-surface-variant hover:text-primary p-1 rounded-md transition-colors">
+                                <span className="material-symbols-outlined text-xl">more_vert</span>
+                              </button>
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* TAB 3: BÀI TẬP VÀ ĐỀ THI TRỰC TUYẾN */}
+          {activeTab === "assignments" && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between gap-4 mb-2">
+                <div>
+                  <h3 className="text-lg font-bold tracking-tight">Học liệu Đánh giá</h3>
+                  <p className="text-xs text-on-surface-variant">
+                    Tạo bài tập về nhà, đề kiểm tra định kỳ chấm điểm tự động.
+                  </p>
+                </div>
+                <button className="bg-primary text-white text-xs font-bold px-4 py-2 rounded-xl flex items-center gap-1 hover:bg-primary/95">
+                  <span className="material-symbols-outlined text-base">add</span> Tạo mới
                 </button>
-                <button className="p-2 text-on-surface-variant hover:bg-surface-container rounded-lg">
-                  <span className="material-symbols-outlined">settings</span>
+              </div>
+
+              {/* Mock UI Quản lý Đánh giá Chuyên Nghiệp */}
+              <div className="bg-white border border-outline-variant p-5 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="flex items-start gap-4">
+                  <div className="w-10 h-10 bg-secondary-container rounded-full flex items-center justify-center text-primary flex-shrink-0">
+                    <span className="material-symbols-outlined text-lg">assignment</span>
+                  </div>
+                  <div>
+                    <h5 className="font-bold text-sm sm:text-base text-on-surface">
+                      Bài tập chương 1: Biểu thức và logic
+                    </h5>
+                    <p className="text-xs text-on-surface-variant mt-0.5">Hạn nộp: 23:59 - Cuối tuần này</p>
+                    <div className="mt-2 flex items-center gap-2">
+                      <div className="w-32 h-1.5 bg-surface-container rounded-full overflow-hidden">
+                        <div className="w-3/4 h-full bg-primary"></div>
+                      </div>
+                      <span className="text-[11px] text-on-surface-variant font-medium">32 học sinh đã nộp bài</span>
+                    </div>
+                  </div>
+                </div>
+                <button className="sm:self-center self-end px-4 py-1.5 border border-primary text-primary text-xs font-bold rounded-lg hover:bg-primary/5 transition-colors">
+                  Chấm điểm
                 </button>
               </div>
             </div>
+          )}
 
-            <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-slate-50/50">
-              {/* Chat Bubble (Them) */}
-              <div className="flex gap-4">
-                <div className="w-10 h-10 rounded-full bg-blue-100 flex-shrink-0 flex items-center justify-center font-bold text-blue-700">
-                  TN
-                </div>
-                <div className="max-w-[70%]">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="font-bold text-sm">Trần Nam</span>
-                    <span className="text-xs text-on-surface-variant">09:42 AM</span>
+          {/* TAB 4: THẢO LUẬN NHÓM LỚP HỌC */}
+          {activeTab === "chat" && (
+            <div className="bg-white border border-outline-variant rounded-2xl h-[500px] flex flex-col overflow-hidden shadow-sm">
+              <div className="p-4 border-b border-outline-variant flex items-center justify-between bg-surface-container-low flex-shrink-0">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 bg-primary text-white rounded-full flex items-center justify-center font-bold text-sm">
+                    #
                   </div>
-                  <div className="bg-white p-4 rounded-2xl rounded-tl-none border border-outline-variant shadow-sm text-body-sm">
-                    Thầy ơi, bài toán chương 2 câu 5 em chưa hiểu lắm ạ. Có thể hướng dẫn lại không thầy?
-                  </div>
-                </div>
-              </div>
-
-              {/* Chat Bubble (Me) */}
-              <div className="flex gap-4 flex-row-reverse">
-                <div className="w-10 h-10 rounded-full bg-primary flex-shrink-0 flex items-center justify-center font-bold text-white">
-                  T
-                </div>
-                <div className="max-w-[70%] text-right">
-                  <div className="flex items-center justify-end gap-2 mb-1">
-                    <span className="text-xs text-on-surface-variant">09:45 AM</span>
-                    <span className="font-bold text-sm text-primary">Bạn (Giáo viên)</span>
-                  </div>
-                  <div className="bg-primary text-white p-4 rounded-2xl rounded-tr-none shadow-sm text-body-sm text-left">
-                    Chào Nam, câu đó cần áp dụng định lý Vi-et. Thầy sẽ gửi tài liệu bổ trợ vào nhóm nhé.
+                  <div>
+                    <h4 className="font-bold text-sm text-on-surface">Kênh chung - Thảo luận lớp học</h4>
+                    <p className="text-[10px] text-green-600 flex items-center gap-1 font-medium mt-0.5">
+                      <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></span> Học sinh trực tuyến
+                      kết nối thời gian thực
+                    </p>
                   </div>
                 </div>
               </div>
 
-              <div className="flex justify-center my-4">
-                <span className="bg-surface-container px-4 py-1 rounded-full text-[10px] uppercase font-bold text-on-surface-variant">
-                  New Messages
-                </span>
+              {/* Vùng Tin nhắn nội dung mẫu */}
+              <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50/40">
+                <div className="flex gap-3">
+                  <div className="w-8 h-8 rounded-full bg-blue-100 flex-shrink-0 flex items-center justify-center font-bold text-blue-700 text-xs">
+                    TN
+                  </div>
+                  <div className="max-w-[75%]">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="font-bold text-xs text-on-surface">Trần Nam</span>
+                      <span className="text-[10px] text-outline">09:42 AM</span>
+                    </div>
+                    <div className="bg-white p-3 rounded-2xl rounded-tl-none border border-outline-variant/60 shadow-sm text-xs sm:text-sm">
+                      Dạ thưa thầy, tệp tài liệu PDF đính kèm chương vừa đăng em chưa mở được ạ. Thầy cấp quyền giúp em
+                      với ạ!
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex gap-3 flex-row-reverse">
+                  <div className="w-8 h-8 rounded-full bg-primary flex-shrink-0 flex items-center justify-center font-bold text-white text-xs">
+                    GV
+                  </div>
+                  <div className="max-w-[75%] text-right">
+                    <div className="flex items-center justify-end gap-2 mb-1">
+                      <span className="text-[10px] text-outline">09:45 AM</span>
+                      <span className="font-bold text-xs text-primary">Bạn (Giảng viên)</span>
+                    </div>
+                    <div className="bg-primary text-white p-3 rounded-2xl rounded-tr-none text-left text-xs sm:text-sm">
+                      Chào Nam, hệ thống vừa cập nhật xong đồng bộ đám mây, em thử tải hoặc tải lại (F5) trang xem được
+                      chưa nhé. Thầy vừa kiểm tra lại link rồi.
+                    </div>
+                  </div>
+                </div>
               </div>
 
-              {/* System Message */}
-              <div className="flex justify-center italic text-on-surface-variant text-xs py-2">
-                Lê Hoa đã tham gia cuộc thảo luận.
-              </div>
-            </div>
-
-            <div className="p-4 border-t border-outline-variant bg-white">
-              <div className="flex items-center gap-3 bg-surface-container rounded-2xl p-2 px-4 border border-transparent focus-within:border-primary/30 transition-all">
-                <button className="text-on-surface-variant hover:text-primary">
-                  <span className="material-symbols-outlined">add_circle</span>
-                </button>
-                <input
-                  className="flex-1 bg-transparent border-none focus:ring-0 text-body-sm outline-none"
-                  placeholder="Nhập tin nhắn..."
-                  type="text"
-                />
-                <div className="flex gap-2">
-                  <button className="text-on-surface-variant hover:text-primary">
-                    <span className="material-symbols-outlined">sentiment_satisfied</span>
+              {/* Thanh gõ tin nhắn phía dưới chân chat */}
+              <div className="p-3 border-t border-outline-variant bg-white flex-shrink-0">
+                <div className="flex items-center gap-2 bg-surface-container rounded-xl p-1.5 px-3 border border-transparent focus-within:border-primary/20 transition-all">
+                  <input
+                    type="text"
+                    value={chatInput}
+                    onChange={(e) => setChatInput(e.target.value)}
+                    className="flex-1 bg-transparent border-none focus:ring-0 text-xs sm:text-sm outline-none"
+                    placeholder="Nhập nội dung tin nhắn trao đổi với cả lớp học..."
+                  />
+                  <button className="bg-primary text-white p-2 rounded-lg active:scale-95 transition-transform flex items-center justify-center">
+                    <span className="material-symbols-outlined text-base">send</span>
                   </button>
-                  <button className="bg-primary text-white p-2 rounded-xl active:scale-90 transition-transform">
-                    <span className="material-symbols-outlined">send</span>
-                  </button>
                 </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
-      </div>
+      </main>
 
-      {/* Floating Action Button */}
-      <button className="fixed bottom-8 right-8 bg-primary text-white flex items-center gap-3 px-6 py-4 rounded-full shadow-2xl hover:bg-primary-container hover:scale-105 active:scale-95 transition-all z-50 group">
-        <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>
-          videocam
-        </span>
-        <span className="font-bold text-label-md">Học trực tuyến</span>
-        <span className="absolute -top-1 -right-1 w-4 h-4 bg-error border-2 border-white rounded-full animate-ping"></span>
-      </button>
-    </main>
+      {/* MODAL ĐIỀU KHIỂN TẬP TRUNG (Mở khi Tạo MỚI HOẶC SỬA) */}
+      <CreateLessonModal
+        isOpen={isModalOpen || !!editingLesson}
+        onClose={() => {
+          setIsModalOpen(false);
+          setEditingLesson(null);
+        }}
+        classId={classId!}
+        lessonData={editingLesson} // Truyền dữ liệu bài giảng đang chỉnh sửa vào đây (nếu có)
+        onCreated={handleLessonCreated}
+        onUpdated={handleLessonUpdated} // Thêm callback khi cập nhật thành công
+      />
+    </div>
   );
-};
-
-export default ClassroomDetail;
+}

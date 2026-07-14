@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 
 const StudentAssignmentContent = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -16,29 +16,20 @@ const StudentAssignmentContent = () => {
                 <span className="px-3 py-1 bg-primary/10 text-primary text-body-sm font-semibold rounded-full uppercase tracking-wider">
                   Cấu trúc dữ liệu & Giải thuật
                 </span>
-                <span className="text-on-surface-variant text-body-sm">
-                  Hạn nộp: 23:59 - 15/10/2023
-                </span>
+                <span className="text-on-surface-variant text-body-sm">Hạn nộp: 23:59 - 15/10/2023</span>
               </div>
-              <h3 className="font-headline-md text-headline-md text-on-surface mb-4">
-                Hướng dẫn làm bài
-              </h3>
+              <h3 className="font-headline-md text-headline-md text-on-surface mb-4">Hướng dẫn làm bài</h3>
               <p className="text-on-surface-variant leading-relaxed mb-4">
-                Bài tập này gồm 3 phần: Trắc nghiệm lý thuyết, câu hỏi ngắn và
-                phân tích mã nguồn. Vui lòng đọc kỹ yêu cầu trước khi trả lời.
-                Bạn có thể sử dụng AI Assistant để nhận gợi ý nếu gặp khó khăn,
-                nhưng tuyệt đối không sao chép lời giải.
+                Bài tập này gồm 3 phần: Trắc nghiệm lý thuyết, câu hỏi ngắn và phân tích mã nguồn. Vui lòng đọc kỹ yêu
+                cầu trước khi trả lời. Bạn có thể sử dụng AI Assistant để nhận gợi ý nếu gặp khó khăn, nhưng tuyệt đối
+                không sao chép lời giải.
               </p>
               <div className="flex gap-4 p-4 bg-surface-container-low rounded-lg border border-primary/10">
-                <span
-                  className="material-symbols-outlined text-primary"
-                  data-icon="info"
-                >
+                <span className="material-symbols-outlined text-primary" data-icon="info">
                   info
                 </span>
                 <span className="text-body-sm text-on-surface">
-                  Mỗi câu hỏi có số điểm khác nhau được ghi rõ ở góc phải. Tổng
-                  điểm: 10.0
+                  Mỗi câu hỏi có số điểm khác nhau được ghi rõ ở góc phải. Tổng điểm: 10.0
                 </span>
               </div>
             </div>
@@ -51,13 +42,10 @@ const StudentAssignmentContent = () => {
                   <span className="bg-primary text-white w-8 h-8 rounded-lg flex items-center justify-center font-bold">
                     1
                   </span>
-                  <span className="text-on-surface-variant font-semibold text-body-sm">
-                    2.0 Điểm
-                  </span>
+                  <span className="text-on-surface-variant font-semibold text-body-sm">2.0 Điểm</span>
                 </div>
                 <h4 className="text-body-lg font-semibold text-on-surface mb-6">
-                  Độ phức tạp thời gian trung bình của giải thuật Quicksort là
-                  gì?
+                  Độ phức tạp thời gian trung bình của giải thuật Quicksort là gì?
                 </h4>
                 <div className="space-y-3">
                   <label className="flex items-center gap-4 p-4 rounded-xl border border-outline-variant hover:bg-primary/5 cursor-pointer transition-all group">
@@ -66,9 +54,7 @@ const StudentAssignmentContent = () => {
                       name="q1"
                       type="radio"
                     />
-                    <span className="text-on-surface group-hover:text-primary">
-                      O(n)
-                    </span>
+                    <span className="text-on-surface group-hover:text-primary">O(n)</span>
                   </label>
                   <label className="flex items-center gap-4 p-4 rounded-xl border border-outline-variant hover:bg-primary/5 cursor-pointer transition-all group">
                     <input
@@ -76,9 +62,7 @@ const StudentAssignmentContent = () => {
                       name="q1"
                       type="radio"
                     />
-                    <span className="text-on-surface group-hover:text-primary">
-                      O(n log n)
-                    </span>
+                    <span className="text-on-surface group-hover:text-primary">O(n log n)</span>
                   </label>
                   <label className="flex items-center gap-4 p-4 rounded-xl border border-outline-variant hover:bg-primary/5 cursor-pointer transition-all group">
                     <input
@@ -86,9 +70,7 @@ const StudentAssignmentContent = () => {
                       name="q1"
                       type="radio"
                     />
-                    <span className="text-on-surface group-hover:text-primary">
-                      O(n²)
-                    </span>
+                    <span className="text-on-surface group-hover:text-primary">O(n²)</span>
                   </label>
                 </div>
               </div>
@@ -99,13 +81,10 @@ const StudentAssignmentContent = () => {
                   <span className="bg-primary text-white w-8 h-8 rounded-lg flex items-center justify-center font-bold">
                     2
                   </span>
-                  <span className="text-on-surface-variant font-semibold text-body-sm">
-                    3.0 Điểm
-                  </span>
+                  <span className="text-on-surface-variant font-semibold text-body-sm">3.0 Điểm</span>
                 </div>
                 <h4 className="text-body-lg font-semibold text-on-surface mb-6">
-                  Giải thích ngắn gọn cơ chế 'Chia để trị' (Divide and Conquer)
-                  trong giải thuật Merge Sort.
+                  Giải thích ngắn gọn cơ chế 'Chia để trị' (Divide and Conquer) trong giải thuật Merge Sort.
                 </h4>
                 <textarea
                   className="w-full h-32 rounded-xl border-outline-variant focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all p-4 text-body-md"
@@ -120,13 +99,10 @@ const StudentAssignmentContent = () => {
                   <span className="bg-primary text-white w-8 h-8 rounded-lg flex items-center justify-center font-bold">
                     3
                   </span>
-                  <span className="text-on-surface-variant font-semibold text-body-sm">
-                    5.0 Điểm
-                  </span>
+                  <span className="text-on-surface-variant font-semibold text-body-sm">5.0 Điểm</span>
                 </div>
                 <h4 className="text-body-lg font-semibold text-on-surface mb-6">
-                  Đoạn mã sau đây thực hiện giải thuật sắp xếp nào? Hãy tối ưu
-                  hóa vòng lặp bên trong.
+                  Đoạn mã sau đây thực hiện giải thuật sắp xếp nào? Hãy tối ưu hóa vòng lặp bên trong.
                 </h4>
                 <div className="bg-slate-900 rounded-xl p-6 mb-6 font-code-sm text-white overflow-x-auto relative">
                   <span className="absolute top-4 right-4 text-slate-500 text-[12px] uppercase tracking-widest">
@@ -143,17 +119,13 @@ const StudentAssignmentContent = () => {
                   </pre>
                 </div>
                 <div className="space-y-4">
-                  <label className="block text-label-md text-on-surface-variant mb-2">
-                    Tên giải thuật:
-                  </label>
+                  <label className="block text-label-md text-on-surface-variant mb-2">Tên giải thuật:</label>
                   <input
                     className="w-full rounded-xl border-outline-variant focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all px-4 py-3 text-body-md"
                     placeholder="Tên giải thuật..."
                     type="text"
                   />
-                  <label className="block text-label-md text-on-surface-variant mb-2 mt-4">
-                    Đề xuất tối ưu hóa:
-                  </label>
+                  <label className="block text-label-md text-on-surface-variant mb-2 mt-4">Đề xuất tối ưu hóa:</label>
                   <textarea
                     className="w-full h-40 rounded-xl border-outline-variant focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all p-4 font-code-sm"
                     placeholder="Nhập đoạn mã đã tối ưu hoặc giải thích..."
@@ -188,14 +160,11 @@ const StudentAssignmentContent = () => {
             {/* AI Suggestion Card */}
             <div className="ai-gradient-border p-5 shadow-sm">
               <p className="text-body-sm text-on-surface mb-3 leading-relaxed">
-                Chào bạn! Tôi thấy bạn đang xem câu 3 về thuật toán nổi bọt
-                (Bubble Sort). Bạn có cần một gợi ý về cách tối ưu hóa không?
+                Chào bạn! Tôi thấy bạn đang xem câu 3 về thuật toán nổi bọt (Bubble Sort). Bạn có cần một gợi ý về cách
+                tối ưu hóa không?
               </p>
               <button className="text-primary font-bold text-body-sm flex items-center gap-2 hover:underline">
-                <span
-                  className="material-symbols-outlined text-[18px]"
-                  data-icon="lightbulb"
-                >
+                <span className="material-symbols-outlined text-[18px]" data-icon="lightbulb">
                   lightbulb
                 </span>
                 Cho tôi gợi ý
@@ -203,15 +172,10 @@ const StudentAssignmentContent = () => {
             </div>
             {/* Chat History (Empty placeholder) */}
             <div className="text-center py-10 opacity-30">
-              <span
-                className="material-symbols-outlined text-[48px] mb-2"
-                data-icon="chat_bubble"
-              >
+              <span className="material-symbols-outlined text-[48px] mb-2" data-icon="chat_bubble">
                 chat_bubble
               </span>
-              <p className="text-body-sm italic">
-                Hỏi AI để nhận gợi ý học tập
-              </p>
+              <p className="text-body-sm italic">Hỏi AI để nhận gợi ý học tập</p>
             </div>
           </div>
           <div className="p-4 border-t border-outline-variant">
@@ -228,8 +192,7 @@ const StudentAssignmentContent = () => {
               </button>
             </div>
             <p className="text-[10px] text-on-surface-variant mt-3 text-center px-4">
-              AI Scholar sẽ không trực tiếp đưa ra lời giải mà chỉ hướng dẫn bạn
-              tư duy.
+              AI Scholar sẽ không trực tiếp đưa ra lời giải mà chỉ hướng dẫn bạn tư duy.
             </p>
           </div>
         </aside>
@@ -239,16 +202,12 @@ const StudentAssignmentContent = () => {
       <footer className="fixed bottom-0 right-0 left-[280px] bg-white border-t border-outline-variant h-20 px-10 flex items-center justify-between z-40">
         <div className="flex items-center gap-8">
           <div className="flex flex-col">
-            <span className="text-on-surface-variant text-[12px] uppercase font-bold tracking-widest">
-              Tiến độ
-            </span>
+            <span className="text-on-surface-variant text-[12px] uppercase font-bold tracking-widest">Tiến độ</span>
             <div className="flex items-center gap-3">
               <div className="w-48 h-2 bg-slate-100 rounded-full overflow-hidden">
                 <div className="w-2/3 h-full bg-primary rounded-full"></div>
               </div>
-              <span className="text-body-sm font-bold text-on-surface">
-                2/3 Câu
-              </span>
+              <span className="text-body-sm font-bold text-on-surface">2/3 Câu</span>
             </div>
           </div>
         </div>
@@ -280,13 +239,10 @@ const StudentAssignmentContent = () => {
               cloud_upload
             </span>
           </div>
-          <h3 className="font-headline-md text-headline-md text-on-surface mb-2">
-            Bạn có chắc muốn nộp bài?
-          </h3>
+          <h3 className="font-headline-md text-headline-md text-on-surface mb-2">Bạn có chắc muốn nộp bài?</h3>
           <p className="text-on-surface-variant mb-8 leading-relaxed text-body-md">
-            Bạn đã hoàn thành 2 trên 3 câu hỏi. Sau khi nộp, bạn sẽ không thể
-            chỉnh sửa câu trả lời. Hệ thống sẽ chấm điểm và gửi kết quả về
-            dashboard.
+            Bạn đã hoàn thành 2 trên 3 câu hỏi. Sau khi nộp, bạn sẽ không thể chỉnh sửa câu trả lời. Hệ thống sẽ chấm
+            điểm và gửi kết quả về dashboard.
           </p>
           <div className="flex gap-4">
             <button

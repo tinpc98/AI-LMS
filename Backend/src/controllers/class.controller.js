@@ -18,13 +18,8 @@ export const ClassList = async (req, res) => {
     }
     // Nếu là Admin, query rỗng {} sẽ lấy ra toàn bộ lớp học trên hệ thống
     //Dùng populate để lấy thêm tên giáo viên thay vì trả về id
-    const classList = await classModel
-      .find(query)
-      .populate("teacherId", "fullName email")
-      .sort({ createAt: -1 }); // sắp xếp lớp mới tạo lên đầu
-    return res
-      .status(200)
-      .json({ message: "Lấy danh sách lớp học thành công", data: classList });
+    const classList = await classModel.find(query).populate("teacherId", "fullName email").sort({ createAt: -1 }); // sắp xếp lớp mới tạo lên đầu
+    return res.status(200).json({ message: "Lấy danh sách lớp học thành công", data: classList });
   } catch (error) {
     console.error("[Class] danh sách lỗi:", error);
     return res.status(500).json({ message: "Lỗi khi tải dữ liệu" });
@@ -38,13 +33,12 @@ export const ClassListById = async (req, res) => {
   try {
     const classDetail = await classModel
       .findById(id)
-      .populate("teacherId", "fullName email");
+      .populate("teacherId", "fullName email")
+      .populate("students", "fullName email");
     if (!classDetail) {
       return res.status(404).json({ message: "Lớp học không tồn tại" });
     }
-    return res
-      .status(200)
-      .json({ message: "Lấy danh sách lớp học thành công", data: classDetail });
+    return res.status(200).json({ message: "Lấy danh sách lớp học thành công", data: classDetail });
   } catch (error) {
     return res.status(500).json({ message: "Lỗi khi tải dữ liệu" });
   }
@@ -68,9 +62,7 @@ export const AddNewClass = async (req, res) => {
       student: [],
     };
     const savedClass = await new classModel(newClassData).save();
-    return res
-      .status(200)
-      .json({ message: "Tạo lớp học thành công", data: savedClass });
+    return res.status(200).json({ message: "Tạo lớp học thành công", data: savedClass });
   } catch (error) {
     console.error("[Class] Create Error:", error);
     return res.status(500).json({ message: "Lỗi khi tải dữ liệu" });
@@ -102,9 +94,7 @@ export const UpdateClass = async (req, res) => {
       });
     }
 
-    return res
-      .status(200)
-      .json({ message: "Cập nhật lớp học thành công", data: updatedClass });
+    return res.status(200).json({ message: "Cập nhật lớp học thành công", data: updatedClass });
   } catch (error) {
     return res.status(500).json({ message: "Lỗi khi tải dữ liệu" });
   }
@@ -126,9 +116,7 @@ export const DeleteClass = async (req, res) => {
         message: "Lớp học không tồn tại hoặc bạn không có quyền truy cập",
       });
     }
-    return res
-      .status(200)
-      .json({ message: "Xóa lớp học thành công", data: deleteClass });
+    return res.status(200).json({ message: "Xóa lớp học thành công", data: deleteClass });
   } catch (error) {
     return res.status(500).json({ message: "Lỗi khi tải dữ liệu" });
   }
@@ -150,40 +138,26 @@ export const JoinClass = async (req, res) => {
     // Kiểm tra xem lớp học có tồn tại với mã này không
     const targetClass = await classModel.findOne({ joinCode: normalizedCode });
     if (!targetClass) {
-      return res
-        .status(404)
-        .json({ message: "Mã lớp học không chính xác, vui lòng kiểm tra lại" });
+      return res.status(404).json({ message: "Mã lớp học không chính xác, vui lòng kiểm tra lại" });
     }
 
     //Chặn giáo viên tự join vào code của chính mình
     if (targetClass.teacherId.toString() === userId) {
-      return res
-        .status(400)
-        .json({ message: "Bạn đang là giáo viên quản lý của lớp học này." });
+      return res.status(400).json({ message: "Bạn đang là giáo viên quản lý của lớp học này." });
     }
 
     // chặn học sinh đã tham gia rồi nhưng lại tham gia lại
     if (targetClass.students.includes(userId)) {
-      return res
-        .status(400)
-        .json({ message: "Bạn đã tham gia lớp học này từ trước." });
+      return res.status(400).json({ message: "Bạn đã tham gia lớp học này từ trước." });
     }
 
     //Thêm học sinh vào Lớp
     const updatedClass = await classModel
-      .findByIdAndUpdate(
-        targetClass._id,
-        { $addToSet: { students: userId } },
-        { returnDocument: "after" },
-      )
+      .findByIdAndUpdate(targetClass._id, { $addToSet: { students: userId } }, { returnDocument: "after" })
       .populate("teacherId", "fullName email");
-    return res
-      .status(200)
-      .json({ message: "Tham gia lớp học thành công", data: updatedClass });
+    return res.status(200).json({ message: "Tham gia lớp học thành công", data: updatedClass });
   } catch (error) {
     console.error("[Class] Join Error:", error);
-    return res
-      .status(500)
-      .json({ message: "Lỗi hệ thống khi xử lý tham gia lớp học" });
+    return res.status(500).json({ message: "Lỗi hệ thống khi xử lý tham gia lớp học" });
   }
 };

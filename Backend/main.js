@@ -1,9 +1,6 @@
 import dotenv from "dotenv";
 import express from "express";
-import cors from "cors";
-import { createServer } from "http"; // 1. Bổ sung module http cốt lõi của Node.js
-import { Server } from "socket.io"; // 2. Bổ sung Socket.io
-
+import cors from "cors"; // Thêm thư viện cấu hình cho phép Frontend gọi API
 import { connectDB } from "./src/config/database.js";
 import socketHandler from "./src/sockets/exam.socket.js"; // 3. Import bộ xử lý Real-time
 
@@ -13,16 +10,14 @@ import ClassRouter from "./src/routers/class.router.js";
 import LessonRouter from "./src/routers/lesson.routes.js";
 import assignmentRouter from "./src/routers/assignment.routes.js";
 
-// Import Routers mới (Module Quản lý Thi trực tuyến)
-import QuestionRouter from "./src/routers/question.route.js";
-import ExamRouter from "./src/routers/exam.route.js";
-import ExamAttemptRouter from "./src/routers/examAttempt.route.js";
-
+// Kích hoạt cấu hình file .env
 dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 5000;
 
+// Lấy danh sách origin từ biến môi trường FRONTEND_ORIGINS (comma-separated).
+// Ví dụ: FRONTEND_ORIGINS=http://localhost:5173,http://localhost:5174
 const allowedOrigins = (
   process.env.FRONTEND_ORIGINS || "http://localhost:5173,http://127.0.0.1:5173"
 )

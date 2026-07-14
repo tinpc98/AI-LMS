@@ -1,9 +1,11 @@
 export default interface User {
-  id: string;
-  title: string;
-  subtitle: number;
-  teacher: string;
+  id?: string;
+  name?: string;
+  fullName: string;
+  phone: string;
+  email: string;
   password: string;
-  confirmPassword: string;
-  role: "student" | "teacher" | "admin";
+  confirmPassword?: string;
+  role?: "student" | "teacher" | "admin";
+  terms?: boolean;
 }

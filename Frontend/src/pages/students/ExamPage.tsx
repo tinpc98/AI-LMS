@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 
-const ExamPage: React.FC = () => {
+const ExamPage = () => {
   const [selectedOption, setSelectedOption] = useState<string | null>("C");
   const [isWarningVisible, setIsWarningVisible] = useState(false);
   const [timer, setTimer] = useState(45 * 60 + 22);
@@ -59,9 +59,7 @@ const ExamPage: React.FC = () => {
                 >
                   <div
                     className={`w-10 h-10 rounded-full flex items-center justify-center font-bold ${
-                      selectedOption === opt
-                        ? "bg-primary text-white"
-                        : "bg-surface-container"
+                      selectedOption === opt ? "bg-primary text-white" : "bg-surface-container"
                     }`}
                   >
                     {opt}
@@ -95,14 +93,9 @@ const ExamPage: React.FC = () => {
       {isWarningVisible && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm">
           <div className="bg-surface p-8 rounded-2xl max-w-sm text-center border border-error">
-            <h3 className="text-xl font-bold text-error mb-4">
-              Cảnh báo vi phạm!
-            </h3>
+            <h3 className="text-xl font-bold text-error mb-4">Cảnh báo vi phạm!</h3>
             <p className="mb-6">Hệ thống ghi nhận bạn đã rời khỏi tab thi.</p>
-            <button
-              onClick={() => setIsWarningVisible(false)}
-              className="px-6 py-2 bg-primary text-white rounded-lg"
-            >
+            <button onClick={() => setIsWarningVisible(false)} className="px-6 py-2 bg-primary text-white rounded-lg">
               Quay lại
             </button>
           </div>
