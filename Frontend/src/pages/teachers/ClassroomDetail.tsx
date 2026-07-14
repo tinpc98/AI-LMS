@@ -4,11 +4,20 @@ import axios from "axios";
 import assignmentApi from "../../api/assignmentApi";
 import { classApi } from "../../api/classApi";
 import { lessonApi } from "../../api/lessonApi";
-import type { IClass } from "../../interface/ClassInterface";
+import type { IClass, IStudentSummary } from "../../interface/ClassInterface";
 import type { IAssignment, ISubmission } from "../../interface/assignmentInterface";
 import type { ILesson } from "../../interface/lessonInterface";
 import CreateAssignmentModal from "../../components/features/CreateAssignmentModal";
 import CreateLessonModal from "../../components/features/CreateLessonModal";
+
+const TAB_ITEMS = [
+  { id: "lessons", label: "Bài giảng", icon: "book" },
+  { id: "members", label: "Học sinh", icon: "groups" },
+  { id: "assignments", label: "Bài tập & Đề thi", icon: "assignment" },
+  { id: "chat", label: "Thảo luận nhóm", icon: "chat" },
+] as const;
+
+const sortLessonsByOrder = (lessons: ILesson[]) => [...lessons].sort((a, b) => a.order - b.order);
 
 export default function ClassroomDetail() {
   const { classId } = useParams<{ classId: string }>();
@@ -74,21 +83,24 @@ export default function ClassroomDetail() {
 
   useEffect(() => {
     isMounted.current = true;
-    void loadClassroom();
-    void loadAssignments();
+
+    void (async () => {
+      await Promise.all([loadClassroom(), loadAssignments()]);
+    })();
+
     return () => {
       isMounted.current = false;
     };
   }, [loadClassroom, loadAssignments]);
 
   const handleLessonCreated = (newLesson: ILesson) => {
-    setLessons((prev) => [...prev, newLesson].sort((a, b) => a.order - b.order));
+    setLessons((prev) => sortLessonsByOrder([...prev, newLesson]));
     setIsModalOpen(false);
   };
 
   const handleLessonUpdated = (updatedLesson: ILesson) => {
     setLessons((prev) =>
-      prev.map((l) => (l._id === updatedLesson._id ? updatedLesson : l)).sort((a, b) => a.order - b.order),
+      sortLessonsByOrder(prev.map((lesson) => (lesson._id === updatedLesson._id ? updatedLesson : lesson))),
     );
     setEditingLesson(null);
   };
@@ -256,12 +268,7 @@ export default function ClassroomDetail() {
 
           {/* Hệ thống Tabs chuyển màn hình chức năng */}
           <nav className="flex items-center gap-6 h-12 overflow-x-auto whitespace-nowrap scrollbar-none">
-            {[
-              { id: "lessons", label: "Bài giảng", icon: "book" },
-              { id: "members", label: "Học sinh", icon: "groups" },
-              { id: "assignments", label: "Bài tập & Đề thi", icon: "assignment" },
-              { id: "chat", label: "Thảo luận nhóm", icon: "chat" },
-            ].map((tab) => (
+            {TAB_ITEMS.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
@@ -427,7 +434,7 @@ export default function ClassroomDetail() {
                           </td>
                         </tr>
                       ) : (
-                        classInfo.students.map((student: any, index: number) => (
+                        classInfo.students.map((student: IStudentSummary, index: number) => (
                           <tr key={student._id || index} className="hover:bg-surface-container-low transition-colors">
                             <td className="px-6 py-4">
                               <div className="flex items-center gap-3">

@@ -49,7 +49,10 @@ const CreateAssignmentModal = ({ isOpen, onClose, classId, lessonId, onCreated }
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    if (!title.trim()) {
+    const trimmedTitle = title.trim();
+    const trimmedDescription = description.trim();
+
+    if (!trimmedTitle) {
       alert("Vui lòng nhập tiêu đề bài tập!");
       return;
     }
@@ -62,8 +65,8 @@ const CreateAssignmentModal = ({ isOpen, onClose, classId, lessonId, onCreated }
     try {
       setLoading(true);
       const formData = new FormData();
-      formData.append("title", title.trim());
-      formData.append("description", description.trim());
+      formData.append("title", trimmedTitle);
+      formData.append("description", trimmedDescription);
       formData.append("deadline", new Date(deadline).toISOString());
       formData.append("classId", classId);
       if (lessonId) {
