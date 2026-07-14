@@ -1,7 +1,7 @@
 import { useState } from "react";
 import axios from "axios";
 import { classApi } from "../../api/classApi";
-import type { IClass } from "../../interface/classInterface";
+import type { IClass } from "../../interface/ClassInterface";
 
 interface Props {
   isOpen: boolean;

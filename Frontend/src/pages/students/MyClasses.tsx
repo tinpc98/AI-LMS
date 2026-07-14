@@ -2,7 +2,7 @@ import axios from "axios";
 import { useEffect, useState } from "react";
 import JoinClassModel from "../../components/features/JoinClassModel";
 import { classApi } from "../../api/classApi";
-import type { IClass } from "../../interface/classInterface";
+import type { IClass } from "../../interface/ClassInterface";
 import { useNavigate } from "react-router-dom";
 
 const MyClassesContent = () => {

@@ -1,5 +1,5 @@
 // Frontend/src/api/classApi.ts
-import type { ICreateClassPayload } from "../interface/classInterface";
+import type { ICreateClassPayload } from "../interface/ClassInterface";
 import axiosClient from "./axiosClient";
 
 export const classApi = {

@@ -1,22 +1,12 @@
-import { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useEffect, useState, type ChangeEvent } from "react";
+import { Link, useParams } from "react-router-dom";
 import axios from "axios";
+import assignmentApi from "../../api/assignmentApi";
 import { classApi } from "../../api/classApi";
 import { lessonApi } from "../../api/lessonApi";
-import type { IClass } from "../../interface/classInterface";
+import type { IClass } from "../../interface/ClassInterface";
+import type { IAssignment } from "../../interface/assignmentInterface";
 import type { ILesson } from "../../interface/lessonInterface";
-
-// Mock Data
-const MOCK_ASSIGNMENTS = [
-  { id: "1", title: "BTTL 01: Cài đặt danh sách liên kết đơn", deadline: "23:59 - 25/10/2024", status: "Chưa nộp" },
-  {
-    id: "2",
-    title: "BTTL 02: Giải thuật sắp xếp nhanh QuickSort",
-    submitTime: "10:15 - 18/10/2024",
-    status: "Đã chấm điểm",
-    score: "9.0/10",
-  },
-];
 
 const MOCK_RANKINGS = [
   { rank: 1, name: "Trần Quốc Quân", short: "TQ", score: 9.8, bg: "bg-yellow-100 text-yellow-700 border-yellow-200" },
@@ -38,11 +28,91 @@ export default function ClassDetail() {
   // State Logic dữ liệu thật
   const [classInfo, setClassInfo] = useState<IClass | null>(null);
   const [lessons, setLessons] = useState<ILesson[]>([]);
+  const [assignments, setAssignments] = useState<IAssignment[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
+  const [submitModalOpen, setSubmitModalOpen] = useState(false);
+  const [selectedAssignment, setSelectedAssignment] = useState<IAssignment | null>(null);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [submissionLink, setSubmissionLink] = useState("");
+  const [submissionNote, setSubmissionNote] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submittedAssignmentIds, setSubmittedAssignmentIds] = useState<string[]>([]);
 
   // State hỗ trợ tab chat/thảo luận mẫu
   const [chatMessage, setChatMessage] = useState("");
+
+  const openSubmitModal = (assignment: IAssignment) => {
+    setSelectedAssignment(assignment);
+    setSelectedFiles([]);
+    setSubmissionLink("");
+    setSubmissionNote("");
+    setSubmitModalOpen(true);
+  };
+
+  const handleFileSelection = (event: ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.target.files ?? []);
+    if (!files.length) return;
+
+    if (selectedFiles.length + files.length > 5) {
+      alert("Bạn chỉ có thể đính kèm tối đa 5 tệp bài làm.");
+      event.target.value = "";
+      return;
+    }
+
+    setSelectedFiles((prev) => [...prev, ...files]);
+    event.target.value = "";
+  };
+
+  const removeFile = (index: number) => {
+    setSelectedFiles((prev) => prev.filter((_, fileIndex) => fileIndex !== index));
+  };
+
+  const handleCancelSubmission = (assignmentId: string) => {
+    setSubmittedAssignmentIds((prev) => prev.filter((id) => id !== assignmentId));
+    alert("Đã hủy nộp bài. Bạn có thể nộp lại bất cứ lúc nào.");
+  };
+
+  const handleSubmitAssignment = async () => {
+    if (!selectedAssignment) return;
+
+    if (selectedFiles.length === 0 && !submissionLink.trim()) {
+      alert("Vui lòng chọn ít nhất một tệp hoặc nhập đường link để nộp bài.");
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      const formData = new FormData();
+      const content = [
+        submissionNote.trim() ? `[Ghi chú]: ${submissionNote.trim()}` : "",
+        submissionLink.trim() ? `[Link nộp]: ${submissionLink.trim()}` : "",
+      ]
+        .filter(Boolean)
+        .join("\n");
+
+      formData.append("content", content || "Nộp bài từ popup trên lớp học");
+      selectedFiles.forEach((file) => {
+        formData.append("files", file);
+      });
+
+      await assignmentApi.submitAssignment(selectedAssignment._id, formData);
+      setSubmittedAssignmentIds((prev) =>
+        prev.includes(selectedAssignment._id) ? prev : [...prev, selectedAssignment._id],
+      );
+      setSubmitModalOpen(false);
+      setSelectedAssignment(null);
+      setSelectedFiles([]);
+      setSubmissionLink("");
+      setSubmissionNote("");
+      alert("Đã nộp bài thành công!");
+    } catch (error) {
+      console.error("Lỗi khi nộp bài từ popup:", error);
+      alert("Nộp bài thất bại. Vui lòng thử lại.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -51,9 +121,10 @@ export default function ClassDetail() {
         setIsLoading(true);
         setErrorMsg("");
 
-        const [classRes, lessonRes] = await Promise.all([
+        const [classRes, lessonRes, assignmentRes] = await Promise.all([
           classApi.getClassById(classId),
           lessonApi.getLessonsByClass(classId),
+          assignmentApi.getAssignmentsByClass(classId),
         ]);
 
         setClassInfo(classRes.data.data);
@@ -63,6 +134,7 @@ export default function ClassDetail() {
           .sort((a, b) => a.order - b.order);
 
         setLessons(publishedLessons);
+        setAssignments(assignmentRes);
       } catch (error: unknown) {
         if (axios.isAxiosError(error)) {
           setErrorMsg(error.response?.data?.message || "Không thể tải dữ liệu lớp học.");
@@ -399,48 +471,68 @@ export default function ClassDetail() {
               <div className="space-y-6">
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div className="p-4 bg-primary-container/10 border border-primary/20 rounded-xl">
-                    <span className="text-xs uppercase font-bold text-primary">Chưa nộp</span>
-                    <div className="text-2xl font-bold text-primary mt-1">01</div>
+                    <span className="text-xs uppercase font-bold text-primary">Tổng bài tập</span>
+                    <div className="text-2xl font-bold text-primary mt-1">{assignments.length}</div>
                   </div>
                   <div className="p-4 bg-secondary-container/20 border border-secondary/20 rounded-xl">
-                    <span className="text-xs uppercase font-bold text-secondary">Đã nộp</span>
-                    <div className="text-2xl font-bold text-secondary mt-1">01</div>
+                    <span className="text-xs uppercase font-bold text-secondary">Đang mở</span>
+                    <div className="text-2xl font-bold text-secondary mt-1">{assignments.length}</div>
                   </div>
                   <div className="p-4 bg-surface-container-high rounded-xl">
-                    <span className="text-xs uppercase font-bold text-on-surface-variant">Điểm trung bình</span>
-                    <div className="text-2xl font-bold text-on-surface mt-1">9.0</div>
+                    <span className="text-xs uppercase font-bold text-on-surface-variant">Lớp học</span>
+                    <div className="text-2xl font-bold text-on-surface mt-1">{classInfo.className}</div>
                   </div>
                 </div>
 
                 <div className="bg-white border border-outline-variant rounded-xl divide-y divide-outline-variant">
-                  {MOCK_ASSIGNMENTS.map((item) => (
-                    <div key={item.id} className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                      <div>
-                        <h4 className="font-semibold text-sm sm:text-base">{item.title}</h4>
-                        <p className="text-xs text-secondary mt-0.5">
-                          {item.deadline || `Nộp lúc: ${item.submitTime}`}
-                        </p>
-                      </div>
-                      <div className="flex items-center space-x-4 self-end sm:self-auto">
-                        {item.score ? (
-                          <div className="text-right">
-                            <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-secondary-container text-on-secondary-container">
-                              {item.status}
-                            </span>
-                            <div className="mt-1 font-bold text-primary text-sm">{item.score}</div>
-                          </div>
-                        ) : (
-                          <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-error-container text-on-error-container">
-                            {item.status}
-                          </span>
-                        )}
-                        <button className="flex items-center space-x-1 bg-primary text-on-primary px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-primary/90">
-                          <span className="material-symbols-outlined text-base">upload</span>
-                          <span>Nộp bài</span>
-                        </button>
-                      </div>
+                  {assignments.length === 0 ? (
+                    <div className="p-8 text-center text-secondary">
+                      Chưa có bài tập nào được giáo viên giao cho lớp này.
                     </div>
-                  ))}
+                  ) : (
+                    assignments.map((item) => (
+                      <div
+                        key={item._id}
+                        className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+                      >
+                        <div className="min-w-0">
+                          <h4 className="font-semibold text-sm sm:text-base">{item.title}</h4>
+                          {item.description && <p className="text-xs text-secondary mt-1">{item.description}</p>}
+                          <p className="text-xs text-secondary mt-0.5">
+                            Hạn nộp: {new Date(item.deadline).toLocaleString("vi-VN")}
+                          </p>
+                        </div>
+                        <div className="flex items-center space-x-4 self-end sm:self-auto">
+                          {submittedAssignmentIds.includes(item._id) ? (
+                            <>
+                              <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-success-container text-on-success-container">
+                                Đã nộp
+                              </span>
+                              <button
+                                onClick={() => handleCancelSubmission(item._id)}
+                                className="rounded-lg border border-outline-variant px-3 py-1.5 text-xs font-semibold text-on-surface hover:bg-surface-container-low"
+                              >
+                                Hủy nộp bài
+                              </button>
+                            </>
+                          ) : (
+                            <>
+                              <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-error-container text-on-error-container">
+                                Chưa nộp
+                              </span>
+                              <button
+                                onClick={() => openSubmitModal(item)}
+                                className="flex items-center space-x-1 bg-primary text-on-primary px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-primary/90"
+                              >
+                                <span className="material-symbols-outlined text-base">upload</span>
+                                <span>Nộp bài</span>
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    ))
+                  )}
                 </div>
               </div>
             )}
@@ -607,6 +699,94 @@ export default function ClassDetail() {
           </div>
         </section>
       </main>
+
+      {submitModalOpen && selectedAssignment && (
+        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-slate-900/60 p-4">
+          <div className="w-full max-w-2xl rounded-2xl border border-outline-variant bg-white p-6 shadow-2xl">
+            <div className="mb-5 flex items-start justify-between gap-4">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">Nộp bài trực tiếp</p>
+                <h3 className="mt-1 text-xl font-bold text-on-surface">{selectedAssignment.title}</h3>
+                <p className="mt-1 text-sm text-secondary">
+                  Bạn có thể đính kèm tệp hoặc gửi đường link bài làm cho giáo viên.
+                </p>
+              </div>
+              <button
+                onClick={() => setSubmitModalOpen(false)}
+                className="rounded-full p-2 text-secondary hover:bg-surface-container-high"
+              >
+                <span className="material-symbols-outlined text-xl">close</span>
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div className="rounded-xl border border-dashed border-outline-variant bg-surface-container-low p-4">
+                <div className="flex items-center justify-between">
+                  <label className="text-sm font-semibold text-on-surface">Nộp bằng folder / tệp</label>
+                  <span className="text-xs text-secondary">{selectedFiles.length}/5</span>
+                </div>
+                <label className="mt-3 flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-primary/20 bg-white px-4 py-3 text-sm font-semibold text-primary transition-colors hover:bg-primary/5">
+                  <input type="file" multiple className="hidden" onChange={handleFileSelection} />
+                  <span className="material-symbols-outlined text-base">folder_open</span>
+                  <span>Chọn thư mục hoặc tệp</span>
+                </label>
+                <p className="mt-2 text-xs text-secondary">Hỗ trợ chọn nhiều tệp hoặc cả folder từ máy tính.</p>
+                {selectedFiles.length > 0 && (
+                  <div className="mt-3 space-y-2">
+                    {selectedFiles.map((file, index) => (
+                      <div
+                        key={`${file.name}-${index}`}
+                        className="flex items-center justify-between rounded-lg bg-white px-3 py-2 text-sm text-on-surface"
+                      >
+                        <span className="max-w-[85%] truncate">{file.name}</span>
+                        <button type="button" onClick={() => removeFile(index)} className="text-error">
+                          <span className="material-symbols-outlined text-base">delete</span>
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="rounded-xl border border-outline-variant bg-white p-4">
+                <label className="text-sm font-semibold text-on-surface">Nộp bằng Link</label>
+                <input
+                  value={submissionLink}
+                  onChange={(event) => setSubmissionLink(event.target.value)}
+                  className="mt-2 w-full rounded-lg border border-outline-variant px-3 py-2 text-sm outline-none focus:border-primary"
+                  placeholder="https://drive.google.com/..."
+                />
+              </div>
+
+              <div className="rounded-xl border border-outline-variant bg-white p-4">
+                <label className="text-sm font-semibold text-on-surface">Ghi chú cho giáo viên</label>
+                <textarea
+                  value={submissionNote}
+                  onChange={(event) => setSubmissionNote(event.target.value)}
+                  className="mt-2 min-h-[90px] w-full rounded-lg border border-outline-variant px-3 py-2 text-sm outline-none focus:border-primary"
+                  placeholder="Ví dụ: em đã hoàn thành phần bài tập và đính kèm kết quả ở thư mục trên..."
+                />
+              </div>
+            </div>
+
+            <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+              <button
+                onClick={() => setSubmitModalOpen(false)}
+                className="rounded-xl border border-outline-variant px-4 py-2 text-sm font-semibold text-on-surface hover:bg-surface-container-low"
+              >
+                Hủy
+              </button>
+              <button
+                onClick={() => void handleSubmitAssignment()}
+                disabled={isSubmitting}
+                className="rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-on-primary hover:bg-primary/90 disabled:opacity-70"
+              >
+                {isSubmitting ? "Đang nộp..." : "Xác nhận nộp"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

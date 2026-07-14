@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { classApi } from "../../api/classApi";
 import CreateClassModal from "../../components/features/CreateClassModal";
-import type { IClass } from "../../interface/classInterface";
+import type { IClass } from "../../interface/ClassInterface";
 import { useNavigate } from "react-router-dom";
 
 const ClassManagement = () => {

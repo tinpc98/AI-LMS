@@ -1,7 +1,67 @@
-import { useState } from "react";
+import { useState, type ChangeEvent } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import assignmentApi from "../../api/assignmentApi";
 
 const StudentAssignmentContent = () => {
+  const { assignmentId } = useParams<{ assignmentId: string }>();
+  const navigate = useNavigate();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [q1Answer, setQ1Answer] = useState("");
+  const [q2Answer, setQ2Answer] = useState("");
+  const [q3Algorithm, setQ3Algorithm] = useState("");
+  const [q3Optimize, setQ3Optimize] = useState("");
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const filesArray = Array.from(event.target.files ?? []);
+    if (!filesArray.length) return;
+
+    if (selectedFiles.length + filesArray.length > 5) {
+      alert("Bạn chỉ có thể đính kèm tối đa 5 tệp bài làm.");
+      event.target.value = "";
+      return;
+    }
+
+    setSelectedFiles((prev) => [...prev, ...filesArray]);
+    event.target.value = "";
+  };
+
+  const removeFile = (index: number) => {
+    setSelectedFiles((prev) => prev.filter((_, fileIndex) => fileIndex !== index));
+  };
+
+  const handleSubmitAssignment = async () => {
+    if (!assignmentId) {
+      alert("Không tìm thấy mã bài tập trong URL.");
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      const formData = new FormData();
+      const content = [
+        `[Câu 1 - Trắc nghiệm]: ${q1Answer || "Chưa trả lời"}`,
+        `[Câu 2 - Chia để trị]: ${q2Answer || "Chưa trả lời"}`,
+        `[Câu 3 - Giải thuật]: ${q3Algorithm || "Chưa trả lời"}`,
+        `[Câu 3 - Tối ưu]: ${q3Optimize || "Chưa trả lời"}`,
+      ].join("\n");
+
+      formData.append("content", content);
+      selectedFiles.forEach((file) => {
+        formData.append("files", file);
+      });
+
+      await assignmentApi.submitAssignment(assignmentId, formData);
+      setIsModalOpen(false);
+      navigate(-1);
+    } catch (error) {
+      console.error("Lỗi khi nộp bài:", error);
+      alert("Nộp bài thất bại. Vui lòng thử lại.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <main className="ml-[280px] pt-16 h-screen flex flex-col bg-surface relative">
@@ -53,6 +113,8 @@ const StudentAssignmentContent = () => {
                       className="w-5 h-5 text-primary border-outline-variant focus:ring-primary"
                       name="q1"
                       type="radio"
+                      checked={q1Answer === "O(n)"}
+                      onChange={() => setQ1Answer("O(n)")}
                     />
                     <span className="text-on-surface group-hover:text-primary">O(n)</span>
                   </label>
@@ -61,6 +123,8 @@ const StudentAssignmentContent = () => {
                       className="w-5 h-5 text-primary border-outline-variant focus:ring-primary"
                       name="q1"
                       type="radio"
+                      checked={q1Answer === "O(n log n)"}
+                      onChange={() => setQ1Answer("O(n log n)")}
                     />
                     <span className="text-on-surface group-hover:text-primary">O(n log n)</span>
                   </label>
@@ -69,6 +133,8 @@ const StudentAssignmentContent = () => {
                       className="w-5 h-5 text-primary border-outline-variant focus:ring-primary"
                       name="q1"
                       type="radio"
+                      checked={q1Answer === "O(n²)"}
+                      onChange={() => setQ1Answer("O(n²)")}
                     />
                     <span className="text-on-surface group-hover:text-primary">O(n²)</span>
                   </label>
@@ -90,6 +156,8 @@ const StudentAssignmentContent = () => {
                   className="w-full h-32 rounded-xl border-outline-variant focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all p-4 text-body-md"
                   placeholder="Nhập câu trả lời của bạn tại đây..."
                   style={{ resize: "none" }}
+                  value={q2Answer}
+                  onChange={(event) => setQ2Answer(event.target.value)}
                 />
               </div>
 
@@ -124,12 +192,16 @@ const StudentAssignmentContent = () => {
                     className="w-full rounded-xl border-outline-variant focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all px-4 py-3 text-body-md"
                     placeholder="Tên giải thuật..."
                     type="text"
+                    value={q3Algorithm}
+                    onChange={(event) => setQ3Algorithm(event.target.value)}
                   />
                   <label className="block text-label-md text-on-surface-variant mb-2 mt-4">Đề xuất tối ưu hóa:</label>
                   <textarea
                     className="w-full h-40 rounded-xl border-outline-variant focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all p-4 font-code-sm"
                     placeholder="Nhập đoạn mã đã tối ưu hoặc giải thích..."
                     style={{ resize: "none" }}
+                    value={q3Optimize}
+                    onChange={(event) => setQ3Optimize(event.target.value)}
                   />
                 </div>
               </div>
@@ -244,15 +316,50 @@ const StudentAssignmentContent = () => {
             Bạn đã hoàn thành 2 trên 3 câu hỏi. Sau khi nộp, bạn sẽ không thể chỉnh sửa câu trả lời. Hệ thống sẽ chấm
             điểm và gửi kết quả về dashboard.
           </p>
+          <div className="mb-6 rounded-xl border border-outline-variant bg-surface-container-low p-4">
+            <div className="flex items-center justify-between">
+              <label className="text-sm font-semibold text-on-surface">Đính kèm tệp bài làm</label>
+              <span className="text-xs text-on-surface-variant">{selectedFiles.length}/5</span>
+            </div>
+            <label className="mt-3 flex cursor-pointer items-center gap-2 rounded-xl border border-dashed border-outline-variant px-4 py-3 text-sm text-primary transition-colors hover:bg-primary/5">
+              <input type="file" multiple className="hidden" onChange={handleFileChange} />
+              <span className="material-symbols-outlined text-[18px]">attach_file</span>
+              <span>Chọn tệp</span>
+            </label>
+            {selectedFiles.length > 0 && (
+              <div className="mt-3 space-y-2">
+                {selectedFiles.map((file, index) => (
+                  <div
+                    key={`${file.name}-${index}`}
+                    className="flex items-center justify-between rounded-lg bg-white px-3 py-2 text-sm text-on-surface"
+                  >
+                    <span className="max-w-[85%] truncate">{file.name}</span>
+                    <button
+                      type="button"
+                      onClick={() => removeFile(index)}
+                      className="text-error hover:text-error-container"
+                    >
+                      <span className="material-symbols-outlined text-[18px]">delete</span>
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
           <div className="flex gap-4">
             <button
               className="flex-1 py-3 border border-outline-variant rounded-xl font-bold text-on-surface hover:bg-slate-50 transition-colors"
               onClick={() => setIsModalOpen(false)}
+              disabled={isSubmitting}
             >
               Quay lại
             </button>
-            <button className="flex-1 py-3 bg-primary text-white rounded-xl font-bold hover:bg-primary-container transition-all shadow-lg shadow-primary/30">
-              Xác nhận nộp
+            <button
+              className="flex-1 py-3 bg-primary text-white rounded-xl font-bold hover:bg-primary-container transition-all shadow-lg shadow-primary/30 disabled:opacity-70"
+              onClick={handleSubmitAssignment}
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? "Đang nộp..." : "Xác nhận nộp"}
             </button>
           </div>
         </div>

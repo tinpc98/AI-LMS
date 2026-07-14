@@ -114,7 +114,23 @@ const assignmentController = {
     }
   },
 
-  // 4. Học sinh Nộp bài (Tự động tính trễ hạn & Xử lý nộp lại bài)
+  // 4. Lấy danh sách bài nộp của một assignment (dùng cho giáo viên chấm điểm)
+  getSubmissionsByAssignment: async (req, res) => {
+    try {
+      const { assignmentId } = req.params;
+      const submissions = await Submission.find({ assignmentId })
+        .populate("studentId", "fullName email")
+        .sort({ createdAt: -1 });
+
+      return res.status(200).json({ submissions });
+    } catch (error) {
+      return res
+        .status(500)
+        .json({ message: "Lỗi server khi lấy danh sách bài nộp", error: error.message });
+    }
+  },
+
+  // 5. Học sinh Nộp bài (Tự động tính trễ hạn & Xử lý nộp lại bài)
   submitAssignment: async (req, res) => {
     try {
       const { assignmentId } = req.params;

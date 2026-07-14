@@ -37,6 +37,7 @@ function App() {
         <Route path="studentassignment" element={<StudentAssignment />} />
       </Route>
       <Route path="classdetail/:classId" element={<ClassDetail />} />
+      <Route path="studentassignment/:assignmentId" element={<StudentAssignment />} />
       <Route path="lessonview" element={<LessonView />} />
       <Route path="exam" element={<ExamPage />} />
 

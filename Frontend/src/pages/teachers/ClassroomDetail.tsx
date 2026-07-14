@@ -1,10 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import axios from "axios";
+import assignmentApi from "../../api/assignmentApi";
 import { classApi } from "../../api/classApi";
 import { lessonApi } from "../../api/lessonApi";
-import type { IClass } from "../../interface/classInterface";
+import type { IClass } from "../../interface/ClassInterface";
+import type { IAssignment, ISubmission } from "../../interface/assignmentInterface";
 import type { ILesson } from "../../interface/lessonInterface";
+import CreateAssignmentModal from "../../components/features/CreateAssignmentModal";
 import CreateLessonModal from "../../components/features/CreateLessonModal";
 
 export default function ClassroomDetail() {
@@ -14,6 +17,10 @@ export default function ClassroomDetail() {
   // --- States Logic thực tế ---
   const [classInfo, setClassInfo] = useState<IClass | null>(null);
   const [lessons, setLessons] = useState<ILesson[]>([]);
+  const [assignments, setAssignments] = useState<IAssignment[]>([]);
+  const [reviewingAssignment, setReviewingAssignment] = useState<IAssignment | null>(null);
+  const [reviewSubmissions, setReviewSubmissions] = useState<ISubmission[]>([]);
+  const [isReviewLoading, setIsReviewLoading] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
 
@@ -21,6 +28,7 @@ export default function ClassroomDetail() {
   const [editingLesson, setEditingLesson] = useState<ILesson | null>(null);
   const [activeTab, setActiveTab] = useState("lessons");
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isAssignmentModalOpen, setIsAssignmentModalOpen] = useState(false);
   const [chatInput, setChatInput] = useState("");
 
   const loadClassroom = useCallback(async () => {
@@ -49,13 +57,29 @@ export default function ClassroomDetail() {
     }
   }, [classId]);
 
+  const loadAssignments = useCallback(async () => {
+    if (!classId) return;
+
+    try {
+      const data = await assignmentApi.getAssignmentsByClass(classId);
+      if (isMounted.current) {
+        setAssignments(data);
+      }
+    } catch (error: unknown) {
+      if (isMounted.current && axios.isAxiosError(error)) {
+        console.error("Không thể tải danh sách bài tập:", error.response?.data?.message || error.message);
+      }
+    }
+  }, [classId]);
+
   useEffect(() => {
     isMounted.current = true;
-    void Promise.resolve().then(loadClassroom);
+    void loadClassroom();
+    void loadAssignments();
     return () => {
       isMounted.current = false;
     };
-  }, [loadClassroom]);
+  }, [loadClassroom, loadAssignments]);
 
   const handleLessonCreated = (newLesson: ILesson) => {
     setLessons((prev) => [...prev, newLesson].sort((a, b) => a.order - b.order));
@@ -79,6 +103,40 @@ export default function ClassroomDetail() {
         alert(error.response?.data?.message || "Xóa bài giảng thất bại.");
       }
     }
+  };
+
+  const handleAssignmentCreated = (newAssignment: IAssignment) => {
+    setAssignments((prev) => [newAssignment, ...prev]);
+    setIsAssignmentModalOpen(false);
+  };
+
+  const handleReviewAssignment = async (assignment: IAssignment) => {
+    setReviewingAssignment(assignment);
+    setIsReviewLoading(true);
+    try {
+      const submissions = await assignmentApi.getSubmissionsByAssignment(assignment._id);
+      setReviewSubmissions(submissions);
+    } catch (error: unknown) {
+      console.error("Không thể tải danh sách bài nộp:", error);
+      setReviewSubmissions([]);
+    } finally {
+      setIsReviewLoading(false);
+    }
+  };
+
+  const formatDeadline = (value: string) => {
+    const parsed = new Date(value);
+    if (Number.isNaN(parsed.getTime())) {
+      return "Chưa xác định";
+    }
+
+    return parsed.toLocaleString("vi-VN", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
   };
 
   if (isLoading) {
@@ -406,41 +464,126 @@ export default function ClassroomDetail() {
           {/* TAB 3: BÀI TẬP VÀ ĐỀ THI TRỰC TUYẾN */}
           {activeTab === "assignments" && (
             <div className="space-y-4">
-              <div className="flex items-center justify-between gap-4 mb-2">
+              <div className="mb-2 flex items-center justify-between gap-4">
                 <div>
                   <h3 className="text-lg font-bold tracking-tight">Học liệu Đánh giá</h3>
                   <p className="text-xs text-on-surface-variant">
-                    Tạo bài tập về nhà, đề kiểm tra định kỳ chấm điểm tự động.
+                    Tạo bài tập về nhà, đề kiểm tra định kỳ và chia sẻ tài liệu cho cả lớp.
                   </p>
                 </div>
-                <button className="bg-primary text-white text-xs font-bold px-4 py-2 rounded-xl flex items-center gap-1 hover:bg-primary/95">
-                  <span className="material-symbols-outlined text-base">add</span> Tạo mới
+                <button
+                  onClick={() => {
+                    setActiveTab("assignments");
+                    setIsAssignmentModalOpen(true);
+                  }}
+                  className="bg-[#3525cd] text-white px-5 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-2 hover:bg-[#281baf] hover:shadow-md transition-all active:scale-95 flex-shrink-0"
+                >
+                  <span className="material-symbols-outlined text-sm">assignment_add</span>
+                  <span>Tạo bài tập</span>
                 </button>
               </div>
 
-              {/* Mock UI Quản lý Đánh giá Chuyên Nghiệp */}
-              <div className="bg-white border border-outline-variant p-5 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div className="flex items-start gap-4">
-                  <div className="w-10 h-10 bg-secondary-container rounded-full flex items-center justify-center text-primary flex-shrink-0">
-                    <span className="material-symbols-outlined text-lg">assignment</span>
-                  </div>
-                  <div>
-                    <h5 className="font-bold text-sm sm:text-base text-on-surface">
-                      Bài tập chương 1: Biểu thức và logic
-                    </h5>
-                    <p className="text-xs text-on-surface-variant mt-0.5">Hạn nộp: 23:59 - Cuối tuần này</p>
-                    <div className="mt-2 flex items-center gap-2">
-                      <div className="w-32 h-1.5 bg-surface-container rounded-full overflow-hidden">
-                        <div className="w-3/4 h-full bg-primary"></div>
-                      </div>
-                      <span className="text-[11px] text-on-surface-variant font-medium">32 học sinh đã nộp bài</span>
-                    </div>
-                  </div>
+              {assignments.length === 0 ? (
+                <div className="rounded-2xl border-2 border-dashed border-outline-variant bg-white p-12 text-center text-on-surface-variant">
+                  <span className="material-symbols-outlined mb-2 text-4xl text-outline">assignment</span>
+                  <p className="text-sm font-medium">Chưa có bài tập nào được giao cho lớp học này.</p>
                 </div>
-                <button className="sm:self-center self-end px-4 py-1.5 border border-primary text-primary text-xs font-bold rounded-lg hover:bg-primary/5 transition-colors">
-                  Chấm điểm
-                </button>
-              </div>
+              ) : (
+                <div className="space-y-4">
+                  {assignments.map((assignment) => (
+                    <div key={assignment._id} className="rounded-2xl border border-outline-variant bg-white p-5">
+                      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                        <div className="flex items-start gap-4">
+                          <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-secondary-container text-primary">
+                            <span className="material-symbols-outlined text-lg">assignment</span>
+                          </div>
+                          <div className="min-w-0">
+                            <h5 className="text-sm font-bold text-on-surface sm:text-base">{assignment.title}</h5>
+                            <p className="mt-1 text-xs text-on-surface-variant">
+                              Hạn nộp: {formatDeadline(assignment.deadline)}
+                            </p>
+                            {assignment.description && (
+                              <p className="mt-2 text-sm text-on-surface-variant">{assignment.description}</p>
+                            )}
+                            {assignment.attachments?.length > 0 && (
+                              <div className="mt-3 flex flex-wrap gap-2">
+                                {assignment.attachments.map((file) => (
+                                  <a
+                                    key={file.publicId}
+                                    href={file.url}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="inline-flex items-center gap-1 rounded-full border border-outline-variant bg-surface-container-low px-3 py-1 text-xs font-medium text-primary hover:bg-primary/10"
+                                  >
+                                    <span className="material-symbols-outlined text-sm">download</span>
+                                    <span className="truncate">{file.name}</span>
+                                  </a>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => void handleReviewAssignment(assignment)}
+                          className="self-start rounded-lg border border-primary px-4 py-1.5 text-xs font-bold text-primary transition-colors hover:bg-primary/5 sm:self-center"
+                        >
+                          Chấm điểm
+                        </button>
+                      </div>
+
+                      {reviewingAssignment?._id === assignment._id && (
+                        <div className="mt-4 rounded-xl border border-outline-variant bg-surface-container-low p-4">
+                          <div className="mb-3 flex items-center justify-between">
+                            <h6 className="text-sm font-semibold text-on-surface">Danh sách học sinh đã nộp</h6>
+                            <button
+                              onClick={() => setReviewingAssignment(null)}
+                              className="text-xs font-semibold text-primary"
+                            >
+                              Đóng
+                            </button>
+                          </div>
+                          {isReviewLoading ? (
+                            <p className="text-sm text-on-surface-variant">Đang tải danh sách bài nộp...</p>
+                          ) : reviewSubmissions.length === 0 ? (
+                            <p className="text-sm text-on-surface-variant">
+                              Chưa có học sinh nào nộp bài cho assignment này.
+                            </p>
+                          ) : (
+                            <div className="space-y-2">
+                              {reviewSubmissions.map((submission) => {
+                                const student = typeof submission.studentId === "object" ? submission.studentId : null;
+                                return (
+                                  <div
+                                    key={submission._id}
+                                    className="rounded-lg border border-outline-variant bg-white p-3"
+                                  >
+                                    <div className="flex items-center justify-between gap-2">
+                                      <div>
+                                        <p className="text-sm font-semibold text-on-surface">
+                                          {student?.fullName || "Học sinh"}
+                                        </p>
+                                        <p className="text-xs text-on-surface-variant">{student?.email || ""}</p>
+                                      </div>
+                                      <span className="rounded-full bg-primary/10 px-2.5 py-1 text-[11px] font-bold text-primary">
+                                        {submission.status === "graded" ? "Đã chấm" : "Đã nộp"}
+                                      </span>
+                                    </div>
+                                    {submission.content && (
+                                      <p className="mt-2 text-xs text-on-surface-variant line-clamp-3">
+                                        {submission.content}
+                                      </p>
+                                    )}
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
@@ -525,9 +668,16 @@ export default function ClassroomDetail() {
           setEditingLesson(null);
         }}
         classId={classId!}
-        lessonData={editingLesson} // Truyền dữ liệu bài giảng đang chỉnh sửa vào đây (nếu có)
+        lessonData={editingLesson}
         onCreated={handleLessonCreated}
-        onUpdated={handleLessonUpdated} // Thêm callback khi cập nhật thành công
+        onUpdated={handleLessonUpdated}
+      />
+
+      <CreateAssignmentModal
+        isOpen={isAssignmentModalOpen}
+        onClose={() => setIsAssignmentModalOpen(false)}
+        classId={classId!}
+        onCreated={handleAssignmentCreated}
       />
     </div>
   );
