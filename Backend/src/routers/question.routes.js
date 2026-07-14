@@ -8,6 +8,7 @@ import {
   updateQuestion,
   deleteQuestion,
 } from "../controllers/question.controller.js";
+import Question from "../models/question.model.js";
 
 const router = express.Router();
 

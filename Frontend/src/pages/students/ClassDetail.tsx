@@ -5,10 +5,16 @@ import { classApi } from "../../api/classApi";
 import { lessonApi } from "../../api/lessonApi";
 import type { IClass } from "../../interface/classInterface";
 import type { ILesson } from "../../interface/lessonInterface";
+import { useNavigate } from "react-router-dom";
 
 // Mock Data
 const MOCK_ASSIGNMENTS = [
-  { id: "1", title: "BTTL 01: Cài đặt danh sách liên kết đơn", deadline: "23:59 - 25/10/2024", status: "Chưa nộp" },
+  {
+    id: "1",
+    title: "BTTL 01: Cài đặt danh sách liên kết đơn",
+    deadline: "23:59 - 25/10/2024",
+    status: "Chưa nộp",
+  },
   {
     id: "2",
     title: "BTTL 02: Giải thuật sắp xếp nhanh QuickSort",
@@ -19,8 +25,20 @@ const MOCK_ASSIGNMENTS = [
 ];
 
 const MOCK_RANKINGS = [
-  { rank: 1, name: "Trần Quốc Quân", short: "TQ", score: 9.8, bg: "bg-yellow-100 text-yellow-700 border-yellow-200" },
-  { rank: 2, name: "Lê Anh", short: "LA", score: 9.5, bg: "bg-slate-100 text-slate-700 border-slate-200" },
+  {
+    rank: 1,
+    name: "Trần Quốc Quân",
+    short: "TQ",
+    score: 9.8,
+    bg: "bg-yellow-100 text-yellow-700 border-yellow-200",
+  },
+  {
+    rank: 2,
+    name: "Lê Anh",
+    short: "LA",
+    score: 9.5,
+    bg: "bg-slate-100 text-slate-700 border-slate-200",
+  },
   {
     rank: 12,
     name: "Bạn (Minh Quân)",
@@ -43,6 +61,10 @@ export default function ClassDetail() {
 
   // State hỗ trợ tab chat/thảo luận mẫu
   const [chatMessage, setChatMessage] = useState("");
+  const navigate = useNavigate();
+  const startExam = () => {
+    navigate("/exam");
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -65,7 +87,9 @@ export default function ClassDetail() {
         setLessons(publishedLessons);
       } catch (error: unknown) {
         if (axios.isAxiosError(error)) {
-          setErrorMsg(error.response?.data?.message || "Không thể tải dữ liệu lớp học.");
+          setErrorMsg(
+            error.response?.data?.message || "Không thể tải dữ liệu lớp học.",
+          );
         }
       } finally {
         setIsLoading(false);
@@ -88,10 +112,18 @@ export default function ClassDetail() {
   if (errorMsg || !classInfo) {
     return (
       <div className="bg-surface-bright min-h-screen flex flex-col items-center justify-center gap-4">
-        <span className="material-symbols-outlined text-5xl text-error">error</span>
-        <p className="text-error font-semibold text-lg">{errorMsg || "Không tìm thấy thông tin lớp học này."}</p>
-        <Link to="/myclasses" className="text-primary font-bold hover:underline flex items-center gap-1">
-          <span className="material-symbols-outlined text-sm">arrow_back</span> Quay lại danh sách lớp học
+        <span className="material-symbols-outlined text-5xl text-error">
+          error
+        </span>
+        <p className="text-error font-semibold text-lg">
+          {errorMsg || "Không tìm thấy thông tin lớp học này."}
+        </p>
+        <Link
+          to="/myclasses"
+          className="text-primary font-bold hover:underline flex items-center gap-1"
+        >
+          <span className="material-symbols-outlined text-sm">arrow_back</span>{" "}
+          Quay lại danh sách lớp học
         </Link>
       </div>
     );
@@ -121,7 +153,10 @@ export default function ClassDetail() {
       {/* 1. SIDE NAVIGATION BAR */}
       <aside className="fixed left-0 top-0 h-screen w-[280px] bg-surface border-r border-outline-variant flex flex-col p-6 space-y-2 z-50">
         <div className="mb-8 px-2">
-          <h1 className="text-2xl font-bold text-primary" style={{ fontFamily: "Hanken Grotesk" }}>
+          <h1
+            className="text-2xl font-bold text-primary"
+            style={{ fontFamily: "Hanken Grotesk" }}
+          >
             AI Academy
           </h1>
           <p className="text-sm text-secondary">Learning Portal</p>
@@ -177,7 +212,9 @@ export default function ClassDetail() {
               />
             </div>
             <div className="flex flex-col min-w-0">
-              <span className="text-sm text-on-surface font-semibold truncate">Minh Quân</span>
+              <span className="text-sm text-on-surface font-semibold truncate">
+                Minh Quân
+              </span>
               <span className="text-xs text-secondary">ID: 2024AI01</span>
             </div>
           </div>
@@ -228,20 +265,33 @@ export default function ClassDetail() {
                 <div className="inline-flex items-center px-3 py-1 bg-primary-container text-on-primary-container rounded-full text-xs font-semibold mb-4 uppercase tracking-wider">
                   {classInfo.status === "active" ? "Đang học" : "Đã kết thúc"}
                 </div>
-                <h2 className="text-3xl font-bold text-on-surface mb-2" style={{ fontFamily: "Hanken Grotesk" }}>
+                <h2
+                  className="text-3xl font-bold text-on-surface mb-2"
+                  style={{ fontFamily: "Hanken Grotesk" }}
+                >
                   {classInfo.className}
                 </h2>
                 <div className="flex flex-col gap-1 text-secondary">
                   <div className="flex items-center text-sm">
-                    <span className="material-symbols-outlined text-base mr-2">person</span>
+                    <span className="material-symbols-outlined text-base mr-2">
+                      person
+                    </span>
                     <span>
-                      Giảng viên: <strong>{classInfo.teacherId?.fullName ?? "Chưa rõ"}</strong>
+                      Giảng viên:{" "}
+                      <strong>
+                        {classInfo.teacherId?.fullName ?? "Chưa rõ"}
+                      </strong>
                     </span>
                   </div>
                   <div className="flex items-center text-sm">
-                    <span className="material-symbols-outlined text-base mr-2">groups</span>
+                    <span className="material-symbols-outlined text-base mr-2">
+                      groups
+                    </span>
                     <span>
-                      Sĩ số: <strong>{classInfo.students?.length ?? 0} học sinh</strong>
+                      Sĩ số:{" "}
+                      <strong>
+                        {classInfo.students?.length ?? 0} học sinh
+                      </strong>
                     </span>
                   </div>
                 </div>
@@ -263,14 +313,18 @@ export default function ClassDetail() {
                       strokeDasharray="65, 100"
                       strokeLinecap="round"
                       strokeWidth="3"
-                      style={{ transition: "stroke-dasharray 1.5s ease-in-out" }}
+                      style={{
+                        transition: "stroke-dasharray 1.5s ease-in-out",
+                      }}
                     ></path>
                   </svg>
                   <div className="absolute inset-0 flex items-center justify-center">
                     <span className="text-xl font-bold text-primary">65%</span>
                   </div>
                 </div>
-                <span className="text-xs font-semibold mt-2 text-secondary">Tiến độ cá nhân</span>
+                <span className="text-xs font-semibold mt-2 text-secondary">
+                  Tiến độ cá nhân
+                </span>
               </div>
             </div>
           </div>
@@ -279,13 +333,17 @@ export default function ClassDetail() {
             <div className="flex-1 bg-primary rounded-xl p-6 text-on-primary shadow-xl relative group cursor-pointer overflow-hidden transition-all hover:-translate-y-1">
               <div className="relative z-10">
                 <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center mb-4">
-                  <span className="material-symbols-outlined text-3xl" style={{ fontVariationSettings: "'FILL' 1" }}>
+                  <span
+                    className="material-symbols-outlined text-3xl"
+                    style={{ fontVariationSettings: "'FILL' 1" }}
+                  >
                     video_chat
                   </span>
                 </div>
                 <h3 className="text-lg font-bold mb-1">Phòng học trực tuyến</h3>
                 <p className="text-xs opacity-90 mb-4">
-                  Lớp học đang diễn ra hoặc có lịch hẹn. Vào lớp ngay để thảo luận trực tiếp.
+                  Lớp học đang diễn ra hoặc có lịch hẹn. Vào lớp ngay để thảo
+                  luận trực tiếp.
                 </p>
                 <div className="flex items-center text-xs font-bold uppercase tracking-widest mt-auto">
                   Vào Học Ngay{" "}
@@ -328,7 +386,9 @@ export default function ClassDetail() {
             {activeTab === "lessons" && (
               <div className="space-y-4">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold text-on-surface">Danh sách bài học</h3>
+                  <h3 className="text-lg font-semibold text-on-surface">
+                    Danh sách bài học
+                  </h3>
                   <span className="px-3 py-1 bg-surface-container-high rounded text-xs text-secondary font-medium">
                     {lessons.length} bài học thực tế
                   </span>
@@ -336,8 +396,12 @@ export default function ClassDetail() {
 
                 {lessons.length === 0 ? (
                   <div className="border-2 border-dashed border-outline-variant rounded-xl p-12 text-center text-secondary">
-                    <span className="material-symbols-outlined text-4xl mb-2 text-outline">description</span>
-                    <p className="text-sm">Giảng viên chưa đăng tải giáo trình nào cho lớp này.</p>
+                    <span className="material-symbols-outlined text-4xl mb-2 text-outline">
+                      description
+                    </span>
+                    <p className="text-sm">
+                      Giảng viên chưa đăng tải giáo trình nào cho lớp này.
+                    </p>
                   </div>
                 ) : (
                   lessons.map((lesson) => (
@@ -359,7 +423,8 @@ export default function ClassDetail() {
                             {lesson.title}
                           </h4>
                           <p className="text-xs text-secondary line-clamp-1 mt-0.5">
-                            {lesson.description || "Không có mô tả chi tiết cho bài học này."}
+                            {lesson.description ||
+                              "Không có mô tả chi tiết cho bài học này."}
                           </p>
                         </div>
                       </div>
@@ -384,7 +449,9 @@ export default function ClassDetail() {
                               className="p-2 text-secondary hover:bg-surface-container-high rounded-lg transition-colors"
                               title={file.name}
                             >
-                              <span className="material-symbols-outlined text-xl">download</span>
+                              <span className="material-symbols-outlined text-xl">
+                                download
+                              </span>
                             </a>
                           ))}
                       </div>
@@ -399,24 +466,41 @@ export default function ClassDetail() {
               <div className="space-y-6">
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div className="p-4 bg-primary-container/10 border border-primary/20 rounded-xl">
-                    <span className="text-xs uppercase font-bold text-primary">Chưa nộp</span>
-                    <div className="text-2xl font-bold text-primary mt-1">01</div>
+                    <span className="text-xs uppercase font-bold text-primary">
+                      Chưa nộp
+                    </span>
+                    <div className="text-2xl font-bold text-primary mt-1">
+                      01
+                    </div>
                   </div>
                   <div className="p-4 bg-secondary-container/20 border border-secondary/20 rounded-xl">
-                    <span className="text-xs uppercase font-bold text-secondary">Đã nộp</span>
-                    <div className="text-2xl font-bold text-secondary mt-1">01</div>
+                    <span className="text-xs uppercase font-bold text-secondary">
+                      Đã nộp
+                    </span>
+                    <div className="text-2xl font-bold text-secondary mt-1">
+                      01
+                    </div>
                   </div>
                   <div className="p-4 bg-surface-container-high rounded-xl">
-                    <span className="text-xs uppercase font-bold text-on-surface-variant">Điểm trung bình</span>
-                    <div className="text-2xl font-bold text-on-surface mt-1">9.0</div>
+                    <span className="text-xs uppercase font-bold text-on-surface-variant">
+                      Điểm trung bình
+                    </span>
+                    <div className="text-2xl font-bold text-on-surface mt-1">
+                      9.0
+                    </div>
                   </div>
                 </div>
 
                 <div className="bg-white border border-outline-variant rounded-xl divide-y divide-outline-variant">
                   {MOCK_ASSIGNMENTS.map((item) => (
-                    <div key={item.id} className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div
+                      key={item.id}
+                      className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+                    >
                       <div>
-                        <h4 className="font-semibold text-sm sm:text-base">{item.title}</h4>
+                        <h4 className="font-semibold text-sm sm:text-base">
+                          {item.title}
+                        </h4>
                         <p className="text-xs text-secondary mt-0.5">
                           {item.deadline || `Nộp lúc: ${item.submitTime}`}
                         </p>
@@ -427,7 +511,9 @@ export default function ClassDetail() {
                             <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-secondary-container text-on-secondary-container">
                               {item.status}
                             </span>
-                            <div className="mt-1 font-bold text-primary text-sm">{item.score}</div>
+                            <div className="mt-1 font-bold text-primary text-sm">
+                              {item.score}
+                            </div>
                           </div>
                         ) : (
                           <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-error-container text-on-error-container">
@@ -435,7 +521,9 @@ export default function ClassDetail() {
                           </span>
                         )}
                         <button className="flex items-center space-x-1 bg-primary text-on-primary px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-primary/90">
-                          <span className="material-symbols-outlined text-base">upload</span>
+                          <span className="material-symbols-outlined text-base">
+                            upload
+                          </span>
                           <span>Nộp bài</span>
                         </button>
                       </div>
@@ -456,26 +544,36 @@ export default function ClassDetail() {
                         <span className="inline-block px-3 py-1 bg-error-container text-on-error-container rounded-full text-xs font-bold mb-3">
                           Sắp diễn ra
                         </span>
-                        <h3 className="text-xl font-bold text-on-surface">Kiểm tra năng lực Định kỳ</h3>
+                        <h3 className="text-xl font-bold text-on-surface">
+                          Kiểm tra năng lực Định kỳ
+                        </h3>
                         <p className="text-xs text-secondary mt-1">
                           Thời gian làm bài: 60 phút | Trắc nghiệm trực tuyến
                         </p>
                       </div>
                       <div className="sm:text-right flex sm:flex-col items-center sm:items-end gap-2">
-                        <div className="text-2xl font-mono font-bold text-primary">00:45:12</div>
+                        <div className="text-2xl font-mono font-bold text-primary">
+                          00:45:12
+                        </div>
                         <span className="text-[10px] text-secondary uppercase font-bold tracking-wider">
                           Hệ thống mở sau
                         </span>
                       </div>
                     </div>
                     <div className="p-4 bg-surface-container-high rounded-xl mb-6 flex items-start space-x-3">
-                      <span className="material-symbols-outlined text-error mt-0.5">info</span>
+                      <span className="material-symbols-outlined text-error mt-0.5">
+                        info
+                      </span>
                       <p className="text-xs text-on-surface-variant">
-                        Lưu ý quan trọng: Hệ thống sẽ kích hoạt AI giám sát và tự động nộp bài khi hết giờ. Hãy kiểm tra
-                        camera trước khi làm bài.
+                        Lưu ý quan trọng: Hệ thống sẽ kích hoạt AI giám sát và
+                        tự động nộp bài khi hết giờ. Hãy kiểm tra camera trước
+                        khi làm bài.
                       </p>
                     </div>
-                    <button className="w-full bg-primary text-on-primary py-3 rounded-xl font-bold text-sm hover:shadow-lg transition-all">
+                    <button
+                      onClick={() => startExam()}
+                      className="w-full bg-primary text-on-primary py-3 rounded-xl font-bold text-sm hover:shadow-lg transition-all"
+                    >
                       Bắt đầu làm bài thi
                     </button>
                   </div>
@@ -495,10 +593,13 @@ export default function ClassDetail() {
                     <div>
                       <div className="flex items-center space-x-2 mb-1">
                         <span className="text-xs font-bold">Thanh Thảo</span>
-                        <span className="text-[10px] text-secondary">09:12 AM</span>
+                        <span className="text-[10px] text-secondary">
+                          09:12 AM
+                        </span>
                       </div>
                       <div className="bg-white p-3 rounded-2xl rounded-tl-none shadow-sm text-xs sm:text-sm">
-                        Mọi người ơi, tài liệu chương mới thầy cập nhật nằm ở mục nào vậy ạ?
+                        Mọi người ơi, tài liệu chương mới thầy cập nhật nằm ở
+                        mục nào vậy ạ?
                       </div>
                     </div>
                   </div>
@@ -506,9 +607,12 @@ export default function ClassDetail() {
                   {/* AI Suggestion */}
                   <div className="flex items-center justify-center my-2">
                     <div className="bg-surface-container-highest border border-primary/20 px-4 py-1.5 rounded-full text-xs flex items-center space-x-2 text-primary">
-                      <span className="material-symbols-outlined text-sm animate-pulse">auto_awesome</span>
+                      <span className="material-symbols-outlined text-sm animate-pulse">
+                        auto_awesome
+                      </span>
                       <span>
-                        AI khuyên dùng: Bạn có thể xem các slide PDF tải về trực tiếp tại Tab <b>Bài giảng</b>.
+                        AI khuyên dùng: Bạn có thể xem các slide PDF tải về trực
+                        tiếp tại Tab <b>Bài giảng</b>.
                       </span>
                     </div>
                   </div>
@@ -523,11 +627,14 @@ export default function ClassDetail() {
                         <span className="text-xs font-bold text-primary">
                           Thầy {classInfo.teacherId?.fullName || "Nguyễn Văn A"}
                         </span>
-                        <span className="text-[10px] text-secondary">09:20 AM</span>
+                        <span className="text-[10px] text-secondary">
+                          09:20 AM
+                        </span>
                       </div>
                       <div className="bg-primary-container/10 border border-primary/10 p-3 rounded-2xl rounded-tl-none text-xs sm:text-sm">
-                        Chào các em, thầy vừa bổ sung các tệp đính kèm mới vào danh sách bài học bên trên rồi nhé. Hãy
-                        chủ động tải về trước buổi học chiều nay.
+                        Chào các em, thầy vừa bổ sung các tệp đính kèm mới vào
+                        danh sách bài học bên trên rồi nhé. Hãy chủ động tải về
+                        trước buổi học chiều nay.
                       </div>
                     </div>
                   </div>
@@ -543,7 +650,9 @@ export default function ClassDetail() {
                     type="text"
                   />
                   <button className="p-2.5 bg-primary text-on-primary rounded-xl hover:bg-primary/90 transition-transform active:scale-95 flex items-center justify-center">
-                    <span className="material-symbols-outlined text-xl">send</span>
+                    <span className="material-symbols-outlined text-xl">
+                      send
+                    </span>
                   </button>
                 </div>
               </div>
@@ -556,7 +665,9 @@ export default function ClassDetail() {
           {/* Widget Bảng xếp hạng */}
           <div className="col-span-12 md:col-span-4 bg-white p-6 rounded-xl border border-outline-variant shadow-sm">
             <h4 className="font-semibold mb-4 flex items-center text-sm sm:text-base">
-              <span className="material-symbols-outlined mr-2 text-primary">analytics</span>
+              <span className="material-symbols-outlined mr-2 text-primary">
+                analytics
+              </span>
               Xếp hạng lớp học
             </h4>
             <div className="space-y-3">
@@ -576,11 +687,15 @@ export default function ClassDetail() {
                     >
                       {user.short}
                     </div>
-                    <span className={`text-xs sm:text-sm truncate ${user.isUser ? "font-bold" : "font-medium"}`}>
+                    <span
+                      className={`text-xs sm:text-sm truncate ${user.isUser ? "font-bold" : "font-medium"}`}
+                    >
                       {user.name}
                     </span>
                   </div>
-                  <span className="text-xs sm:text-sm font-bold text-primary ml-2">{user.score}</span>
+                  <span className="text-xs sm:text-sm font-bold text-primary ml-2">
+                    {user.score}
+                  </span>
                 </div>
               ))}
             </div>
@@ -590,14 +705,20 @@ export default function ClassDetail() {
           <div className="col-span-12 md:col-span-8 bg-surface-container-low p-6 rounded-xl border border-outline-variant border-dashed flex items-center justify-center text-center">
             <div className="space-y-3 max-w-xl">
               <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center text-primary shadow-inner mx-auto">
-                <span className="material-symbols-outlined text-2xl">auto_awesome</span>
+                <span className="material-symbols-outlined text-2xl">
+                  auto_awesome
+                </span>
               </div>
               <div>
-                <h4 className="font-bold text-on-surface text-sm sm:text-base">AI Learning Insights</h4>
+                <h4 className="font-bold text-on-surface text-sm sm:text-base">
+                  AI Learning Insights
+                </h4>
                 <p className="text-xs sm:text-sm text-secondary mt-1 px-4">
-                  "Hệ thống nhận thấy lớp học đang triển khai chương trình học mới. Bạn hãy hoàn thành việc xem các
-                  video bài giảng thực tế của thầy <b>{classInfo.teacherId?.fullName ?? "Giảng viên"}</b> để nắm chắc
-                  kiến thức trước kỳ thi!"
+                  "Hệ thống nhận thấy lớp học đang triển khai chương trình học
+                  mới. Bạn hãy hoàn thành việc xem các video bài giảng thực tế
+                  của thầy{" "}
+                  <b>{classInfo.teacherId?.fullName ?? "Giảng viên"}</b> để nắm
+                  chắc kiến thức trước kỳ thi!"
                 </p>
               </div>
               <button className="text-primary font-bold text-xs hover:underline block mx-auto">

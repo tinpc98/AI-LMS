@@ -3,12 +3,16 @@ import express from "express";
 import cors from "cors"; // Thêm thư viện cấu hình cho phép Frontend gọi API
 import { connectDB } from "./src/config/database.js";
 import socketHandler from "./src/sockets/exam.socket.js"; // 3. Import bộ xử lý Real-time
-
+import { createServer } from "http";
+import { Server } from "socket.io";
 // Import Routers hiện có
 import UserRouter from "./src/routers/user.routes.js";
-import ClassRouter from "./src/routers/class.router.js";
+import ClassRouter from "./src/routers/class.routes.js";
 import LessonRouter from "./src/routers/lesson.routes.js";
 import assignmentRouter from "./src/routers/assignment.routes.js";
+import QuestionRouter from "./src/routers/question.routes.js";
+import ExamRouter from "./src/routers/exam.routes.js";
+import ExamAttemptRouter from "./src/routers/examAttempt.routes.js";
 
 // Kích hoạt cấu hình file .env
 dotenv.config();

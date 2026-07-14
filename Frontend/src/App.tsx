@@ -15,13 +15,14 @@ import HomePageStudent from "./pages/students/HomePageStudent";
 
 // Teacher Components
 import HomePageTeacher from "./pages/teachers/HomePageTeacher";
-import QuestionBank from "./pages/teachers/QuestionBank";
 import ClassroomDetail from "./pages/teachers/ClassroomDetail";
 import ClassManagement from "./pages/teachers/ClassroomManagement";
 import ExamDetai from "./pages/teachers/ExamDetai";
 import LessonManagement from "./pages/teachers/LessonManagement";
 import HomeLayoutTeacher from "./components/layout/HomeLayoutTeacher";
 import ClassDetail from "./pages/students/ClassDetail";
+import ExamManagement from "./pages/teachers/ExamManagement";
+import QuestionBank from "./pages/teachers/QuestionBank";
 
 function App() {
   return (
@@ -46,9 +47,10 @@ function App() {
         <Route path="classroom-detail/:classId" element={<ClassroomDetail />} />
         <Route path="classroom-management" element={<ClassManagement />} />
         <Route path="examdetail/:examId" element={<ExamDetai />} />
+        <Route path="exammanagement" element={<ExamManagement />} />
         <Route path="lessonManagement" element={<LessonManagement />} />
+        <Route path="questionbank" element={<QuestionBank />} />
       </Route>
-      <Route path="question-bank" element={<QuestionBank />} />
 
       {/* ================= ADMIN ROUTES ================= */}
       {/* <Route path="/admin" element={<AdminLayout />}>
