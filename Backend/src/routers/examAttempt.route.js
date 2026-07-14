@@ -3,6 +3,7 @@ import {
   submitExam,
   startExam,
   gradeEssaySubmit,
+  getAttemptForReview,
 } from "../controllers/examAttempt.controller.js";
 
 const router = express.Router();
@@ -14,5 +15,7 @@ router.post("/start", startExam);
 router.post("/:id/submit", submitExam);
 
 router.put("/:id/grade-essay", gradeEssaySubmit);
+
+router.get("/:id/review", getAttemptForReview);
 
 export default router;

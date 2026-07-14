@@ -1,7 +1,13 @@
 import express from "express";
 import multer from "multer";
 import path from "path"; // Thêm thư viện có sẵn của Node.js để đọc đuôi file
-import { uploadExcelQuestions } from "../controllers/question.controller.js";
+import {
+  uploadExcelQuestions,
+  getQuestions,
+  createQuestion,
+  updateQuestion,
+  deleteQuestion,
+} from "../controllers/question.controller.js";
 
 const router = express.Router();
 
@@ -35,5 +41,9 @@ const upload = multer({
 });
 
 router.post("/import-excel", upload.single("file"), uploadExcelQuestions);
+router.get("/", getQuestions);
+router.post("/", createQuestion);
+router.put("/:id", updateQuestion);
+router.delete("/:id", deleteQuestion);
 
 export default router;
