@@ -51,11 +51,18 @@ axiosClient.interceptors.response.use(
       console.log("[axios] Response error:", error.response?.status, error.message);
     }
 
-    // Tự động xử lý khi Token không hợp lệ hoặc hết hạn (401 / 403)
+    // Tự động xử lý khi Token hết hạn (401 / 403)
     if (error.response?.status === 401 || error.response?.status === 403) {
+      // Tránh việc bắn liên tiếp nhiều alert khi có nhiều API lỗi cùng lúc
       localStorage.removeItem("accessToken");
-      alert("Phiên đăng nhập của bạn đã hết hạn hoặc không hợp lệ. Vui lòng đăng nhập lại!");
-      window.location.href = "/login";
+
+      // Kiểm tra xem hiện tại có đang ở trang login sẵn chưa để tránh lặp redirect
+      if (window.location.pathname !== "/login") {
+        alert("Phiên đăng nhập của bạn đã hết hạn. Vui lòng đăng nhập lại!");
+
+        // Phát sự kiện toàn hệ thống yêu cầu Đăng xuất (Event-driven)
+        window.dispatchEvent(new Event("unauthorized-logout"));
+      }
     }
 
     return Promise.reject(error);

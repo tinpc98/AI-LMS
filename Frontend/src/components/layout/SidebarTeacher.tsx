@@ -1,6 +1,8 @@
 import { Link } from "react-router-dom";
+import { useAuth } from "../../hooks/useAuth";
 
 export default function SidebarTeacher() {
+  const { logout } = useAuth();
   return (
     <aside className="hidden md:flex flex-col h-full py-unit w-[280px] z-50 overflow-y-auto fixed left-0 top-0 bg-surface-container-lowest border-r border-outline-variant custom-scrollbar">
       <div className="px-6 py-8 flex items-center gap-3">
@@ -77,7 +79,10 @@ export default function SidebarTeacher() {
         </a>
         <a
           className="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-low rounded-lg transition-all duration-200"
-          href="#"
+          onClick={(e) => {
+            e.preventDefault();
+            logout();
+          }}
         >
           <span className="material-symbols-outlined">logout</span>
           <span className="font-label-md text-label-md">Đăng xuất</span>

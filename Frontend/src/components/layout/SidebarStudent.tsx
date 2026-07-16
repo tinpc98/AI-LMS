@@ -1,6 +1,8 @@
 import { Link } from "react-router-dom";
+import { useAuth } from "../../hooks/useAuth";
 
 const SidebarStudent = () => {
+  const { logout } = useAuth();
   return (
     <>
       <aside
@@ -67,7 +69,7 @@ const SidebarStudent = () => {
           <div className="bg-primary-container p-4 rounded-xl text-white">
             <p className="font-label-md text-label-md font-bold mb-2">Upgrade to Pro</p>
             <p className="text-xs opacity-90 mb-3">Mở khóa tính năng AI nâng cao và gia sư 1:1.</p>
-            <button className="w-full py-2 bg-white text-primary font-bold rounded-lg text-sm hover:bg-opacity-90 transition-all">
+            <button className="w-full py-2 bg-white text-black font-bold rounded-lg text-sm hover:bg-opacity-90 transition-all">
               Nâng cấp ngay
             </button>
           </div>
@@ -81,7 +83,10 @@ const SidebarStudent = () => {
             </a>
             <a
               className="flex items-center gap-3 px-4 py-2 text-error hover:bg-error-container/20 transition-colors rounded-lg"
-              href="#"
+              onClick={(e) => {
+                e.preventDefault();
+                logout();
+              }}
             >
               <span className="material-symbols-outlined">logout</span>
               <span className="font-body-sm text-body-sm">Đăng xuất</span>
