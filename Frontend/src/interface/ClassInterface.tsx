@@ -14,7 +14,7 @@ export interface IClass {
     email: string;
   };
   students: IStudentSummary[];
-  status: "active" | "completed";
+  status: "active" | "completed" | "closed";
   createdAt: string;
 }
 
