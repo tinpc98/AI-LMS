@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { classApi } from "../../api/classApi";
 import { lessonApi } from "../../api/lessonApi";
+import axiosClient from "../../api/axiosClient";
 import type { IClass } from "../../interface/classInterface";
 import type { ILesson } from "../../interface/lessonInterface";
-import { useNavigate } from "react-router-dom";
 
 // Mock Data
 const MOCK_ASSIGNMENTS = [
@@ -58,14 +58,248 @@ export default function ClassDetail() {
   const [lessons, setLessons] = useState<ILesson[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
-
+  const [showPopup, setShowPopup] = useState(false);
+  const [popupMessage, setPopupMessage] = useState("");
   // State hỗ trợ tab chat/thảo luận mẫu
   const [chatMessage, setChatMessage] = useState("");
   const navigate = useNavigate();
-  const startExam = () => {
-    navigate("/exam");
+  // ==============================================
+  // 1. STATE QUẢN LÝ LOBBY PHÒNG THI
+  // ==============================================
+  const [exams, setExams] = useState<any[]>([]); // Đã bỏ hardcode classExams, dùng state lấy từ DB
+  const [examPopupState, setExamPopupState] = useState<
+    "NONE" | "NO_EXAM" | "NOT_YET_TIME" | "COUNTDOWN" | "READY" | "LOADING"
+  >("NONE");
+  const [selectedExam, setSelectedExam] = useState<any>(null);
+  const [countdown, setCountdown] = useState(0);
+
+  // ==============================================
+  // 2. LOGIC ĐẾM NGƯỢC THỜI GIAN TRONG LOBBY
+  // ==============================================
+  useEffect(() => {
+    const fetchClassExams = async () => {
+      if (!classId) return;
+
+      // KHÔNG gọi setIsLoading(true) ở đây để tránh đụng độ với API load classInfo
+      try {
+        const response = await axiosClient.get(`/api/exams/class/${classId}`);
+        setExams(response.data.data || response.data || []);
+      } catch (error) {
+        console.error("Lỗi khi lấy danh sách đề thi của lớp:", error);
+        // KHÔNG dùng setErrorMsg() ở đây để tránh sập toàn bộ trang
+        // Nếu API lỗi (VD: Backend chưa code xong), cứ mặc định gán mảng rỗng
+        setExams([]);
+      }
+    };
+
+    fetchClassExams();
+  }, [classId]);
+  // Lọc lấy đề thi phù hợp để hiển thị (Yêu cầu 2: chỉ hiển thị trước giờ thi 1 tiếng)
+  const getVisibleExam = () => {
+    if (!exams || exams.length === 0) return null;
+    const now = new Date().getTime();
+
+    return exams.find((exam) => {
+      const startTime = new Date(exam.startTime).getTime();
+      const oneHourBefore = startTime - 60 * 60 * 1000;
+
+      // Giới hạn thời gian làm bài: sau khi kết thúc đề vẫn ẩn đi
+      const durationMs = (exam.duration || 45) * 60 * 1000;
+      const endTime = startTime + durationMs;
+
+      // Hiển thị từ lúc 1 tiếng trước giờ bắt đầu đến khi bài thi kết thúc hoàn toàn
+      return now >= oneHourBefore && now <= endTime;
+    });
   };
 
+  const visibleExam = getVisibleExam();
+
+  // ==============================================
+  // 3. HÀM XỬ LÝ KHI BẤM "VÀO THI" Ở TAB 3
+  // ==============================================
+  useEffect(() => {
+    let timer: any;
+    if (
+      ["COUNTDOWN", "NOT_YET_TIME"].includes(examPopupState) &&
+      countdown > 0
+    ) {
+      timer = setInterval(() => {
+        setCountdown((prev) => {
+          const nextValue = prev - 1;
+
+          // Nếu đang ở phòng chờ (COUNTDOWN) và đếm ngược hết -> Chuyển sang READY để học sinh bấm bắt đầu
+          if (examPopupState === "COUNTDOWN" && nextValue <= 0) {
+            setExamPopupState("READY");
+          }
+
+          // Học sinh đang treo popup "NOT_YET_TIME", nếu đếm ngược tự động chạm mốc 5 phút (300 giây)
+          // Hệ thống tự đẩy học sinh vào phòng chờ đếm ngược thực tế cực kỳ mượt mà
+          if (examPopupState === "NOT_YET_TIME" && nextValue <= 300) {
+            setExamPopupState("COUNTDOWN");
+          }
+
+          return nextValue;
+        });
+      }, 1000);
+    }
+    return () => clearInterval(timer);
+  }, [examPopupState, countdown]);
+  const formatTime = (seconds: number) => {
+    if (seconds <= 0) return "00:00";
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60)
+      .toString()
+      .padStart(2, "0");
+    const s = (seconds % 60).toString().padStart(2, "0");
+
+    return h > 0 ? `${h}:${m}:${s}` : `${m}:${s}`;
+  };
+
+  // ==============================================
+  // 4. HÀM XỬ LÝ KHI BẤM "VÀO PHÒNG THI"
+  // ==============================================
+  const handleJoinExamClick = (exam: any) => {
+    if (!exam) {
+      setExamPopupState("NO_EXAM");
+      setTimeout(() => setExamPopupState("NONE"), 3000);
+      return;
+    }
+
+    const now = new Date();
+    const startTime = new Date(exam.startTime);
+    const diffSeconds = Math.floor(
+      (startTime.getTime() - now.getTime()) / 1000,
+    );
+
+    setSelectedExam(exam);
+
+    if (diffSeconds > 300) {
+      // TRƯỜNG HỢP A: Thời gian chờ còn lớn hơn 5 phút -> Hiện popup chưa đến giờ thi (Yêu cầu 2)
+      setCountdown(diffSeconds);
+      setExamPopupState("NOT_YET_TIME");
+    } else if (diffSeconds > 0 && diffSeconds <= 300) {
+      // TRƯỜNG HỢP B: Còn dưới 5 phút -> Vào phòng chờ lấy chính xác thời gian còn lại (Yêu cầu 2)
+      // Ví dụ: vào lúc 11:58 cho ca thi 12:00, đếm ngược sẽ là 2 phút (120 giây) thực tế
+      setCountdown(diffSeconds);
+      setExamPopupState("COUNTDOWN");
+    } else {
+      // TRƯỜNG HỢP C: Đã qua giờ bắt đầu thi -> Tự động bypass phòng chờ vào thẳng bài thi (Yêu cầu 3)
+      handleStartAttemptDirectly(exam);
+    }
+  };
+
+  // ==============================================
+  // HÀM TIỆN ÍCH LẤY ID HỌC SINH TỪ LOCALSTORAGE
+  // ==============================================
+  const getStudentId = () => {
+    const token = localStorage.getItem("accessToken");
+
+    if (!token) return null;
+
+    try {
+      // Giải mã payload (phần thứ 2 của chuỗi JWT sau dấu chấm)
+      const base64Url = token.split(".")[1];
+      const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+      const jsonPayload = decodeURIComponent(
+        window
+          .atob(base64)
+          .split("")
+          .map(function (c) {
+            return "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2);
+          })
+          .join(""),
+      );
+
+      const decodedToken = JSON.parse(jsonPayload);
+      console.log("=== ĐÃ GIẢI MÃ TOKEN ===", decodedToken);
+
+      // Lấy ID học sinh (tùy Backend của bạn lưu là _id hay id)
+      return decodedToken._id || decodedToken.id || decodedToken.userId;
+    } catch (error) {
+      console.error("Lỗi giải mã token:", error);
+      return null;
+    }
+  };
+
+  // ==============================================
+  // 5. GỌI API BẮT ĐẦU VÀ CHUYỂN TRANG (BYPASS HOẶC READY)
+  // ==============================================
+  const handleStartAttemptDirectly = async (exam: any) => {
+    console.log("=== THÔNG TIN KỲ THI GỬI ĐI ===", exam);
+    console.log("=== ID KỲ THI ===", exam._id);
+
+    const studentId = getStudentId(); // Lấy ID học sinh
+
+    if (!studentId) {
+      setPopupMessage(
+        "Không tìm thấy thông tin đăng nhập. Vui lòng đăng nhập lại!",
+      );
+      setShowPopup(true);
+      return;
+    }
+
+    setExamPopupState("LOADING");
+
+    try {
+      const response = await axiosClient.post("/api/exam-attempts/start", {
+        examId: exam._id,
+        studentId: studentId, // 👉 ĐÃ THÊM STUDENT ID VÀO ĐÂY
+      });
+
+      const attemptId = response.data.data._id;
+      navigate(`/exam/${attemptId}`);
+    } catch (error: any) {
+      console.error("Lỗi khi tạo phiên làm bài:", error);
+      setExamPopupState("NONE");
+
+      const errorMsg =
+        error.response?.data?.message || "Không thể bắt đầu bài thi.";
+      console.log("🔥 LÝ DO BACKEND CHẶN:", errorMsg);
+      setPopupMessage(errorMsg);
+      setShowPopup(true);
+    }
+  };
+
+  const handleStartAttemptFromLobby = () => {
+    if (selectedExam) {
+      handleStartAttemptDirectly(selectedExam);
+    }
+  };
+
+  // ==============================================
+  // 6. CHẶN HỌC SINH THI LẦN 2
+  // ==============================================
+  const handleStartExam = async () => {
+    const studentId = getStudentId(); // Lấy ID học sinh
+
+    if (!studentId) {
+      setPopupMessage(
+        "Không tìm thấy thông tin đăng nhập. Vui lòng đăng nhập lại!",
+      );
+      setShowPopup(true);
+      return;
+    }
+
+    try {
+      const res = await axiosClient.post("/api/exam-attempts/start", {
+        examId: id, // Kiểm tra biến id ở 컴포넌트 có đúng không
+        studentId: studentId, // 👉 ĐÃ THÊM STUDENT ID VÀO ĐÂY
+      });
+      navigate(`/exam/${res.data.data._id}`);
+    } catch (error: any) {
+      if (error.response?.status === 400) {
+        // Thay alert() bằng set State mở Popup
+        setPopupMessage(error.response.data.message);
+        setShowPopup(true);
+      } else {
+        setPopupMessage("Có lỗi xảy ra, vui lòng thử lại!");
+        setShowPopup(true);
+      }
+    }
+  };
+  // ==============================================
+  // FETCH DỮ LIỆU LỚP HỌC
+  // ==============================================
   useEffect(() => {
     const fetchData = async () => {
       if (!classId) return;
@@ -533,51 +767,84 @@ export default function ClassDetail() {
               </div>
             )}
 
-            {/* TAB 3: THI TRỰC TUYẾN */}
+            {/* TAB 3: THI TRỰC TUYẾN - ĐÃ FIX THEO YÊU CẦU MỚI */}
             {activeTab === "exams" && (
               <div className="max-w-2xl mx-auto py-4">
-                <div className="bg-white border border-outline-variant rounded-2xl overflow-hidden shadow-lg">
-                  <div className="h-2 ai-progress-gradient"></div>
-                  <div className="p-6 sm:p-8">
-                    <div className="flex flex-col sm:flex-row justify-between items-start gap-4 mb-6">
-                      <div>
-                        <span className="inline-block px-3 py-1 bg-error-container text-on-error-container rounded-full text-xs font-bold mb-3">
-                          Sắp diễn ra
+                {!visibleExam ? (
+                  /* YÊU CẦU 1: UI CỨNG KHÔNG CÓ BÀI KIỂM TRA NÀO */
+                  <div className="bg-white border border-outline-variant rounded-2xl p-12 text-center shadow-lg">
+                    <span className="material-symbols-outlined text-6xl text-gray-300 mb-4">
+                      assignment_late
+                    </span>
+                    <h3 className="text-xl font-bold text-gray-700">
+                      Hiện tại chưa có bài kiểm tra nào cả
+                    </h3>
+                    <p className="text-sm text-gray-400 mt-2">
+                      Các đề thi của lớp học sẽ hiển thị tại đây 1 tiếng trước
+                      giờ thi bắt đầu.
+                    </p>
+                  </div>
+                ) : (
+                  /* YÊU CẦU 2: HIỂN THỊ ĐỀ THI ĐÁP ỨNG THỜI GIAN TRƯỚC 1 TIẾNG */
+                  <div className="bg-white border border-outline-variant rounded-2xl overflow-hidden shadow-lg">
+                    <div className="h-2 ai-progress-gradient"></div>
+                    <div className="p-6 sm:p-8">
+                      <div className="flex flex-col sm:flex-row justify-between items-start gap-4 mb-6">
+                        <div>
+                          <span className="inline-block px-3 py-1 bg-error-container text-on-error-container rounded-full text-xs font-bold mb-3 animate-pulse">
+                            {new Date(visibleExam.startTime).getTime() >
+                            new Date().getTime()
+                              ? "Sắp diễn ra"
+                              : "Đang diễn ra"}
+                          </span>
+                          <h3 className="text-xl font-bold text-on-surface">
+                            {visibleExam.title}
+                          </h3>
+                          <p className="text-xs text-secondary mt-1">
+                            Thời gian làm bài: {visibleExam.duration || 45} phút
+                            | Hình thức:{" "}
+                            {visibleExam.format || "Trắc nghiệm & Tự luận"}
+                          </p>
+                        </div>
+                        <div className="sm:text-right flex sm:flex-col items-center sm:items-end gap-2">
+                          <div className="text-2xl font-mono font-bold text-primary">
+                            {new Date(visibleExam.startTime).toLocaleTimeString(
+                              [],
+                              {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              },
+                            )}
+                          </div>
+                          <span className="text-[10px] text-secondary uppercase font-bold tracking-wider">
+                            Bắt đầu:{" "}
+                            {new Date(visibleExam.startTime).toLocaleDateString(
+                              "vi-VN",
+                            )}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="p-4 bg-surface-container-high rounded-xl mb-6 flex items-start space-x-3">
+                        <span className="material-symbols-outlined text-error mt-0.5">
+                          info
                         </span>
-                        <h3 className="text-xl font-bold text-on-surface">
-                          Kiểm tra năng lực Định kỳ
-                        </h3>
-                        <p className="text-xs text-secondary mt-1">
-                          Thời gian làm bài: 60 phút | Trắc nghiệm trực tuyến
+                        <p className="text-xs text-on-surface-variant">
+                          Lưu ý quan trọng: Hệ thống sẽ kích hoạt AI giám sát và
+                          tự động nộp bài khi hết giờ. Hãy kiểm tra kết nối mạng
+                          trước khi vào phòng.
                         </p>
                       </div>
-                      <div className="sm:text-right flex sm:flex-col items-center sm:items-end gap-2">
-                        <div className="text-2xl font-mono font-bold text-primary">
-                          00:45:12
-                        </div>
-                        <span className="text-[10px] text-secondary uppercase font-bold tracking-wider">
-                          Hệ thống mở sau
-                        </span>
+                      <div className="flex gap-4">
+                        <button
+                          onClick={() => handleJoinExamClick(visibleExam)}
+                          className="flex-1 bg-primary text-on-primary py-3 rounded-xl font-bold text-sm hover:shadow-lg transition-all"
+                        >
+                          Vào phòng thi
+                        </button>
                       </div>
                     </div>
-                    <div className="p-4 bg-surface-container-high rounded-xl mb-6 flex items-start space-x-3">
-                      <span className="material-symbols-outlined text-error mt-0.5">
-                        info
-                      </span>
-                      <p className="text-xs text-on-surface-variant">
-                        Lưu ý quan trọng: Hệ thống sẽ kích hoạt AI giám sát và
-                        tự động nộp bài khi hết giờ. Hãy kiểm tra camera trước
-                        khi làm bài.
-                      </p>
-                    </div>
-                    <button
-                      onClick={() => startExam()}
-                      className="w-full bg-primary text-on-primary py-3 rounded-xl font-bold text-sm hover:shadow-lg transition-all"
-                    >
-                      Bắt đầu làm bài thi
-                    </button>
                   </div>
-                </div>
+                )}
               </div>
             )}
 
@@ -728,6 +995,163 @@ export default function ClassDetail() {
           </div>
         </section>
       </main>
+
+      {/* ==================================================== */}
+      {/* CÁC POPUP TRẠNG THÁI LOBBY PHÒNG THI */}
+      {/* ==================================================== */}
+
+      {/* 1. POPUP: KHÔNG CÓ KỲ THI */}
+      {examPopupState === "NO_EXAM" && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in">
+          <div className="bg-white p-8 rounded-2xl max-w-sm w-full text-center border-2 border-red-500 shadow-2xl">
+            <span className="material-symbols-outlined text-5xl text-red-500 mb-2">
+              event_busy
+            </span>
+            <h3 className="text-xl font-bold text-red-600 mb-2">Thông báo</h3>
+            <p className="text-gray-700 font-medium">
+              Kỳ thi này không tồn tại hoặc đã bị gỡ!
+            </p>
+            <p className="text-sm text-gray-400 mt-4">
+              (Tự động đóng sau 3 giây...)
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* 2. POPUP CHUYÊN NGHIỆP: CHƯA ĐẾN GIỜ THI (> 5 PHÚT) (Yêu cầu 2) */}
+      {examPopupState === "NOT_YET_TIME" && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in p-4">
+          <div className="bg-white p-8 rounded-2xl max-w-md w-full text-center border border-outline-variant shadow-2xl">
+            <span className="material-symbols-outlined text-5xl text-yellow-500 mb-3">
+              warning
+            </span>
+            <h3 className="text-2xl font-bold text-on-surface mb-2">
+              Chưa đến giờ thi!
+            </h3>
+            <p className="text-gray-700 font-medium mb-4">
+              Bài thi{" "}
+              <span className="text-primary font-bold">
+                "{selectedExam?.title}"
+              </span>{" "}
+              chưa mở phòng chờ.
+            </p>
+            <div className="bg-surface-container-high py-4 px-6 rounded-xl mb-6">
+              <p className="text-xs text-secondary mb-1">
+                Thời gian đếm ngược thực tế:
+              </p>
+              <p className="text-2xl font-mono font-bold text-error">
+                {formatTime(countdown)}
+              </p>
+              <p className="text-xs text-gray-500 mt-2">
+                Bạn vui lòng quay lại khi thời gian còn dưới 5 phút để vào phòng
+                chờ đếm ngược.
+              </p>
+            </div>
+            <button
+              onClick={() => setExamPopupState("NONE")}
+              className="w-full py-3 bg-primary text-white font-bold rounded-xl hover:bg-primary/95 transition-colors"
+            >
+              Đã hiểu & Quay lại
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* 3. POPUP: PHÒNG CHỜ THI (LOBBY - Dưới 5 phút) (Yêu cầu 2) */}
+      {["COUNTDOWN", "READY", "LOADING"].includes(examPopupState) && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-md animate-in fade-in p-4">
+          <div className="bg-surface w-full max-w-md rounded-3xl shadow-2xl p-8 text-center relative overflow-hidden">
+            <div className="absolute -top-24 -right-24 w-48 h-48 bg-primary/20 blur-3xl rounded-full"></div>
+
+            <h2 className="text-2xl font-bold text-on-surface mb-2 relative z-10">
+              Phòng chờ thi
+            </h2>
+            <p className="text-primary font-bold text-lg mb-8 relative z-10">
+              {selectedExam?.title}
+            </p>
+
+            {/* Trạng thái đếm ngược phòng chờ thực tế */}
+            {examPopupState === "COUNTDOWN" && (
+              <div className="mb-8 relative z-10">
+                <p className="text-on-surface-variant font-medium mb-4">
+                  Hệ thống sẽ mở đề sau:
+                </p>
+                <div className="text-5xl font-mono font-bold text-primary bg-primary/10 py-6 rounded-2xl border-2 border-primary/20 shadow-inner">
+                  {formatTime(countdown)}
+                </div>
+              </div>
+            )}
+
+            {/* Trạng thái đã sẵn sàng thi */}
+            {["READY", "LOADING"].includes(examPopupState) && (
+              <div className="mb-8 relative z-10">
+                <div className="text-5xl mb-4">✅</div>
+                <h3 className="text-2xl font-bold text-green-600 mb-2">
+                  Đã đến giờ thi!
+                </h3>
+                <p className="text-gray-600">
+                  Hãy chuẩn bị sẵn sàng và bấm nút bên dưới để nhận đề.
+                </p>
+              </div>
+            )}
+
+            <div className="flex gap-4 relative z-10">
+              <button
+                disabled={examPopupState === "LOADING"}
+                onClick={() => setExamPopupState("NONE")}
+                className="flex-1 py-3 bg-gray-200 text-gray-700 font-bold rounded-xl hover:bg-gray-300 transition-colors disabled:opacity-50"
+              >
+                Quay lại
+              </button>
+
+              <button
+                disabled={
+                  examPopupState === "COUNTDOWN" || examPopupState === "LOADING"
+                }
+                onClick={handleStartAttemptFromLobby}
+                className={`flex-1 py-3 font-bold rounded-xl transition-all shadow-md flex items-center justify-center gap-2 ${
+                  ["READY", "LOADING"].includes(examPopupState)
+                    ? "bg-primary text-white hover:bg-primary-container hover:scale-105"
+                    : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                }`}
+              >
+                {examPopupState === "LOADING" ? (
+                  <span className="animate-spin material-symbols-outlined">
+                    autorenew
+                  </span>
+                ) : (
+                  "Bắt đầu ngay"
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {showPopup && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white p-6 md:p-8 rounded-2xl shadow-2xl text-center max-w-sm w-[90%] mx-auto transform animate-in zoom-in-95 duration-200">
+            <div className="w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-4">
+              <span className="material-symbols-outlined text-3xl font-bold text-error">
+                block
+              </span>
+            </div>
+            <h3 className="font-bold text-xl text-gray-900 mb-2">
+              Không thể làm bài
+            </h3>
+            <p className="text-gray-600 mb-6 text-sm leading-relaxed">
+              {popupMessage}
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => navigate("/")} // Đổi link này về trang chủ / danh sách lớp của bạn
+                className="w-full py-2.5 px-4 bg-gray-100 text-gray-700 font-bold rounded-xl hover:bg-gray-200 transition-colors"
+              >
+                Quay lại trang chủ
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

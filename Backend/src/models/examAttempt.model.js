@@ -60,7 +60,12 @@ const examAttemptSchema = new mongoose.Schema(
         },
       },
     ],
+    cheatWarnings: {
+      type: Number,
+      default: 0,
+    },
   },
+
   { timestamps: true },
 );
 

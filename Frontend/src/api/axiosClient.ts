@@ -19,7 +19,11 @@ axiosClient.interceptors.request.use(
 
       // In log debug khi đang ở môi trường phát triển (Development)
       if (import.meta.env.DEV) {
-        console.log("[axios] Request:", config.method?.toUpperCase(), (config.baseURL ?? "") + config.url);
+        console.log(
+          "[axios] Request:",
+          config.method?.toUpperCase(),
+          (config.baseURL ?? "") + config.url,
+        );
       }
     } catch (e) {
       console.error("[axios] Request interceptor error:", e);
@@ -48,13 +52,19 @@ axiosClient.interceptors.response.use(
   (error: AxiosError) => {
     // Log lỗi phản hồi khi dev local
     if (import.meta.env.DEV) {
-      console.log("[axios] Response error:", error.response?.status, error.message);
+      console.log(
+        "[axios] Response error:",
+        error.response?.status,
+        error.message,
+      );
     }
 
     // Tự động xử lý khi Token không hợp lệ hoặc hết hạn (401 / 403)
     if (error.response?.status === 401 || error.response?.status === 403) {
       localStorage.removeItem("accessToken");
-      alert("Phiên đăng nhập của bạn đã hết hạn hoặc không hợp lệ. Vui lòng đăng nhập lại!");
+      alert(
+        "Phiên đăng nhập của bạn đã hết hạn hoặc không hợp lệ. Vui lòng đăng nhập lại!",
+      );
       window.location.href = "/login";
     }
 

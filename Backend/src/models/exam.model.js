@@ -16,7 +16,16 @@ const examSchema = new mongoose.Schema(
         points: { type: Number, required: true },
       },
     ],
+    startTime: {
+      type: Date,
+      required: true,
+    },
 
+    classId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Class", // Đảm bảo tên ref khớp với tên model Lớp học của bạn
+      required: true,
+    },
     maxScore: {
       type: Number,
       default: 10,
@@ -25,7 +34,7 @@ const examSchema = new mongoose.Schema(
     status: {
       type: String,
       enum: ["DRAFT", "PUBLISHED", "COMPLETED"],
-      default: "DRAFT",
+      default: "PUBLISHED",
     },
   },
   { timestamps: true },

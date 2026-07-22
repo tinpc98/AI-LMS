@@ -2,10 +2,19 @@ import { useEffect, useRef } from "react";
 
 const useAntiCheat = (onCheatDetected) => {
   const warningCount = useRef(0);
+  const lastTriggerTime = useRef(0); // Thêm biến lưu thời gian để chống tính đúp
 
   useEffect(() => {
     // Tạo 1 hàm chung để tăng biến đếm và gọi Modal
     const triggerWarning = (reason) => {
+      const now = Date.now();
+
+      // FIX LỖI TÍNH ĐÚP: Nếu 2 sự kiện gian lận xảy ra cách nhau dưới 1 giây (1000ms), bỏ qua sự kiện thứ 2.
+      if (now - lastTriggerTime.current < 1000) {
+        return;
+      }
+
+      lastTriggerTime.current = now;
       warningCount.current += 1;
       onCheatDetected(reason, warningCount.current);
     };
@@ -14,7 +23,6 @@ const useAntiCheat = (onCheatDetected) => {
 
     const handleClipboard = (e) => {
       e.preventDefault();
-      // Đổi từ alert() sang triggerWarning
       triggerWarning("Phát hiện hành vi sao chép/dán");
     };
 
@@ -22,7 +30,6 @@ const useAntiCheat = (onCheatDetected) => {
       if (e.key === "F12") e.preventDefault();
       if (e.key === "F5" || (e.ctrlKey && e.key === "r")) {
         e.preventDefault();
-        // Đổi từ alert() sang triggerWarning
         triggerWarning("Phát hiện hành vi tải lại trang (F5)");
       }
       if (e.ctrlKey && ["c", "v", "x"].includes(e.key.toLowerCase())) {

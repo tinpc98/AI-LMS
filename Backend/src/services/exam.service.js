@@ -23,6 +23,8 @@ const generateExamWithMatrix = async (params) => {
     title,
     duration,
     topic,
+    startTime,
+    classId,
     mcqCount,
     mcqPoints,
     essayCount,
@@ -66,8 +68,15 @@ const generateExamWithMatrix = async (params) => {
   const newExam = new Exam({
     title,
     duration,
+    startTime,
+    topic,
+    classId,
     questions: finalQuestions,
-    status: "PUBLISHED", // Có thể để DRAFT nếu muốn GV xem lại trước khi học sinh thi
+    mcqCount,
+    mcqPoints,
+    essayCount,
+    essayPoints,
+    status: "DRAFT",
   });
 
   await newExam.save();

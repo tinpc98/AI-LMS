@@ -17,11 +17,9 @@ const gradeSubmission = async (attemptId, studentAnswers) => {
   // 2. Kiểm tra thời gian (Senior Tip: Chống gian lận kéo dài thời gian)
   const now = new Date();
   const timeElapsed = (now - new Date(attempt.startTime)) / 1000 / 60; // Đổi ra phút
-  const gracePeriod = 2; // Cho phép 2 phút bù giờ do độ trễ mạng mạng
+  const gracePeriod = 2; // Cho phép 2 phút bù giờ do độ trễ mạng
 
   if (timeElapsed > exam.duration + gracePeriod) {
-    // Nếu quá hạn, bạn có thể chọn từ chối hoặc vẫn cho nộp nhưng đánh dấu bài làm
-    // Ở đây ta vẫn cho nộp nhưng ghi nhận kết thúc đúng thời hạn tối đa
     attempt.endTime = new Date(
       attempt.startTime.getTime() + exam.duration * 60000,
     );
@@ -30,16 +28,13 @@ const gradeSubmission = async (attemptId, studentAnswers) => {
   }
 
   // 3. Tạo một Map để tra cứu nhanh số điểm phân bổ cho từng câu hỏi trong Đề thi này
-  // Cấu trúc map: { "questionId_abc": 0.27, "questionId_xyz": 3.0 }
   const examPointsMap = new Map(
     exam.questions.map((q) => [q.questionId.toString(), q.points]),
   );
 
-  // 4. Lấy danh sách chi tiết các Câu hỏi từ DB để xem đáp án đúng (correctAnswer) và loại câu hỏi (type)
+  // 4. Lấy danh sách chi tiết các Câu hỏi từ DB
   const questionIds = exam.questions.map((q) => q.questionId);
   const dbQuestions = await Question.find({ _id: { $in: questionIds } });
-
-  // Tạo Map để tra cứu nhanh thông tin câu hỏi chuẩn từ DB
   const dbQuestionsMap = new Map(dbQuestions.map((q) => [q._id.toString(), q]));
 
   let totalScore = 0;
@@ -52,14 +47,34 @@ const gradeSubmission = async (attemptId, studentAnswers) => {
     const questionConfig = dbQuestionsMap.get(qIdStr);
     const allocatedPoints = examPointsMap.get(qIdStr) || 0;
 
-    if (!questionConfig) continue; // Bỏ qua nếu câu hỏi không nằm trong đề
+    if (!questionConfig) continue;
 
     let pointsEarned = 0;
 
     if (questionConfig.type === "MCQ") {
-      // Chấm trắc nghiệm: So khớp đáp án
-      const isCorrect =
-        questionConfig.correctAnswer.trim() === ans.selectedOption?.trim();
+      console.log("====================================");
+      console.log("Question:", questionConfig.content);
+      console.log("Question Type:", questionConfig.type);
+      console.log("Allocated Points:", allocatedPoints);
+
+      console.log(
+        "Correct Answer:",
+        JSON.stringify(questionConfig.correctAnswer),
+      );
+
+      console.log("Student Answer:", JSON.stringify(ans.selectedOption));
+
+      const correctAnswer = String(questionConfig.correctAnswer || "").trim();
+      const studentAnswer = String(ans.selectedOption || "").trim();
+
+      console.log("Correct (trim):", JSON.stringify(correctAnswer));
+      console.log("Student (trim):", JSON.stringify(studentAnswer));
+
+      const isCorrect = correctAnswer === studentAnswer;
+
+      console.log("isCorrect =", isCorrect);
+      console.log("====================================");
+
       if (isCorrect) {
         pointsEarned = allocatedPoints;
         totalScore += pointsEarned;
@@ -68,20 +83,19 @@ const gradeSubmission = async (attemptId, studentAnswers) => {
       processedAnswers.push({
         questionId: questionConfig._id,
         selectedOption: ans.selectedOption,
-        pointsEarned: pointsEarned,
+        pointsEarned: Number(pointsEarned.toFixed(2)),
       });
     } else if (questionConfig.type === "ESSAY") {
-      // Tự luận: Tạm thời cho 0 điểm, đợi Giáo viên chấm tay
       hasEssay = true;
       processedAnswers.push({
         questionId: questionConfig._id,
         essayText: ans.essayText,
-        pointsEarned: 0, // Sẽ được cập nhật sau bởi GV
+        pointsEarned: 0, // Tạm thời 0 điểm, đợi GV chấm
       });
     }
   }
 
-  // 6. Cập nhật trạng thái và lưu kết quả (Làm tròn 2 chữ số thập phân an toàn)
+  // 6. Cập nhật trạng thái và lưu kết quả (An toàn chống NaN)
   attempt.answers = processedAnswers;
   attempt.totalScore = Number(totalScore.toFixed(2));
   attempt.status = hasEssay ? "PARTIALLY_GRADED" : "GRADED";
@@ -89,36 +103,54 @@ const gradeSubmission = async (attemptId, studentAnswers) => {
   await attempt.save();
   return attempt;
 };
-// Hàm xử lý logic cộng điểm tự luận
+
+// ==========================================
+// HÀM CHẤM TỰ LUẬN ĐÃ ĐƯỢC VÁ LỖI AN TOÀN
+// ==========================================
 const gradeEssay = async (attemptId, essayGrades) => {
-  const attempt = await ExamAttempt.findById(attemptId);
+  const attempt = await ExamAttempt.findById(attemptId).populate("examId");
   if (!attempt) throw new Error("Không tìm thấy phiên làm bài thi này!");
-  if (attempt.status === "GRADED")
-    throw new Error("Bài thi này đã được chấm xong toàn bộ!");
 
-  let additionalScore = 0;
+  // Lấy danh sách phân bổ điểm tối đa từ đề thi để đối chiếu chống gian lận
+  const exam = attempt.examId;
+  const examPointsMap = new Map(
+    exam.questions.map((q) => [q.questionId.toString(), q.points]),
+  );
 
-  // Lặp qua mảng điểm giáo viên gửi lên
-  essayGrades.forEach((grade) => {
-    // Tìm đúng câu trả lời của câu tự luận đó trong bài làm
+  // Lặp qua mảng điểm giáo viên gửi lên và cập nhật trực tiếp vào câu trả lời
+  for (const grade of essayGrades) {
+    const qIdStr = grade.questionId.toString();
     const answerIndex = attempt.answers.findIndex(
-      (ans) => ans.questionId.toString() === grade.questionId.toString(),
+      (ans) => ans.questionId.toString() === qIdStr,
     );
 
     if (answerIndex !== -1) {
-      // Cập nhật điểm cho câu đó
-      attempt.answers[answerIndex].pointsEarned = grade.pointsAwarded;
-      additionalScore += grade.pointsAwarded;
+      // Ép kiểu an toàn, chống giá trị NaN / undefined
+      let points = Number(grade.pointsEarned ?? grade.pointsAwarded);
+      if (isNaN(points)) points = 0;
+
+      // [BẢO MẬT] Không cho phép giáo viên chấm vượt quá số điểm tối đa của câu hỏi trong đề
+      const maxAllowed = examPointsMap.get(qIdStr) || 10;
+      if (points > maxAllowed) {
+        points = maxAllowed;
+      }
+
+      attempt.answers[answerIndex].pointsEarned = points;
     }
-  });
+  }
 
-  // Cộng dồn điểm tự luận vào tổng điểm (Làm tròn 2 chữ số thập phân)
-  attempt.totalScore = Number(
-    (attempt.totalScore + additionalScore).toFixed(2),
-  );
+  // TÍNH LẠI TOÀN BỘ TỔNG ĐIỂM (Tự động cộng dồn từ tất cả các câu MCQ + ESSAY)
+  // Cách này tuyệt đối an toàn, dù bấm phê duyệt 10 lần điểm cũng không bị nhân đôi
+  let recalculatedTotal = 0;
+  for (const ans of attempt.answers) {
+    const p = Number(ans.pointsEarned);
+    if (!isNaN(p)) {
+      recalculatedTotal += p;
+    }
+  }
 
-  // Đổi trạng thái thành GRADED (Đã chấm xong)
-  attempt.status = "GRADED";
+  attempt.totalScore = Number(recalculatedTotal.toFixed(2));
+  attempt.status = "GRADED"; // Đã chấm xong toàn bộ
 
   await attempt.save();
   return attempt;

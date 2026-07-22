@@ -4,6 +4,9 @@ import {
   startExam,
   gradeEssaySubmit,
   getAttemptForReview,
+  getExamAttemptDetail,
+  getAttemptsByExam,
+  recordCheatWarning,
 } from "../controllers/examAttempt.controller.js";
 
 const router = express.Router();
@@ -18,4 +21,7 @@ router.put("/:id/grade-essay", gradeEssaySubmit);
 
 router.get("/:id/review", getAttemptForReview);
 
+router.get("/:id", getExamAttemptDetail);
+router.get("/exam/:examId", getAttemptsByExam);
+router.post("/:id/warning", recordCheatWarning);
 export default router;

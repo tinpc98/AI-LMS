@@ -20,7 +20,8 @@ dotenv.config();
 const app = express();
 const port = process.env.PORT || 5000;
 
-// Lấy danh sách origin từ biến môi trường FRONTEND_ORIGINS (comma-separated).
+// Lấy danh sách origin từ
+//  biến môi trường FRONTEND_ORIGINS (comma-separated).
 // Ví dụ: FRONTEND_ORIGINS=http://localhost:5173,http://localhost:5174
 const allowedOrigins = (
   process.env.FRONTEND_ORIGINS || "http://localhost:5173,http://127.0.0.1:5173"
