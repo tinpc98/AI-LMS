@@ -1,5 +1,11 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import "../../assets/css/HomePage.css";
+import { classApi } from "../../api/classApi";
+import assignmentApi from "../../api/assignmentApi";
+import axiosClient from "../../api/axiosClient";
+import { useAuth } from "../../hooks/useAuth";
+import type User from "../../interface/userInterface";
+import type { IClass } from "../../interface/ClassInterface";
 
 // ==========================================================================
 // TYPES & INTERFACES
@@ -31,41 +37,44 @@ const renderSafeMarkdown = (text: string) => {
 };
 
 export default function HomePageStudent() {
-  // Phân quyền (Authorization)
+  const { user: authUser } = useAuth();
+  const [currentUser, setCurrentUser] = useState<User | null>(authUser);
+
+  // MOCK DATA BAN ĐẦU (Dùng làm Fallback khi chưa có API hoặc dữ liệu rỗng)
+  // const initialMockTodos: Todo[] = [
+  //   {
+  //     id: "t1",
+  //     title: "Bài tập: Giải thuật sắp xếp",
+  //     subject: "Cấu trúc dữ liệu & Giải thuật",
+  //     deadline: "Còn 2 giờ",
+  //     deadlineType: "error",
+  //     completed: false,
+  //   },
+  //   {
+  //     id: "t2",
+  //     title: "Kiểm tra: Database Design",
+  //     subject: "Hệ quản trị CSDL",
+  //     deadline: "Ngày mai",
+  //     deadlineType: "warning",
+  //     completed: false,
+  //   },
+  //   {
+  //     id: "t3",
+  //     title: "Lab 4: Linux Commands",
+  //     subject: "Hệ điều hành",
+  //     deadline: "3 ngày nữa",
+  //     deadlineType: "info",
+  //     completed: false,
+  //   },
+  // ];
 
   // STATE MANAGEMENT
-  const [todos, setTodos] = useState<Todo[]>([
-    {
-      id: "t1",
-      title: "Bài tập: Giải thuật sắp xếp",
-      subject: "Cấu trúc dữ liệu & Giải thuật",
-      deadline: "Còn 2 giờ",
-      deadlineType: "error",
-      completed: false,
-    },
-    {
-      id: "t2",
-      title: "Kiểm tra: Database Design",
-      subject: "Hệ quản trị CSDL",
-      deadline: "Ngày mai",
-      deadlineType: "warning",
-      completed: false,
-    },
-    {
-      id: "t3",
-      title: "Lab 4: Linux Commands",
-      subject: "Hệ điều hành",
-      deadline: "3 ngày nữa",
-      deadlineType: "info",
-      completed: false,
-    },
-  ]);
-
+  const [todos, setTodos] = useState<Todo[]>([]);
   const [chatHistory, setChatHistory] = useState<ChatMessage[]>([
     {
       id: "init-msg",
       sender: "ai",
-      text: "Chào Minh Anh! Mình là **AI Scholar**. Mình có thể giúp gì cho bạn hôm nay?",
+      text: "Chào bạn! Mình là **AI Scholar**. Mình có thể giúp gì cho bạn hôm nay?",
     },
   ]);
 
@@ -93,9 +102,66 @@ export default function HomePageStudent() {
   const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const aiTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Cleanup timers khi component unmount để tránh Memory Leak
+  // ==========================================================================
+  // FETCH REAL APIS (Profile, Classes & Assignments)
+  // ==========================================================================
   useEffect(() => {
+    let isMounted = true;
+
+    // 1. Lấy thông tin người dùng từ API thực tế
+    const fetchUserProfile = async () => {
+      try {
+        const response = await axiosClient.get("/api/users/me");
+        if (isMounted && response.data?.data) {
+          setCurrentUser(response.data.data);
+        }
+      } catch (err) {
+        console.warn("Không thể lấy thông tin profile thực tế từ API, dùng dữ liệu đăng nhập hiện tại.", err);
+      }
+    };
+
+    // 2. Lấy danh sách Lớp học & Bài tập thực tế của học sinh
+    const fetchClassesAndAssignments = async () => {
+      try {
+        const classRes = await classApi.getMyClasses();
+        const classes: IClass[] = classRes.data?.data ?? [];
+
+        if (classes.length > 0) {
+          const assignmentPromises = classes.map(async (cls) => {
+            try {
+              const list = await assignmentApi.getAssignmentsByClass(cls._id);
+              return list.map((item: any) => ({
+                id: item._id || item.id,
+                title: item.title || "Bài tập lớp " + cls.className,
+                subject: cls.className,
+                deadline: item.dueDate
+                  ? `Hạn: ${new Date(item.dueDate).toLocaleDateString("vi-VN")}`
+                  : "Chưa có hạn",
+                deadlineType: "warning" as const,
+                completed: false,
+              }));
+            } catch {
+              return [];
+            }
+          });
+
+          const results = await Promise.all(assignmentPromises);
+          const realAssignments = results.flat();
+
+          if (isMounted && realAssignments.length > 0) {
+            setTodos(realAssignments);
+          }
+        }
+      } catch (err) {
+        console.warn("Chưa lấy được bài tập thực tế từ API backend, giữ dữ liệu fallback.", err);
+      }
+    };
+
+    fetchUserProfile();
+    fetchClassesAndAssignments();
+
     return () => {
+      isMounted = false;
       if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
       if (aiTimerRef.current) clearTimeout(aiTimerRef.current);
     };
@@ -203,8 +269,9 @@ export default function HomePageStudent() {
         let response = "Mình đã lưu lại câu hỏi. Mình đề xuất bạn xem thêm bài giảng và tài liệu PDF tương ứng.";
 
         const query = text.toLowerCase();
+        const displayName = currentUser?.fullName || currentUser?.name || "bạn";
         if (query.includes("chao") || query.includes("hello")) {
-          response = "Chào Minh Anh! Mình có thể giúp gì cho mục tiêu học tập tuần này của bạn?";
+          response = `Chào ${displayName}! Mình có thể giúp gì cho mục tiêu học tập tuần này của bạn?`;
         } else if (query.includes("linux") || query.includes("hệ điều hành")) {
           response =
             "Đối với **Linux**, các câu lệnh cần ghi nhớ bao gồm `ls` (liệt kê file), `cd` (di chuyển), và `grep` (tìm kiếm). Bạn có muốn mình soạn bài tập trắc nghiệm ngắn về Linux không?";
@@ -221,13 +288,18 @@ export default function HomePageStudent() {
         triggerToast("Trợ lý AI vừa phản hồi!", "info");
       }, 1500);
     },
-    [triggerToast],
+    [currentUser, triggerToast],
   );
 
   // Dynamic values
+  const studentName = currentUser?.fullName || currentUser?.name || "Minh Anh";
+  const userRoleText = currentUser?.role === "teacher" ? "Giáo Viên" : "Sinh Viên";
+
   const totalTodos = todos.length;
   const completedTodos = todos.filter((t) => t.completed).length;
   const todoProgress = totalTodos > 0 ? Math.round((completedTodos / totalTodos) * 100) : 0;
+  
+  // Tạm thời mock data GPA & Kỹ năng (chưa có endpoint API backend)
   const gpaData = [7.2, 7.8, 8.0, 8.5, 8.2, 8.4];
   const activeGpaIndex = hoveredGpaIndex !== null ? hoveredGpaIndex : gpaData.length - 1;
   const activeGpa = gpaData[activeGpaIndex];
@@ -235,62 +307,11 @@ export default function HomePageStudent() {
   return (
     <div className={`lms-theme-wrapper ${isDarkTheme ? "dark" : ""}`}>
       <div className="lms-app">
-        {/* SIDEBAR */}
-        {/* <aside className="lms-sidebar">
-          <div className="lms-logo-container">
-            <div className="lms-logo-icon">
-              <span className="material-symbols-outlined icon-filled">school</span>
-            </div>
-            <span className="lms-logo-text">Scholar LMS</span>
-          </div>
-          <nav className="lms-nav-menu">
-            <ul>
-              <li className="lms-nav-item active">
-                <a href="#dashboard">
-                  <span className="material-symbols-outlined icon-filled">dashboard</span>
-                  <span>Trang chủ</span>
-                </a>
-              </li>
-              <li className="lms-nav-item">
-                <a href="#courses">
-                  <span className="material-symbols-outlined">menu_book</span>
-                  <span>Khóa học của tôi</span>
-                </a>
-              </li>
-              <li className="lms-nav-item">
-                <a href="#assignments">
-                  <span className="material-symbols-outlined">edit_note</span>
-                  <span>Nộp bài tập</span>
-                </a>
-              </li>
-              <li className="lms-nav-item">
-                <a href="#forum">
-                  <span className="material-symbols-outlined">forum</span>
-                  <span>Hộp thư thoại</span>
-                </a>
-              </li>
-            </ul>
-          </nav>
-          <div className="lms-sidebar-footer">
-            <div className="lms-profile-widget">
-              <img
-                className="lms-avatar"
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuBkQFxlJRTq8GL9fEZbHjA7Hc3jgJXxkKh1syAgR1lbJ4LHb6gEmXTueRbg4z90fzPh5dW1BCO886wPgWR-14JDQ4YcFII_wf3ScBfMuhxIv-6ZvZBY8JvqS4ejzaByjOs20chmkZ9jtycHZ-gRbauxuTQ2CN-nlhCbtaCiwtiugSZ0KscDgbQ23FSJoH_b8hvNXk3Ul3tQQR2xliBOyMYXAHeisMuZPZ6_3O6s7DHwA4j4cwbe4Y3OHwc7wLja71jezmhLsWWSUrtq"
-                alt="Avatar student"
-              />
-              <div className="lms-profile-info">
-                <span className="lms-profile-name">Minh Anh</span>
-                <span className="lms-profile-role">MSSV: SV8902</span>
-              </div>
-            </div>
-          </div>
-        </aside> */}
-
         {/* MAIN LAYOUT */}
         <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
           <header className="lms-header">
             <div className="lms-header-left">
-              <span className="lms-role-badge">Sinh Viên</span>
+              <span className="lms-role-badge">{userRoleText}</span>
             </div>
             <div className="lms-header-right">
               <button
@@ -313,7 +334,7 @@ export default function HomePageStudent() {
           <main className="lms-main">
             <section className="lms-welcome-section">
               <div>
-                <h2 className="lms-welcome-title">Chào mừng trở lại, Minh Anh! 👋</h2>
+                <h2 className="lms-welcome-title">Chào mừng trở lại, {studentName}! 👋</h2>
                 <p className="lms-welcome-subtitle">
                   Bạn đã hoàn thành {todoProgress}% mục tiêu bài tập được giao. Cố gắng giữ phong độ nhé!
                 </p>
@@ -557,7 +578,6 @@ export default function HomePageStudent() {
           </main>
 
           {/* Mobile footer nav */}
-          {/* FIX: Thay thế danh sách phẳng thành cấu trúc ul/li chuẩn HTML Semantic */}
           <nav className="lms-mobile-nav" aria-label="Mobile Navigation">
             <ul>
               <li className="lms-mobile-item active">

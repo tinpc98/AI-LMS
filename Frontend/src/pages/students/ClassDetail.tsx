@@ -5,25 +5,9 @@ import assignmentApi from "../../api/assignmentApi";
 import { classApi } from "../../api/classApi";
 import { lessonApi } from "../../api/lessonApi";
 import axiosClient from "../../api/axiosClient";
-import type { IClass } from "../../interface/classInterface";
 import type { ILesson } from "../../interface/lessonInterface";
-
-// Mock Data
-const MOCK_ASSIGNMENTS = [
-  {
-    id: "1",
-    title: "BTTL 01: Cài đặt danh sách liên kết đơn",
-    deadline: "23:59 - 25/10/2024",
-    status: "Chưa nộp",
-  },
-  {
-    id: "2",
-    title: "BTTL 02: Giải thuật sắp xếp nhanh QuickSort",
-    submitTime: "10:15 - 18/10/2024",
-    status: "Đã chấm điểm",
-    score: "9.0/10",
-  },
-];
+import type { IAssignment } from "../../interface/assignmentInterface";
+import type { IClass } from "../../interface/ClassInterface";
 
 const MOCK_RANKINGS = [
   {
@@ -58,6 +42,8 @@ export default function ClassDetail() {
   const [classInfo, setClassInfo] = useState<IClass | null>(null);
   const [lessons, setLessons] = useState<ILesson[]>([]);
   const [assignments, setAssignments] = useState<IAssignment[]>([]);
+  const [submittedAssignmentIds, setSubmittedAssignmentIds] = useState<string[]>([]);
+  const [submittingAssignment, setSubmittingAssignment] = useState<IAssignment | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const [showPopup, setShowPopup] = useState(false);
@@ -121,10 +107,7 @@ export default function ClassDetail() {
   // ==============================================
   useEffect(() => {
     let timer: any;
-    if (
-      ["COUNTDOWN", "NOT_YET_TIME"].includes(examPopupState) &&
-      countdown > 0
-    ) {
+    if (["COUNTDOWN", "NOT_YET_TIME"].includes(examPopupState) && countdown > 0) {
       timer = setInterval(() => {
         setCountdown((prev) => {
           const nextValue = prev - 1;
@@ -169,9 +152,7 @@ export default function ClassDetail() {
 
     const now = new Date();
     const startTime = new Date(exam.startTime);
-    const diffSeconds = Math.floor(
-      (startTime.getTime() - now.getTime()) / 1000,
-    );
+    const diffSeconds = Math.floor((startTime.getTime() - now.getTime()) / 1000);
 
     setSelectedExam(exam);
 
@@ -233,9 +214,7 @@ export default function ClassDetail() {
     const studentId = getStudentId(); // Lấy ID học sinh
 
     if (!studentId) {
-      setPopupMessage(
-        "Không tìm thấy thông tin đăng nhập. Vui lòng đăng nhập lại!",
-      );
+      setPopupMessage("Không tìm thấy thông tin đăng nhập. Vui lòng đăng nhập lại!");
       setShowPopup(true);
       return;
     }
@@ -254,8 +233,7 @@ export default function ClassDetail() {
       console.error("Lỗi khi tạo phiên làm bài:", error);
       setExamPopupState("NONE");
 
-      const errorMsg =
-        error.response?.data?.message || "Không thể bắt đầu bài thi.";
+      const errorMsg = error.response?.data?.message || "Không thể bắt đầu bài thi.";
       console.log("🔥 LÝ DO BACKEND CHẶN:", errorMsg);
       setPopupMessage(errorMsg);
       setShowPopup(true);
@@ -268,37 +246,24 @@ export default function ClassDetail() {
     }
   };
 
-  // ==============================================
-  // 6. CHẶN HỌC SINH THI LẦN 2
-  // ==============================================
-  const handleStartExam = async () => {
-    const studentId = getStudentId(); // Lấy ID học sinh
-
-    if (!studentId) {
-      setPopupMessage(
-        "Không tìm thấy thông tin đăng nhập. Vui lòng đăng nhập lại!",
-      );
-      setShowPopup(true);
-      return;
-    }
-
+  const handleCancelSubmission = async (assignmentId: string) => {
     try {
-      const res = await axiosClient.post("/api/exam-attempts/start", {
-        examId: id, // Kiểm tra biến id ở 컴포넌트 có đúng không
-        studentId: studentId, // 👉 ĐÃ THÊM STUDENT ID VÀO ĐÂY
-      });
-      navigate(`/exam/${res.data.data._id}`);
-    } catch (error: any) {
-      if (error.response?.status === 400) {
-        // Thay alert() bằng set State mở Popup
-        setPopupMessage(error.response.data.message);
-        setShowPopup(true);
-      } else {
-        setPopupMessage("Có lỗi xảy ra, vui lòng thử lại!");
-        setShowPopup(true);
-      }
+      // TODO: thay thế bằng endpoint hủy nộp bài thực tế khi backend có sẵn.
+      setSubmittedAssignmentIds((prev) => prev.filter((id) => id !== assignmentId));
+      setPopupMessage("Đã hủy nộp bài thành công.");
+      setShowPopup(true);
+    } catch (error: unknown) {
+      setPopupMessage("Không thể hủy nộp bài. Vui lòng thử lại.");
+      setShowPopup(true);
     }
   };
+
+  const openSubmitModal = (item: IAssignment) => {
+    setSubmittingAssignment(item);
+    setPopupMessage("Mở form nộp bài cho bài tập đang chọn.");
+    setShowPopup(true);
+  };
+
   // ==============================================
   // FETCH DỮ LIỆU LỚP HỌC
   // ==============================================
@@ -325,9 +290,7 @@ export default function ClassDetail() {
         setAssignments(assignmentRes);
       } catch (error: unknown) {
         if (axios.isAxiosError(error)) {
-          setErrorMsg(
-            error.response?.data?.message || "Không thể tải dữ liệu lớp học.",
-          );
+          setErrorMsg(error.response?.data?.message || "Không thể tải dữ liệu lớp học.");
         }
       } finally {
         setIsLoading(false);
@@ -350,18 +313,10 @@ export default function ClassDetail() {
   if (errorMsg || !classInfo) {
     return (
       <div className="bg-surface-bright min-h-screen flex flex-col items-center justify-center gap-4">
-        <span className="material-symbols-outlined text-5xl text-error">
-          error
-        </span>
-        <p className="text-error font-semibold text-lg">
-          {errorMsg || "Không tìm thấy thông tin lớp học này."}
-        </p>
-        <Link
-          to="/myclasses"
-          className="text-primary font-bold hover:underline flex items-center gap-1"
-        >
-          <span className="material-symbols-outlined text-sm">arrow_back</span>{" "}
-          Quay lại danh sách lớp học
+        <span className="material-symbols-outlined text-5xl text-error">error</span>
+        <p className="text-error font-semibold text-lg">{errorMsg || "Không tìm thấy thông tin lớp học này."}</p>
+        <Link to="/myclasses" className="text-primary font-bold hover:underline flex items-center gap-1">
+          <span className="material-symbols-outlined text-sm">arrow_back</span> Quay lại danh sách lớp học
         </Link>
       </div>
     );
@@ -391,10 +346,7 @@ export default function ClassDetail() {
       {/* 1. SIDE NAVIGATION BAR */}
       <aside className="fixed left-0 top-0 h-screen w-[280px] bg-surface border-r border-outline-variant flex flex-col p-6 space-y-2 z-50">
         <div className="mb-8 px-2">
-          <h1
-            className="text-2xl font-bold text-primary"
-            style={{ fontFamily: "Hanken Grotesk" }}
-          >
+          <h1 className="text-2xl font-bold text-primary" style={{ fontFamily: "Hanken Grotesk" }}>
             AI Academy
           </h1>
           <p className="text-sm text-secondary">Learning Portal</p>
@@ -450,9 +402,7 @@ export default function ClassDetail() {
               />
             </div>
             <div className="flex flex-col min-w-0">
-              <span className="text-sm text-on-surface font-semibold truncate">
-                Minh Quân
-              </span>
+              <span className="text-sm text-on-surface font-semibold truncate">Minh Quân</span>
               <span className="text-xs text-secondary">ID: 2024AI01</span>
             </div>
           </div>
@@ -503,33 +453,20 @@ export default function ClassDetail() {
                 <div className="inline-flex items-center px-3 py-1 bg-primary-container text-on-primary-container rounded-full text-xs font-semibold mb-4 uppercase tracking-wider">
                   {classInfo.status === "active" ? "Đang học" : "Đã kết thúc"}
                 </div>
-                <h2
-                  className="text-3xl font-bold text-on-surface mb-2"
-                  style={{ fontFamily: "Hanken Grotesk" }}
-                >
+                <h2 className="text-3xl font-bold text-on-surface mb-2" style={{ fontFamily: "Hanken Grotesk" }}>
                   {classInfo.className}
                 </h2>
                 <div className="flex flex-col gap-1 text-secondary">
                   <div className="flex items-center text-sm">
-                    <span className="material-symbols-outlined text-base mr-2">
-                      person
-                    </span>
+                    <span className="material-symbols-outlined text-base mr-2">person</span>
                     <span>
-                      Giảng viên:{" "}
-                      <strong>
-                        {classInfo.teacherId?.fullName ?? "Chưa rõ"}
-                      </strong>
+                      Giảng viên: <strong>{classInfo.teacherId?.fullName ?? "Chưa rõ"}</strong>
                     </span>
                   </div>
                   <div className="flex items-center text-sm">
-                    <span className="material-symbols-outlined text-base mr-2">
-                      groups
-                    </span>
+                    <span className="material-symbols-outlined text-base mr-2">groups</span>
                     <span>
-                      Sĩ số:{" "}
-                      <strong>
-                        {classInfo.students?.length ?? 0} học sinh
-                      </strong>
+                      Sĩ số: <strong>{classInfo.students?.length ?? 0} học sinh</strong>
                     </span>
                   </div>
                 </div>
@@ -560,9 +497,7 @@ export default function ClassDetail() {
                     <span className="text-xl font-bold text-primary">65%</span>
                   </div>
                 </div>
-                <span className="text-xs font-semibold mt-2 text-secondary">
-                  Tiến độ cá nhân
-                </span>
+                <span className="text-xs font-semibold mt-2 text-secondary">Tiến độ cá nhân</span>
               </div>
             </div>
           </div>
@@ -571,17 +506,13 @@ export default function ClassDetail() {
             <div className="flex-1 bg-primary rounded-xl p-6 text-on-primary shadow-xl relative group cursor-pointer overflow-hidden transition-all hover:-translate-y-1">
               <div className="relative z-10">
                 <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center mb-4">
-                  <span
-                    className="material-symbols-outlined text-3xl"
-                    style={{ fontVariationSettings: "'FILL' 1" }}
-                  >
+                  <span className="material-symbols-outlined text-3xl" style={{ fontVariationSettings: "'FILL' 1" }}>
                     video_chat
                   </span>
                 </div>
                 <h3 className="text-lg font-bold mb-1">Phòng học trực tuyến</h3>
                 <p className="text-xs opacity-90 mb-4">
-                  Lớp học đang diễn ra hoặc có lịch hẹn. Vào lớp ngay để thảo
-                  luận trực tiếp.
+                  Lớp học đang diễn ra hoặc có lịch hẹn. Vào lớp ngay để thảo luận trực tiếp.
                 </p>
                 <div className="flex items-center text-xs font-bold uppercase tracking-widest mt-auto">
                   Vào Học Ngay{" "}
@@ -624,9 +555,7 @@ export default function ClassDetail() {
             {activeTab === "lessons" && (
               <div className="space-y-4">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold text-on-surface">
-                    Danh sách bài học
-                  </h3>
+                  <h3 className="text-lg font-semibold text-on-surface">Danh sách bài học</h3>
                   <span className="px-3 py-1 bg-surface-container-high rounded text-xs text-secondary font-medium">
                     {lessons.length} bài học thực tế
                   </span>
@@ -634,12 +563,8 @@ export default function ClassDetail() {
 
                 {lessons.length === 0 ? (
                   <div className="border-2 border-dashed border-outline-variant rounded-xl p-12 text-center text-secondary">
-                    <span className="material-symbols-outlined text-4xl mb-2 text-outline">
-                      description
-                    </span>
-                    <p className="text-sm">
-                      Giảng viên chưa đăng tải giáo trình nào cho lớp này.
-                    </p>
+                    <span className="material-symbols-outlined text-4xl mb-2 text-outline">description</span>
+                    <p className="text-sm">Giảng viên chưa đăng tải giáo trình nào cho lớp này.</p>
                   </div>
                 ) : (
                   lessons.map((lesson) => (
@@ -661,8 +586,7 @@ export default function ClassDetail() {
                             {lesson.title}
                           </h4>
                           <p className="text-xs text-secondary line-clamp-1 mt-0.5">
-                            {lesson.description ||
-                              "Không có mô tả chi tiết cho bài học này."}
+                            {lesson.description || "Không có mô tả chi tiết cho bài học này."}
                           </p>
                         </div>
                       </div>
@@ -687,9 +611,7 @@ export default function ClassDetail() {
                               className="p-2 text-secondary hover:bg-surface-container-high rounded-lg transition-colors"
                               title={file.name}
                             >
-                              <span className="material-symbols-outlined text-xl">
-                                download
-                              </span>
+                              <span className="material-symbols-outlined text-xl">download</span>
                             </a>
                           ))}
                       </div>
@@ -704,131 +626,72 @@ export default function ClassDetail() {
               <div className="space-y-6">
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div className="p-4 bg-primary-container/10 border border-primary/20 rounded-xl">
-                    <span className="text-xs uppercase font-bold text-primary">
-                      Chưa nộp
-                    </span>
-                    <div className="text-2xl font-bold text-primary mt-1">
-                      01
-                    </div>
+                    <span className="text-xs uppercase font-bold text-primary">Chưa nộp</span>
+                    <div className="text-2xl font-bold text-primary mt-1">01</div>
                   </div>
                   <div className="p-4 bg-secondary-container/20 border border-secondary/20 rounded-xl">
-                    <span className="text-xs uppercase font-bold text-secondary">
-                      Đã nộp
-                    </span>
-                    <div className="text-2xl font-bold text-secondary mt-1">
-                      01
-                    </div>
+                    <span className="text-xs uppercase font-bold text-secondary">Đã nộp</span>
+                    <div className="text-2xl font-bold text-secondary mt-1">01</div>
                   </div>
                   <div className="p-4 bg-surface-container-high rounded-xl">
-                    <span className="text-xs uppercase font-bold text-on-surface-variant">
-                      Điểm trung bình
-                    </span>
-                    <div className="text-2xl font-bold text-on-surface mt-1">
-                      9.0
-                    </div>
+                    <span className="text-xs uppercase font-bold text-on-surface-variant">Điểm trung bình</span>
+                    <div className="text-2xl font-bold text-on-surface mt-1">9.0</div>
                   </div>
                 </div>
 
                 <div className="bg-white border border-outline-variant rounded-xl divide-y divide-outline-variant">
-                  {MOCK_ASSIGNMENTS.map((item) => (
-                    <div
-                      key={item.id}
-                      className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
-                    >
-                      <div>
-                        <h4 className="font-semibold text-sm sm:text-base">
-                          {item.title}
-                        </h4>
+                  {assignments.map((item) => (
+                    <div key={item._id} className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                      <div className="min-w-0">
+                        <h4 className="font-semibold text-sm sm:text-base">{item.title}</h4>
+                        {item.description && <p className="text-xs text-secondary mt-1">{item.description}</p>}
                         <p className="text-xs text-secondary mt-0.5">
-                          {item.deadline || `Nộp lúc: ${item.submitTime}`}
+                          Hạn nộp: {new Date(item.deadline).toLocaleString("vi-VN")}
                         </p>
                       </div>
                       <div className="flex items-center space-x-4 self-end sm:self-auto">
-                        {item.score ? (
-                          <div className="text-right">
-                            <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-secondary-container text-on-secondary-container">
-                              {item.status}
+                        {submittedAssignmentIds.includes(item._id) ? (
+                          <>
+                            <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-success-container text-on-success-container">
+                              Đã nộp
                             </span>
-                            <div className="mt-1 font-bold text-primary text-sm">
-                              {item.score}
-                            </div>
-                          </div>
+                            <button
+                              onClick={() => handleCancelSubmission(item._id)}
+                              className="rounded-lg border border-outline-variant px-3 py-1.5 text-xs font-semibold text-on-surface hover:bg-surface-container-low"
+                            >
+                              Hủy nộp bài
+                            </button>
+                          </>
                         ) : (
-                          <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-error-container text-on-error-container">
-                            {item.status}
-                          </span>
+                          <>
+                            <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-error-container text-on-error-container">
+                              Chưa nộp
+                            </span>
+                            <button
+                              onClick={() => openSubmitModal(item)}
+                              className="flex items-center space-x-1 bg-primary text-on-primary px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-primary/90"
+                            >
+                              <span className="material-symbols-outlined text-base">upload</span>
+                              <span>Nộp bài</span>
+                            </button>
+                          </>
                         )}
-                        <button className="flex items-center space-x-1 bg-primary text-on-primary px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-primary/90">
-                          <span className="material-symbols-outlined text-base">
-                            upload
-                          </span>
-                          <span>Nộp bài</span>
-                        </button>
                       </div>
                     </div>
-                  ) : (
-                    assignments.map((item) => (
-                      <div
-                        key={item._id}
-                        className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
-                      >
-                        <div className="min-w-0">
-                          <h4 className="font-semibold text-sm sm:text-base">{item.title}</h4>
-                          {item.description && <p className="text-xs text-secondary mt-1">{item.description}</p>}
-                          <p className="text-xs text-secondary mt-0.5">
-                            Hạn nộp: {new Date(item.deadline).toLocaleString("vi-VN")}
-                          </p>
-                        </div>
-                        <div className="flex items-center space-x-4 self-end sm:self-auto">
-                          {submittedAssignmentIds.includes(item._id) ? (
-                            <>
-                              <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-success-container text-on-success-container">
-                                Đã nộp
-                              </span>
-                              <button
-                                onClick={() => handleCancelSubmission(item._id)}
-                                className="rounded-lg border border-outline-variant px-3 py-1.5 text-xs font-semibold text-on-surface hover:bg-surface-container-low"
-                              >
-                                Hủy nộp bài
-                              </button>
-                            </>
-                          ) : (
-                            <>
-                              <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-error-container text-on-error-container">
-                                Chưa nộp
-                              </span>
-                              <button
-                                onClick={() => openSubmitModal(item)}
-                                className="flex items-center space-x-1 bg-primary text-on-primary px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-primary/90"
-                              >
-                                <span className="material-symbols-outlined text-base">upload</span>
-                                <span>Nộp bài</span>
-                              </button>
-                            </>
-                          )}
-                        </div>
-                      </div>
-                    ))
-                  )}
+                  ))}
                 </div>
               </div>
             )}
-
             {/* TAB 3: THI TRỰC TUYẾN - ĐÃ FIX THEO YÊU CẦU MỚI */}
             {activeTab === "exams" && (
               <div className="max-w-2xl mx-auto py-4">
                 {!visibleExam ? (
                   /* YÊU CẦU 1: UI CỨNG KHÔNG CÓ BÀI KIỂM TRA NÀO */
                   <div className="bg-white border border-outline-variant rounded-2xl p-12 text-center shadow-lg">
-                    <span className="material-symbols-outlined text-6xl text-gray-300 mb-4">
-                      assignment_late
-                    </span>
-                    <h3 className="text-xl font-bold text-gray-700">
-                      Hiện tại chưa có bài kiểm tra nào cả
-                    </h3>
+                    <span className="material-symbols-outlined text-6xl text-gray-300 mb-4">assignment_late</span>
+                    <h3 className="text-xl font-bold text-gray-700">Hiện tại chưa có bài kiểm tra nào cả</h3>
                     <p className="text-sm text-gray-400 mt-2">
-                      Các đề thi của lớp học sẽ hiển thị tại đây 1 tiếng trước
-                      giờ thi bắt đầu.
+                      Các đề thi của lớp học sẽ hiển thị tại đây 1 tiếng trước giờ thi bắt đầu.
                     </p>
                   </div>
                 ) : (
@@ -839,46 +702,33 @@ export default function ClassDetail() {
                       <div className="flex flex-col sm:flex-row justify-between items-start gap-4 mb-6">
                         <div>
                           <span className="inline-block px-3 py-1 bg-error-container text-on-error-container rounded-full text-xs font-bold mb-3 animate-pulse">
-                            {new Date(visibleExam.startTime).getTime() >
-                            new Date().getTime()
+                            {new Date(visibleExam.startTime).getTime() > new Date().getTime()
                               ? "Sắp diễn ra"
                               : "Đang diễn ra"}
                           </span>
-                          <h3 className="text-xl font-bold text-on-surface">
-                            {visibleExam.title}
-                          </h3>
+                          <h3 className="text-xl font-bold text-on-surface">{visibleExam.title}</h3>
                           <p className="text-xs text-secondary mt-1">
-                            Thời gian làm bài: {visibleExam.duration || 45} phút
-                            | Hình thức:{" "}
+                            Thời gian làm bài: {visibleExam.duration || 45} phút | Hình thức:{" "}
                             {visibleExam.format || "Trắc nghiệm & Tự luận"}
                           </p>
                         </div>
                         <div className="sm:text-right flex sm:flex-col items-center sm:items-end gap-2">
                           <div className="text-2xl font-mono font-bold text-primary">
-                            {new Date(visibleExam.startTime).toLocaleTimeString(
-                              [],
-                              {
-                                hour: "2-digit",
-                                minute: "2-digit",
-                              },
-                            )}
+                            {new Date(visibleExam.startTime).toLocaleTimeString([], {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}
                           </div>
                           <span className="text-[10px] text-secondary uppercase font-bold tracking-wider">
-                            Bắt đầu:{" "}
-                            {new Date(visibleExam.startTime).toLocaleDateString(
-                              "vi-VN",
-                            )}
+                            Bắt đầu: {new Date(visibleExam.startTime).toLocaleDateString("vi-VN")}
                           </span>
                         </div>
                       </div>
                       <div className="p-4 bg-surface-container-high rounded-xl mb-6 flex items-start space-x-3">
-                        <span className="material-symbols-outlined text-error mt-0.5">
-                          info
-                        </span>
+                        <span className="material-symbols-outlined text-error mt-0.5">info</span>
                         <p className="text-xs text-on-surface-variant">
-                          Lưu ý quan trọng: Hệ thống sẽ kích hoạt AI giám sát và
-                          tự động nộp bài khi hết giờ. Hãy kiểm tra kết nối mạng
-                          trước khi vào phòng.
+                          Lưu ý quan trọng: Hệ thống sẽ kích hoạt AI giám sát và tự động nộp bài khi hết giờ. Hãy kiểm
+                          tra kết nối mạng trước khi vào phòng.
                         </p>
                       </div>
                       <div className="flex gap-4">
@@ -907,13 +757,10 @@ export default function ClassDetail() {
                     <div>
                       <div className="flex items-center space-x-2 mb-1">
                         <span className="text-xs font-bold">Thanh Thảo</span>
-                        <span className="text-[10px] text-secondary">
-                          09:12 AM
-                        </span>
+                        <span className="text-[10px] text-secondary">09:12 AM</span>
                       </div>
                       <div className="bg-white p-3 rounded-2xl rounded-tl-none shadow-sm text-xs sm:text-sm">
-                        Mọi người ơi, tài liệu chương mới thầy cập nhật nằm ở
-                        mục nào vậy ạ?
+                        Mọi người ơi, tài liệu chương mới thầy cập nhật nằm ở mục nào vậy ạ?
                       </div>
                     </div>
                   </div>
@@ -921,12 +768,9 @@ export default function ClassDetail() {
                   {/* AI Suggestion */}
                   <div className="flex items-center justify-center my-2">
                     <div className="bg-surface-container-highest border border-primary/20 px-4 py-1.5 rounded-full text-xs flex items-center space-x-2 text-primary">
-                      <span className="material-symbols-outlined text-sm animate-pulse">
-                        auto_awesome
-                      </span>
+                      <span className="material-symbols-outlined text-sm animate-pulse">auto_awesome</span>
                       <span>
-                        AI khuyên dùng: Bạn có thể xem các slide PDF tải về trực
-                        tiếp tại Tab <b>Bài giảng</b>.
+                        AI khuyên dùng: Bạn có thể xem các slide PDF tải về trực tiếp tại Tab <b>Bài giảng</b>.
                       </span>
                     </div>
                   </div>
@@ -941,14 +785,11 @@ export default function ClassDetail() {
                         <span className="text-xs font-bold text-primary">
                           Thầy {classInfo.teacherId?.fullName || "Nguyễn Văn A"}
                         </span>
-                        <span className="text-[10px] text-secondary">
-                          09:20 AM
-                        </span>
+                        <span className="text-[10px] text-secondary">09:20 AM</span>
                       </div>
                       <div className="bg-primary-container/10 border border-primary/10 p-3 rounded-2xl rounded-tl-none text-xs sm:text-sm">
-                        Chào các em, thầy vừa bổ sung các tệp đính kèm mới vào
-                        danh sách bài học bên trên rồi nhé. Hãy chủ động tải về
-                        trước buổi học chiều nay.
+                        Chào các em, thầy vừa bổ sung các tệp đính kèm mới vào danh sách bài học bên trên rồi nhé. Hãy
+                        chủ động tải về trước buổi học chiều nay.
                       </div>
                     </div>
                   </div>
@@ -964,9 +805,7 @@ export default function ClassDetail() {
                     type="text"
                   />
                   <button className="p-2.5 bg-primary text-on-primary rounded-xl hover:bg-primary/90 transition-transform active:scale-95 flex items-center justify-center">
-                    <span className="material-symbols-outlined text-xl">
-                      send
-                    </span>
+                    <span className="material-symbols-outlined text-xl">send</span>
                   </button>
                 </div>
               </div>
@@ -979,9 +818,7 @@ export default function ClassDetail() {
           {/* Widget Bảng xếp hạng */}
           <div className="col-span-12 md:col-span-4 bg-white p-6 rounded-xl border border-outline-variant shadow-sm">
             <h4 className="font-semibold mb-4 flex items-center text-sm sm:text-base">
-              <span className="material-symbols-outlined mr-2 text-primary">
-                analytics
-              </span>
+              <span className="material-symbols-outlined mr-2 text-primary">analytics</span>
               Xếp hạng lớp học
             </h4>
             <div className="space-y-3">
@@ -1001,15 +838,11 @@ export default function ClassDetail() {
                     >
                       {user.short}
                     </div>
-                    <span
-                      className={`text-xs sm:text-sm truncate ${user.isUser ? "font-bold" : "font-medium"}`}
-                    >
+                    <span className={`text-xs sm:text-sm truncate ${user.isUser ? "font-bold" : "font-medium"}`}>
                       {user.name}
                     </span>
                   </div>
-                  <span className="text-xs sm:text-sm font-bold text-primary ml-2">
-                    {user.score}
-                  </span>
+                  <span className="text-xs sm:text-sm font-bold text-primary ml-2">{user.score}</span>
                 </div>
               ))}
             </div>
@@ -1019,20 +852,14 @@ export default function ClassDetail() {
           <div className="col-span-12 md:col-span-8 bg-surface-container-low p-6 rounded-xl border border-outline-variant border-dashed flex items-center justify-center text-center">
             <div className="space-y-3 max-w-xl">
               <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center text-primary shadow-inner mx-auto">
-                <span className="material-symbols-outlined text-2xl">
-                  auto_awesome
-                </span>
+                <span className="material-symbols-outlined text-2xl">auto_awesome</span>
               </div>
               <div>
-                <h4 className="font-bold text-on-surface text-sm sm:text-base">
-                  AI Learning Insights
-                </h4>
+                <h4 className="font-bold text-on-surface text-sm sm:text-base">AI Learning Insights</h4>
                 <p className="text-xs sm:text-sm text-secondary mt-1 px-4">
-                  "Hệ thống nhận thấy lớp học đang triển khai chương trình học
-                  mới. Bạn hãy hoàn thành việc xem các video bài giảng thực tế
-                  của thầy{" "}
-                  <b>{classInfo.teacherId?.fullName ?? "Giảng viên"}</b> để nắm
-                  chắc kiến thức trước kỳ thi!"
+                  "Hệ thống nhận thấy lớp học đang triển khai chương trình học mới. Bạn hãy hoàn thành việc xem các
+                  video bài giảng thực tế của thầy <b>{classInfo.teacherId?.fullName ?? "Giảng viên"}</b> để nắm chắc
+                  kiến thức trước kỳ thi!"
                 </p>
               </div>
               <button className="text-primary font-bold text-xs hover:underline block mx-auto">
@@ -1051,16 +878,10 @@ export default function ClassDetail() {
       {examPopupState === "NO_EXAM" && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in">
           <div className="bg-white p-8 rounded-2xl max-w-sm w-full text-center border-2 border-red-500 shadow-2xl">
-            <span className="material-symbols-outlined text-5xl text-red-500 mb-2">
-              event_busy
-            </span>
+            <span className="material-symbols-outlined text-5xl text-red-500 mb-2">event_busy</span>
             <h3 className="text-xl font-bold text-red-600 mb-2">Thông báo</h3>
-            <p className="text-gray-700 font-medium">
-              Kỳ thi này không tồn tại hoặc đã bị gỡ!
-            </p>
-            <p className="text-sm text-gray-400 mt-4">
-              (Tự động đóng sau 3 giây...)
-            </p>
+            <p className="text-gray-700 font-medium">Kỳ thi này không tồn tại hoặc đã bị gỡ!</p>
+            <p className="text-sm text-gray-400 mt-4">(Tự động đóng sau 3 giây...)</p>
           </div>
         </div>
       )}
@@ -1069,29 +890,16 @@ export default function ClassDetail() {
       {examPopupState === "NOT_YET_TIME" && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in p-4">
           <div className="bg-white p-8 rounded-2xl max-w-md w-full text-center border border-outline-variant shadow-2xl">
-            <span className="material-symbols-outlined text-5xl text-yellow-500 mb-3">
-              warning
-            </span>
-            <h3 className="text-2xl font-bold text-on-surface mb-2">
-              Chưa đến giờ thi!
-            </h3>
+            <span className="material-symbols-outlined text-5xl text-yellow-500 mb-3">warning</span>
+            <h3 className="text-2xl font-bold text-on-surface mb-2">Chưa đến giờ thi!</h3>
             <p className="text-gray-700 font-medium mb-4">
-              Bài thi{" "}
-              <span className="text-primary font-bold">
-                "{selectedExam?.title}"
-              </span>{" "}
-              chưa mở phòng chờ.
+              Bài thi <span className="text-primary font-bold">"{selectedExam?.title}"</span> chưa mở phòng chờ.
             </p>
             <div className="bg-surface-container-high py-4 px-6 rounded-xl mb-6">
-              <p className="text-xs text-secondary mb-1">
-                Thời gian đếm ngược thực tế:
-              </p>
-              <p className="text-2xl font-mono font-bold text-error">
-                {formatTime(countdown)}
-              </p>
+              <p className="text-xs text-secondary mb-1">Thời gian đếm ngược thực tế:</p>
+              <p className="text-2xl font-mono font-bold text-error">{formatTime(countdown)}</p>
               <p className="text-xs text-gray-500 mt-2">
-                Bạn vui lòng quay lại khi thời gian còn dưới 5 phút để vào phòng
-                chờ đếm ngược.
+                Bạn vui lòng quay lại khi thời gian còn dưới 5 phút để vào phòng chờ đếm ngược.
               </p>
             </div>
             <button
@@ -1110,19 +918,13 @@ export default function ClassDetail() {
           <div className="bg-surface w-full max-w-md rounded-3xl shadow-2xl p-8 text-center relative overflow-hidden">
             <div className="absolute -top-24 -right-24 w-48 h-48 bg-primary/20 blur-3xl rounded-full"></div>
 
-            <h2 className="text-2xl font-bold text-on-surface mb-2 relative z-10">
-              Phòng chờ thi
-            </h2>
-            <p className="text-primary font-bold text-lg mb-8 relative z-10">
-              {selectedExam?.title}
-            </p>
+            <h2 className="text-2xl font-bold text-on-surface mb-2 relative z-10">Phòng chờ thi</h2>
+            <p className="text-primary font-bold text-lg mb-8 relative z-10">{selectedExam?.title}</p>
 
             {/* Trạng thái đếm ngược phòng chờ thực tế */}
             {examPopupState === "COUNTDOWN" && (
               <div className="mb-8 relative z-10">
-                <p className="text-on-surface-variant font-medium mb-4">
-                  Hệ thống sẽ mở đề sau:
-                </p>
+                <p className="text-on-surface-variant font-medium mb-4">Hệ thống sẽ mở đề sau:</p>
                 <div className="text-5xl font-mono font-bold text-primary bg-primary/10 py-6 rounded-2xl border-2 border-primary/20 shadow-inner">
                   {formatTime(countdown)}
                 </div>
@@ -1133,12 +935,8 @@ export default function ClassDetail() {
             {["READY", "LOADING"].includes(examPopupState) && (
               <div className="mb-8 relative z-10">
                 <div className="text-5xl mb-4">✅</div>
-                <h3 className="text-2xl font-bold text-green-600 mb-2">
-                  Đã đến giờ thi!
-                </h3>
-                <p className="text-gray-600">
-                  Hãy chuẩn bị sẵn sàng và bấm nút bên dưới để nhận đề.
-                </p>
+                <h3 className="text-2xl font-bold text-green-600 mb-2">Đã đến giờ thi!</h3>
+                <p className="text-gray-600">Hãy chuẩn bị sẵn sàng và bấm nút bên dưới để nhận đề.</p>
               </div>
             )}
 
@@ -1152,9 +950,7 @@ export default function ClassDetail() {
               </button>
 
               <button
-                disabled={
-                  examPopupState === "COUNTDOWN" || examPopupState === "LOADING"
-                }
+                disabled={examPopupState === "COUNTDOWN" || examPopupState === "LOADING"}
                 onClick={handleStartAttemptFromLobby}
                 className={`flex-1 py-3 font-bold rounded-xl transition-all shadow-md flex items-center justify-center gap-2 ${
                   ["READY", "LOADING"].includes(examPopupState)
@@ -1163,9 +959,7 @@ export default function ClassDetail() {
                 }`}
               >
                 {examPopupState === "LOADING" ? (
-                  <span className="animate-spin material-symbols-outlined">
-                    autorenew
-                  </span>
+                  <span className="animate-spin material-symbols-outlined">autorenew</span>
                 ) : (
                   "Bắt đầu ngay"
                 )}
@@ -1178,16 +972,10 @@ export default function ClassDetail() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
           <div className="bg-white p-6 md:p-8 rounded-2xl shadow-2xl text-center max-w-sm w-[90%] mx-auto transform animate-in zoom-in-95 duration-200">
             <div className="w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-4">
-              <span className="material-symbols-outlined text-3xl font-bold text-error">
-                block
-              </span>
+              <span className="material-symbols-outlined text-3xl font-bold text-error">block</span>
             </div>
-            <h3 className="font-bold text-xl text-gray-900 mb-2">
-              Không thể làm bài
-            </h3>
-            <p className="text-gray-600 mb-6 text-sm leading-relaxed">
-              {popupMessage}
-            </p>
+            <h3 className="font-bold text-xl text-gray-900 mb-2">Không thể làm bài</h3>
+            <p className="text-gray-600 mb-6 text-sm leading-relaxed">{popupMessage}</p>
             <div className="flex gap-3">
               <button
                 onClick={() => navigate("/")} // Đổi link này về trang chủ / danh sách lớp của bạn
