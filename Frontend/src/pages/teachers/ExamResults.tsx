@@ -1,13 +1,13 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import axiosClient from "../../api/axiosClient";
 
 export default function ExamResults() {
   const { examId } = useParams();
 
-  const [studentList, setStudentList] = useState([]);
+  const [studentList, setStudentList] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [examInfo, setExamInfo] = useState(null);
+  const [examInfo, setExamInfo] = useState<any>(null);
 
   useEffect(() => {
     const fetchExamData = async (isFirstLoad = false) => {
@@ -50,8 +50,8 @@ export default function ExamResults() {
   }, [examId]);
 
   // Cấu hình giao diện theo trạng thái
-  const getStatusConfig = (status) => {
-    const configs = {
+  const getStatusConfig = (status: any) => {
+    const configs: Record<string, any> = {
       GRADED: {
         label: "Graded",
         containerColor: "bg-white border-gray-200 hover:border-primary/30",

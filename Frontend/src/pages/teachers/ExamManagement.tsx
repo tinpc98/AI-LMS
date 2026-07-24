@@ -5,8 +5,8 @@ import { useNavigate } from "react-router-dom";
 const ExamManagement = () => {
   const navigate = useNavigate();
   const [isExamModalOpen, setIsExamModalOpen] = useState(false);
-  const [classes, setClasses] = useState([]);
-  const [exams, setExams] = useState([]);
+  const [classes, setClasses] = useState<any[]>([]);
+  const [exams, setExams] = useState<any[]>([]);
   const [stats, setStats] = useState({
     total: 0,
     ongoing: 0,
@@ -15,7 +15,7 @@ const ExamManagement = () => {
   });
   const [filterClass, setFilterClass] = useState("all");
   const [filterStatus, setFilterStatus] = useState("all");
-  const [selectedExamDetail, setSelectedExamDetail] = useState(null);
+  const [selectedExamDetail, setSelectedExamDetail] = useState<any>(null);
 
   // 1. STATE FORM TẠO KỲ THI
   const initialFormState = {
@@ -29,10 +29,11 @@ const ExamManagement = () => {
     essayPoints: 0,
     classId: "",
   };
-  const [examForm, setExamForm] = useState(initialFormState);
+  const [examForm, setExamForm] = useState<any>(initialFormState);
 
   // HÀM TÍNH TOÁN TRẠNG THÁI REAL-TIME (Dựa vào thời gian và DB)
-  const getExamStatusInfo = (exam) => {
+  const getExamStatusInfo = (exam: any) => {
+    if (!exam) return { id: "unknown", label: "Không xác định", color: "bg-gray-100 text-gray-700" };
     const now = new Date().getTime();
     const start = new Date(exam.startTime).getTime();
     const end = start + exam.duration * 60000;

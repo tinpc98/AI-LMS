@@ -34,6 +34,10 @@ const assignmentApi = {
     });
   },
 
+  cancelSubmission: async (assignmentId: string): Promise<any> => {
+    return axiosClient.delete(`/api/assignments/submit/${assignmentId}`);
+  },
+
   getSubmissionsByAssignment: async (assignmentId: string): Promise<any[]> => {
     const response = await axiosClient.get(`/api/assignments/submissions/${assignmentId}`);
     return response.data.submissions ?? [];

@@ -34,11 +34,11 @@ export const autoGenerateExam = async (req, res) => {
     });
 
     res.status(201).json({
-      message: "Tạo đề thành công!",
+      message: "Tạo đề thi thành công!",
       data: newExam,
     });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: "Lỗi hệ thống khi sinh đề thi. Vui lòng thử lại sau." });
   }
 };
 export const getExamsByClass = async (req, res) => {
@@ -53,7 +53,7 @@ export const getExamsByClass = async (req, res) => {
       data: exams,
     });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: "Lỗi hệ thống khi lấy danh sách đề thi." });
   }
 };
 export const getAllExams = async (req, res) => {
@@ -82,7 +82,7 @@ export const getAllExams = async (req, res) => {
       data: updatedExams,
     });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json({ success: false, message: "Lỗi hệ thống khi tải danh sách đề thi." });
   }
 };
 export const getExamById = async (req, res) => {
@@ -98,6 +98,6 @@ export const getExamById = async (req, res) => {
 
     res.status(200).json({ data: exam });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: "Lỗi hệ thống khi tải chi tiết đề thi." });
   }
 };

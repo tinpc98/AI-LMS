@@ -8,30 +8,18 @@ import axiosClient from "../../api/axiosClient";
 import type { ILesson } from "../../interface/lessonInterface";
 import type { IAssignment } from "../../interface/assignmentInterface";
 import type { IClass } from "../../interface/ClassInterface";
+import LiveRoomModal from "../../components/features/LiveRoomModal";
+import SubmitAssignmentModal from "../../components/features/SubmitAssignmentModal";
+import { useJitsiLiveSession } from "../../hooks/useJitsiLiveSession";
+import type { IExam } from "../../interface/examInterface";
+import { StudentLiveSidebar } from "../../components/features/student/StudentLiveSidebar";
+import { toast } from "../../utils/toast";
+
 
 const MOCK_RANKINGS = [
-  {
-    rank: 1,
-    name: "Trần Quốc Quân",
-    short: "TQ",
-    score: 9.8,
-    bg: "bg-yellow-100 text-yellow-700 border-yellow-200",
-  },
-  {
-    rank: 2,
-    name: "Lê Anh",
-    short: "LA",
-    score: 9.5,
-    bg: "bg-slate-100 text-slate-700 border-slate-200",
-  },
-  {
-    rank: 12,
-    name: "Bạn (Minh Quân)",
-    short: "MQ",
-    score: 8.5,
-    bg: "bg-primary-container text-on-primary-container",
-    isUser: true,
-  },
+  { rank: 1, name: "Trần Quốc Quân", short: "TQ", score: 9.8, bg: "bg-yellow-100 text-yellow-700 border-yellow-200", isUser: false },
+  { rank: 2, name: "Lê Anh", short: "LA", score: 9.5, bg: "bg-slate-100 text-slate-700 border-slate-200", isUser: false },
+  { rank: 12, name: "Bạn (Minh Quân)", short: "MQ", score: 8.5, bg: "bg-primary-container text-on-primary-container", isUser: true },
 ];
 
 export default function ClassDetail() {
@@ -44,21 +32,76 @@ export default function ClassDetail() {
   const [assignments, setAssignments] = useState<IAssignment[]>([]);
   const [submittedAssignmentIds, setSubmittedAssignmentIds] = useState<string[]>([]);
   const [submittingAssignment, setSubmittingAssignment] = useState<IAssignment | null>(null);
+  const [isSubmitModalOpen, setIsSubmitModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const [showPopup, setShowPopup] = useState(false);
   const [popupMessage, setPopupMessage] = useState("");
-  // State hỗ trợ tab chat/thảo luận mẫu
+  const [popupTitle, setPopupTitle] = useState("Thông báo");
+  const [popupType, setPopupType] = useState<"success" | "error" | "info">("info");
+  const [searchQuery, setSearchQuery] = useState("");
+
+  // --- Custom Hook Chức năng Học Online ---
+  const {
+    isLiveRoomOpen,
+    setIsLiveRoomOpen,
+    liveRoomName,
+    jwtToken,
+    appId,
+    isLiveLoading,
+    notificationMessage,
+    setNotificationMessage,
+    handleJoinLiveClass,
+  } = useJitsiLiveSession({ classId, isTeacher: false });
+
+  const [customRoomCode, setCustomRoomCode] = useState("");
+  const [showRoomCodeInput, setShowRoomCodeInput] = useState(false);
+  
+  // State hỗ trợ tab chat/thảo luận
   const [chatMessage, setChatMessage] = useState("");
+  const [chatMessages, setChatMessages] = useState<
+    { id: string; sender: string; avatar: string; text: string; time: string; isTeacher?: boolean; isAi?: boolean; isUser?: boolean }[]
+  >([
+    {
+      id: "1",
+      sender: "Thanh Thảo",
+      avatar: "TT",
+      text: "Mọi người ơi, tài liệu chương mới thầy cập nhật nằm ở mục nào vậy ạ?",
+      time: "09:12 AM",
+    },
+    {
+      id: "2",
+      sender: "AI Assistant",
+      avatar: "AI",
+      text: "AI khuyên dùng: Bạn có thể xem các slide PDF tải về trực tiếp tại Tab Bài giảng.",
+      time: "09:15 AM",
+      isAi: true,
+    },
+  ]);
+
+  const handleSendMessage = () => {
+    if (!chatMessage.trim()) return;
+    const newMsg = {
+      id: Date.now().toString(),
+      sender: "Bạn (Minh Quân)",
+      avatar: "MQ",
+      text: chatMessage.trim(),
+      time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+      isUser: true,
+    };
+    setChatMessages((prev) => [...prev, newMsg]);
+    setChatMessage("");
+  };
+
   const navigate = useNavigate();
   // ==============================================
   // 1. STATE QUẢN LÝ LOBBY PHÒNG THI
   // ==============================================
-  const [exams, setExams] = useState<any[]>([]); // Đã bỏ hardcode classExams, dùng state lấy từ DB
+  const [exams, setExams] = useState<IExam[]>([]);
   const [examPopupState, setExamPopupState] = useState<
     "NONE" | "NO_EXAM" | "NOT_YET_TIME" | "COUNTDOWN" | "READY" | "LOADING"
   >("NONE");
-  const [selectedExam, setSelectedExam] = useState<any>(null);
+  const [selectedExam, setSelectedExam] = useState<IExam | null>(null);
   const [countdown, setCountdown] = useState(0);
 
   // ==============================================
@@ -68,20 +111,25 @@ export default function ClassDetail() {
     const fetchClassExams = async () => {
       if (!classId) return;
 
-      // KHÔNG gọi setIsLoading(true) ở đây để tránh đụng độ với API load classInfo
       try {
         const response = await axiosClient.get(`/api/exams/class/${classId}`);
         setExams(response.data.data || response.data || []);
       } catch (error) {
         console.error("Lỗi khi lấy danh sách đề thi của lớp:", error);
-        // KHÔNG dùng setErrorMsg() ở đây để tránh sập toàn bộ trang
-        // Nếu API lỗi (VD: Backend chưa code xong), cứ mặc định gán mảng rỗng
         setExams([]);
       }
     };
 
     fetchClassExams();
   }, [classId]);
+
+
+  useEffect(() => {
+    if (notificationMessage) {
+      toast.info(notificationMessage, "Buổi học trực tuyến");
+      setNotificationMessage(null);
+    }
+  }, [notificationMessage, setNotificationMessage]);
   // Lọc lấy đề thi phù hợp để hiển thị (Yêu cầu 2: chỉ hiển thị trước giờ thi 1 tiếng)
   const getVisibleExam = () => {
     if (!exams || exams.length === 0) return null;
@@ -214,8 +262,7 @@ export default function ClassDetail() {
     const studentId = getStudentId(); // Lấy ID học sinh
 
     if (!studentId) {
-      setPopupMessage("Không tìm thấy thông tin đăng nhập. Vui lòng đăng nhập lại!");
-      setShowPopup(true);
+      toast.error("Không tìm thấy thông tin đăng nhập. Vui lòng đăng nhập lại!", "Lỗi xác thực");
       return;
     }
 
@@ -235,8 +282,7 @@ export default function ClassDetail() {
 
       const errorMsg = error.response?.data?.message || "Không thể bắt đầu bài thi.";
       console.log("🔥 LÝ DO BACKEND CHẶN:", errorMsg);
-      setPopupMessage(errorMsg);
-      setShowPopup(true);
+      toast.error(errorMsg, "Không thể bắt đầu bài thi");
     }
   };
 
@@ -248,20 +294,24 @@ export default function ClassDetail() {
 
   const handleCancelSubmission = async (assignmentId: string) => {
     try {
-      // TODO: thay thế bằng endpoint hủy nộp bài thực tế khi backend có sẵn.
+      await assignmentApi.cancelSubmission(assignmentId);
       setSubmittedAssignmentIds((prev) => prev.filter((id) => id !== assignmentId));
-      setPopupMessage("Đã hủy nộp bài thành công.");
-      setShowPopup(true);
-    } catch (error: unknown) {
-      setPopupMessage("Không thể hủy nộp bài. Vui lòng thử lại.");
-      setShowPopup(true);
+      toast.success("Hủy nộp bài tập thành công!", "Hủy nộp bài");
+    } catch (error: any) {
+      console.error("Lỗi khi hủy nộp bài:", error);
+      const msg = error.response?.data?.message || "Không thể hủy nộp bài. Vui lòng thử lại.";
+      toast.error(msg, "Hủy nộp bài thất bại");
     }
   };
 
   const openSubmitModal = (item: IAssignment) => {
     setSubmittingAssignment(item);
-    setPopupMessage("Mở form nộp bài cho bài tập đang chọn.");
-    setShowPopup(true);
+    setIsSubmitModalOpen(true);
+  };
+
+  const handleSubmitSuccess = (assignmentId: string) => {
+    setSubmittedAssignmentIds((prev) => [...new Set([...prev, assignmentId])]);
+    toast.success("Nộp bài tập thành công!", "Nộp bài tập");
   };
 
   // ==============================================
@@ -288,6 +338,31 @@ export default function ClassDetail() {
 
         setLessons(publishedLessons);
         setAssignments(assignmentRes);
+
+        // Tự động kiểm tra bài tập đã nộp của học sinh
+        const studentId = getStudentId();
+        if (studentId && assignmentRes.length > 0) {
+          const submittedIds: string[] = [];
+          await Promise.all(
+            assignmentRes.map(async (item) => {
+              try {
+                const subs = await assignmentApi.getSubmissionsByAssignment(item._id);
+                const hasSubmitted = subs.some(
+                  (s: any) =>
+                    s.studentId === studentId ||
+                    s.studentId?._id === studentId ||
+                    s.student === studentId
+                );
+                if (hasSubmitted) {
+                  submittedIds.push(item._id);
+                }
+              } catch (err) {
+                // Ignore failure if no submissions
+              }
+            })
+          );
+          setSubmittedAssignmentIds(submittedIds);
+        }
       } catch (error: unknown) {
         if (axios.isAxiosError(error)) {
           setErrorMsg(error.response?.data?.message || "Không thể tải dữ liệu lớp học.");
@@ -389,10 +464,15 @@ export default function ClassDetail() {
           </button>
         </nav>
         <div className="mt-auto pt-6 border-t border-outline-variant">
-          <button className="w-full bg-primary text-on-primary py-3 rounded-xl font-semibold flex items-center justify-center space-x-2 transition-transform active:scale-95 shadow-lg">
-            <span className="material-symbols-outlined">video_call</span>
-            <span className="text-sm">Join Online Class</span>
-          </button>
+          <StudentLiveSidebar
+            liveRoomName={liveRoomName}
+            isLiveLoading={isLiveLoading}
+            onJoinClick={(code) => void handleJoinLiveClass(code)}
+            showRoomCodeInput={showRoomCodeInput}
+            setShowRoomCodeInput={setShowRoomCodeInput}
+            customRoomCode={customRoomCode}
+            setCustomRoomCode={setCustomRoomCode}
+          />
           <div className="flex items-center mt-6 space-x-3 px-2">
             <div className="w-10 h-10 rounded-full bg-surface-container-high overflow-hidden flex-shrink-0">
               <img
@@ -424,6 +504,8 @@ export default function ClassDetail() {
               className="pl-10 pr-4 py-1.5 rounded-full bg-surface-container-low border-none focus:ring-2 focus:ring-primary w-64 text-sm"
               placeholder="Search lessons..."
               type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
             />
             <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-secondary text-lg">
               search
@@ -436,7 +518,10 @@ export default function ClassDetail() {
             <span className="absolute top-2 right-2 w-2 h-2 bg-error rounded-full border-2 border-surface-bright"></span>
           </button>
           <div className="h-8 w-px bg-outline-variant hidden sm:block"></div>
-          <button className="px-4 py-1.5 rounded-full border border-primary text-primary font-semibold text-sm hover:bg-primary hover:text-on-primary transition-all">
+          <button
+            onClick={() => setShowRoomCodeInput((prev) => !prev)}
+            className="px-4 py-1.5 rounded-full border border-primary text-primary font-semibold text-sm hover:bg-primary hover:text-on-primary transition-all"
+          >
             Tham gia bằng mã
           </button>
         </div>
@@ -503,22 +588,78 @@ export default function ClassDetail() {
           </div>
 
           <div className="col-span-12 md:col-span-4 flex flex-col">
-            <div className="flex-1 bg-primary rounded-xl p-6 text-on-primary shadow-xl relative group cursor-pointer overflow-hidden transition-all hover:-translate-y-1">
-              <div className="relative z-10">
-                <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center mb-4">
-                  <span className="material-symbols-outlined text-3xl" style={{ fontVariationSettings: "'FILL' 1" }}>
-                    video_chat
-                  </span>
+            <div className="flex-1 bg-primary rounded-xl p-6 text-on-primary shadow-xl relative overflow-hidden transition-all hover:-translate-y-1">
+              <div className="relative z-10 flex flex-col h-full">
+                {/* Card chính */}
+                <div
+                  onClick={() => void handleJoinLiveClass()}
+                  className={`group cursor-pointer ${
+                    isLiveLoading ? "pointer-events-none opacity-70" : ""
+                  }`}
+                >
+                  <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center mb-4">
+                    <span
+                      className="material-symbols-outlined text-3xl"
+                      style={{ fontVariationSettings: "'FILL' 1" }}
+                    >
+                      video_chat
+                    </span>
+                  </div>
+
+                  <h3 className="text-lg font-bold mb-1">
+                    {liveRoomName ? "🔴 Phòng học đang diễn ra" : "Phòng học trực tuyến"}
+                  </h3>
+
+                  <p className="text-xs opacity-90 mb-4">
+                    {liveRoomName
+                      ? "Giáo viên đang mở lớp học. Nhấn để tham gia ngay."
+                      : "Chưa có lớp học trực tuyến đang diễn ra."}
+                  </p>
+
+                  <div className="flex items-center text-xs font-bold uppercase tracking-widest">
+                    {isLiveLoading
+                      ? "Đang vào..."
+                      : liveRoomName
+                      ? "Vào lớp ngay"
+                      : "Tham gia lớp học"}
+
+                    <span className="material-symbols-outlined ml-2 group-hover:translate-x-2 transition-transform text-sm">
+                      arrow_forward
+                    </span>
+                  </div>
                 </div>
-                <h3 className="text-lg font-bold mb-1">Phòng học trực tuyến</h3>
-                <p className="text-xs opacity-90 mb-4">
-                  Lớp học đang diễn ra hoặc có lịch hẹn. Vào lớp ngay để thảo luận trực tiếp.
-                </p>
-                <div className="flex items-center text-xs font-bold uppercase tracking-widest mt-auto">
-                  Vào Học Ngay{" "}
-                  <span className="material-symbols-outlined ml-2 group-hover:translate-x-2 transition-transform text-sm">
-                    arrow_forward
-                  </span>
+
+                {/* Nhập mã phòng */}
+                <div className="mt-5">
+                  {!showRoomCodeInput ? (
+                    <button
+                      onClick={() => setShowRoomCodeInput(true)}
+                      className="text-xs underline opacity-90 hover:opacity-100 transition"
+                    >
+                      + Nhập mã phòng thủ công
+                    </button>
+                  ) : (
+                    <div className="flex gap-2 mt-2">
+                      <input
+                        type="text"
+                        placeholder="Mã phòng..."
+                        value={customRoomCode}
+                        onChange={(e) => setCustomRoomCode(e.target.value)}
+                        className="flex-1 px-3 py-2 rounded-lg text-sm text-on-surface bg-white border border-outline"
+                      />
+
+                      <button
+                        onClick={() => {
+                          if (customRoomCode.trim()) {
+                            void handleJoinLiveClass(customRoomCode.trim());
+                          }
+                        }}
+                        className="px-4 rounded-lg bg-secondary text-on-secondary hover:bg-secondary-container transition"
+                      >
+                        Vào
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -557,66 +698,87 @@ export default function ClassDetail() {
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-semibold text-on-surface">Danh sách bài học</h3>
                   <span className="px-3 py-1 bg-surface-container-high rounded text-xs text-secondary font-medium">
-                    {lessons.length} bài học thực tế
+                    {
+                      lessons.filter(
+                        (l) =>
+                          l.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          (l.description && l.description.toLowerCase().includes(searchQuery.toLowerCase()))
+                      ).length
+                    }{" "}
+                    bài học
                   </span>
                 </div>
 
-                {lessons.length === 0 ? (
+                {lessons.filter(
+                  (l) =>
+                    l.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                    (l.description && l.description.toLowerCase().includes(searchQuery.toLowerCase()))
+                ).length === 0 ? (
                   <div className="border-2 border-dashed border-outline-variant rounded-xl p-12 text-center text-secondary">
                     <span className="material-symbols-outlined text-4xl mb-2 text-outline">description</span>
-                    <p className="text-sm">Giảng viên chưa đăng tải giáo trình nào cho lớp này.</p>
+                    <p className="text-sm">
+                      {searchQuery
+                        ? `Không tìm thấy bài học nào phù hợp với từ khóa "${searchQuery}".`
+                        : "Giảng viên chưa đăng tải giáo trình nào cho lớp này."}
+                    </p>
                   </div>
                 ) : (
-                  lessons.map((lesson) => (
-                    <div
-                      key={lesson._id}
-                      className="group flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-white border border-outline-variant rounded-xl hover:border-primary/30 transition-all hover:shadow-md gap-4"
-                    >
-                      <div className="flex items-center space-x-4 min-w-0">
-                        <div className="w-12 h-12 bg-surface-container-low rounded-lg flex items-center justify-center text-primary group-hover:bg-primary-container group-hover:text-on-primary-container transition-colors flex-shrink-0">
-                          <span
-                            className="material-symbols-outlined text-2xl"
-                            style={{ fontVariationSettings: "'FILL' 1" }}
-                          >
-                            {lesson.videoUrl ? "play_circle" : "picture_as_pdf"}
-                          </span>
+                  lessons
+                    .filter(
+                      (l) =>
+                        l.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                        (l.description && l.description.toLowerCase().includes(searchQuery.toLowerCase()))
+                    )
+                    .map((lesson) => (
+                      <div
+                        key={lesson._id}
+                        className="group flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-white border border-outline-variant rounded-xl hover:border-primary/30 transition-all hover:shadow-md gap-4"
+                      >
+                        <div className="flex items-center space-x-4 min-w-0">
+                          <div className="w-12 h-12 bg-surface-container-low rounded-lg flex items-center justify-center text-primary group-hover:bg-primary-container group-hover:text-on-primary-container transition-colors flex-shrink-0">
+                            <span
+                              className="material-symbols-outlined text-2xl"
+                              style={{ fontVariationSettings: "'FILL' 1" }}
+                            >
+                              {lesson.videoUrl ? "play_circle" : "picture_as_pdf"}
+                            </span>
+                          </div>
+                          <div className="min-w-0">
+                            <h4 className="font-semibold text-on-surface text-sm sm:text-base truncate">
+                              {lesson.title}
+                            </h4>
+                            <p className="text-xs text-secondary line-clamp-1 mt-0.5">
+                              {lesson.description || "Không có mô tả chi tiết cho bài học này."}
+                            </p>
+                          </div>
                         </div>
-                        <div className="min-w-0">
-                          <h4 className="font-semibold text-on-surface text-sm sm:text-base truncate">
-                            {lesson.title}
-                          </h4>
-                          <p className="text-xs text-secondary line-clamp-1 mt-0.5">
-                            {lesson.description || "Không có mô tả chi tiết cho bài học này."}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex items-center justify-end space-x-2 flex-shrink-0">
-                        {lesson.videoUrl && (
-                          <a
-                            href={lesson.videoUrl}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="px-4 py-2 text-xs font-bold text-primary bg-primary-container/20 hover:bg-primary hover:text-white rounded-lg transition-colors"
-                          >
-                            Xem video
-                          </a>
-                        )}
-                        {lesson.attachments &&
-                          lesson.attachments.map((file) => (
+                        <div className="flex items-center justify-end space-x-2 flex-shrink-0">
+                          {lesson.videoUrl && (
                             <a
-                              key={file.publicId}
-                              href={file.url}
+                              href={lesson.videoUrl}
                               target="_blank"
                               rel="noreferrer"
-                              className="p-2 text-secondary hover:bg-surface-container-high rounded-lg transition-colors"
-                              title={file.name}
+                              className="px-4 py-2 text-xs font-bold text-primary bg-primary-container/20 hover:bg-primary hover:text-white rounded-lg transition-colors"
                             >
-                              <span className="material-symbols-outlined text-xl">download</span>
+                              Xem video
                             </a>
-                          ))}
+                          )}
+                          {lesson.attachments &&
+                            lesson.attachments.map((file) => (
+                              <a
+                                key={file.publicId}
+                                href={file.url}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="p-2 text-secondary hover:bg-surface-container-high rounded-lg transition-colors"
+                                title={file.name}
+                              >
+                                <span className="material-symbols-outlined text-xl">download</span>
+                              </a>
+                            ))}
+                        </div>
                       </div>
-                    </div>
-                  ))
+                    ))
                 )}
               </div>
             )}
@@ -627,11 +789,15 @@ export default function ClassDetail() {
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div className="p-4 bg-primary-container/10 border border-primary/20 rounded-xl">
                     <span className="text-xs uppercase font-bold text-primary">Chưa nộp</span>
-                    <div className="text-2xl font-bold text-primary mt-1">01</div>
+                    <div className="text-2xl font-bold text-primary mt-1">
+                      {String(assignments.length - submittedAssignmentIds.length).padStart(2, "0")}
+                    </div>
                   </div>
                   <div className="p-4 bg-secondary-container/20 border border-secondary/20 rounded-xl">
                     <span className="text-xs uppercase font-bold text-secondary">Đã nộp</span>
-                    <div className="text-2xl font-bold text-secondary mt-1">01</div>
+                    <div className="text-2xl font-bold text-secondary mt-1">
+                      {String(submittedAssignmentIds.length).padStart(2, "0")}
+                    </div>
                   </div>
                   <div className="p-4 bg-surface-container-high rounded-xl">
                     <span className="text-xs uppercase font-bold text-on-surface-variant">Điểm trung bình</span>
@@ -748,51 +914,67 @@ export default function ClassDetail() {
             {/* TAB 4: THẢO LUẬN LỚP HỌC */}
             {activeTab === "chat" && (
               <div className="flex flex-col h-full space-y-4">
-                <div className="bg-surface-container-low rounded-xl p-4 flex flex-col space-y-4 min-h-[300px]">
-                  {/* Tin nhắn từ người khác */}
-                  <div className="flex items-start space-x-3 max-w-[85%]">
-                    <div className="w-8 h-8 rounded-full bg-gray-300 flex-shrink-0 flex items-center justify-center text-xs font-bold">
-                      TT
-                    </div>
-                    <div>
-                      <div className="flex items-center space-x-2 mb-1">
-                        <span className="text-xs font-bold">Thanh Thảo</span>
-                        <span className="text-[10px] text-secondary">09:12 AM</span>
-                      </div>
-                      <div className="bg-white p-3 rounded-2xl rounded-tl-none shadow-sm text-xs sm:text-sm">
-                        Mọi người ơi, tài liệu chương mới thầy cập nhật nằm ở mục nào vậy ạ?
-                      </div>
-                    </div>
-                  </div>
+                <div className="bg-surface-container-low rounded-xl p-4 flex flex-col space-y-4 min-h-[350px] max-h-[500px] overflow-y-auto">
+                  {chatMessages.map((msg) => {
+                    if (msg.isAi) {
+                      return (
+                        <div key={msg.id} className="flex items-center justify-center my-2">
+                          <div className="bg-surface-container-highest border border-primary/20 px-4 py-1.5 rounded-full text-xs flex items-center space-x-2 text-primary">
+                            <span className="material-symbols-outlined text-sm animate-pulse">auto_awesome</span>
+                            <span>{msg.text}</span>
+                          </div>
+                        </div>
+                      );
+                    }
 
-                  {/* AI Suggestion */}
-                  <div className="flex items-center justify-center my-2">
-                    <div className="bg-surface-container-highest border border-primary/20 px-4 py-1.5 rounded-full text-xs flex items-center space-x-2 text-primary">
-                      <span className="material-symbols-outlined text-sm animate-pulse">auto_awesome</span>
-                      <span>
-                        AI khuyên dùng: Bạn có thể xem các slide PDF tải về trực tiếp tại Tab <b>Bài giảng</b>.
-                      </span>
-                    </div>
-                  </div>
+                    const isUser = msg.isUser;
 
-                  {/* Tin nhắn Giảng viên lấy tên từ API */}
-                  <div className="flex items-start space-x-3 max-w-[85%]">
-                    <div className="w-8 h-8 rounded-full bg-primary text-on-primary flex-shrink-0 flex items-center justify-center text-xs font-bold">
-                      GV
-                    </div>
-                    <div>
-                      <div className="flex items-center space-x-2 mb-1">
-                        <span className="text-xs font-bold text-primary">
-                          Thầy {classInfo.teacherId?.fullName || "Nguyễn Văn A"}
-                        </span>
-                        <span className="text-[10px] text-secondary">09:20 AM</span>
+                    return (
+                      <div
+                        key={msg.id}
+                        className={`flex items-start space-x-3 max-w-[85%] ${
+                          isUser ? "ml-auto flex-row-reverse space-x-reverse" : ""
+                        }`}
+                      >
+                        <div
+                          className={`w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center text-xs font-bold ${
+                            msg.isTeacher
+                              ? "bg-primary text-on-primary"
+                              : isUser
+                              ? "bg-primary-container text-on-primary-container"
+                              : "bg-gray-300 text-gray-700"
+                          }`}
+                        >
+                          {msg.avatar}
+                        </div>
+                        <div>
+                          <div
+                            className={`flex items-center space-x-2 mb-1 ${isUser ? "justify-end" : ""}`}
+                          >
+                            <span
+                              className={`text-xs font-bold ${
+                                msg.isTeacher ? "text-primary" : "text-on-surface"
+                              }`}
+                            >
+                              {msg.sender}
+                            </span>
+                            <span className="text-[10px] text-secondary">{msg.time}</span>
+                          </div>
+                          <div
+                            className={`p-3 rounded-2xl text-xs sm:text-sm ${
+                              isUser
+                                ? "bg-primary text-on-primary rounded-tr-none shadow-sm"
+                                : msg.isTeacher
+                                ? "bg-primary-container/10 border border-primary/10 rounded-tl-none"
+                                : "bg-white rounded-tl-none shadow-sm"
+                            }`}
+                          >
+                            {msg.text}
+                          </div>
+                        </div>
                       </div>
-                      <div className="bg-primary-container/10 border border-primary/10 p-3 rounded-2xl rounded-tl-none text-xs sm:text-sm">
-                        Chào các em, thầy vừa bổ sung các tệp đính kèm mới vào danh sách bài học bên trên rồi nhé. Hãy
-                        chủ động tải về trước buổi học chiều nay.
-                      </div>
-                    </div>
-                  </div>
+                    );
+                  })}
                 </div>
 
                 {/* Khung chat input */}
@@ -800,11 +982,20 @@ export default function ClassDetail() {
                   <input
                     value={chatMessage}
                     onChange={(e) => setChatMessage(e.target.value)}
-                    className="flex-1 px-4 py-2.5 rounded-xl bg-surface-container border-none focus:ring-2 focus:ring-primary text-sm"
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        handleSendMessage();
+                      }
+                    }}
+                    className="flex-1 px-4 py-2.5 rounded-xl bg-surface-container border-none focus:ring-2 focus:ring-primary text-sm text-on-surface"
                     placeholder="Nhập nội dung thảo luận cùng lớp học..."
                     type="text"
                   />
-                  <button className="p-2.5 bg-primary text-on-primary rounded-xl hover:bg-primary/90 transition-transform active:scale-95 flex items-center justify-center">
+                  <button
+                    onClick={handleSendMessage}
+                    className="p-2.5 bg-primary text-on-primary rounded-xl hover:bg-primary/90 transition-transform active:scale-95 flex items-center justify-center"
+                  >
                     <span className="material-symbols-outlined text-xl">send</span>
                   </button>
                 </div>
@@ -968,25 +1159,22 @@ export default function ClassDetail() {
           </div>
         </div>
       )}
-      {showPopup && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white p-6 md:p-8 rounded-2xl shadow-2xl text-center max-w-sm w-[90%] mx-auto transform animate-in zoom-in-95 duration-200">
-            <div className="w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-4">
-              <span className="material-symbols-outlined text-3xl font-bold text-error">block</span>
-            </div>
-            <h3 className="font-bold text-xl text-gray-900 mb-2">Không thể làm bài</h3>
-            <p className="text-gray-600 mb-6 text-sm leading-relaxed">{popupMessage}</p>
-            <div className="flex gap-3">
-              <button
-                onClick={() => navigate("/")} // Đổi link này về trang chủ / danh sách lớp của bạn
-                className="w-full py-2.5 px-4 bg-gray-100 text-gray-700 font-bold rounded-xl hover:bg-gray-200 transition-colors"
-              >
-                Quay lại trang chủ
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <LiveRoomModal
+        isOpen={isLiveRoomOpen}
+        onClose={() => setIsLiveRoomOpen(false)}
+        roomName={liveRoomName}
+        jwtToken={jwtToken}
+        appId={appId}
+      />
+      <SubmitAssignmentModal
+        isOpen={isSubmitModalOpen}
+        onClose={() => {
+          setIsSubmitModalOpen(false);
+          setSubmittingAssignment(null);
+        }}
+        assignment={submittingAssignment}
+        onSuccess={handleSubmitSuccess}
+      />
     </div>
   );
 }

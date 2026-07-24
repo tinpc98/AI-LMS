@@ -11,3 +11,5 @@ npm-debug.log*
 
 # Bỏ qua thư mục cấu hình riêng của VS Code
 .vscode/
+
+keys/

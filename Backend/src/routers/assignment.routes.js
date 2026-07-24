@@ -47,4 +47,11 @@ router.post(
   assignmentController.submitAssignment,
 );
 
+// Học sinh Hủy nộp bài
+router.delete(
+  "/submit/:assignmentId",
+  verifyUser,
+  assignmentController.cancelSubmission,
+);
+
 export default router;

@@ -25,45 +25,52 @@ import ExamManagement from "./pages/teachers/ExamManagement";
 import QuestionBank from "./pages/teachers/QuestionBank";
 import ExamResults from "./pages/teachers/ExamResults";
 
+import ToastContainer from "./components/common/ToastContainer";
+import PublicRoute from "./components/common/PublicRoute";
+import ProtectedRoute from "./components/common/ProtectedRoute";
+
 function App() {
   return (
-    <Routes>
-      {/* ================= AUTH ROUTES (Dùng chung Layout nếu cần) ================= */}
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/register" element={<RegistrationPage />} />
+    <>
+      <ToastContainer />
+      <Routes>
+        {/* ================= PUBLIC / AUTH ROUTES ================= */}
+        <Route element={<PublicRoute />}>
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegistrationPage />} />
+        </Route>
 
-      {/* ================= STUDENT ROUTES ================= */}
-      <Route path="/" element={<HomeLayoutStudent />}>
-        <Route index element={<HomePageStudent />} />
-        <Route path="myclasses" element={<MyClasses />} />
-        <Route path="studentassignment" element={<StudentAssignment />} />
-      </Route>
-      <Route path="classdetail/:classId" element={<ClassDetail />} />
-      <Route path="studentassignment/:assignmentId" element={<StudentAssignment />} />
-      <Route path="lessonview" element={<LessonView />} />
-      <Route path="/exam/:attemptId" element={<ExamPage />} />
+        {/* ================= STUDENT PROTECTED ROUTES ================= */}
+        <Route element={<ProtectedRoute allowedRoles={["student"]} />}>
+          <Route path="/" element={<HomeLayoutStudent />}>
+            <Route index element={<HomePageStudent />} />
+            <Route path="myclasses" element={<MyClasses />} />
+            <Route path="studentassignment" element={<StudentAssignment />} />
+          </Route>
+          <Route path="classdetail/:classId" element={<ClassDetail />} />
+          <Route path="studentassignment/:assignmentId" element={<StudentAssignment />} />
+          <Route path="lessonview" element={<LessonView />} />
+          <Route path="/exam/:attemptId" element={<ExamPage />} />
+        </Route>
 
-      {/* ================= TEACHER ROUTES ================= */}
-      <Route path="/teacher" element={<HomeLayoutTeacher />}>
-        <Route index element={<HomePageTeacher />} />
-        <Route path="classroom-detail/:classId" element={<ClassroomDetail />} />
-        <Route path="classroom-management" element={<ClassManagement />} />
-        <Route path="lessonManagement" element={<LessonManagement />} />
-        <Route path="questionbank" element={<QuestionBank />} />
-        <Route path="exammanagement" element={<ExamManagement />} />
-        <Route path="examresults/:examId" element={<ExamResults />} />
-        <Route path="exam-review/:attemptId" element={<ExamAttemptDetail />} />
-      </Route>
+        {/* ================= TEACHER PROTECTED ROUTES ================= */}
+        <Route element={<ProtectedRoute allowedRoles={["teacher"]} />}>
+          <Route path="/teacher" element={<HomeLayoutTeacher />}>
+            <Route index element={<HomePageTeacher />} />
+            <Route path="classroom-detail/:classId" element={<ClassroomDetail />} />
+            <Route path="classroom-management" element={<ClassManagement />} />
+            <Route path="lessonManagement" element={<LessonManagement />} />
+            <Route path="questionbank" element={<QuestionBank />} />
+            <Route path="exammanagement" element={<ExamManagement />} />
+            <Route path="examresults/:examId" element={<ExamResults />} />
+            <Route path="exam-review/:attemptId" element={<ExamAttemptDetail />} />
+          </Route>
+        </Route>
 
-      {/* ================= ADMIN ROUTES ================= */}
-      {/* <Route path="/admin" element={<AdminLayout />}>
-        <Route index element={<AdminHome />} /> 
-        
-      </Route> */}
-
-      {/* ================= 404 NOT FOUND (Tùy chọn) ================= */}
-      <Route path="*" element={<h2>Trang không tồn tại!</h2>} />
-    </Routes>
+        {/* ================= 404 NOT FOUND ================= */}
+        <Route path="*" element={<h2>Trang không tồn tại!</h2>} />
+      </Routes>
+    </>
   );
 }
 

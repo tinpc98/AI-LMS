@@ -3,6 +3,7 @@ import express from "express";
 import cors from "cors"; // Thêm thư viện cấu hình cho phép Frontend gọi API
 import { connectDB } from "./src/config/database.js";
 import socketHandler from "./src/sockets/exam.socket.js"; // 3. Import bộ xử lý Real-time
+import liveSocketHandler from "./src/sockets/live.socket.js"; // Import xử lý Socket phòng học online
 import { createServer } from "http";
 import { Server } from "socket.io";
 // Import Routers hiện có
@@ -13,6 +14,7 @@ import assignmentRouter from "./src/routers/assignment.routes.js";
 import QuestionRouter from "./src/routers/question.routes.js";
 import ExamRouter from "./src/routers/exam.routes.js";
 import ExamAttemptRouter from "./src/routers/examAttempt.routes.js";
+import LiveRouter from "./src/routers/live.routes.js";
 
 // Kích hoạt cấu hình file .env
 dotenv.config();
@@ -54,8 +56,11 @@ const io = new Server(httpServer, {
   cors: corsOptions, // Đồng bộ cấu hình CORS của Express sang Socket.io
 });
 
+app.set("io", io); // Lưu io instance để gọi từ các controllers
+
 // Kích hoạt luồng lắng nghe sự kiện Real-time
 socketHandler(io);
+liveSocketHandler(io);
 
 // ==========================================
 // ĐĂNG KÝ CÁC API ROUTES
@@ -69,6 +74,7 @@ app.use("/api/assignments", assignmentRouter);
 app.use("/api/questions", QuestionRouter);
 app.use("/api/exams", ExamRouter);
 app.use("/api/exam-attempts", ExamAttemptRouter);
+app.use("/api/live", LiveRouter);
 
 app.get("/", (req, res) => {
   res

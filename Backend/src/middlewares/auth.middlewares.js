@@ -29,8 +29,9 @@ export const isTeacher = (req, res, next) => {
       .status(500)
       .json({ message: "Lỗi hệ thống, không tìm thấy dữ liệu người dùng" });
   }
-  const allowedRoles = ["Teacher", "Admin"];
-  if (!allowedRoles.includes(req.user.role)) {
+  const userRole = req.user.role?.toLowerCase();
+  const allowedRoles = ["teacher", "admin"];
+  if (!allowedRoles.includes(userRole)) {
     return res.status(403).json({
       message:
         "Quyền truy cập bị từ chối. Chỉ giáo viên mới có thể thực hiện chức năng này",
