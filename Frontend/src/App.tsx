@@ -15,13 +15,15 @@ import HomePageStudent from "./pages/students/HomePageStudent";
 
 // Teacher Components
 import HomePageTeacher from "./pages/teachers/HomePageTeacher";
-import QuestionBank from "./pages/teachers/QuestionBank";
 import ClassroomDetail from "./pages/teachers/ClassroomDetail";
 import ClassManagement from "./pages/teachers/ClassroomManagement";
-import ExamDetai from "./pages/teachers/ExamDetai";
+import ExamAttemptDetail from "./pages/teachers/ExamAttemptDetail.tsx";
 import LessonManagement from "./pages/teachers/LessonManagement";
 import HomeLayoutTeacher from "./components/layout/HomeLayoutTeacher";
 import ClassDetail from "./pages/students/ClassDetail";
+import ExamManagement from "./pages/teachers/ExamManagement";
+import QuestionBank from "./pages/teachers/QuestionBank";
+import ExamResults from "./pages/teachers/ExamResults";
 
 function App() {
   return (
@@ -39,17 +41,19 @@ function App() {
       <Route path="classdetail/:classId" element={<ClassDetail />} />
       <Route path="studentassignment/:assignmentId" element={<StudentAssignment />} />
       <Route path="lessonview" element={<LessonView />} />
-      <Route path="exam" element={<ExamPage />} />
+      <Route path="/exam/:attemptId" element={<ExamPage />} />
 
       {/* ================= TEACHER ROUTES ================= */}
       <Route path="/teacher" element={<HomeLayoutTeacher />}>
         <Route index element={<HomePageTeacher />} />
         <Route path="classroom-detail/:classId" element={<ClassroomDetail />} />
         <Route path="classroom-management" element={<ClassManagement />} />
-        <Route path="examdetail/:examId" element={<ExamDetai />} />
         <Route path="lessonManagement" element={<LessonManagement />} />
+        <Route path="questionbank" element={<QuestionBank />} />
+        <Route path="exammanagement" element={<ExamManagement />} />
+        <Route path="examresults/:examId" element={<ExamResults />} />
+        <Route path="exam-review/:attemptId" element={<ExamAttemptDetail />} />
       </Route>
-      <Route path="question-bank" element={<QuestionBank />} />
 
       {/* ================= ADMIN ROUTES ================= */}
       {/* <Route path="/admin" element={<AdminLayout />}>

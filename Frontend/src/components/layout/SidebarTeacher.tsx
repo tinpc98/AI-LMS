@@ -12,8 +12,12 @@ export default function SidebarTeacher() {
           src="https://lh3.googleusercontent.com/aida-public/AB6AXuCkHipXsG3Jdqn_T1kn-iQLl2Rgp0xI8NBtwkLr3AVXSNtxKGcQtd_vjkQf3Nqy4bvn2cdUDnYhl8CrLatmVuOJEc5Thz15ltoUa3CDz-PJd-0j8e0eg2tskVHGYfd6MxAJBXUBxYSLxZY2TMqb-zZRzRpW7jDDO6GFnwr5QE5Ic2nWHSb7TS-VEM406cwmWV4b0vXD2nI0KEFO8c4sBMI-D2I-NJIt6KIo6522qWXOGZGyfHdA9l2oEGClirojk5JPXdilCbLLyPXS"
         />
         <div>
-          <h1 className="font-headline-md text-headline-md font-bold text-primary">EduPortal AI</h1>
-          <p className="font-body-sm text-body-sm text-on-surface-variant">Teacher Dashboard</p>
+          <h1 className="font-headline-md text-headline-md font-bold text-primary">
+            EduPortal AI
+          </h1>
+          <p className="font-body-sm text-body-sm text-on-surface-variant">
+            Teacher Dashboard
+          </p>
         </div>
       </div>
 
@@ -32,27 +36,28 @@ export default function SidebarTeacher() {
           <span className="material-symbols-outlined">groups</span>
           <span className="font-label-md text-label-md">Quản lý lớp học</span>
         </Link>
-        <a
+        <Link
+          to=""
           className="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-low rounded-lg transition-all duration-200"
-          href="#"
         >
           <span className="material-symbols-outlined">menu_book</span>
           <span className="font-label-md text-label-md">Quản lý bài giảng</span>
-        </a>
-        <a
+        </Link>
+        <Link
+          to="questionbank"
           className="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-low rounded-lg transition-all duration-200"
-          href="#"
         >
           <span className="material-symbols-outlined">quiz</span>
           <span className="font-label-md text-label-md">Ngân hàng câu hỏi</span>
-        </a>
-        <a
+        </Link>
+        <Link
+          to="exammanagement"
           className="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-low rounded-lg transition-all duration-200"
-          href="#"
         >
           <span className="material-symbols-outlined">assignment</span>
           <span className="font-label-md text-label-md">Quản lý thi</span>
-        </a>
+        </Link>
+
         <a
           className="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-low rounded-lg transition-all duration-200"
           href="#"

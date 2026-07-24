@@ -1,16 +1,45 @@
-import { useEffect, useState, type ChangeEvent } from "react";
-import { Link, useParams } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import assignmentApi from "../../api/assignmentApi";
 import { classApi } from "../../api/classApi";
 import { lessonApi } from "../../api/lessonApi";
-import type { IClass } from "../../interface/ClassInterface";
-import type { IAssignment } from "../../interface/assignmentInterface";
+import axiosClient from "../../api/axiosClient";
+import type { IClass } from "../../interface/classInterface";
 import type { ILesson } from "../../interface/lessonInterface";
 
+// Mock Data
+const MOCK_ASSIGNMENTS = [
+  {
+    id: "1",
+    title: "BTTL 01: Cài đặt danh sách liên kết đơn",
+    deadline: "23:59 - 25/10/2024",
+    status: "Chưa nộp",
+  },
+  {
+    id: "2",
+    title: "BTTL 02: Giải thuật sắp xếp nhanh QuickSort",
+    submitTime: "10:15 - 18/10/2024",
+    status: "Đã chấm điểm",
+    score: "9.0/10",
+  },
+];
+
 const MOCK_RANKINGS = [
-  { rank: 1, name: "Trần Quốc Quân", short: "TQ", score: 9.8, bg: "bg-yellow-100 text-yellow-700 border-yellow-200" },
-  { rank: 2, name: "Lê Anh", short: "LA", score: 9.5, bg: "bg-slate-100 text-slate-700 border-slate-200" },
+  {
+    rank: 1,
+    name: "Trần Quốc Quân",
+    short: "TQ",
+    score: 9.8,
+    bg: "bg-yellow-100 text-yellow-700 border-yellow-200",
+  },
+  {
+    rank: 2,
+    name: "Lê Anh",
+    short: "LA",
+    score: 9.5,
+    bg: "bg-slate-100 text-slate-700 border-slate-200",
+  },
   {
     rank: 12,
     name: "Bạn (Minh Quân)",
@@ -31,89 +60,248 @@ export default function ClassDetail() {
   const [assignments, setAssignments] = useState<IAssignment[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
-  const [submitModalOpen, setSubmitModalOpen] = useState(false);
-  const [selectedAssignment, setSelectedAssignment] = useState<IAssignment | null>(null);
-  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
-  const [submissionLink, setSubmissionLink] = useState("");
-  const [submissionNote, setSubmissionNote] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submittedAssignmentIds, setSubmittedAssignmentIds] = useState<string[]>([]);
-
+  const [showPopup, setShowPopup] = useState(false);
+  const [popupMessage, setPopupMessage] = useState("");
   // State hỗ trợ tab chat/thảo luận mẫu
   const [chatMessage, setChatMessage] = useState("");
+  const navigate = useNavigate();
+  // ==============================================
+  // 1. STATE QUẢN LÝ LOBBY PHÒNG THI
+  // ==============================================
+  const [exams, setExams] = useState<any[]>([]); // Đã bỏ hardcode classExams, dùng state lấy từ DB
+  const [examPopupState, setExamPopupState] = useState<
+    "NONE" | "NO_EXAM" | "NOT_YET_TIME" | "COUNTDOWN" | "READY" | "LOADING"
+  >("NONE");
+  const [selectedExam, setSelectedExam] = useState<any>(null);
+  const [countdown, setCountdown] = useState(0);
 
-  const openSubmitModal = (assignment: IAssignment) => {
-    setSelectedAssignment(assignment);
-    setSelectedFiles([]);
-    setSubmissionLink("");
-    setSubmissionNote("");
-    setSubmitModalOpen(true);
+  // ==============================================
+  // 2. LOGIC ĐẾM NGƯỢC THỜI GIAN TRONG LOBBY
+  // ==============================================
+  useEffect(() => {
+    const fetchClassExams = async () => {
+      if (!classId) return;
+
+      // KHÔNG gọi setIsLoading(true) ở đây để tránh đụng độ với API load classInfo
+      try {
+        const response = await axiosClient.get(`/api/exams/class/${classId}`);
+        setExams(response.data.data || response.data || []);
+      } catch (error) {
+        console.error("Lỗi khi lấy danh sách đề thi của lớp:", error);
+        // KHÔNG dùng setErrorMsg() ở đây để tránh sập toàn bộ trang
+        // Nếu API lỗi (VD: Backend chưa code xong), cứ mặc định gán mảng rỗng
+        setExams([]);
+      }
+    };
+
+    fetchClassExams();
+  }, [classId]);
+  // Lọc lấy đề thi phù hợp để hiển thị (Yêu cầu 2: chỉ hiển thị trước giờ thi 1 tiếng)
+  const getVisibleExam = () => {
+    if (!exams || exams.length === 0) return null;
+    const now = new Date().getTime();
+
+    return exams.find((exam) => {
+      const startTime = new Date(exam.startTime).getTime();
+      const oneHourBefore = startTime - 60 * 60 * 1000;
+
+      // Giới hạn thời gian làm bài: sau khi kết thúc đề vẫn ẩn đi
+      const durationMs = (exam.duration || 45) * 60 * 1000;
+      const endTime = startTime + durationMs;
+
+      // Hiển thị từ lúc 1 tiếng trước giờ bắt đầu đến khi bài thi kết thúc hoàn toàn
+      return now >= oneHourBefore && now <= endTime;
+    });
   };
 
-  const handleFileSelection = (event: ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(event.target.files ?? []);
-    if (!files.length) return;
+  const visibleExam = getVisibleExam();
 
-    if (selectedFiles.length + files.length > 5) {
-      alert("Bạn chỉ có thể đính kèm tối đa 5 tệp bài làm.");
-      event.target.value = "";
+  // ==============================================
+  // 3. HÀM XỬ LÝ KHI BẤM "VÀO THI" Ở TAB 3
+  // ==============================================
+  useEffect(() => {
+    let timer: any;
+    if (
+      ["COUNTDOWN", "NOT_YET_TIME"].includes(examPopupState) &&
+      countdown > 0
+    ) {
+      timer = setInterval(() => {
+        setCountdown((prev) => {
+          const nextValue = prev - 1;
+
+          // Nếu đang ở phòng chờ (COUNTDOWN) và đếm ngược hết -> Chuyển sang READY để học sinh bấm bắt đầu
+          if (examPopupState === "COUNTDOWN" && nextValue <= 0) {
+            setExamPopupState("READY");
+          }
+
+          // Học sinh đang treo popup "NOT_YET_TIME", nếu đếm ngược tự động chạm mốc 5 phút (300 giây)
+          // Hệ thống tự đẩy học sinh vào phòng chờ đếm ngược thực tế cực kỳ mượt mà
+          if (examPopupState === "NOT_YET_TIME" && nextValue <= 300) {
+            setExamPopupState("COUNTDOWN");
+          }
+
+          return nextValue;
+        });
+      }, 1000);
+    }
+    return () => clearInterval(timer);
+  }, [examPopupState, countdown]);
+  const formatTime = (seconds: number) => {
+    if (seconds <= 0) return "00:00";
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60)
+      .toString()
+      .padStart(2, "0");
+    const s = (seconds % 60).toString().padStart(2, "0");
+
+    return h > 0 ? `${h}:${m}:${s}` : `${m}:${s}`;
+  };
+
+  // ==============================================
+  // 4. HÀM XỬ LÝ KHI BẤM "VÀO PHÒNG THI"
+  // ==============================================
+  const handleJoinExamClick = (exam: any) => {
+    if (!exam) {
+      setExamPopupState("NO_EXAM");
+      setTimeout(() => setExamPopupState("NONE"), 3000);
       return;
     }
 
-    setSelectedFiles((prev) => [...prev, ...files]);
-    event.target.value = "";
+    const now = new Date();
+    const startTime = new Date(exam.startTime);
+    const diffSeconds = Math.floor(
+      (startTime.getTime() - now.getTime()) / 1000,
+    );
+
+    setSelectedExam(exam);
+
+    if (diffSeconds > 300) {
+      // TRƯỜNG HỢP A: Thời gian chờ còn lớn hơn 5 phút -> Hiện popup chưa đến giờ thi (Yêu cầu 2)
+      setCountdown(diffSeconds);
+      setExamPopupState("NOT_YET_TIME");
+    } else if (diffSeconds > 0 && diffSeconds <= 300) {
+      // TRƯỜNG HỢP B: Còn dưới 5 phút -> Vào phòng chờ lấy chính xác thời gian còn lại (Yêu cầu 2)
+      // Ví dụ: vào lúc 11:58 cho ca thi 12:00, đếm ngược sẽ là 2 phút (120 giây) thực tế
+      setCountdown(diffSeconds);
+      setExamPopupState("COUNTDOWN");
+    } else {
+      // TRƯỜNG HỢP C: Đã qua giờ bắt đầu thi -> Tự động bypass phòng chờ vào thẳng bài thi (Yêu cầu 3)
+      handleStartAttemptDirectly(exam);
+    }
   };
 
-  const removeFile = (index: number) => {
-    setSelectedFiles((prev) => prev.filter((_, fileIndex) => fileIndex !== index));
+  // ==============================================
+  // HÀM TIỆN ÍCH LẤY ID HỌC SINH TỪ LOCALSTORAGE
+  // ==============================================
+  const getStudentId = () => {
+    const token = localStorage.getItem("accessToken");
+
+    if (!token) return null;
+
+    try {
+      // Giải mã payload (phần thứ 2 của chuỗi JWT sau dấu chấm)
+      const base64Url = token.split(".")[1];
+      const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+      const jsonPayload = decodeURIComponent(
+        window
+          .atob(base64)
+          .split("")
+          .map(function (c) {
+            return "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2);
+          })
+          .join(""),
+      );
+
+      const decodedToken = JSON.parse(jsonPayload);
+      console.log("=== ĐÃ GIẢI MÃ TOKEN ===", decodedToken);
+
+      // Lấy ID học sinh (tùy Backend của bạn lưu là _id hay id)
+      return decodedToken._id || decodedToken.id || decodedToken.userId;
+    } catch (error) {
+      console.error("Lỗi giải mã token:", error);
+      return null;
+    }
   };
 
-  const handleCancelSubmission = (assignmentId: string) => {
-    setSubmittedAssignmentIds((prev) => prev.filter((id) => id !== assignmentId));
-    alert("Đã hủy nộp bài. Bạn có thể nộp lại bất cứ lúc nào.");
+  // ==============================================
+  // 5. GỌI API BẮT ĐẦU VÀ CHUYỂN TRANG (BYPASS HOẶC READY)
+  // ==============================================
+  const handleStartAttemptDirectly = async (exam: any) => {
+    console.log("=== THÔNG TIN KỲ THI GỬI ĐI ===", exam);
+    console.log("=== ID KỲ THI ===", exam._id);
+
+    const studentId = getStudentId(); // Lấy ID học sinh
+
+    if (!studentId) {
+      setPopupMessage(
+        "Không tìm thấy thông tin đăng nhập. Vui lòng đăng nhập lại!",
+      );
+      setShowPopup(true);
+      return;
+    }
+
+    setExamPopupState("LOADING");
+
+    try {
+      const response = await axiosClient.post("/api/exam-attempts/start", {
+        examId: exam._id,
+        studentId: studentId, // 👉 ĐÃ THÊM STUDENT ID VÀO ĐÂY
+      });
+
+      const attemptId = response.data.data._id;
+      navigate(`/exam/${attemptId}`);
+    } catch (error: any) {
+      console.error("Lỗi khi tạo phiên làm bài:", error);
+      setExamPopupState("NONE");
+
+      const errorMsg =
+        error.response?.data?.message || "Không thể bắt đầu bài thi.";
+      console.log("🔥 LÝ DO BACKEND CHẶN:", errorMsg);
+      setPopupMessage(errorMsg);
+      setShowPopup(true);
+    }
   };
 
-  const handleSubmitAssignment = async () => {
-    if (!selectedAssignment) return;
+  const handleStartAttemptFromLobby = () => {
+    if (selectedExam) {
+      handleStartAttemptDirectly(selectedExam);
+    }
+  };
 
-    if (selectedFiles.length === 0 && !submissionLink.trim()) {
-      alert("Vui lòng chọn ít nhất một tệp hoặc nhập đường link để nộp bài.");
+  // ==============================================
+  // 6. CHẶN HỌC SINH THI LẦN 2
+  // ==============================================
+  const handleStartExam = async () => {
+    const studentId = getStudentId(); // Lấy ID học sinh
+
+    if (!studentId) {
+      setPopupMessage(
+        "Không tìm thấy thông tin đăng nhập. Vui lòng đăng nhập lại!",
+      );
+      setShowPopup(true);
       return;
     }
 
     try {
-      setIsSubmitting(true);
-      const formData = new FormData();
-      const content = [
-        submissionNote.trim() ? `[Ghi chú]: ${submissionNote.trim()}` : "",
-        submissionLink.trim() ? `[Link nộp]: ${submissionLink.trim()}` : "",
-      ]
-        .filter(Boolean)
-        .join("\n");
-
-      formData.append("content", content || "Nộp bài từ popup trên lớp học");
-      selectedFiles.forEach((file) => {
-        formData.append("files", file);
+      const res = await axiosClient.post("/api/exam-attempts/start", {
+        examId: id, // Kiểm tra biến id ở 컴포넌트 có đúng không
+        studentId: studentId, // 👉 ĐÃ THÊM STUDENT ID VÀO ĐÂY
       });
-
-      await assignmentApi.submitAssignment(selectedAssignment._id, formData);
-      setSubmittedAssignmentIds((prev) =>
-        prev.includes(selectedAssignment._id) ? prev : [...prev, selectedAssignment._id],
-      );
-      setSubmitModalOpen(false);
-      setSelectedAssignment(null);
-      setSelectedFiles([]);
-      setSubmissionLink("");
-      setSubmissionNote("");
-      alert("Đã nộp bài thành công!");
-    } catch (error) {
-      console.error("Lỗi khi nộp bài từ popup:", error);
-      alert("Nộp bài thất bại. Vui lòng thử lại.");
-    } finally {
-      setIsSubmitting(false);
+      navigate(`/exam/${res.data.data._id}`);
+    } catch (error: any) {
+      if (error.response?.status === 400) {
+        // Thay alert() bằng set State mở Popup
+        setPopupMessage(error.response.data.message);
+        setShowPopup(true);
+      } else {
+        setPopupMessage("Có lỗi xảy ra, vui lòng thử lại!");
+        setShowPopup(true);
+      }
     }
   };
-
+  // ==============================================
+  // FETCH DỮ LIỆU LỚP HỌC
+  // ==============================================
   useEffect(() => {
     const fetchData = async () => {
       if (!classId) return;
@@ -137,7 +325,9 @@ export default function ClassDetail() {
         setAssignments(assignmentRes);
       } catch (error: unknown) {
         if (axios.isAxiosError(error)) {
-          setErrorMsg(error.response?.data?.message || "Không thể tải dữ liệu lớp học.");
+          setErrorMsg(
+            error.response?.data?.message || "Không thể tải dữ liệu lớp học.",
+          );
         }
       } finally {
         setIsLoading(false);
@@ -160,10 +350,18 @@ export default function ClassDetail() {
   if (errorMsg || !classInfo) {
     return (
       <div className="bg-surface-bright min-h-screen flex flex-col items-center justify-center gap-4">
-        <span className="material-symbols-outlined text-5xl text-error">error</span>
-        <p className="text-error font-semibold text-lg">{errorMsg || "Không tìm thấy thông tin lớp học này."}</p>
-        <Link to="/myclasses" className="text-primary font-bold hover:underline flex items-center gap-1">
-          <span className="material-symbols-outlined text-sm">arrow_back</span> Quay lại danh sách lớp học
+        <span className="material-symbols-outlined text-5xl text-error">
+          error
+        </span>
+        <p className="text-error font-semibold text-lg">
+          {errorMsg || "Không tìm thấy thông tin lớp học này."}
+        </p>
+        <Link
+          to="/myclasses"
+          className="text-primary font-bold hover:underline flex items-center gap-1"
+        >
+          <span className="material-symbols-outlined text-sm">arrow_back</span>{" "}
+          Quay lại danh sách lớp học
         </Link>
       </div>
     );
@@ -193,7 +391,10 @@ export default function ClassDetail() {
       {/* 1. SIDE NAVIGATION BAR */}
       <aside className="fixed left-0 top-0 h-screen w-[280px] bg-surface border-r border-outline-variant flex flex-col p-6 space-y-2 z-50">
         <div className="mb-8 px-2">
-          <h1 className="text-2xl font-bold text-primary" style={{ fontFamily: "Hanken Grotesk" }}>
+          <h1
+            className="text-2xl font-bold text-primary"
+            style={{ fontFamily: "Hanken Grotesk" }}
+          >
             AI Academy
           </h1>
           <p className="text-sm text-secondary">Learning Portal</p>
@@ -249,7 +450,9 @@ export default function ClassDetail() {
               />
             </div>
             <div className="flex flex-col min-w-0">
-              <span className="text-sm text-on-surface font-semibold truncate">Minh Quân</span>
+              <span className="text-sm text-on-surface font-semibold truncate">
+                Minh Quân
+              </span>
               <span className="text-xs text-secondary">ID: 2024AI01</span>
             </div>
           </div>
@@ -300,20 +503,33 @@ export default function ClassDetail() {
                 <div className="inline-flex items-center px-3 py-1 bg-primary-container text-on-primary-container rounded-full text-xs font-semibold mb-4 uppercase tracking-wider">
                   {classInfo.status === "active" ? "Đang học" : "Đã kết thúc"}
                 </div>
-                <h2 className="text-3xl font-bold text-on-surface mb-2" style={{ fontFamily: "Hanken Grotesk" }}>
+                <h2
+                  className="text-3xl font-bold text-on-surface mb-2"
+                  style={{ fontFamily: "Hanken Grotesk" }}
+                >
                   {classInfo.className}
                 </h2>
                 <div className="flex flex-col gap-1 text-secondary">
                   <div className="flex items-center text-sm">
-                    <span className="material-symbols-outlined text-base mr-2">person</span>
+                    <span className="material-symbols-outlined text-base mr-2">
+                      person
+                    </span>
                     <span>
-                      Giảng viên: <strong>{classInfo.teacherId?.fullName ?? "Chưa rõ"}</strong>
+                      Giảng viên:{" "}
+                      <strong>
+                        {classInfo.teacherId?.fullName ?? "Chưa rõ"}
+                      </strong>
                     </span>
                   </div>
                   <div className="flex items-center text-sm">
-                    <span className="material-symbols-outlined text-base mr-2">groups</span>
+                    <span className="material-symbols-outlined text-base mr-2">
+                      groups
+                    </span>
                     <span>
-                      Sĩ số: <strong>{classInfo.students?.length ?? 0} học sinh</strong>
+                      Sĩ số:{" "}
+                      <strong>
+                        {classInfo.students?.length ?? 0} học sinh
+                      </strong>
                     </span>
                   </div>
                 </div>
@@ -335,14 +551,18 @@ export default function ClassDetail() {
                       strokeDasharray="65, 100"
                       strokeLinecap="round"
                       strokeWidth="3"
-                      style={{ transition: "stroke-dasharray 1.5s ease-in-out" }}
+                      style={{
+                        transition: "stroke-dasharray 1.5s ease-in-out",
+                      }}
                     ></path>
                   </svg>
                   <div className="absolute inset-0 flex items-center justify-center">
                     <span className="text-xl font-bold text-primary">65%</span>
                   </div>
                 </div>
-                <span className="text-xs font-semibold mt-2 text-secondary">Tiến độ cá nhân</span>
+                <span className="text-xs font-semibold mt-2 text-secondary">
+                  Tiến độ cá nhân
+                </span>
               </div>
             </div>
           </div>
@@ -351,13 +571,17 @@ export default function ClassDetail() {
             <div className="flex-1 bg-primary rounded-xl p-6 text-on-primary shadow-xl relative group cursor-pointer overflow-hidden transition-all hover:-translate-y-1">
               <div className="relative z-10">
                 <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center mb-4">
-                  <span className="material-symbols-outlined text-3xl" style={{ fontVariationSettings: "'FILL' 1" }}>
+                  <span
+                    className="material-symbols-outlined text-3xl"
+                    style={{ fontVariationSettings: "'FILL' 1" }}
+                  >
                     video_chat
                   </span>
                 </div>
                 <h3 className="text-lg font-bold mb-1">Phòng học trực tuyến</h3>
                 <p className="text-xs opacity-90 mb-4">
-                  Lớp học đang diễn ra hoặc có lịch hẹn. Vào lớp ngay để thảo luận trực tiếp.
+                  Lớp học đang diễn ra hoặc có lịch hẹn. Vào lớp ngay để thảo
+                  luận trực tiếp.
                 </p>
                 <div className="flex items-center text-xs font-bold uppercase tracking-widest mt-auto">
                   Vào Học Ngay{" "}
@@ -400,7 +624,9 @@ export default function ClassDetail() {
             {activeTab === "lessons" && (
               <div className="space-y-4">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold text-on-surface">Danh sách bài học</h3>
+                  <h3 className="text-lg font-semibold text-on-surface">
+                    Danh sách bài học
+                  </h3>
                   <span className="px-3 py-1 bg-surface-container-high rounded text-xs text-secondary font-medium">
                     {lessons.length} bài học thực tế
                   </span>
@@ -408,8 +634,12 @@ export default function ClassDetail() {
 
                 {lessons.length === 0 ? (
                   <div className="border-2 border-dashed border-outline-variant rounded-xl p-12 text-center text-secondary">
-                    <span className="material-symbols-outlined text-4xl mb-2 text-outline">description</span>
-                    <p className="text-sm">Giảng viên chưa đăng tải giáo trình nào cho lớp này.</p>
+                    <span className="material-symbols-outlined text-4xl mb-2 text-outline">
+                      description
+                    </span>
+                    <p className="text-sm">
+                      Giảng viên chưa đăng tải giáo trình nào cho lớp này.
+                    </p>
                   </div>
                 ) : (
                   lessons.map((lesson) => (
@@ -431,7 +661,8 @@ export default function ClassDetail() {
                             {lesson.title}
                           </h4>
                           <p className="text-xs text-secondary line-clamp-1 mt-0.5">
-                            {lesson.description || "Không có mô tả chi tiết cho bài học này."}
+                            {lesson.description ||
+                              "Không có mô tả chi tiết cho bài học này."}
                           </p>
                         </div>
                       </div>
@@ -456,7 +687,9 @@ export default function ClassDetail() {
                               className="p-2 text-secondary hover:bg-surface-container-high rounded-lg transition-colors"
                               title={file.name}
                             >
-                              <span className="material-symbols-outlined text-xl">download</span>
+                              <span className="material-symbols-outlined text-xl">
+                                download
+                              </span>
                             </a>
                           ))}
                       </div>
@@ -471,23 +704,67 @@ export default function ClassDetail() {
               <div className="space-y-6">
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div className="p-4 bg-primary-container/10 border border-primary/20 rounded-xl">
-                    <span className="text-xs uppercase font-bold text-primary">Tổng bài tập</span>
-                    <div className="text-2xl font-bold text-primary mt-1">{assignments.length}</div>
+                    <span className="text-xs uppercase font-bold text-primary">
+                      Chưa nộp
+                    </span>
+                    <div className="text-2xl font-bold text-primary mt-1">
+                      01
+                    </div>
                   </div>
                   <div className="p-4 bg-secondary-container/20 border border-secondary/20 rounded-xl">
-                    <span className="text-xs uppercase font-bold text-secondary">Đang mở</span>
-                    <div className="text-2xl font-bold text-secondary mt-1">{assignments.length}</div>
+                    <span className="text-xs uppercase font-bold text-secondary">
+                      Đã nộp
+                    </span>
+                    <div className="text-2xl font-bold text-secondary mt-1">
+                      01
+                    </div>
                   </div>
                   <div className="p-4 bg-surface-container-high rounded-xl">
-                    <span className="text-xs uppercase font-bold text-on-surface-variant">Lớp học</span>
-                    <div className="text-2xl font-bold text-on-surface mt-1">{classInfo.className}</div>
+                    <span className="text-xs uppercase font-bold text-on-surface-variant">
+                      Điểm trung bình
+                    </span>
+                    <div className="text-2xl font-bold text-on-surface mt-1">
+                      9.0
+                    </div>
                   </div>
                 </div>
 
                 <div className="bg-white border border-outline-variant rounded-xl divide-y divide-outline-variant">
-                  {assignments.length === 0 ? (
-                    <div className="p-8 text-center text-secondary">
-                      Chưa có bài tập nào được giáo viên giao cho lớp này.
+                  {MOCK_ASSIGNMENTS.map((item) => (
+                    <div
+                      key={item.id}
+                      className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+                    >
+                      <div>
+                        <h4 className="font-semibold text-sm sm:text-base">
+                          {item.title}
+                        </h4>
+                        <p className="text-xs text-secondary mt-0.5">
+                          {item.deadline || `Nộp lúc: ${item.submitTime}`}
+                        </p>
+                      </div>
+                      <div className="flex items-center space-x-4 self-end sm:self-auto">
+                        {item.score ? (
+                          <div className="text-right">
+                            <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-secondary-container text-on-secondary-container">
+                              {item.status}
+                            </span>
+                            <div className="mt-1 font-bold text-primary text-sm">
+                              {item.score}
+                            </div>
+                          </div>
+                        ) : (
+                          <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-error-container text-on-error-container">
+                            {item.status}
+                          </span>
+                        )}
+                        <button className="flex items-center space-x-1 bg-primary text-on-primary px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-primary/90">
+                          <span className="material-symbols-outlined text-base">
+                            upload
+                          </span>
+                          <span>Nộp bài</span>
+                        </button>
+                      </div>
                     </div>
                   ) : (
                     assignments.map((item) => (
@@ -537,41 +814,84 @@ export default function ClassDetail() {
               </div>
             )}
 
-            {/* TAB 3: THI TRỰC TUYẾN */}
+            {/* TAB 3: THI TRỰC TUYẾN - ĐÃ FIX THEO YÊU CẦU MỚI */}
             {activeTab === "exams" && (
               <div className="max-w-2xl mx-auto py-4">
-                <div className="bg-white border border-outline-variant rounded-2xl overflow-hidden shadow-lg">
-                  <div className="h-2 ai-progress-gradient"></div>
-                  <div className="p-6 sm:p-8">
-                    <div className="flex flex-col sm:flex-row justify-between items-start gap-4 mb-6">
-                      <div>
-                        <span className="inline-block px-3 py-1 bg-error-container text-on-error-container rounded-full text-xs font-bold mb-3">
-                          Sắp diễn ra
+                {!visibleExam ? (
+                  /* YÊU CẦU 1: UI CỨNG KHÔNG CÓ BÀI KIỂM TRA NÀO */
+                  <div className="bg-white border border-outline-variant rounded-2xl p-12 text-center shadow-lg">
+                    <span className="material-symbols-outlined text-6xl text-gray-300 mb-4">
+                      assignment_late
+                    </span>
+                    <h3 className="text-xl font-bold text-gray-700">
+                      Hiện tại chưa có bài kiểm tra nào cả
+                    </h3>
+                    <p className="text-sm text-gray-400 mt-2">
+                      Các đề thi của lớp học sẽ hiển thị tại đây 1 tiếng trước
+                      giờ thi bắt đầu.
+                    </p>
+                  </div>
+                ) : (
+                  /* YÊU CẦU 2: HIỂN THỊ ĐỀ THI ĐÁP ỨNG THỜI GIAN TRƯỚC 1 TIẾNG */
+                  <div className="bg-white border border-outline-variant rounded-2xl overflow-hidden shadow-lg">
+                    <div className="h-2 ai-progress-gradient"></div>
+                    <div className="p-6 sm:p-8">
+                      <div className="flex flex-col sm:flex-row justify-between items-start gap-4 mb-6">
+                        <div>
+                          <span className="inline-block px-3 py-1 bg-error-container text-on-error-container rounded-full text-xs font-bold mb-3 animate-pulse">
+                            {new Date(visibleExam.startTime).getTime() >
+                            new Date().getTime()
+                              ? "Sắp diễn ra"
+                              : "Đang diễn ra"}
+                          </span>
+                          <h3 className="text-xl font-bold text-on-surface">
+                            {visibleExam.title}
+                          </h3>
+                          <p className="text-xs text-secondary mt-1">
+                            Thời gian làm bài: {visibleExam.duration || 45} phút
+                            | Hình thức:{" "}
+                            {visibleExam.format || "Trắc nghiệm & Tự luận"}
+                          </p>
+                        </div>
+                        <div className="sm:text-right flex sm:flex-col items-center sm:items-end gap-2">
+                          <div className="text-2xl font-mono font-bold text-primary">
+                            {new Date(visibleExam.startTime).toLocaleTimeString(
+                              [],
+                              {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              },
+                            )}
+                          </div>
+                          <span className="text-[10px] text-secondary uppercase font-bold tracking-wider">
+                            Bắt đầu:{" "}
+                            {new Date(visibleExam.startTime).toLocaleDateString(
+                              "vi-VN",
+                            )}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="p-4 bg-surface-container-high rounded-xl mb-6 flex items-start space-x-3">
+                        <span className="material-symbols-outlined text-error mt-0.5">
+                          info
                         </span>
-                        <h3 className="text-xl font-bold text-on-surface">Kiểm tra năng lực Định kỳ</h3>
-                        <p className="text-xs text-secondary mt-1">
-                          Thời gian làm bài: 60 phút | Trắc nghiệm trực tuyến
+                        <p className="text-xs text-on-surface-variant">
+                          Lưu ý quan trọng: Hệ thống sẽ kích hoạt AI giám sát và
+                          tự động nộp bài khi hết giờ. Hãy kiểm tra kết nối mạng
+                          trước khi vào phòng.
                         </p>
                       </div>
-                      <div className="sm:text-right flex sm:flex-col items-center sm:items-end gap-2">
-                        <div className="text-2xl font-mono font-bold text-primary">00:45:12</div>
-                        <span className="text-[10px] text-secondary uppercase font-bold tracking-wider">
-                          Hệ thống mở sau
-                        </span>
+                      <div className="flex gap-4">
+                        <button
+                          onClick={() => handleJoinExamClick(visibleExam)}
+                          className="flex-1 bg-primary text-on-primary py-3 rounded-xl font-bold text-sm hover:shadow-lg transition-all"
+                        >
+                          Vào phòng thi
+                        </button>
                       </div>
                     </div>
-                    <div className="p-4 bg-surface-container-high rounded-xl mb-6 flex items-start space-x-3">
-                      <span className="material-symbols-outlined text-error mt-0.5">info</span>
-                      <p className="text-xs text-on-surface-variant">
-                        Lưu ý quan trọng: Hệ thống sẽ kích hoạt AI giám sát và tự động nộp bài khi hết giờ. Hãy kiểm tra
-                        camera trước khi làm bài.
-                      </p>
-                    </div>
-                    <button className="w-full bg-primary text-on-primary py-3 rounded-xl font-bold text-sm hover:shadow-lg transition-all">
-                      Bắt đầu làm bài thi
-                    </button>
                   </div>
-                </div>
+                )}
               </div>
             )}
 
@@ -587,10 +907,13 @@ export default function ClassDetail() {
                     <div>
                       <div className="flex items-center space-x-2 mb-1">
                         <span className="text-xs font-bold">Thanh Thảo</span>
-                        <span className="text-[10px] text-secondary">09:12 AM</span>
+                        <span className="text-[10px] text-secondary">
+                          09:12 AM
+                        </span>
                       </div>
                       <div className="bg-white p-3 rounded-2xl rounded-tl-none shadow-sm text-xs sm:text-sm">
-                        Mọi người ơi, tài liệu chương mới thầy cập nhật nằm ở mục nào vậy ạ?
+                        Mọi người ơi, tài liệu chương mới thầy cập nhật nằm ở
+                        mục nào vậy ạ?
                       </div>
                     </div>
                   </div>
@@ -598,9 +921,12 @@ export default function ClassDetail() {
                   {/* AI Suggestion */}
                   <div className="flex items-center justify-center my-2">
                     <div className="bg-surface-container-highest border border-primary/20 px-4 py-1.5 rounded-full text-xs flex items-center space-x-2 text-primary">
-                      <span className="material-symbols-outlined text-sm animate-pulse">auto_awesome</span>
+                      <span className="material-symbols-outlined text-sm animate-pulse">
+                        auto_awesome
+                      </span>
                       <span>
-                        AI khuyên dùng: Bạn có thể xem các slide PDF tải về trực tiếp tại Tab <b>Bài giảng</b>.
+                        AI khuyên dùng: Bạn có thể xem các slide PDF tải về trực
+                        tiếp tại Tab <b>Bài giảng</b>.
                       </span>
                     </div>
                   </div>
@@ -615,11 +941,14 @@ export default function ClassDetail() {
                         <span className="text-xs font-bold text-primary">
                           Thầy {classInfo.teacherId?.fullName || "Nguyễn Văn A"}
                         </span>
-                        <span className="text-[10px] text-secondary">09:20 AM</span>
+                        <span className="text-[10px] text-secondary">
+                          09:20 AM
+                        </span>
                       </div>
                       <div className="bg-primary-container/10 border border-primary/10 p-3 rounded-2xl rounded-tl-none text-xs sm:text-sm">
-                        Chào các em, thầy vừa bổ sung các tệp đính kèm mới vào danh sách bài học bên trên rồi nhé. Hãy
-                        chủ động tải về trước buổi học chiều nay.
+                        Chào các em, thầy vừa bổ sung các tệp đính kèm mới vào
+                        danh sách bài học bên trên rồi nhé. Hãy chủ động tải về
+                        trước buổi học chiều nay.
                       </div>
                     </div>
                   </div>
@@ -635,7 +964,9 @@ export default function ClassDetail() {
                     type="text"
                   />
                   <button className="p-2.5 bg-primary text-on-primary rounded-xl hover:bg-primary/90 transition-transform active:scale-95 flex items-center justify-center">
-                    <span className="material-symbols-outlined text-xl">send</span>
+                    <span className="material-symbols-outlined text-xl">
+                      send
+                    </span>
                   </button>
                 </div>
               </div>
@@ -648,7 +979,9 @@ export default function ClassDetail() {
           {/* Widget Bảng xếp hạng */}
           <div className="col-span-12 md:col-span-4 bg-white p-6 rounded-xl border border-outline-variant shadow-sm">
             <h4 className="font-semibold mb-4 flex items-center text-sm sm:text-base">
-              <span className="material-symbols-outlined mr-2 text-primary">analytics</span>
+              <span className="material-symbols-outlined mr-2 text-primary">
+                analytics
+              </span>
               Xếp hạng lớp học
             </h4>
             <div className="space-y-3">
@@ -668,11 +1001,15 @@ export default function ClassDetail() {
                     >
                       {user.short}
                     </div>
-                    <span className={`text-xs sm:text-sm truncate ${user.isUser ? "font-bold" : "font-medium"}`}>
+                    <span
+                      className={`text-xs sm:text-sm truncate ${user.isUser ? "font-bold" : "font-medium"}`}
+                    >
                       {user.name}
                     </span>
                   </div>
-                  <span className="text-xs sm:text-sm font-bold text-primary ml-2">{user.score}</span>
+                  <span className="text-xs sm:text-sm font-bold text-primary ml-2">
+                    {user.score}
+                  </span>
                 </div>
               ))}
             </div>
@@ -682,14 +1019,20 @@ export default function ClassDetail() {
           <div className="col-span-12 md:col-span-8 bg-surface-container-low p-6 rounded-xl border border-outline-variant border-dashed flex items-center justify-center text-center">
             <div className="space-y-3 max-w-xl">
               <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center text-primary shadow-inner mx-auto">
-                <span className="material-symbols-outlined text-2xl">auto_awesome</span>
+                <span className="material-symbols-outlined text-2xl">
+                  auto_awesome
+                </span>
               </div>
               <div>
-                <h4 className="font-bold text-on-surface text-sm sm:text-base">AI Learning Insights</h4>
+                <h4 className="font-bold text-on-surface text-sm sm:text-base">
+                  AI Learning Insights
+                </h4>
                 <p className="text-xs sm:text-sm text-secondary mt-1 px-4">
-                  "Hệ thống nhận thấy lớp học đang triển khai chương trình học mới. Bạn hãy hoàn thành việc xem các
-                  video bài giảng thực tế của thầy <b>{classInfo.teacherId?.fullName ?? "Giảng viên"}</b> để nắm chắc
-                  kiến thức trước kỳ thi!"
+                  "Hệ thống nhận thấy lớp học đang triển khai chương trình học
+                  mới. Bạn hãy hoàn thành việc xem các video bài giảng thực tế
+                  của thầy{" "}
+                  <b>{classInfo.teacherId?.fullName ?? "Giảng viên"}</b> để nắm
+                  chắc kiến thức trước kỳ thi!"
                 </p>
               </div>
               <button className="text-primary font-bold text-xs hover:underline block mx-auto">
@@ -700,88 +1043,157 @@ export default function ClassDetail() {
         </section>
       </main>
 
-      {submitModalOpen && selectedAssignment && (
-        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-slate-900/60 p-4">
-          <div className="w-full max-w-2xl rounded-2xl border border-outline-variant bg-white p-6 shadow-2xl">
-            <div className="mb-5 flex items-start justify-between gap-4">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">Nộp bài trực tiếp</p>
-                <h3 className="mt-1 text-xl font-bold text-on-surface">{selectedAssignment.title}</h3>
-                <p className="mt-1 text-sm text-secondary">
-                  Bạn có thể đính kèm tệp hoặc gửi đường link bài làm cho giáo viên.
+      {/* ==================================================== */}
+      {/* CÁC POPUP TRẠNG THÁI LOBBY PHÒNG THI */}
+      {/* ==================================================== */}
+
+      {/* 1. POPUP: KHÔNG CÓ KỲ THI */}
+      {examPopupState === "NO_EXAM" && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in">
+          <div className="bg-white p-8 rounded-2xl max-w-sm w-full text-center border-2 border-red-500 shadow-2xl">
+            <span className="material-symbols-outlined text-5xl text-red-500 mb-2">
+              event_busy
+            </span>
+            <h3 className="text-xl font-bold text-red-600 mb-2">Thông báo</h3>
+            <p className="text-gray-700 font-medium">
+              Kỳ thi này không tồn tại hoặc đã bị gỡ!
+            </p>
+            <p className="text-sm text-gray-400 mt-4">
+              (Tự động đóng sau 3 giây...)
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* 2. POPUP CHUYÊN NGHIỆP: CHƯA ĐẾN GIỜ THI (> 5 PHÚT) (Yêu cầu 2) */}
+      {examPopupState === "NOT_YET_TIME" && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in p-4">
+          <div className="bg-white p-8 rounded-2xl max-w-md w-full text-center border border-outline-variant shadow-2xl">
+            <span className="material-symbols-outlined text-5xl text-yellow-500 mb-3">
+              warning
+            </span>
+            <h3 className="text-2xl font-bold text-on-surface mb-2">
+              Chưa đến giờ thi!
+            </h3>
+            <p className="text-gray-700 font-medium mb-4">
+              Bài thi{" "}
+              <span className="text-primary font-bold">
+                "{selectedExam?.title}"
+              </span>{" "}
+              chưa mở phòng chờ.
+            </p>
+            <div className="bg-surface-container-high py-4 px-6 rounded-xl mb-6">
+              <p className="text-xs text-secondary mb-1">
+                Thời gian đếm ngược thực tế:
+              </p>
+              <p className="text-2xl font-mono font-bold text-error">
+                {formatTime(countdown)}
+              </p>
+              <p className="text-xs text-gray-500 mt-2">
+                Bạn vui lòng quay lại khi thời gian còn dưới 5 phút để vào phòng
+                chờ đếm ngược.
+              </p>
+            </div>
+            <button
+              onClick={() => setExamPopupState("NONE")}
+              className="w-full py-3 bg-primary text-white font-bold rounded-xl hover:bg-primary/95 transition-colors"
+            >
+              Đã hiểu & Quay lại
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* 3. POPUP: PHÒNG CHỜ THI (LOBBY - Dưới 5 phút) (Yêu cầu 2) */}
+      {["COUNTDOWN", "READY", "LOADING"].includes(examPopupState) && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-md animate-in fade-in p-4">
+          <div className="bg-surface w-full max-w-md rounded-3xl shadow-2xl p-8 text-center relative overflow-hidden">
+            <div className="absolute -top-24 -right-24 w-48 h-48 bg-primary/20 blur-3xl rounded-full"></div>
+
+            <h2 className="text-2xl font-bold text-on-surface mb-2 relative z-10">
+              Phòng chờ thi
+            </h2>
+            <p className="text-primary font-bold text-lg mb-8 relative z-10">
+              {selectedExam?.title}
+            </p>
+
+            {/* Trạng thái đếm ngược phòng chờ thực tế */}
+            {examPopupState === "COUNTDOWN" && (
+              <div className="mb-8 relative z-10">
+                <p className="text-on-surface-variant font-medium mb-4">
+                  Hệ thống sẽ mở đề sau:
+                </p>
+                <div className="text-5xl font-mono font-bold text-primary bg-primary/10 py-6 rounded-2xl border-2 border-primary/20 shadow-inner">
+                  {formatTime(countdown)}
+                </div>
+              </div>
+            )}
+
+            {/* Trạng thái đã sẵn sàng thi */}
+            {["READY", "LOADING"].includes(examPopupState) && (
+              <div className="mb-8 relative z-10">
+                <div className="text-5xl mb-4">✅</div>
+                <h3 className="text-2xl font-bold text-green-600 mb-2">
+                  Đã đến giờ thi!
+                </h3>
+                <p className="text-gray-600">
+                  Hãy chuẩn bị sẵn sàng và bấm nút bên dưới để nhận đề.
                 </p>
               </div>
-              <button
-                onClick={() => setSubmitModalOpen(false)}
-                className="rounded-full p-2 text-secondary hover:bg-surface-container-high"
-              >
-                <span className="material-symbols-outlined text-xl">close</span>
-              </button>
-            </div>
+            )}
 
-            <div className="space-y-4">
-              <div className="rounded-xl border border-dashed border-outline-variant bg-surface-container-low p-4">
-                <div className="flex items-center justify-between">
-                  <label className="text-sm font-semibold text-on-surface">Nộp bằng folder / tệp</label>
-                  <span className="text-xs text-secondary">{selectedFiles.length}/5</span>
-                </div>
-                <label className="mt-3 flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-primary/20 bg-white px-4 py-3 text-sm font-semibold text-primary transition-colors hover:bg-primary/5">
-                  <input type="file" multiple className="hidden" onChange={handleFileSelection} />
-                  <span className="material-symbols-outlined text-base">folder_open</span>
-                  <span>Chọn thư mục hoặc tệp</span>
-                </label>
-                <p className="mt-2 text-xs text-secondary">Hỗ trợ chọn nhiều tệp hoặc cả folder từ máy tính.</p>
-                {selectedFiles.length > 0 && (
-                  <div className="mt-3 space-y-2">
-                    {selectedFiles.map((file, index) => (
-                      <div
-                        key={`${file.name}-${index}`}
-                        className="flex items-center justify-between rounded-lg bg-white px-3 py-2 text-sm text-on-surface"
-                      >
-                        <span className="max-w-[85%] truncate">{file.name}</span>
-                        <button type="button" onClick={() => removeFile(index)} className="text-error">
-                          <span className="material-symbols-outlined text-base">delete</span>
-                        </button>
-                      </div>
-                    ))}
-                  </div>
+            <div className="flex gap-4 relative z-10">
+              <button
+                disabled={examPopupState === "LOADING"}
+                onClick={() => setExamPopupState("NONE")}
+                className="flex-1 py-3 bg-gray-200 text-gray-700 font-bold rounded-xl hover:bg-gray-300 transition-colors disabled:opacity-50"
+              >
+                Quay lại
+              </button>
+
+              <button
+                disabled={
+                  examPopupState === "COUNTDOWN" || examPopupState === "LOADING"
+                }
+                onClick={handleStartAttemptFromLobby}
+                className={`flex-1 py-3 font-bold rounded-xl transition-all shadow-md flex items-center justify-center gap-2 ${
+                  ["READY", "LOADING"].includes(examPopupState)
+                    ? "bg-primary text-white hover:bg-primary-container hover:scale-105"
+                    : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                }`}
+              >
+                {examPopupState === "LOADING" ? (
+                  <span className="animate-spin material-symbols-outlined">
+                    autorenew
+                  </span>
+                ) : (
+                  "Bắt đầu ngay"
                 )}
-              </div>
-
-              <div className="rounded-xl border border-outline-variant bg-white p-4">
-                <label className="text-sm font-semibold text-on-surface">Nộp bằng Link</label>
-                <input
-                  value={submissionLink}
-                  onChange={(event) => setSubmissionLink(event.target.value)}
-                  className="mt-2 w-full rounded-lg border border-outline-variant px-3 py-2 text-sm outline-none focus:border-primary"
-                  placeholder="https://drive.google.com/..."
-                />
-              </div>
-
-              <div className="rounded-xl border border-outline-variant bg-white p-4">
-                <label className="text-sm font-semibold text-on-surface">Ghi chú cho giáo viên</label>
-                <textarea
-                  value={submissionNote}
-                  onChange={(event) => setSubmissionNote(event.target.value)}
-                  className="mt-2 min-h-[90px] w-full rounded-lg border border-outline-variant px-3 py-2 text-sm outline-none focus:border-primary"
-                  placeholder="Ví dụ: em đã hoàn thành phần bài tập và đính kèm kết quả ở thư mục trên..."
-                />
-              </div>
-            </div>
-
-            <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-              <button
-                onClick={() => setSubmitModalOpen(false)}
-                className="rounded-xl border border-outline-variant px-4 py-2 text-sm font-semibold text-on-surface hover:bg-surface-container-low"
-              >
-                Hủy
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {showPopup && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white p-6 md:p-8 rounded-2xl shadow-2xl text-center max-w-sm w-[90%] mx-auto transform animate-in zoom-in-95 duration-200">
+            <div className="w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-4">
+              <span className="material-symbols-outlined text-3xl font-bold text-error">
+                block
+              </span>
+            </div>
+            <h3 className="font-bold text-xl text-gray-900 mb-2">
+              Không thể làm bài
+            </h3>
+            <p className="text-gray-600 mb-6 text-sm leading-relaxed">
+              {popupMessage}
+            </p>
+            <div className="flex gap-3">
               <button
-                onClick={() => void handleSubmitAssignment()}
-                disabled={isSubmitting}
-                className="rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-on-primary hover:bg-primary/90 disabled:opacity-70"
+                onClick={() => navigate("/")} // Đổi link này về trang chủ / danh sách lớp của bạn
+                className="w-full py-2.5 px-4 bg-gray-100 text-gray-700 font-bold rounded-xl hover:bg-gray-200 transition-colors"
               >
-                {isSubmitting ? "Đang nộp..." : "Xác nhận nộp"}
+                Quay lại trang chủ
               </button>
             </div>
           </div>
