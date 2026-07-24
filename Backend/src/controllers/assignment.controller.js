@@ -204,6 +204,35 @@ const assignmentController = {
         .json({ message: "Lỗi server khi nộp bài", error: error.message });
     }
   },
+
+  // 6. Học sinh Hủy nộp bài
+  cancelSubmission: async (req, res) => {
+    try {
+      const { assignmentId } = req.params;
+      const studentId = req.user.id;
+
+      const submission = await Submission.findOne({ assignmentId, studentId });
+      if (!submission) {
+        return res.status(404).json({ message: "Không tìm thấy bài nộp để hủy" });
+      }
+
+      // Xóa các tệp đính kèm trên Cloudinary nếu có
+      if (submission.attachments && submission.attachments.length > 0) {
+        const deletePromises = submission.attachments
+          .filter((file) => file.publicId)
+          .map((file) => cloudinary.uploader.destroy(file.publicId).catch(() => null));
+        await Promise.all(deletePromises);
+      }
+
+      await Submission.deleteOne({ _id: submission._id });
+
+      return res.status(200).json({ message: "Đã hủy nộp bài thành công" });
+    } catch (error) {
+      return res
+        .status(500)
+        .json({ message: "Lỗi server khi hủy nộp bài", error: error.message });
+    }
+  },
 };
 
 export default assignmentController;
