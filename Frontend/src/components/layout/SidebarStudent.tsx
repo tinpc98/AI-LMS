@@ -43,20 +43,20 @@ const SidebarStudent = () => {
             <span className="material-symbols-outlined">school</span>
             <span className="font-body-md text-body-md">Lớp học của tôi</span>
           </Link>
-          <Link
+          {/* <Link
             to="/studentassignment"
             className="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-low transition-colors rounded-xl transition-all duration-150 ease-in-out active:scale-95"
           >
             <span className="material-symbols-outlined">edit_note</span>
             <span className="font-body-md text-body-md">Làm bài tập</span>
-          </Link>
-          <Link
+          </Link> */}
+          {/* <Link
             to="/exam"
             className="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-low transition-colors rounded-xl transition-all duration-150 ease-in-out active:scale-95"
           >
             <span className="material-symbols-outlined">quiz</span>
             <span className="font-body-md text-body-md">Thi trực tuyến</span>
-          </Link>
+          </Link> */}
           <a
             className="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-low transition-colors rounded-xl transition-all duration-150 ease-in-out active:scale-95"
             href="#"

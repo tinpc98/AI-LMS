@@ -8,30 +8,15 @@ import axiosClient from "../../api/axiosClient";
 import type { ILesson } from "../../interface/lessonInterface";
 import type { IAssignment } from "../../interface/assignmentInterface";
 import type { IClass } from "../../interface/ClassInterface";
+import LiveRoomModal from "../../components/features/LiveRoomModal";
+import { useJitsiLiveSession } from "../../hooks/useJitsiLiveSession";
+import type { IExam } from "../../interface/examInterface";
+import { StudentLiveSidebar } from "../../components/features/student/StudentLiveSidebar";
 
 const MOCK_RANKINGS = [
-  {
-    rank: 1,
-    name: "Trần Quốc Quân",
-    short: "TQ",
-    score: 9.8,
-    bg: "bg-yellow-100 text-yellow-700 border-yellow-200",
-  },
-  {
-    rank: 2,
-    name: "Lê Anh",
-    short: "LA",
-    score: 9.5,
-    bg: "bg-slate-100 text-slate-700 border-slate-200",
-  },
-  {
-    rank: 12,
-    name: "Bạn (Minh Quân)",
-    short: "MQ",
-    score: 8.5,
-    bg: "bg-primary-container text-on-primary-container",
-    isUser: true,
-  },
+  { rank: 1, name: "Trần Quốc Quân", short: "TQ", score: 9.8, bg: "bg-yellow-100 text-yellow-700 border-yellow-200", isUser: false },
+  { rank: 2, name: "Lê Anh", short: "LA", score: 9.5, bg: "bg-slate-100 text-slate-700 border-slate-200", isUser: false },
+  { rank: 12, name: "Bạn (Minh Quân)", short: "MQ", score: 8.5, bg: "bg-primary-container text-on-primary-container", isUser: true },
 ];
 
 export default function ClassDetail() {
@@ -48,17 +33,32 @@ export default function ClassDetail() {
   const [errorMsg, setErrorMsg] = useState("");
   const [showPopup, setShowPopup] = useState(false);
   const [popupMessage, setPopupMessage] = useState("");
+  // --- Custom Hook Chức năng Học Online ---
+  const {
+    isLiveRoomOpen,
+    setIsLiveRoomOpen,
+    liveRoomName,
+    jwtToken,
+    appId,
+    isLiveLoading,
+    notificationMessage,
+    setNotificationMessage,
+    handleJoinLiveClass,
+  } = useJitsiLiveSession({ classId, isTeacher: false });
+
+  const [customRoomCode, setCustomRoomCode] = useState("");
+  const [showRoomCodeInput, setShowRoomCodeInput] = useState(false);
   // State hỗ trợ tab chat/thảo luận mẫu
   const [chatMessage, setChatMessage] = useState("");
   const navigate = useNavigate();
   // ==============================================
   // 1. STATE QUẢN LÝ LOBBY PHÒNG THI
   // ==============================================
-  const [exams, setExams] = useState<any[]>([]); // Đã bỏ hardcode classExams, dùng state lấy từ DB
+  const [exams, setExams] = useState<IExam[]>([]);
   const [examPopupState, setExamPopupState] = useState<
     "NONE" | "NO_EXAM" | "NOT_YET_TIME" | "COUNTDOWN" | "READY" | "LOADING"
   >("NONE");
-  const [selectedExam, setSelectedExam] = useState<any>(null);
+  const [selectedExam, setSelectedExam] = useState<IExam | null>(null);
   const [countdown, setCountdown] = useState(0);
 
   // ==============================================
@@ -68,20 +68,25 @@ export default function ClassDetail() {
     const fetchClassExams = async () => {
       if (!classId) return;
 
-      // KHÔNG gọi setIsLoading(true) ở đây để tránh đụng độ với API load classInfo
       try {
         const response = await axiosClient.get(`/api/exams/class/${classId}`);
         setExams(response.data.data || response.data || []);
       } catch (error) {
         console.error("Lỗi khi lấy danh sách đề thi của lớp:", error);
-        // KHÔNG dùng setErrorMsg() ở đây để tránh sập toàn bộ trang
-        // Nếu API lỗi (VD: Backend chưa code xong), cứ mặc định gán mảng rỗng
         setExams([]);
       }
     };
 
     fetchClassExams();
   }, [classId]);
+
+  useEffect(() => {
+    if (notificationMessage) {
+      setPopupMessage(notificationMessage);
+      setShowPopup(true);
+      setNotificationMessage(null);
+    }
+  }, [notificationMessage, setNotificationMessage]);
   // Lọc lấy đề thi phù hợp để hiển thị (Yêu cầu 2: chỉ hiển thị trước giờ thi 1 tiếng)
   const getVisibleExam = () => {
     if (!exams || exams.length === 0) return null;
@@ -246,9 +251,10 @@ export default function ClassDetail() {
     }
   };
 
+
+
   const handleCancelSubmission = async (assignmentId: string) => {
     try {
-      // TODO: thay thế bằng endpoint hủy nộp bài thực tế khi backend có sẵn.
       setSubmittedAssignmentIds((prev) => prev.filter((id) => id !== assignmentId));
       setPopupMessage("Đã hủy nộp bài thành công.");
       setShowPopup(true);
@@ -389,10 +395,15 @@ export default function ClassDetail() {
           </button>
         </nav>
         <div className="mt-auto pt-6 border-t border-outline-variant">
-          <button className="w-full bg-primary text-on-primary py-3 rounded-xl font-semibold flex items-center justify-center space-x-2 transition-transform active:scale-95 shadow-lg">
-            <span className="material-symbols-outlined">video_call</span>
-            <span className="text-sm">Join Online Class</span>
-          </button>
+          <StudentLiveSidebar
+            liveRoomName={liveRoomName}
+            isLiveLoading={isLiveLoading}
+            onJoinClick={(code) => void handleJoinLiveClass(code)}
+            showRoomCodeInput={showRoomCodeInput}
+            setShowRoomCodeInput={setShowRoomCodeInput}
+            customRoomCode={customRoomCode}
+            setCustomRoomCode={setCustomRoomCode}
+          />
           <div className="flex items-center mt-6 space-x-3 px-2">
             <div className="w-10 h-10 rounded-full bg-surface-container-high overflow-hidden flex-shrink-0">
               <img
@@ -436,7 +447,10 @@ export default function ClassDetail() {
             <span className="absolute top-2 right-2 w-2 h-2 bg-error rounded-full border-2 border-surface-bright"></span>
           </button>
           <div className="h-8 w-px bg-outline-variant hidden sm:block"></div>
-          <button className="px-4 py-1.5 rounded-full border border-primary text-primary font-semibold text-sm hover:bg-primary hover:text-on-primary transition-all">
+          <button
+            onClick={() => setShowRoomCodeInput((prev) => !prev)}
+            className="px-4 py-1.5 rounded-full border border-primary text-primary font-semibold text-sm hover:bg-primary hover:text-on-primary transition-all"
+          >
             Tham gia bằng mã
           </button>
         </div>
@@ -987,6 +1001,13 @@ export default function ClassDetail() {
           </div>
         </div>
       )}
+      <LiveRoomModal
+        isOpen={isLiveRoomOpen}
+        onClose={() => setIsLiveRoomOpen(false)}
+        roomName={liveRoomName}
+        jwtToken={jwtToken}
+        appId={appId}
+      />
     </div>
   );
 }

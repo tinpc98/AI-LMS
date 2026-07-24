@@ -11,6 +11,7 @@
     "mock-api": "json-server --watch db.json --port 3000"
   },
   "dependencies": {
+    "@jitsi/react-sdk": "^1.4.4",
     "@tailwindcss/vite": "^4.3.1",
     "axios": "^1.17.0",
     "dotenv": "^17.4.2",
@@ -19,7 +20,8 @@
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
     "react-hook-form": "^7.79.0",
-    "react-router-dom": "^7.17.0"
+    "react-router-dom": "^7.17.0",
+    "socket.io-client": "^4.8.3"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

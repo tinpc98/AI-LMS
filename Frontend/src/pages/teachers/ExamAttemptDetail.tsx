@@ -6,8 +6,8 @@ export default function ExamAttemptDetail() {
   const { attemptId } = useParams();
   const navigate = useNavigate();
 
-  const [reviewData, setReviewData] = useState(null);
-  const [essayGrades, setEssayGrades] = useState({});
+  const [reviewData, setReviewData] = useState<any>(null);
+  const [essayGrades, setEssayGrades] = useState<Record<string, any>>({});
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showApprovalPopup, setShowApprovalPopup] = useState(false);
@@ -20,12 +20,10 @@ export default function ExamAttemptDetail() {
           `/api/exam-attempts/${attemptId}/review`,
         );
         const data = response.data.data;
-        console.log(response.data);
-        console.log(response.data.data);
         setReviewData(data);
 
         const initialGrades = {};
-        data.answersDetail.forEach((ans) => {
+        data.answersDetail.forEach((ans: any) => {
           if (ans.type === "ESSAY") {
             initialGrades[ans.questionId] = ans.pointsEarned || 0;
           }
@@ -41,7 +39,7 @@ export default function ExamAttemptDetail() {
   }, [attemptId]);
 
   // 2. Handlers
-  const handleGradeChange = (qId, value, maxPoints) => {
+  const handleGradeChange = (qId: any, value: any, maxPoints: any) => {
     if (value === "") {
       setEssayGrades((prev) => ({ ...prev, [qId]: "" }));
       return;
@@ -79,10 +77,10 @@ export default function ExamAttemptDetail() {
       });
       setShowApprovalPopup(false);
       navigate(-1); // Quay lại trang trước
-    } catch (error) {
+    } catch (error: any) {
       console.error("🔥 LỖI TỪ BACKEND:", error.response?.data || error);
       alert(
-        `Lỗi phê duyệt: ${error.response?.data?.message || "Lỗi máy chủ nội bộ (500)."}`,
+        `Lỗi phê duyệt: ${error.response?.data?.message || "Lỗi máy chủ nội bộ (500)."}`
       );
     } finally {
       setIsSubmitting(false);
@@ -113,10 +111,10 @@ export default function ExamAttemptDetail() {
 
   // Tính toán thống kê nhanh
   const correctCount = reviewData.answersDetail.filter(
-    (a) => a.pointsEarned > 0 && a.type !== "ESSAY",
+    (a: any) => a.pointsEarned > 0 && a.type !== "ESSAY",
   ).length;
   const wrongCount = reviewData.answersDetail.filter(
-    (a) => a.pointsEarned === 0 && a.type !== "ESSAY",
+    (a: any) => a.pointsEarned === 0 && a.type !== "ESSAY",
   ).length;
 
   return (
@@ -190,12 +188,11 @@ export default function ExamAttemptDetail() {
       </section>
 
       {/* ========================================== */}
-      {/* 2. MAIN LAYOUT (Cố định chiều cao, chia 2 vùng cuộn độc lập) */}
+      {/* 2. MAIN LAYOUT */}
       {/* ========================================== */}
       <div className="flex flex-col xl:flex-row gap-6 items-start">
-        {/* ================== CỘT TRÁI (Chứa danh sách câu hỏi) ================== */}
+        {/* CỘT TRÁI */}
         <div className="flex-1 w-full bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-          {/* Header Cột Trái (Đứng im không cuộn) */}
           <div className="flex justify-between items-center p-5 border-b border-gray-100 bg-gray-50/50">
             <h3 className="text-lg font-bold flex items-center gap-2 text-gray-800">
               <span className="material-symbols-outlined text-gray-500">
@@ -213,14 +210,12 @@ export default function ExamAttemptDetail() {
             </div>
           </div>
 
-          {/* Danh sách câu hỏi */}
           <div className="p-6 space-y-8">
-            {reviewData.answersDetail.map((ans, idx) => (
+            {reviewData.answersDetail.map((ans: any, idx: number) => (
               <div
                 key={ans.questionId}
                 className="border-b border-gray-100 pb-8 last:border-0 last:pb-0"
               >
-                {/* Tiêu đề câu hỏi & Ô chấm điểm */}
                 <div className="flex justify-between items-start mb-4">
                   <h4 className="font-bold text-gray-800 text-base">
                     Câu {idx + 1}:{" "}
@@ -263,21 +258,18 @@ export default function ExamAttemptDetail() {
                   )}
                 </div>
 
-                {/* Nội dung đề bài */}
                 <p className="text-gray-800 font-medium mb-5">
                   {ans.questionContent}
                 </p>
 
-                {/* Vùng hiển thị Đáp án */}
                 {ans.type !== "ESSAY" && (
                   <div className="space-y-3">
                     {ans.options && ans.options.length > 0 ? (
-                      ans.options.map((opt, i) => {
+                      ans.options.map((opt: any, i: number) => {
                         const optText =
                           typeof opt === "string" ? opt : opt.text;
 
-                        // Tạo các biến nhận diện linh hoạt (So khớp cả dạng text lẫn dạng Index/Chữ cái A, B, C, D)
-                        const letterKey = String.fromCharCode(65 + i); // 'A', 'B', 'C', 'D'
+                        const letterKey = String.fromCharCode(65 + i);
                         const studentAns = String(
                           ans.studentAnswer || "",
                         ).trim();
@@ -296,7 +288,6 @@ export default function ExamAttemptDetail() {
                           "border-gray-200 text-gray-600 bg-white";
                         let icon = null;
 
-                        // 1. Nếu đây là đáp án ĐÚNG -> Luôn bôi xanh
                         if (isCorrectAnswer) {
                           optionStyle =
                             "border-green-500 bg-green-50 text-green-800 font-medium";
@@ -307,7 +298,6 @@ export default function ExamAttemptDetail() {
                           );
                         }
 
-                        // 2. Nếu học sinh chọn nhưng lại là đáp án SAI -> Bôi đỏ kèm icon cancel
                         if (isStudentChoice && !isCorrectAnswer) {
                           optionStyle =
                             "border-red-400 bg-red-50 text-red-800 font-medium";
@@ -338,7 +328,6 @@ export default function ExamAttemptDetail() {
                   </div>
                 )}
 
-                {/* Vùng hiển thị Tự luận */}
                 {ans.type === "ESSAY" && (
                   <div className="bg-blue-50/50 border border-blue-100 p-5 rounded-xl mt-4">
                     <p className="text-xs font-bold uppercase tracking-wider text-blue-500 mb-2">
@@ -358,9 +347,8 @@ export default function ExamAttemptDetail() {
           </div>
         </div>
 
-        {/* ================== CỘT PHẢI (SIDEBAR GIÁM SÁT - CỐ ĐỊNH 100%) ================== */}
+        {/* CỘT PHẢI */}
         <div className="w-full xl:w-[350px] shrink-0 sticky top-24 space-y-6">
-          {/* Card 1: Chỉ số tin cậy */}
           <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm">
             <div className="flex justify-between items-center mb-3">
               <h3 className="font-bold text-gray-800 text-lg">Gian lận</h3>
@@ -391,8 +379,6 @@ export default function ExamAttemptDetail() {
             </div>
           </div>
 
-          {/* Card 2: Báo cáo hành vi chi tiết */}
-          {/* Card 2: Báo cáo hành vi chi tiết */}
           <div className="bg-white rounded-2xl border border-gray-200 p-0 shadow-sm overflow-hidden flex flex-col max-h-[350px]">
             <div className="p-5 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
               <h3 className="font-bold text-gray-800 flex items-center gap-2">
@@ -408,7 +394,6 @@ export default function ExamAttemptDetail() {
 
             <div className="p-6 flex-1 overflow-y-auto space-y-4">
               {reviewData.cheatWarnings > 0 ? (
-                // Nếu có log chi tiết từ BE thì map qua, nếu không hiển thị thông báo tổng số lần
                 <div className="relative pl-6 border-l-2 border-red-400 pb-2">
                   <div className="absolute w-3 h-3 bg-red-500 rounded-full -left-[7px] top-1 border-2 border-white"></div>
                   <div className="flex justify-between items-start mb-1">
@@ -435,7 +420,6 @@ export default function ExamAttemptDetail() {
             </div>
           </div>
 
-          {/* Card 3: Action Buttons */}
           <div className="flex gap-3">
             <button className="flex-1 bg-white border border-gray-300 text-gray-700 py-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-gray-50 transition">
               <span className="material-symbols-outlined">videocam</span> Xem
@@ -452,9 +436,6 @@ export default function ExamAttemptDetail() {
         </div>
       </div>
 
-      {/* ========================================== */}
-      {/* POPUP XÁC NHẬN PHÊ DUYỆT */}
-      {/* ========================================== */}
       {showApprovalPopup && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
           <div className="bg-white rounded-2xl w-full max-w-md p-6 shadow-2xl scale-100 animate-in zoom-in-95 duration-200">

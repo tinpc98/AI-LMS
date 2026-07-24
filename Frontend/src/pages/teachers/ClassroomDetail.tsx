@@ -9,6 +9,9 @@ import type { IAssignment, ISubmission } from "../../interface/assignmentInterfa
 import type { ILesson } from "../../interface/lessonInterface";
 import CreateAssignmentModal from "../../components/features/CreateAssignmentModal";
 import CreateLessonModal from "../../components/features/CreateLessonModal";
+import LiveRoomModal from "../../components/features/LiveRoomModal"; // <-- TÍCH HỢP LIVE ROOM MODAL
+import { useJitsiLiveSession } from "../../hooks/useJitsiLiveSession";
+import { TeacherClassroomHeader } from "../../components/features/teacher/TeacherClassroomHeader";
 
 const TAB_ITEMS = [
   { id: "lessons", label: "Bài giảng", icon: "book" },
@@ -39,6 +42,17 @@ export default function ClassroomDetail() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isAssignmentModalOpen, setIsAssignmentModalOpen] = useState(false);
   const [chatInput, setChatInput] = useState("");
+
+  // --- Custom Hook Chức năng Học Online ---
+  const {
+    isLiveRoomOpen,
+    setIsLiveRoomOpen,
+    liveRoomName,
+    jwtToken,
+    appId,
+    isLiveLoading,
+    handleStartLiveSession,
+  } = useJitsiLiveSession({ classId, isTeacher: true });
 
   const loadClassroom = useCallback(async () => {
     if (!classId) return;
@@ -92,6 +106,12 @@ export default function ClassroomDetail() {
       isMounted.current = false;
     };
   }, [loadClassroom, loadAssignments]);
+
+  // --- Xử lý sự kiện mở Phòng học Online (Thông qua Custom Hook) ---
+  const onStartLiveClick = () => {
+    if (!classInfo) return;
+    void handleStartLiveSession(classInfo.className || "Buổi học trực tuyến");
+  };
 
   const handleLessonCreated = (newLesson: ILesson) => {
     setLessons((prev) => sortLessonsByOrder([...prev, newLesson]));
@@ -229,61 +249,15 @@ export default function ClassroomDetail() {
 
       {/* 2. MAIN CONTENT WRAPPER */}
       <main className="flex-1 md:ml-[280px] min-h-screen flex flex-col min-w-0">
-        {/* TOP NAV BAR - Tích hợp Thông tin lớp gọn gàng & Thanh chuyển Tab */}
-        <header className="bg-surface border-b border-outline-variant sticky top-0 z-40 backdrop-blur-md bg-opacity-90 px-6 sm:px-8 flex flex-col justify-between pt-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 w-full pb-3">
-            <div className="min-w-0">
-              <div className="flex items-center gap-2 text-xs text-on-surface-variant mb-1">
-                <Link to="/teacher/classroom-management" className="hover:text-primary transition-colors">
-                  Quản lý lớp học
-                </Link>
-                <span>/</span>
-                <span className="text-on-surface truncate font-medium">{classInfo.className}</span>
-              </div>
-              <h2
-                className="text-2xl font-bold tracking-tight text-on-surface truncate"
-                style={{ fontFamily: "Hanken Grotesk" }}
-              >
-                {classInfo.className}
-              </h2>
-            </div>
-
-            {/* Các badge thông tin & nút Dạy Trực Tuyến nhanh gọn */}
-            <div className="flex items-center gap-3 flex-wrap sm:flex-nowrap">
-              <span className="bg-secondary-container text-on-secondary-container px-3 py-1 rounded-full text-xs font-bold font-mono">
-                Mã lớp: {classInfo.joinCode}
-              </span>
-              <span className="bg-surface-container-high text-on-surface-variant px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1">
-                <span className="material-symbols-outlined text-sm">groups</span>
-                {classInfo.students?.length ?? 0} học sinh
-              </span>
-              <button className="bg-[#ba1a1a] text-white text-xs font-bold px-4 py-2 rounded-xl flex items-center gap-2 shadow-md hover:bg-[#a01212] active:scale-95 transition-all opacity-100">
-                <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>
-                  videocam
-                </span>
-                <span>Dạy trực tuyến</span>
-              </button>
-            </div>
-          </div>
-
-          {/* Hệ thống Tabs chuyển màn hình chức năng */}
-          <nav className="flex items-center gap-6 h-12 overflow-x-auto whitespace-nowrap scrollbar-none">
-            {TAB_ITEMS.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`h-full flex items-center gap-2 border-b-2 text-sm font-semibold px-1 transition-all ${
-                  activeTab === tab.id
-                    ? "text-primary border-primary"
-                    : "text-on-surface-variant border-transparent hover:text-primary"
-                }`}
-              >
-                <span className="material-symbols-outlined text-lg">{tab.icon}</span>
-                {tab.label}
-              </button>
-            ))}
-          </nav>
-        </header>
+        {/* TOP NAV BAR - Sub-component */}
+        <TeacherClassroomHeader
+          classInfo={classInfo}
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          isLiveLoading={isLiveLoading}
+          onStartLiveClick={onStartLiveClick}
+          tabItems={TAB_ITEMS}
+        />
 
         {/* CANVAS NỘI DUNG CHÍNH (Thay đổi linh hoạt theo Tab active) */}
         <div className="flex-1 p-6 sm:p-8 max-w-[1280px] w-full mx-auto box-border">
@@ -299,7 +273,7 @@ export default function ClassroomDetail() {
                 </div>
                 <button
                   onClick={() => {
-                    setEditingLesson(null); // Đảm bảo trạng thái tạo mới khi bấm nút này
+                    setEditingLesson(null);
                     setIsModalOpen(true);
                   }}
                   className="bg-[#3525cd] text-white px-5 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-2 hover:bg-[#281baf] hover:shadow-md transition-all active:scale-95 flex-shrink-0"
@@ -368,7 +342,6 @@ export default function ClassroomDetail() {
                           Ngày tạo: {new Date(lesson.createdAt).toLocaleDateString("vi-VN")}
                         </span>
                         <div className="flex items-center gap-1">
-                          {/* NÚT SỬA BÀI GIẢNG */}
                           <button
                             onClick={() => setEditingLesson(lesson)}
                             className="text-primary hover:bg-primary/10 p-2 rounded-lg transition-colors"
@@ -376,7 +349,6 @@ export default function ClassroomDetail() {
                           >
                             <span className="material-symbols-outlined text-lg">edit</span>
                           </button>
-                          {/* NÚT XÓA BÀI GIẢNG */}
                           <button
                             onClick={() => handleDeleteLesson(lesson._id)}
                             className="text-error hover:bg-error-container/10 p-2 rounded-lg transition-colors"
@@ -667,7 +639,7 @@ export default function ClassroomDetail() {
         </div>
       </main>
 
-      {/* MODAL ĐIỀU KHIỂN TẬP TRUNG (Mở khi Tạo MỚI HOẶC SỬA) */}
+      {/* MODALS HỆ THỐNG */}
       <CreateLessonModal
         isOpen={isModalOpen || !!editingLesson}
         onClose={() => {
@@ -685,6 +657,15 @@ export default function ClassroomDetail() {
         onClose={() => setIsAssignmentModalOpen(false)}
         classId={classId!}
         onCreated={handleAssignmentCreated}
+      />
+
+      {/* MODAL HỌC ONLINE TRỰC TUYẾN */}
+      <LiveRoomModal
+        isOpen={isLiveRoomOpen}
+        onClose={() => setIsLiveRoomOpen(false)}
+        roomName={liveRoomName}
+        jwtToken={jwtToken}
+        appId={appId}
       />
     </div>
   );

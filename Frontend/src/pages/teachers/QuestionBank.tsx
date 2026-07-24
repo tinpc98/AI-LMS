@@ -1,20 +1,20 @@
 import { useState, useEffect } from "react";
-import axios from "axios";
+import axiosClient from "../../api/axiosClient";
 
 const QuestionBank = () => {
   // 1. STATE QUẢN LÝ DỮ LIỆU & POPUP
-  const [questions, setQuestions] = useState([]);
+  const [questions, setQuestions] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [totalQuestions, setTotalQuestions] = useState(0);
 
   // States cho Popup Thêm/Sửa
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [modalMode, setModalMode] = useState("EDIT");
-  const [editingId, setEditingId] = useState(null);
+  const [modalMode, setModalMode] = useState<"ADD" | "EDIT">("EDIT");
+  const [editingId, setEditingId] = useState<any>(null);
 
   // States cho Popup Xem Chi Tiết
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
-  const [viewingQuestion, setViewingQuestion] = useState(null);
+  const [viewingQuestion, setViewingQuestion] = useState<any>(null);
 
   // States cho Popup Thông báo (Xanh/Đỏ)
   const [successMessage, setSuccessMessage] = useState("");
@@ -31,13 +31,13 @@ const QuestionBank = () => {
   const fetchQuestions = async () => {
     setIsLoading(true);
     try {
-      const response = await axios.get("http://localhost:5000/api/questions", {
+      const response = await axiosClient.get("/api/questions", {
         params: filters,
       });
 
       setQuestions(response.data.data || []);
       setTotalQuestions(response.data.total || 0);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Lỗi khi tải ngân hàng câu hỏi:", error);
     } finally {
       setIsLoading(false);
@@ -50,7 +50,7 @@ const QuestionBank = () => {
   }, [filters]);
 
   // Hàm xử lý đổi Filter
-  const handleFilterChange = (e) => {
+  const handleFilterChange = (e: any) => {
     const { name, value } = e.target;
     setFilters((prev) => ({
       ...prev,
@@ -59,7 +59,7 @@ const QuestionBank = () => {
   };
 
   // Hàm Helper: Đổi màu Badge tùy theo độ khó
-  const renderDifficultyBadge = (difficulty) => {
+  const renderDifficultyBadge = (difficulty: any) => {
     switch (difficulty?.toUpperCase()) {
       case "HARD":
         return (
@@ -69,14 +69,13 @@ const QuestionBank = () => {
         );
       case "MEDIUM":
         return (
-          <span className="px-2 py-1 bg-surface-container-highest text-on-surface-variant text-[12px] font-bold rounded-full uppercase">
-            Trung bình
+          <span className="px-2 py-1 bg-tertiary-container text-on-tertiary-container text-[12px] font-bold rounded-full uppercase">
+            Vừa
           </span>
         );
-      case "EASY":
       default:
         return (
-          <span className="px-2 py-1 bg-surface-variant text-primary text-[12px] font-bold rounded-full uppercase">
+          <span className="px-2 py-1 bg-secondary-container text-on-secondary-container text-[12px] font-bold rounded-full uppercase">
             Dễ
           </span>
         );
@@ -92,8 +91,8 @@ const QuestionBank = () => {
     options: ["", "", "", ""],
     correctAnswer: "",
   };
-  const [formData, setFormData] = useState(initialForm);
-  const [formErrors, setFormErrors] = useState({});
+  const [formData, setFormData] = useState<any>(initialForm);
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
   // Mở popup Thêm mới
   const openAddModal = () => {
@@ -104,7 +103,7 @@ const QuestionBank = () => {
   };
 
   // Mở popup Chỉnh sửa
-  const openEditModal = (question) => {
+  const openEditModal = (question: any) => {
     setModalMode("EDIT");
     setEditingId(question._id);
 
@@ -131,14 +130,14 @@ const QuestionBank = () => {
   };
 
   // Mở popup Xem chi tiết
-  const openViewModal = (question) => {
+  const openViewModal = (question: any) => {
     setViewingQuestion(question);
     setIsViewModalOpen(true);
   };
 
   // Gọi API Lưu (Thêm/Sửa)
   const handleSaveQuestion = async () => {
-    const errors = {};
+    const errors: Record<string, string> = {};
     let hasError = false;
 
     if (!formData.topic.trim()) {
@@ -163,11 +162,11 @@ const QuestionBank = () => {
 
     try {
       if (modalMode === "ADD") {
-        await axios.post("http://localhost:5000/api/questions", formData);
+        await axiosClient.post("/api/questions", formData);
         setSuccessMessage("Thêm câu hỏi thành công!");
       } else {
-        await axios.put(
-          `http://localhost:5000/api/questions/${editingId}`,
+        await axiosClient.put(
+          `/api/questions/${editingId}`,
           formData,
         );
         setSuccessMessage("Cập nhật câu hỏi thành công!");
@@ -179,7 +178,7 @@ const QuestionBank = () => {
       setTimeout(() => {
         setSuccessMessage("");
       }, 3000);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Lỗi API chi tiết:", error.response?.data);
       const backendError =
         error.response?.data?.message ||
@@ -194,14 +193,14 @@ const QuestionBank = () => {
   };
 
   // Hàm xóa câu hỏi
-  const handleDelete = async (id) => {
+  const handleDelete = async (id: any) => {
     if (window.confirm("Bạn có chắc chắn muốn xóa câu hỏi này không?")) {
       try {
-        await axios.delete(`http://localhost:5000/api/questions/${id}`);
+        await axiosClient.delete(`/api/questions/${id}`);
         fetchQuestions();
         setSuccessMessage("Xóa câu hỏi thành công!");
         setTimeout(() => setSuccessMessage(""), 3000);
-      } catch (error) {
+      } catch (error: any) {
         setErrorMessage(
           error.response?.data?.message || "Có lỗi khi xóa câu hỏi!",
         );
@@ -391,7 +390,7 @@ const QuestionBank = () => {
               {isLoading ? (
                 <tr>
                   <td
-                    colSpan="5"
+                    colSpan={5}
                     className="text-center py-10 text-on-surface-variant"
                   >
                     Đang tải dữ liệu...
@@ -400,7 +399,7 @@ const QuestionBank = () => {
               ) : questions.length === 0 ? (
                 <tr>
                   <td
-                    colSpan="5"
+                    colSpan={5}
                     className="text-center py-10 text-on-surface-variant"
                   >
                     Không tìm thấy câu hỏi nào phù hợp với bộ lọc.
@@ -563,7 +562,7 @@ const QuestionBank = () => {
                     setFormData({ ...formData, content: e.target.value });
                     setFormErrors({ ...formErrors, content: "" });
                   }}
-                  rows="3"
+                  rows={3}
                   className={`w-full p-3 bg-surface-container-low border rounded-lg focus:ring-2 focus:outline-none resize-y ${formErrors.content ? "border-red-500 focus:ring-red-500" : "border-outline-variant focus:ring-primary"}`}
                   placeholder="Nhập nội dung câu hỏi vào đây..."
                 ></textarea>
@@ -757,7 +756,7 @@ const QuestionBank = () => {
                       Các đáp án:
                     </p>
                     <div className="space-y-3">
-                      {viewingQuestion.options.map((opt, idx) => {
+                      {viewingQuestion.options.map((opt: any, idx: number) => {
                         if (!opt) return null; // Bỏ qua nếu option trống
                         const isCorrect = opt === viewingQuestion.correctAnswer;
                         const label = String.fromCharCode(65 + idx); // A, B, C, D
