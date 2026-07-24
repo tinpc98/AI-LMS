@@ -1,5 +1,6 @@
 import axios, { AxiosError } from "axios";
 import type { InternalAxiosRequestConfig } from "axios";
+import { toast } from "../utils/toast";
 
 const axiosClient = axios.create({
   baseURL: "http://localhost:5000", // Port của Backend Node.js
@@ -63,8 +64,9 @@ axiosClient.interceptors.response.use(
     if (error.response?.status === 401 || error.response?.status === 403) {
       // Tránh việc bắn liên tiếp nhiều alert khi có nhiều API lỗi cùng lúc
       localStorage.removeItem("accessToken");
-      alert(
+      toast.error(
         "Phiên đăng nhập của bạn đã hết hạn hoặc không hợp lệ. Vui lòng đăng nhập lại!",
+        "Phiên hết hạn"
       );
       window.location.href = "/login";
     }

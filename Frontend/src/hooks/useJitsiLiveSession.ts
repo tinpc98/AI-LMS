@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { io, Socket } from "socket.io-client";
 import { liveApi } from "../api/liveApi";
+import { toast } from "../utils/toast";
 
 interface UseJitsiLiveSessionProps {
   classId?: string;
@@ -93,7 +94,7 @@ export function useJitsiLiveSession({ classId, isTeacher = false }: UseJitsiLive
       } catch (err: any) {
         console.error("Lỗi khởi tạo phòng học online:", err);
         const serverMsg = err?.response?.data?.message || err?.message || "Vui lòng thử lại!";
-        alert(`Không thể khởi tạo phòng học online: ${serverMsg}`);
+        toast.error(`Không thể khởi tạo phòng học trực tuyến: ${serverMsg}`);
       } finally {
         setIsLiveLoading(false);
       }
@@ -106,7 +107,7 @@ export function useJitsiLiveSession({ classId, isTeacher = false }: UseJitsiLive
     async (targetRoomCode?: string) => {
       const roomToJoin = targetRoomCode || liveRoomName;
       if (!classId || !roomToJoin) {
-        alert("Hiện chưa có buổi học trực tuyến nào đang mở cho lớp này.");
+        toast.info("Hiện chưa có buổi học trực tuyến nào đang mở cho lớp này.");
         return;
       }
 
@@ -120,7 +121,7 @@ export function useJitsiLiveSession({ classId, isTeacher = false }: UseJitsiLive
       } catch (err: any) {
         console.error("Lỗi khi tham gia phòng học trực tuyến:", err);
         const serverMsg = err?.response?.data?.message || err?.message || "Vui lòng thử lại!";
-        alert(`Không thể tham gia buổi học trực tuyến: ${serverMsg}`);
+        toast.error(`Không thể tham gia buổi học trực tuyến: ${serverMsg}`);
       } finally {
         setIsLiveLoading(false);
       }

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axiosClient from "../../api/axiosClient";
+import { toast } from "../../utils/toast";
 
 export default function ExamAttemptDetail() {
   const { attemptId } = useParams();
@@ -49,7 +50,7 @@ export default function ExamAttemptDetail() {
 
     // Chặn tuyệt đối không cho nhập quá điểm tối đa của câu hỏi
     if (numValue > maxPoints) {
-      alert(`Điểm tối đa của câu này chỉ là ${maxPoints} điểm!`);
+      toast.warning(`Điểm tối đa của câu hỏi này là ${maxPoints} điểm.`);
       numValue = maxPoints; // Tự động ép về mức tối đa cho phép
     }
 
@@ -75,13 +76,12 @@ export default function ExamAttemptDetail() {
       await axiosClient.put(`/api/exam-attempts/${attemptId}/grade-essay`, {
         essayGrades: payload,
       });
+      toast.success("Duyệt điểm tự luận thành công!");
       setShowApprovalPopup(false);
       navigate(-1); // Quay lại trang trước
     } catch (error: any) {
       console.error("🔥 LỖI TỪ BACKEND:", error.response?.data || error);
-      alert(
-        `Lỗi phê duyệt: ${error.response?.data?.message || "Lỗi máy chủ nội bộ (500)."}`
-      );
+      toast.error(error.response?.data?.message || "Phê duyệt điểm thất bại. Vui lòng thử lại sau.");
     } finally {
       setIsSubmitting(false);
     }

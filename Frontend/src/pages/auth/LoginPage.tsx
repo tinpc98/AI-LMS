@@ -51,7 +51,7 @@ const Login = () => {
         localStorage.setItem("userRole", normalizedRole);
       }
 
-      alert(result.message || "Đăng nhập thành công rực rỡ!");
+      toast.success(result.message || "Đăng nhập thành công.");
 
       // Phân quyền điều hướng (Authorization)
       if (normalizedRole === "teacher") {
@@ -67,9 +67,9 @@ const Login = () => {
       if (axios.isAxiosError(error)) {
         console.log("Lỗi đăng nhập:", error);
         const serverMessage = error.response?.data?.message || "Email hoặc mật khẩu không chính xác!";
-        alert(serverMessage);
+        toast.error(serverMessage);
       } else {
-        alert("Đã xảy ra lỗi hệ thống không xác định.");
+        toast.error("Đã xảy ra lỗi hệ thống không xác định.");
       }
     } finally {
       setIsLoading(false); // Tắt trạng thái loading dù thành công hay thất bại

@@ -12,6 +12,7 @@ import CreateLessonModal from "../../components/features/CreateLessonModal";
 import LiveRoomModal from "../../components/features/LiveRoomModal"; // <-- TÍCH HỢP LIVE ROOM MODAL
 import { useJitsiLiveSession } from "../../hooks/useJitsiLiveSession";
 import { TeacherClassroomHeader } from "../../components/features/teacher/TeacherClassroomHeader";
+import { toast } from "../../utils/toast";
 
 const TAB_ITEMS = [
   { id: "lessons", label: "Bài giảng", icon: "book" },
@@ -130,9 +131,10 @@ export default function ClassroomDetail() {
     try {
       await lessonApi.deleteLesson(id);
       setLessons((prev) => prev.filter((l) => l._id !== id));
+      toast.success("Xóa bài giảng thành công.");
     } catch (error: unknown) {
       if (axios.isAxiosError(error)) {
-        alert(error.response?.data?.message || "Xóa bài giảng thất bại.");
+        toast.error(error.response?.data?.message || "Xóa bài giảng thất bại.");
       }
     }
   };

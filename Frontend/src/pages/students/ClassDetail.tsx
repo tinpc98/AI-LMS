@@ -13,6 +13,8 @@ import SubmitAssignmentModal from "../../components/features/SubmitAssignmentMod
 import { useJitsiLiveSession } from "../../hooks/useJitsiLiveSession";
 import type { IExam } from "../../interface/examInterface";
 import { StudentLiveSidebar } from "../../components/features/student/StudentLiveSidebar";
+import { toast } from "../../utils/toast";
+
 
 const MOCK_RANKINGS = [
   { rank: 1, name: "Trần Quốc Quân", short: "TQ", score: 9.8, bg: "bg-yellow-100 text-yellow-700 border-yellow-200", isUser: false },
@@ -35,6 +37,8 @@ export default function ClassDetail() {
   const [errorMsg, setErrorMsg] = useState("");
   const [showPopup, setShowPopup] = useState(false);
   const [popupMessage, setPopupMessage] = useState("");
+  const [popupTitle, setPopupTitle] = useState("Thông báo");
+  const [popupType, setPopupType] = useState<"success" | "error" | "info">("info");
   const [searchQuery, setSearchQuery] = useState("");
 
   // --- Custom Hook Chức năng Học Online ---
@@ -119,10 +123,10 @@ export default function ClassDetail() {
     fetchClassExams();
   }, [classId]);
 
+
   useEffect(() => {
     if (notificationMessage) {
-      setPopupMessage(notificationMessage);
-      setShowPopup(true);
+      toast.info(notificationMessage, "Buổi học trực tuyến");
       setNotificationMessage(null);
     }
   }, [notificationMessage, setNotificationMessage]);
@@ -258,8 +262,7 @@ export default function ClassDetail() {
     const studentId = getStudentId(); // Lấy ID học sinh
 
     if (!studentId) {
-      setPopupMessage("Không tìm thấy thông tin đăng nhập. Vui lòng đăng nhập lại!");
-      setShowPopup(true);
+      toast.error("Không tìm thấy thông tin đăng nhập. Vui lòng đăng nhập lại!", "Lỗi xác thực");
       return;
     }
 
@@ -279,8 +282,7 @@ export default function ClassDetail() {
 
       const errorMsg = error.response?.data?.message || "Không thể bắt đầu bài thi.";
       console.log("🔥 LÝ DO BACKEND CHẶN:", errorMsg);
-      setPopupMessage(errorMsg);
-      setShowPopup(true);
+      toast.error(errorMsg, "Không thể bắt đầu bài thi");
     }
   };
 
@@ -290,19 +292,15 @@ export default function ClassDetail() {
     }
   };
 
-
-
   const handleCancelSubmission = async (assignmentId: string) => {
     try {
       await assignmentApi.cancelSubmission(assignmentId);
       setSubmittedAssignmentIds((prev) => prev.filter((id) => id !== assignmentId));
-      setPopupMessage("Đã hủy nộp bài thành công.");
-      setShowPopup(true);
+      toast.success("Hủy nộp bài tập thành công!", "Hủy nộp bài");
     } catch (error: any) {
       console.error("Lỗi khi hủy nộp bài:", error);
       const msg = error.response?.data?.message || "Không thể hủy nộp bài. Vui lòng thử lại.";
-      setPopupMessage(msg);
-      setShowPopup(true);
+      toast.error(msg, "Hủy nộp bài thất bại");
     }
   };
 
@@ -313,8 +311,7 @@ export default function ClassDetail() {
 
   const handleSubmitSuccess = (assignmentId: string) => {
     setSubmittedAssignmentIds((prev) => [...new Set([...prev, assignmentId])]);
-    setPopupMessage("Nộp bài tập thành công!");
-    setShowPopup(true);
+    toast.success("Nộp bài tập thành công!", "Nộp bài tập");
   };
 
   // ==============================================
@@ -1157,25 +1154,6 @@ export default function ClassDetail() {
                 ) : (
                   "Bắt đầu ngay"
                 )}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-      {showPopup && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white p-6 md:p-8 rounded-2xl shadow-2xl text-center max-w-sm w-[90%] mx-auto transform animate-in zoom-in-95 duration-200">
-            <div className="w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-4">
-              <span className="material-symbols-outlined text-3xl font-bold text-error">block</span>
-            </div>
-            <h3 className="font-bold text-xl text-gray-900 mb-2">Không thể làm bài</h3>
-            <p className="text-gray-600 mb-6 text-sm leading-relaxed">{popupMessage}</p>
-            <div className="flex gap-3">
-              <button
-                onClick={() => navigate("/")} // Đổi link này về trang chủ / danh sách lớp của bạn
-                className="w-full py-2.5 px-4 bg-gray-100 text-gray-700 font-bold rounded-xl hover:bg-gray-200 transition-colors"
-              >
-                Quay lại trang chủ
               </button>
             </div>
           </div>

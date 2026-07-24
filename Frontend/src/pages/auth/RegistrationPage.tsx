@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { authApi } from "../../api/authApi";
 import type User from "../../interface/userInterface";
 import axios from "axios";
+import { toast } from "../../utils/toast";
 
 const Register = () => {
   const navigate = useNavigate();
@@ -28,13 +29,13 @@ const Register = () => {
         role: "student",
       });
 
-      alert(res.data.message || "Đăng ký tài khoản thành công rực rỡ!");
+      toast.success(res.data.message || "Đăng ký tài khoản thành công.");
       navigate("/login");
     } catch (error: unknown) {
       if (axios.isAxiosError(error)) {
         console.log("Lỗi đăng ký:", error);
         const serverMessage = error.response?.data?.message || "Đăng ký thất bại, vui lòng thử lại!";
-        alert(serverMessage);
+        toast.error(serverMessage);
       }
     }
   };

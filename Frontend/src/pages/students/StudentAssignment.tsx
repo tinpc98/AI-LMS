@@ -1,6 +1,7 @@
 import { useState, type ChangeEvent } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import assignmentApi from "../../api/assignmentApi";
+import { toast } from "../../utils/toast";
 
 const StudentAssignmentContent = () => {
   const { assignmentId } = useParams<{ assignmentId: string }>();
@@ -18,7 +19,7 @@ const StudentAssignmentContent = () => {
     if (!filesArray.length) return;
 
     if (selectedFiles.length + filesArray.length > 5) {
-      alert("Bạn chỉ có thể đính kèm tối đa 5 tệp bài làm.");
+      toast.warning("Bạn chỉ có thể đính kèm tối đa 5 tệp bài làm.");
       event.target.value = "";
       return;
     }
@@ -33,7 +34,7 @@ const StudentAssignmentContent = () => {
 
   const handleSubmitAssignment = async () => {
     if (!assignmentId) {
-      alert("Không tìm thấy mã bài tập trong URL.");
+      toast.error("Không tìm thấy thông tin bài tập.");
       return;
     }
 
@@ -53,11 +54,12 @@ const StudentAssignmentContent = () => {
       });
 
       await assignmentApi.submitAssignment(assignmentId, formData);
+      toast.success("Nộp bài tập thành công!");
       setIsModalOpen(false);
       navigate(-1);
     } catch (error) {
       console.error("Lỗi khi nộp bài:", error);
-      alert("Nộp bài thất bại. Vui lòng thử lại.");
+      toast.error("Nộp bài thất bại. Vui lòng thử lại sau.");
     } finally {
       setIsSubmitting(false);
     }

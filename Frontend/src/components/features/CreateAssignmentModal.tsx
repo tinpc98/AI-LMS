@@ -1,6 +1,7 @@
 import { useState, type ChangeEvent, type FormEvent } from "react";
-import assignmentApi from "../../api/assignmentApi";
 import type { IAssignment } from "../../interface/assignmentInterface";
+import { toast } from "../../utils/toast";
+import assignmentApi from "../../api/assignmentApi";
 
 interface CreateAssignmentModalProps {
   isOpen: boolean;
@@ -33,7 +34,7 @@ const CreateAssignmentModal = ({ isOpen, onClose, classId, lessonId, onCreated }
     if (!filesArray.length) return;
 
     if (selectedFiles.length + filesArray.length > MAX_FILES) {
-      alert("Chỉ được đính kèm tối đa 5 file đề bài!");
+      toast.warning("Chỉ được đính kèm tối đa 5 tệp đề bài.");
       event.target.value = "";
       return;
     }
@@ -53,12 +54,12 @@ const CreateAssignmentModal = ({ isOpen, onClose, classId, lessonId, onCreated }
     const trimmedDescription = description.trim();
 
     if (!trimmedTitle) {
-      alert("Vui lòng nhập tiêu đề bài tập!");
+      toast.warning("Vui lòng nhập tiêu đề bài tập.");
       return;
     }
 
     if (!deadline) {
-      alert("Vui lòng chọn hạn nộp!");
+      toast.warning("Vui lòng chọn hạn nộp bài tập.");
       return;
     }
 
@@ -78,12 +79,13 @@ const CreateAssignmentModal = ({ isOpen, onClose, classId, lessonId, onCreated }
       });
 
       const createdAssignment = await assignmentApi.createAssignment(formData);
+      toast.success("Tạo bài tập mới thành công!");
       onCreated(createdAssignment);
       resetForm();
       onClose();
     } catch (error) {
       console.error("Lỗi khi tạo bài tập:", error);
-      alert("Tạo bài tập thất bại. Vui lòng kiểm tra lại dữ liệu gửi đi!");
+      toast.error("Tạo bài tập thất bại. Vui lòng thử lại sau.");
     } finally {
       setLoading(false);
     }
