@@ -11,8 +11,10 @@
     "mock-api": "json-server --watch db.json --port 3000"
   },
   "dependencies": {
+    "@ant-design/icons": "^6.3.2",
     "@jitsi/react-sdk": "^1.4.4",
     "@tailwindcss/vite": "^4.3.1",
+    "antd": "^6.5.2",
     "axios": "^1.17.0",
     "dotenv": "^17.4.2",
     "mongodb": "^7.3.0",
