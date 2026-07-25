@@ -35,17 +35,13 @@ export default function ClassDetail() {
   const [isSubmitModalOpen, setIsSubmitModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
-  const [showPopup, setShowPopup] = useState(false);
-  const [popupMessage, setPopupMessage] = useState("");
-  const [popupTitle, setPopupTitle] = useState("Thông báo");
-  const [popupType, setPopupType] = useState<"success" | "error" | "info">("info");
   const [searchQuery, setSearchQuery] = useState("");
 
   // --- Custom Hook Chức năng Học Online ---
   const {
     isLiveRoomOpen,
     setIsLiveRoomOpen,
-    liveRoomName,
+    meetingRoomId,
     jwtToken,
     appId,
     isLiveLoading,
@@ -53,9 +49,6 @@ export default function ClassDetail() {
     setNotificationMessage,
     handleJoinLiveClass,
   } = useJitsiLiveSession({ classId, isTeacher: false });
-
-  const [customRoomCode, setCustomRoomCode] = useState("");
-  const [showRoomCodeInput, setShowRoomCodeInput] = useState(false);
   
   // State hỗ trợ tab chat/thảo luận
   const [chatMessage, setChatMessage] = useState("");
@@ -465,13 +458,9 @@ export default function ClassDetail() {
         </nav>
         <div className="mt-auto pt-6 border-t border-outline-variant">
           <StudentLiveSidebar
-            liveRoomName={liveRoomName}
+            meetingRoomId={meetingRoomId}
             isLiveLoading={isLiveLoading}
-            onJoinClick={(code) => void handleJoinLiveClass(code)}
-            showRoomCodeInput={showRoomCodeInput}
-            setShowRoomCodeInput={setShowRoomCodeInput}
-            customRoomCode={customRoomCode}
-            setCustomRoomCode={setCustomRoomCode}
+            onJoinClick={() => void handleJoinLiveClass()}
           />
           <div className="flex items-center mt-6 space-x-3 px-2">
             <div className="w-10 h-10 rounded-full bg-surface-container-high overflow-hidden flex-shrink-0">
@@ -516,13 +505,6 @@ export default function ClassDetail() {
           <button className="p-2 rounded-full hover:bg-surface-container-high text-secondary transition-colors relative">
             <span className="material-symbols-outlined">notifications</span>
             <span className="absolute top-2 right-2 w-2 h-2 bg-error rounded-full border-2 border-surface-bright"></span>
-          </button>
-          <div className="h-8 w-px bg-outline-variant hidden sm:block"></div>
-          <button
-            onClick={() => setShowRoomCodeInput((prev) => !prev)}
-            className="px-4 py-1.5 rounded-full border border-primary text-primary font-semibold text-sm hover:bg-primary hover:text-on-primary transition-all"
-          >
-            Tham gia bằng mã
           </button>
         </div>
       </header>
@@ -607,11 +589,11 @@ export default function ClassDetail() {
                   </div>
 
                   <h3 className="text-lg font-bold mb-1">
-                    {liveRoomName ? "🔴 Phòng học đang diễn ra" : "Phòng học trực tuyến"}
+                    {meetingRoomId ? "🔴 Phòng học đang diễn ra" : "Phòng học trực tuyến"}
                   </h3>
 
                   <p className="text-xs opacity-90 mb-4">
-                    {liveRoomName
+                    {meetingRoomId
                       ? "Giáo viên đang mở lớp học. Nhấn để tham gia ngay."
                       : "Chưa có lớp học trực tuyến đang diễn ra."}
                   </p>
@@ -619,9 +601,9 @@ export default function ClassDetail() {
                   <div className="flex items-center text-xs font-bold uppercase tracking-widest">
                     {isLiveLoading
                       ? "Đang vào..."
-                      : liveRoomName
+                      : meetingRoomId
                       ? "Vào lớp ngay"
-                      : "Tham gia lớp học"}
+                      : "Chờ giáo viên mở lớp"}
 
                     <span className="material-symbols-outlined ml-2 group-hover:translate-x-2 transition-transform text-sm">
                       arrow_forward
@@ -629,37 +611,10 @@ export default function ClassDetail() {
                   </div>
                 </div>
 
-                {/* Nhập mã phòng */}
                 <div className="mt-5">
-                  {!showRoomCodeInput ? (
-                    <button
-                      onClick={() => setShowRoomCodeInput(true)}
-                      className="text-xs underline opacity-90 hover:opacity-100 transition"
-                    >
-                      + Nhập mã phòng thủ công
-                    </button>
-                  ) : (
-                    <div className="flex gap-2 mt-2">
-                      <input
-                        type="text"
-                        placeholder="Mã phòng..."
-                        value={customRoomCode}
-                        onChange={(e) => setCustomRoomCode(e.target.value)}
-                        className="flex-1 px-3 py-2 rounded-lg text-sm text-on-surface bg-white border border-outline"
-                      />
-
-                      <button
-                        onClick={() => {
-                          if (customRoomCode.trim()) {
-                            void handleJoinLiveClass(customRoomCode.trim());
-                          }
-                        }}
-                        className="px-4 rounded-lg bg-secondary text-on-secondary hover:bg-secondary-container transition"
-                      >
-                        Vào
-                      </button>
-                    </div>
-                  )}
+                  <p className="text-xs text-on-surface-variant">
+                    Học sinh chỉ cần nhấn vào "Học trực tuyến" khi giáo viên đã bắt đầu buổi học.
+                  </p>
                 </div>
               </div>
             </div>
@@ -1162,7 +1117,7 @@ export default function ClassDetail() {
       <LiveRoomModal
         isOpen={isLiveRoomOpen}
         onClose={() => setIsLiveRoomOpen(false)}
-        roomName={liveRoomName}
+        meetingRoomId={meetingRoomId}
         jwtToken={jwtToken}
         appId={appId}
       />

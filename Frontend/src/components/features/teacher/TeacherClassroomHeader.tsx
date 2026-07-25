@@ -41,7 +41,10 @@ export const TeacherClassroomHeader: React.FC<TeacherClassroomHeaderProps> = ({
         {/* Các badge thông tin & nút Dạy Trực Tuyến */}
         <div className="flex items-center gap-3 flex-wrap sm:flex-nowrap">
           <span className="bg-secondary-container text-on-secondary-container px-3 py-1 rounded-full text-xs font-bold font-mono">
-            Mã lớp: {classInfo.joinCode}
+            Mã lớp: {classInfo.classCode || "—"}
+          </span>
+          <span className="bg-surface-container-high text-on-surface-variant px-3 py-1 rounded-full text-xs font-medium">
+            {classInfo.learningMode ? `${classInfo.learningMode}` : "Chế độ học: —"}
           </span>
           <span className="bg-surface-container-high text-on-surface-variant px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1">
             <span className="material-symbols-outlined text-sm">groups</span>

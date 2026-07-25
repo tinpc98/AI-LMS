@@ -10,22 +10,21 @@ interface UseJitsiLiveSessionProps {
 
 export function useJitsiLiveSession({ classId, isTeacher = false }: UseJitsiLiveSessionProps) {
   const [isLiveRoomOpen, setIsLiveRoomOpen] = useState(false);
-  const [liveRoomName, setLiveRoomName] = useState("");
+  const [meetingRoomId, setMeetingRoomId] = useState("");
   const [jwtToken, setJwtToken] = useState("");
   const [appId, setAppId] = useState("");
   const [isLiveLoading, setIsLiveLoading] = useState(false);
   const [notificationMessage, setNotificationMessage] = useState<string | null>(null);
 
-  // 1. Fetch active session on mount
   useEffect(() => {
     if (!classId) return;
 
     const fetchActiveSession = async () => {
       try {
         const response = await liveApi.getActiveSession(classId);
-        const activeRoomName = response?.data?.data?.roomName;
-        if (activeRoomName) {
-          setLiveRoomName(activeRoomName);
+        const activeMeetingRoomId = response?.data?.data?.meetingRoomId;
+        if (activeMeetingRoomId) {
+          setMeetingRoomId(activeMeetingRoomId);
         }
       } catch (err) {
         console.error("Lỗi khi kiểm tra buổi học trực tuyến đang mở:", err);
@@ -35,7 +34,6 @@ export function useJitsiLiveSession({ classId, isTeacher = false }: UseJitsiLive
     void fetchActiveSession();
   }, [classId]);
 
-  // 2. Realtime Socket.IO Connection per classId
   useEffect(() => {
     if (!classId) return;
 
@@ -48,8 +46,8 @@ export function useJitsiLiveSession({ classId, isTeacher = false }: UseJitsiLive
 
     socket.on("LIVE_SESSION_STARTED", (data) => {
       console.log("📢 Realtime Live Session Started:", data);
-      if (data?.roomName) {
-        setLiveRoomName(data.roomName);
+      if (data?.meetingRoomId) {
+        setMeetingRoomId(data.meetingRoomId);
         if (!isTeacher) {
           setNotificationMessage(`📢 Lớp học trực tuyến "${data.title || "Buổi học"}" vừa bắt đầu! Bạn có thể nhấn tham gia ngay.`);
         }
@@ -58,7 +56,7 @@ export function useJitsiLiveSession({ classId, isTeacher = false }: UseJitsiLive
 
     socket.on("LIVE_SESSION_ENDED", () => {
       console.log("📢 Realtime Live Session Ended");
-      setLiveRoomName("");
+      setMeetingRoomId("");
       setIsLiveRoomOpen(false);
       setNotificationMessage("Buổi học trực tuyến đã kết thúc.");
     });
@@ -69,32 +67,27 @@ export function useJitsiLiveSession({ classId, isTeacher = false }: UseJitsiLive
     };
   }, [classId, isTeacher]);
 
-  // 3. Teacher Handler: Start Live Session
   const handleStartLiveSession = useCallback(
-    async (title?: string) => {
+    async () => {
       if (!classId) return;
       setIsLiveLoading(true);
 
       try {
-        const response = await liveApi.createSession({
-          classId,
-          title: title || "Buổi học trực tuyến",
-        });
-
-        const roomNameFromServer = response?.data?.data?.roomName;
-        if (!roomNameFromServer) {
-          throw new Error("Backend không trả về roomName cho buổi học.");
+        const response = await liveApi.createSession({ classId });
+        const meetingRoomIdFromServer = response?.data?.data?.meetingRoomId;
+        if (!meetingRoomIdFromServer) {
+          throw new Error("Backend không trả về meetingRoomId cho buổi học.");
         }
 
-        const tokenRes = await liveApi.getJaasToken(roomNameFromServer);
+        const tokenRes = await liveApi.getJaasToken(meetingRoomIdFromServer);
         setJwtToken(tokenRes.data.token);
         setAppId(tokenRes.data.appId);
-        setLiveRoomName(roomNameFromServer);
+        setMeetingRoomId(meetingRoomIdFromServer);
         setIsLiveRoomOpen(true);
       } catch (err: any) {
-        console.error("Lỗi khởi tạo phòng học online:", err);
+        console.error("Lỗi khởi tạo buổi học trực tuyến:", err);
         const serverMsg = err?.response?.data?.message || err?.message || "Vui lòng thử lại!";
-        toast.error(`Không thể khởi tạo phòng học trực tuyến: ${serverMsg}`);
+        toast.error(`Không thể khởi tạo buổi học trực tuyến: ${serverMsg}`);
       } finally {
         setIsLiveLoading(false);
       }
@@ -102,50 +95,51 @@ export function useJitsiLiveSession({ classId, isTeacher = false }: UseJitsiLive
     [classId]
   );
 
-  // 4. Student / Teacher Handler: Join Live Session
-  const handleJoinLiveClass = useCallback(
-    async (targetRoomCode?: string) => {
-      const roomToJoin = targetRoomCode || liveRoomName;
-      if (!classId || !roomToJoin) {
-        toast.info("Hiện chưa có buổi học trực tuyến nào đang mở cho lớp này.");
+  const handleJoinLiveClass = useCallback(async () => {
+    if (!classId) {
+      toast.info("Không thể xác định lớp học.");
+      return;
+    }
+
+    setIsLiveLoading(true);
+    try {
+      const response = await liveApi.getActiveSession(classId);
+      const meetingRoomIdFromServer = response?.data?.data?.meetingRoomId;
+
+      if (!meetingRoomIdFromServer) {
+        toast.info("Giáo viên chưa bắt đầu buổi học.");
         return;
       }
 
-      setIsLiveLoading(true);
-      try {
-        const response = await liveApi.getJaasToken(roomToJoin);
-        setLiveRoomName(roomToJoin);
-        setJwtToken(response.data.token);
-        setAppId(response.data.appId);
-        setIsLiveRoomOpen(true);
-      } catch (err: any) {
-        console.error("Lỗi khi tham gia phòng học trực tuyến:", err);
-        const serverMsg = err?.response?.data?.message || err?.message || "Vui lòng thử lại!";
-        toast.error(`Không thể tham gia buổi học trực tuyến: ${serverMsg}`);
-      } finally {
-        setIsLiveLoading(false);
-      }
-    },
-    [classId, liveRoomName]
-  );
+      const tokenRes = await liveApi.getJaasToken(meetingRoomIdFromServer);
+      setJwtToken(tokenRes.data.token);
+      setAppId(tokenRes.data.appId);
+      setMeetingRoomId(meetingRoomIdFromServer);
+      setIsLiveRoomOpen(true);
+    } catch (err: any) {
+      console.error("Lỗi khi tham gia buổi học trực tuyến:", err);
+      const serverMsg = err?.response?.data?.message || err?.message || "Vui lòng thử lại!";
+      toast.error(`Không thể tham gia buổi học trực tuyến: ${serverMsg}`);
+    } finally {
+      setIsLiveLoading(false);
+    }
+  }, [classId]);
 
-  // 5. Teacher Handler: End Live Session
   const handleEndLiveSession = useCallback(async () => {
     if (!classId) return;
     try {
       await liveApi.endSession(classId);
-      setLiveRoomName("");
+      setMeetingRoomId("");
       setIsLiveRoomOpen(false);
     } catch (err) {
-      console.error("Lỗi khi kết thúc phòng học:", err);
+      console.error("Lỗi khi kết thúc buổi học:", err);
     }
   }, [classId]);
 
   return {
     isLiveRoomOpen,
     setIsLiveRoomOpen,
-    liveRoomName,
-    setLiveRoomName,
+    meetingRoomId,
     jwtToken,
     appId,
     isLiveLoading,
