@@ -1,7 +1,6 @@
-import { create } from "domain";
-import classModel from "../models/class.model.js";
 import crypto from "crypto";
-import User from "../models/user.models.js";
+import classModel from "../models/class.model.js";
+import Course from "../models/course.model.js";
 
 export const ClassList = async (req, res) => {
   try {
@@ -18,7 +17,11 @@ export const ClassList = async (req, res) => {
     }
     // Nếu là Admin, query rỗng {} sẽ lấy ra toàn bộ lớp học trên hệ thống
     //Dùng populate để lấy thêm tên giáo viên thay vì trả về id
-    const classList = await classModel.find(query).populate("teacherId", "fullName email").sort({ createAt: -1 }); // sắp xếp lớp mới tạo lên đầu
+    const classList = await classModel
+      .find(query)
+      .populate("teacherId", "fullName email")
+      .populate("courseId", "courseName subject grade status")
+      .sort({ createdAt: -1 });
     return res.status(200).json({ message: "Lấy danh sách lớp học thành công", data: classList });
   } catch (error) {
     console.error("[Class] danh sách lỗi:", error);
@@ -34,7 +37,8 @@ export const ClassListById = async (req, res) => {
     const classDetail = await classModel
       .findById(id)
       .populate("teacherId", "fullName email")
-      .populate("students", "fullName email");
+      .populate("students", "fullName email")
+      .populate("courseId", "courseName subject grade status");
     if (!classDetail) {
       return res.status(404).json({ message: "Lớp học không tồn tại" });
     }
@@ -47,20 +51,37 @@ export const ClassListById = async (req, res) => {
 //Tạo lớp học mới (Tự động hóa joinCode & teacherId)
 export const AddNewClass = async (req, res) => {
   try {
-    const { className, subjectId } = req.body;
-    if (!className) {
-      return res.status(400).json({ message: "Vui lòng nhập tên lớp" });
+    const { className, courseId, classCode, room, startDate, endDate, schedule, maxStudents, meetingLink, note, status } = req.body;
+
+    if (!className || !courseId) {
+      return res.status(400).json({ message: "Vui lòng nhập tên lớp và khóa học" });
     }
-    // sinh mã ngấu nhiên 6 ký tự
+
+    const courseExists = await Course.findById(courseId);
+    if (!courseExists) {
+      return res.status(404).json({ message: "Khóa học không tồn tại" });
+    }
+
     const joinCode = crypto.randomBytes(3).toString("hex").toUpperCase();
 
     const newClassData = {
       className,
-      subjectId: subjectId || null,
-      teacherId: req.user.id, // lấy id trực tiếp từ token đã verify
+      classCode: classCode || `CLS-${Date.now().toString().slice(-6)}`,
+      courseId,
+      teacherId: req.user.id,
       joinCode,
-      student: [],
+      room: room || "",
+      startDate: startDate || null,
+      endDate: endDate || null,
+      schedule: schedule || { days: [], startTime: "", endTime: "" },
+      maxStudents: maxStudents || 30,
+      currentStudents: 0,
+      students: [],
+      meetingLink: meetingLink || "",
+      note: note || "",
+      status: status || "Upcoming",
     };
+
     const savedClass = await new classModel(newClassData).save();
     return res.status(200).json({ message: "Tạo lớp học thành công", data: savedClass });
   } catch (error) {
@@ -74,9 +95,21 @@ export const AddNewClass = async (req, res) => {
 export const UpdateClass = async (req, res) => {
   const { id } = req.params;
   try {
-    const { className, subjectId, status } = req.body;
-    // Chỉ cho phép cập nhật những trường an toàn, không cho phép đổi joinCode hay teacherId qua API này
-    const updateData = { className, subjectId, status };
+    const { className, courseId, classCode, room, startDate, endDate, schedule, maxStudents, meetingLink, note, status } = req.body;
+
+    const updateData = {
+      className,
+      courseId,
+      classCode,
+      room,
+      startDate,
+      endDate,
+      schedule,
+      maxStudents,
+      meetingLink,
+      note,
+      status,
+    };
 
     // Điều kiện cập nhật: Phải đúng ID lớp VÀ người cập nhật phải là Giáo viên tạo ra lớp đó
     const query = { _id: id, teacherId: req.user.id };
