@@ -2,7 +2,20 @@ import { Schema, model } from "mongoose";
 
 const scheduleSchema = new Schema(
   {
-    days: [{ type: String, trim: true }],
+    days: [
+      {
+        type: String,
+        enum: [
+          "Monday",
+          "Tuesday",
+          "Wednesday",
+          "Thursday",
+          "Friday",
+          "Saturday",
+          "Sunday"
+        ]
+      }
+    ],
     startTime: { type: String, trim: true, default: "" },
     endTime: { type: String, trim: true, default: "" },
   },
@@ -31,7 +44,7 @@ export const classSchema = new Schema(
     teacherId: {
       type: Schema.Types.ObjectId,
       ref: "User",
-      required: true,
+      default: null,
     },
     joinCode: {
       type: String,
@@ -66,7 +79,7 @@ export const classSchema = new Schema(
       min: 0,
     },
     students: [{ type: Schema.Types.ObjectId, ref: "User" }],
-    meetingLink: {
+    description: {
       type: String,
       trim: true,
       default: "",
@@ -75,6 +88,15 @@ export const classSchema = new Schema(
       type: String,
       trim: true,
       default: "",
+    },
+    learningMode: {
+      type: String,
+      enum: ["Offline", "Online", "Hybrid"],
+      default: "Offline",
+    },
+    isEnrollmentOpen: {
+      type: Boolean,
+      default: true,
     },
     status: {
       type: String,
@@ -85,7 +107,18 @@ export const classSchema = new Schema(
   { timestamps: true },
 );
 
-classSchema.pre("save", function (next) {
+classSchema.virtual("room").get(function () {
+  return this.classroom || "";
+}).set(function (value) {
+  if (value != null) {
+    this.classroom = value;
+  }
+});
+
+classSchema.set("toJSON", { virtuals: true });
+classSchema.set("toObject", { virtuals: true });
+
+classSchema.pre("validate", function (next) {
   if (this.currentStudents > this.maxStudents) {
     this.currentStudents = this.maxStudents;
   }

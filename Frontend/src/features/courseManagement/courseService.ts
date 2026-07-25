@@ -1,5 +1,5 @@
 import type { CourseFilters, CourseFormValues, CourseRecord } from "./course.types";
-import { mockCourses } from "./mockCourses";
+import { mockCourses } from "./course.mock";
 
 const delay = (ms: number) => new Promise((resolve) => window.setTimeout(resolve, ms));
 
