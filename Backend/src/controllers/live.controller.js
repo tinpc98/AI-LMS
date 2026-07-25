@@ -1,35 +1,55 @@
+import crypto from "crypto";
 import LiveSession from "../models/liveSession.model.js";
+import classModel from "../models/class.model.js";
 
-// 1. Giáo viên khởi tạo buổi học online (Đảm bảo duy nhất 1 roomName trong suốt buổi học)
 export const createLiveSession = async (req, res) => {
   try {
-    const { classId, title } = req.body;
+    const { classId, title, scheduledStart, scheduledEnd } = req.body;
 
-    // Kiểm tra nếu đã có buổi học đang diễn ra cho lớp này -> Tái sử dụng session cũ, KHÔNG tạo roomName mới
-    let session = await LiveSession.findOne({ classId, isLive: true });
+    if (!classId) {
+      return res.status(400).json({ success: false, message: "classId is required" });
+    }
+
+    const classInfo = await classModel.findById(classId).select("meetingRoomId");
+    if (!classInfo) {
+      return res.status(404).json({ success: false, message: "Lớp học không tồn tại" });
+    }
+
+    if (!classInfo.meetingRoomId) {
+      classInfo.meetingRoomId = `room_${crypto.randomBytes(4).toString("hex")}`;
+      await classInfo.save();
+    }
+
+    let session = await LiveSession.findOne({ classId, status: "Live" });
 
     if (!session) {
-      // Chỉ khi chưa có phòng nào đang mở mới tạo phòng mới với roomName duy nhất
-      const roomName = `AI-LMS-${classId}-${Date.now()}`;
+      const lastSession = await LiveSession.findOne({ classId }).sort({ sessionNumber: -1 }).select("sessionNumber");
+      const nextSessionNumber = lastSession?.sessionNumber ? lastSession.sessionNumber + 1 : 1;
+
       session = await LiveSession.create({
         classId,
-        title: title || "Buổi học trực tuyến",
-        roomName,
+        meetingRoomId: classInfo.meetingRoomId,
+        sessionNumber: nextSessionNumber,
+        title: title?.trim() || `Buổi ${nextSessionNumber}`,
         createdBy: req.user._id || req.user.id,
-        isLive: true,
+        scheduledStart: scheduledStart || null,
+        scheduledEnd: scheduledEnd || null,
+        actualStart: new Date(),
+        status: "Live",
       });
     }
 
-    // Broadcast Realtime Event tới phòng học qua Socket.IO
     const io = req.app.get("io");
     if (io) {
       io.to(`room_class_${classId}`).emit("LIVE_SESSION_STARTED", {
         classId,
-        roomName: session.roomName,
+        meetingRoomId: session.meetingRoomId,
+        sessionNumber: session.sessionNumber,
         title: session.title,
-        startedAt: session.startedAt,
+        actualStart: session.actualStart,
+        status: session.status,
       });
-      console.log(`📢 Realtime Broadcast: LIVE_SESSION_STARTED cho lớp ${classId} (roomName: ${session.roomName})`);
+      console.log(`📢 Realtime Broadcast: LIVE_SESSION_STARTED cho lớp ${classId}`);
     }
 
     return res.status(201).json({ success: true, data: session });
@@ -38,11 +58,10 @@ export const createLiveSession = async (req, res) => {
   }
 };
 
-// 2. Lấy phòng học đang diễn ra trong lớp
 export const getActiveLiveSession = async (req, res) => {
   try {
     const { classId } = req.params;
-    const activeSession = await LiveSession.findOne({ classId, isLive: true });
+    const activeSession = await LiveSession.findOne({ classId, status: "Live" });
 
     return res.status(200).json({ success: true, data: activeSession });
   } catch (error) {
@@ -50,18 +69,20 @@ export const getActiveLiveSession = async (req, res) => {
   }
 };
 
-// 3. Giáo viên kết thúc buổi học online
 export const endLiveSession = async (req, res) => {
   try {
     const { classId } = req.body;
 
     const session = await LiveSession.findOneAndUpdate(
-      { classId, isLive: true },
-      { isLive: false, endedAt: new Date() },
+      { classId, status: "Live" },
+      { status: "Completed", actualEnd: new Date() },
       { new: true }
     );
 
-    // Broadcast Realtime Event báo phòng đã kết thúc
+    if (!session) {
+      return res.status(404).json({ success: false, message: "Không có buổi học trực tuyến đang diễn ra." });
+    }
+
     const io = req.app.get("io");
     if (io) {
       io.to(`room_class_${classId}`).emit("LIVE_SESSION_ENDED", {

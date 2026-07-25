@@ -9,14 +9,12 @@ export const ClassList = async (req, res) => {
 
     let query = {};
 
-    //phân luồng dữ liệu
     if (userRole === "Teacher") {
-      query = { teacherId: userId }; // giáo viên chỉ thấy lớp mình tạo
+      query = { teacherId: userId };
     } else if (userRole === "Student") {
-      query = { students: userId }; // học sinh chỉ thấy lớp của mình
+      query = { students: userId };
     }
-    // Nếu là Admin, query rỗng {} sẽ lấy ra toàn bộ lớp học trên hệ thống
-    //Dùng populate để lấy thêm tên giáo viên thay vì trả về id
+
     const classList = await classModel
       .find(query)
       .populate("teacherId", "fullName email")
@@ -47,11 +45,27 @@ export const ClassListById = async (req, res) => {
     return res.status(500).json({ message: "Lỗi khi tải dữ liệu" });
   }
 };
+
 //=====================================================================================
-//Tạo lớp học mới (Tự động hóa joinCode & teacherId)
+//Tạo lớp học mới (Tự động tạo meetingRoomId và phân quyền giáo viên)
 export const AddNewClass = async (req, res) => {
   try {
-    const { className, courseId, classCode, room, startDate, endDate, schedule, maxStudents, meetingLink, note, status } = req.body;
+    const {
+      className,
+      courseId,
+      classCode,
+      room,
+      classRoom,
+      learningMode,
+      schedule,
+      startDate,
+      endDate,
+      maxStudents,
+      description,
+      note,
+      status,
+      isEnrollmentOpen,
+    } = req.body;
 
     if (!className || !courseId) {
       return res.status(400).json({ message: "Vui lòng nhập tên lớp và khóa học" });
@@ -62,23 +76,25 @@ export const AddNewClass = async (req, res) => {
       return res.status(404).json({ message: "Khóa học không tồn tại" });
     }
 
-    const joinCode = crypto.randomBytes(3).toString("hex").toUpperCase();
+    const meetingRoomId = `room_${crypto.randomBytes(4).toString("hex")}`;
 
     const newClassData = {
-      className,
-      classCode: classCode || `CLS-${Date.now().toString().slice(-6)}`,
+      className: className.trim(),
+      classCode: classCode?.trim() || `CLS-${Date.now().toString().slice(-6)}`,
       courseId,
       teacherId: req.user.id,
-      joinCode,
-      room: room || "",
+      meetingRoomId,
+      classRoom: classRoom ?? room ?? "",
+      learningMode: learningMode || "Offline",
+      schedule: schedule || { days: [], startTime: "", endTime: "" },
       startDate: startDate || null,
       endDate: endDate || null,
-      schedule: schedule || { days: [], startTime: "", endTime: "" },
       maxStudents: maxStudents || 30,
       currentStudents: 0,
       students: [],
-      meetingLink: meetingLink || "",
+      description: description || "",
       note: note || "",
+      isEnrollmentOpen: typeof isEnrollmentOpen === "boolean" ? isEnrollmentOpen : true,
       status: status || "Upcoming",
     };
 
@@ -95,26 +111,40 @@ export const AddNewClass = async (req, res) => {
 export const UpdateClass = async (req, res) => {
   const { id } = req.params;
   try {
-    const { className, courseId, classCode, room, startDate, endDate, schedule, maxStudents, meetingLink, note, status } = req.body;
+    const {
+      className,
+      courseId,
+      classCode,
+      room,
+      classRoom,
+      learningMode,
+      schedule,
+      startDate,
+      endDate,
+      maxStudents,
+      description,
+      note,
+      status,
+      isEnrollmentOpen,
+    } = req.body;
 
     const updateData = {
       className,
       courseId,
       classCode,
-      room,
+      classRoom: classRoom ?? room,
+      learningMode,
+      schedule,
       startDate,
       endDate,
-      schedule,
       maxStudents,
-      meetingLink,
+      description,
       note,
+      isEnrollmentOpen,
       status,
     };
 
-    // Điều kiện cập nhật: Phải đúng ID lớp VÀ người cập nhật phải là Giáo viên tạo ra lớp đó
     const query = { _id: id, teacherId: req.user.id };
-
-    //Nếu là Admin thì có quyền sửa mọi lớp
     if (req.user.role === "Admin") delete query.teacherId;
 
     const updatedClass = await classModel.findOneAndUpdate(query, updateData, {
@@ -154,43 +184,11 @@ export const DeleteClass = async (req, res) => {
     return res.status(500).json({ message: "Lỗi khi tải dữ liệu" });
   }
 };
+
 //=====================================================================================
-//Học sinh tham gia lớp học bằng mã (Join Code)
+// Chức năng Join Class đã bị vô hiệu hóa vì học sinh được quản lý tự động theo lớp.
 export const JoinClass = async (req, res) => {
-  try {
-    const { joinCode } = req.body;
-    const userId = req.user.id;
-
-    // kiểm tra đầu vào
-    if (!joinCode) {
-      return res.status(400).json({ message: "Vui lòng nhập mã lớp học" });
-    }
-    // chuẩn hóa mã(xóa khoảng trắng thừa và viết hoa để khớp với DB)
-    const normalizedCode = joinCode.trim().toUpperCase();
-
-    // Kiểm tra xem lớp học có tồn tại với mã này không
-    const targetClass = await classModel.findOne({ joinCode: normalizedCode });
-    if (!targetClass) {
-      return res.status(404).json({ message: "Mã lớp học không chính xác, vui lòng kiểm tra lại" });
-    }
-
-    //Chặn giáo viên tự join vào code của chính mình
-    if (targetClass.teacherId.toString() === userId) {
-      return res.status(400).json({ message: "Bạn đang là giáo viên quản lý của lớp học này." });
-    }
-
-    // chặn học sinh đã tham gia rồi nhưng lại tham gia lại
-    if (targetClass.students.includes(userId)) {
-      return res.status(400).json({ message: "Bạn đã tham gia lớp học này từ trước." });
-    }
-
-    //Thêm học sinh vào Lớp
-    const updatedClass = await classModel
-      .findByIdAndUpdate(targetClass._id, { $addToSet: { students: userId } }, { returnDocument: "after" })
-      .populate("teacherId", "fullName email");
-    return res.status(200).json({ message: "Tham gia lớp học thành công", data: updatedClass });
-  } catch (error) {
-    console.error("[Class] Join Error:", error);
-    return res.status(500).json({ message: "Lỗi hệ thống khi xử lý tham gia lớp học" });
-  }
+  return res.status(400).json({
+    message: "Tính năng tham gia lớp bằng mã đã bị vô hiệu hóa. Học sinh được phân lớp bởi Admin và tự động truy cập lớp khi có buổi trực tuyến.",
+  });
 };

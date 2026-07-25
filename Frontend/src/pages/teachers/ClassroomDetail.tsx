@@ -48,7 +48,7 @@ export default function ClassroomDetail() {
   const {
     isLiveRoomOpen,
     setIsLiveRoomOpen,
-    liveRoomName,
+    meetingRoomId,
     jwtToken,
     appId,
     isLiveLoading,
@@ -110,8 +110,7 @@ export default function ClassroomDetail() {
 
   // --- Xử lý sự kiện mở Phòng học Online (Thông qua Custom Hook) ---
   const onStartLiveClick = () => {
-    if (!classInfo) return;
-    void handleStartLiveSession(classInfo.className || "Buổi học trực tuyến");
+    void handleStartLiveSession();
   };
 
   const handleLessonCreated = (newLesson: ILesson) => {
@@ -665,7 +664,7 @@ export default function ClassroomDetail() {
       <LiveRoomModal
         isOpen={isLiveRoomOpen}
         onClose={() => setIsLiveRoomOpen(false)}
-        roomName={liveRoomName}
+        meetingRoomId={meetingRoomId}
         jwtToken={jwtToken}
         appId={appId}
       />

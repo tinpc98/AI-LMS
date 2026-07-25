@@ -4,34 +4,21 @@ import { JitsiMeeting } from "@jitsi/react-sdk";
 interface LiveRoomModalProps {
   isOpen: boolean;
   onClose: () => void;
-  roomName: string;
-  jwtToken: string; // <-- Bổ sung nhận JWT Token từ API Backend
-  appId: string;    // <-- App ID của 8x8 JaaS
+  meetingRoomId: string;
+  jwtToken: string;
+  appId: string;
 }
 
 const LiveRoomModal: React.FC<LiveRoomModalProps> = ({
   isOpen,
   onClose,
-  roomName,
+  meetingRoomId,
   jwtToken,
   appId,
 }) => {
-  if (!isOpen || !jwtToken || !appId || !roomName) return null;
+  if (!isOpen || !jwtToken || !appId || !meetingRoomId) return null;
 
-  // Chuẩn hóa tên phòng tránh trường hợp bị lặp tiền tố appId/appId/...
-  const cleanAppId = appId.trim();
-  const rawRoom = roomName.trim();
-  const formattedRoomName = rawRoom.startsWith(`${cleanAppId}/`)
-    ? rawRoom
-    : `${cleanAppId}/${rawRoom.replace(/^\/+/, "")}`;
-
-  console.log("🎥 [JitsiMeeting Debug] JOIN ROOM:", {
-    domain: "8x8.vc",
-    formattedRoomName,
-    rawRoom,
-    appId: cleanAppId,
-    jwtLength: jwtToken.length,
-  });
+  const roomName = meetingRoomId.trim();
 
   return (
     <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex flex-col items-center justify-center p-4">
@@ -51,7 +38,7 @@ const LiveRoomModal: React.FC<LiveRoomModalProps> = ({
       <div className="w-full max-w-6xl h-[80vh] rounded-2xl overflow-hidden shadow-2xl border border-white/10">
         <JitsiMeeting
           domain="8x8.vc"
-          roomName={formattedRoomName}
+          roomName={roomName}
           jwt={jwtToken}
           configOverwrite={{
             disableThirdPartyRequests: true,

@@ -12,17 +12,17 @@ const scheduleSchema = new Schema(
           "Thursday",
           "Friday",
           "Saturday",
-          "Sunday"
-        ]
-      }
+          "Sunday",
+        ],
+      },
     ],
     startTime: { type: String, trim: true, default: "" },
     endTime: { type: String, trim: true, default: "" },
   },
-  { _id: false },
+  { _id: false }
 );
 
-export const classSchema = new Schema(
+const classSchema = new Schema(
   {
     className: {
       type: String,
@@ -46,15 +46,27 @@ export const classSchema = new Schema(
       ref: "User",
       default: null,
     },
-    joinCode: {
+    students: [{ type: Schema.Types.ObjectId, ref: "User" }],
+    meetingRoomId: {
       type: String,
+      required: true,
       unique: true,
-      sparse: true,
+      immutable: true,
+      trim: true,
     },
     classRoom: {
       type: String,
       trim: true,
       default: "",
+    },
+    learningMode: {
+      type: String,
+      enum: ["Offline", "Online", "Hybrid"],
+      default: "Offline",
+    },
+    schedule: {
+      type: scheduleSchema,
+      default: () => ({ days: [], startTime: "", endTime: "" }),
     },
     startDate: {
       type: Date,
@@ -63,10 +75,6 @@ export const classSchema = new Schema(
     endDate: {
       type: Date,
       default: null,
-    },
-    schedule: {
-      type: scheduleSchema,
-      default: () => ({ days: [], startTime: "", endTime: "" }),
     },
     maxStudents: {
       type: Number,
@@ -78,7 +86,6 @@ export const classSchema = new Schema(
       default: 0,
       min: 0,
     },
-    students: [{ type: Schema.Types.ObjectId, ref: "User" }],
     description: {
       type: String,
       trim: true,
@@ -88,11 +95,6 @@ export const classSchema = new Schema(
       type: String,
       trim: true,
       default: "",
-    },
-    learningMode: {
-      type: String,
-      enum: ["Offline", "Online", "Hybrid"],
-      default: "Offline",
     },
     isEnrollmentOpen: {
       type: Boolean,
@@ -104,23 +106,17 @@ export const classSchema = new Schema(
       default: "Upcoming",
     },
   },
-  { timestamps: true },
+  { timestamps: true }
 );
 
-classSchema.virtual("room").get(function () {
-  return this.classroom || "";
-}).set(function (value) {
-  if (value != null) {
-    this.classroom = value;
-  }
-});
-
-classSchema.set("toJSON", { virtuals: true });
-classSchema.set("toObject", { virtuals: true });
+classSchema.index({ classCode: 1 }, { unique: true, sparse: true });
+classSchema.index({ meetingRoomId: 1 }, { unique: true });
 
 classSchema.pre("validate", function (next) {
-  if (this.currentStudents > this.maxStudents) {
-    this.currentStudents = this.maxStudents;
+  const studentCount = Array.isArray(this.students) ? this.students.length : 0;
+  this.currentStudents = Math.min(studentCount, this.maxStudents);
+  if (this.currentStudents < 0) {
+    this.currentStudents = 0;
   }
   next();
 });
