@@ -30,6 +30,7 @@ import PublicRoute from "./components/common/PublicRoute";
 import ProtectedRoute from "./components/common/ProtectedRoute";
 import AdminLayout from "./components/layout/AdminLayout";
 import AdminPage from "./pages/admin/AdminPage";
+import AccountManagementPage from "./features/accountManagement/AccountManagementPage";
 
 function App() {
   return (
@@ -70,11 +71,10 @@ function App() {
         </Route>
 
         {/* ================= ADMIN PROTECTED ROUTES ================= */}
-        {/* <Route element={<ProtectedRoute allowedRoles={["admin"]} />}>
-        </Route> */}
+        {/* <Route element={<ProtectedRoute allowedRoles={["admin"]} />}> */}
         <Route path="/admin" element={<AdminLayout />}>
           <Route index element={<AdminPage title="Dashboard" description="Welcome to the admin dashboard." />} />
-          <Route path="accounts" element={<AdminPage title="Account Management" description="Manage platform accounts and access." />} />
+          <Route path="accounts" element={<AccountManagementPage />} />
           <Route path="courses" element={<AdminPage title="Course Management" description="Manage training courses and curriculum." />} />
           <Route path="classes" element={<AdminPage title="Class Management" description="Manage classes and class details." />} />
           <Route path="teacher-assignment" element={<AdminPage title="Teacher Assignment" description="Assign teachers to classes." />} />
@@ -82,6 +82,7 @@ function App() {
           <Route path="reports" element={<AdminPage title="Reports" description="Review system and learning reports." />} />
           <Route path="system" element={<AdminPage title="System Management" description="Configure system-wide settings." />} />
         </Route>
+        {/* </Route> */}
 
         {/* ================= 404 NOT FOUND ================= */}
         <Route path="*" element={<h2>Trang không tồn tại!</h2>} />
