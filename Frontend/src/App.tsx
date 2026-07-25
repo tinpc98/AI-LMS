@@ -31,6 +31,7 @@ import ProtectedRoute from "./components/common/ProtectedRoute";
 import AdminLayout from "./components/layout/AdminLayout";
 import AdminPage from "./pages/admin/AdminPage";
 import AccountManagementPage from "./features/accountManagement/AccountManagementPage";
+import CourseManagementPage from "./features/courseManagement/CourseManagementPage";
 
 function App() {
   return (
@@ -75,7 +76,7 @@ function App() {
         <Route path="/admin" element={<AdminLayout />}>
           <Route index element={<AdminPage title="Dashboard" description="Welcome to the admin dashboard." />} />
           <Route path="accounts" element={<AccountManagementPage />} />
-          <Route path="courses" element={<AdminPage title="Course Management" description="Manage training courses and curriculum." />} />
+          <Route path="courses" element={<CourseManagementPage />} />
           <Route path="classes" element={<AdminPage title="Class Management" description="Manage classes and class details." />} />
           <Route path="teacher-assignment" element={<AdminPage title="Teacher Assignment" description="Assign teachers to classes." />} />
           <Route path="ai-management" element={<AdminPage title="AI Management" description="Manage AI-enabled features and tools." />} />
