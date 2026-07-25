@@ -3,7 +3,6 @@ import "./App.css";
 
 // Auth Components
 import LoginPage from "./pages/auth/LoginPage";
-import RegistrationPage from "./pages/auth/RegistrationPage";
 
 // Student Components
 import HomeLayoutStudent from "./components/layout/HomeLayoutStudent";
@@ -42,7 +41,6 @@ function App() {
         {/* ================= PUBLIC / AUTH ROUTES ================= */}
         <Route element={<PublicRoute />}>
           <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegistrationPage />} />
         </Route>
 
         {/* ================= STUDENT PROTECTED ROUTES ================= */}

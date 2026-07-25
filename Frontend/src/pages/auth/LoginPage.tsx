@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import type User from "../../interface/userInterface";
 // FIX LỖI: Import authApi để dùng tầng gọi API tập trung
 import { authApi } from "../../api/authApi.ts";
@@ -241,16 +241,6 @@ const Login = () => {
               </svg>
               <span className="text-xs font-semibold text-slate-300">Facebook</span>
             </button>
-          </div>
-
-          {/* Đăng ký */}
-          <div className="mt-6 text-center border-t border-white/10 pt-4">
-            <p className="text-xs text-slate-400">
-              Bạn chưa có tài khoản?
-              <Link to="/register" className="text-indigo-400 font-bold hover:text-indigo-300 hover:underline ml-1">
-                Đăng ký ngay
-              </Link>
-            </p>
           </div>
         </div>
 

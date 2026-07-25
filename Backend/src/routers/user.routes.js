@@ -2,15 +2,16 @@ import { Router } from "express";
 import {
   getMyProfile,
   login,
-  register,
   updateMyProfile,
 } from "../controllers/auth.controllers.js";
-import { loginValidation, registerValidation } from "../utils/validators.js";
+import { loginValidation } from "../utils/validators.js";
 import { verifyUser } from "./../middlewares/auth.middlewares.js";
+
 const route = Router();
-route.post("/register", registerValidation, register);
+
 route.post("/login", loginValidation, login);
 route.get("/me", verifyUser, getMyProfile);
 route.put("/me", verifyUser, updateMyProfile);
 
 export default route;
+
