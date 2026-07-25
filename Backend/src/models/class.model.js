@@ -51,7 +51,7 @@ export const classSchema = new Schema(
       unique: true,
       sparse: true,
     },
-    room: {
+    classRoom: {
       type: String,
       trim: true,
       default: "",
