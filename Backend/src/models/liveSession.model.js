@@ -3,17 +3,25 @@ import mongoose from "mongoose";
 const liveSessionSchema = new mongoose.Schema(
   {
     classId: { type: mongoose.Schema.Types.ObjectId, ref: "Class", required: true },
-    title: { type: String, required: true },
-    roomName: { type: String, required: true, unique: true }, // Tên phòng duy nhất (UUID/Slug)
+    meetingRoomId: { type: String, required: true, trim: true },
+    sessionNumber: { type: Number, required: true },
+    title: { type: String, required: true, trim: true },
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
-    isLive: { type: Boolean, default: true },
-    startedAt: { type: Date, default: Date.now },
-    endedAt: { type: Date },
+    scheduledStart: { type: Date, default: null },
+    scheduledEnd: { type: Date, default: null },
+    actualStart: { type: Date, default: null },
+    actualEnd: { type: Date, default: null },
+    status: {
+      type: String,
+      enum: ["Scheduled", "Live", "Completed", "Cancelled"],
+      default: "Live",
+    },
+    recordingUrl: { type: String, trim: true, default: "" },
   },
-  { timestamps: true },
+  { timestamps: true }
 );
 
-// Index kép giúp tăng tốc độ truy vấn kiểm tra phòng đang live của lớp học
-liveSessionSchema.index({ classId: 1, isLive: 1 });
+liveSessionSchema.index({ classId: 1, status: 1 });
+liveSessionSchema.index({ classId: 1, sessionNumber: 1 }, { unique: true });
 
 export default mongoose.model("LiveSession", liveSessionSchema);
