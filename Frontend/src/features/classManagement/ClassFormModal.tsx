@@ -1,0 +1,175 @@
+import { Checkbox, Form, Input, InputNumber, Modal, Select } from "antd";
+import { forwardRef, useEffect, useImperativeHandle } from "react";
+import type { ClassFormValues, ClassRecord, CourseOption, TeacherOption } from "./class.types";
+
+interface ClassFormModalProps {
+  open: boolean;
+  mode: "create" | "edit";
+  initialValues?: ClassRecord;
+  onSubmit: (values: ClassFormValues) => Promise<void>;
+  onCancel: () => void;
+  courseOptions: CourseOption[];
+  teacherOptions: TeacherOption[];
+}
+
+export interface ClassFormModalHandle {
+  submit: () => void;
+}
+
+const ClassFormModal = forwardRef<ClassFormModalHandle, ClassFormModalProps>(function ClassFormModal(
+  { open, mode, initialValues, onSubmit, onCancel, courseOptions, teacherOptions },
+  ref,
+) {
+  const [form] = Form.useForm<ClassFormValues>();
+
+  useEffect(() => {
+    if (open) {
+      form.setFieldsValue({
+        className: initialValues?.className || "",
+        classCode: initialValues?.classCode || "",
+        courseId: initialValues?.courseId || undefined,
+        teacherId: initialValues?.teacherId || undefined,
+        joinCode: initialValues?.joinCode || "",
+        classroom: initialValues?.classroom || "",
+        learningMode: initialValues?.learningMode || "Offline",
+        startDate: initialValues?.startDate || "",
+        endDate: initialValues?.endDate || "",
+        schedule: initialValues?.schedule || { days: [], startTime: "", endTime: "" },
+        maxStudents: initialValues?.maxStudents || 20,
+        description: initialValues?.description || "",
+        note: initialValues?.note || "",
+        isEnrollmentOpen: initialValues?.isEnrollmentOpen ?? true,
+        status: initialValues?.status || "Upcoming",
+      });
+    }
+  }, [open, initialValues, form]);
+
+  useImperativeHandle(ref, () => ({
+    submit: () => form.submit(),
+  }));
+
+  const handleFinish = async (values: ClassFormValues) => {
+    const trimmedValues = {
+      ...values,
+      className: values.className.trim(),
+      classCode: values.classCode.trim(),
+      joinCode: values.joinCode.trim(),
+      classroom: values.classroom.trim(),
+      description: values.description.trim(),
+      note: values.note.trim(),
+      schedule: {
+        ...values.schedule,
+        days: values.schedule.days.map((day) => day.trim()).filter(Boolean),
+        startTime: values.schedule.startTime.trim(),
+        endTime: values.schedule.endTime.trim(),
+      },
+    };
+
+    await onSubmit(trimmedValues);
+  };
+
+  return (
+    <Modal
+      open={open}
+      title={mode === "create" ? "Create Class" : "Edit Class"}
+      onCancel={onCancel}
+      onOk={() => form.submit()}
+      okText={mode === "create" ? "Create" : "Save"}
+      destroyOnClose
+      width={760}
+    >
+      <Form form={form} layout="vertical" onFinish={handleFinish}>
+        <Form.Item
+          name="className"
+          label="Class Name"
+          rules={[{ required: true, message: "Class name is required" }, { whitespace: true, message: "Class name is required" }]}
+        >
+          <Input placeholder="Enter class name" />
+        </Form.Item>
+        <Form.Item name="classCode" label="Class Code">
+          <Input placeholder="Optional class code" />
+        </Form.Item>
+        <Form.Item name="courseId" label="Course" rules={[{ required: true, message: "Course is required" }]}> 
+          <Select options={courseOptions.map((item) => ({ label: item.label, value: item.id }))} />
+        </Form.Item>
+        <Form.Item name="teacherId" label="Teacher">
+          <Select allowClear options={teacherOptions.map((item) => ({ label: item.label, value: item.id }))} />
+        </Form.Item>
+        <Form.Item name="learningMode" label="Learning Mode" rules={[{ required: true, message: "Learning mode is required" }]}> 
+          <Select
+            options={[
+              { label: "Offline", value: "Offline" },
+              { label: "Online", value: "Online" },
+              { label: "Hybrid", value: "Hybrid" },
+            ]}
+          />
+        </Form.Item>
+        <Form.Item name="classroom" label="Room">
+          <Input placeholder="Optional room or classroom" />
+        </Form.Item>
+        <Form.Item name="joinCode" label="Join Code">
+          <Input placeholder="Optional join code" />
+        </Form.Item>
+        <Form.Item name="startDate" label="Start Date" rules={[{ required: true, message: "Start date is required" }]}> 
+          <Input type="date" />
+        </Form.Item>
+        <Form.Item
+          name="endDate"
+          label="End Date"
+          dependencies={["startDate"]}
+          rules={[
+            { required: true, message: "End date is required" },
+            ({ getFieldValue }) => ({
+              validator(_, value) {
+                const startDate = getFieldValue("startDate");
+                if (!value || !startDate || new Date(value) >= new Date(startDate)) {
+                  return Promise.resolve();
+                }
+                return Promise.reject(new Error("End date must be after start date"));
+              },
+            }),
+          ]}
+        >
+          <Input type="date" />
+        </Form.Item>
+        <Form.Item label="Schedule">
+          <Input.Group compact>
+            <Form.Item name={["schedule", "days"]} noStyle>
+              <Input placeholder="Days (e.g. Thứ 2, Thứ 4)" />
+            </Form.Item>
+            <Form.Item name={["schedule", "startTime"]} noStyle>
+              <Input placeholder="Start Time" />
+            </Form.Item>
+            <Form.Item name={["schedule", "endTime"]} noStyle>
+              <Input placeholder="End Time" />
+            </Form.Item>
+          </Input.Group>
+        </Form.Item>
+        <Form.Item name="maxStudents" label="Max Students" rules={[{ required: true, message: "Max students is required" }, { type: "number", min: 1, message: "Must be greater than 0" }]}> 
+          <InputNumber min={1} style={{ width: "100%" }} />
+        </Form.Item>
+        <Form.Item name="description" label="Description">
+          <Input.TextArea rows={3} placeholder="Short class description" />
+        </Form.Item>
+        <Form.Item name="note" label="Note">
+          <Input.TextArea rows={3} placeholder="Additional notes" />
+        </Form.Item>
+        <Form.Item name="isEnrollmentOpen" valuePropName="checked">
+          <Checkbox>Enrollment Open</Checkbox>
+        </Form.Item>
+        <Form.Item name="status" label="Status" rules={[{ required: true, message: "Status is required" }]}> 
+          <Select
+            options={[
+              { label: "Upcoming", value: "Upcoming" },
+              { label: "Active", value: "Active" },
+              { label: "Completed", value: "Completed" },
+              { label: "Cancelled", value: "Cancelled" },
+            ]}
+          />
+        </Form.Item>
+      </Form>
+    </Modal>
+  );
+});
+
+export default ClassFormModal;

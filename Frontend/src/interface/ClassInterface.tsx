@@ -6,13 +6,19 @@ export interface IStudentSummary {
 export interface IClass {
   _id: string;
   className: string;
+  classCode?: string;
   joinCode: string;
   subjectId?: string | null;
-  teacherId: {
+  teacherId?: {
     _id: string;
     fullName: string;
     email: string;
-  };
+  } | null;
+  classroom?: string;
+  room?: string;
+  learningMode?: "Offline" | "Online" | "Hybrid";
+  description?: string;
+  isEnrollmentOpen?: boolean;
   students: IStudentSummary[];
   status: "active" | "completed" | "closed";
   createdAt: string;
