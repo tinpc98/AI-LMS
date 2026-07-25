@@ -33,6 +33,7 @@ import AdminPage from "./pages/admin/AdminPage";
 import AccountManagementPage from "./features/accountManagement/AccountManagementPage";
 import CourseManagementPage from "./features/courseManagement/CourseManagementPage";
 import ClassManagementPage from "./features/classManagement/ClassManagementPage";
+import TeacherAssignmentPage from "./features/teacherAssignment/TeacherAssignmentPage";
 
 function App() {
   return (
@@ -79,7 +80,7 @@ function App() {
           <Route path="accounts" element={<AccountManagementPage />} />
           <Route path="courses" element={<CourseManagementPage />} />
           <Route path="classes" element={<ClassManagementPage />} />
-          <Route path="teacher-assignment" element={<AdminPage title="Teacher Assignment" description="Assign teachers to classes." />} />
+          <Route path="teacher-assignment" element={<TeacherAssignmentPage />} />
           <Route path="ai-management" element={<AdminPage title="AI Management" description="Manage AI-enabled features and tools." />} />
           <Route path="reports" element={<AdminPage title="Reports" description="Review system and learning reports." />} />
           <Route path="system" element={<AdminPage title="System Management" description="Configure system-wide settings." />} />
