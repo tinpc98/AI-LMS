@@ -11,6 +11,7 @@ const labelMap: Record<string, string> = {
   "teacher-assignment": "Teacher Assignment",
   "ai-management": "AI Management",
   reports: "Reports",
+  profile: "My Profile",
   system: "System Management",
 };
 

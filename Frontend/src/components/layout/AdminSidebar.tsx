@@ -54,11 +54,17 @@ const flattenMenuItems = (items: AdminMenuItem[]) =>
 
 const getSelectedKey = (pathname: string) => {
   const normalizedPath = pathname.replace(/\/$/, "");
+
   const flattened = flattenMenuItems(adminMenuItems);
 
-  const match = flattened.find(
-    (item) => normalizedPath === item.path || normalizedPath.startsWith(`${item.path}/`),
-  );
+  // Ưu tiên route dài nhất trước
+  const match = flattened
+    .sort((a, b) => b.path.length - a.path.length)
+    .find(
+      (item) =>
+        normalizedPath === item.path ||
+        normalizedPath.startsWith(`${item.path}/`)
+    );
 
   return match?.key ?? "dashboard";
 };
@@ -139,6 +145,14 @@ const AdminSidebar = ({
       onCollapse={onCollapse}
       className={styles.sider}
       trigger={null}
+      style={{
+        position: "fixed",
+        left: 0,
+        top: 0,
+        bottom: 0,
+        height: "100vh",
+        zIndex: 1000,
+      }}
     >
       {renderMenu()}
     </Layout.Sider>

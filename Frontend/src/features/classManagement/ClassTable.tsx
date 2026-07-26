@@ -129,7 +129,11 @@ const ClassTable = ({ data, loading, courseOptions, teacherOptions, onView, onEd
       loading={loading}
       pagination={{ pageSize: 6 }}
       scroll={{ x: 1200 }}
-      locale={{ emptyText: <Empty description="No classes found" /> }}
+      locale={{
+        emptyText: loading ? null : (
+          <Empty description="No classes found" />
+        ),
+      }}
     />
   );
 };

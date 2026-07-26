@@ -1,3 +1,4 @@
+import React, { useState } from "react";
 import {
   BellOutlined,
   MenuFoldOutlined,
@@ -11,6 +12,7 @@ import type { MenuProps } from "antd";
 import { useNavigate } from "react-router-dom";
 import Breadcrumbs from "./Breadcrumbs";
 import styles from "./adminLayout.module.css";
+import ChangePasswordModal from "../../pages/admin/Profile/ChangePasswordModal";
 
 interface AdminHeaderProps {
   collapsed: boolean;
@@ -19,13 +21,29 @@ interface AdminHeaderProps {
   isMobile: boolean;
 }
 
-const AdminHeader = ({ collapsed, onToggleCollapse, onMobileMenuOpen, isMobile }: AdminHeaderProps) => {
+const AdminHeader: React.FC<AdminHeaderProps> = ({
+  collapsed,
+  onToggleCollapse,
+  onMobileMenuOpen,
+  isMobile,
+}) => {
   const navigate = useNavigate();
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState<boolean>(false);
 
   const handleLogout = () => {
     localStorage.removeItem("accessToken");
     localStorage.removeItem("userRole");
     navigate("/login", { replace: true });
+  };
+
+  const handleMenuClick: MenuProps["onClick"] = (info) => {
+    if (info.key === "profile") {
+      navigate("/admin/profile");
+    } else if (info.key === "password") {
+      setIsPasswordModalOpen(true);
+    } else if (info.key === "logout") {
+      handleLogout();
+    }
   };
 
   const dropdownItems: MenuProps["items"] = [
@@ -40,41 +58,57 @@ const AdminHeader = ({ collapsed, onToggleCollapse, onMobileMenuOpen, isMobile }
       icon: <LockOutlined />,
     },
     {
+      type: "divider",
+    },
+    {
       key: "logout",
       label: "Logout",
       icon: <LogoutOutlined />,
-      onClick: handleLogout,
     },
   ];
 
   return (
-    <header className={styles.header}>
-      <div className={styles.headerLeft}>
-        <Button
-          type="text"
-          icon={isMobile ? <MenuUnfoldOutlined /> : collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
-          onClick={isMobile ? onMobileMenuOpen : onToggleCollapse}
-          className={styles.headerButton}
-        />
+    <>
+      <header className={styles.header}>
+        <div className={styles.headerLeft}>
+          <Button
+            type="text"
+            icon={isMobile ? <MenuUnfoldOutlined /> : collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+            onClick={isMobile ? onMobileMenuOpen : onToggleCollapse}
+            className={styles.headerButton}
+          />
 
-        <div className={styles.breadcrumbWrap}>
-          <Breadcrumbs />
+          <div className={styles.breadcrumbWrap}>
+            <Breadcrumbs />
+          </div>
         </div>
-      </div>
 
-      <div className={styles.headerActions}>
-        <Button type="text" icon={<BellOutlined />} className={styles.headerButton} />
+        <div className={styles.headerActions}>
+          <Button type="text" icon={<BellOutlined />} className={styles.headerButton} />
 
-        <Dropdown menu={{ items: dropdownItems }} placement="bottomRight" trigger={["click"]}>
-          <Space className={styles.userArea}>
-            <Badge dot color="#52c41a">
-              <Avatar className={styles.avatar}>A</Avatar>
-            </Badge>
-            <span className={styles.userName}>Admin</span>
-          </Space>
-        </Dropdown>
-      </div>
-    </header>
+          <Dropdown
+            menu={{
+              items: dropdownItems,
+              onClick: handleMenuClick,
+            }}
+            placement="bottomRight"
+            trigger={["click"]}
+          >
+            <Space className={styles.userArea}>
+              <Badge dot color="#52c41a">
+                <Avatar className={styles.avatar}>A</Avatar>
+              </Badge>
+              <span className={styles.userName}>Admin</span>
+            </Space>
+          </Dropdown>
+        </div>
+      </header>
+
+      <ChangePasswordModal
+        open={isPasswordModalOpen}
+        onClose={() => setIsPasswordModalOpen(false)}
+      />
+    </>
   );
 };
 
