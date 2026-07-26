@@ -13,7 +13,7 @@ import StudentAssignment from "./pages/students/StudentAssignment";
 import HomePageStudent from "./pages/students/HomePageStudent";
 
 // Teacher Components
-// import HomePageTeacher from "./pages/teachers/HomePageTeacher";
+import HomePageTeacher from "./pages/teachers/HomePageTeacher";
 import ClassroomDetail from "./pages/teachers/ClassroomDetail";
 import ClassManagement from "./pages/teachers/ClassroomManagement";
 import ExamAttemptDetail from "./pages/teachers/ExamAttemptDetail.tsx";
@@ -61,7 +61,8 @@ function App() {
         {/* ================= TEACHER PROTECTED ROUTES ================= */}
         <Route element={<ProtectedRoute allowedRoles={["teacher"]} />}>
           <Route path="/teacher" element={<HomeLayoutTeacher />}>
-            <Route index element={<ClassManagement />} />
+            <Route index element={<HomePageTeacher />} />
+            <Route path="classes" element={<ClassManagement />} />
             <Route path="classroom-detail/:classId" element={<ClassroomDetail />} />
             <Route path="lessonManagement" element={<LessonManagement />} />
             <Route path="questionbank" element={<QuestionBank />} />
@@ -72,7 +73,6 @@ function App() {
         </Route>
 
         {/* ================= ADMIN PROTECTED ROUTES ================= */}
-        {/* <Route element={<ProtectedRoute allowedRoles={["admin"]} />}> */}
         <Route path="/admin" element={<AdminLayout />}>
           <Route index element={<AdminPage title="Dashboard" description="Welcome to the admin dashboard." />} />
           <Route path="accounts" element={<AccountManagementPage />} />
@@ -83,7 +83,6 @@ function App() {
           <Route path="reports" element={<AdminPage title="Reports" description="Review system and learning reports." />} />
           <Route path="system" element={<AdminPage title="System Management" description="Configure system-wide settings." />} />
         </Route>
-        {/* </Route> */}
 
         {/* ================= 404 NOT FOUND ================= */}
         <Route path="*" element={<h2>Trang không tồn tại!</h2>} />

@@ -22,36 +22,36 @@ export default function SidebarTeacher() {
       </div>
 
       <div className="mt-4 px-4 space-y-1 flex-grow">
-        {/* <Link
+        <Link
           to="/teacher"
           className="flex items-center gap-3 px-4 py-3 bg-secondary-container text-on-secondary-container font-bold rounded-lg transition-transform duration-100 active:scale-95"
         >
           <span className="material-symbols-outlined">dashboard</span>
-          <span className="font-label-md text-label-md">Trang chủ</span>
-        </Link> */}
+          <span className="font-label-md text-label-md">Trang chủ Dashboard</span>
+        </Link>
         <Link
-          to="/"
+          to="/teacher/classes"
           className="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-low rounded-lg transition-all duration-200"
         >
           <span className="material-symbols-outlined">groups</span>
-          <span className="font-label-md text-label-md">Trang chủ</span>
+          <span className="font-label-md text-label-md">Quản lý lớp học</span>
         </Link>
         <Link
-          to=""
+          to="/teacher/lessonManagement"
           className="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-low rounded-lg transition-all duration-200"
         >
           <span className="material-symbols-outlined">menu_book</span>
           <span className="font-label-md text-label-md">Quản lý bài giảng</span>
         </Link>
         <Link
-          to="questionbank"
+          to="/teacher/questionbank"
           className="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-low rounded-lg transition-all duration-200"
         >
           <span className="material-symbols-outlined">quiz</span>
           <span className="font-label-md text-label-md">Ngân hàng câu hỏi</span>
         </Link>
         <Link
-          to="exammanagement"
+          to="/teacher/exammanagement"
           className="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-low rounded-lg transition-all duration-200"
         >
           <span className="material-symbols-outlined">assignment</span>
