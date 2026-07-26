@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import "../../assets/css/HomePage.css";
+import PageContainer from "../../components/common/PageContainer";
 import { classApi } from "../../api/classApi";
 import assignmentApi from "../../api/assignmentApi";
 import axiosClient from "../../api/axiosClient";
@@ -305,7 +306,8 @@ export default function HomePageStudent() {
   const activeGpa = gpaData[activeGpaIndex];
 
   return (
-    <div className={`lms-theme-wrapper ${isDarkTheme ? "dark" : ""}`}>
+    <PageContainer maxWidth="100%">
+      <div className={`lms-theme-wrapper ${isDarkTheme ? "dark" : ""}`}>
       <div className="lms-app">
         {/* MAIN LAYOUT */}
         <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
@@ -750,5 +752,6 @@ export default function HomePageStudent() {
         )}
       </div>
     </div>
+    </PageContainer>
   );
 }

@@ -52,10 +52,10 @@ function App() {
             <Route index element={<HomePageStudent />} />
             <Route path="myclasses" element={<MyClasses />} />
             <Route path="studentassignment" element={<StudentAssignment />} />
+            <Route path="classdetail/:classId" element={<ClassDetail />} />
+            <Route path="studentassignment/:assignmentId" element={<StudentAssignment />} />
+            <Route path="lessonview" element={<LessonView />} />
           </Route>
-          <Route path="classdetail/:classId" element={<ClassDetail />} />
-          <Route path="studentassignment/:assignmentId" element={<StudentAssignment />} />
-          <Route path="lessonview" element={<LessonView />} />
           <Route path="/exam/:attemptId" element={<ExamPage />} />
         </Route>
 

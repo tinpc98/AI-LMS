@@ -3,6 +3,7 @@ import { useEffect, useState, useMemo } from "react";
 import { classApi } from "../../api/classApi";
 import type { IClass } from "../../interface/ClassInterface";
 import { useNavigate } from "react-router-dom";
+import PageContainer from "../../components/common/PageContainer";
 
 const MyClassesContent = () => {
   // --- STATE & API LOGIC ---
@@ -89,9 +90,8 @@ const MyClassesContent = () => {
   };
 
   return (
-    <>
-      <main className="ml-[280px] min-h-screen flex flex-col pt-8 bg-slate-50/50 font-sans selection:bg-indigo-500/20">
-        <div className="p-6 md:p-8 max-w-7xl mx-auto w-full flex-1 space-y-8">
+    <PageContainer>
+      <div className="w-full flex-1 space-y-8">
           {/* PAGE HEADER & CONTROLS */}
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-2">
             <div>
@@ -238,7 +238,7 @@ const MyClassesContent = () => {
 
                 {/* Thẻ Thêm lớp học mới (Dạng Dash card) */}
                 <div
-                  onClick={() => setIsModalOpen(true)}
+                  onClick={() => alert("Tính năng tham gia lớp học qua mã sắp ra mắt!")}
                   className="border-2 border-dashed border-slate-200 hover:border-indigo-500 rounded-3xl flex flex-col items-center justify-center p-8 text-center bg-white/50 hover:bg-white hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer min-h-[330px] group"
                 >
                   <div className="w-14 h-14 rounded-2xl bg-indigo-50 border border-indigo-100 flex items-center justify-center mb-4 group-hover:scale-110 group-hover:bg-indigo-600 group-hover:text-white transition-all duration-300 text-indigo-600">
@@ -289,14 +289,13 @@ const MyClassesContent = () => {
               </div>
             </div>
           </div>
-        </div>
 
         {/* FOOTER */}
         <footer className="mt-auto py-8 text-center text-slate-400 text-xs font-medium border-t border-slate-100">
           © 2026 Lumen AI - Hệ thống quản lý học tập thông minh
         </footer>
-      </main>
-    </>
+      </div>
+    </PageContainer>
   );
 };
 
