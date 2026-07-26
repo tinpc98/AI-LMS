@@ -231,6 +231,10 @@ const classSchema = new Schema(
       ],
       default: "Draft",
     },
+    isDeleted: {
+      type: Boolean,
+      default: false
+    }
   },
   { timestamps: true }
 );

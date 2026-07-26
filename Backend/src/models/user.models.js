@@ -63,6 +63,10 @@ const userSchema = new Schema(
       trim: true,
       default: "",
     },
+    isDeleted: {
+      type: Boolean,
+      default: false
+    },
 
     // --- CÁC TRƯỜNG DÀNH RIÊNG CHO TEACHER ---
     // Các môn học giáo viên đăng ký giảng dạy (VD: ["Mathematics", "Physics"])
