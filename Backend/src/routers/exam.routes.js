@@ -1,11 +1,25 @@
 import express from "express";
-import { autoGenerateExam } from "../controllers/exam.controller.js";
-import { verifyUser } from "../middlewares/auth.middlewares.js";
-import * as examController from "../controllers/exam.controller.js";
+import {
+  autoGenerateExam,
+  createExam,
+  updateExam,
+  deleteExam,
+  getExamsByClass,
+  getAllExams,
+  getExamById,
+} from "../controllers/exam.controller.js";
+import { verifyUser, isTeacher } from "../middlewares/auth.middlewares.js";
 
 const router = express.Router();
-router.post("/generate-auto", verifyUser, autoGenerateExam);
-router.get("/class/:classId", examController.getExamsByClass);
-router.get("/", examController.getAllExams);
-router.get("/:id", examController.getExamById);
+
+router.get("/class/:classId", verifyUser, getExamsByClass);
+router.get("/", verifyUser, getAllExams);
+router.get("/:id", verifyUser, getExamById);
+
+// Giáo viên và Admin có quyền Tạo/Sửa/Xóa Đề thi
+router.post("/", verifyUser, isTeacher, createExam);
+router.post("/generate-auto", verifyUser, isTeacher, autoGenerateExam);
+router.put("/:id", verifyUser, isTeacher, updateExam);
+router.delete("/:id", verifyUser, isTeacher, deleteExam);
+
 export default router;
