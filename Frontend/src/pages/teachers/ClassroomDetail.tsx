@@ -21,6 +21,7 @@ import {
   FileDoneOutlined,
   NotificationOutlined,
   VideoCameraOutlined,
+  TrophyOutlined,
   FileTextOutlined,
   PlusOutlined,
   EditOutlined,
@@ -47,6 +48,7 @@ import { TeacherAssignmentsTab } from "../../components/teacher/classroom/Teache
 import { TeacherExamsTab } from "../../components/teacher/classroom/TeacherExamsTab";
 import { TeacherAnnouncementsTab } from "../../components/teacher/classroom/TeacherAnnouncementsTab";
 import { TeacherLiveSessionTab } from "../../components/teacher/classroom/TeacherLiveSessionTab";
+import { TeacherGradebookTab } from "../../components/teacher/classroom/TeacherGradebookTab";
 import { toast } from "../../utils/toast";
 
 const { Title, Text, Paragraph } = Typography;
@@ -300,6 +302,25 @@ export default function ClassroomDetail() {
           classId={classId!}
           className={classInfo.className}
           teacherName={teacherName}
+        />
+      ),
+    },
+    {
+      key: "gradebook",
+      label: (
+        <Space>
+          <TrophyOutlined />
+          <span>Bảng điểm</span>
+        </Space>
+      ),
+      children: (
+        <TeacherGradebookTab
+          classId={classId!}
+          className={classInfo.className}
+          teacherName={teacherName}
+          students={studentList}
+          onRefresh={loadClassroom}
+          loading={isLoading}
         />
       ),
     },
