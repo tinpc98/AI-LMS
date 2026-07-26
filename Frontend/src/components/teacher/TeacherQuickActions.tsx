@@ -18,19 +18,11 @@ export const TeacherQuickActions: React.FC = React.memo(() => {
   const actions = [
     {
       title: "Lớp học của tôi",
-      desc: "Quản lý và xem danh sách lớp",
+      desc: "Quản lý và xem danh sách lớp học phụ trách",
       icon: <BookOutlined style={{ fontSize: 24, color: "#1890ff" }} />,
       color: "#e6f7ff",
       borderColor: "#91d5ff",
-      onClick: () => navigate("/teacher"),
-    },
-    {
-      title: "Quản lý bài giảng",
-      desc: "Tạo và đăng tải tài liệu học tập",
-      icon: <FormOutlined style={{ fontSize: 24, color: "#52c41a" }} />,
-      color: "#f6ffed",
-      borderColor: "#b7eb8f",
-      onClick: () => navigate("/teacher/lessonManagement"),
+      onClick: () => navigate("/teacher/classes"),
     },
     {
       title: "Ngân hàng câu hỏi",
@@ -39,14 +31,6 @@ export const TeacherQuickActions: React.FC = React.memo(() => {
       color: "#fffbe6",
       borderColor: "#ffe58f",
       onClick: () => navigate("/teacher/questionbank"),
-    },
-    {
-      title: "Quản lý kỳ thi",
-      desc: "Tạo đề thi và theo dõi làm bài",
-      icon: <FileDoneOutlined style={{ fontSize: 24, color: "#722ed1" }} />,
-      color: "#f9f0ff",
-      borderColor: "#d3ade6",
-      onClick: () => navigate("/teacher/exammanagement"),
     },
   ];
 

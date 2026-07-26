@@ -17,10 +17,8 @@ import HomePageTeacher from "./pages/teachers/HomePageTeacher";
 import ClassroomDetail from "./pages/teachers/ClassroomDetail";
 import ClassManagement from "./pages/teachers/ClassroomManagement";
 import ExamAttemptDetail from "./pages/teachers/ExamAttemptDetail.tsx";
-import LessonManagement from "./pages/teachers/LessonManagement";
 import HomeLayoutTeacher from "./components/layout/HomeLayoutTeacher";
 import ClassDetail from "./pages/students/ClassDetail";
-import ExamManagement from "./pages/teachers/ExamManagement";
 import QuestionBank from "./pages/teachers/QuestionBank";
 import ExamResults from "./pages/teachers/ExamResults";
 
@@ -64,9 +62,7 @@ function App() {
             <Route index element={<HomePageTeacher />} />
             <Route path="classes" element={<ClassManagement />} />
             <Route path="classroom-detail/:classId" element={<ClassroomDetail />} />
-            <Route path="lessonManagement" element={<LessonManagement />} />
             <Route path="questionbank" element={<QuestionBank />} />
-            <Route path="exammanagement" element={<ExamManagement />} />
             <Route path="examresults/:examId" element={<ExamResults />} />
             <Route path="exam-review/:attemptId" element={<ExamAttemptDetail />} />
           </Route>

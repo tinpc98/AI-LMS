@@ -42,19 +42,9 @@ export const TeacherSidebar: React.FC<TeacherSidebarProps> = React.memo(
           label: <Link to="/teacher/classes">Quản lý lớp học</Link>,
         },
         {
-          key: "/teacher/lessonManagement",
-          icon: <FileTextOutlined />,
-          label: <Link to="/teacher/lessonManagement">Quản lý bài giảng</Link>,
-        },
-        {
           key: "/teacher/questionbank",
           icon: <DatabaseOutlined />,
           label: <Link to="/teacher/questionbank">Ngân hàng câu hỏi</Link>,
-        },
-        {
-          key: "/teacher/exammanagement",
-          icon: <FileDoneOutlined />,
-          label: <Link to="/teacher/exammanagement">Quản lý kỳ thi</Link>,
         },
       ],
       []
