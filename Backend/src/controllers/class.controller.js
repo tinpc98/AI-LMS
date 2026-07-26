@@ -12,7 +12,7 @@ export const ClassList = async (req, res) => {
     if (userRole === "Teacher") {
       query = { teacherId: userId };
     } else if (userRole === "Student") {
-      query = { students: userId };
+      query = { $or: [{ students: userId }, { "students.studentId": userId }] };
     }
 
     const classList = await classModel
@@ -35,6 +35,7 @@ export const ClassListById = async (req, res) => {
     const classDetail = await classModel
       .findById(id)
       .populate("teacherId", "fullName email")
+      .populate("students.studentId", "fullName email")
       .populate("students", "fullName email")
       .populate("courseId", "courseName subject grade status");
     if (!classDetail) {

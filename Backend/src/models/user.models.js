@@ -1,24 +1,48 @@
 import bcrypt from "bcryptjs";
 import { Schema, model } from "mongoose";
 
+// Schema khung giờ làm việc theo ngày cho Giáo viên
+const dayAvailabilitySchema = new Schema(
+  {
+    startTime: { type: String, trim: true, default: "08:00" },
+    endTime: { type: String, trim: true, default: "17:00" },
+    available: { type: Boolean, default: true },
+  },
+  { _id: false }
+);
+
+// Schema tổng hợp lịch rảnh hàng tuần cho Giáo viên
+const availabilityScheduleSchema = new Schema(
+  {
+    Monday: { type: dayAvailabilitySchema, default: () => ({}) },
+    Tuesday: { type: dayAvailabilitySchema, default: () => ({}) },
+    Wednesday: { type: dayAvailabilitySchema, default: () => ({}) },
+    Thursday: { type: dayAvailabilitySchema, default: () => ({}) },
+    Friday: { type: dayAvailabilitySchema, default: () => ({}) },
+    Saturday: { type: dayAvailabilitySchema, default: () => ({}) },
+    Sunday: { type: dayAvailabilitySchema, default: () => ({}) },
+  },
+  { _id: false }
+);
+
 const userSchema = new Schema(
   {
     fullName: {
       type: String,
-      required: true,
+      required: [true, "Họ và tên là bắt buộc"],
       trim: true,
       minlength: 3,
     },
     email: {
       type: String,
-      required: true,
+      required: [true, "Email là bắt buộc"],
       unique: true,
       lowercase: true,
       trim: true,
     },
     password: {
       type: String,
-      required: true,
+      required: [true, "Mật khẩu là bắt buộc"],
     },
     role: {
       type: String,
@@ -39,6 +63,20 @@ const userSchema = new Schema(
       trim: true,
       default: "",
     },
+
+    // --- CÁC TRƯỜNG DÀNH RIÊNG CHO TEACHER ---
+    // Các môn học giáo viên đăng ký giảng dạy (VD: ["Mathematics", "Physics"])
+    teachingSubjects: [
+      {
+        type: String,
+        trim: true,
+      },
+    ],
+    // Khung thời gian rảnh/có thể giảng dạy của giáo viên
+    availabilitySchedule: {
+      type: availabilityScheduleSchema,
+      default: null,
+    },
   },
   {
     timestamps: true,
@@ -54,9 +92,15 @@ const userSchema = new Schema(
         return ret;
       },
     },
-  },
+  }
 );
 
+// Indexes phục vụ tìm kiếm nhanh theo Email, Role và Status
+userSchema.index({ email: 1 }, { unique: true });
+userSchema.index({ role: 1 });
+userSchema.index({ status: 1 });
+
+// Hook tự động mã hóa mật khẩu trước khi lưu
 userSchema.pre("save", async function (next) {
   if (!this.isModified("password")) {
     return next();

@@ -22,19 +22,19 @@ export default function SidebarTeacher() {
       </div>
 
       <div className="mt-4 px-4 space-y-1 flex-grow">
-        <Link
+        {/* <Link
           to="/teacher"
           className="flex items-center gap-3 px-4 py-3 bg-secondary-container text-on-secondary-container font-bold rounded-lg transition-transform duration-100 active:scale-95"
         >
           <span className="material-symbols-outlined">dashboard</span>
           <span className="font-label-md text-label-md">Trang chủ</span>
-        </Link>
+        </Link> */}
         <Link
-          to="classroom-management"
+          to="/"
           className="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-low rounded-lg transition-all duration-200"
         >
           <span className="material-symbols-outlined">groups</span>
-          <span className="font-label-md text-label-md">Quản lý lớp học</span>
+          <span className="font-label-md text-label-md">Trang chủ</span>
         </Link>
         <Link
           to=""
@@ -65,13 +65,6 @@ export default function SidebarTeacher() {
           <span className="material-symbols-outlined">chat</span>
           <span className="font-label-md text-label-md">Nhắn tin</span>
         </a>
-      </div>
-
-      <div className="px-6 mt-auto py-6">
-        <button className="w-full py-3 px-4 bg-primary text-on-primary font-bold rounded-xl flex items-center justify-center gap-2 hover:bg-primary/90 transition-colors duration-150 shadow-md active:scale-95">
-          <span className="material-symbols-outlined">add_circle</span>
-          <span className="font-label-md text-label-md">Tạo bài giảng mới</span>
-        </button>
       </div>
 
       <div className="px-4 py-6 border-t border-outline-variant space-y-1">

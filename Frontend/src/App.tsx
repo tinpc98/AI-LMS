@@ -13,7 +13,7 @@ import StudentAssignment from "./pages/students/StudentAssignment";
 import HomePageStudent from "./pages/students/HomePageStudent";
 
 // Teacher Components
-import HomePageTeacher from "./pages/teachers/HomePageTeacher";
+// import HomePageTeacher from "./pages/teachers/HomePageTeacher";
 import ClassroomDetail from "./pages/teachers/ClassroomDetail";
 import ClassManagement from "./pages/teachers/ClassroomManagement";
 import ExamAttemptDetail from "./pages/teachers/ExamAttemptDetail.tsx";
@@ -61,9 +61,8 @@ function App() {
         {/* ================= TEACHER PROTECTED ROUTES ================= */}
         <Route element={<ProtectedRoute allowedRoles={["teacher"]} />}>
           <Route path="/teacher" element={<HomeLayoutTeacher />}>
-            <Route index element={<HomePageTeacher />} />
+            <Route index element={<ClassManagement />} />
             <Route path="classroom-detail/:classId" element={<ClassroomDetail />} />
-            <Route path="classroom-management" element={<ClassManagement />} />
             <Route path="lessonManagement" element={<LessonManagement />} />
             <Route path="questionbank" element={<QuestionBank />} />
             <Route path="exammanagement" element={<ExamManagement />} />
