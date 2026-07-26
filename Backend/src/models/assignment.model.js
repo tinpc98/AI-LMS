@@ -1,4 +1,5 @@
 import mongoose, { Schema, model } from "mongoose";
+import softDeletePlugin from "../plugins/softDelete.plugin.js";
 
 const assignmentSchema = new Schema(
   {
@@ -72,6 +73,8 @@ assignmentSchema.pre("validate", function () {
     this.createdBy = this.teacherId;
   }
 });
+
+assignmentSchema.plugin(softDeletePlugin);
 
 const Assignment = model("Assignment", assignmentSchema);
 export default Assignment;

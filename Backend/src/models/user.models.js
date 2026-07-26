@@ -1,5 +1,6 @@
 import bcrypt from "bcryptjs";
 import { Schema, model } from "mongoose";
+import softDeletePlugin from "../plugins/softDelete.plugin.js";
 
 // Schema khung giờ làm việc theo ngày cho Giáo viên
 const dayAvailabilitySchema = new Schema(
@@ -117,6 +118,8 @@ userSchema.pre("save", async function () {
     this.password = await bcrypt.hash(passwordValue, salt);
   }
 });
+
+userSchema.plugin(softDeletePlugin);
 
 const User = model("User", userSchema);
 export default User;

@@ -56,8 +56,8 @@ class CourseService {
     return course;
   }
 
-  async deleteCourse(id) {
-    const course = await Course.findByIdAndDelete(id);
+  async deleteCourse(id, userId = null) {
+    const course = await Course.softDelete(id, userId);
     if (!course) {
       throw new Error("Khóa học không tồn tại!");
     }

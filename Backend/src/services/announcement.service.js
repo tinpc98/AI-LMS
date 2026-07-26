@@ -142,7 +142,7 @@ class AnnouncementService {
       throw new Error("Bạn không có quyền xóa thông báo này!");
     }
 
-    await announcement.deleteOne();
+    await announcement.softDelete(userId);
     return true;
   }
 }

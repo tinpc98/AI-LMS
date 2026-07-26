@@ -168,7 +168,7 @@ export const deleteExam = async (req, res) => {
       return res.status(403).json({ message: "Bạn không có quyền xóa đề thi này!" });
     }
 
-    await Exam.findByIdAndDelete(id);
+    await Exam.softDelete(id, userId);
     return res.status(200).json({ message: "Xóa đề thi thành công!" });
   } catch (error) {
     return res.status(500).json({ message: error.message || "Lỗi hệ thống khi xóa đề thi." });

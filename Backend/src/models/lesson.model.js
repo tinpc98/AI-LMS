@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import softDeletePlugin from "../plugins/softDelete.plugin.js";
 
 const lessonSchema = new mongoose.Schema(
   {
@@ -49,9 +50,10 @@ const lessonSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
-// Indexes nâng cao tốc độ truy vấn bài giảng theo lớp
 lessonSchema.index({ classId: 1, isPublished: 1, order: 1 });
 lessonSchema.index({ teacherId: 1 });
+
+lessonSchema.plugin(softDeletePlugin);
 
 const Lesson = mongoose.model("Lesson", lessonSchema);
 export default Lesson;

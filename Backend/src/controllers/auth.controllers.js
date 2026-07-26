@@ -256,7 +256,8 @@ export const deleteUser = async (req, res) => {
       return res.status(400).json({ message: "ID người dùng không hợp lệ!" });
     }
 
-    const user = await User.findByIdAndDelete(id);
+    const adminUserId = req.user?.id || req.user?._id;
+    const user = await User.softDelete(id, adminUserId);
 
     if (!user) {
       return res.status(404).json({ message: "Người dùng không tồn tại" });

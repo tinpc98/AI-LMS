@@ -6,11 +6,18 @@ export const loginService = async (email, password) => {
   // Chuẩn hóa email đầu vào để tìm kiếm chính xác tuyệt đối
   const normalizedEmail = String(email).trim().toLowerCase();
 
-  // Bước 1: Tìm xem email này có tồn tại trong hệ thống không
-  const user = await User.findOne({ email: normalizedEmail });
+  // Bước 1: Tìm xem email này có tồn tại trong hệ thống không (bao gồm tài khoản đã xóa để kiểm tra vô hiệu hóa)
+  const user = await User.findOne({ email: normalizedEmail }).withDeleted();
   if (!user) {
     const error = new Error("Tài khoản hoặc email không tồn tại trên hệ thống!");
     error.status = 401;
+    throw error;
+  }
+
+  // Phân vùng kiểm tra tài khoản đã bị vô hiệu hóa / Soft Delete
+  if (user.isDeleted) {
+    const error = new Error("Tài khoản đã bị vô hiệu hóa.");
+    error.status = 403;
     throw error;
   }
 

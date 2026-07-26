@@ -1,4 +1,5 @@
 import { Schema, model } from "mongoose";
+import softDeletePlugin from "../plugins/softDelete.plugin.js";
 
 const courseSchema = new Schema(
   {
@@ -58,10 +59,6 @@ const courseSchema = new Schema(
       ref: "User",
       required: true,
     },
-    isDeleted: {
-      type: Boolean,
-      default: false
-    }
   },
   {
     timestamps: true,
@@ -71,6 +68,8 @@ const courseSchema = new Schema(
 // Indexes nâng cao hiệu năng truy vấn khóa học
 courseSchema.index({ subject: 1, status: 1 });
 courseSchema.index({ createdBy: 1 });
+
+courseSchema.plugin(softDeletePlugin);
 
 const Course = model("Course", courseSchema);
 export default Course;

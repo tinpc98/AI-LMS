@@ -1,4 +1,5 @@
 import mongoose, { Schema, model } from "mongoose";
+import softDeletePlugin from "../plugins/softDelete.plugin.js";
 
 // Subdocument Schema cho lịch học
 const scheduleSchema = new Schema(
@@ -272,6 +273,8 @@ classSchema.pre("validate", function () {
     this.currentStudents = 0;
   }
 });
+
+classSchema.plugin(softDeletePlugin);
 
 const classModel = model("Class", classSchema);
 export default classModel;

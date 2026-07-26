@@ -174,7 +174,7 @@ const assignmentController = {
         return res.status(403).json({ message: "Bạn không có quyền xóa bài tập này" });
       }
 
-      await Assignment.findByIdAndDelete(id);
+      await Assignment.softDelete(id, userId);
       return res.status(200).json({ message: "Xóa bài tập thành công" });
     } catch (error) {
       return res.status(500).json({ message: error.message || "Lỗi server khi xóa bài tập" });
@@ -339,7 +339,7 @@ const assignmentController = {
         await Promise.all(deletePromises);
       }
 
-      await Submission.deleteOne({ _id: submission._id });
+      await submission.softDelete(studentId);
 
       return res.status(200).json({ message: "Đã hủy nộp bài thành công" });
     } catch (error) {

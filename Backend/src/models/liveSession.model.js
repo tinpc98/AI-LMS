@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import softDeletePlugin from "../plugins/softDelete.plugin.js";
 
 const liveSessionSchema = new mongoose.Schema(
   {
@@ -23,5 +24,7 @@ const liveSessionSchema = new mongoose.Schema(
 
 liveSessionSchema.index({ classId: 1, status: 1 });
 liveSessionSchema.index({ classId: 1, sessionNumber: 1 }, { unique: true });
+
+liveSessionSchema.plugin(softDeletePlugin);
 
 export default mongoose.model("LiveSession", liveSessionSchema);

@@ -430,7 +430,8 @@ export const DeleteClass = async (req, res) => {
   }
 
   try {
-    const deleteClass = await classModel.findByIdAndDelete(id);
+    const userId = req.user?.id || req.user?._id;
+    const deleteClass = await classModel.softDelete(id, userId);
 
     if (!deleteClass) {
       return res.status(404).json({
