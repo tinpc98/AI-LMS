@@ -60,6 +60,19 @@ function App() {
 
           {/* ================= STUDENT PROTECTED ROUTES ================= */}
           <Route element={<ProtectedRoute allowedRoles={["student"]} />}>
+            {/* Tuyến đường /student làm prefix chính cho Student Module */}
+            <Route path="/student" element={<HomeLayoutStudent />}>
+              <Route index element={<HomePageStudent />} />
+              <Route path="dashboard" element={<HomePageStudent />} />
+              <Route path="myclasses" element={<MyClasses />} />
+              <Route path="studentassignment" element={<StudentAssignment />} />
+              <Route path="classdetail/:classId" element={<ClassDetail />} />
+              <Route path="studentassignment/:assignmentId" element={<StudentAssignment />} />
+              <Route path="lessonview" element={<LessonView />} />
+              <Route path="notifications" element={<NotificationCenterPage />} />
+            </Route>
+
+            {/* Tuyến đường / giữ tương thích ngược */}
             <Route path="/" element={<HomeLayoutStudent />}>
               <Route index element={<HomePageStudent />} />
               <Route path="myclasses" element={<MyClasses />} />
@@ -69,6 +82,7 @@ function App() {
               <Route path="lessonview" element={<LessonView />} />
               <Route path="notifications" element={<NotificationCenterPage />} />
             </Route>
+
             <Route path="/exam/:attemptId" element={<ExamPage />} />
           </Route>
 

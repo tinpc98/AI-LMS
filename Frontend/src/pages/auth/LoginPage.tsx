@@ -49,8 +49,10 @@ const Login = () => {
         navigate("/admin", { replace: true });
       } else if (normalizedRole === "teacher") {
         navigate("/teacher", { replace: true });
+      } else if (normalizedRole === "student") {
+        navigate("/student", { replace: true });
       } else {
-        navigate("/", { replace: true });
+        navigate("/student", { replace: true });
       }
     } catch (error: unknown) {
       if (axios.isAxiosError(error)) {

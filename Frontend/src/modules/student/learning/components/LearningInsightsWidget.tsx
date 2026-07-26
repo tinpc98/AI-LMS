@@ -1,6 +1,6 @@
 import React from "react";
 import { Card, Typography, Tag, Space, Alert } from "antd";
-import { SparklesOutlined, CheckCircleOutlined, WarningOutlined, CompassOutlined } from "@ant-design/icons";
+import { StarOutlined, CheckCircleOutlined, WarningOutlined, CompassOutlined } from "@ant-design/icons";
 import type { LearningInsight } from "../types/learningDashboard.types";
 
 const { Text, Paragraph } = Typography;
@@ -26,7 +26,7 @@ export const LearningInsightsWidget: React.FC<LearningInsightsWidgetProps> = Rea
     <Card
       title={
         <Space align="center">
-          <SparklesOutlined style={{ color: "#722ed1", fontSize: 18 }} />
+          <StarOutlined style={{ color: "#722ed1", fontSize: 18 }} />
           <span style={{ fontSize: 15, fontWeight: 700, color: "#391085" }}>
             🤖 AI Learning Insights & Gợi ý lộ trình
           </span>

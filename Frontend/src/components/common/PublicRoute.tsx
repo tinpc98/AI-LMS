@@ -13,7 +13,7 @@ export default function PublicRoute() {
       return <Navigate to="/teacher" replace />;
     }
     if (role === "student") {
-      return <Navigate to="/" replace />;
+      return <Navigate to="/student" replace />;
     }
   }
 

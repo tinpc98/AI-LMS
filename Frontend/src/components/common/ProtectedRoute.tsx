@@ -34,7 +34,7 @@ export default function ProtectedRoute({ allowedRoles }: Props) {
   if (!normalizedAllowedRoles.includes(role)) {
     // Nếu Học sinh cố tình truy cập Route của Giáo viên / Admin -> Chuyển về trang chủ Học sinh
     if (role === "student") {
-      return <Navigate to="/" replace />;
+      return <Navigate to="/student" replace />;
     }
     // Nếu Giáo viên cố tình truy cập Route của Admin -> Chuyển về trang chủ Giáo viên
     if (role === "teacher") {

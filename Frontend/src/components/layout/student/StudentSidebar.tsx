@@ -31,29 +31,24 @@ export const StudentSidebar: React.FC<StudentSidebarProps> = React.memo(
     const menuItems = useMemo(
       () => [
         {
-          key: "/",
+          key: "/student",
           icon: <DashboardOutlined />,
-          label: <Link to="/">Dashboard</Link>,
+          label: <Link to="/student">Dashboard</Link>,
         },
         {
-          key: "/myclasses",
+          key: "/student/myclasses",
           icon: <BookOutlined />,
-          label: <Link to="/myclasses">Lớp học của tôi</Link>,
+          label: <Link to="/student/myclasses">Lớp học của tôi</Link>,
         },
         {
-          key: "/schedule",
-          icon: <CalendarOutlined />,
-          label: <Link to="/schedule">Lịch học</Link>,
-        },
-        {
-          key: "/notifications",
+          key: "/student/notifications",
           icon: <BellOutlined />,
-          label: <Link to="/notifications">Thông báo</Link>,
+          label: <Link to="/student/notifications">Thông báo</Link>,
         },
         {
-          key: "/profile",
+          key: "/student/profile",
           icon: <UserOutlined />,
-          label: <Link to="/profile">Hồ sơ</Link>,
+          label: <Link to="/student/profile">Hồ sơ</Link>,
         },
       ],
       []
@@ -62,11 +57,11 @@ export const StudentSidebar: React.FC<StudentSidebarProps> = React.memo(
     // Dynamic active key detection
     const selectedKeys = useMemo(() => {
       const path = location.pathname;
-      if (path === "/" || path === "") return ["/"];
+      if (path === "/student" || path === "/" || path === "") return ["/student"];
       const matched = menuItems.find(
-        (item) => item.key !== "/" && path.startsWith(item.key)
+        (item) => item.key !== "/student" && path.startsWith(item.key)
       );
-      return matched ? [matched.key] : ["/"];
+      return matched ? [matched.key] : ["/student"];
     }, [location.pathname, menuItems]);
 
     // Internal Sidebar content

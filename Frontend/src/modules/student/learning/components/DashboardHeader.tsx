@@ -1,6 +1,6 @@
 import React from "react";
 import { Button, Typography, Space, Tag } from "antd";
-import { ReloadOutlined, SparklesOutlined, RiseOutlined } from "@ant-design/icons";
+import { ReloadOutlined, StarOutlined, RiseOutlined } from "@ant-design/icons";
 import type { LearningOverview, LearningScore } from "../types/learningDashboard.types";
 
 const { Title, Text } = Typography;
@@ -35,7 +35,7 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = React.memo(
             <Title level={3} style={{ margin: 0, fontWeight: 700, color: "#1f2937" }}>
               📊 Learning Progress Dashboard
             </Title>
-            <Tag color="purple" icon={<SparklesOutlined />}>
+            <Tag color="purple" icon={<StarOutlined />}>
               AI Powered
             </Tag>
           </Space>
