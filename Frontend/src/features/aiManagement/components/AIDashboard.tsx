@@ -16,6 +16,10 @@ interface AIDashboardProps {
   features: AIFeature[];
 }
 
+const statCardStyle = {
+  height: 150,
+};
+
 const AIDashboard = ({ stats, features }: AIDashboardProps) => {
   const topFeatures = [...features]
     .sort((a, b) => b.dailyRequests - a.dailyRequests)
@@ -34,7 +38,16 @@ const AIDashboard = ({ stats, features }: AIDashboardProps) => {
     <div>
       <Row gutter={[16, 16]} style={{ marginBottom: 20 }}>
         <Col xs={24} sm={12} lg={4}>
-          <Card bordered={false} bodyStyle={{ padding: "16px" }}>
+          <Card
+            bordered={false}
+            style={statCardStyle}
+            styles={{
+              body: {
+                padding: "16px",
+                height: "100%",
+              },
+            }}
+          >
             <Statistic
               title="Active AI Models"
               value={`${stats.activeModelsCount}/${stats.totalModelsCount}`}
@@ -44,7 +57,16 @@ const AIDashboard = ({ stats, features }: AIDashboardProps) => {
           </Card>
         </Col>
         <Col xs={24} sm={12} lg={4}>
-          <Card bordered={false} bodyStyle={{ padding: "16px" }}>
+          <Card
+            bordered={false}
+            style={statCardStyle}
+            styles={{
+              body: {
+                padding: "16px",
+                height: "100%",
+              },
+            }}
+          >
             <Statistic
               title="Prompt Templates"
               value={stats.promptTemplatesCount}
@@ -54,7 +76,16 @@ const AIDashboard = ({ stats, features }: AIDashboardProps) => {
           </Card>
         </Col>
         <Col xs={24} sm={12} lg={4}>
-          <Card bordered={false} bodyStyle={{ padding: "16px" }}>
+          <Card
+            bordered={false}
+            style={statCardStyle}
+            styles={{
+              body: {
+                padding: "16px",
+                height: "100%",
+              },
+            }}
+          >
             <Statistic
               title="Knowledge Base"
               value={stats.knowledgeDocsCount}
@@ -65,7 +96,16 @@ const AIDashboard = ({ stats, features }: AIDashboardProps) => {
           </Card>
         </Col>
         <Col xs={24} sm={12} lg={4}>
-          <Card bordered={false} bodyStyle={{ padding: "16px" }}>
+          <Card
+            bordered={false}
+            style={statCardStyle}
+            styles={{
+              body: {
+                padding: "16px",
+                height: "100%",
+              },
+            }}
+          >
             <Statistic
               title="Features Enabled"
               value={`${stats.enabledFeaturesCount}/${stats.totalFeaturesCount}`}
@@ -75,7 +115,16 @@ const AIDashboard = ({ stats, features }: AIDashboardProps) => {
           </Card>
         </Col>
         <Col xs={24} sm={12} lg={4}>
-          <Card bordered={false} bodyStyle={{ padding: "16px" }}>
+          <Card
+            bordered={false}
+            style={statCardStyle}
+            styles={{
+              body: {
+                padding: "16px",
+                height: "100%",
+              },
+            }}
+          >
             <Statistic
               title="Requests Today"
               value={stats.todayRequestsCount}
@@ -85,7 +134,16 @@ const AIDashboard = ({ stats, features }: AIDashboardProps) => {
           </Card>
         </Col>
         <Col xs={24} sm={12} lg={4}>
-          <Card bordered={false} bodyStyle={{ padding: "16px" }}>
+          <Card
+            bordered={false}
+            style={statCardStyle}
+            styles={{
+              body: {
+                padding: "16px",
+                height: "100%",
+              },
+            }}
+          >
             <Statistic
               title="Avg Response Time"
               value={stats.avgResponseTimeMs}

@@ -32,6 +32,9 @@ import CourseManagementPage from "./features/courseManagement/CourseManagementPa
 import ClassManagementPage from "./features/classManagement/ClassManagementPage";
 import TeacherAssignmentPage from "./features/teacherAssignment/TeacherAssignmentPage";
 import AIManagementPage from "./features/aiManagement/AIManagementPage";
+import DashboardPage from "./features/dashboard/DashboardPage";
+import ReportPage from "./pages/Report/ReportPage.tsx";
+import ProfilePage from "./pages/admin/Profile/ProfilePage";
 
 function App() {
   return (
@@ -70,13 +73,14 @@ function App() {
 
         {/* ================= ADMIN PROTECTED ROUTES ================= */}
         <Route path="/admin" element={<AdminLayout />}>
-          <Route index element={<AdminPage title="Dashboard" description="Welcome to the admin dashboard." />} />
+          <Route index element={<DashboardPage />} />
           <Route path="accounts" element={<AccountManagementPage />} />
           <Route path="courses" element={<CourseManagementPage />} />
           <Route path="classes" element={<ClassManagementPage />} />
           <Route path="teacher-assignment" element={<TeacherAssignmentPage />} />
           <Route path="ai-management" element={<AIManagementPage />} />
-          <Route path="reports" element={<AdminPage title="Reports" description="Review system and learning reports." />} />
+          <Route path="reports" element={<ReportPage />} />
+          <Route path="profile" element={<ProfilePage />} />
           <Route path="system" element={<AdminPage title="System Management" description="Configure system-wide settings." />} />
         </Route>
 
