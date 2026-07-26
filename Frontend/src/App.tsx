@@ -74,16 +74,18 @@ function App() {
         </Route>
 
         {/* ================= ADMIN PROTECTED ROUTES ================= */}
-        <Route path="/admin" element={<AdminLayout />}>
-          <Route index element={<DashboardPage />} />
-          <Route path="accounts" element={<AccountManagementPage />} />
-          <Route path="courses" element={<CourseManagementPage />} />
-          <Route path="classes" element={<ClassManagementPage />} />
-          <Route path="teacher-assignment" element={<TeacherAssignmentPage />} />
-          <Route path="ai-management" element={<AIManagementPage />} />
-          <Route path="reports" element={<ReportPage />} />
-          <Route path="profile" element={<ProfilePage />} />
-          <Route path="system" element={<AdminPage title="System Management" description="Configure system-wide settings." />} />
+        <Route element={<ProtectedRoute allowedRoles={["admin"]} />}>
+          <Route path="/admin" element={<AdminLayout />}>
+            <Route index element={<DashboardPage />} />
+            <Route path="accounts" element={<AccountManagementPage />} />
+            <Route path="courses" element={<CourseManagementPage />} />
+            <Route path="classes" element={<ClassManagementPage />} />
+            <Route path="teacher-assignment" element={<TeacherAssignmentPage />} />
+            <Route path="ai-management" element={<AIManagementPage />} />
+            <Route path="reports" element={<ReportPage />} />
+            <Route path="profile" element={<ProfilePage />} />
+            <Route path="system" element={<AdminPage title="System Management" description="Configure system-wide settings." />} />
+          </Route>
         </Route>
 
         {/* ================= 404 NOT FOUND ================= */}

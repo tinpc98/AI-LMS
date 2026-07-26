@@ -23,15 +23,20 @@ export default function ProtectedRoute({ allowedRoles }: Props) {
     return <Navigate to="/login" replace />;
   }
 
-  // 3. Kiểm tra quyền truy cập theo từng Role (Role Guard)
+  // 3. Admin có toàn quyền truy cập hệ thống (Supervisory Access)
+  if (role === "admin") {
+    return <Outlet />;
+  }
+
+  // 4. Kiểm tra quyền truy cập theo từng Role (Role Guard)
   const normalizedAllowedRoles = allowedRoles.map((r) => r.toLowerCase());
 
   if (!normalizedAllowedRoles.includes(role)) {
-    // Nếu Học sinh cố tình truy cập Route của Giáo viên -> Chuyển về trang chủ Học sinh
+    // Nếu Học sinh cố tình truy cập Route của Giáo viên / Admin -> Chuyển về trang chủ Học sinh
     if (role === "student") {
       return <Navigate to="/" replace />;
     }
-    // Nếu Giáo viên cố tình truy cập Route của Học sinh -> Chuyển về trang chủ Giáo viên
+    // Nếu Giáo viên cố tình truy cập Route của Admin -> Chuyển về trang chủ Giáo viên
     if (role === "teacher") {
       return <Navigate to="/teacher" replace />;
     }
