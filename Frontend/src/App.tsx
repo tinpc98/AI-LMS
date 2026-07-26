@@ -1,96 +1,108 @@
+import React, { lazy, Suspense } from "react";
 import { Route, Routes } from "react-router-dom";
+import { Spin } from "antd";
 import "./App.css";
-
-// Auth Components
-import LoginPage from "./pages/auth/LoginPage";
-
-// Student Components
-import HomeLayoutStudent from "./components/layout/HomeLayoutStudent";
-import ExamPage from "./pages/students/ExamPage";
-import LessonView from "./pages/students/LessonView";
-import MyClasses from "./pages/students/MyClasses";
-import StudentAssignment from "./pages/students/StudentAssignment";
-import HomePageStudent from "./pages/students/HomePageStudent";
-import NotificationCenterPage from "./pages/students/NotificationCenterPage";
-
-// Teacher Components
-import HomePageTeacher from "./pages/teachers/HomePageTeacher";
-import ClassroomDetail from "./pages/teachers/ClassroomDetail";
-import ClassManagement from "./pages/teachers/ClassroomManagement";
-import ExamAttemptDetail from "./pages/teachers/ExamAttemptDetail.tsx";
-import HomeLayoutTeacher from "./components/layout/HomeLayoutTeacher";
-import ClassDetail from "./pages/students/ClassDetail";
-import QuestionBank from "./pages/teachers/QuestionBank";
-import ExamResults from "./pages/teachers/ExamResults";
 
 import ToastContainer from "./components/common/ToastContainer";
 import PublicRoute from "./components/common/PublicRoute";
 import ProtectedRoute from "./components/common/ProtectedRoute";
-import AdminLayout from "./components/layout/AdminLayout";
-import AdminPage from "./pages/admin/AdminPage";
-import AccountManagementPage from "./features/accountManagement/AccountManagementPage";
-import CourseManagementPage from "./features/courseManagement/CourseManagementPage";
-import ClassManagementPage from "./features/classManagement/ClassManagementPage";
-import TeacherAssignmentPage from "./features/teacherAssignment/TeacherAssignmentPage";
-import AIManagementPage from "./features/aiManagement/AIManagementPage";
-import DashboardPage from "./features/dashboard/DashboardPage";
-import ReportPage from "./pages/Report/ReportPage.tsx";
-import ProfilePage from "./pages/admin/Profile/ProfilePage";
+
+// Auth Components (Lazy Loaded)
+const LoginPage = lazy(() => import("./pages/auth/LoginPage"));
+
+// Student Components (Lazy Loaded)
+const HomeLayoutStudent = lazy(() => import("./components/layout/HomeLayoutStudent"));
+const HomePageStudent = lazy(() => import("./pages/students/HomePageStudent"));
+const MyClasses = lazy(() => import("./pages/students/MyClasses"));
+const StudentAssignment = lazy(() => import("./pages/students/StudentAssignment"));
+const ClassDetail = lazy(() => import("./pages/students/ClassDetail"));
+const LessonView = lazy(() => import("./pages/students/LessonView"));
+const NotificationCenterPage = lazy(() => import("./pages/students/NotificationCenterPage"));
+const ExamPage = lazy(() => import("./pages/students/ExamPage"));
+
+// Teacher Components (Lazy Loaded)
+const HomeLayoutTeacher = lazy(() => import("./components/layout/HomeLayoutTeacher"));
+const HomePageTeacher = lazy(() => import("./pages/teachers/HomePageTeacher"));
+const ClassManagement = lazy(() => import("./pages/teachers/ClassroomManagement"));
+const ClassroomDetail = lazy(() => import("./pages/teachers/ClassroomDetail"));
+const QuestionBank = lazy(() => import("./pages/teachers/QuestionBank"));
+const ExamResults = lazy(() => import("./pages/teachers/ExamResults"));
+const ExamAttemptDetail = lazy(() => import("./pages/teachers/ExamAttemptDetail"));
+
+// Admin Components (Lazy Loaded)
+const AdminLayout = lazy(() => import("./components/layout/AdminLayout"));
+const DashboardPage = lazy(() => import("./features/dashboard/DashboardPage"));
+const AccountManagementPage = lazy(() => import("./features/accountManagement/AccountManagementPage"));
+const CourseManagementPage = lazy(() => import("./features/courseManagement/CourseManagementPage"));
+const ClassManagementPage = lazy(() => import("./features/classManagement/ClassManagementPage"));
+const TeacherAssignmentPage = lazy(() => import("./features/teacherAssignment/TeacherAssignmentPage"));
+const AIManagementPage = lazy(() => import("./features/aiManagement/AIManagementPage"));
+const ReportPage = lazy(() => import("./pages/Report/ReportPage"));
+const ProfilePage = lazy(() => import("./pages/admin/Profile/ProfilePage"));
+const AdminPage = lazy(() => import("./pages/admin/AdminPage"));
+
+const PageLoadingFallback = () => (
+  <div style={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "100vh" }}>
+    <Spin size="large" tip="Đang tải trang..." />
+  </div>
+);
 
 function App() {
   return (
     <>
       <ToastContainer />
-      <Routes>
-        {/* ================= PUBLIC / AUTH ROUTES ================= */}
-        <Route element={<PublicRoute />}>
-          <Route path="/login" element={<LoginPage />} />
-        </Route>
-
-        {/* ================= STUDENT PROTECTED ROUTES ================= */}
-        <Route element={<ProtectedRoute allowedRoles={["student"]} />}>
-          <Route path="/" element={<HomeLayoutStudent />}>
-            <Route index element={<HomePageStudent />} />
-            <Route path="myclasses" element={<MyClasses />} />
-            <Route path="studentassignment" element={<StudentAssignment />} />
-            <Route path="classdetail/:classId" element={<ClassDetail />} />
-            <Route path="studentassignment/:assignmentId" element={<StudentAssignment />} />
-            <Route path="lessonview" element={<LessonView />} />
-            <Route path="notifications" element={<NotificationCenterPage />} />
+      <Suspense fallback={<PageLoadingFallback />}>
+        <Routes>
+          {/* ================= PUBLIC / AUTH ROUTES ================= */}
+          <Route element={<PublicRoute />}>
+            <Route path="/login" element={<LoginPage />} />
           </Route>
-          <Route path="/exam/:attemptId" element={<ExamPage />} />
-        </Route>
 
-        {/* ================= TEACHER PROTECTED ROUTES ================= */}
-        <Route element={<ProtectedRoute allowedRoles={["teacher"]} />}>
-          <Route path="/teacher" element={<HomeLayoutTeacher />}>
-            <Route index element={<HomePageTeacher />} />
-            <Route path="classes" element={<ClassManagement />} />
-            <Route path="classroom-detail/:classId" element={<ClassroomDetail />} />
-            <Route path="questionbank" element={<QuestionBank />} />
-            <Route path="examresults/:examId" element={<ExamResults />} />
-            <Route path="exam-review/:attemptId" element={<ExamAttemptDetail />} />
+          {/* ================= STUDENT PROTECTED ROUTES ================= */}
+          <Route element={<ProtectedRoute allowedRoles={["student"]} />}>
+            <Route path="/" element={<HomeLayoutStudent />}>
+              <Route index element={<HomePageStudent />} />
+              <Route path="myclasses" element={<MyClasses />} />
+              <Route path="studentassignment" element={<StudentAssignment />} />
+              <Route path="classdetail/:classId" element={<ClassDetail />} />
+              <Route path="studentassignment/:assignmentId" element={<StudentAssignment />} />
+              <Route path="lessonview" element={<LessonView />} />
+              <Route path="notifications" element={<NotificationCenterPage />} />
+            </Route>
+            <Route path="/exam/:attemptId" element={<ExamPage />} />
           </Route>
-        </Route>
 
-        {/* ================= ADMIN PROTECTED ROUTES ================= */}
-        <Route element={<ProtectedRoute allowedRoles={["admin"]} />}>
-          <Route path="/admin" element={<AdminLayout />}>
-            <Route index element={<DashboardPage />} />
-            <Route path="accounts" element={<AccountManagementPage />} />
-            <Route path="courses" element={<CourseManagementPage />} />
-            <Route path="classes" element={<ClassManagementPage />} />
-            <Route path="teacher-assignment" element={<TeacherAssignmentPage />} />
-            <Route path="ai-management" element={<AIManagementPage />} />
-            <Route path="reports" element={<ReportPage />} />
-            <Route path="profile" element={<ProfilePage />} />
-            <Route path="system" element={<AdminPage title="System Management" description="Configure system-wide settings." />} />
+          {/* ================= TEACHER PROTECTED ROUTES ================= */}
+          <Route element={<ProtectedRoute allowedRoles={["teacher"]} />}>
+            <Route path="/teacher" element={<HomeLayoutTeacher />}>
+              <Route index element={<HomePageTeacher />} />
+              <Route path="classes" element={<ClassManagement />} />
+              <Route path="classroom-detail/:classId" element={<ClassroomDetail />} />
+              <Route path="questionbank" element={<QuestionBank />} />
+              <Route path="examresults/:examId" element={<ExamResults />} />
+              <Route path="exam-review/:attemptId" element={<ExamAttemptDetail />} />
+            </Route>
           </Route>
-        </Route>
 
-        {/* ================= 404 NOT FOUND ================= */}
-        <Route path="*" element={<h2>Trang không tồn tại!</h2>} />
-      </Routes>
+          {/* ================= ADMIN PROTECTED ROUTES ================= */}
+          <Route element={<ProtectedRoute allowedRoles={["admin"]} />}>
+            <Route path="/admin" element={<AdminLayout />}>
+              <Route index element={<DashboardPage />} />
+              <Route path="accounts" element={<AccountManagementPage />} />
+              <Route path="courses" element={<CourseManagementPage />} />
+              <Route path="classes" element={<ClassManagementPage />} />
+              <Route path="teacher-assignment" element={<TeacherAssignmentPage />} />
+              <Route path="ai-management" element={<AIManagementPage />} />
+              <Route path="reports" element={<ReportPage />} />
+              <Route path="profile" element={<ProfilePage />} />
+              <Route path="system" element={<AdminPage title="System Management" description="Configure system-wide settings." />} />
+            </Route>
+          </Route>
+
+          {/* ================= 404 NOT FOUND ================= */}
+          <Route path="*" element={<h2 style={{ textAlign: "center", marginTop: 40 }}>Trang không tồn tại!</h2>} />
+        </Routes>
+      </Suspense>
     </>
   );
 }

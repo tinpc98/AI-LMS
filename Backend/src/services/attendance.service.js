@@ -86,7 +86,8 @@ class AttendanceService {
 
     return await Attendance.find(query)
       .populate("studentId", "fullName email avatar")
-      .sort({ date: -1 });
+      .sort({ date: -1 })
+      .lean();
   }
 
   // Lấy lịch sử điểm danh của học sinh
@@ -102,7 +103,8 @@ class AttendanceService {
 
     return await Attendance.find(query)
       .populate("classId", "className classCode")
-      .sort({ date: -1 });
+      .sort({ date: -1 })
+      .lean();
   }
 
   // Thống kê tỷ lệ điểm danh theo lớp

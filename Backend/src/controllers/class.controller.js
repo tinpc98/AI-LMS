@@ -65,7 +65,8 @@ export const ClassList = async (req, res) => {
         .populate("resources.uploadedBy", "fullName email")
         .sort({ createdAt: -1 })
         .skip(skip)
-        .limit(limitNum),
+        .limit(limitNum)
+        .lean(),
       classModel.countDocuments(finalQuery),
     ]);
 
@@ -104,7 +105,8 @@ export const ClassListById = async (req, res) => {
       .populate("assignedBy", "fullName email")
       .populate("students.studentId", "fullName email phone avatar")
       .populate("resources.uploadedBy", "fullName email")
-      .populate("courseId", "courseName subject grade status description");
+      .populate("courseId", "courseName subject grade status description")
+      .lean();
 
     if (!classDetail) {
       return res.status(404).json({ message: "Lớp học không tồn tại" });

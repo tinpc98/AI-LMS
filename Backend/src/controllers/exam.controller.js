@@ -183,7 +183,7 @@ export const getExamsByClass = async (req, res) => {
       return res.status(200).json({ success: true, data: [] });
     }
 
-    const exams = await Exam.find({ classId: classId }).sort({ createdAt: -1 });
+    const exams = await Exam.find({ classId: classId }).sort({ createdAt: -1 }).lean();
 
     return res.status(200).json({
       success: true,

@@ -75,7 +75,8 @@ class AnnouncementService {
         .populate("courseId", "courseName")
         .sort({ createdAt: -1 })
         .skip(skip)
-        .limit(limit),
+        .limit(limit)
+        .lean(),
       Announcement.countDocuments(query),
     ]);
 
@@ -98,7 +99,8 @@ class AnnouncementService {
     const announcement = await Announcement.findById(id)
       .populate("createdBy", "fullName email avatar role")
       .populate("classId", "className classCode")
-      .populate("courseId", "courseName");
+      .populate("courseId", "courseName")
+      .lean();
 
     if (!announcement) {
       throw new Error("Thông báo không tồn tại!");

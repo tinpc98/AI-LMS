@@ -195,7 +195,8 @@ const assignmentController = {
 
       const assignment = await Assignment.findById(id)
         .populate("teacherId", "fullName email avatar")
-        .populate("classId", "className classCode");
+        .populate("classId", "className classCode")
+        .lean();
 
       if (!assignment) {
         return res.status(404).json({ message: "Bài tập không tồn tại" });
@@ -215,9 +216,9 @@ const assignmentController = {
         return res.status(200).json({ assignments: [], data: [] });
       }
 
-      const assignments = await Assignment.find({ classId }).sort({
-        createdAt: -1,
-      });
+      const assignments = await Assignment.find({ classId })
+        .sort({ createdAt: -1 })
+        .lean();
       return res.status(200).json({ assignments, data: assignments });
     } catch (error) {
       return res
@@ -237,7 +238,8 @@ const assignmentController = {
       const submissions = await Submission.find({ assignmentId })
         .populate("studentId", "fullName email avatar")
         .populate("gradedBy", "fullName email")
-        .sort({ createdAt: -1 });
+        .sort({ createdAt: -1 })
+        .lean();
 
       return res.status(200).json({ submissions, data: submissions });
     } catch (error) {

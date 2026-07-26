@@ -41,7 +41,8 @@ class GradeService {
     return await Grade.find({ classId })
       .populate("studentId", "fullName email avatar")
       .populate("gradedBy", "fullName email")
-      .sort({ studentId: 1, category: 1 });
+      .sort({ studentId: 1, category: 1 })
+      .lean();
   }
 
   // Lấy bảng điểm cá nhân học sinh
@@ -58,7 +59,8 @@ class GradeService {
     return await Grade.find(query)
       .populate("classId", "className classCode")
       .populate("gradedBy", "fullName email")
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .lean();
   }
 
   // Tính điểm trung bình môn (GPA) theo tỷ trọng gradingWeight của lớp
