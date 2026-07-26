@@ -123,3 +123,42 @@ export const calculateLearningInsights = (
     recommendedActions,
   };
 };
+
+/**
+ * Tái sử dụng để định dạng dữ liệu schedule (string hoặc object) thành chuỗi hiển thị an toàn cho React
+ * Tránh lỗi Runtime: Objects are not valid as a React child
+ */
+export function formatSchedule(schedule: any): string {
+  if (!schedule) {
+    return "08:00 - 10:30";
+  }
+
+  if (typeof schedule === "string") {
+    return schedule;
+  }
+
+  if (typeof schedule === "object") {
+    const daysStr =
+      Array.isArray(schedule.days) && schedule.days.length > 0
+        ? schedule.days.join(", ")
+        : typeof schedule.days === "string"
+        ? schedule.days
+        : "";
+
+    const startTime = schedule.startTime || "";
+    const endTime = schedule.endTime || "";
+    const timeStr = startTime && endTime ? `${startTime} - ${endTime}` : startTime || endTime || "";
+
+    if (daysStr && timeStr) {
+      return `${daysStr} (${timeStr})`;
+    }
+    if (daysStr) {
+      return daysStr;
+    }
+    if (timeStr) {
+      return timeStr;
+    }
+  }
+
+  return "08:00 - 10:30";
+}

@@ -3,6 +3,7 @@ import { Card, Typography, Space, Button, Tag, Avatar } from "antd";
 import { ClockCircleOutlined, UserOutlined, VideoCameraOutlined, ArrowRightOutlined } from "@ant-design/icons";
 import { Link } from "react-router-dom";
 import type { TodayClassItem } from "../types/learningDashboard.types";
+import { formatSchedule } from "../utils/learningDashboard.utils";
 
 const { Text, Title } = Typography;
 
@@ -60,7 +61,7 @@ export const TodayClassesWidget: React.FC<TodayClassesWidgetProps> = React.memo(
                     )}
                   </Space>
                   <Text type="secondary" style={{ fontSize: 12, display: "block" }}>
-                    {item.courseName} • GV: {item.teacherName} ({item.timeSlot})
+                    {item.courseName} • GV: {item.teacherName} ({formatSchedule(item.timeSlot)})
                   </Text>
                 </div>
               </Space>

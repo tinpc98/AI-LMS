@@ -6,6 +6,16 @@ import type {
   AttendanceSummary,
 } from "../types/learningDashboard.types";
 
+import {
+  calculateAverageGrade,
+  calculateCompletionRate,
+  calculateExamPerformanceRate,
+  calculateLearningScore,
+  calculateLearningInsights,
+  formatSchedule,
+} from "../utils/learningDashboard.utils";
+import type { LearningDashboardState } from "../types/learningDashboard.types";
+
 export const mapClassResponse = (rawClasses: any[]): TodayClassItem[] => {
   if (!Array.isArray(rawClasses)) return [];
 
@@ -18,7 +28,7 @@ export const mapClassResponse = (rawClasses: any[]): TodayClassItem[] => {
       courseName: c.subject || c.courseId?.name || "Khóa học môn chuyên ngành",
       teacherName: c.teacherId?.fullName || c.teacherName || "Giảng viên phụ trách",
       teacherAvatar: c.teacherId?.avatar || c.teacherAvatar,
-      timeSlot: c.schedule || "08:00 - 10:30",
+      timeSlot: formatSchedule(c.schedule),
       status: isLiveNow ? "LIVE" : "UPCOMING",
     };
   });

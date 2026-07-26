@@ -4,6 +4,8 @@ import { ClockCircleOutlined, UserOutlined, VideoCameraOutlined, BookOutlined } 
 import { useNavigate } from "react-router-dom";
 import EmptyState from "../../common/EmptyState";
 
+import { formatSchedule } from "../../modules/student/learning/utils/learningDashboard.utils";
+
 const { Title, Text } = Typography;
 
 export interface ITodayClassItem {
@@ -106,7 +108,7 @@ export const StudentTodayClasses: React.FC<StudentTodayClassesProps> = React.mem
                     <Space size={8}>
                       <ClockCircleOutlined style={{ color: "#8c8c8c", fontSize: 14 }} />
                       <Text type="secondary" style={{ fontSize: 12 }}>
-                        {cls.timeSlot || "Hôm nay"}
+                        {formatSchedule(cls.timeSlot)}
                       </Text>
                     </Space>
                   </Space>
