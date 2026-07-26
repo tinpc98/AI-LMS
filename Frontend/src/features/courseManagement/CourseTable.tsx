@@ -104,7 +104,11 @@ const CourseTable = ({ data, loading, onView, onEdit, onChangeStatus, onDelete }
       dataSource={data}
       loading={loading}
       pagination={{ pageSize: 6 }}
-      locale={{ emptyText: <Empty description="No courses found" /> }}
+      locale={{
+        emptyText: loading ? null : (
+          <Empty description="No courses found" />
+        ),
+      }}
     />
   );
 };

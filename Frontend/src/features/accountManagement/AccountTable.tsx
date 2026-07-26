@@ -99,7 +99,11 @@ const AccountTable = ({
       dataSource={data}
       loading={loading}
       pagination={{ pageSize: 6 }}
-      locale={{ emptyText: <Empty description="No accounts found" /> }}
+      locale={{
+        emptyText: loading ? null : (
+          <Empty description="No accounts found" />
+        ),
+      }}
     />
   );
 };
