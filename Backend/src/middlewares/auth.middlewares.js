@@ -39,3 +39,21 @@ export const isTeacher = (req, res, next) => {
   }
   next();
 };
+
+//kiểm tra xem có phải admin hay không
+export const isAdmin = (req, res, next) => {
+  if (!req.user) {
+    return res
+      .status(500)
+      .json({ message: "Lỗi hệ thống, không tìm thấy dữ liệu người dùng" });
+  }
+  const userRole = req.user.role?.toLowerCase();
+  if (userRole !== "admin") {
+    return res.status(403).json({
+      message:
+        "Quyền truy cập bị từ chối. Chỉ Quản trị viên (Admin) mới có quyền quản lý lớp học",
+    });
+  }
+  next();
+};
+

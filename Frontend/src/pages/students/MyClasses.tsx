@@ -1,16 +1,14 @@
 import axios from "axios";
 import { useEffect, useState, useMemo } from "react";
-import JoinClassModel from "../../components/features/JoinClassModel";
 import { classApi } from "../../api/classApi";
 import type { IClass } from "../../interface/ClassInterface";
 import { useNavigate } from "react-router-dom";
 
 const MyClassesContent = () => {
-  // --- STATE & API LOGIC (GIỮ NGUYÊN HOÀN TOÀN LOGIC CŨ) ---
+  // --- STATE & API LOGIC ---
   const [myClasses, setMyClasses] = useState<IClass[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string>("");
-  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const navigate = useNavigate();
 
   const getAllMyClasses = async (isMounted: boolean) => {
@@ -58,10 +56,6 @@ const MyClassesContent = () => {
     };
   }, []);
 
-  const handleJoined = (joinedClass: IClass) => {
-    setMyClasses((prev) => [joinedClass, ...prev]);
-  };
-
   const handleGoToClass = (classId: string) => {
     console.log("Điều hướng vào lớp học có ID:", classId);
     navigate(`/classdetail/${classId}`);
@@ -96,8 +90,6 @@ const MyClassesContent = () => {
 
   return (
     <>
-      <JoinClassModel isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onJoined={handleJoined} />
-
       <main className="ml-[280px] min-h-screen flex flex-col pt-8 bg-slate-50/50 font-sans selection:bg-indigo-500/20">
         <div className="p-6 md:p-8 max-w-7xl mx-auto w-full flex-1 space-y-8">
           {/* PAGE HEADER & CONTROLS */}
@@ -105,7 +97,7 @@ const MyClassesContent = () => {
             <div>
               <h2 className="text-3xl font-extrabold tracking-tight text-slate-900">Lớp học của tôi</h2>
               <p className="text-slate-500 text-sm mt-1">
-                Quản lý tiến trình học tập, tham gia lớp mới và theo dõi kết quả lớp học.
+                Quản lý tiến trình học tập và theo dõi kết quả trong các lớp học được phân công.
               </p>
             </div>
 
@@ -133,17 +125,6 @@ const MyClassesContent = () => {
                   Đã hoàn thành
                 </button>
               </div>
-
-              {/* Nút Tham gia lớp học mới */}
-              <button
-                onClick={() => setIsModalOpen(true)}
-                className="group flex items-center justify-center gap-2 px-5 py-3 bg-indigo-600 text-white font-bold rounded-2xl shadow-md shadow-indigo-600/10 hover:shadow-indigo-600/20 hover:bg-indigo-700 active:scale-[0.97] transition-all cursor-pointer text-sm"
-              >
-                <span className="material-symbols-outlined text-[18px] transition-transform group-hover:rotate-90">
-                  add
-                </span>
-                <span>Tham gia lớp mới</span>
-              </button>
             </div>
           </div>
 
