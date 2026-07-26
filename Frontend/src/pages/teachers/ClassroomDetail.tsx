@@ -10,7 +10,6 @@ import {
   Spin,
   Alert,
   Empty,
-  Modal,
 } from "antd";
 import {
   ArrowLeftOutlined,
@@ -18,8 +17,8 @@ import {
   TeamOutlined,
   CheckSquareOutlined,
   FolderOpenOutlined,
-  FileTextOutlined,
   FormOutlined,
+  FileTextOutlined,
   VideoCameraOutlined,
   PlusOutlined,
   EditOutlined,
@@ -31,10 +30,9 @@ import { classApi } from "../../api/classApi";
 import { lessonApi } from "../../api/lessonApi";
 
 import type { IClass } from "../../interface/ClassInterface";
-import type { IAssignment, ISubmission } from "../../interface/assignmentInterface";
+import type { IAssignment } from "../../interface/assignmentInterface";
 import type { ILesson } from "../../interface/lessonInterface";
 
-import CreateAssignmentModal from "../../components/features/CreateAssignmentModal";
 import CreateLessonModal from "../../components/features/CreateLessonModal";
 import LiveRoomModal from "../../components/features/LiveRoomModal";
 import { useJitsiLiveSession } from "../../hooks/useJitsiLiveSession";
@@ -43,6 +41,7 @@ import { TeacherClassOverviewTab } from "../../components/teacher/classroom/Teac
 import { TeacherStudentTableTab } from "../../components/teacher/classroom/TeacherStudentTableTab";
 import { TeacherAttendanceTab } from "../../components/teacher/classroom/TeacherAttendanceTab";
 import { TeacherMaterialsTab } from "../../components/teacher/classroom/TeacherMaterialsTab";
+import { TeacherAssignmentsTab } from "../../components/teacher/classroom/TeacherAssignmentsTab";
 import { toast } from "../../utils/toast";
 
 const { Title, Text, Paragraph } = Typography;
@@ -56,9 +55,6 @@ export default function ClassroomDetail() {
   const [classInfo, setClassInfo] = useState<IClass | null>(null);
   const [lessons, setLessons] = useState<ILesson[]>([]);
   const [assignments, setAssignments] = useState<IAssignment[]>([]);
-  const [reviewingAssignment, setReviewingAssignment] = useState<IAssignment | null>(null);
-  const [reviewSubmissions, setReviewSubmissions] = useState<ISubmission[]>([]);
-  const [isReviewLoading, setIsReviewLoading] = useState(false);
 
   const [isLoading, setIsLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState("");
@@ -66,7 +62,6 @@ export default function ClassroomDetail() {
   const [editingLesson, setEditingLesson] = useState<ILesson | null>(null);
   const [activeTab, setActiveTab] = useState("overview");
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isAssignmentModalOpen, setIsAssignmentModalOpen] = useState(false);
 
   // Live Session Hook
   const {
@@ -146,24 +141,6 @@ export default function ClassroomDetail() {
       toast.success("Xóa bài giảng thành công.");
     } catch (error: any) {
       toast.error(error.response?.data?.message || "Xóa bài giảng thất bại.");
-    }
-  };
-
-  const handleAssignmentCreated = (newAssignment: IAssignment) => {
-    setAssignments((prev) => [newAssignment, ...prev]);
-    setIsAssignmentModalOpen(false);
-  };
-
-  const handleReviewAssignment = async (assignment: IAssignment) => {
-    setReviewingAssignment(assignment);
-    setIsReviewLoading(true);
-    try {
-      const submissions = await assignmentApi.getSubmissionsByAssignment(assignment._id);
-      setReviewSubmissions(submissions);
-    } catch (error) {
-      setReviewSubmissions([]);
-    } finally {
-      setIsReviewLoading(false);
     }
   };
 
@@ -254,6 +231,24 @@ export default function ClassroomDetail() {
       ),
     },
     {
+      key: "assignments",
+      label: (
+        <Space>
+          <FormOutlined />
+          <span>Bài tập ({assignments.length})</span>
+        </Space>
+      ),
+      children: (
+        <TeacherAssignmentsTab
+          classId={classId!}
+          className={classInfo.className}
+          assignments={assignments}
+          onRefresh={loadAssignments}
+          loading={isLoading}
+        />
+      ),
+    },
+    {
       key: "lessons",
       label: (
         <Space>
@@ -310,58 +305,6 @@ export default function ClassroomDetail() {
             </div>
           ) : (
             <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="Chưa có bài giảng nào trong lớp này." />
-          )}
-        </Card>
-      ),
-    },
-    {
-      key: "assignments",
-      label: (
-        <Space>
-          <FormOutlined />
-          <span>Bài tập ({assignments.length})</span>
-        </Space>
-      ),
-      children: (
-        <Card
-          title={
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <Title level={5} style={{ margin: 0 }}>📝 Bài tập được giao</Title>
-              <Button
-                type="primary"
-                icon={<PlusOutlined />}
-                onClick={() => setIsAssignmentModalOpen(true)}
-              >
-                Tạo bài tập
-              </Button>
-            </div>
-          }
-          style={{ borderRadius: 12 }}
-        >
-          {assignments.length > 0 ? (
-            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-              {assignments.map((item) => (
-                <Card key={item._id} style={{ borderRadius: 8 }} styles={{ body: { padding: 16 } }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <div>
-                      <Title level={5} style={{ margin: 0, fontSize: 15 }}>
-                        {item.title}
-                      </Title>
-                      {item.deadline && (
-                        <Text type="secondary" style={{ fontSize: 12 }}>
-                          Hạn nộp: {new Date(item.deadline).toLocaleString("vi-VN")}
-                        </Text>
-                      )}
-                    </div>
-                    <Button size="small" type="primary" ghost onClick={() => handleReviewAssignment(item)}>
-                      Xem bài nộp
-                    </Button>
-                  </div>
-                </Card>
-              ))}
-            </div>
-          ) : (
-            <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="Chưa có bài tập nào được giao cho lớp." />
           )}
         </Card>
       ),
@@ -438,13 +381,6 @@ export default function ClassroomDetail() {
         onUpdated={handleLessonUpdated}
       />
 
-      <CreateAssignmentModal
-        isOpen={isAssignmentModalOpen}
-        onClose={() => setIsAssignmentModalOpen(false)}
-        classId={classId!}
-        onCreated={handleAssignmentCreated}
-      />
-
       <LiveRoomModal
         isOpen={isLiveRoomOpen}
         onClose={() => setIsLiveRoomOpen(false)}
@@ -452,30 +388,6 @@ export default function ClassroomDetail() {
         jwtToken={jwtToken}
         appId={appId}
       />
-
-      {/* Submissions Review Modal */}
-      <Modal
-        title={`Chấm bài: ${reviewingAssignment?.title || ""}`}
-        open={!!reviewingAssignment}
-        onCancel={() => setReviewingAssignment(null)}
-        footer={null}
-        width={700}
-      >
-        {isReviewLoading ? (
-          <Spin />
-        ) : reviewSubmissions.length > 0 ? (
-          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-            {reviewSubmissions.map((sub: any, idx: number) => (
-              <Card key={sub._id || `sub-${idx}`} size="small">
-                <Text strong>{typeof sub.studentId === "object" ? sub.studentId?.fullName : "Học sinh"}</Text>
-                <Paragraph style={{ margin: "4px 0" }}>{sub.content || "Nộp tệp đính kèm"}</Paragraph>
-              </Card>
-            ))}
-          </div>
-        ) : (
-          <Empty description="Chưa có học sinh nào nộp bài." />
-        )}
-      </Modal>
     </div>
   );
 }
