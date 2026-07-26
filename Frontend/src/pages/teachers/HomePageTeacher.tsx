@@ -91,12 +91,8 @@ export default function HomePageTeacher() {
   const [isDarkTheme, setIsDarkTheme] = useState(false);
   const itemsPerPage = 3;
   // Modals visibility state
-  const [modalType, setModalType] = useState<"class" | "homework" | "exam" | null>(null);
+  const [modalType, setModalType] = useState<"homework" | "exam" | null>(null);
   // Form Fields
-  const [newClassName, setNewClassName] = useState("");
-  const [newClassCode, setNewClassCode] = useState("");
-  const [newClassSize, setNewClassSize] = useState("40");
-  const [newClassSchedule, setNewClassSchedule] = useState("Thứ 2, 08:00 AM");
   const [hwTitle, setHwTitle] = useState("");
   const [hwClassSelect, setHwClassSelect] = useState("");
   const [hwDeadline, setHwDeadline] = useState("Ngày mai");
@@ -135,37 +131,6 @@ export default function HomePageTeacher() {
         return c;
       }),
     );
-  };
-  const handleCreateClassSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newClassName.trim() || !newClassCode.trim() || !newClassSchedule.trim()) {
-      triggerToast("Vui lòng điền đầy đủ thông tin!", "error");
-      return;
-    }
-    const newClass: ClassItem = {
-      id: "c-" + Date.now(),
-      name: newClassName,
-      code: newClassCode.toUpperCase(),
-      size: parseInt(newClassSize) || 40,
-      progress: 0,
-      nextClass: newClassSchedule,
-      attendanceStatus: "chua_diem_danh",
-      iconClass: newClassName.toLowerCase().includes("tin")
-        ? "tin"
-        : newClassName.toLowerCase().includes("lý")
-          ? "ly"
-          : "toan",
-      icon: newClassName.toLowerCase().includes("tin")
-        ? "computer"
-        : newClassName.toLowerCase().includes("lý")
-          ? "science"
-          : "functions",
-    };
-    setClasses((prev) => [newClass, ...prev]);
-    setModalType(null);
-    setNewClassName("");
-    setNewClassCode("");
-    triggerToast(`Đã tạo thành công lớp học học phần: ${newClassName}!`, "success");
   };
   const handleCreateHomeworkSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -416,14 +381,6 @@ export default function HomePageTeacher() {
             <section style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
               <h3 className="lms-section-title">Thao tác nhanh</h3>
               <div className="lms-action-grid">
-                {/* Button: Create class */}
-                <button onClick={() => setModalType("class")} className="lms-action-card brand">
-                  <div className="lms-action-card-text">
-                    <h4 className="lms-action-card-title">Tạo lớp học</h4>
-                    <p className="lms-action-card-desc">Thiết lập thêm một lớp học học phần mới</p>
-                  </div>
-                  <span className="material-symbols-outlined lms-action-card-bg-icon">add_business</span>
-                </button>
                 {/* Button: Create homework */}
                 <button onClick={() => setModalType("homework")} className="lms-action-card secondary">
                   <div className="lms-action-card-text">
@@ -601,69 +558,6 @@ export default function HomePageTeacher() {
         {/* ==========================================================================
            MODALS (Quick Actions Form popups)
            ========================================================================== */}
-
-        {/* 1. Create Class Modal */}
-        {modalType === "class" && (
-          <div className="lms-modal-overlay">
-            <div className="lms-modal">
-              <div className="lms-modal-header">
-                <span className="lms-modal-title">Thiết lập lớp học mới</span>
-                <button onClick={() => setModalType(null)} className="lms-modal-close">
-                  <span className="material-symbols-outlined">close</span>
-                </button>
-              </div>
-
-              <form onSubmit={handleCreateClassSubmit} className="lms-modal-body">
-                <div className="lms-form-group">
-                  <label>Tên môn học / lớp học</label>
-                  <input
-                    type="text"
-                    placeholder="Ví dụ: Lớp 11A3 - Giải tích"
-                    value={newClassName}
-                    onChange={(e) => setNewClassName(e.target.value)}
-                    required
-                  />
-                </div>
-                <div className="lms-form-group">
-                  <label>Mã lớp học phần</label>
-                  <input
-                    type="text"
-                    placeholder="Ví dụ: TOAN11GT"
-                    value={newClassCode}
-                    onChange={(e) => setNewClassCode(e.target.value)}
-                    required
-                  />
-                </div>
-                <div className="lms-form-group">
-                  <label>Sĩ số lớp dự kiến</label>
-                  <input
-                    type="number"
-                    value={newClassSize}
-                    onChange={(e) => setNewClassSize(e.target.value)}
-                    required
-                  />
-                </div>
-                <div className="lms-form-group">
-                  <label>Lịch dạy tiếp theo</label>
-                  <input
-                    type="text"
-                    value={newClassSchedule}
-                    onChange={(e) => setNewClassSchedule(e.target.value)}
-                    required
-                  />
-                </div>
-                <div className="lms-modal-footer">
-                  <button type="button" onClick={() => setModalType(null)} className="lms-btn cancel">
-                    Hủy bỏ
-                  </button>
-                  <button type="submit" className="lms-btn confirm">
-                    Xác nhận
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        )}
         {/* 2. Create Homework Modal */}
         {modalType === "homework" && (
           <div className="lms-modal-overlay">

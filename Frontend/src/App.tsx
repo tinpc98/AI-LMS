@@ -3,7 +3,6 @@ import "./App.css";
 
 // Auth Components
 import LoginPage from "./pages/auth/LoginPage";
-import RegistrationPage from "./pages/auth/RegistrationPage";
 
 // Student Components
 import HomeLayoutStudent from "./components/layout/HomeLayoutStudent";
@@ -14,7 +13,7 @@ import StudentAssignment from "./pages/students/StudentAssignment";
 import HomePageStudent from "./pages/students/HomePageStudent";
 
 // Teacher Components
-import HomePageTeacher from "./pages/teachers/HomePageTeacher";
+// import HomePageTeacher from "./pages/teachers/HomePageTeacher";
 import ClassroomDetail from "./pages/teachers/ClassroomDetail";
 import ClassManagement from "./pages/teachers/ClassroomManagement";
 import ExamAttemptDetail from "./pages/teachers/ExamAttemptDetail.tsx";
@@ -44,7 +43,6 @@ function App() {
         {/* ================= PUBLIC / AUTH ROUTES ================= */}
         <Route element={<PublicRoute />}>
           <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegistrationPage />} />
         </Route>
 
         {/* ================= STUDENT PROTECTED ROUTES ================= */}
@@ -63,9 +61,8 @@ function App() {
         {/* ================= TEACHER PROTECTED ROUTES ================= */}
         <Route element={<ProtectedRoute allowedRoles={["teacher"]} />}>
           <Route path="/teacher" element={<HomeLayoutTeacher />}>
-            <Route index element={<HomePageTeacher />} />
+            <Route index element={<ClassManagement />} />
             <Route path="classroom-detail/:classId" element={<ClassroomDetail />} />
-            <Route path="classroom-management" element={<ClassManagement />} />
             <Route path="lessonManagement" element={<LessonManagement />} />
             <Route path="questionbank" element={<QuestionBank />} />
             <Route path="exammanagement" element={<ExamManagement />} />

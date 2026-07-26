@@ -12,7 +12,7 @@ export const ClassList = async (req, res) => {
     if (userRole === "Teacher") {
       query = { teacherId: userId };
     } else if (userRole === "Student") {
-      query = { students: userId };
+      query = { $or: [{ students: userId }, { "students.studentId": userId }] };
     }
 
     const classList = await classModel
@@ -35,6 +35,7 @@ export const ClassListById = async (req, res) => {
     const classDetail = await classModel
       .findById(id)
       .populate("teacherId", "fullName email")
+      .populate("students.studentId", "fullName email")
       .populate("students", "fullName email")
       .populate("courseId", "courseName subject grade status");
     if (!classDetail) {
@@ -47,12 +48,13 @@ export const ClassListById = async (req, res) => {
 };
 
 //=====================================================================================
-//Tạo lớp học mới (Tự động tạo meetingRoomId và phân quyền giáo viên)
+//Tạo lớp học mới (Dành cho Admin - Tự động tạo meetingRoomId và phân công giáo viên/học sinh)
 export const AddNewClass = async (req, res) => {
   try {
     const {
       className,
       courseId,
+      teacherId,
       classCode,
       room,
       classRoom,
@@ -65,6 +67,7 @@ export const AddNewClass = async (req, res) => {
       note,
       status,
       isEnrollmentOpen,
+      students,
     } = req.body;
 
     if (!className || !courseId) {
@@ -82,7 +85,7 @@ export const AddNewClass = async (req, res) => {
       className: className.trim(),
       classCode: classCode?.trim() || `CLS-${Date.now().toString().slice(-6)}`,
       courseId,
-      teacherId: req.user.id,
+      teacherId: teacherId || req.user.id,
       meetingRoomId,
       classRoom: classRoom ?? room ?? "",
       learningMode: learningMode || "Offline",
@@ -90,8 +93,8 @@ export const AddNewClass = async (req, res) => {
       startDate: startDate || null,
       endDate: endDate || null,
       maxStudents: maxStudents || 30,
-      currentStudents: 0,
-      students: [],
+      currentStudents: Array.isArray(students) ? students.length : 0,
+      students: Array.isArray(students) ? students : [],
       description: description || "",
       note: note || "",
       isEnrollmentOpen: typeof isEnrollmentOpen === "boolean" ? isEnrollmentOpen : true,
@@ -107,13 +110,14 @@ export const AddNewClass = async (req, res) => {
 };
 
 //=====================================================================================
-//Cập nhật lớp học (Khóa quyền sở hữu)
+//Cập nhật lớp học (Dành cho Admin)
 export const UpdateClass = async (req, res) => {
   const { id } = req.params;
   try {
     const {
       className,
       courseId,
+      teacherId,
       classCode,
       room,
       classRoom,
@@ -126,28 +130,28 @@ export const UpdateClass = async (req, res) => {
       note,
       status,
       isEnrollmentOpen,
+      students,
     } = req.body;
 
     const updateData = {
-      className,
-      courseId,
-      classCode,
-      classRoom: classRoom ?? room,
-      learningMode,
-      schedule,
-      startDate,
-      endDate,
-      maxStudents,
-      description,
-      note,
-      isEnrollmentOpen,
-      status,
+      ...(className && { className }),
+      ...(courseId && { courseId }),
+      ...(teacherId && { teacherId }),
+      ...(classCode && { classCode }),
+      ...(classRoom !== undefined || room !== undefined ? { classRoom: classRoom ?? room } : {}),
+      ...(learningMode && { learningMode }),
+      ...(schedule && { schedule }),
+      ...(startDate !== undefined && { startDate }),
+      ...(endDate !== undefined && { endDate }),
+      ...(maxStudents !== undefined && { maxStudents }),
+      ...(description !== undefined && { description }),
+      ...(note !== undefined && { note }),
+      ...(isEnrollmentOpen !== undefined && { isEnrollmentOpen }),
+      ...(status && { status }),
+      ...(Array.isArray(students) && { students }),
     };
 
-    const query = { _id: id, teacherId: req.user.id };
-    if (req.user.role === "Admin") delete query.teacherId;
-
-    const updatedClass = await classModel.findOneAndUpdate(query, updateData, {
+    const updatedClass = await classModel.findByIdAndUpdate(id, updateData, {
       returnDocument: "after",
     });
 
@@ -164,15 +168,11 @@ export const UpdateClass = async (req, res) => {
 };
 
 //=====================================================================================
-//Xóa lớp học (Khóa quyền sở hữu)
+//Xóa lớp học (Dành cho Admin)
 export const DeleteClass = async (req, res) => {
   const { id } = req.params;
   try {
-    const query = { _id: id, teacherId: req.user.id };
-
-    if (req.user.role === "Admin") delete query.teacherId;
-
-    const deleteClass = await classModel.findOneAndDelete(query);
+    const deleteClass = await classModel.findByIdAndDelete(id);
 
     if (!deleteClass) {
       return res.status(404).json({
@@ -185,10 +185,3 @@ export const DeleteClass = async (req, res) => {
   }
 };
 
-//=====================================================================================
-// Chức năng Join Class đã bị vô hiệu hóa vì học sinh được quản lý tự động theo lớp.
-export const JoinClass = async (req, res) => {
-  return res.status(400).json({
-    message: "Tính năng tham gia lớp bằng mã đã bị vô hiệu hóa. Học sinh được phân lớp bởi Admin và tự động truy cập lớp khi có buổi trực tuyến.",
-  });
-};

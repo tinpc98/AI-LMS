@@ -1,6 +1,6 @@
-import mongoose from "mongoose";
+import mongoose, { Schema, model } from "mongoose";
 
-const assignmentSchema = new mongoose.Schema(
+const assignmentSchema = new Schema(
   {
     title: {
       type: String,
@@ -10,8 +10,9 @@ const assignmentSchema = new mongoose.Schema(
     description: {
       type: String,
       trim: true,
+      default: "",
     },
-    // Đính kèm file đề bài (tận dụng lại cấu trúc file Cloudinary đã làm)
+    // Đính kèm file đề bài (tận dụng lại cấu trúc Cloudinary)
     attachments: [
       {
         name: { type: String, required: true },
@@ -24,22 +25,54 @@ const assignmentSchema = new mongoose.Schema(
       required: [true, "Phải có hạn nộp bài (Deadline)"],
     },
     classId: {
-      type: mongoose.Schema.Types.ObjectId,
+      type: Schema.Types.ObjectId,
       ref: "Class",
-      required: true,
+      required: [true, "Lớp học liên kết là bắt buộc"],
     },
     lessonId: {
-      // Tùy chọn: Bài tập có thể gắn liền với 1 bài giảng cụ thể hoặc bài tập chung của lớp
-      type: mongoose.Schema.Types.ObjectId,
+      type: Schema.Types.ObjectId,
       ref: "Lesson",
+      default: null,
     },
     teacherId: {
-      type: mongoose.Schema.Types.ObjectId,
+      type: Schema.Types.ObjectId,
       ref: "User",
-      required: true,
+      required: [true, "Giáo viên tạo bài tập là bắt buộc"],
+    },
+    // Người tạo bài tập (Admin hoặc Giáo viên)
+    createdBy: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+    },
+    // Cờ đánh dấu bài tập tạo bằng AI
+    isAIGenerated: {
+      type: Boolean,
+      default: false,
+    },
+    // Prompt AI đã dùng để tạo bài tập (nếu không dùng AI thì null)
+    aiPromptUsed: {
+      type: String,
+      trim: true,
+      default: null,
     },
   },
-  { timestamps: true },
+  { timestamps: true }
 );
-const Assignment = mongoose.model("Assignment", assignmentSchema);
+
+// Indexes tối ưu hiệu năng tìm kiếm
+assignmentSchema.index({ classId: 1 });
+assignmentSchema.index({ teacherId: 1 });
+assignmentSchema.index({ createdBy: 1 });
+assignmentSchema.index({ deadline: 1 });
+
+// Hook gán createdBy = teacherId nếu createdBy chưa được truyền vào
+assignmentSchema.pre("validate", function (next) {
+  if (!this.createdBy && this.teacherId) {
+    this.createdBy = this.teacherId;
+  }
+  next();
+});
+
+const Assignment = model("Assignment", assignmentSchema);
 export default Assignment;

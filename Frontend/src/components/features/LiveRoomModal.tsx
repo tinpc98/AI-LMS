@@ -18,7 +18,8 @@ const LiveRoomModal: React.FC<LiveRoomModalProps> = ({
 }) => {
   if (!isOpen || !jwtToken || !appId || !meetingRoomId) return null;
 
-  const roomName = meetingRoomId.trim();
+  const rawRoomName = meetingRoomId.trim();
+  const fullRoomName = rawRoomName.startsWith(appId) ? rawRoomName : `${appId}/${rawRoomName}`;
 
   return (
     <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex flex-col items-center justify-center p-4">
@@ -38,7 +39,7 @@ const LiveRoomModal: React.FC<LiveRoomModalProps> = ({
       <div className="w-full max-w-6xl h-[80vh] rounded-2xl overflow-hidden shadow-2xl border border-white/10">
         <JitsiMeeting
           domain="8x8.vc"
-          roomName={roomName}
+          roomName={fullRoomName}
           jwt={jwtToken}
           configOverwrite={{
             disableThirdPartyRequests: true,
@@ -53,5 +54,6 @@ const LiveRoomModal: React.FC<LiveRoomModalProps> = ({
     </div>
   );
 };
+
 
 export default LiveRoomModal;

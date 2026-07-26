@@ -8,6 +8,26 @@ interface UseJitsiLiveSessionProps {
   isTeacher?: boolean;
 }
 
+const getUserIdFromToken = (): string | undefined => {
+  const token = localStorage.getItem("accessToken");
+  if (!token) return undefined;
+  try {
+    const base64Url = token.split(".")[1];
+    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+    const jsonPayload = decodeURIComponent(
+      window
+        .atob(base64)
+        .split("")
+        .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+        .join("")
+    );
+    const decoded = JSON.parse(jsonPayload);
+    return decoded._id || decoded.id || decoded.userId;
+  } catch (e) {
+    return undefined;
+  }
+};
+
 export function useJitsiLiveSession({ classId, isTeacher = false }: UseJitsiLiveSessionProps) {
   const [isLiveRoomOpen, setIsLiveRoomOpen] = useState(false);
   const [meetingRoomId, setMeetingRoomId] = useState("");
@@ -25,6 +45,8 @@ export function useJitsiLiveSession({ classId, isTeacher = false }: UseJitsiLive
         const activeMeetingRoomId = response?.data?.data?.meetingRoomId;
         if (activeMeetingRoomId) {
           setMeetingRoomId(activeMeetingRoomId);
+        } else {
+          setMeetingRoomId("");
         }
       } catch (err) {
         console.error("Lỗi khi kiểm tra buổi học trực tuyến đang mở:", err);
@@ -42,14 +64,21 @@ export function useJitsiLiveSession({ classId, isTeacher = false }: UseJitsiLive
       transports: ["websocket", "polling"],
     });
 
-    socket.emit("JOIN_CLASS_ROOM", { classId, role: isTeacher ? "Teacher" : "Student" });
+    const userId = getUserIdFromToken();
+    socket.emit("JOIN_CLASS_ROOM", {
+      classId,
+      userId,
+      role: isTeacher ? "Teacher" : "Student",
+    });
 
-    socket.on("LIVE_SESSION_STARTED", (data) => {
+    socket.on("LIVE_SESSION_STARTED", (data: { meetingRoomId?: string; title?: string }) => {
       console.log("📢 Realtime Live Session Started:", data);
       if (data?.meetingRoomId) {
         setMeetingRoomId(data.meetingRoomId);
         if (!isTeacher) {
-          setNotificationMessage(`📢 Lớp học trực tuyến "${data.title || "Buổi học"}" vừa bắt đầu! Bạn có thể nhấn tham gia ngay.`);
+          setNotificationMessage(
+            `📢 Lớp học trực tuyến "${data.title || "Buổi học"}" vừa bắt đầu! Bạn có thể nhấn tham gia ngay.`
+          );
         }
       }
     });
@@ -67,33 +96,31 @@ export function useJitsiLiveSession({ classId, isTeacher = false }: UseJitsiLive
     };
   }, [classId, isTeacher]);
 
-  const handleStartLiveSession = useCallback(
-    async () => {
-      if (!classId) return;
-      setIsLiveLoading(true);
+  const handleStartLiveSession = useCallback(async () => {
+    if (!classId) return;
+    setIsLiveLoading(true);
 
-      try {
-        const response = await liveApi.createSession({ classId });
-        const meetingRoomIdFromServer = response?.data?.data?.meetingRoomId;
-        if (!meetingRoomIdFromServer) {
-          throw new Error("Backend không trả về meetingRoomId cho buổi học.");
-        }
-
-        const tokenRes = await liveApi.getJaasToken(meetingRoomIdFromServer);
-        setJwtToken(tokenRes.data.token);
-        setAppId(tokenRes.data.appId);
-        setMeetingRoomId(meetingRoomIdFromServer);
-        setIsLiveRoomOpen(true);
-      } catch (err: any) {
-        console.error("Lỗi khởi tạo buổi học trực tuyến:", err);
-        const serverMsg = err?.response?.data?.message || err?.message || "Vui lòng thử lại!";
-        toast.error(`Không thể khởi tạo buổi học trực tuyến: ${serverMsg}`);
-      } finally {
-        setIsLiveLoading(false);
+    try {
+      const response = await liveApi.createSession({ classId });
+      const meetingRoomIdFromServer = response?.data?.data?.meetingRoomId;
+      if (!meetingRoomIdFromServer) {
+        throw new Error("Backend không trả về meetingRoomId cho buổi học.");
       }
-    },
-    [classId]
-  );
+
+      const tokenRes = await liveApi.getJaasToken(meetingRoomIdFromServer);
+      setJwtToken(tokenRes.data.token);
+      setAppId(tokenRes.data.appId);
+      setMeetingRoomId(meetingRoomIdFromServer);
+      setIsLiveRoomOpen(true);
+    } catch (err: unknown) {
+      console.error("Lỗi khởi tạo buổi học trực tuyến:", err);
+      const errorObj = err as { response?: { data?: { message?: string } }; message?: string };
+      const serverMsg = errorObj?.response?.data?.message || errorObj?.message || "Vui lòng thử lại!";
+      toast.error(`Không thể khởi tạo buổi học trực tuyến: ${serverMsg}`);
+    } finally {
+      setIsLiveLoading(false);
+    }
+  }, [classId]);
 
   const handleJoinLiveClass = useCallback(async () => {
     if (!classId) {
@@ -116,9 +143,10 @@ export function useJitsiLiveSession({ classId, isTeacher = false }: UseJitsiLive
       setAppId(tokenRes.data.appId);
       setMeetingRoomId(meetingRoomIdFromServer);
       setIsLiveRoomOpen(true);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Lỗi khi tham gia buổi học trực tuyến:", err);
-      const serverMsg = err?.response?.data?.message || err?.message || "Vui lòng thử lại!";
+      const errorObj = err as { response?: { data?: { message?: string } }; message?: string };
+      const serverMsg = errorObj?.response?.data?.message || errorObj?.message || "Vui lòng thử lại!";
       toast.error(`Không thể tham gia buổi học trực tuyến: ${serverMsg}`);
     } finally {
       setIsLiveLoading(false);
@@ -150,3 +178,4 @@ export function useJitsiLiveSession({ classId, isTeacher = false }: UseJitsiLive
     handleEndLiveSession,
   };
 }
+

@@ -1,14 +1,12 @@
 import { useEffect, useState, useMemo } from "react";
 import { classApi } from "../../api/classApi";
-import CreateClassModal from "../../components/features/CreateClassModal";
 import type { IClass } from "../../interface/ClassInterface";
 import { useNavigate } from "react-router-dom";
 
 const ClassManagement = () => {
-  // --- STATE & DATA FETCHING LOGIC (GIỮ NGUYÊN HOÀN TOÀN) ---
+  // --- STATE & DATA FETCHING LOGIC ---
   const [classes, setClasses] = useState<IClass[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -26,30 +24,10 @@ const ClassManagement = () => {
     fetchClasses();
   }, []);
 
-  const handleClassCreated = (newClass: IClass) => {
-    setClasses((prev) => [newClass, ...prev]);
-  };
-
-  // --- CÁC HÀM XỬ LÝ SỰ KIỆN CHO NÚT BẤM (GIỮ NGUYÊN) ---
+  // --- CÁC HÀM XỬ LÝ SỰ KIỆN ---
   const handleGoToClass = (classId: string) => {
     console.log("Điều hướng vào lớp học có ID:", classId);
     navigate(`/teacher/classroom-detail/${classId}`);
-  };
-
-  const handleEditClass = (cls: IClass) => {
-    console.log("Mở modal sửa lớp học:", cls);
-    // Logic kích hoạt Modal chỉnh sửa lớp học của bạn tại đây
-  };
-
-  const handleDeleteClass = async (classId: string) => {
-    if (window.confirm("Bạn có chắc chắn muốn xóa lớp học này không? Hành động này không thể hoàn tác.")) {
-      try {
-        await classApi.deleteClass(classId);
-        setClasses((prev) => prev.filter((c) => c._id !== classId));
-      } catch (error) {
-        console.error("Lỗi khi xóa lớp học:", error);
-      }
-    }
   };
 
   // --- LOGIC HỖ TRỢ GIAO DIỆN MỚI ---
@@ -144,21 +122,9 @@ const ClassManagement = () => {
               {/* Tiêu đề chính chữ đậm màu slate sâu */}
               <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight text-slate-900">Quản lý lớp học</h2>
               <p className="text-slate-500 text-sm mt-2 max-w-xl font-medium leading-relaxed">
-                Tạo mới, theo dõi trạng thái, quản lý học sinh và điều phối hoạt động giảng dạy trong các lớp học của
-                bạn một cách trực quan.
+                Theo dõi trạng thái, quản lý học sinh và điều phối hoạt động giảng dạy trong các lớp học được phân công.
               </p>
             </div>
-
-            {/* Nút Tạo lớp học mới - Tối ưu hiệu ứng hover lung linh */}
-            <button
-              onClick={() => setIsModalOpen(true)}
-              className="group self-start lg:self-center flex items-center gap-2.5 px-6 py-3.5 bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-semibold rounded-2xl shadow-md shadow-indigo-600/10 hover:shadow-lg hover:shadow-indigo-600/20 hover:from-indigo-500 hover:to-violet-500 transition-all duration-300 active:scale-[0.98] cursor-pointer"
-            >
-              <span className="material-symbols-outlined transition-transform group-hover:rotate-90 duration-300 text-lg">
-                add
-              </span>
-              Tạo lớp học mới
-            </button>
           </div>
 
           {/* Dashboard Thống kê Số liệu (Grid các hộp số liệu trắng mờ kính) */}
@@ -313,9 +279,9 @@ const ClassManagement = () => {
             <p className="text-slate-500 text-sm mt-2 max-w-sm">
               {searchTerm || statusFilter !== "all"
                 ? "Hãy thử thay đổi từ khóa tìm kiếm hoặc gỡ bộ lọc trạng thái xem sao."
-                : "Hiện tại bạn chưa tạo lớp học nào. Hãy bắt đầu xây dựng lớp học đầu tiên ngay."}
+                : "Hiện tại bạn chưa được phân công lớp học nào. Vui lòng liên hệ Admin."}
             </p>
-            {searchTerm || statusFilter !== "all" ? (
+            {searchTerm || statusFilter !== "all" && (
               <button
                 onClick={() => {
                   setSearchTerm("");
@@ -324,13 +290,6 @@ const ClassManagement = () => {
                 className="mt-6 px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl text-sm transition-all cursor-pointer"
               >
                 Đặt lại bộ lọc
-              </button>
-            ) : (
-              <button
-                onClick={() => setIsModalOpen(true)}
-                className="mt-6 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-2xl text-sm shadow-md shadow-indigo-600/20 transition-all cursor-pointer"
-              >
-                Tạo lớp học mới
               </button>
             )}
           </div>
@@ -434,31 +393,13 @@ const ClassManagement = () => {
 
                   {/* Nhóm nút chức năng */}
                   <div className="flex items-center gap-2 pt-4 border-t border-slate-100">
-                    {/* Nút Vào Lớp (Chính) */}
+                    {/* Nút Vào Lớp */}
                     <button
                       onClick={() => handleGoToClass(cls._id)}
                       className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-indigo-600 text-white font-bold rounded-2xl text-xs tracking-wide shadow-md shadow-indigo-600/10 hover:bg-indigo-700 hover:shadow-indigo-600/20 active:scale-[0.98] transition-all cursor-pointer"
                     >
                       <span className="material-symbols-outlined text-[16px]">logout</span>
                       Vào lớp
-                    </button>
-
-                    {/* Nút Sửa Lớp (Phụ) */}
-                    <button
-                      onClick={() => handleEditClass(cls)}
-                      title="Sửa thông tin lớp"
-                      className="p-3 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 border border-slate-200/80 hover:border-indigo-200 rounded-2xl transition-all active:scale-[0.95] cursor-pointer"
-                    >
-                      <span className="material-symbols-outlined text-[18px] block">edit</span>
-                    </button>
-
-                    {/* Nút Xóa Lớp (Nguy hiểm) */}
-                    <button
-                      onClick={() => handleDeleteClass(cls._id)}
-                      title="Xóa lớp học"
-                      className="p-3 text-slate-400 hover:text-rose-600 hover:bg-rose-50 border border-slate-200/80 hover:border-rose-200 rounded-2xl transition-all active:scale-[0.95] cursor-pointer"
-                    >
-                      <span className="material-symbols-outlined text-[18px] block">delete</span>
                     </button>
                   </div>
                 </div>
@@ -467,8 +408,6 @@ const ClassManagement = () => {
           </div>
         )}
       </div>
-
-      <CreateClassModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onCreated={handleClassCreated} />
     </main>
   );
 };
