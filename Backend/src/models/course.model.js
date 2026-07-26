@@ -64,5 +64,9 @@ const courseSchema = new Schema(
   },
 );
 
+// Indexes nâng cao hiệu năng truy vấn khóa học
+courseSchema.index({ subject: 1, status: 1 });
+courseSchema.index({ createdBy: 1 });
+
 const Course = model("Course", courseSchema);
 export default Course;
