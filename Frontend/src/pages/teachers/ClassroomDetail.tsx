@@ -18,6 +18,7 @@ import {
   CheckSquareOutlined,
   FolderOpenOutlined,
   FormOutlined,
+  FileDoneOutlined,
   FileTextOutlined,
   VideoCameraOutlined,
   PlusOutlined,
@@ -42,6 +43,7 @@ import { TeacherStudentTableTab } from "../../components/teacher/classroom/Teach
 import { TeacherAttendanceTab } from "../../components/teacher/classroom/TeacherAttendanceTab";
 import { TeacherMaterialsTab } from "../../components/teacher/classroom/TeacherMaterialsTab";
 import { TeacherAssignmentsTab } from "../../components/teacher/classroom/TeacherAssignmentsTab";
+import { TeacherExamsTab } from "../../components/teacher/classroom/TeacherExamsTab";
 import { toast } from "../../utils/toast";
 
 const { Title, Text, Paragraph } = Typography;
@@ -244,6 +246,23 @@ export default function ClassroomDetail() {
           className={classInfo.className}
           assignments={assignments}
           onRefresh={loadAssignments}
+          loading={isLoading}
+        />
+      ),
+    },
+    {
+      key: "exams",
+      label: (
+        <Space>
+          <FileDoneOutlined />
+          <span>Bài kiểm tra</span>
+        </Space>
+      ),
+      children: (
+        <TeacherExamsTab
+          classId={classId!}
+          className={classInfo.className}
+          onRefresh={loadClassroom}
           loading={isLoading}
         />
       ),
