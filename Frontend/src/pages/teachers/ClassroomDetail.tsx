@@ -20,8 +20,8 @@ import {
   FormOutlined,
   FileDoneOutlined,
   NotificationOutlined,
-  FileTextOutlined,
   VideoCameraOutlined,
+  FileTextOutlined,
   PlusOutlined,
   EditOutlined,
   DeleteOutlined,
@@ -46,6 +46,7 @@ import { TeacherMaterialsTab } from "../../components/teacher/classroom/TeacherM
 import { TeacherAssignmentsTab } from "../../components/teacher/classroom/TeacherAssignmentsTab";
 import { TeacherExamsTab } from "../../components/teacher/classroom/TeacherExamsTab";
 import { TeacherAnnouncementsTab } from "../../components/teacher/classroom/TeacherAnnouncementsTab";
+import { TeacherLiveSessionTab } from "../../components/teacher/classroom/TeacherLiveSessionTab";
 import { toast } from "../../utils/toast";
 
 const { Title, Text, Paragraph } = Typography;
@@ -283,6 +284,22 @@ export default function ClassroomDetail() {
           className={classInfo.className}
           onRefresh={loadClassroom}
           loading={isLoading}
+        />
+      ),
+    },
+    {
+      key: "live",
+      label: (
+        <Space>
+          <VideoCameraOutlined />
+          <span>Phòng học Live</span>
+        </Space>
+      ),
+      children: (
+        <TeacherLiveSessionTab
+          classId={classId!}
+          className={classInfo.className}
+          teacherName={teacherName}
         />
       ),
     },
