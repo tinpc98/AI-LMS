@@ -28,6 +28,7 @@ import LearningMaterialsTab from "../../components/student/classDetail/materials
 import AssignmentsTab from "../../components/student/classDetail/assignments/AssignmentsTab";
 import ExamsTab from "../../components/student/classDetail/exams/ExamsTab";
 import GradesTab from "../../components/student/classDetail/grades/GradesTab";
+import AttendanceTab from "../../components/student/classDetail/attendance/AttendanceTab";
 
 
 const MOCK_RANKINGS = [
@@ -415,6 +416,7 @@ export default function ClassDetail() {
             { key: "assignments", label: "Bài tập của tôi" },
             { key: "exams", label: "Thi trực tuyến" },
             { key: "grades", label: "Bảng điểm" },
+            { key: "attendance", label: "Điểm danh" },
             { key: "chat", label: "Thảo luận lớp học" },
           ].map((tab) => (
             <button
@@ -616,6 +618,14 @@ export default function ClassDetail() {
                 assignments={assignments}
                 submittedAssignmentIds={submittedAssignmentIds}
                 exams={exams}
+                loading={isLoading}
+              />
+            )}
+
+            {/* TAB 6: ĐIỂM DANH (ATTENDANCE - SPRINT 3.6) */}
+            {activeTab === "attendance" && (
+              <AttendanceTab
+                rawRecords={[]}
                 loading={isLoading}
               />
             )}
