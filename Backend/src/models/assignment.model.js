@@ -67,11 +67,10 @@ assignmentSchema.index({ createdBy: 1 });
 assignmentSchema.index({ deadline: 1 });
 
 // Hook gán createdBy = teacherId nếu createdBy chưa được truyền vào
-assignmentSchema.pre("validate", function (next) {
+assignmentSchema.pre("validate", function () {
   if (!this.createdBy && this.teacherId) {
     this.createdBy = this.teacherId;
   }
-  next();
 });
 
 const Assignment = model("Assignment", assignmentSchema);

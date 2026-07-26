@@ -68,7 +68,7 @@ const assignmentController = {
     } catch (error) {
       return res
         .status(500)
-        .json({ message: "Lỗi server khi tạo bài tập", error: error.message });
+        .json({ message: error.message || "Lỗi server khi tạo bài tập" });
     }
   },
 

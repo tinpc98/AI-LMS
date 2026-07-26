@@ -60,11 +60,10 @@ announcementSchema.index({ createdBy: 1 });
 announcementSchema.index({ createdAt: -1 });
 
 // Pre-validate hook: Tự động xóa classId nếu scope = System
-announcementSchema.pre("validate", function (next) {
+announcementSchema.pre("validate", function () {
   if (this.scope === "System") {
     this.classId = null;
   }
-  next();
 });
 
 const Announcement = model("Announcement", announcementSchema);

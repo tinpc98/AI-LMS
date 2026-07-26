@@ -71,19 +71,16 @@ examSchema.index({ createdBy: 1 });
 examSchema.index({ status: 1 });
 
 // Pre-save hook: Kích hoạt tự động kiểm tra tổng điểm phải chuẩn 10 trước khi lưu vào Database
-examSchema.pre("save", function (next) {
+examSchema.pre("save", function () {
   if (this.questions && this.questions.length > 0) {
     const currentTotal = this.questions.reduce((sum, q) => sum + (q.points || 0), 0);
     // Dùng toFixed(2) để tránh lỗi số thập phân của Javascript (vd: 0.1 + 0.2 = 0.300000004)
     if (parseFloat(currentTotal.toFixed(2)) !== 10) {
-      return next(
-        new Error(
-          `Tổng điểm của đề thi phải bằng đúng 10. Tổng hiện tại: ${currentTotal}`
-        )
+      throw new Error(
+        `Tổng điểm của đề thi phải bằng đúng 10. Tổng hiện tại: ${currentTotal}`
       );
     }
   }
-  next();
 });
 
 const Exam = model("Exam", examSchema);
