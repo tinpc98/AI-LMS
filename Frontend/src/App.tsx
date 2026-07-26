@@ -35,6 +35,7 @@ import ClassManagementPage from "./features/classManagement/ClassManagementPage"
 import TeacherAssignmentPage from "./features/teacherAssignment/TeacherAssignmentPage";
 import AIManagementPage from "./features/aiManagement/AIManagementPage";
 import DashboardPage from "./features/dashboard/DashboardPage";
+import ReportPage from "./pages/Report/ReportPage.tsx";
 
 function App() {
   return (
@@ -81,7 +82,7 @@ function App() {
           <Route path="classes" element={<ClassManagementPage />} />
           <Route path="teacher-assignment" element={<TeacherAssignmentPage />} />
           <Route path="ai-management" element={<AIManagementPage />} />
-          <Route path="reports" element={<AdminPage title="Reports" description="Review system and learning reports." />} />
+          <Route path="reports" element={<ReportPage />} />
           <Route path="system" element={<AdminPage title="System Management" description="Configure system-wide settings." />} />
         </Route>
         {/* </Route> */}
