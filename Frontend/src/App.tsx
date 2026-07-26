@@ -11,6 +11,7 @@ import LessonView from "./pages/students/LessonView";
 import MyClasses from "./pages/students/MyClasses";
 import StudentAssignment from "./pages/students/StudentAssignment";
 import HomePageStudent from "./pages/students/HomePageStudent";
+import NotificationCenterPage from "./pages/students/NotificationCenterPage";
 
 // Teacher Components
 import HomePageTeacher from "./pages/teachers/HomePageTeacher";
@@ -55,6 +56,7 @@ function App() {
             <Route path="classdetail/:classId" element={<ClassDetail />} />
             <Route path="studentassignment/:assignmentId" element={<StudentAssignment />} />
             <Route path="lessonview" element={<LessonView />} />
+            <Route path="notifications" element={<NotificationCenterPage />} />
           </Route>
           <Route path="/exam/:attemptId" element={<ExamPage />} />
         </Route>
