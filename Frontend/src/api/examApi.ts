@@ -54,6 +54,18 @@ export const examApi = {
     return response.data.data;
   },
 
+  // Cập nhật đề thi (status: PUBLISHED / DRAFT)
+  updateExam: async (examId: string, data: Partial<IExam>): Promise<IExam> => {
+    const response = await axiosClient.put<{ data: IExam }>(`/api/exams/${examId}`, data);
+    return response.data.data;
+  },
+
+  // Lấy câu hỏi từ Ngân hàng câu hỏi
+  getQuestions: async (params?: any): Promise<{ total: number; data: any[] }> => {
+    const response = await axiosClient.get<{ total: number; data: any[] }>("/api/questions", { params });
+    return response.data;
+  },
+
   // Xóa bài kiểm tra
   deleteExam: async (examId: string): Promise<void> => {
     await axiosClient.delete(`/api/exams/${examId}`);

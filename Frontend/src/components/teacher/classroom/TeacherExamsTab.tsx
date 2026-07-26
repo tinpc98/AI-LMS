@@ -16,8 +16,10 @@ import {
   Skeleton,
   Tooltip,
   Alert,
+  Dropdown,
 } from "antd";
 import type { ColumnsType } from "antd/es/table";
+import type { MenuProps } from "antd";
 import {
   FileDoneOutlined,
   PlusOutlined,
@@ -26,15 +28,19 @@ import {
   DeleteOutlined,
   ClockCircleOutlined,
   CheckCircleOutlined,
-  ExclamationCircleOutlined,
   ReloadOutlined,
   RobotOutlined,
+  MoreOutlined,
+  EyeOutlined,
+  RocketOutlined,
+  StopOutlined,
 } from "@ant-design/icons";
 
 import examApi from "../../../api/examApi";
 import type { IExam } from "../../../api/examApi";
 import { toast } from "../../../utils/toast";
 import { TeacherExamAttemptsDrawer } from "./TeacherExamAttemptsDrawer";
+import { CreateExamWizardDrawer } from "./CreateExamWizardDrawer";
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -56,9 +62,10 @@ export const TeacherExamsTab: React.FC<TeacherExamsTabProps> = React.memo(
     const [statusFilter, setStatusFilter] = useState("all");
     const [sortBy, setSortBy] = useState("newest");
 
-    // Drawer state
+    // Drawer states
     const [selectedExam, setSelectedExam] = useState<IExam | null>(null);
     const [isAttemptsDrawerOpen, setIsAttemptsDrawerOpen] = useState(false);
+    const [isCreateWizardOpen, setIsCreateWizardOpen] = useState(false);
 
     // Fetch exams for this class
     const fetchExams = useCallback(async () => {
@@ -130,6 +137,18 @@ export const TeacherExamsTab: React.FC<TeacherExamsTabProps> = React.memo(
       }
     };
 
+    // Handle Publish / Unpublish status change
+    const handleToggleStatus = async (exam: IExam) => {
+      const newStatus = exam.status === "PUBLISHED" ? "DRAFT" : "PUBLISHED";
+      try {
+        await examApi.updateExam(exam._id, { status: newStatus });
+        toast.success(`Đã chuyển trạng thái bài thi thành ${newStatus === "PUBLISHED" ? "Đang diễn ra" : "Bản nháp"}`);
+        fetchExams();
+      } catch (err: any) {
+        toast.error(err.response?.data?.message || "Lỗi cập nhật trạng thái bài thi!");
+      }
+    };
+
     const getStatusTag = (status?: string) => {
       switch (status) {
         case "COMPLETED":
@@ -196,37 +215,61 @@ export const TeacherExamsTab: React.FC<TeacherExamsTabProps> = React.memo(
       {
         title: "Thao tác",
         key: "action",
-        width: 200,
+        width: 210,
         align: "right",
-        render: (_, record) => (
-          <Space size={8}>
-            <Button
-              type="primary"
-              size="small"
-              icon={<FileDoneOutlined />}
-              onClick={() => {
+        render: (_, record) => {
+          const menuItems: MenuProps["items"] = [
+            {
+              key: "review",
+              icon: <EyeOutlined />,
+              label: "Bài làm & Chấm điểm",
+              onClick: () => {
                 setSelectedExam(record);
                 setIsAttemptsDrawerOpen(true);
-              }}
-              style={{ borderRadius: 6 }}
-            >
-              Bài làm & Chấm bài
-            </Button>
+              },
+            },
+            {
+              key: "toggleStatus",
+              icon: record.status === "PUBLISHED" ? <StopOutlined /> : <RocketOutlined />,
+              label: record.status === "PUBLISHED" ? "Chuyển thành Bản nháp" : "Xuất bản ngay",
+              onClick: () => handleToggleStatus(record),
+            },
+          ];
 
-            <Popconfirm
-              title="Xóa đề thi này?"
-              description="Hành động này sẽ xóa đề thi và toàn bộ lượt thi liên quan."
-              onConfirm={() => handleDeleteExam(record._id)}
-              okText="Xóa"
-              cancelText="Hủy"
-              okButtonProps={{ danger: true }}
-            >
-              <Tooltip title="Xóa đề thi">
-                <Button type="text" danger size="small" icon={<DeleteOutlined />} />
-              </Tooltip>
-            </Popconfirm>
-          </Space>
-        ),
+          return (
+            <Space size={8}>
+              <Button
+                type="primary"
+                size="small"
+                icon={<FileDoneOutlined />}
+                onClick={() => {
+                  setSelectedExam(record);
+                  setIsAttemptsDrawerOpen(true);
+                }}
+                style={{ borderRadius: 6 }}
+              >
+                Bài làm & Chấm bài
+              </Button>
+
+              <Dropdown menu={{ items: menuItems }} trigger={["click"]}>
+                <Button type="text" size="small" icon={<MoreOutlined />} />
+              </Dropdown>
+
+              <Popconfirm
+                title="Xóa đề thi này?"
+                description="Hành động này sẽ xóa đề thi và toàn bộ lượt thi liên quan."
+                onConfirm={() => handleDeleteExam(record._id)}
+                okText="Xóa"
+                cancelText="Hủy"
+                okButtonProps={{ danger: true }}
+              >
+                <Tooltip title="Xóa đề thi">
+                  <Button type="text" danger size="small" icon={<DeleteOutlined />} />
+                </Tooltip>
+              </Popconfirm>
+            </Space>
+          );
+        },
       },
     ];
 
@@ -255,19 +298,35 @@ export const TeacherExamsTab: React.FC<TeacherExamsTabProps> = React.memo(
               </Text>
             </div>
 
-            <Button
-              type="default"
-              icon={<ReloadOutlined spin={loading} />}
-              onClick={fetchExams}
-              style={{
-                backgroundColor: "rgba(255,255,255,0.2)",
-                borderColor: "rgba(255,255,255,0.4)",
-                color: "#fff",
-                fontWeight: 600,
-              }}
-            >
-              Làm mới
-            </Button>
+            <Space size={12}>
+              <Button
+                type="primary"
+                icon={<PlusOutlined />}
+                onClick={() => setIsCreateWizardOpen(true)}
+                style={{
+                  backgroundColor: "#52c41a",
+                  borderColor: "#52c41a",
+                  fontWeight: 700,
+                  borderRadius: 8,
+                }}
+              >
+                Tạo bài kiểm tra
+              </Button>
+
+              <Button
+                type="default"
+                icon={<ReloadOutlined spin={loading} />}
+                onClick={fetchExams}
+                style={{
+                  backgroundColor: "rgba(255,255,255,0.2)",
+                  borderColor: "rgba(255,255,255,0.4)",
+                  color: "#fff",
+                  fontWeight: 600,
+                }}
+              >
+                Làm mới
+              </Button>
+            </Space>
           </div>
 
           <Row gutter={[16, 16]}>
@@ -366,9 +425,14 @@ export const TeacherExamsTab: React.FC<TeacherExamsTabProps> = React.memo(
                 />
               </Space>
 
-              <Text type="secondary" style={{ fontSize: 13 }}>
-                Gợi ý: Quản lý ngân hàng câu hỏi & tạo đề thi mới tại menu <b>Ngân hàng câu hỏi / Quản lý kỳ thi</b>
-              </Text>
+              <Button
+                type="primary"
+                icon={<PlusOutlined />}
+                onClick={() => setIsCreateWizardOpen(true)}
+                style={{ fontWeight: 600, borderRadius: 8 }}
+              >
+                Tạo bài kiểm tra
+              </Button>
             </div>
           }
           style={{ borderRadius: 12 }}
@@ -396,7 +460,18 @@ export const TeacherExamsTab: React.FC<TeacherExamsTabProps> = React.memo(
                       : "Lớp học chưa có bài kiểm tra nào."}
                   </Text>
                 }
-              />
+              >
+                {!searchQuery && statusFilter === "all" && (
+                  <Button
+                    type="primary"
+                    icon={<PlusOutlined />}
+                    onClick={() => setIsCreateWizardOpen(true)}
+                    style={{ borderRadius: 6 }}
+                  >
+                    Tạo bài kiểm tra đầu tiên
+                  </Button>
+                )}
+              </Empty>
             </div>
           )}
         </Card>
@@ -406,6 +481,15 @@ export const TeacherExamsTab: React.FC<TeacherExamsTabProps> = React.memo(
           open={isAttemptsDrawerOpen}
           onClose={() => setIsAttemptsDrawerOpen(false)}
           exam={selectedExam}
+        />
+
+        {/* 4. Create Exam Wizard Drawer */}
+        <CreateExamWizardDrawer
+          open={isCreateWizardOpen}
+          onClose={() => setIsCreateWizardOpen(false)}
+          classId={classId}
+          className={className}
+          onSaved={fetchExams}
         />
       </div>
     );
