@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { Modal, Form, InputNumber, Input, Button, Typography, Space, Tag, Avatar } from "antd";
-import { CheckCircleOutlined, UserOutlined, EditOutlined } from "@ant-design/icons";
+import { Modal, Form, InputNumber, Input, Button, Typography, Space, Tag, Avatar, Card } from "antd";
+import { CheckCircleOutlined, UserOutlined, EditOutlined, PaperClipOutlined, ClockCircleOutlined } from "@ant-design/icons";
 import assignmentApi from "../../../api/assignmentApi";
 import { toast } from "../../../utils/toast";
 import type { ISubmission } from "../../../interface/assignmentInterface";
@@ -22,6 +22,11 @@ export const GradeSubmissionModal: React.FC<GradeSubmissionModalProps> = React.m
     const studentObj = typeof submission?.studentId === "object" ? submission.studentId : null;
     const studentName = studentObj?.fullName || "Học sinh";
     const studentEmail = studentObj?.email || "";
+    const studentIdStr = (studentObj?._id || submission?.studentId || "").toString();
+    const studentCode = studentIdStr ? `STU-${studentIdStr.slice(-6).toUpperCase()}` : "STU-N/A";
+
+    const graderObj = typeof submission?.gradedBy === "object" ? submission.gradedBy : null;
+    const graderName = graderObj?.fullName || "";
 
     useEffect(() => {
       if (open && submission) {
@@ -44,7 +49,7 @@ export const GradeSubmissionModal: React.FC<GradeSubmissionModalProps> = React.m
           aiFeedback: values.aiFeedback?.trim() || "",
         });
 
-        toast.success(`Đã chấm điểm cho học sinh ${studentName} thành công!`);
+        toast.success(`Đã lưu kết quả chấm điểm cho ${studentName} thành công!`);
         onClose();
         if (onGraded) onGraded();
       } catch (err: any) {
@@ -59,32 +64,99 @@ export const GradeSubmissionModal: React.FC<GradeSubmissionModalProps> = React.m
         title={
           <Space align="center">
             <EditOutlined style={{ color: "#1890ff" }} />
-            <span>Chấm điểm & Nhận xét bài làm</span>
+            <span>Chấm điểm & Nhận xét bài nộp</span>
           </Space>
         }
         open={open}
         onCancel={onClose}
         footer={null}
+        width={680}
         destroyOnClose
       >
         {submission && (
-          <div style={{ marginBottom: 20, padding: 12, backgroundColor: "#f5f5f5", borderRadius: 8 }}>
-            <Space size={12}>
-              <Avatar
-                src={studentObj?.avatar || undefined}
-                icon={!studentObj?.avatar ? <UserOutlined /> : undefined}
-                style={{ backgroundColor: "#1890ff" }}
-              />
-              <div>
-                <Text strong style={{ fontSize: 14, display: "block" }}>
-                  {studentName}
-                </Text>
-                {studentEmail && <Text type="secondary" style={{ fontSize: 12 }}>{studentEmail}</Text>}
+          <div style={{ display: "flex", flexDirection: "column", gap: 16, marginBottom: 20 }}>
+            {/* Student Info Card */}
+            <Card size="small" style={{ backgroundColor: "#f8f9fa", borderRadius: 8 }} styles={{ body: { padding: 12 } }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
+                <Space size={12}>
+                  <Avatar
+                    src={studentObj?.avatar || undefined}
+                    icon={!studentObj?.avatar ? <UserOutlined /> : undefined}
+                    style={{ backgroundColor: "#1890ff" }}
+                  />
+                  <div>
+                    <Text strong style={{ fontSize: 14, display: "block" }}>
+                      {studentName}
+                    </Text>
+                    <Text type="secondary" style={{ fontSize: 12, fontFamily: "monospace" }}>
+                      {studentCode} {studentEmail ? `| ${studentEmail}` : ""}
+                    </Text>
+                  </div>
+                </Space>
+
+                <div>
+                  {submission.status === "graded" && <Tag color="success">🔵 Đã chấm điểm</Tag>}
+                  {submission.status === "late" && <Tag color="warning">🟡 Nộp trễ hạn</Tag>}
+                  {submission.status === "submitted" && <Tag color="processing">🟢 Nộp đúng hạn</Tag>}
+                </div>
               </div>
-            </Space>
+            </Card>
+
+            {/* Submission Content & Attachments Box */}
+            <div style={{ border: "1px solid #e8e8e8", borderRadius: 8, padding: 16, backgroundColor: "#fff" }}>
+              <Text strong style={{ fontSize: 13, color: "#8c8c8c", display: "block", marginBottom: 6 }}>
+                📌 NỘI DUNG BÀI LÀM CỦA HỌC SINH:
+              </Text>
+              {submission.content ? (
+                <Paragraph style={{ fontSize: 14, whiteSpace: "pre-wrap", marginBottom: 12 }}>
+                  {submission.content}
+                </Paragraph>
+              ) : (
+                <Text type="secondary" style={{ fontStyle: "italic", fontSize: 13, display: "block", marginBottom: 12 }}>
+                  (Học sinh không nhập nội dung văn bản)
+                </Text>
+              )}
+
+              {submission.attachments && submission.attachments.length > 0 && (
+                <div>
+                  <Text strong style={{ fontSize: 12, color: "#8c8c8c", display: "block", marginBottom: 6 }}>
+                    📎 TỆP ĐÍNH KÈM ({submission.attachments.length}):
+                  </Text>
+                  <Space wrap size={8}>
+                    {submission.attachments.map((att: any, idx: number) => (
+                      <Button
+                        key={att.publicId || idx}
+                        type="default"
+                        size="small"
+                        icon={<PaperClipOutlined />}
+                        onClick={() => window.open(att.url, "_blank")}
+                        style={{ borderRadius: 6 }}
+                      >
+                        {att.name || `Tệp ${idx + 1}`}
+                      </Button>
+                    ))}
+                  </Space>
+                </div>
+              )}
+
+              {submission.createdAt && (
+                <div style={{ marginTop: 12, paddingTop: 8, borderTop: "1px dashed #f0f0f0", fontSize: 12, color: "#8c8c8c" }}>
+                  <ClockCircleOutlined style={{ marginRight: 4 }} />
+                  Thời gian nộp: {new Date(submission.createdAt).toLocaleString("vi-VN")}
+                </div>
+              )}
+            </div>
+
+            {/* Previously Graded Info */}
+            {submission.gradedAt && (
+              <div style={{ fontSize: 12, color: "#8c8c8c", fontStyle: "italic" }}>
+                ℹ️ Được chấm bởi <b>{graderName || "Giáo viên"}</b> vào lúc {new Date(submission.gradedAt).toLocaleString("vi-VN")}
+              </div>
+            )}
           </div>
         )}
 
+        {/* Form Chấm điểm & Feedback */}
         <Form form={form} layout="vertical" onFinish={handleSubmit}>
           <Form.Item
             name="grade"
@@ -94,15 +166,15 @@ export const GradeSubmissionModal: React.FC<GradeSubmissionModalProps> = React.m
               { type: "number", min: 0, max: 100, message: "Điểm số từ 0 đến 100!" },
             ]}
           >
-            <InputNumber min={0} max={100} step={0.5} style={{ width: "100%" }} placeholder="Nhập điểm số (Ví dụ: 8.5 hoặc 85)" />
+            <InputNumber min={0} max={100} step={0.5} style={{ width: "100%" }} placeholder="Nhập điểm số (Ví dụ: 85 hoặc 8.5)" />
           </Form.Item>
 
           <Form.Item name="feedback" label="Nhận xét / Lời phê của giáo viên">
-            <Input.TextArea rows={3} placeholder="Nhập nhận xét chi tiết, khen ngợi hoặc lưu ý bài làm cho học sinh..." />
+            <Input.TextArea rows={3} placeholder="Nhập nhận xét chi tiết, khen ngợi hoặc nhắc nhở học sinh..." />
           </Form.Item>
 
           <Form.Item name="aiFeedback" label="Gợi ý đánh giá tự động (AI Feedback)">
-            <Input.TextArea rows={2} placeholder="Nhập gợi ý feedback tự động từ AI (nếu có)..." />
+            <Input.TextArea rows={2} placeholder="Nhập nhận xét từ hệ thống AI (nếu có)..." />
           </Form.Item>
 
           <div style={{ display: "flex", justifyContent: "flex-end", gap: 12, marginTop: 24 }}>
