@@ -24,6 +24,7 @@ import OverviewCard from "../../components/student/classDetail/OverviewCard";
 import TeacherInformationCard from "../../components/student/classDetail/TeacherInformationCard";
 import NextSessionCard from "../../components/student/classDetail/NextSessionCard";
 import LearningProgressCard from "../../components/student/classDetail/LearningProgressCard";
+import LearningMaterialsTab from "../../components/student/classDetail/materials/LearningMaterialsTab";
 
 
 const MOCK_RANKINGS = [
@@ -406,6 +407,7 @@ export default function ClassDetail() {
         <div style={{ display: "flex", borderBottom: "1px solid #f0f0f0", padding: "0 24px", overflowX: "auto" }}>
           {[
             { key: "overview", label: "Tổng quan" },
+            { key: "materials", label: "Tài liệu học tập" },
             { key: "lessons", label: "Bài giảng" },
             { key: "assignments", label: "Bài tập của tôi" },
             { key: "exams", label: "Thi trực tuyến" },
@@ -488,7 +490,15 @@ export default function ClassDetail() {
             </div>
           )}
 
-          {/* TAB 1: BÀI GIẢNG — SỬ DỤNG DỮ LIỆU THẬT */}
+          {/* TAB 1: TÀI LIỆU HỌC TẬP (LEARNING MATERIALS - SPRINT 3.2) */}
+          {activeTab === "materials" && (
+            <LearningMaterialsTab
+              resources={(classInfo as any)?.resources || []}
+              loading={isLoading}
+            />
+          )}
+
+          {/* TAB 2: BÀI GIẢNG — SỬ DỤNG DỮ LIỆU THẬT */}
           {activeTab === "lessons" && (
               <div className="space-y-4">
                 <div className="flex items-center justify-between mb-4">
