@@ -176,10 +176,10 @@ export const CreateExamWizardDrawer: React.FC<CreateExamWizardDrawerProps> = Rea
 
     // Final Submit (Publish or Save Draft)
     const handleFinalSubmit = async (status: "PUBLISHED" | "DRAFT") => {
-      const step1Values = formStep1.getFieldsValue();
       setSubmitting(true);
 
       try {
+        const step1Values = await formStep1.validateFields();
         const payload = {
           title: step1Values.title.trim(),
           duration: Number(step1Values.duration),

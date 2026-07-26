@@ -86,7 +86,12 @@ export const TeacherGradebookTab: React.FC<TeacherGradebookTabProps> = React.mem
     // Map grades by student ID for rendering
     const studentGradeRows = useMemo(() => {
       return students.map((stu) => {
-        const sId = (stu._id || "").toString();
+        const sObj = typeof stu.studentId === "object" && stu.studentId !== null ? stu.studentId : stu;
+        const sId = (sObj._id || stu._id || "").toString();
+        const name = sObj.fullName || stu.fullName || "Học sinh";
+        const email = sObj.email || stu.email || "";
+        const avatar = sObj.avatar || stu.avatar;
+
         const studentGrades = grades.filter(
           (g) => (typeof g.studentId === "object" ? g.studentId?._id : g.studentId)?.toString() === sId
         );
@@ -127,6 +132,10 @@ export const TeacherGradebookTab: React.FC<TeacherGradebookTabProps> = React.mem
 
         return {
           student: stu,
+          studentObj: sObj,
+          name,
+          email,
+          avatar,
           studentIdStr: sId,
           attendanceScore,
           assignmentScore,
@@ -209,18 +218,17 @@ export const TeacherGradebookTab: React.FC<TeacherGradebookTabProps> = React.mem
         title: "Học sinh",
         key: "studentInfo",
         render: (_, record) => {
-          const stu = record.student;
           const code = record.studentIdStr ? record.studentIdStr.slice(-6).toUpperCase() : "N/A";
           return (
             <Space size={12}>
               <Avatar
-                src={stu?.avatar || undefined}
-                icon={!stu?.avatar ? <UserOutlined /> : undefined}
+                src={record.avatar || undefined}
+                icon={!record.avatar ? <UserOutlined /> : undefined}
                 style={{ backgroundColor: "#1890ff" }}
               />
               <div>
                 <Text strong style={{ fontSize: 14, display: "block" }}>
-                  {stu?.fullName || "Học sinh"}
+                  {record.name}
                 </Text>
                 <Text style={{ fontSize: 12, fontFamily: "monospace", color: "#8c8c8c" }}>
                   STU-{code}

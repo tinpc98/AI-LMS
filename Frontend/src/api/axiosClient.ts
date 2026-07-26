@@ -60,15 +60,19 @@ axiosClient.interceptors.response.use(
       );
     }
 
-    // Tự động xử lý khi Token hết hạn (401 / 403)
-    if (error.response?.status === 401 || error.response?.status === 403) {
-      // Tránh việc bắn liên tiếp nhiều alert khi có nhiều API lỗi cùng lúc
+    // Tự động xử lý khi Token hết hạn (401) hoặc Không có quyền (403)
+    if (error.response?.status === 401) {
       localStorage.removeItem("accessToken");
       toast.error(
-        "Phiên đăng nhập của bạn đã hết hạn hoặc không hợp lệ. Vui lòng đăng nhập lại!",
+        "Phiên đăng nhập của bạn đã hết hạn. Vui lòng đăng nhập lại!",
         "Phiên hết hạn"
       );
       window.location.href = "/login";
+    } else if (error.response?.status === 403) {
+      toast.error(
+        "Bạn không có quyền thực hiện thao tác này!",
+        "Từ chối truy cập"
+      );
     }
 
     return Promise.reject(error);

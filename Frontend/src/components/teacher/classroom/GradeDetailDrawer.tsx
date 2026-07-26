@@ -21,9 +21,11 @@ export const GradeDetailDrawer: React.FC<GradeDetailDrawerProps> = React.memo(
     const [form] = Form.useForm();
     const [submitting, setSubmitting] = useState(false);
 
-    const studentName = student?.fullName || "Học sinh";
-    const studentEmail = student?.email || "";
-    const studentIdStr = (student?._id || "").toString();
+    const sObj = typeof student?.studentId === "object" && student?.studentId !== null ? student.studentId : student;
+    const studentName = sObj?.fullName || student?.fullName || "Học sinh";
+    const studentEmail = sObj?.email || student?.email || "";
+    const studentAvatar = sObj?.avatar || student?.avatar;
+    const studentIdStr = (sObj?._id || student?._id || "").toString();
     const studentCode = studentIdStr ? `STU-${studentIdStr.slice(-6).toUpperCase()}` : "STU-N/A";
 
     const categories = [
@@ -56,7 +58,7 @@ export const GradeDetailDrawer: React.FC<GradeDetailDrawerProps> = React.memo(
     }, [open, student, existingGrades, studentIdStr, form]);
 
     const handleSubmit = async (values: any) => {
-      if (!student?._id || !classId) return;
+      if (!studentIdStr || !classId) return;
       setSubmitting(true);
 
       try {
@@ -64,7 +66,7 @@ export const GradeDetailDrawer: React.FC<GradeDetailDrawerProps> = React.memo(
           const scoreVal = values[`score_${cat.key}`];
           if (scoreVal !== undefined && scoreVal !== null && scoreVal !== "") {
             await gradeApi.upsertGrade({
-              studentId: student._id,
+              studentId: studentIdStr,
               classId,
               category: cat.key,
               score: Number(scoreVal),
