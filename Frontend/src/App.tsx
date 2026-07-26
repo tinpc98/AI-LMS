@@ -34,6 +34,7 @@ import CourseManagementPage from "./features/courseManagement/CourseManagementPa
 import ClassManagementPage from "./features/classManagement/ClassManagementPage";
 import TeacherAssignmentPage from "./features/teacherAssignment/TeacherAssignmentPage";
 import AIManagementPage from "./features/aiManagement/AIManagementPage";
+import DashboardPage from "./features/dashboard/DashboardPage";
 
 function App() {
   return (
@@ -74,7 +75,7 @@ function App() {
         {/* ================= ADMIN PROTECTED ROUTES ================= */}
         {/* <Route element={<ProtectedRoute allowedRoles={["admin"]} />}> */}
         <Route path="/admin" element={<AdminLayout />}>
-          <Route index element={<AdminPage title="Dashboard" description="Welcome to the admin dashboard." />} />
+          <Route index element={<DashboardPage />} />
           <Route path="accounts" element={<AccountManagementPage />} />
           <Route path="courses" element={<CourseManagementPage />} />
           <Route path="classes" element={<ClassManagementPage />} />
