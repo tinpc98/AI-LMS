@@ -6,7 +6,7 @@ import socketHandler from "./src/sockets/exam.socket.js"; // 3. Import bộ xử
 import liveSocketHandler from "./src/sockets/live.socket.js"; // Import xử lý Socket phòng học online
 import { createServer } from "http";
 import { Server } from "socket.io";
-// Import Routers hiện có
+// Import Routers hiện có & mới
 import UserRouter from "./src/routers/user.routes.js";
 import ClassRouter from "./src/routers/class.routes.js";
 import LessonRouter from "./src/routers/lesson.routes.js";
@@ -15,6 +15,10 @@ import QuestionRouter from "./src/routers/question.routes.js";
 import ExamRouter from "./src/routers/exam.routes.js";
 import ExamAttemptRouter from "./src/routers/examAttempt.routes.js";
 import LiveRouter from "./src/routers/live.routes.js";
+import AttendanceRouter from "./src/routers/attendance.routes.js";
+import GradeRouter from "./src/routers/grade.routes.js";
+import AnnouncementRouter from "./src/routers/announcement.routes.js";
+import CourseRouter from "./src/routers/course.routes.js";
 
 // Kích hoạt cấu hình file .env
 dotenv.config();
@@ -66,11 +70,16 @@ liveSocketHandler(io);
 // ĐĂNG KÝ CÁC API ROUTES
 // ==========================================
 app.use("/api/auth", UserRouter);
+app.use("/api/users", UserRouter);
 app.use("/api/classes", ClassRouter);
+app.use("/api/courses", CourseRouter);
 app.use("/api/lesson", LessonRouter);
 app.use("/api/assignments", assignmentRouter);
+app.use("/api/attendances", AttendanceRouter);
+app.use("/api/grades", GradeRouter);
+app.use("/api/announcements", AnnouncementRouter);
 
-// Routes Module Thi trực tuyến
+// Routes Module Thi trực tuyến & Live
 app.use("/api/questions", QuestionRouter);
 app.use("/api/exams", ExamRouter);
 app.use("/api/exam-attempts", ExamAttemptRouter);
@@ -97,7 +106,6 @@ app.use((err, req, res, next) => {
   console.error("🔥 Lỗi hệ thống:", err.stack);
   res.status(500).json({
     message: err.message || "Đã xảy ra lỗi nội bộ trên Server!",
-    // Chỉ trả ra stack trace nếu đang ở môi trường Dev
     error: process.env.NODE_ENV === "development" ? err.stack : {},
   });
 });
@@ -107,7 +115,6 @@ app.use((err, req, res, next) => {
 // ==========================================
 connectDB()
   .then(() => {
-    // QUAN TRỌNG: Dùng httpServer.listen thay vì app.listen
     httpServer.listen(port, () => {
       console.log(`==================================================`);
       console.log(`🚀 Server HTTP & Socket đang chạy tại cổng: ${port}`);

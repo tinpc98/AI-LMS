@@ -244,7 +244,7 @@ classSchema.index({ "students.studentId": 1 });
 classSchema.index({ status: 1 });
 
 // Hook chuẩn hóa dữ liệu trước khi validate (Hỗ trợ tương thích truyền mảng ID hoặc Subdocument)
-classSchema.pre("validate", function (next) {
+classSchema.pre("validate", function () {
   if (Array.isArray(this.students)) {
     this.students = this.students.map((item) => {
       if (
@@ -269,7 +269,6 @@ classSchema.pre("validate", function (next) {
   if (this.currentStudents < 0) {
     this.currentStudents = 0;
   }
-  next();
 });
 
 const classModel = model("Class", classSchema);

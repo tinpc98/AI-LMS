@@ -1,689 +1,168 @@
-import { useState } from "react";
-import "../../assets/css/HomePage.css";
-// ==========================================================================
-// TYPES & INTERFACES
-// ==========================================================================
-interface ClassItem {
-  id: string;
-  name: string;
-  code: string;
-  size: number;
-  progress: number;
-  nextClass: string;
-  attendanceStatus: "chua_diem_danh" | "da_diem_danh";
-  iconClass: "toan" | "tin" | "ly";
-  icon: string;
-}
+import React, { useState, useEffect, useCallback } from "react";
+import { Row, Col, Alert, Result, Button, Skeleton, Space, Spin } from "antd";
+import { ReloadOutlined } from "@ant-design/icons";
+import { useAuth } from "../../hooks/useAuth";
+import { classApi } from "../../api/classApi";
+import axiosClient from "../../api/axiosClient";
+
+import { TeacherWelcomeHeader } from "../../components/teacher/TeacherWelcomeHeader";
+import { TeacherQuickStats } from "../../components/teacher/TeacherQuickStats";
+import { TeacherQuickActions } from "../../components/teacher/TeacherQuickActions";
+import { TeacherScheduleWidget } from "../../components/teacher/TeacherScheduleWidget";
+import { TeacherClassroomsGrid } from "../../components/teacher/TeacherClassroomsGrid";
+import { TeacherAnnouncementsWidget } from "../../components/teacher/TeacherAnnouncementsWidget";
+import { TeacherAssignmentsWidget } from "../../components/teacher/TeacherAssignmentsWidget";
+import { TeacherLiveSessionWidget } from "../../components/teacher/TeacherLiveSessionWidget";
+
 export default function HomePageTeacher() {
-  // ==========================================================================
-  // STATE MANAGEMENT
-  // ==========================================================================
-  const [classes, setClasses] = useState<ClassItem[]>([
-    {
-      id: "c1",
-      name: "Lớp 10A1 - Toán học",
-      code: "TOAN10",
-      size: 45,
-      progress: 65,
-      nextClass: "Thứ 2, 08:00 AM",
-      attendanceStatus: "chua_diem_danh",
-      iconClass: "toan",
-      icon: "functions",
-    },
-    {
-      id: "c2",
-      name: "Lớp 11B2 - Tin học",
-      code: "TIN11",
-      size: 38,
-      progress: 42,
-      nextClass: "Thứ 3, 10:15 AM",
-      attendanceStatus: "chua_diem_danh",
-      iconClass: "tin",
-      icon: "computer",
-    },
-    {
-      id: "c3",
-      name: "Lớp 12C3 - Vật lý",
-      code: "LY12",
-      size: 42,
-      progress: 88,
-      nextClass: "Thứ 4, 01:30 PM",
-      attendanceStatus: "chua_diem_danh",
-      iconClass: "ly",
-      icon: "science",
-    },
-    {
-      id: "c4",
-      name: "Lớp 12A2 - Toán nâng cao",
-      code: "TOAN12NC",
-      size: 40,
-      progress: 74,
-      nextClass: "Thứ 5, 08:00 AM",
-      attendanceStatus: "chua_diem_danh",
-      iconClass: "toan",
-      icon: "calculate",
-    },
-    {
-      id: "c5",
-      name: "Lớp 10B3 - Lập trình C++",
-      code: "CPP10",
-      size: 35,
-      progress: 50,
-      nextClass: "Thứ 6, 02:00 PM",
-      attendanceStatus: "chua_diem_danh",
-      iconClass: "tin",
-      icon: "code",
-    },
-    {
-      id: "c6",
-      name: "Lớp 11C1 - Vật lý Cơ bản",
-      code: "LY11",
-      size: 39,
-      progress: 30,
-      nextClass: "Thứ 7, 09:30 AM",
-      attendanceStatus: "chua_diem_danh",
-      iconClass: "ly",
-      icon: "bolt",
-    },
-  ]);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
-  const [isDarkTheme, setIsDarkTheme] = useState(false);
-  const itemsPerPage = 3;
-  // Modals visibility state
-  const [modalType, setModalType] = useState<"homework" | "exam" | null>(null);
-  // Form Fields
-  const [hwTitle, setHwTitle] = useState("");
-  const [hwClassSelect, setHwClassSelect] = useState("");
-  const [hwDeadline, setHwDeadline] = useState("Ngày mai");
-  const [examTitle, setExamTitle] = useState("");
-  const [examClassSelect, setExamClassSelect] = useState("");
-  const [examQuestions, setExamQuestions] = useState("20");
-  // Toast
-  const [toast, setToast] = useState<{
-    message: string;
-    type: "success" | "info" | "error";
-  } | null>(null);
-  const triggerToast = (message: string, type: "success" | "info" | "error" = "success") => {
-    setToast({ message, type });
-    setTimeout(() => {
-      setToast(null);
-    }, 3000);
-  };
-  // ==========================================================================
-  // HANDLERS
-  // ==========================================================================
-  const handleAttendance = (id: string) => {
-    setClasses((prev) =>
-      prev.map((c) => {
-        if (c.id === id) {
-          const wasChecked = c.attendanceStatus === "da_diem_danh";
-          const nextStatus = wasChecked ? "chua_diem_danh" : "da_diem_danh";
-          const nextSize = wasChecked ? c.size - 1 : c.size + 1; // attendance increment simulation
-          triggerToast(
-            !wasChecked
-              ? `Điểm danh thành công lớp: ${c.name}. Sĩ số trực tuyến: ${nextSize}!`
-              : `Đã hủy điểm danh lớp: ${c.name}`,
-            "success",
+  const { user } = useAuth();
+
+  // State Management
+  const [classes, setClasses] = useState<any[]>([]);
+  const [announcements, setAnnouncements] = useState<any[]>([]);
+  const [assignments, setAssignments] = useState<any[]>([]);
+  const [activeLiveSessions, setActiveLiveSessions] = useState<any[]>([]);
+
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Fetch real data from Backend
+  const fetchDashboardData = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      // 1. Fetch Classes
+      const classRes = await classApi.getMyClasses();
+      const rawClasses = classRes.data?.data || classRes.data?.classList || classRes.data || [];
+      const classList = Array.isArray(rawClasses) ? rawClasses : [];
+      setClasses(classList);
+
+      // 2. Fetch Announcements
+      try {
+        const annRes = await axiosClient.get("/api/announcements");
+        const rawAnn = annRes.data?.data || annRes.data?.items || annRes.data || [];
+        setAnnouncements(Array.isArray(rawAnn) ? rawAnn : []);
+      } catch (e) {
+        console.warn("[Teacher Dashboard] Announcements fetch warning:", e);
+      }
+
+      // 3. Fetch Assignments for assigned classes
+      try {
+        if (classList.length > 0) {
+          const assignmentPromises = classList.slice(0, 5).map((cls: any) =>
+            axiosClient.get(`/api/assignments/class/${cls._id}`).catch(() => null)
           );
-          return { ...c, attendanceStatus: nextStatus, size: nextSize };
+          const assignmentResults = await Promise.all(assignmentPromises);
+          const aggregatedAssignments: any[] = [];
+          assignmentResults.forEach((res) => {
+            if (res?.data?.assignments) {
+              aggregatedAssignments.push(...res.data.assignments);
+            }
+          });
+          setAssignments(aggregatedAssignments);
         }
-        return c;
-      }),
-    );
-  };
-  const handleCreateHomeworkSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!hwTitle.trim()) {
-      triggerToast("Vui lòng điền tên bài tập cần giao!", "error");
-      return;
+      } catch (e) {
+        console.warn("[Teacher Dashboard] Assignments fetch warning:", e);
+      }
+
+      // 4. Fetch Active Live Sessions
+      try {
+        if (classList.length > 0) {
+          const livePromises = classList.slice(0, 5).map((cls: any) =>
+            axiosClient.get(`/api/live/active/${cls._id}`).catch(() => null)
+          );
+          const liveResults = await Promise.all(livePromises);
+          const activeSessions = liveResults
+            .filter((res) => res?.data?.data && res.data.data.status === "Live")
+            .map((res) => res.data.data);
+          setActiveLiveSessions(activeSessions);
+        }
+      } catch (e) {
+        console.warn("[Teacher Dashboard] Live Sessions fetch warning:", e);
+      }
+
+    } catch (err: any) {
+      console.error("[Teacher Dashboard] Fetch Error:", err);
+      setError(err.message || "Lỗi khi tải dữ liệu từ máy chủ. Vui lòng thử lại!");
+    } finally {
+      setLoading(false);
     }
-    setModalType(null);
-    setHwTitle("");
-    triggerToast(`Đã giao bài tập về nhà mới cho lớp: ${hwClassSelect || classes[0]?.name}!`, "success");
-  };
-  const handleCreateExamSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!examTitle.trim()) {
-      triggerToast("Vui lòng điền tên đề kiểm tra!", "error");
-      return;
-    }
-    setModalType(null);
-    setExamTitle("");
-    triggerToast(`Đã công bố đề kiểm tra "${examTitle}" (${examQuestions} câu)!`, "success");
-  };
-  // Filter & Pagination Calculations
-  const query = searchQuery.toLowerCase().trim();
-  const filteredClasses = classes.filter(
-    (c) => c.name.toLowerCase().includes(query) || c.code.toLowerCase().includes(query),
-  );
-  const totalItems = filteredClasses.length;
-  const totalPages = Math.ceil(totalItems / itemsPerPage) || 1;
-  const clampedPage = Math.min(currentPage, totalPages);
-  const startIndex = (clampedPage - 1) * itemsPerPage;
-  const paginatedClasses = filteredClasses.slice(startIndex, startIndex + itemsPerPage);
+  }, []);
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, [fetchDashboardData]);
+
+  // Aggregate Stats
+  const totalStudentsCount = classes.reduce((sum, c) => {
+    const studentCount = c.currentStudents ?? (Array.isArray(c.students) ? c.students.length : 0);
+    return sum + studentCount;
+  }, 0);
+
   return (
-    <div className={`lms-theme-wrapper ${isDarkTheme ? "dark" : ""}`}>
-      <div className="lms-app">
-        {/* ==========================================================================
-           SIDEBAR (Desktop)
-           ========================================================================== */}
-        {/* <aside className="lms-sidebar">
-          <div className="lms-logo-container">
-            <div className="lms-logo-icon">
-              <span className="material-symbols-outlined icon-filled">
-                school
-              </span>
-            </div>
-            <span className="lms-logo-text">Scholar LMS</span>
-          </div>
-          <nav className="lms-nav-menu">
-            <li className="lms-nav-item active">
-              <a href="#">
-                <span className="material-symbols-outlined icon-filled">
-                  dashboard
-                </span>
-                <span>Trang chủ</span>
-              </a>
-            </li>
-            <li className="lms-nav-item">
-              <a href="#">
-                <span className="material-symbols-outlined">school</span>
-                <span>Lớp học của tôi</span>
-              </a>
-            </li>
-            <li className="lms-nav-item">
-              <a href="#">
-                <span className="material-symbols-outlined">edit_note</span>
-                <span>Chấm điểm</span>
-              </a>
-            </li>
-            <li className="lms-nav-item">
-              <a href="#">
-                <span className="material-symbols-outlined">forum</span>
-                <span>Hộp thư thoại</span>
-              </a>
-            </li>
-          </nav>
-          <div className="lms-sidebar-footer">
-            <div className="lms-profile-widget">
-              <img
-                className="lms-avatar"
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuCVNNzlGhy-GGItcerFxHk-epZGSAkBK1agzSvWs0mQJQd3cFAJxOn2qR-UcnymQJvT3f3dWfahGjZLN_Gb4FAnJ32kY79JW6MofSaohYHr3KeR6KfQM6o7u00zWrZXBXzocMcES_hS8YCw1zMpeTnWegTbOCuh3SbOy2HCGmwe4kYrWZzDU9ZPWVFKKxvlTo03haIlWcByJeBvDXWaa7oLbT1mjgUWLXCVJ4ge656MyWrUiJpwOFLZPKJYkXESAOVp6bYyIyVltXY9"
-                alt="Avatar teacher"
-              />
-              <div className="lms-profile-info">
-                <span className="lms-profile-name">Nguyễn An</span>
-                <span className="lms-profile-role">Giảng viên chính</span>
-              </div>
-            </div>
-          </div>
-        </aside> */}
-        {/* ==========================================================================
-           MAIN LAYOUT
-           ========================================================================== */}
-        <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
-          {/* Top Header */}
-          <header className="lms-header">
-            <div className="lms-header-left">
-              <span className="lms-role-badge">Giảng Viên</span>
-            </div>
-            <div className="lms-header-right">
-              {/* Theme switcher */}
-              <button
-                onClick={() => {
-                  setIsDarkTheme(!isDarkTheme);
-                  triggerToast(`Đã đổi sang chế độ giao diện ${!isDarkTheme ? "Tối" : "Sáng"}!`, "info");
-                }}
-                className="lms-icon-btn"
-                title="Đổi giao diện sáng/tối"
-              >
-                <span className="material-symbols-outlined">{isDarkTheme ? "light_mode" : "dark_mode"}</span>
-              </button>
-              <button className="lms-icon-btn" title="Thông báo mới">
-                <span className="material-symbols-outlined">notifications</span>
-                <span className="lms-badge-dot"></span>
-              </button>
-            </div>
-          </header>
-          {/* Page Content */}
-          <main className="lms-main">
-            {/* Welcome Header */}
-            <section className="lms-welcome-section">
-              <div>
-                <h2 className="lms-welcome-title">Chào buổi sáng, Thầy Nguyễn An! ☕</h2>
-                <p className="lms-welcome-subtitle">
-                  Dưới đây là tóm tắt hoạt động giảng dạy của bạn trong ngày hôm nay.
-                </p>
-              </div>
-            </section>
-            {/* Bento Stats Grid */}
-            <section className="lms-bento-grid">
-              {/* Stat Card 1: GPA */}
-              <div className="lms-card lms-progress-circle-box">
-                <div className="lms-progress-text-info">
-                  <span className="lms-progress-label">Điểm trung bình lớp</span>
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "baseline",
-                      gap: "4px",
-                    }}
-                  >
-                    <span className="lms-progress-val-large">8.5</span>
-                    <span
-                      style={{
-                        fontSize: "12px",
-                        color: "var(--lms-text-muted)",
-                      }}
-                    >
-                      / 10.0
-                    </span>
-                  </div>
-                  <span className="lms-progress-trend">
-                    <span className="material-symbols-outlined text-[16px]">trending_up</span>
-                    +0.4 so với đầu kỳ
-                  </span>
-                </div>
-                <div className="lms-ring-svg-container">
-                  <svg className="lms-ring-svg" width="80" height="80" style={{ transform: "rotate(-90deg)" }}>
-                    <circle className="lms-ring-bg" cx="40" cy="40" fill="transparent" r="32" strokeWidth="5" />
-                    <circle
-                      className="lms-ring-fill"
-                      cx="40"
-                      cy="40"
-                      fill="transparent"
-                      r="32"
-                      strokeWidth="5"
-                      strokeLinecap="round"
-                      style={{
-                        strokeDashoffset: 201 - (201 * 85) / 100,
-                      }}
-                    />
-                  </svg>
-                  <span className="lms-ring-text-center">8.5</span>
-                </div>
-              </div>
-              {/* Stat Card 2: Homework Rate */}
-              <div className="lms-card lms-progress-circle-box">
-                <div className="lms-progress-text-info">
-                  <span className="lms-progress-label">Tỷ lệ hoàn thành bài tập</span>
-                  <span className="lms-progress-val-large">92%</span>
-                  <span className="lms-progress-trend" style={{ color: "var(--lms-sky)" }}>
-                    Ổn định ở mức cao
-                  </span>
-                </div>
-                <div className="lms-ring-svg-container">
-                  <svg className="lms-ring-svg" width="80" height="80" style={{ transform: "rotate(-90deg)" }}>
-                    <circle className="lms-ring-bg" cx="40" cy="40" fill="transparent" r="32" strokeWidth="5" />
-                    <circle
-                      className="lms-ring-fill"
-                      cx="40"
-                      cy="40"
-                      fill="transparent"
-                      r="32"
-                      strokeWidth="5"
-                      strokeLinecap="round"
-                      style={{
-                        stroke: "var(--lms-sky)",
-                        strokeDashoffset: 201 - (201 * 92) / 100,
-                      }}
-                    />
-                  </svg>
-                  <span className="lms-ring-text-center" style={{ color: "var(--lms-sky)" }}>
-                    92%
-                  </span>
-                </div>
-              </div>
-              {/* Stat Card 3: Online Attendance */}
-              <div className="lms-card lms-progress-circle-box">
-                <div className="lms-progress-text-info">
-                  <span className="lms-progress-label">Tỷ lệ online trực tuyến</span>
-                  <span className="lms-progress-val-large">95%</span>
-                  <span className="lms-progress-trend" style={{ color: "var(--lms-success)" }}>
-                    <span
-                      style={{
-                        width: "6px",
-                        height: "6px",
-                        backgroundColor: "var(--lms-success)",
-                        borderRadius: "50%",
-                        display: "inline-block",
-                        animation: "ping 1.5s infinite",
-                      }}
-                    ></span>
-                    Lớp đang trực tuyến
-                  </span>
-                </div>
-                <div className="lms-ring-svg-container">
-                  <svg className="lms-ring-svg" width="80" height="80" style={{ transform: "rotate(-90deg)" }}>
-                    <circle className="lms-ring-bg" cx="40" cy="40" fill="transparent" r="32" strokeWidth="5" />
-                    <circle
-                      className="lms-ring-fill"
-                      cx="40"
-                      cy="40"
-                      fill="transparent"
-                      r="32"
-                      strokeWidth="5"
-                      strokeLinecap="round"
-                      style={{
-                        stroke: "var(--lms-success)",
-                        strokeDashoffset: 201 - (201 * 95) / 100,
-                      }}
-                    />
-                  </svg>
-                  <span className="lms-ring-text-center" style={{ color: "var(--lms-success)" }}>
-                    95%
-                  </span>
-                </div>
-              </div>
-            </section>
-            {/* Quick Actions Section */}
-            <section style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-              <h3 className="lms-section-title">Thao tác nhanh</h3>
-              <div className="lms-action-grid">
-                {/* Button: Create homework */}
-                <button onClick={() => setModalType("homework")} className="lms-action-card secondary">
-                  <div className="lms-action-card-text">
-                    <h4 className="lms-action-card-title">Giao bài tập</h4>
-                    <p className="lms-action-card-desc">Giao nhiệm vụ tự học cho học sinh</p>
-                  </div>
-                  <span className="material-symbols-outlined lms-action-card-bg-icon">edit_document</span>
-                </button>
-                {/* Button: Create exam */}
-                <button onClick={() => setModalType("exam")} className="lms-action-card tertiary">
-                  <div className="lms-action-card-text">
-                    <h4 className="lms-action-card-title">Tạo đề thi</h4>
-                    <p className="lms-action-card-desc">Kiểm tra đánh giá năng lực học sinh</p>
-                  </div>
-                  <span className="material-symbols-outlined lms-action-card-bg-icon">assignment_turned_in</span>
-                </button>
-              </div>
-            </section>
-            {/* Active Classes Table Section */}
-            <section className="lms-table-card">
-              <div
-                className="lms-table-header"
-                style={{
-                  padding: "24px 24px 18px",
-                  borderBottom: "1px solid var(--lms-card-border)",
-                }}
-              >
-                <h3 className="lms-section-title">Lớp học đang hoạt động</h3>
+    <div style={{ padding: "24px", maxWidth: 1400, margin: "0 auto", backgroundColor: "#f8f9fa", minHeight: "100vh" }}>
+      {/* 1. Header Section */}
+      <TeacherWelcomeHeader
+        fullName={user?.fullName}
+        email={user?.email}
+        avatar={user?.avatar}
+        loading={loading}
+        onRefresh={fetchDashboardData}
+      />
 
-                {/* Search filter input */}
-                <div className="lms-search-wrapper">
-                  <input
-                    type="text"
-                    placeholder="Tìm kiếm lớp học..."
-                    value={searchQuery}
-                    onChange={(e) => {
-                      setSearchQuery(e.target.value);
-                      setCurrentPage(1);
-                    }}
-                    className="lms-search-input"
-                  />
-                  <span className="material-symbols-outlined lms-search-icon">search</span>
-                </div>
-              </div>
-              <div className="lms-table-responsive">
-                <table className="lms-table">
-                  <thead>
-                    <tr>
-                      <th>Tên lớp học</th>
-                      <th>Mã lớp</th>
-                      <th>Sĩ số</th>
-                      <th>Tiến độ bài học</th>
-                      <th>Bài học tiếp theo</th>
-                      <th style={{ textAlign: "right" }}>Thao tác</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {paginatedClasses.map((cls) => (
-                      <tr key={cls.id}>
-                        <td>
-                          <div className="lms-class-info">
-                            <div className={`lms-class-icon-box ${cls.iconClass}`}>
-                              <span className="material-symbols-outlined">{cls.icon}</span>
-                            </div>
-                            <span className="lms-class-name">{cls.name}</span>
-                          </div>
-                        </td>
-                        <td>
-                          <code
-                            style={{
-                              fontSize: "11px",
-                              backgroundColor: "var(--lms-bg-secondary)",
-                              padding: "3px 6px",
-                              borderRadius: "4px",
-                            }}
-                          >
-                            {cls.code}
-                          </code>
-                        </td>
-                        <td>{cls.size} học sinh</td>
-                        <td>
-                          <div className="lms-table-progress-container">
-                            <div className="lms-table-progress-bg">
-                              <div className="lms-table-progress-fill" style={{ width: `${cls.progress}%` }}></div>
-                            </div>
-                            <span className="lms-table-progress-text">{cls.progress}%</span>
-                          </div>
-                        </td>
-                        <td>
-                          <span className="lms-schedule-badge">{cls.nextClass}</span>
-                        </td>
-                        <td style={{ textAlign: "right" }}>
-                          <button
-                            onClick={() => handleAttendance(cls.id)}
-                            className={`lms-table-btn ${cls.attendanceStatus === "da_diem_danh" ? "checked" : ""}`}
-                          >
-                            {cls.attendanceStatus === "da_diem_danh" ? "Đã điểm danh" : "Điểm danh"}
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                    {paginatedClasses.length === 0 && (
-                      <tr>
-                        <td
-                          colSpan={6}
-                          style={{
-                            textAlign: "center",
-                            padding: "40px",
-                            color: "var(--lms-text-muted)",
-                            fontSize: "12px",
-                          }}
-                        >
-                          Không tìm thấy lớp học nào phù hợp!
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-              {/* Pagination Controls */}
-              <div className="lms-pagination">
-                <div className="lms-pagination-controls">
-                  <button
-                    onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
-                    disabled={clampedPage === 1}
-                    className="lms-page-btn"
-                  >
-                    <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>
-                      chevron_left
-                    </span>
-                  </button>
+      {/* Error Alert State */}
+      {error && (
+        <Alert
+          message="Lỗi kết nối dữ liệu"
+          description={error}
+          type="error"
+          showIcon
+          action={
+            <Button size="small" type="primary" danger icon={<ReloadOutlined />} onClick={fetchDashboardData}>
+              Thử lại
+            </Button>
+          }
+          style={{ marginBottom: 24, borderRadius: 8 }}
+        />
+      )}
 
-                  {Array.from({ length: totalPages }).map((_, i) => (
-                    <button
-                      key={i}
-                      onClick={() => setCurrentPage(i + 1)}
-                      className={`lms-page-btn ${clampedPage === i + 1 ? "active" : ""}`}
-                    >
-                      {i + 1}
-                    </button>
-                  ))}
-                  <button
-                    onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
-                    disabled={clampedPage === totalPages}
-                    className="lms-page-btn"
-                  >
-                    <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>
-                      chevron_right
-                    </span>
-                  </button>
-                </div>
-              </div>
-            </section>
-          </main>
-          {/* Mobile bottom nav */}
-          <nav className="lms-mobile-nav">
-            <button className="lms-mobile-item active">
-              <span className="material-symbols-outlined icon-filled">home</span>
-              <span>Trang chủ</span>
-            </button>
-            <button className="lms-mobile-item">
-              <span className="material-symbols-outlined">school</span>
-              <span>Lớp học</span>
-            </button>
-            <button className="lms-mobile-item">
-              <span className="material-symbols-outlined">edit_note</span>
-              <span>Chấm điểm</span>
-            </button>
-            <button className="lms-mobile-item">
-              <span className="material-symbols-outlined">forum</span>
-              <span>Hộp thư</span>
-            </button>
-          </nav>
-        </div>
-        {/* ==========================================================================
-           MODALS (Quick Actions Form popups)
-           ========================================================================== */}
-        {/* 2. Create Homework Modal */}
-        {modalType === "homework" && (
-          <div className="lms-modal-overlay">
-            <div className="lms-modal">
-              <div className="lms-modal-header">
-                <span className="lms-modal-title">Giao bài tập về nhà</span>
-                <button onClick={() => setModalType(null)} className="lms-modal-close">
-                  <span className="material-symbols-outlined">close</span>
-                </button>
-              </div>
+      {/* 2. Active Live Sessions Banner Widget */}
+      <TeacherLiveSessionWidget activeSessions={activeLiveSessions} loading={loading} />
 
-              <form onSubmit={handleCreateHomeworkSubmit} className="lms-modal-body">
-                <div className="lms-form-group">
-                  <label>Tên bài tập / nhiệm vụ tự học</label>
-                  <input
-                    type="text"
-                    placeholder="Ví dụ: Đọc chương 3 và làm bài tập 1, 2"
-                    value={hwTitle}
-                    onChange={(e) => setHwTitle(e.target.value)}
-                    required
-                  />
-                </div>
-                <div className="lms-form-group">
-                  <label>Chọn lớp giao bài</label>
-                  <select value={hwClassSelect} onChange={(e) => setHwClassSelect(e.target.value)}>
-                    {classes.map((c) => (
-                      <option key={c.id} value={c.name}>
-                        {c.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div className="lms-form-group">
-                  <label>Hạn nộp bài</label>
-                  <select value={hwDeadline} onChange={(e) => setHwDeadline(e.target.value)}>
-                    <option value="Còn 4 giờ">Trong ngày hôm nay (4 giờ nữa)</option>
-                    <option value="Ngày mai">Ngày mai</option>
-                    <option value="3 ngày nữa">3 ngày nữa</option>
-                    <option value="Tuần sau">Tuần sau</option>
-                  </select>
-                </div>
-                <div className="lms-modal-footer">
-                  <button type="button" onClick={() => setModalType(null)} className="lms-btn cancel">
-                    Hủy bỏ
-                  </button>
-                  <button type="submit" className="lms-btn confirm" style={{ backgroundColor: "var(--lms-sky)" }}>
-                    Giao bài tập
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        )}
-        {/* 3. Create Exam Modal */}
-        {modalType === "exam" && (
-          <div className="lms-modal-overlay">
-            <div className="lms-modal">
-              <div className="lms-modal-header">
-                <span className="lms-modal-title">Tạo đề thi trắc nghiệm mới</span>
-                <button onClick={() => setModalType(null)} className="lms-modal-close">
-                  <span className="material-symbols-outlined">close</span>
-                </button>
-              </div>
+      {/* 3. Quick Statistics Cards */}
+      <TeacherQuickStats
+        totalClasses={classes.length}
+        totalStudents={totalStudentsCount}
+        pendingSubmissionsCount={assignments.length}
+        activeLiveSessionsCount={activeLiveSessions.length}
+        totalAnnouncementsCount={announcements.length}
+        loading={loading}
+      />
 
-              <form onSubmit={handleCreateExamSubmit} className="lms-modal-body">
-                <div className="lms-form-group">
-                  <label>Tên đề thi / bài kiểm tra</label>
-                  <input
-                    type="text"
-                    placeholder="Ví dụ: Kiểm tra 15 phút số 3"
-                    value={examTitle}
-                    onChange={(e) => setExamTitle(e.target.value)}
-                    required
-                  />
-                </div>
-                <div className="lms-form-group">
-                  <label>Lớp đánh giá học vụ</label>
-                  <select value={examClassSelect} onChange={(e) => setExamClassSelect(e.target.value)}>
-                    {classes.map((c) => (
-                      <option key={c.id} value={c.name}>
-                        {c.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div className="lms-form-group">
-                  <label>Số lượng câu hỏi trắc nghiệm</label>
-                  <input
-                    type="number"
-                    value={examQuestions}
-                    onChange={(e) => setExamQuestions(e.target.value)}
-                    min="5"
-                    max="100"
-                    required
-                  />
-                </div>
-                <div className="lms-modal-footer">
-                  <button type="button" onClick={() => setModalType(null)} className="lms-btn cancel">
-                    Hủy bỏ
-                  </button>
-                  <button
-                    type="submit"
-                    className="lms-btn confirm"
-                    style={{ backgroundColor: "var(--lms-text-primary)" }}
-                  >
-                    Tạo đề thi
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        )}
-        {/* ==========================================================================
-           TOAST SYSTEM
-           ========================================================================== */}
-        {toast && (
-          <div className="lms-toast-container">
-            <div className={`lms-toast ${toast.type}`}>
-              <span className="material-symbols-outlined lms-toast-icon">
-                {toast.type === "success" ? "check_circle" : toast.type === "info" ? "info" : "error"}
-              </span>
-              <span>{toast.message}</span>
-            </div>
-          </div>
-        )}
-      </div>
+      {/* 4. Quick Action Navigation */}
+      <TeacherQuickActions />
+
+      {/* 5. Main Layout Split (Left & Right Column) */}
+      <Row gutter={[24, 24]}>
+        {/* Left Column (Main Content) */}
+        <Col xs={24} lg={16}>
+          {/* Schedule Widget */}
+          <TeacherScheduleWidget classes={classes} loading={loading} />
+
+          {/* Classrooms Grid */}
+          <TeacherClassroomsGrid classes={classes} loading={loading} />
+        </Col>
+
+        {/* Right Column (Sidebar Widgets) */}
+        <Col xs={24} lg={8}>
+          {/* Assignments Widget */}
+          <TeacherAssignmentsWidget assignments={assignments} loading={loading} />
+
+          {/* Announcements Widget */}
+          <TeacherAnnouncementsWidget announcements={announcements} loading={loading} />
+        </Col>
+      </Row>
     </div>
   );
 }

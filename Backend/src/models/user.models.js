@@ -101,23 +101,17 @@ userSchema.index({ role: 1 });
 userSchema.index({ status: 1 });
 
 // Hook tự động mã hóa mật khẩu trước khi lưu
-userSchema.pre("save", async function (next) {
+userSchema.pre("save", async function () {
   if (!this.isModified("password")) {
-    return next();
+    return;
   }
 
-  try {
-    const passwordValue = this.password;
-    const isHashed = /\$2[aby]\$\d{2}\$/.test(passwordValue);
+  const passwordValue = this.password;
+  const isHashed = /\$2[aby]\$\d{2}\$/.test(passwordValue);
 
-    if (!isHashed) {
-      const salt = await bcrypt.genSalt(10);
-      this.password = await bcrypt.hash(passwordValue, salt);
-    }
-
-    return next();
-  } catch (error) {
-    return next(error);
+  if (!isHashed) {
+    const salt = await bcrypt.genSalt(10);
+    this.password = await bcrypt.hash(passwordValue, salt);
   }
 });
 
