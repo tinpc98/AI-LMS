@@ -47,7 +47,7 @@ const FeatureList = ({
                   flexDirection: "column",
                   justify: "space-between",
                 }}
-                bodyStyle={{ padding: 20, display: "flex", flexDirection: "column", height: "100%" }}
+                styles={{ body: { padding: 20, display: "flex", flexDirection: "column", height: "100%" } }}
               >
                 <div>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
