@@ -27,6 +27,7 @@ import LearningProgressCard from "../../components/student/classDetail/LearningP
 import LearningMaterialsTab from "../../components/student/classDetail/materials/LearningMaterialsTab";
 import AssignmentsTab from "../../components/student/classDetail/assignments/AssignmentsTab";
 import ExamsTab from "../../components/student/classDetail/exams/ExamsTab";
+import GradesTab from "../../components/student/classDetail/grades/GradesTab";
 
 
 const MOCK_RANKINGS = [
@@ -413,6 +414,7 @@ export default function ClassDetail() {
             { key: "lessons", label: "Bài giảng" },
             { key: "assignments", label: "Bài tập của tôi" },
             { key: "exams", label: "Thi trực tuyến" },
+            { key: "grades", label: "Bảng điểm" },
             { key: "chat", label: "Thảo luận lớp học" },
           ].map((tab) => (
             <button
@@ -602,6 +604,17 @@ export default function ClassDetail() {
             {/* TAB 4: THI TRỰC TUYẾN (ONLINE EXAMS - SPRINT 3.4) */}
             {activeTab === "exams" && (
               <ExamsTab
+                exams={exams}
+                loading={isLoading}
+              />
+            )}
+
+            {/* TAB 5: BẢNG ĐIỂM (GRADEBOOK - SPRINT 3.5) */}
+            {activeTab === "grades" && (
+              <GradesTab
+                rawGrades={[]}
+                assignments={assignments}
+                submittedAssignmentIds={submittedAssignmentIds}
                 exams={exams}
                 loading={isLoading}
               />
