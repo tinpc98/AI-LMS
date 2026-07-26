@@ -36,6 +36,7 @@ import TeacherAssignmentPage from "./features/teacherAssignment/TeacherAssignmen
 import AIManagementPage from "./features/aiManagement/AIManagementPage";
 import DashboardPage from "./features/dashboard/DashboardPage";
 import ReportPage from "./pages/Report/ReportPage.tsx";
+import ProfilePage from "./pages/admin/Profile/ProfilePage";
 
 function App() {
   return (
@@ -83,6 +84,7 @@ function App() {
           <Route path="teacher-assignment" element={<TeacherAssignmentPage />} />
           <Route path="ai-management" element={<AIManagementPage />} />
           <Route path="reports" element={<ReportPage />} />
+          <Route path="profile" element={<ProfilePage />} />
           <Route path="system" element={<AdminPage title="System Management" description="Configure system-wide settings." />} />
         </Route>
         {/* </Route> */}
