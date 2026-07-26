@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import assignmentApi from "../../api/assignmentApi";
@@ -15,6 +15,16 @@ import type { IExam } from "../../interface/examInterface";
 import { StudentLiveSidebar } from "../../components/features/student/StudentLiveSidebar";
 import { toast } from "../../utils/toast";
 
+// Ant Design 5 & Common Components
+import { Row, Col, Alert, Skeleton } from "antd";
+import PageContainer from "../../components/common/PageContainer";
+import StudentClassHeader from "../../components/student/classDetail/StudentClassHeader";
+import StatisticSection from "../../components/student/classDetail/StatisticSection";
+import OverviewCard from "../../components/student/classDetail/OverviewCard";
+import TeacherInformationCard from "../../components/student/classDetail/TeacherInformationCard";
+import NextSessionCard from "../../components/student/classDetail/NextSessionCard";
+import LearningProgressCard from "../../components/student/classDetail/LearningProgressCard";
+
 
 const MOCK_RANKINGS = [
   { rank: 1, name: "Trần Quốc Quân", short: "TQ", score: 9.8, bg: "bg-yellow-100 text-yellow-700 border-yellow-200", isUser: false },
@@ -24,7 +34,7 @@ const MOCK_RANKINGS = [
 
 export default function ClassDetail() {
   const { classId } = useParams<{ classId: string }>();
-  const [activeTab, setActiveTab] = useState("lessons");
+  const [activeTab, setActiveTab] = useState("overview");
 
   // State Logic dữ liệu thật
   const [classInfo, setClassInfo] = useState<IClass | null>(null);
@@ -344,311 +354,142 @@ export default function ClassDetail() {
                   (s: any) =>
                     s.studentId === studentId ||
                     s.studentId?._id === studentId ||
-                    s.student === studentId
-                );
-                if (hasSubmitted) {
-                  submittedIds.push(item._id);
-                }
-              } catch (err) {
-                // Ignore failure if no submissions
-              }
-            })
-          );
-          setSubmittedAssignmentIds(submittedIds);
-        }
-      } catch (error: unknown) {
-        if (axios.isAxiosError(error)) {
-          setErrorMsg(error.response?.data?.message || "Không thể tải dữ liệu lớp học.");
-        }
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchData();
-  }, [classId]);
-
-  if (isLoading) {
+                    s.student ===   if (isLoading) {
     return (
-      <div className="bg-surface-bright min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-secondary">Đang tải dữ liệu lớp học thực tế...</p>
-        </div>
-      </div>
+      <PageContainer maxWidth="1400px">
+        <Skeleton active avatar paragraph={{ rows: 4 }} style={{ marginBottom: 24 }} />
+        <Skeleton active paragraph={{ rows: 8 }} />
+      </PageContainer>
     );
   }
 
   if (errorMsg || !classInfo) {
     return (
-      <div className="bg-surface-bright min-h-screen flex flex-col items-center justify-center gap-4">
-        <span className="material-symbols-outlined text-5xl text-error">error</span>
-        <p className="text-error font-semibold text-lg">{errorMsg || "Không tìm thấy thông tin lớp học này."}</p>
-        <Link to="/myclasses" className="text-primary font-bold hover:underline flex items-center gap-1">
-          <span className="material-symbols-outlined text-sm">arrow_back</span> Quay lại danh sách lớp học
-        </Link>
-      </div>
+      <PageContainer maxWidth="1400px">
+        <Alert
+          message="Không tìm thấy thông tin lớp học"
+          description={errorMsg || "Lớp học bạn đang tìm kiếm không tồn tại hoặc đã bị xóa."}
+          type="error"
+          showIcon
+          action={
+            <Link to="/myclasses">
+              <span style={{ color: "#1890ff", fontWeight: 700 }}>Quay lại danh sách lớp học</span>
+            </Link>
+          }
+        />
+      </PageContainer>
     );
   }
 
   return (
-    <div className="bg-surface-bright text-on-surface font-body-md min-h-screen flex selection:bg-primary-fixed selection:text-on-primary-fixed">
-      {/* Nhúng CSS tùy biến hiệu ứng chuyển động */}
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap');
-        .glass-card {
-          background: rgba(255, 255, 255, 0.8);
-          backdrop-filter: blur(12px);
-          border: 1px solid rgba(226, 232, 240, 0.8);
-        }
-        .ai-progress-gradient {
-          background: linear-gradient(90deg, #4f46e5, #3b82f6, #4f46e5);
-          background-size: 200% 100%;
-          animation: shimmer 2s linear infinite;
-        }
-        @keyframes shimmer {
-          0% { background-position: 200% 0; }
-          100% { background-position: -200% 0; }
-        }
-      `}</style>
+    <PageContainer maxWidth="1400px">
+      {/* 1. STUDENT CLASS HEADER */}
+      <StudentClassHeader
+        className={classInfo.className}
+        classCode={classInfo.classCode}
+        subject={classInfo.subject || (classInfo as any).courseId?.subject || (classInfo as any).courseId?.courseName}
+        status={classInfo.status as any}
+        teacher={classInfo.teacherId as any}
+      />
 
-      {/* 1. SIDE NAVIGATION BAR */}
-      <aside className="fixed left-0 top-0 h-screen w-[280px] bg-surface border-r border-outline-variant flex flex-col p-6 space-y-2 z-50">
-        <div className="mb-8 px-2">
-          <h1 className="text-2xl font-bold text-primary" style={{ fontFamily: "Hanken Grotesk" }}>
-            AI Academy
-          </h1>
-          <p className="text-sm text-secondary">Learning Portal</p>
+      {/* 2. TABS MANAGEMENT SYSTEM */}
+      <div
+        style={{
+          backgroundColor: "#fff",
+          borderRadius: 16,
+          boxShadow: "0 2px 8px rgba(0, 0, 0, 0.04)",
+          border: "1px solid #f0f0f0",
+          overflow: "hidden",
+        }}
+      >
+        {/* Navigation Tabs Header */}
+        <div style={{ display: "flex", borderBottom: "1px solid #f0f0f0", padding: "0 24px", overflowX: "auto" }}>
+          {[
+            { key: "overview", label: "Tổng quan" },
+            { key: "lessons", label: "Bài giảng" },
+            { key: "assignments", label: "Bài tập của tôi" },
+            { key: "exams", label: "Thi trực tuyến" },
+            { key: "chat", label: "Thảo luận lớp học" },
+          ].map((tab) => (
+            <button
+              key={tab.key}
+              style={{
+                padding: "16px 20px",
+                fontWeight: 600,
+                fontSize: 14,
+                cursor: "pointer",
+                border: "none",
+                background: "transparent",
+                borderBottom: activeTab === tab.key ? "2px solid #1890ff" : "2px solid transparent",
+                color: activeTab === tab.key ? "#1890ff" : "#595959",
+                transition: "all 0.2s",
+              }}
+              onClick={() => setActiveTab(tab.key)}
+            >
+              {tab.label}
+            </button>
+          ))}
         </div>
-        <nav className="flex-1 space-y-1">
-          <Link
-            to="/"
-            className="flex items-center space-x-3 px-4 py-3 text-secondary hover:bg-surface-container-low transition-colors rounded-lg"
-          >
-            <span className="material-symbols-outlined">dashboard</span>
-            <span className="text-sm font-medium">Dashboard</span>
-          </Link>
-          <Link
-            to="/myclasses"
-            className="flex items-center space-x-3 px-4 py-3 bg-secondary-container text-on-secondary-container font-semibold rounded-lg"
-          >
-            <span className="material-symbols-outlined">school</span>
-            <span className="text-sm">My Classes</span>
-          </Link>
-          <Link
-            to="/studentassignment"
-            className="flex items-center space-x-3 px-4 py-3 text-secondary hover:bg-surface-container-low transition-colors rounded-lg"
-          >
-            <span className="material-symbols-outlined">assignment</span>
-            <span className="text-sm">Assignments</span>
-          </Link>
-          <Link
-            to="/exam"
-            className="flex items-center space-x-3 px-4 py-3 text-secondary hover:bg-surface-container-low transition-colors rounded-lg"
-          >
-            <span className="material-symbols-outlined">quiz</span>
-            <span className="text-sm">Exams</span>
-          </Link>
-          <button
-            onClick={() => setActiveTab("chat")}
-            className="w-full flex items-center space-x-3 px-4 py-3 text-secondary hover:bg-surface-container-low transition-colors rounded-lg text-left"
-          >
-            <span className="material-symbols-outlined">forum</span>
-            <span className="text-sm">Messaging</span>
-          </button>
-        </nav>
-        <div className="mt-auto pt-6 border-t border-outline-variant">
-          <StudentLiveSidebar
-            meetingRoomId={meetingRoomId}
-            isLiveLoading={isLiveLoading}
-            onJoinClick={() => void handleJoinLiveClass()}
-          />
-          <div className="flex items-center mt-6 space-x-3 px-2">
-            <div className="w-10 h-10 rounded-full bg-surface-container-high overflow-hidden flex-shrink-0">
-              <img
-                alt="User profile"
-                className="w-full h-full object-cover"
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuBcXNfJy6RmJkbl-pgJcwHzo54a2COyoyiXR1NxWEIm7Sh1p9mI6ER4LhQiPHc225n4XTfkWrDy5Ef9Wr_6nGTSSm37X2aWjwDxp3zRVn_URu6PrD7ONi9ew0oFTOH5BNROuILCfqgRqpBFdfn_8aYeZoWiH1QnvdQIl1Gm-H_XQ_3JwaQ29_e6kdB-8C2BPDIwNNt7GQtX9SJcE6xSlb9exoX0WN620l-tKbsYwg4Vr8OyySmc1pwBT6Apt4jOSYKptaBFSLhnPF80"
+
+        {/* Tab Content Box */}
+        <div style={{ padding: 24 }}>
+          {/* TAB 0: TỔNG QUAN (OVERVIEW - SPRINT 3.1) */}
+          {activeTab === "overview" && (
+            <div>
+              {/* 1. Statistic Section */}
+              <StatisticSection
+                attendanceRate={95}
+                completedAssignments={submittedAssignmentIds.length}
+                totalAssignments={assignments.length}
+                completedExams={exams.filter((e) => (e as any).score !== null && (e as any).score !== undefined).length}
+                totalExams={exams.length}
+                overallProgress={85}
               />
+
+              {/* 2. Main Grid: Overview & Teacher Info */}
+              <Row gutter={[24, 24]}>
+                {/* Left Column (Overview & Learning Progress) */}
+                <Col xs={24} lg={15} xl={16}>
+                  <OverviewCard
+                    className={classInfo.className}
+                    description={classInfo.description}
+                    startDate={classInfo.startDate}
+                    endDate={classInfo.endDate}
+                    currentStudents={classInfo.students ? classInfo.students.length : (classInfo as any).currentStudents || 0}
+                    maxStudents={classInfo.maxStudents || 40}
+                    status={classInfo.status as any}
+                    learningMode={classInfo.learningMode || "Offline"}
+                    googleMeetLink={classInfo.googleMeetLink}
+                    googleCalendarEventId={classInfo.googleCalendarEventId}
+                  />
+
+                  <LearningProgressCard
+                    progressPercent={85}
+                    completedAssignments={submittedAssignmentIds.length}
+                    totalAssignments={assignments.length}
+                    completedExams={exams.filter((e) => (e as any).score !== null && (e as any).score !== undefined).length}
+                    totalExams={exams.length}
+                    averageScore={8.5}
+                  />
+                </Col>
+
+                {/* Right Column (Teacher Profile & Next Session) */}
+                <Col xs={24} lg={9} xl={8}>
+                  <TeacherInformationCard teacher={classInfo.teacherId as any} />
+
+                  <NextSessionCard
+                    schedule={classInfo.schedule}
+                    classRoom={classInfo.classRoom}
+                    isLiveNow={Boolean(meetingRoomId)}
+                    onJoinLive={() => void handleJoinLiveClass()}
+                  />
+                </Col>
+              </Row>
             </div>
-            <div className="flex flex-col min-w-0">
-              <span className="text-sm text-on-surface font-semibold truncate">Minh Quân</span>
-              <span className="text-xs text-secondary">ID: 2024AI01</span>
-            </div>
-          </div>
-        </div>
-      </aside>
+          )}
 
-      {/* 2. TOP NAVIGATION BAR */}
-      <header className="fixed top-0 right-0 w-[calc(100%-280px)] h-16 bg-surface-bright flex items-center justify-between px-6 border-b border-outline-variant z-40">
-        <div className="flex items-center space-x-4 min-w-0">
-          <span
-            className="text-xl font-bold text-primary truncate max-w-[300px]"
-            style={{ fontFamily: "Hanken Grotesk" }}
-          >
-            {classInfo.className}
-          </span>
-          <div className="h-6 w-px bg-outline-variant mx-2 hidden sm:block"></div>
-          <div className="relative hidden md:block">
-            <input
-              className="pl-10 pr-4 py-1.5 rounded-full bg-surface-container-low border-none focus:ring-2 focus:ring-primary w-64 text-sm"
-              placeholder="Search lessons..."
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-secondary text-lg">
-              search
-            </span>
-          </div>
-        </div>
-        <div className="flex items-center space-x-4 flex-shrink-0">
-          <button className="p-2 rounded-full hover:bg-surface-container-high text-secondary transition-colors relative">
-            <span className="material-symbols-outlined">notifications</span>
-            <span className="absolute top-2 right-2 w-2 h-2 bg-error rounded-full border-2 border-surface-bright"></span>
-          </button>
-        </div>
-      </header>
-
-      {/* 3. MAIN CONTENT CANVAS */}
-      <main className="ml-[280px] mt-16 p-8 max-w-[1280px] w-full mx-auto box-border flex flex-col">
-        {/* Banner tiêu đề dữ liệu thật */}
-        <section className="grid grid-cols-12 gap-6 mb-8">
-          <div className="col-span-12 md:col-span-8 bg-surface-container-lowest rounded-xl p-8 border border-outline-variant shadow-sm relative overflow-hidden">
-            <div className="absolute -right-16 -top-16 w-64 h-64 bg-primary/5 rounded-full blur-3xl"></div>
-            <div className="relative z-10 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-              <div>
-                <div className="inline-flex items-center px-3 py-1 bg-primary-container text-on-primary-container rounded-full text-xs font-semibold mb-4 uppercase tracking-wider">
-                  {classInfo.status === "active" ? "Đang học" : "Đã kết thúc"}
-                </div>
-                <h2 className="text-3xl font-bold text-on-surface mb-2" style={{ fontFamily: "Hanken Grotesk" }}>
-                  {classInfo.className}
-                </h2>
-                <div className="flex flex-col gap-1 text-secondary">
-                  <div className="flex items-center text-sm">
-                    <span className="material-symbols-outlined text-base mr-2">person</span>
-                    <span>
-                      Giảng viên: <strong>{classInfo.teacherId?.fullName ?? "Chưa rõ"}</strong>
-                    </span>
-                  </div>
-                  <div className="flex items-center text-sm">
-                    <span className="material-symbols-outlined text-base mr-2">groups</span>
-                    <span>
-                      Sĩ số: <strong>{classInfo.students?.length ?? 0} học sinh</strong>
-                    </span>
-                  </div>
-                </div>
-              </div>
-              {/* Progress Circle Mock-up */}
-              <div className="flex flex-col items-center self-center sm:self-auto">
-                <div className="relative w-24 h-24">
-                  <svg className="w-full h-full" viewBox="0 0 36 36">
-                    <path
-                      className="stroke-surface-container-high"
-                      d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                      fill="none"
-                      strokeWidth="3"
-                    ></path>
-                    <path
-                      className="stroke-primary"
-                      d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                      fill="none"
-                      strokeDasharray="65, 100"
-                      strokeLinecap="round"
-                      strokeWidth="3"
-                      style={{
-                        transition: "stroke-dasharray 1.5s ease-in-out",
-                      }}
-                    ></path>
-                  </svg>
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <span className="text-xl font-bold text-primary">65%</span>
-                  </div>
-                </div>
-                <span className="text-xs font-semibold mt-2 text-secondary">Tiến độ cá nhân</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="col-span-12 md:col-span-4 flex flex-col">
-            <div className="flex-1 bg-primary rounded-xl p-6 text-on-primary shadow-xl relative overflow-hidden transition-all hover:-translate-y-1">
-              <div className="relative z-10 flex flex-col h-full">
-                {/* Card chính */}
-                <div
-                  onClick={() => void handleJoinLiveClass()}
-                  className={`group cursor-pointer ${
-                    isLiveLoading ? "pointer-events-none opacity-70" : ""
-                  }`}
-                >
-                  <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center mb-4">
-                    <span
-                      className="material-symbols-outlined text-3xl"
-                      style={{ fontVariationSettings: "'FILL' 1" }}
-                    >
-                      video_chat
-                    </span>
-                  </div>
-
-                  <h3 className="text-lg font-bold mb-1">
-                    {meetingRoomId ? "🔴 Phòng học đang diễn ra" : "Phòng học trực tuyến"}
-                  </h3>
-
-                  <p className="text-xs opacity-90 mb-4">
-                    {meetingRoomId
-                      ? "Giáo viên đang mở lớp học. Nhấn để tham gia ngay."
-                      : "Chưa có lớp học trực tuyến đang diễn ra."}
-                  </p>
-
-                  <div className="flex items-center text-xs font-bold uppercase tracking-widest">
-                    {isLiveLoading
-                      ? "Đang vào..."
-                      : meetingRoomId
-                      ? "Vào lớp ngay"
-                      : "Chờ giáo viên mở lớp"}
-
-                    <span className="material-symbols-outlined ml-2 group-hover:translate-x-2 transition-transform text-sm">
-                      arrow_forward
-                    </span>
-                  </div>
-                </div>
-
-                <div className="mt-5">
-                  <p className="text-xs text-on-surface-variant">
-                    Học sinh chỉ cần nhấn vào "Học trực tuyến" khi giáo viên đã bắt đầu buổi học.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* 4. TABS MANAGEMENT SYSTEM */}
-        <section className="bg-surface-container-lowest rounded-2xl border border-outline-variant overflow-hidden min-h-[500px] flex flex-col shadow-sm">
-          {/* Tabs Thanh chọn điều hướng */}
-          <div className="flex border-b border-outline-variant px-6 overflow-x-auto whitespace-nowrap">
-            {[
-              { key: "lessons", label: "Bài giảng" },
-              { key: "assignments", label: "Bài tập của tôi" },
-              { key: "exams", label: "Thi trực tuyến" },
-              { key: "chat", label: "Thảo luận lớp học" },
-            ].map((tab) => (
-              <button
-                key={tab.key}
-                className={`px-6 py-4 font-semibold text-sm transition-all border-b-2 ${
-                  activeTab === tab.key
-                    ? "text-primary border-primary"
-                    : "text-secondary border-transparent hover:text-primary"
-                }`}
-                onClick={() => setActiveTab(tab.key)}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
-
-          {/* Vùng hiển thị nội dung chi tiết từng Tab */}
-          <div className="p-6 flex-1">
-            {/* TAB 1: BÀI GIẢNG — SỬ DỤNG DỮ LIỆU THẬT */}
-            {activeTab === "lessons" && (
+          {/* TAB 1: BÀI GIẢNG — SỬ DỤNG DỮ LIỆU THẬT */}
+          {activeTab === "lessons" && (
               <div className="space-y-4">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-semibold text-on-surface">Danh sách bài học</h3>
@@ -1130,6 +971,6 @@ export default function ClassDetail() {
         assignment={submittingAssignment}
         onSuccess={handleSubmitSuccess}
       />
-    </div>
+    </PageContainer>
   );
 }
