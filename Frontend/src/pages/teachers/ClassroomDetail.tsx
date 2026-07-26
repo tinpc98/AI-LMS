@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { useParams, useNavigate, Link } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import {
   Card,
   Tabs,
@@ -7,27 +7,23 @@ import {
   Button,
   Space,
   Typography,
-  Breadcrumb,
   Spin,
   Alert,
   Empty,
-  Badge,
   Modal,
-  Tooltip,
 } from "antd";
 import {
   ArrowLeftOutlined,
   BookOutlined,
   TeamOutlined,
+  CheckSquareOutlined,
   FileTextOutlined,
   FormOutlined,
   VideoCameraOutlined,
   PlusOutlined,
   EditOutlined,
   DeleteOutlined,
-  HomeOutlined,
 } from "@ant-design/icons";
-import axios from "axios";
 
 import assignmentApi from "../../api/assignmentApi";
 import { classApi } from "../../api/classApi";
@@ -44,6 +40,7 @@ import { useJitsiLiveSession } from "../../hooks/useJitsiLiveSession";
 
 import { TeacherClassOverviewTab } from "../../components/teacher/classroom/TeacherClassOverviewTab";
 import { TeacherStudentTableTab } from "../../components/teacher/classroom/TeacherStudentTableTab";
+import { TeacherAttendanceTab } from "../../components/teacher/classroom/TeacherAttendanceTab";
 import { toast } from "../../utils/toast";
 
 const { Title, Text, Paragraph } = Typography;
@@ -218,6 +215,22 @@ export default function ClassroomDetail() {
       children: <TeacherStudentTableTab students={studentList} loading={false} />,
     },
     {
+      key: "attendance",
+      label: (
+        <Space>
+          <CheckSquareOutlined />
+          <span>Điểm danh</span>
+        </Space>
+      ),
+      children: (
+        <TeacherAttendanceTab
+          classId={classId!}
+          className={classInfo.className}
+          students={studentList}
+        />
+      ),
+    },
+    {
       key: "lessons",
       label: (
         <Space>
@@ -305,7 +318,7 @@ export default function ClassroomDetail() {
           {assignments.length > 0 ? (
             <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
               {assignments.map((item) => (
-                <Card key={item._id} style={{ borderRadius: 8 }} bodyStyle={{ padding: 16 }}>
+                <Card key={item._id} style={{ borderRadius: 8 }} styles={{ body: { padding: 16 } }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                     <div>
                       <Title level={5} style={{ margin: 0, fontSize: 15 }}>
@@ -343,7 +356,7 @@ export default function ClassroomDetail() {
           marginBottom: 24,
           boxShadow: "0 8px 24px rgba(0, 33, 64, 0.25)",
         }}
-        bodyStyle={{ padding: "24px 32px" }}
+        styles={{ body: { padding: "24px 32px" } }}
       >
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 16 }}>
           <div>
@@ -387,7 +400,6 @@ export default function ClassroomDetail() {
         onChange={(key) => setActiveTab(key)}
         items={tabItems}
         type="card"
-        style={{ backgroundColor: "#transparent" }}
       />
 
       {/* MODALS */}
@@ -430,8 +442,8 @@ export default function ClassroomDetail() {
           <Spin />
         ) : reviewSubmissions.length > 0 ? (
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-            {reviewSubmissions.map((sub: any) => (
-              <Card key={sub._id} size="small">
+            {reviewSubmissions.map((sub: any, idx: number) => (
+              <Card key={sub._id || `sub-${idx}`} size="small">
                 <Text strong>{typeof sub.studentId === "object" ? sub.studentId?.fullName : "Học sinh"}</Text>
                 <Paragraph style={{ margin: "4px 0" }}>{sub.content || "Nộp tệp đính kèm"}</Paragraph>
               </Card>

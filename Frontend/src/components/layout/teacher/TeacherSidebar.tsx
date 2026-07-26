@@ -169,7 +169,7 @@ export const TeacherSidebar: React.FC<TeacherSidebarProps> = React.memo(
           placement="left"
           onClose={onMobileClose}
           open={mobileOpen}
-          bodyStyle={{ padding: 0, backgroundColor: "#001529" }}
+          styles={{ body: { padding: 0, backgroundColor: "#001529" } }}
           width={260}
         >
           {sidebarContent}
