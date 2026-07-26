@@ -29,6 +29,8 @@ import AssignmentsTab from "../../components/student/classDetail/assignments/Ass
 import ExamsTab from "../../components/student/classDetail/exams/ExamsTab";
 import GradesTab from "../../components/student/classDetail/grades/GradesTab";
 import AttendanceTab from "../../components/student/classDetail/attendance/AttendanceTab";
+import AnnouncementsTab from "../../components/student/classDetail/announcements/AnnouncementsTab";
+import LiveClassTab from "../../components/student/classDetail/live/LiveClassTab";
 
 
 const MOCK_RANKINGS = [
@@ -411,8 +413,10 @@ export default function ClassDetail() {
         <div style={{ display: "flex", borderBottom: "1px solid #f0f0f0", padding: "0 24px", overflowX: "auto" }}>
           {[
             { key: "overview", label: "Tổng quan" },
+            { key: "live", label: "Học trực tuyến" },
             { key: "materials", label: "Tài liệu học tập" },
             { key: "lessons", label: "Bài giảng" },
+            { key: "announcements", label: "Thông báo" },
             { key: "assignments", label: "Bài tập của tôi" },
             { key: "exams", label: "Thi trực tuyến" },
             { key: "grades", label: "Bảng điểm" },
@@ -627,6 +631,25 @@ export default function ClassDetail() {
               <AttendanceTab
                 rawRecords={[]}
                 loading={isLoading}
+              />
+            )}
+
+            {/* TAB 7: THÔNG BÁO LỚP HỌC (ANNOUNCEMENTS - SPRINT 3.7) */}
+            {activeTab === "announcements" && (
+              <AnnouncementsTab
+                rawAnnouncements={(classInfo as any)?.announcements || []}
+                loading={isLoading}
+              />
+            )}
+
+            {/* TAB 8: HỌC TRỰC TUYẾN (LIVE CLASS - SPRINT 3.8) */}
+            {activeTab === "live" && (
+              <LiveClassTab
+                classId={classId}
+                rawLiveSession={null}
+                classInfo={classInfo}
+                loading={isLoading}
+                onJoinLiveRoom={(roomId) => void handleJoinLiveClass()}
               />
             )}
 
