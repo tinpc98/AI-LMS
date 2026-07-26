@@ -17,6 +17,7 @@ import {
   BookOutlined,
   TeamOutlined,
   CheckSquareOutlined,
+  FolderOpenOutlined,
   FileTextOutlined,
   FormOutlined,
   VideoCameraOutlined,
@@ -41,6 +42,7 @@ import { useJitsiLiveSession } from "../../hooks/useJitsiLiveSession";
 import { TeacherClassOverviewTab } from "../../components/teacher/classroom/TeacherClassOverviewTab";
 import { TeacherStudentTableTab } from "../../components/teacher/classroom/TeacherStudentTableTab";
 import { TeacherAttendanceTab } from "../../components/teacher/classroom/TeacherAttendanceTab";
+import { TeacherMaterialsTab } from "../../components/teacher/classroom/TeacherMaterialsTab";
 import { toast } from "../../utils/toast";
 
 const { Title, Text, Paragraph } = Typography;
@@ -192,6 +194,8 @@ export default function ClassroomDetail() {
   }
 
   const studentList = Array.isArray(classInfo.students) ? classInfo.students : [];
+  const resourceList = Array.isArray(classInfo.resources) ? classInfo.resources : [];
+  const teacherName = typeof classInfo.teacherId === "object" ? classInfo.teacherId?.fullName : "Giảng viên";
 
   const tabItems = [
     {
@@ -227,6 +231,25 @@ export default function ClassroomDetail() {
           classId={classId!}
           className={classInfo.className}
           students={studentList}
+        />
+      ),
+    },
+    {
+      key: "materials",
+      label: (
+        <Space>
+          <FolderOpenOutlined />
+          <span>Tài liệu ({resourceList.length})</span>
+        </Space>
+      ),
+      children: (
+        <TeacherMaterialsTab
+          classId={classId!}
+          className={classInfo.className}
+          resources={resourceList}
+          teacherName={teacherName}
+          onRefresh={loadClassroom}
+          loading={isLoading}
         />
       ),
     },
