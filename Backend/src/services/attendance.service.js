@@ -53,6 +53,10 @@ class AttendanceService {
 
   // Cập nhật 1 bản ghi điểm danh
   async updateAttendance(id, { status, note }) {
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      throw new Error("ID điểm danh không hợp lệ!");
+    }
+
     const attendance = await Attendance.findById(id);
     if (!attendance) {
       throw new Error("Bản ghi điểm danh không tồn tại!");
@@ -66,6 +70,10 @@ class AttendanceService {
 
   // Lấy danh sách điểm danh theo lớp
   async getAttendanceByClass(classId, date) {
+    if (!mongoose.Types.ObjectId.isValid(classId)) {
+      return [];
+    }
+
     const query = { classId };
     if (date) {
       const attendanceDate = new Date(date);
@@ -83,8 +91,14 @@ class AttendanceService {
 
   // Lấy lịch sử điểm danh của học sinh
   async getAttendanceByStudent(studentId, classId) {
+    if (!mongoose.Types.ObjectId.isValid(studentId)) {
+      return [];
+    }
+
     const query = { studentId };
-    if (classId) query.classId = classId;
+    if (classId && mongoose.Types.ObjectId.isValid(classId)) {
+      query.classId = classId;
+    }
 
     return await Attendance.find(query)
       .populate("classId", "className classCode")
@@ -93,6 +107,10 @@ class AttendanceService {
 
   // Thống kê tỷ lệ điểm danh theo lớp
   async getAttendanceStats(classId) {
+    if (!mongoose.Types.ObjectId.isValid(classId)) {
+      return { total: 0, present: 0, absent: 0, late: 0, excused: 0, presentRate: 0 };
+    }
+
     const records = await Attendance.find({ classId });
     const total = records.length;
 

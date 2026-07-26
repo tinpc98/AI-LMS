@@ -1,9 +1,14 @@
+import mongoose from "mongoose";
 import Grade from "../models/grade.model.js";
 import classModel from "../models/class.model.js";
 
 class GradeService {
   // Tạo mới hoặc Cập nhật điểm số của học sinh theo cột điểm
   async upsertGrade({ studentId, classId, courseId, category, score, weight, feedback, aiFeedback, gradedBy }) {
+    if (!mongoose.Types.ObjectId.isValid(classId)) {
+      throw new Error("ID lớp học không hợp lệ!");
+    }
+
     const classExists = await classModel.findById(classId);
     if (!classExists) {
       throw new Error("Lớp học không tồn tại!");
@@ -29,6 +34,10 @@ class GradeService {
 
   // Lấy bảng điểm của cả lớp
   async getGradesByClass(classId) {
+    if (!mongoose.Types.ObjectId.isValid(classId)) {
+      return [];
+    }
+
     return await Grade.find({ classId })
       .populate("studentId", "fullName email avatar")
       .populate("gradedBy", "fullName email")
@@ -37,8 +46,14 @@ class GradeService {
 
   // Lấy bảng điểm cá nhân học sinh
   async getGradesByStudent(studentId, classId) {
+    if (!mongoose.Types.ObjectId.isValid(studentId)) {
+      return [];
+    }
+
     const query = { studentId };
-    if (classId) query.classId = classId;
+    if (classId && mongoose.Types.ObjectId.isValid(classId)) {
+      query.classId = classId;
+    }
 
     return await Grade.find(query)
       .populate("classId", "className classCode")
@@ -48,6 +63,10 @@ class GradeService {
 
   // Tính điểm trung bình môn (GPA) theo tỷ trọng gradingWeight của lớp
   async calculateStudentGPA(studentId, classId) {
+    if (!mongoose.Types.ObjectId.isValid(classId)) {
+      throw new Error("Lớp học không tồn tại!");
+    }
+
     const targetClass = await classModel.findById(classId);
     if (!targetClass) {
       throw new Error("Lớp học không tồn tại!");

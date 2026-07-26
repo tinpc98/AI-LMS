@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import examAttemptService from "../services/examAttempt.service.js";
 import ExamAttempt from "../models/examAttempt.model.js";
 import Question from "../models/question.model.js";
@@ -9,15 +10,12 @@ export const startExam = async (req, res) => {
   try {
     const { examId, studentId: bodyStudentId } = req.body;
 
-    // 2. TỐI ƯU CÁCH LẤY ID HỌC SINH (Bao vây mọi trường hợp)
-    // Đề phòng trường hợp Token dùng req.user._id thay vì req.user.id
     const studentId = req.user?.id || req.user?._id || bodyStudentId;
 
-    // Kiểm tra đầu vào (Tôi đã sửa câu báo lỗi để hiển thị thẳng lên màn hình cái gì đang bị thiếu)
-    if (!examId || !studentId) {
+    if (!examId || !studentId || !mongoose.Types.ObjectId.isValid(examId) || !mongoose.Types.ObjectId.isValid(studentId)) {
       return res.status(400).json({
         success: false,
-        message: `Lỗi hệ thống: ID kỳ thi (${examId || "Thiếu"}) - ID học sinh (${studentId || "Thiếu"})!`,
+        message: `Lỗi hệ thống: ID kỳ thi (${examId || "Thiếu"}) - ID học sinh (${studentId || "Thiếu"}) không hợp lệ!`,
       });
     }
 
@@ -78,18 +76,19 @@ export const startExam = async (req, res) => {
 
 // =======================================================
 // 2. API CHO HỌC SINH: Lấy chi tiết đề thi ĐANG LÀM
-// (Sử dụng Deep Populate để kéo nội dung câu hỏi)
 // =======================================================
 export const getExamAttemptDetail = async (req, res) => {
   try {
     const attemptId = req.params.id;
 
-    // LẤY PHIÊN LÀM BÀI -> MÓC NỐI ĐỀ THI -> MÓC NỐI TIẾP CÂU HỎI
+    if (!attemptId || !mongoose.Types.ObjectId.isValid(attemptId)) {
+      return res.status(400).json({ success: false, message: "ID bài thi không hợp lệ!" });
+    }
+
     const attempt = await ExamAttempt.findById(attemptId).populate({
       path: "examId",
       populate: {
         path: "questions.questionId",
-        // BẢO MẬT: Giấu tuyệt đối đáp án đúng (correctAnswer) không cho Frontend biết
         select: "-correctAnswer",
       },
     });
@@ -109,10 +108,9 @@ export const getExamAttemptDetail = async (req, res) => {
     }
 
     // Lắp ráp dữ liệu thành mảng questions phẳng để Frontend dễ render
-    const formattedQuestions = exam.questions
+    const formattedQuestions = (exam.questions || [])
       .map((q) => {
         const details = q.questionId;
-        // Kiểm tra tránh trường hợp câu hỏi gốc trong DB đã bị xóa
         if (!details) return null;
 
         return {
@@ -123,10 +121,9 @@ export const getExamAttemptDetail = async (req, res) => {
           points: q.points,
         };
       })
-      .filter((q) => q !== null); // Lọc bỏ các câu hỏi bị null
+      .filter((q) => q !== null);
 
-    // Trả về cho Frontend
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       data: {
         _id: attempt._id,
@@ -141,7 +138,7 @@ export const getExamAttemptDetail = async (req, res) => {
     });
   } catch (error) {
     console.error("Lỗi lấy chi tiết bài thi:", error);
-    res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: error.message });
   }
 };
 
@@ -153,6 +150,10 @@ export const submitExam = async (req, res) => {
     const attemptId = req.params.id;
     const { answers } = req.body;
 
+    if (!attemptId || !mongoose.Types.ObjectId.isValid(attemptId)) {
+      return res.status(400).json({ message: "ID bài thi không hợp lệ!" });
+    }
+
     if (!answers || !Array.isArray(answers)) {
       return res.status(400).json({ message: "Dữ liệu bài làm không hợp lệ!" });
     }
@@ -162,7 +163,7 @@ export const submitExam = async (req, res) => {
       answers,
     );
 
-    res.status(200).json({
+    return res.status(200).json({
       message:
         gradedAttempt.status === "GRADED"
           ? "Nộp bài thành công! Hệ thống đã chấm xong trắc nghiệm."
@@ -170,17 +171,20 @@ export const submitExam = async (req, res) => {
       data: gradedAttempt,
     });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    return res.status(500).json({ message: error.message });
   }
 };
 
 // =======================================================
 // 4. API CHO GIÁO VIÊN: Lấy chi tiết để chấm tự luận/xem lại
 // =======================================================
-// TRONG CONTROLLER GET_ATTEMPT_FOR_REVIEW CỦA BACKEND:
 export const getAttemptForReview = async (req, res) => {
   try {
     const attemptId = req.params.id;
+
+    if (!attemptId || !mongoose.Types.ObjectId.isValid(attemptId)) {
+      return res.status(400).json({ success: false, message: "ID bài thi không hợp lệ!" });
+    }
 
     const attempt = await ExamAttempt.findById(attemptId)
       .populate("studentId", "fullName email studentCode avatar")
@@ -191,7 +195,8 @@ export const getAttemptForReview = async (req, res) => {
       return res.status(404).json({ message: "Không tìm thấy bài làm!" });
     }
 
-    const questionIds = attempt.answers.map((ans) => ans.questionId);
+    const validAnswers = (attempt.answers || []).filter((ans) => ans && ans.questionId);
+    const questionIds = validAnswers.map((ans) => ans.questionId);
     const questions = await Question.find({ _id: { $in: questionIds } }).lean();
     const questionMap = new Map(questions.map((q) => [q._id.toString(), q]));
 
@@ -205,10 +210,11 @@ export const getAttemptForReview = async (req, res) => {
 
       cheatWarnings: attempt.cheatWarnings || 0,
 
-      answersDetail: attempt.answers.map((ans) => {
-        const qInfo = questionMap.get(ans.questionId.toString());
+      answersDetail: validAnswers.map((ans) => {
+        const qIdStr = ans.questionId.toString();
+        const qInfo = questionMap.get(qIdStr);
         const examQuestionConfig = attempt.examId?.questions?.find(
-          (eq) => eq.questionId.toString() === ans.questionId.toString(),
+          (eq) => eq.questionId && eq.questionId.toString() === qIdStr,
         );
         const assignedPoints = examQuestionConfig
           ? examQuestionConfig.points
@@ -242,6 +248,10 @@ export const gradeEssaySubmit = async (req, res) => {
     const attemptId = req.params.id;
     const { essayGrades } = req.body;
 
+    if (!attemptId || !mongoose.Types.ObjectId.isValid(attemptId)) {
+      return res.status(400).json({ message: "ID bài thi không hợp lệ!" });
+    }
+
     if (!essayGrades || !Array.isArray(essayGrades)) {
       return res
         .status(400)
@@ -253,12 +263,12 @@ export const gradeEssaySubmit = async (req, res) => {
       essayGrades,
     );
 
-    res.status(200).json({
+    return res.status(200).json({
       message: "Chấm điểm tự luận thành công! Đã chốt điểm bài thi.",
       data: updatedAttempt,
     });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    return res.status(500).json({ message: error.message });
   }
 };
 
@@ -269,21 +279,26 @@ export const getAttemptsByExam = async (req, res) => {
   try {
     const { examId } = req.params;
 
-    // Tìm tất cả các bản ghi làm bài của kỳ thi này
-    // Populate 'studentId' để lấy thông tin user (Họ tên, mã sinh viên, avatar...)
+    if (!examId || !mongoose.Types.ObjectId.isValid(examId)) {
+      return res.status(200).json({
+        success: true,
+        message: "Lấy danh sách bài thi thành công",
+        data: [],
+        stats: { total: 0, graded: 0, pending: 0 },
+      });
+    }
+
     const attempts = await ExamAttempt.find({ examId: examId })
       .populate({
         path: "studentId",
-        select: "fullName studentCode avatar", // Lọc ra các trường cần thiết để hiển thị trên Card
+        select: "fullName studentCode avatar",
       })
-      .sort({ createdAt: -1 }); // Sắp xếp bài nộp mới nhất lên đầu
+      .sort({ createdAt: -1 });
 
-    // Tính toán một số thống kê nhanh (tùy chọn để gửi lên FE)
     const stats = {
       total: attempts.length,
       graded: attempts.filter((a) => a.status === "GRADED").length,
       pending: attempts.filter((a) => a.status === "SUBMITTED").length,
-      // Thêm logic đếm số bài bị cảnh báo gian lận nếu schema của bạn có lưu
     };
 
     return res.status(200).json({
@@ -304,10 +319,11 @@ export const getAttemptsByExam = async (req, res) => {
 export const recordCheatWarning = async (req, res) => {
   try {
     const attemptId = req.params.id;
-    const { reason } = req.body;
-    console.log(attemptId);
 
-    // Tìm phiên làm bài đang mở của học sinh
+    if (!attemptId || !mongoose.Types.ObjectId.isValid(attemptId)) {
+      return res.status(400).json({ success: false, message: "ID phiên làm bài không hợp lệ!" });
+    }
+
     const attempt = await ExamAttempt.findById(attemptId);
     if (!attempt) {
       return res
@@ -315,7 +331,6 @@ export const recordCheatWarning = async (req, res) => {
         .json({ success: false, message: "Không tìm thấy phiên làm bài!" });
     }
 
-    // Tăng số lần cảnh báo lên 1 (Dùng $inc hoặc toán tử cộng trực tiếp)
     attempt.cheatWarnings = (attempt.cheatWarnings || 0) + 1;
     await attempt.save();
 

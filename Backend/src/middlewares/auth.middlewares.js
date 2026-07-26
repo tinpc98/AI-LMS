@@ -1,9 +1,9 @@
-// File: src/middlewares/auth.middleware.js
+// File: src/middlewares/auth.middlewares.js
 import jwt from "jsonwebtoken";
 
-//kiểm tra xem đã đăng nhập chưa
+// Kiểm tra xem người dùng đã đăng nhập hay chưa
 export const verifyUser = (req, res, next) => {
-  const { authorization } = req.headers; // Lấy token từ header gửi lên
+  const { authorization } = req.headers;
 
   if (!authorization) {
     return res.status(401).json({ message: "Bạn chưa đăng nhập hệ thống!" });
@@ -11,49 +11,57 @@ export const verifyUser = (req, res, next) => {
 
   try {
     const token = authorization.split(" ")[1]; // Tách chuỗi "Bearer <token>"
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || "123456"); // Xác thực chìa khóa bí mật
+    if (!token) {
+      return res.status(401).json({ message: "Định dạng token không hợp lệ!" });
+    }
 
-    req.user = decoded; // Đính kèm thông tin user đã giải mã vào req để dùng ở Controller sau này
-    next(); // Hợp lệ, cho đi tiếp qua cổng an ninh!
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || "123456");
+
+    // Chuẩn hóa đính kèm cả id và _id để tránh mismatch giữa các controllers
+    const userId = decoded.id || decoded._id;
+    req.user = {
+      ...decoded,
+      id: userId,
+      _id: userId,
+    };
+
+    next();
   } catch (error) {
     return res
-      .status(403)
+      .status(401)
       .json({ message: "Token không hợp lệ hoặc đã hết hạn!" });
   }
 };
 
-//kiểm tra xem có phải giáo viên/admin hay không
+// Kiểm tra xem có phải Giáo viên hoặc Admin hay không
 export const isTeacher = (req, res, next) => {
   if (!req.user) {
     return res
-      .status(500)
-      .json({ message: "Lỗi hệ thống, không tìm thấy dữ liệu người dùng" });
+      .status(401)
+      .json({ message: "Bạn chưa đăng nhập hoặc không có thông tin xác thực!" });
   }
-  const userRole = req.user.role?.toLowerCase();
+  const userRole = (req.user.role || "").toLowerCase();
   const allowedRoles = ["teacher", "admin"];
   if (!allowedRoles.includes(userRole)) {
     return res.status(403).json({
-      message:
-        "Quyền truy cập bị từ chối. Chỉ giáo viên mới có thể thực hiện chức năng này",
+      message: "Quyền truy cập bị từ chối. Chỉ Giáo viên hoặc Admin mới được phép thực hiện chức năng này",
     });
   }
   next();
 };
 
-//kiểm tra xem có phải admin hay không
+// Kiểm tra xem có phải Admin hay không
 export const isAdmin = (req, res, next) => {
   if (!req.user) {
     return res
-      .status(500)
-      .json({ message: "Lỗi hệ thống, không tìm thấy dữ liệu người dùng" });
+      .status(401)
+      .json({ message: "Bạn chưa đăng nhập hoặc không có thông tin xác thực!" });
   }
-  const userRole = req.user.role?.toLowerCase();
+  const userRole = (req.user.role || "").toLowerCase();
   if (userRole !== "admin") {
     return res.status(403).json({
-      message:
-        "Quyền truy cập bị từ chối. Chỉ Quản trị viên (Admin) mới có quyền quản lý lớp học",
+      message: "Quyền truy cập bị từ chối. Chỉ Quản trị viên (Admin) mới có quyền quản lý hệ thống",
     });
   }
   next();
 };
-

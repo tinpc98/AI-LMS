@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import gradeService from "../services/grade.service.js";
 import { sendSuccess, sendError } from "../utils/response.js";
 
@@ -8,7 +9,11 @@ export const upsertGrade = async (req, res) => {
       return sendError(res, "Vui lòng truyền đầy đủ studentId, classId, category và score", 400);
     }
 
-    const gradedBy = req.user.id;
+    if (!mongoose.Types.ObjectId.isValid(studentId) || !mongoose.Types.ObjectId.isValid(classId)) {
+      return sendError(res, "ID học sinh hoặc ID lớp học không hợp lệ", 400);
+    }
+
+    const gradedBy = req.user.id || req.user._id;
     const result = await gradeService.upsertGrade({
       studentId,
       classId,
@@ -30,6 +35,10 @@ export const upsertGrade = async (req, res) => {
 export const getGradesByClass = async (req, res) => {
   try {
     const { classId } = req.params;
+    if (!classId || !mongoose.Types.ObjectId.isValid(classId)) {
+      return sendError(res, "ID lớp học không hợp lệ!", 400);
+    }
+
     const result = await gradeService.getGradesByClass(classId);
     return sendSuccess(res, "Lấy bảng điểm của lớp thành công", result);
   } catch (error) {
@@ -39,10 +48,22 @@ export const getGradesByClass = async (req, res) => {
 
 export const getGradesByStudent = async (req, res) => {
   try {
-    const { studentId } = req.params;
+    let { studentId } = req.params;
     const { classId } = req.query;
 
-    if (req.user.role === "Student" && req.user.id !== studentId) {
+    const loggedUserId = (req.user?.id || req.user?._id || "").toString();
+    const userRole = (req.user?.role || "").toLowerCase();
+
+    // Hỗ trợ alias "me" hoặc "my" hoặc nếu không truyền studentId
+    if (!studentId || studentId === "me" || studentId === "my") {
+      studentId = loggedUserId;
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(studentId)) {
+      return sendError(res, "ID học sinh không hợp lệ!", 400);
+    }
+
+    if (userRole === "student" && loggedUserId !== studentId.toString()) {
       return sendError(res, "Bạn không có quyền xem bảng điểm của học sinh khác", 403);
     }
 
@@ -55,10 +76,20 @@ export const getGradesByStudent = async (req, res) => {
 
 export const getStudentGPA = async (req, res) => {
   try {
-    const { classId, studentId } = req.params;
-    const targetStudentId = studentId || req.user.id;
+    const { classId, studentId: paramStudentId } = req.params;
+    const loggedUserId = (req.user?.id || req.user?._id || "").toString();
+    const userRole = (req.user?.role || "").toLowerCase();
 
-    if (req.user.role === "Student" && req.user.id !== targetStudentId) {
+    let targetStudentId = paramStudentId;
+    if (!targetStudentId || targetStudentId === "me" || targetStudentId === "my") {
+      targetStudentId = loggedUserId;
+    }
+
+    if (!classId || !mongoose.Types.ObjectId.isValid(classId) || !mongoose.Types.ObjectId.isValid(targetStudentId)) {
+      return sendError(res, "ID lớp học hoặc ID học sinh không hợp lệ!", 400);
+    }
+
+    if (userRole === "student" && loggedUserId !== targetStudentId.toString()) {
       return sendError(res, "Bạn không có quyền xem điểm tổng kết của học sinh khác", 403);
     }
 

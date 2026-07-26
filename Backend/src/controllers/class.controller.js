@@ -1,4 +1,5 @@
 import crypto from "crypto";
+import mongoose from "mongoose";
 import classModel from "../models/class.model.js";
 import Course from "../models/course.model.js";
 import User from "../models/user.models.js";
@@ -6,8 +7,8 @@ import User from "../models/user.models.js";
 // Lấy danh sách lớp học (Hỗ trợ phân trang, tìm kiếm và lọc theo vai trò)
 export const ClassList = async (req, res) => {
   try {
-    const userId = req.user.id || req.user._id;
-    const userRole = req.user.role ? req.user.role.toLowerCase() : "";
+    const userId = (req.user?.id || req.user?._id || "").toString();
+    const userRole = (req.user?.role || "").toLowerCase();
     const { search, courseId, status, page = 1, limit = 10 } = req.query;
 
     const filterConditions = [];
@@ -32,7 +33,7 @@ export const ClassList = async (req, res) => {
     }
 
     // 3. Lọc theo Khóa học liên kết
-    if (courseId) {
+    if (courseId && mongoose.Types.ObjectId.isValid(courseId)) {
       filterConditions.push({ courseId });
     }
 
@@ -91,6 +92,11 @@ export const ClassList = async (req, res) => {
 // Lấy chi tiết 1 lớp học theo ID
 export const ClassListById = async (req, res) => {
   const { id } = req.params;
+
+  if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+    return res.status(400).json({ message: "ID lớp học không hợp lệ!" });
+  }
+
   try {
     const classDetail = await classModel
       .findById(id)
@@ -146,9 +152,17 @@ export const AddNewClass = async (req, res) => {
       return res.status(400).json({ message: "Vui lòng nhập tên lớp và khóa học" });
     }
 
+    if (!mongoose.Types.ObjectId.isValid(courseId)) {
+      return res.status(400).json({ message: "ID khóa học không hợp lệ!" });
+    }
+
     const courseExists = await Course.findById(courseId);
     if (!courseExists) {
       return res.status(404).json({ message: "Khóa học không tồn tại" });
+    }
+
+    if (teacherId && !mongoose.Types.ObjectId.isValid(teacherId)) {
+      return res.status(400).json({ message: "ID giáo viên không hợp lệ!" });
     }
 
     const meetingRoomId = `room_${crypto.randomBytes(4).toString("hex")}`;
@@ -179,7 +193,7 @@ export const AddNewClass = async (req, res) => {
     };
 
     const savedClass = await new classModel(newClassData).save();
-    return res.status(200).json({ message: "Tạo lớp học thành công", data: savedClass });
+    return res.status(201).json({ message: "Tạo lớp học thành công", data: savedClass });
   } catch (error) {
     console.error("[ClassController] Create Error:", error);
     return res.status(500).json({ message: error.message || "Lỗi khi tạo lớp học" });
@@ -190,6 +204,11 @@ export const AddNewClass = async (req, res) => {
 // Cập nhật lớp học (Dành cho Admin)
 export const UpdateClass = async (req, res) => {
   const { id } = req.params;
+
+  if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+    return res.status(400).json({ message: "ID lớp học không hợp lệ!" });
+  }
+
   try {
     const updatedClass = await classModel.findByIdAndUpdate(id, req.body, {
       returnDocument: "after",
@@ -215,9 +234,13 @@ export const AssignTeacher = async (req, res) => {
   const { id } = req.params;
   const { teacherId } = req.body;
 
+  if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+    return res.status(400).json({ message: "ID lớp học không hợp lệ!" });
+  }
+
   try {
-    if (!teacherId) {
-      return res.status(400).json({ message: "ID giáo viên là bắt buộc" });
+    if (!teacherId || !mongoose.Types.ObjectId.isValid(teacherId)) {
+      return res.status(400).json({ message: "ID giáo viên không hợp lệ" });
     }
 
     const teacher = await User.findById(teacherId);
@@ -252,9 +275,13 @@ export const AssignStudent = async (req, res) => {
   const { id } = req.params;
   const { studentId, notes } = req.body;
 
+  if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+    return res.status(400).json({ message: "ID lớp học không hợp lệ!" });
+  }
+
   try {
-    if (!studentId) {
-      return res.status(400).json({ message: "ID học sinh là bắt buộc" });
+    if (!studentId || !mongoose.Types.ObjectId.isValid(studentId)) {
+      return res.status(400).json({ message: "ID học sinh không hợp lệ" });
     }
 
     const student = await User.findById(studentId);
@@ -297,6 +324,10 @@ export const AssignStudent = async (req, res) => {
 export const RemoveStudent = async (req, res) => {
   const { id, studentId } = req.params;
 
+  if (!id || !mongoose.Types.ObjectId.isValid(id) || !studentId || !mongoose.Types.ObjectId.isValid(studentId)) {
+    return res.status(400).json({ message: "ID lớp học hoặc ID học sinh không hợp lệ!" });
+  }
+
   try {
     const targetClass = await classModel.findById(id);
     if (!targetClass) {
@@ -321,6 +352,10 @@ export const RemoveStudent = async (req, res) => {
 export const AddResource = async (req, res) => {
   const { id } = req.params;
   const { title, description, type, url } = req.body;
+
+  if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+    return res.status(400).json({ message: "ID lớp học không hợp lệ!" });
+  }
 
   try {
     if (!title || !url) {
@@ -360,6 +395,10 @@ export const AddResource = async (req, res) => {
 export const RemoveResource = async (req, res) => {
   const { id, resourceId } = req.params;
 
+  if (!id || !mongoose.Types.ObjectId.isValid(id) || !resourceId || !mongoose.Types.ObjectId.isValid(resourceId)) {
+    return res.status(400).json({ message: "ID lớp học hoặc ID tài nguyên không hợp lệ!" });
+  }
+
   try {
     const targetClass = await classModel.findById(id);
     if (!targetClass) {
@@ -383,6 +422,11 @@ export const RemoveResource = async (req, res) => {
 // Xóa lớp học (Dành cho Admin)
 export const DeleteClass = async (req, res) => {
   const { id } = req.params;
+
+  if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+    return res.status(400).json({ message: "ID lớp học không hợp lệ!" });
+  }
+
   try {
     const deleteClass = await classModel.findByIdAndDelete(id);
 
