@@ -26,7 +26,7 @@ export const TeacherLiveSessionWidget: React.FC<TeacherLiveSessionWidgetProps> =
           backgroundColor: "#fff1f0",
           boxShadow: "0 4px 12px rgba(255, 77, 79, 0.15)",
         }}
-        bodyStyle={{ padding: 16 }}
+        styles={{ body: { padding: 16 } }}
       >
         {activeSessions.map((session, index) => (
           <div

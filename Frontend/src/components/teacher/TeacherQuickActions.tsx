@@ -42,7 +42,7 @@ export const TeacherQuickActions: React.FC = React.memo(() => {
         </Title>
       }
       style={{ borderRadius: 12, marginBottom: 24, boxShadow: "0 2px 8px rgba(0,0,0,0.06)" }}
-      bodyStyle={{ padding: 20 }}
+      styles={{ body: { padding: 20 } }}
     >
       <Row gutter={[16, 16]}>
         {actions.map((act, index) => (

@@ -119,7 +119,7 @@ export const TeacherStudentTableTab: React.FC<TeacherStudentTableTabProps> = Rea
         </div>
       }
       style={{ borderRadius: 12 }}
-      bodyStyle={{ padding: 0 }}
+      styles={{ body: { padding: 0 } }}
     >
       <Table
         columns={columns}

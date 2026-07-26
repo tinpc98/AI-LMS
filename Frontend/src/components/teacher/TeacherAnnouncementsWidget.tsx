@@ -47,7 +47,7 @@ export const TeacherAnnouncementsWidget: React.FC<TeacherAnnouncementsWidgetProp
           </Space>
         }
         style={{ borderRadius: 12, marginBottom: 24, boxShadow: "0 2px 8px rgba(0,0,0,0.06)" }}
-        bodyStyle={{ padding: "12px 20px" }}
+        styles={{ body: { padding: "12px 20px" } }}
       >
         {announcements.length > 0 ? (
           <List

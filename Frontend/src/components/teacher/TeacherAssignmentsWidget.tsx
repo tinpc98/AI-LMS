@@ -26,7 +26,7 @@ export const TeacherAssignmentsWidget: React.FC<AssignmentWidgetProps> = React.m
           </Space>
         }
         style={{ borderRadius: 12, marginBottom: 24, boxShadow: "0 2px 8px rgba(0,0,0,0.06)" }}
-        bodyStyle={{ padding: "12px 20px" }}
+        styles={{ body: { padding: "12px 20px" } }}
       >
         {assignments.length > 0 ? (
           <List
