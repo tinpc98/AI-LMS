@@ -25,6 +25,7 @@ import TeacherInformationCard from "../../components/student/classDetail/Teacher
 import NextSessionCard from "../../components/student/classDetail/NextSessionCard";
 import LearningProgressCard from "../../components/student/classDetail/LearningProgressCard";
 import LearningMaterialsTab from "../../components/student/classDetail/materials/LearningMaterialsTab";
+import AssignmentsTab from "../../components/student/classDetail/assignments/AssignmentsTab";
 
 
 const MOCK_RANKINGS = [
@@ -589,70 +590,13 @@ export default function ClassDetail() {
               </div>
             )}
 
-            {/* TAB 2: BÀI TẬP — KẾT HỢP LAYOUT MOCKUP ĐẸP MẮT */}
+            {/* TAB 3: BÀI TẬP CỦA TÔI (ASSIGNMENTS - SPRINT 3.3) */}
             {activeTab === "assignments" && (
-              <div className="space-y-6">
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <div className="p-4 bg-primary-container/10 border border-primary/20 rounded-xl">
-                    <span className="text-xs uppercase font-bold text-primary">Chưa nộp</span>
-                    <div className="text-2xl font-bold text-primary mt-1">
-                      {String(assignments.length - submittedAssignmentIds.length).padStart(2, "0")}
-                    </div>
-                  </div>
-                  <div className="p-4 bg-secondary-container/20 border border-secondary/20 rounded-xl">
-                    <span className="text-xs uppercase font-bold text-secondary">Đã nộp</span>
-                    <div className="text-2xl font-bold text-secondary mt-1">
-                      {String(submittedAssignmentIds.length).padStart(2, "0")}
-                    </div>
-                  </div>
-                  <div className="p-4 bg-surface-container-high rounded-xl">
-                    <span className="text-xs uppercase font-bold text-on-surface-variant">Điểm trung bình</span>
-                    <div className="text-2xl font-bold text-on-surface mt-1">9.0</div>
-                  </div>
-                </div>
-
-                <div className="bg-white border border-outline-variant rounded-xl divide-y divide-outline-variant">
-                  {assignments.map((item) => (
-                    <div key={item._id} className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                      <div className="min-w-0">
-                        <h4 className="font-semibold text-sm sm:text-base">{item.title}</h4>
-                        {item.description && <p className="text-xs text-secondary mt-1">{item.description}</p>}
-                        <p className="text-xs text-secondary mt-0.5">
-                          Hạn nộp: {new Date(item.deadline).toLocaleString("vi-VN")}
-                        </p>
-                      </div>
-                      <div className="flex items-center space-x-4 self-end sm:self-auto">
-                        {submittedAssignmentIds.includes(item._id) ? (
-                          <>
-                            <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-success-container text-on-success-container">
-                              Đã nộp
-                            </span>
-                            <button
-                              onClick={() => handleCancelSubmission(item._id)}
-                              className="rounded-lg border border-outline-variant px-3 py-1.5 text-xs font-semibold text-on-surface hover:bg-surface-container-low"
-                            >
-                              Hủy nộp bài
-                            </button>
-                          </>
-                        ) : (
-                          <>
-                            <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-error-container text-on-error-container">
-                              Chưa nộp
-                            </span>
-                            <button
-                              onClick={() => openSubmitModal(item)}
-                              className="flex items-center space-x-1 bg-primary text-on-primary px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-primary/90"
-                            >
-                              <span className="material-symbols-outlined text-base">upload</span>
-                              <span>Nộp bài</span>
-                            </button>
-                          </>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
+              <AssignmentsTab
+                assignments={assignments}
+                submittedIds={submittedAssignmentIds}
+                loading={isLoading}
+              />
             )}
             {/* TAB 3: THI TRỰC TUYẾN - ĐÃ FIX THEO YÊU CẦU MỚI */}
             {activeTab === "exams" && (
