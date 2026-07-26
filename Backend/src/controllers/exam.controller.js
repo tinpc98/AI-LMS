@@ -1,5 +1,6 @@
 import examService from "../services/exam.service.js";
 import Exam from "../models/exam.model.js";
+import classModel from "../models/class.model.js";
 
 // 1. Tạo đề thi tự động bằng AI / Ma trận câu hỏi
 export const autoGenerateExam = async (req, res) => {
@@ -108,7 +109,17 @@ export const deleteExam = async (req, res) => {
       return res.status(404).json({ message: "Đề thi không tồn tại!" });
     }
 
-    if (req.user.role !== "Admin" && exam.createdBy?.toString() !== req.user.id) {
+    const userId = (req.user._id || req.user.id || "").toString();
+    const userRole = (req.user.role || "").toLowerCase();
+
+    // Lấy thông tin lớp học để kiểm tra xem Giáo viên hiện tại có phải giảng viên phụ trách lớp không
+    const targetClass = await classModel.findById(exam.classId);
+    const classTeacherId = (targetClass?.teacherId?._id || targetClass?.teacherId || "").toString();
+
+    const isCreator = exam.createdBy && exam.createdBy.toString() === userId;
+    const isClassTeacher = classTeacherId && classTeacherId === userId;
+
+    if (userRole !== "admin" && !isCreator && !isClassTeacher) {
       return res.status(403).json({ message: "Bạn không có quyền xóa đề thi này!" });
     }
 

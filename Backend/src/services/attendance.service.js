@@ -1,9 +1,14 @@
+import mongoose from "mongoose";
 import Attendance from "../models/attendance.model.js";
 import classModel from "../models/class.model.js";
 
 class AttendanceService {
   // Điểm danh hàng loạt hoặc đơn lẻ cho một lớp học vào 1 ngày
   async markAttendance({ classId, date, records, teacherId }) {
+    if (!mongoose.Types.ObjectId.isValid(classId)) {
+      throw new Error("ID lớp học không hợp lệ!");
+    }
+
     const classExists = await classModel.findById(classId);
     if (!classExists) {
       throw new Error("Lớp học không tồn tại!");
@@ -12,7 +17,15 @@ class AttendanceService {
     const attendanceDate = new Date(date);
     attendanceDate.setHours(0, 0, 0, 0);
 
-    const operations = records.map((record) => ({
+    const validRecords = records.filter(
+      (record) => record && record.studentId && mongoose.Types.ObjectId.isValid(record.studentId)
+    );
+
+    if (validRecords.length === 0) {
+      throw new Error("Danh sách điểm danh không chứa ID học sinh hợp lệ!");
+    }
+
+    const operations = validRecords.map((record) => ({
       updateOne: {
         filter: {
           classId,

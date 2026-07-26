@@ -275,7 +275,7 @@ export const RemoveStudent = async (req, res) => {
 };
 
 //=====================================================================================
-// Thêm tài nguyên bài học (Dành cho Teacher/Admin)
+// Thêm tài nguyên bài học vào lớp học (Dành cho Giáo viên / Admin)
 export const AddResource = async (req, res) => {
   const { id } = req.params;
   const { title, description, type, url } = req.body;
@@ -290,12 +290,17 @@ export const AddResource = async (req, res) => {
       return res.status(404).json({ message: "Lớp học không tồn tại" });
     }
 
+    const validTypes = ["Document", "Video", "Link", "Other"];
+    const resourceType = validTypes.includes(type) ? type : "Document";
+
+    const userId = req.user._id || req.user.id;
+
     targetClass.resources.push({
-      title,
-      description: description || "",
-      type: type || "Document",
-      url,
-      uploadedBy: req.user.id,
+      title: title.trim(),
+      description: description?.trim() || "",
+      type: resourceType,
+      url: url.trim(),
+      uploadedBy: userId,
       uploadedAt: new Date(),
     });
 
@@ -303,7 +308,7 @@ export const AddResource = async (req, res) => {
 
     return res.status(200).json({ message: "Thêm tài nguyên thành công", data: targetClass });
   } catch (error) {
-    return res.status(500).json({ message: "Lỗi khi thêm tài nguyên bài học" });
+    return res.status(400).json({ message: error.message || "Lỗi khi thêm tài nguyên bài học" });
   }
 };
 
