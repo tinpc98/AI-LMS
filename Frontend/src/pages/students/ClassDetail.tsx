@@ -26,6 +26,7 @@ import NextSessionCard from "../../components/student/classDetail/NextSessionCar
 import LearningProgressCard from "../../components/student/classDetail/LearningProgressCard";
 import LearningMaterialsTab from "../../components/student/classDetail/materials/LearningMaterialsTab";
 import AssignmentsTab from "../../components/student/classDetail/assignments/AssignmentsTab";
+import ExamsTab from "../../components/student/classDetail/exams/ExamsTab";
 
 
 const MOCK_RANKINGS = [
@@ -598,67 +599,12 @@ export default function ClassDetail() {
                 loading={isLoading}
               />
             )}
-            {/* TAB 3: THI TRỰC TUYẾN - ĐÃ FIX THEO YÊU CẦU MỚI */}
+            {/* TAB 4: THI TRỰC TUYẾN (ONLINE EXAMS - SPRINT 3.4) */}
             {activeTab === "exams" && (
-              <div className="max-w-2xl mx-auto py-4">
-                {!visibleExam ? (
-                  /* YÊU CẦU 1: UI CỨNG KHÔNG CÓ BÀI KIỂM TRA NÀO */
-                  <div className="bg-white border border-outline-variant rounded-2xl p-12 text-center shadow-lg">
-                    <span className="material-symbols-outlined text-6xl text-gray-300 mb-4">assignment_late</span>
-                    <h3 className="text-xl font-bold text-gray-700">Hiện tại chưa có bài kiểm tra nào cả</h3>
-                    <p className="text-sm text-gray-400 mt-2">
-                      Các đề thi của lớp học sẽ hiển thị tại đây 1 tiếng trước giờ thi bắt đầu.
-                    </p>
-                  </div>
-                ) : (
-                  /* YÊU CẦU 2: HIỂN THỊ ĐỀ THI ĐÁP ỨNG THỜI GIAN TRƯỚC 1 TIẾNG */
-                  <div className="bg-white border border-outline-variant rounded-2xl overflow-hidden shadow-lg">
-                    <div className="h-2 ai-progress-gradient"></div>
-                    <div className="p-6 sm:p-8">
-                      <div className="flex flex-col sm:flex-row justify-between items-start gap-4 mb-6">
-                        <div>
-                          <span className="inline-block px-3 py-1 bg-error-container text-on-error-container rounded-full text-xs font-bold mb-3 animate-pulse">
-                            {new Date(visibleExam.startTime).getTime() > new Date().getTime()
-                              ? "Sắp diễn ra"
-                              : "Đang diễn ra"}
-                          </span>
-                          <h3 className="text-xl font-bold text-on-surface">{visibleExam.title}</h3>
-                          <p className="text-xs text-secondary mt-1">
-                            Thời gian làm bài: {visibleExam.duration || 45} phút | Hình thức:{" "}
-                            {visibleExam.format || "Trắc nghiệm & Tự luận"}
-                          </p>
-                        </div>
-                        <div className="sm:text-right flex sm:flex-col items-center sm:items-end gap-2">
-                          <div className="text-2xl font-mono font-bold text-primary">
-                            {new Date(visibleExam.startTime).toLocaleTimeString([], {
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            })}
-                          </div>
-                          <span className="text-[10px] text-secondary uppercase font-bold tracking-wider">
-                            Bắt đầu: {new Date(visibleExam.startTime).toLocaleDateString("vi-VN")}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="p-4 bg-surface-container-high rounded-xl mb-6 flex items-start space-x-3">
-                        <span className="material-symbols-outlined text-error mt-0.5">info</span>
-                        <p className="text-xs text-on-surface-variant">
-                          Lưu ý quan trọng: Hệ thống sẽ kích hoạt AI giám sát và tự động nộp bài khi hết giờ. Hãy kiểm
-                          tra kết nối mạng trước khi vào phòng.
-                        </p>
-                      </div>
-                      <div className="flex gap-4">
-                        <button
-                          onClick={() => handleJoinExamClick(visibleExam)}
-                          className="flex-1 bg-primary text-on-primary py-3 rounded-xl font-bold text-sm hover:shadow-lg transition-all"
-                        >
-                          Vào phòng thi
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
+              <ExamsTab
+                exams={exams}
+                loading={isLoading}
+              />
             )}
 
             {/* TAB 4: THẢO LUẬN LỚP HỌC */}
