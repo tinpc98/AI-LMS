@@ -138,6 +138,8 @@ examSetShareSchema.index({ examSetId: 1, sharedWithUserId: 1 }, { unique: true }
 examSetShareSchema.index({ ownerId: 1 });
 examSetShareSchema.index({ sharedWithUserId: 1 });
 examSetShareSchema.index({ status: 1 });
+examSetShareSchema.index({ sharedWithUserId: 1, status: 1, createdAt: -1 });
+examSetShareSchema.index({ sharedWithUserId: 1, permission: 1, status: 1 });
 
 const ExamSetShare = model("ExamSetShare", examSetShareSchema);
 export default ExamSetShare;

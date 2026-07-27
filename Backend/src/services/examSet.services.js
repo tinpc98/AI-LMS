@@ -536,6 +536,152 @@ export const listExamSetSharesService = async (examSetId, currentUserId, current
   };
 };
 
+export const listSharedExamSetsService = async (currentUserId, currentUserRole, options = {}) => {
+  if (!currentUserId || !Types.ObjectId.isValid(currentUserId)) {
+    const error = new Error("currentUserId không hợp lệ");
+    error.status = 400;
+    throw error;
+  }
+
+  const userRole = String(currentUserRole || "").toLowerCase();
+  if (!["teacher", "admin"].includes(userRole)) {
+    const error = new Error("Bạn không có quyền truy cập API này");
+    error.status = 403;
+    throw error;
+  }
+
+  const page = Math.max(1, Number(options.page) || 1);
+  const limit = Math.max(1, Math.min(100, Number(options.limit) || 10));
+  const skip = (page - 1) * limit;
+  const permission = options.permission;
+  const ownerId = options.ownerId;
+  const searchValue = String(options.search || "").trim();
+  const sortByMap = {
+    sharedAt: "createdAt",
+    createdAt: "createdAt",
+    updatedAt: "updatedAt",
+    expiresAt: "expiresAt",
+    permission: "permission",
+  };
+  const sortBy = sortByMap[options.sortBy] || "createdAt";
+  const sortOrder = String(options.sortOrder || "desc").toLowerCase() === "asc" ? 1 : -1;
+  const now = new Date();
+
+  const shareMatch = {
+    sharedWithUserId: new Types.ObjectId(currentUserId),
+    status: EXAM_SET_SHARE_STATUS.ACTIVE,
+    $or: [{ expiresAt: null }, { expiresAt: { $gt: now } }],
+  };
+
+  if (permission) {
+    shareMatch.permission = permission;
+  }
+
+  const examSetLookup = {
+    from: ExamSet.collection.name,
+    localField: "examSetId",
+    foreignField: "_id",
+    as: "examSet",
+  };
+
+  const ownerLookup = {
+    from: User.collection.name,
+    localField: "examSet.ownerId",
+    foreignField: "_id",
+    as: "owner",
+  };
+
+  const pipeline = [
+    { $match: shareMatch },
+    { $lookup: examSetLookup },
+    { $unwind: "$examSet" },
+    { $match: { "examSet.isDeleted": false } },
+  ];
+
+  if (ownerId) {
+    pipeline.push({ $match: { "examSet.ownerId": new Types.ObjectId(ownerId) } });
+  }
+
+  if (searchValue.length > 0) {
+    const regex = new RegExp(escapeRegex(searchValue), "i");
+    pipeline.push({
+      $match: {
+        $or: [
+          { "examSet.title": regex },
+          { "examSet.description": regex },
+          { "examSet.tags": regex },
+        ],
+      },
+    });
+  }
+
+  pipeline.push({ $lookup: ownerLookup }, { $unwind: "$owner" });
+  pipeline.push({ $sort: { [sortBy]: sortOrder } });
+
+  pipeline.push({
+    $facet: {
+      items: [
+        { $skip: skip },
+        { $limit: limit },
+        {
+          $project: {
+            share: {
+              _id: "$_id",
+              permission: "$permission",
+              status: "$status",
+              effectiveStatus: "ACTIVE",
+              expiresAt: "$expiresAt",
+              note: "$note",
+              sharedAt: "$createdAt",
+              createdAt: "$createdAt",
+              updatedAt: "$updatedAt",
+            },
+            examSet: {
+              _id: "$examSet._id",
+              title: "$examSet.title",
+              description: "$examSet.description",
+              tags: "$examSet.tags",
+              status: "$examSet.status",
+              metrics: {
+                totalQuestions: "$examSet.questionCount",
+                totalPoints: "$examSet.totalPoints",
+              },
+              versionNumber: "$examSet.versionNumber",
+              rootExamSetId: "$examSet.rootExamSetId",
+              isLatestVersion: "$examSet.isLatestVersion",
+              createdAt: "$examSet.createdAt",
+              updatedAt: "$examSet.updatedAt",
+            },
+            owner: {
+              _id: "$owner._id",
+              fullName: "$owner.fullName",
+              email: "$owner.email",
+              avatar: "$owner.avatar",
+            },
+          },
+        },
+      ],
+      totalCount: [{ $count: "count" }],
+    },
+  });
+
+  const result = await ExamSetShare.aggregate(pipeline);
+  const items = (result[0]?.items || []).map((item) => item);
+  const totalItems = result[0]?.totalCount?.[0]?.count || 0;
+
+  return {
+    items,
+    pagination: {
+      page,
+      limit,
+      totalItems,
+      totalPages: totalItems === 0 ? 0 : Math.ceil(totalItems / limit),
+      hasNextPage: page * limit < totalItems,
+      hasPreviousPage: page > 1,
+    },
+  };
+};
+
 /**
  * Get version history for an exam set lineage
  * @param {string} examSetId - source exam set id

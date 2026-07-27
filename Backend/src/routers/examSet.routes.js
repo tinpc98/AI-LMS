@@ -1,9 +1,9 @@
 // File: src/routers/examSet.routes.js
 import express from "express";
-import { createExamSet, getExamSets, getExamSetById, saveDraftExamSet, duplicateExamSet, createNewExamSetVersion, getExamSetVersions, restoreExamSetVersion, updateExamSet, updateExamSetTags, deleteExamSet, restoreExamSet, addQuestionToExamSet, updateQuestionInExamSet, deleteQuestionInExamSet, reorderQuestionsInExamSet, createExamSetShare, revokeExamSetShare, listExamSetShares } from "../controllers/examSet.controller.js";
+import { createExamSet, getExamSets, getExamSetById, saveDraftExamSet, duplicateExamSet, createNewExamSetVersion, getExamSetVersions, restoreExamSetVersion, updateExamSet, updateExamSetTags, deleteExamSet, restoreExamSet, addQuestionToExamSet, updateQuestionInExamSet, deleteQuestionInExamSet, reorderQuestionsInExamSet, createExamSetShare, revokeExamSetShare, listExamSetShares, listSharedExamSets } from "../controllers/examSet.controller.js";
 import { verifyUser } from "../middlewares/auth.middlewares.js";
 import { requireExamSetDraftAccess, requireExamSetEditAccess } from "../middlewares/examSetAccess.middlewares.js";
-import { examSetQuestionCreateValidation, examSetQuestionUpdateValidation, reorderQuestionsValidation, examSetTagsValidation, examSetShareCreateValidation, examSetShareRevokeValidation, examSetShareListValidation } from "../utils/validators.js";
+import { examSetQuestionCreateValidation, examSetQuestionUpdateValidation, reorderQuestionsValidation, examSetTagsValidation, examSetShareCreateValidation, examSetShareRevokeValidation, examSetShareListValidation, examSetSharedWithMeValidation } from "../utils/validators.js";
 import { examSetVersionsValidation } from "../utils/validators.js";
 
 const router = express.Router();
@@ -54,6 +54,12 @@ router.post("/:examSetId/shares", requireExamSetEditAccess, examSetShareCreateVa
  * Revoke a share (Owner or Admin only)
  */
 router.patch("/:examSetId/shares/:shareId/revoke", requireExamSetEditAccess, examSetShareRevokeValidation, revokeExamSetShare);
+
+/**
+ * GET /api/exam-sets/shared-with-me
+ * Get exam sets shared with current authenticated user
+ */
+router.get("/shared-with-me", examSetSharedWithMeValidation, listSharedExamSets);
 
 /**
  * GET /api/exam-sets/:examSetId/shares

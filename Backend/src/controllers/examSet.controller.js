@@ -1,5 +1,5 @@
 // File: src/controllers/examSet.controller.js
-import { createExamSetService, getExamSetsService, updateExamSetService, deleteExamSetService, restoreExamSetService, addQuestionToExamSetService, updateQuestionInExamSetService, deleteQuestionFromExamSetService, reorderQuestionsInExamSetService, getExamSetDetailService, saveDraftExamSetService, duplicateExamSetService, updateExamSetTagsService, createNewExamSetVersionService, getExamSetVersionsService, restoreExamSetVersionService, createExamSetShareService, revokeExamSetShareService, listExamSetSharesService } from "../services/examSet.services.js";
+import { createExamSetService, getExamSetsService, updateExamSetService, deleteExamSetService, restoreExamSetService, addQuestionToExamSetService, updateQuestionInExamSetService, deleteQuestionFromExamSetService, reorderQuestionsInExamSetService, getExamSetDetailService, saveDraftExamSetService, duplicateExamSetService, updateExamSetTagsService, createNewExamSetVersionService, getExamSetVersionsService, restoreExamSetVersionService, createExamSetShareService, revokeExamSetShareService, listExamSetSharesService, listSharedExamSetsService } from "../services/examSet.services.js";
 import { Types } from "mongoose";
 
 /**
@@ -321,6 +321,28 @@ export const listExamSetShares = async (req, res) => {
     console.error("[ExamSet] List share error:", error.message);
     const status = error.status || 500;
     return res.status(status).json({ success: false, message: error.message || "Lỗi lấy danh sách chia sẻ bộ đề thi" });
+  }
+};
+
+export const listSharedExamSets = async (req, res) => {
+  try {
+    const { page, limit, permission, search, ownerId, sortBy, sortOrder } = req.query;
+
+    const result = await listSharedExamSetsService(req.user.id, req.user.role, {
+      page,
+      limit,
+      permission,
+      search,
+      ownerId,
+      sortBy,
+      sortOrder,
+    });
+
+    return res.status(200).json({ success: true, message: "Shared Exam Sets retrieved successfully", data: result });
+  } catch (error) {
+    console.error("[ExamSet] List shared-with-me error:", error.message);
+    const status = error.status || 500;
+    return res.status(status).json({ success: false, message: error.message || "Lỗi lấy danh sách bộ đề thi được chia sẻ" });
   }
 };
 

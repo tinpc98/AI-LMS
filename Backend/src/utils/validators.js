@@ -133,6 +133,52 @@ export const examSetShareListValidation = [
   handleValidationErrors,
 ];
 
+export const examSetSharedWithMeValidation = [
+  query("page")
+    .optional()
+    .isInt({ min: 1 })
+    .withMessage("page phải là số nguyên lớn hơn hoặc bằng 1")
+    .toInt(),
+
+  query("limit")
+    .optional()
+    .isInt({ min: 1, max: 100 })
+    .withMessage("limit phải là số nguyên từ 1 đến 100")
+    .toInt(),
+
+  query("permission")
+    .optional()
+    .isIn(["VIEW", "EDIT"])
+    .withMessage("permission không hợp lệ"),
+
+  query("search")
+    .optional()
+    .isString()
+    .withMessage("search phải là chuỗi")
+    .trim()
+    .isLength({ max: 100 })
+    .withMessage("search không được vượt quá 100 ký tự"),
+
+  query("ownerId")
+    .optional()
+    .isMongoId()
+    .withMessage("ownerId không hợp lệ"),
+
+  query("sortBy")
+    .optional()
+    .isIn(["sharedAt", "createdAt", "updatedAt", "expiresAt", "permission"])
+    .withMessage("sortBy không hợp lệ"),
+
+  query("sortOrder")
+    .optional()
+    .trim()
+    .toLowerCase()
+    .isIn(["asc", "desc"])
+    .withMessage("sortOrder không hợp lệ"),
+
+  handleValidationErrors,
+];
+
 export const loginValidation = [
   body("email")
     .trim()
