@@ -1,16 +1,29 @@
 import { Schema, model } from "mongoose";
 import softDeletePlugin from "../plugins/softDelete.plugin.js";
 
-// Question subdocument schema
+/**
+ * Question Subdocument Schema
+ * Questions are embedded in ExamSet (no separate collection)
+ * Supports: multiple_choice, true_false, short_answer, essay
+ */
 const questionSchema = new Schema(
   {
-    // Unique question ID within the exam set
+    // ========== IDENTIFICATION ==========
+    // Unique question ID within the exam set (auto-generated or custom)
     questionId: {
       type: String,
       required: [true, "questionId là bắt buộc"],
       trim: true,
     },
 
+    // Question order/position in exam
+    order: {
+      type: Number,
+      required: [true, "Thứ tự câu hỏi là bắt buộc"],
+      min: 0,
+    },
+
+    // ========== QUESTION CONTENT ==========
     // Question type: multiple_choice, true_false, short_answer, essay
     type: {
       type: String,
@@ -18,50 +31,134 @@ const questionSchema = new Schema(
       required: [true, "Loại câu hỏi là bắt buộc"],
     },
 
-    // Question content
+    // Main question text/content
     content: {
       type: String,
       required: [true, "Nội dung câu hỏi là bắt buộc"],
+      trim: true,
     },
 
-    // Point value for this question
+    // Optional: Image/attachment URL for visual questions
+    imageUrl: {
+      type: String,
+      default: null,
+    },
+
+    // Optional: Hint for students (shown during attempt)
+    hint: {
+      type: String,
+      default: "",
+      maxlength: 500,
+    },
+
+    // ========== SCORING ==========
+    // Points/marks for this question
     points: {
       type: Number,
+      required: [true, "Điểm câu hỏi là bắt buộc"],
       default: 1,
       min: 0,
+      max: 1000,
     },
 
-    // Options for multiple choice questions
-    options: [
-      {
-        text: String,
-        isCorrect: Boolean,
-      },
-    ],
-
-    // Correct answer (for true/false or short answer)
-    correctAnswer: String,
-
-    // Explanation for the answer
-    explanation: String,
-
-    // Question difficulty level: easy, medium, hard
+    // Difficulty level: easy, medium, hard
     difficulty: {
       type: String,
       enum: ["easy", "medium", "hard"],
       default: "medium",
     },
 
-    // Tags for categorizing questions
-    tags: [String],
+    // ========== ANSWER & VERIFICATION ==========
+    // For MULTIPLE_CHOICE: Array of answer options
+    options: [
+      {
+        _id: false,
+        id: {
+          type: String,
+          required: true,
+        },
+        text: {
+          type: String,
+          required: [true, "Nội dung option là bắt buộc"],
+        },
+        isCorrect: {
+          type: Boolean,
+          default: false,
+        },
+      },
+    ],
 
-    // Order of question in exam
-    order: {
+    // Correct answer text (for TRUE_FALSE, SHORT_ANSWER)
+    correctAnswer: {
+      type: String,
+      default: "",
+    },
+
+    // Accepted variations of correct answer (for SHORT_ANSWER)
+    acceptedAnswers: [
+      {
+        type: String,
+        trim: true,
+      },
+    ],
+
+    // Is correct answer case-sensitive? (for SHORT_ANSWER)
+    caseSensitive: {
+      type: Boolean,
+      default: false,
+    },
+
+    // ========== FEEDBACK & EXPLANATION ==========
+    // Explanation of correct answer (shown after submission)
+    explanation: {
+      type: String,
+      default: "",
+      maxlength: 2000,
+    },
+
+    // Positive feedback (shown for correct answers)
+    feedbackCorrect: {
+      type: String,
+      default: "Chính xác!",
+    },
+
+    // Negative feedback (shown for incorrect answers)
+    feedbackIncorrect: {
+      type: String,
+      default: "Sai rồi!",
+    },
+
+    // ========== CATEGORIZATION & METADATA ==========
+    // Sub-category/topic of question
+    category: {
+      type: String,
+      default: "",
+      trim: true,
+    },
+
+    // Tags for filtering/organization
+    tags: [
+      {
+        type: String,
+        trim: true,
+      },
+    ],
+
+    // ========== STATUS & TIMING ==========
+    // Is question active? (false = question skipped in exams)
+    isActive: {
+      type: Boolean,
+      default: true,
+    },
+
+    // Optional: Time limit for this specific question (in seconds)
+    timeLimit: {
       type: Number,
-      default: 0,
+      default: null,
+      min: 1,
     },
   },
-  { _id: false }
+  { _id: false, timestamps: false }
 );
 
 const examSetSchema = new Schema(
