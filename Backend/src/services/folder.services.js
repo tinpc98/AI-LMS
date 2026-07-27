@@ -221,3 +221,63 @@ export const hardDeleteFolderService = async (folderId) => {
 
   return folder;
 };
+
+/**
+ * Get folder tree for current user
+ * Returns all folders in tree structure (parent-child hierarchy)
+ * @param {string} userId - Current user ID
+ * @returns {Array} Array of root folders with nested children
+ */
+export const getFolderTreeService = async (userId) => {
+  // Fetch all folders belonging to this user (not deleted)
+  const allFolders = await Folder.find({
+    ownerId: userId,
+    isDeleted: false,
+  }).lean(); // Use lean() for better performance
+
+  if (allFolders.length === 0) {
+    return [];
+  }
+
+  // Convert folder array to map for quick lookup
+  const folderMap = new Map();
+  const rootFolders = [];
+
+  allFolders.forEach((folder) => {
+    folderMap.set(folder._id.toString(), {
+      ...folder,
+      children: [],
+    });
+  });
+
+  // Build tree structure
+  allFolders.forEach((folder) => {
+    const folderId = folder._id.toString();
+    const parentId = folder.parentFolderId?.toString();
+
+    if (!parentId) {
+      // Root folder
+      rootFolders.push(folderMap.get(folderId));
+    } else {
+      // Add to parent's children
+      const parent = folderMap.get(parentId);
+      if (parent) {
+        parent.children.push(folderMap.get(folderId));
+      }
+    }
+  });
+
+  // Sort by name
+  const sortByName = (arr) => {
+    arr.sort((a, b) => a.name.localeCompare(b.name));
+    arr.forEach((folder) => {
+      if (folder.children && folder.children.length > 0) {
+        sortByName(folder.children);
+      }
+    });
+  };
+
+  sortByName(rootFolders);
+
+  return rootFolders;
+};

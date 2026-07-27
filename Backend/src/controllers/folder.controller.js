@@ -5,6 +5,7 @@ import {
   getFolderListService,
   updateFolderService,
   deleteFolderService,
+  getFolderTreeService,
 } from "../services/folder.services.js";
 
 /**
@@ -168,6 +169,34 @@ export const deleteFolder = async (req, res) => {
     return res.status(status).json({
       success: false,
       message: error.message || "Lỗi xóa folder",
+    });
+  }
+};
+
+/**
+ * Get folder tree structure
+ * GET /api/folders/tree
+ * Returns all folders in hierarchical tree structure
+ */
+export const getFolderTree = async (req, res) => {
+  try {
+    const userId = req.user.id; // From verifyUser middleware
+
+    // Get folder tree
+    const tree = await getFolderTreeService(userId);
+
+    return res.status(200).json({
+      success: true,
+      message: "Lấy cây folder thành công",
+      data: tree,
+    });
+  } catch (error) {
+    console.error("[Folder] Get tree error:", error.message);
+
+    const status = error.status || 500;
+    return res.status(status).json({
+      success: false,
+      message: error.message || "Lỗi lấy cây folder",
     });
   }
 };

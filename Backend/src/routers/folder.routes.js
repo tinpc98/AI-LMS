@@ -6,6 +6,7 @@ import {
   getFolders,
   updateFolder,
   deleteFolder,
+  getFolderTree,
 } from "../controllers/folder.controller.js";
 import { verifyUser } from "../middlewares/auth.middlewares.js";
 
@@ -27,6 +28,13 @@ router.post("/", createFolder);
  * Query: page?, limit?, parentFolderId?
  */
 router.get("/", getFolders);
+
+/**
+ * GET /api/folders/tree
+ * Get folder tree structure (hierarchical)
+ * Should be BEFORE /:id route to avoid conflict
+ */
+router.get("/tree", getFolderTree);
 
 /**
  * GET /api/folders/:id
