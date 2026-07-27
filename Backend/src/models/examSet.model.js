@@ -214,6 +214,13 @@ const examSetSchema = new Schema(
       min: 0,
     },
 
+    // Auto-calculated: Total points for all questions
+    totalPoints: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+
     // Version number for tracking changes
     version: {
       type: Number,
@@ -260,9 +267,13 @@ examSetSchema.index({ ownerId: 1, folderId: 1 });
 // Index for finding published exam sets
 examSetSchema.index({ ownerId: 1, status: 1 });
 
-// Middleware to auto-update questionCount before save
+// Middleware to auto-update questionCount and totalPoints before save
 examSetSchema.pre("save", function (next) {
   this.questionCount = this.questions.length;
+  this.totalPoints = this.questions.reduce((sum, question) => {
+    const points = typeof question.points === "number" ? question.points : 0;
+    return sum + points;
+  }, 0);
   next();
 });
 

@@ -1,4 +1,5 @@
 // File: src/services/examSet.services.js
+import { Types } from "mongoose";
 import ExamSet from "../models/examSet.model.js";
 import Folder from "../models/folder.model.js";
 
@@ -496,5 +497,68 @@ export const updateQuestionInExamSetService = async (examSetId, ownerId, questio
   // Save exam set
   const updatedExamSet = await examSet.save();
 
+  return updatedExamSet.populate("folderId", "name").populate("ownerId", "fullName email");
+};
+
+/**
+ * Delete question from exam set
+ * @param {string} examSetId
+ * @param {string} currentUserId
+ * @param {string} currentUserRole
+ * @param {string} questionId
+ * @returns {Object} Updated exam set
+ */
+export const deleteQuestionFromExamSetService = async (examSetId, currentUserId, currentUserRole, questionId) => {
+  if (!examSetId || !Types.ObjectId.isValid(examSetId)) {
+    const error = new Error("examSetId không hợp lệ");
+    error.status = 400;
+    throw error;
+  }
+
+  if (!questionId || typeof questionId !== "string" || questionId.trim() === "") {
+    const error = new Error("questionId là bắt buộc");
+    error.status = 400;
+    throw error;
+  }
+
+  const normalizedQuestionId = questionId.trim();
+
+  const examSet = await ExamSet.findOne({
+    _id: examSetId,
+    isDeleted: false,
+  });
+
+  if (!examSet) {
+    const error = new Error("Bộ đề thi không tồn tại");
+    error.status = 404;
+    throw error;
+  }
+
+  const userRole = (currentUserRole || "").toLowerCase();
+  const isOwner = examSet.ownerId.toString() === currentUserId;
+  const hasEditPermission = ["admin", "teacher"].includes(userRole);
+
+  if (!isOwner && !hasEditPermission) {
+    const error = new Error("Bạn không có quyền xóa câu hỏi");
+    error.status = 403;
+    throw error;
+  }
+
+  if (examSet.status === "published") {
+    const error = new Error("Không thể xóa câu hỏi khi bộ đề thi đang ở trạng thái Published");
+    error.status = 403;
+    throw error;
+  }
+
+  const questionIndex = examSet.questions.findIndex(q => q.questionId === normalizedQuestionId);
+  if (questionIndex === -1) {
+    const error = new Error("Câu hỏi không tồn tại trong bộ đề thi");
+    error.status = 404;
+    throw error;
+  }
+
+  examSet.questions.splice(questionIndex, 1);
+
+  const updatedExamSet = await examSet.save();
   return updatedExamSet.populate("folderId", "name").populate("ownerId", "fullName email");
 };

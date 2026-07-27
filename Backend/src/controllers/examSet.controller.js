@@ -1,5 +1,5 @@
 // File: src/controllers/examSet.controller.js
-import { createExamSetService, getExamSetsService, updateExamSetService, deleteExamSetService, restoreExamSetService, addQuestionToExamSetService, updateQuestionInExamSetService } from "../services/examSet.services.js";
+import { createExamSetService, getExamSetsService, updateExamSetService, deleteExamSetService, restoreExamSetService, addQuestionToExamSetService, updateQuestionInExamSetService, deleteQuestionFromExamSetService } from "../services/examSet.services.js";
 
 /**
  * Create new exam set
@@ -281,6 +281,34 @@ export const updateQuestionInExamSet = async (req, res) => {
     return res.status(status).json({
       success: false,
       message: error.message || "Lỗi cập nhật câu hỏi",
+    });
+  }
+};
+
+/**
+ * Delete question in exam set
+ * DELETE /api/exam-sets/:id/questions/:questionId
+ */
+export const deleteQuestionInExamSet = async (req, res) => {
+  try {
+    const { id, questionId } = req.params;
+    const userId = req.user.id;
+    const userRole = req.user.role;
+
+    const examSet = await deleteQuestionFromExamSetService(id, userId, userRole, questionId);
+
+    return res.status(200).json({
+      success: true,
+      message: "Xóa câu hỏi thành công",
+      data: examSet,
+    });
+  } catch (error) {
+    console.error("[ExamSet] Delete question error:", error.message);
+
+    const status = error.status || 500;
+    return res.status(status).json({
+      success: false,
+      message: error.message || "Lỗi xóa câu hỏi",
     });
   }
 };
