@@ -36,6 +36,56 @@ export const loginValidation = [
   handleValidationErrors, // Thêm chốt chặn xử lý kết quả lỗi (Em từng thiếu chỗ này)
 ];
 
+export const examSetTagsValidation = [
+  body("tags")
+    .exists({ checkFalsy: false })
+    .withMessage("tags là bắt buộc")
+    .isArray()
+    .withMessage("tags phải là một mảng"),
+
+  body("tags").custom((tags) => {
+    if (!Array.isArray(tags)) {
+      throw new Error("tags phải là một mảng");
+    }
+
+    if (tags.length > 20) {
+      throw new Error("Không được phép có quá 20 tag");
+    }
+
+    const normalized = new Set();
+
+    for (const [index, tag] of tags.entries()) {
+      if (typeof tag !== "string") {
+        throw new Error(`tags[${index}] phải là chuỗi`);
+      }
+
+      const trimmed = tag.trim().replace(/\s+/g, " ");
+      if (trimmed === "") {
+        throw new Error(`tags[${index}] không được để trống`);
+      }
+
+      const withoutHash = trimmed.replace(/^#+/, "");
+      if (withoutHash === "") {
+        throw new Error(`tags[${index}] không được chỉ chứa ký tự #`);
+      }
+
+      if (withoutHash.length > 30) {
+        throw new Error(`tags[${index}] không được quá 30 ký tự`);
+      }
+
+      const lower = withoutHash.toLowerCase();
+      if (normalized.has(lower)) {
+        continue;
+      }
+      normalized.add(lower);
+    }
+
+    return true;
+  }),
+
+  handleValidationErrors,
+];
+
 export const multipleChoiceQuestionValidation = [
   body("questionId")
     .trim()

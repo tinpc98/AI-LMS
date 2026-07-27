@@ -8,6 +8,60 @@ const EDITABLE_EXAM_STATUSES = ["draft"];
 const essayForbiddenFields = ["options", "correctAnswer", "acceptedAnswers", "caseSensitive"];
 const VALID_QUESTION_TYPES = ["multiple_choice", "true_false", "short_answer", "essay"];
 
+const normalizeExamSetTags = (tags) => {
+  if (!Array.isArray(tags)) {
+    const error = new Error("tags phải là một mảng");
+    error.status = 400;
+    throw error;
+  }
+
+  if (tags.length > 20) {
+    const error = new Error("Không được phép có quá 20 tag");
+    error.status = 400;
+    throw error;
+  }
+
+  const normalizedTags = [];
+  const seen = new Set();
+
+  for (const [index, tag] of tags.entries()) {
+    if (typeof tag !== "string") {
+      const error = new Error(`tags[${index}] phải là chuỗi`);
+      error.status = 400;
+      throw error;
+    }
+
+    const trimmed = tag.trim().replace(/\s+/g, " ");
+    if (trimmed === "") {
+      const error = new Error(`tags[${index}] không được để trống`);
+      error.status = 400;
+      throw error;
+    }
+
+    const withoutHash = trimmed.replace(/^#+/, "");
+    if (withoutHash === "") {
+      const error = new Error(`tags[${index}] không được chỉ chứa ký tự #`);
+      error.status = 400;
+      throw error;
+    }
+
+    if (withoutHash.length > 30) {
+      const error = new Error(`tags[${index}] không được quá 30 ký tự`);
+      error.status = 400;
+      throw error;
+    }
+
+    const normalized = withoutHash.toLowerCase();
+    if (seen.has(normalized)) {
+      continue;
+    }
+    seen.add(normalized);
+    normalizedTags.push(normalized);
+  }
+
+  return normalizedTags;
+};
+
 const normalizeQuestionOrder = (questions) => {
   if (!Array.isArray(questions)) {
     return [];
@@ -383,9 +437,37 @@ export const saveDraftExamSetService = async (examSet, draftData = {}) => {
     updateFields.description = updateFields.description.trim();
   }
 
+  if (Object.prototype.hasOwnProperty.call(updateFields, "tags")) {
+    updateFields.tags = normalizeExamSetTags(updateFields.tags);
+  }
+
   Object.assign(examSet, updateFields, { status: "draft" });
 
   recalculateExamSetMetrics(examSet);
+
+  const savedExamSet = await examSet.save();
+  if (savedExamSet && typeof savedExamSet.populate === "function") {
+    return savedExamSet.populate("folderId", "name").populate("ownerId", "fullName email");
+  }
+
+  return savedExamSet;
+};
+
+export const updateExamSetTagsService = async (examSet, tags) => {
+  if (!examSet) {
+    const error = new Error("Bộ đề thi không tồn tại");
+    error.status = 404;
+    throw error;
+  }
+
+  if (!isEditableExamSetStatus(examSet.status)) {
+    const error = new Error("Không thể cập nhật tags khi bộ đề thi không ở trạng thái draft");
+    error.status = 403;
+    throw error;
+  }
+
+  const normalizedTags = normalizeExamSetTags(tags);
+  examSet.tags = normalizedTags;
 
   const savedExamSet = await examSet.save();
   if (savedExamSet && typeof savedExamSet.populate === "function") {
@@ -642,6 +724,10 @@ export const updateExamSetService = async (examSetId, ownerId, updateData) => {
 
   if (updateFields.description) {
     updateFields.description = updateFields.description.trim();
+  }
+
+  if (Object.prototype.hasOwnProperty.call(updateFields, "tags")) {
+    updateFields.tags = normalizeExamSetTags(updateFields.tags);
   }
 
   // Update exam set

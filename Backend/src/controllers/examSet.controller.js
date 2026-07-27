@@ -1,5 +1,5 @@
 // File: src/controllers/examSet.controller.js
-import { createExamSetService, getExamSetsService, updateExamSetService, deleteExamSetService, restoreExamSetService, addQuestionToExamSetService, updateQuestionInExamSetService, deleteQuestionFromExamSetService, reorderQuestionsInExamSetService, getExamSetDetailService, saveDraftExamSetService, duplicateExamSetService } from "../services/examSet.services.js";
+import { createExamSetService, getExamSetsService, updateExamSetService, deleteExamSetService, restoreExamSetService, addQuestionToExamSetService, updateQuestionInExamSetService, deleteQuestionFromExamSetService, reorderQuestionsInExamSetService, getExamSetDetailService, saveDraftExamSetService, duplicateExamSetService, updateExamSetTagsService } from "../services/examSet.services.js";
 import { Types } from "mongoose";
 
 /**
@@ -213,6 +213,32 @@ export const updateExamSet = async (req, res) => {
     return res.status(status).json({
       success: false,
       message: error.message || "Lỗi cập nhật bộ đề thi",
+    });
+  }
+};
+
+/**
+ * Update exam set tags
+ * PATCH /api/exam-sets/:examSetId/tags
+ * Body: { tags }
+ */
+export const updateExamSetTags = async (req, res) => {
+  try {
+    const tags = req.body.tags;
+    const examSet = await updateExamSetTagsService(req.examSet, tags);
+
+    return res.status(200).json({
+      success: true,
+      message: "Cập nhật tags bộ đề thi thành công",
+      data: examSet,
+    });
+  } catch (error) {
+    console.error("[ExamSet] Update tags error:", error.message);
+
+    const status = error.status || 500;
+    return res.status(status).json({
+      success: false,
+      message: error.message || "Lỗi cập nhật tags bộ đề thi",
     });
   }
 };
