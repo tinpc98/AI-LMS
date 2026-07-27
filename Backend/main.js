@@ -39,11 +39,14 @@ const allowedOrigins = (
 
 const corsOptions = {
   origin: (origin, cb) => {
-    if (!origin) return cb(null, true);
-    if (allowedOrigins.includes(origin)) return cb(null, true);
-    return cb(new Error("Origin không được phép bởi CORS"));
+    if (!origin || allowedOrigins.includes(origin)) {
+      return cb(null, true);
+    }
+
+    console.log("CORS blocked origin:", origin);
+    return cb(new Error(`Origin ${origin} không được phép bởi CORS`));
   },
-  methods: ["GET", "POST", "PUT", "DELETE"],
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
   credentials: true,
   allowedHeaders: ["Content-Type", "Authorization"],
 };

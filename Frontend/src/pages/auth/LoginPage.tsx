@@ -27,12 +27,13 @@ const Login = () => {
         password: data.password,
       });
 
-      const result = res.data;
+      const response = res.data;
+      const result = response.data;
 
       // Lưu Token, Role & User Info khi đăng nhập thành công
       localStorage.setItem("accessToken", result.accessToken);
 
-      const loggedInUser = result.data;
+      const loggedInUser = result.user;
       const normalizedRole = String(loggedInUser?.role || "").toLowerCase();
 
       if (normalizedRole) {
