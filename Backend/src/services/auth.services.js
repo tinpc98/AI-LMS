@@ -1,4 +1,8 @@
 // File: src/services/auth.services.js
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
+import User from "../models/user.models.js";
+
 /**
  * Authentication Service
  * Contains all business logic for authentication
@@ -22,10 +26,68 @@ export const registerService = async (userData) => {
  * @param {string} email - User email
  * @param {string} password - User password
  * @returns {Object} User data with access token
+ * @throws {Error} User not found, password mismatch, or account inactive
  */
 export const loginService = async (email, password) => {
-  // Business logic to be implemented
-  throw new Error("Login service not implemented");
+  // Bước 1: Chuẩn hóa email
+  const normalizedEmail = String(email).trim().toLowerCase();
+
+  // Bước 2: Tìm user trong DB (bao gồm tài khoản đã xóa để kiểm tra)
+  const user = await User.findOne({ email: normalizedEmail }).withDeleted();
+  
+  if (!user) {
+    const error = new Error("Email hoặc mật khẩu không chính xác!");
+    error.status = 401;
+    throw error;
+  }
+
+  // Bước 3: Kiểm tra tài khoản đã bị xóa (soft delete)
+  if (user.isDeleted) {
+    const error = new Error("Tài khoản đã bị xóa!");
+    error.status = 403;
+    throw error;
+  }
+
+  // Bước 4: Kiểm tra trạng thái tài khoản
+  if (user.status === "Inactive" || user.status === "Locked") {
+    const error = new Error("Tài khoản của bạn đã bị khóa hoặc ngừng hoạt động!");
+    error.status = 403;
+    throw error;
+  }
+
+  // Bước 5: So sánh mật khẩu với bcrypt
+  const isPasswordMatch = await bcrypt.compare(password, user.password);
+  
+  if (!isPasswordMatch) {
+    const error = new Error("Email hoặc mật khẩu không chính xác!");
+    error.status = 401;
+    throw error;
+  }
+
+  // Bước 6: Tạo JWT Access Token (lấy role từ DB, không tin client)
+  const accessToken = jwt.sign(
+    {
+      id: user._id,
+      email: user.email,
+      role: user.role, // Lấy từ DB, không từ client
+    },
+    process.env.JWT_SECRET || "your-secret-key-change-in-env",
+    { expiresIn: "7d" }
+  );
+
+  // Bước 7: Trả về dữ liệu người dùng + token
+  return {
+    accessToken,
+    user: {
+      id: user._id,
+      email: user.email,
+      fullName: user.fullName,
+      role: user.role,
+      avatar: user.avatar || "",
+      phone: user.phone || "",
+      status: user.status,
+    },
+  };
 };
 
 /**

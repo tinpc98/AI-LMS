@@ -8,6 +8,8 @@
  * - Password management
  */
 
+import { loginService } from "../services/auth.services.js";
+
 /**
  * Register new user
  * POST /api/auth/register
@@ -35,15 +37,47 @@ export const register = async (req, res) => {
  */
 export const login = async (req, res) => {
   try {
-    // Business logic to be implemented
-    res.status(200).json({
-      message: "Login endpoint - to be implemented",
+    const { email, password } = req.body;
+
+    // Validate input
+    if (!email || !password) {
+      return res.status(400).json({
+        success: false,
+        message: "Vui lòng nhập email và mật khẩu",
+      });
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({
+        success: false,
+        message: "Email không hợp lệ",
+      });
+    }
+
+    // Call login service
+    const result = await loginService(email, password);
+
+    // Return standardized response
+    return res.status(200).json({
+      success: true,
+      message: "Đăng nhập thành công",
+      data: {
+        accessToken: result.accessToken,
+        user: result.user,
+      },
     });
   } catch (error) {
-    console.error("[Auth] Login error:", error);
-    res.status(500).json({
-      message: "Internal server error",
-      error: error.message,
+    console.error("[Auth] Login error:", error.message);
+
+    const status = error.status || 500;
+    const message =
+      error.message || "Lỗi máy chủ nội bộ";
+
+    return res.status(status).json({
+      success: false,
+      message: message,
     });
   }
 };
