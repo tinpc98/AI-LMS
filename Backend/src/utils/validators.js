@@ -1,4 +1,4 @@
-import { body, validationResult, query } from "express-validator";
+import { body, validationResult, query, param } from "express-validator";
 
 const stripTags = (value) => {
   if (typeof value !== "string") {
@@ -58,6 +58,24 @@ export const examSetShareCreateValidation = [
     .trim()
     .isLength({ max: 500 })
     .withMessage("note tối đa 500 ký tự"),
+
+  handleValidationErrors,
+];
+
+export const examSetShareRevokeValidation = [
+  param("examSetId")
+    .notEmpty()
+    .withMessage("examSetId là bắt buộc")
+    .bail()
+    .isMongoId()
+    .withMessage("examSetId không hợp lệ"),
+
+  param("shareId")
+    .notEmpty()
+    .withMessage("shareId là bắt buộc")
+    .bail()
+    .isMongoId()
+    .withMessage("shareId không hợp lệ"),
 
   handleValidationErrors,
 ];

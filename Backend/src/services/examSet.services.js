@@ -319,6 +319,75 @@ export const createExamSetShareService = async (examSetId, currentUserId, curren
   return { statusCode: 200, message: "Share re-activated successfully", data: updated };
 };
 
+export const revokeExamSetShareService = async (examSetId, shareId, currentUserId, currentUserRole) => {
+  if (!examSetId || !Types.ObjectId.isValid(examSetId)) {
+    const error = new Error("examSetId không hợp lệ");
+    error.status = 400;
+    throw error;
+  }
+
+  if (!shareId || !Types.ObjectId.isValid(shareId)) {
+    const error = new Error("shareId không hợp lệ");
+    error.status = 400;
+    throw error;
+  }
+
+  const examSet = await ExamSet.findOne({ _id: examSetId, isDeleted: false });
+  if (!examSet) {
+    const error = new Error("Bộ đề thi không tồn tại");
+    error.status = 404;
+    throw error;
+  }
+
+  const share = await ExamSetShare.findOne({ _id: shareId });
+  if (!share) {
+    const error = new Error("Share không tồn tại");
+    error.status = 404;
+    throw error;
+  }
+
+  if (String(share.examSetId) !== String(examSet._id)) {
+    const error = new Error("Share không thuộc bộ đề thi này");
+    error.status = 400;
+    throw error;
+  }
+
+  const userRole = String(currentUserRole || "").toLowerCase();
+  const isOwner = String(examSet.ownerId?._id || examSet.ownerId) === String(currentUserId);
+  const isAdmin = userRole === "admin";
+
+  if (!isOwner && !isAdmin) {
+    const error = new Error("Bạn không có quyền thu hồi chia sẻ này");
+    error.status = 403;
+    throw error;
+  }
+
+  if (String(share.status) === String(EXAM_SET_SHARE_STATUS.REVOKED)) {
+    const error = new Error("Share đã bị thu hồi");
+    error.status = 409;
+    throw error;
+  }
+
+  if (String(share.status) === String(EXAM_SET_SHARE_STATUS.EXPIRED)) {
+    const error = new Error("Share đã hết hạn");
+    error.status = 409;
+    throw error;
+  }
+
+  if (String(share.sharedWithUserId) === String(examSet.ownerId || examSet.ownerId?._id)) {
+    const error = new Error("Không thể thu hồi chia sẻ của Owner");
+    error.status = 400;
+    throw error;
+  }
+
+  share.status = EXAM_SET_SHARE_STATUS.REVOKED;
+  share.revokedAt = new Date();
+  share.revokedBy = currentUserId;
+
+  const updated = await share.save();
+  return { statusCode: 200, message: "Share revoked successfully", data: updated };
+};
+
 /**
  * Get version history for an exam set lineage
  * @param {string} examSetId - source exam set id

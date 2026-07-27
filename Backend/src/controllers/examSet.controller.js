@@ -1,6 +1,6 @@
 // File: src/controllers/examSet.controller.js
 import { createExamSetService, getExamSetsService, updateExamSetService, deleteExamSetService, restoreExamSetService, addQuestionToExamSetService, updateQuestionInExamSetService, deleteQuestionFromExamSetService, reorderQuestionsInExamSetService, getExamSetDetailService, saveDraftExamSetService, duplicateExamSetService, updateExamSetTagsService, createNewExamSetVersionService, getExamSetVersionsService, restoreExamSetVersionService } from "../services/examSet.services.js";
-import { createExamSetShareService } from "../services/examSet.services.js";
+import { createExamSetShareService, revokeExamSetShareService } from "../services/examSet.services.js";
 import { Types } from "mongoose";
 
 /**
@@ -272,6 +272,28 @@ export const createExamSetShare = async (req, res) => {
     console.error("[ExamSet] Create share error:", error.message);
     const status = error.status || 500;
     return res.status(status).json({ success: false, message: error.message || "Lỗi tạo chia sẻ bộ đề thi" });
+  }
+};
+
+export const revokeExamSetShare = async (req, res) => {
+  try {
+    const { examSetId, shareId } = req.params;
+
+    if (!examSetId || !Types.ObjectId.isValid(examSetId)) {
+      return res.status(400).json({ success: false, message: "examSetId không hợp lệ" });
+    }
+
+    if (!shareId || !Types.ObjectId.isValid(shareId)) {
+      return res.status(400).json({ success: false, message: "shareId không hợp lệ" });
+    }
+
+    const result = await revokeExamSetShareService(examSetId, shareId, req.user.id, req.user.role);
+
+    return res.status(result.statusCode).json({ success: true, message: result.message, data: result.data });
+  } catch (error) {
+    console.error("[ExamSet] Revoke share error:", error.message);
+    const status = error.status || 500;
+    return res.status(status).json({ success: false, message: error.message || "Lỗi thu hồi chia sẻ bộ đề thi" });
   }
 };
 
