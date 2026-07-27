@@ -1,5 +1,5 @@
 // File: src/controllers/examSet.controller.js
-import { createExamSetService, getExamSetsService, updateExamSetService, deleteExamSetService, restoreExamSetService, addQuestionToExamSetService, updateQuestionInExamSetService, deleteQuestionFromExamSetService, reorderQuestionsInExamSetService, getExamSetDetailService, saveDraftExamSetService, duplicateExamSetService, updateExamSetTagsService } from "../services/examSet.services.js";
+import { createExamSetService, getExamSetsService, updateExamSetService, deleteExamSetService, restoreExamSetService, addQuestionToExamSetService, updateQuestionInExamSetService, deleteQuestionFromExamSetService, reorderQuestionsInExamSetService, getExamSetDetailService, saveDraftExamSetService, duplicateExamSetService, updateExamSetTagsService, createNewExamSetVersionService } from "../services/examSet.services.js";
 import { Types } from "mongoose";
 
 /**
@@ -146,6 +146,35 @@ export const duplicateExamSet = async (req, res) => {
     return res.status(status).json({
       success: false,
       message: error.message || "Lỗi duplicate bộ đề thi",
+    });
+  }
+};
+
+export const createNewExamSetVersion = async (req, res) => {
+  try {
+    const { examSetId } = req.params;
+
+    if (!examSetId || !Types.ObjectId.isValid(examSetId)) {
+      return res.status(400).json({
+        success: false,
+        message: "examSetId không hợp lệ",
+      });
+    }
+
+    const newVersionExamSet = await createNewExamSetVersionService(examSetId, req.user.id, req.user.role);
+
+    return res.status(201).json({
+      success: true,
+      message: "New exam set version created successfully",
+      data: newVersionExamSet,
+    });
+  } catch (error) {
+    console.error("[ExamSet] Create version error:", error.message);
+
+    const status = error.status || 500;
+    return res.status(status).json({
+      success: false,
+      message: error.message || "Lỗi tạo phiên bản mới của bộ đề thi",
     });
   }
 };

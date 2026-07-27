@@ -1,6 +1,6 @@
 // File: src/routers/examSet.routes.js
 import express from "express";
-import { createExamSet, getExamSets, getExamSetById, saveDraftExamSet, duplicateExamSet, updateExamSet, updateExamSetTags, deleteExamSet, restoreExamSet, addQuestionToExamSet, updateQuestionInExamSet, deleteQuestionInExamSet, reorderQuestionsInExamSet } from "../controllers/examSet.controller.js";
+import { createExamSet, getExamSets, getExamSetById, saveDraftExamSet, duplicateExamSet, createNewExamSetVersion, updateExamSet, updateExamSetTags, deleteExamSet, restoreExamSet, addQuestionToExamSet, updateQuestionInExamSet, deleteQuestionInExamSet, reorderQuestionsInExamSet } from "../controllers/examSet.controller.js";
 import { verifyUser } from "../middlewares/auth.middlewares.js";
 import { requireExamSetDraftAccess, requireExamSetEditAccess } from "../middlewares/examSetAccess.middlewares.js";
 import { examSetQuestionCreateValidation, examSetQuestionUpdateValidation, reorderQuestionsValidation, examSetTagsValidation } from "../utils/validators.js";
@@ -35,6 +35,12 @@ router.patch("/:examSetId/save-draft", requireExamSetDraftAccess, saveDraftExamS
  * Duplicate an existing exam set as a new draft owned by the current user
  */
 router.post("/:examSetId/duplicate", requireExamSetEditAccess, duplicateExamSet);
+
+/**
+ * POST /api/exam-sets/:examSetId/new-version
+ * Create a new version of the latest exam set
+ */
+router.post("/:examSetId/new-version", requireExamSetEditAccess, createNewExamSetVersion);
 
 /**
  * GET /api/exam-sets/:id
