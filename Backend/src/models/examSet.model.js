@@ -88,9 +88,11 @@ const questionSchema = new Schema(
       },
     ],
 
-    // Correct answer text (for TRUE_FALSE, SHORT_ANSWER)
+    // Correct answer for TRUE_FALSE, SHORT_ANSWER, MULTIPLE_CHOICE
+    // - string for multiple_choice / short_answer
+    // - boolean or string for true_false
     correctAnswer: {
-      type: String,
+      type: Schema.Types.Mixed,
       default: "",
     },
 

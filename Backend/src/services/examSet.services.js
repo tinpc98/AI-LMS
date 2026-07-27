@@ -5,6 +5,7 @@ import Folder from "../models/folder.model.js";
 
 const EDITABLE_EXAM_STATUSES = ["draft"];
 const essayForbiddenFields = ["options", "correctAnswer", "acceptedAnswers", "caseSensitive"];
+const VALID_QUESTION_TYPES = ["multiple_choice", "true_false", "short_answer", "essay"];
 
 export const isEditableExamSetStatus = (status) => {
   return EDITABLE_EXAM_STATUSES.includes(String(status).toLowerCase());
@@ -35,6 +36,108 @@ export const ensureEssayQuestionFieldsAllowed = (type, payload, existingQuestion
     const error = new Error("Score là bắt buộc cho ESSAY");
     error.status = 400;
     throw error;
+  }
+};
+
+const normalizeBooleanAnswer = (correctAnswer) => {
+  if (typeof correctAnswer === "boolean") {
+    return correctAnswer;
+  }
+  if (typeof correctAnswer === "string") {
+    return correctAnswer.toLowerCase().trim() === "true";
+  }
+  return undefined;
+};
+
+const buildTrueFalseOptions = (correctAnswer) => {
+  const normalizedCorrect = normalizeBooleanAnswer(correctAnswer);
+  return [
+    { id: "true", text: "True", isCorrect: normalizedCorrect === true },
+    { id: "false", text: "False", isCorrect: normalizedCorrect === false },
+  ];
+};
+
+const validateTrueFalsePayload = (questionData) => {
+  const correctAnswerValue = normalizeBooleanAnswer(questionData.correctAnswer);
+  if (correctAnswerValue === undefined) {
+    const error = new Error("correctAnswer phải là boolean hoặc 'true'/'false' cho true_false");
+    error.status = 400;
+    throw error;
+  }
+
+  if (!questionData.options) {
+    questionData.options = buildTrueFalseOptions(correctAnswerValue);
+    return;
+  }
+
+  if (!Array.isArray(questionData.options) || questionData.options.length !== 2) {
+    const error = new Error("Câu hỏi Đúng/Sai phải có đúng 2 lựa chọn");
+    error.status = 400;
+    throw error;
+  }
+
+  const normalized = questionData.options.map((option) => {
+    if (!option || typeof option !== "object") {
+      const error = new Error("TRUE_FALSE options phải là object");
+      error.status = 400;
+      throw error;
+    }
+    return String(option.text || "").trim().toLowerCase();
+  });
+
+  if (!normalized.includes("true") || !normalized.includes("false")) {
+    const error = new Error("TRUE_FALSE options phải gồm True và False");
+    error.status = 400;
+    throw error;
+  }
+};
+
+const validateMultipleChoicePayload = (questionData) => {
+  if (!questionData.options || !Array.isArray(questionData.options) || questionData.options.length < 2) {
+    const error = new Error("Câu hỏi trắc nghiệm phải có ít nhất 2 lựa chọn");
+    error.status = 400;
+    throw error;
+  }
+
+  const hasCorrectAnswer = questionData.options.some((opt) => opt.isCorrect === true || opt.id === questionData.correctAnswer || opt.text === questionData.correctAnswer);
+  if (!hasCorrectAnswer) {
+    const error = new Error("Phải có ít nhất 1 đáp án đúng");
+    error.status = 400;
+    throw error;
+  }
+};
+
+const validateShortAnswerPayload = (questionData) => {
+  if (!questionData.correctAnswer || String(questionData.correctAnswer).trim() === "") {
+    const error = new Error("Câu hỏi trả lời ngắn phải có câu trả lời đúng");
+    error.status = 400;
+    throw error;
+  }
+};
+
+const validateQuestionPayloadByType = (type, questionData) => {
+  const normalizedType = String(type || "").trim().toLowerCase();
+  switch (normalizedType) {
+    case "multiple_choice":
+      return validateMultipleChoicePayload(questionData);
+    case "true_false":
+      return validateTrueFalsePayload(questionData);
+    case "short_answer":
+      return validateShortAnswerPayload(questionData);
+    case "essay":
+      return ensureEssayQuestionFieldsAllowed(normalizedType, questionData);
+    default:
+      return;
+  }
+};
+
+const normalizeQuestionPayload = (type, questionData) => {
+  const normalizedType = String(type || "").trim().toLowerCase();
+  if (normalizedType === "true_false") {
+    if (questionData.options === undefined || questionData.options === null) {
+      const correctAnswerValue = normalizeBooleanAnswer(questionData.correctAnswer);
+      questionData.options = buildTrueFalseOptions(correctAnswerValue);
+    }
   }
 };
 
@@ -319,7 +422,15 @@ export const addQuestionToExamSetService = async (examSetId, ownerId, questionDa
     throw error;
   }
 
-  ensureEssayQuestionFieldsAllowed(questionData.type, questionData);
+  // Validate question type
+  if (!VALID_QUESTION_TYPES.includes(questionData.type)) {
+    const error = new Error("Loại câu hỏi không hợp lệ");
+    error.status = 400;
+    throw error;
+  }
+
+  validateQuestionPayloadByType(questionData.type, questionData);
+  normalizeQuestionPayload(questionData.type, questionData);
 
   // Check if question ID already exists
   const questionExists = examSet.questions.some(q => q.questionId === questionData.questionId);
@@ -327,49 +438,6 @@ export const addQuestionToExamSetService = async (examSetId, ownerId, questionDa
     const error = new Error("questionId đã tồn tại trong bộ đề thi này");
     error.status = 400;
     throw error;
-  }
-
-  // Validate question type
-  const validTypes = ["multiple_choice", "true_false", "short_answer", "essay"];
-  if (!validTypes.includes(questionData.type)) {
-    const error = new Error("Loại câu hỏi không hợp lệ");
-    error.status = 400;
-    throw error;
-  }
-
-  // Type-specific validation
-  if (questionData.type === "multiple_choice") {
-    if (!questionData.options || !Array.isArray(questionData.options) || questionData.options.length < 2) {
-      const error = new Error("Câu hỏi trắc nghiệm phải có ít nhất 2 lựa chọn");
-      error.status = 400;
-      throw error;
-    }
-
-    const hasCorrectAnswer = questionData.options.some(opt => opt.isCorrect === true);
-    if (!hasCorrectAnswer) {
-      const error = new Error("Phải có ít nhất 1 đáp án đúng");
-      error.status = 400;
-      throw error;
-    }
-  } else if (questionData.type === "true_false") {
-    if (!questionData.options || !Array.isArray(questionData.options) || questionData.options.length !== 2) {
-      const error = new Error("Câu hỏi Đúng/Sai phải có đúng 2 lựa chọn");
-      error.status = 400;
-      throw error;
-    }
-
-    const hasCorrectAnswer = questionData.options.some(opt => opt.isCorrect === true);
-    if (!hasCorrectAnswer) {
-      const error = new Error("Phải có 1 đáp án đúng");
-      error.status = 400;
-      throw error;
-    }
-  } else if (questionData.type === "short_answer") {
-    if (!questionData.correctAnswer) {
-      const error = new Error("Câu hỏi trả lời ngắn phải có câu trả lời đúng");
-      error.status = 400;
-      throw error;
-    }
   }
 
   // Prepare new question object
@@ -459,7 +527,14 @@ export const updateQuestionInExamSetService = async (examSetId, ownerId, questio
   }
 
   const effectiveType = updateData.type || question.type;
-  ensureEssayQuestionFieldsAllowed(effectiveType, updateData, question);
+  if (!VALID_QUESTION_TYPES.includes(effectiveType)) {
+    const error = new Error("Loại câu hỏi không hợp lệ");
+    error.status = 400;
+    throw error;
+  }
+
+  validateQuestionPayloadByType(effectiveType, updateData);
+  normalizeQuestionPayload(effectiveType, updateData);
 
   if (updateData.score !== undefined) {
     question.points = updateData.score;
