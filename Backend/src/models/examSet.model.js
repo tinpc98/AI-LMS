@@ -128,6 +128,32 @@ const questionSchema = new Schema(
       default: "Sai rồi!",
     },
 
+    // Suggested reference answer for essay questions
+    suggestedAnswer: {
+      type: String,
+      default: "",
+      trim: true,
+      maxlength: 10000,
+    },
+
+    // Rubric for essay grading
+    rubric: [
+      {
+        _id: false,
+        criterion: {
+          type: String,
+          required: [true, "Tiêu chí rubric là bắt buộc"],
+          trim: true,
+          maxlength: 500,
+        },
+        maxScore: {
+          type: Number,
+          required: [true, "Điểm tối đa cho tiêu chí là bắt buộc"],
+          min: 0,
+        },
+      },
+    ],
+
     // ========== CATEGORIZATION & METADATA ==========
     // Sub-category/topic of question
     category: {

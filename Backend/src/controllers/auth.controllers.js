@@ -164,6 +164,61 @@ export const updateMyProfile = async (req, res) => {
 };
 
 /**
+ * Admin: Get all users
+ * GET /api/users
+ */
+export const getAllUsers = async (req, res) => {
+  res.status(501).json({
+    success: false,
+    message: "Chức năng lấy danh sách người dùng chưa được triển khai",
+  });
+};
+
+/**
+ * Admin: Get user by id
+ * GET /api/users/:id
+ */
+export const getUserById = async (req, res) => {
+  res.status(501).json({
+    success: false,
+    message: "Chức năng lấy người dùng theo ID chưa được triển khai",
+  });
+};
+
+/**
+ * Admin: Create a new user
+ * POST /api/users
+ */
+export const createUser = async (req, res) => {
+  res.status(501).json({
+    success: false,
+    message: "Chức năng tạo người dùng chưa được triển khai",
+  });
+};
+
+/**
+ * Admin: Update an existing user
+ * PUT /api/users/:id
+ */
+export const updateUser = async (req, res) => {
+  res.status(501).json({
+    success: false,
+    message: "Chức năng cập nhật người dùng chưa được triển khai",
+  });
+};
+
+/**
+ * Admin: Delete user
+ * DELETE /api/users/:id
+ */
+export const deleteUser = async (req, res) => {
+  res.status(501).json({
+    success: false,
+    message: "Chức năng xóa người dùng chưa được triển khai",
+  });
+};
+
+/**
  * Change user password
  * PUT /api/auth/change-password
  * Headers: { authorization: "Bearer token" }

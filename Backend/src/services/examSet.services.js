@@ -3,6 +3,41 @@ import { Types } from "mongoose";
 import ExamSet from "../models/examSet.model.js";
 import Folder from "../models/folder.model.js";
 
+const EDITABLE_EXAM_STATUSES = ["draft"];
+const essayForbiddenFields = ["options", "correctAnswer", "acceptedAnswers", "caseSensitive"];
+
+export const isEditableExamSetStatus = (status) => {
+  return EDITABLE_EXAM_STATUSES.includes(String(status).toLowerCase());
+};
+
+export const ensureEssayQuestionFieldsAllowed = (type, payload, existingQuestion = null) => {
+  const questionType = String(type || "").trim().toLowerCase();
+  if (questionType !== "essay") {
+    return;
+  }
+
+  for (const field of essayForbiddenFields) {
+    if (payload[field] !== undefined) {
+      const error = new Error(`ESSAY không sử dụng ${field}`);
+      error.status = 400;
+      throw error;
+    }
+  }
+
+  const effectiveScore =
+    payload.score !== undefined
+      ? payload.score
+      : payload.points !== undefined
+      ? payload.points
+      : existingQuestion?.points;
+
+  if (effectiveScore === undefined) {
+    const error = new Error("Score là bắt buộc cho ESSAY");
+    error.status = 400;
+    throw error;
+  }
+};
+
 /**
  * Create new exam set
  * @param {string} ownerId - Owner user ID (from JWT)
@@ -277,12 +312,14 @@ export const addQuestionToExamSetService = async (examSetId, ownerId, questionDa
     throw error;
   }
 
-  // Check if exam set is published (cannot add questions to published exams)
-  if (examSet.status === "published") {
-    const error = new Error("Không thể thêm câu hỏi vào bộ đề thi đã công bố");
+  // Check if exam set is in editable status
+  if (!isEditableExamSetStatus(examSet.status)) {
+    const error = new Error("Không thể thêm câu hỏi khi bộ đề thi không ở trạng thái draft");
     error.status = 403;
     throw error;
   }
+
+  ensureEssayQuestionFieldsAllowed(questionData.type, questionData);
 
   // Check if question ID already exists
   const questionExists = examSet.questions.some(q => q.questionId === questionData.questionId);
@@ -343,7 +380,12 @@ export const addQuestionToExamSetService = async (examSetId, ownerId, questionDa
     content: questionData.content.trim(),
     imageUrl: questionData.imageUrl || null,
     hint: questionData.hint ? questionData.hint.trim() : "",
-    points: questionData.points || 1,
+    points:
+      questionData.points !== undefined
+        ? questionData.points
+        : questionData.score !== undefined
+        ? questionData.score
+        : 1,
     difficulty: questionData.difficulty || "medium",
     options: questionData.options || [],
     correctAnswer: questionData.correctAnswer || "",
@@ -352,6 +394,8 @@ export const addQuestionToExamSetService = async (examSetId, ownerId, questionDa
     explanation: questionData.explanation ? questionData.explanation.trim() : "",
     feedbackCorrect: questionData.feedbackCorrect || "Chính xác!",
     feedbackIncorrect: questionData.feedbackIncorrect || "Sai rồi!",
+    suggestedAnswer: questionData.suggestedAnswer ? questionData.suggestedAnswer.trim() : "",
+    rubric: Array.isArray(questionData.rubric) ? questionData.rubric : [],
     category: questionData.category ? questionData.category.trim() : "",
     tags: questionData.tags || [],
     isActive: questionData.isActive !== undefined ? questionData.isActive : true,
@@ -414,6 +458,16 @@ export const updateQuestionInExamSetService = async (examSetId, ownerId, questio
     throw error;
   }
 
+  const effectiveType = updateData.type || question.type;
+  ensureEssayQuestionFieldsAllowed(effectiveType, updateData, question);
+
+  if (updateData.score !== undefined) {
+    question.points = updateData.score;
+  }
+  if (updateData.points !== undefined) {
+    question.points = updateData.points;
+  }
+
   // Allowed fields to update
   const allowedFields = [
     "type",
@@ -434,6 +488,8 @@ export const updateQuestionInExamSetService = async (examSetId, ownerId, questio
     "isActive",
     "timeLimit",
     "order",
+    "suggestedAnswer",
+    "rubric",
   ];
 
   // Update fields if provided

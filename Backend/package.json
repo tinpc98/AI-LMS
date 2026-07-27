@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "nodemon main.js",
-    "test:validator": "node ./src/scripts/runMultipleChoiceValidatorTests.js"
+    "test:validator": "node ./src/scripts/runMultipleChoiceValidatorTests.js",
+    "test:essay-validator": "node ./src/scripts/runEssayQuestionValidationTests.js"
   },
   "author": "",
   "license": "ISC",
