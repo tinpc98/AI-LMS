@@ -1,6 +1,6 @@
 // File: src/routers/examSet.routes.js
 import express from "express";
-import { createExamSet, getExamSets, updateExamSet, deleteExamSet, restoreExamSet, addQuestionToExamSet } from "../controllers/examSet.controller.js";
+import { createExamSet, getExamSets, updateExamSet, deleteExamSet, restoreExamSet, addQuestionToExamSet, updateQuestionInExamSet } from "../controllers/examSet.controller.js";
 import { verifyUser } from "../middlewares/auth.middlewares.js";
 
 const router = express.Router();
@@ -28,6 +28,13 @@ router.get("/", getExamSets);
  * Body: { questionId, type, content, points?, ... }
  */
 router.post("/:id/questions", addQuestionToExamSet);
+
+/**
+ * PATCH /api/exam-sets/:id/questions/:questionId
+ * Update question in exam set
+ * Body: { type?, content?, points?, difficulty?, options?, ... }
+ */
+router.patch("/:id/questions/:questionId", updateQuestionInExamSet);
 
 /**
  * PATCH /api/exam-sets/:id

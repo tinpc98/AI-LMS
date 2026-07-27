@@ -366,3 +366,135 @@ export const addQuestionToExamSetService = async (examSetId, ownerId, questionDa
 
   return updatedExamSet.populate("folderId", "name").populate("ownerId", "fullName email");
 };
+
+/**
+ * Update question in exam set
+ * @param {string} examSetId - Exam set ID
+ * @param {string} ownerId - Current user ID (from JWT)
+ * @param {string} questionId - Question ID (not MongoDB _id)
+ * @param {Object} updateData - Question data to update
+ * @returns {Object} Updated exam set with modified question
+ */
+export const updateQuestionInExamSetService = async (examSetId, ownerId, questionId, updateData) => {
+  // Find exam set and verify ownership
+  const examSet = await ExamSet.findOne({
+    _id: examSetId,
+    ownerId: ownerId,
+    isDeleted: false,
+  });
+
+  if (!examSet) {
+    const error = new Error("Bộ đề thi không tồn tại hoặc bạn không có quyền truy cập");
+    error.status = 404;
+    throw error;
+  }
+
+  // Check if exam set is published (cannot update questions in published exams)
+  if (examSet.status === "published") {
+    const error = new Error("Không thể cập nhật câu hỏi trong bộ đề thi đã công bố");
+    error.status = 403;
+    throw error;
+  }
+
+  // Find question in the questions array
+  const questionIndex = examSet.questions.findIndex(q => q.questionId === questionId);
+  if (questionIndex === -1) {
+    const error = new Error("Câu hỏi không tồn tại");
+    error.status = 404;
+    throw error;
+  }
+
+  const question = examSet.questions[questionIndex];
+
+  // Cannot update questionId (unique identifier)
+  if (updateData.questionId && updateData.questionId !== questionId) {
+    const error = new Error("Không thể thay đổi questionId");
+    error.status = 400;
+    throw error;
+  }
+
+  // Allowed fields to update
+  const allowedFields = [
+    "type",
+    "content",
+    "imageUrl",
+    "hint",
+    "points",
+    "difficulty",
+    "options",
+    "correctAnswer",
+    "acceptedAnswers",
+    "caseSensitive",
+    "explanation",
+    "feedbackCorrect",
+    "feedbackIncorrect",
+    "category",
+    "tags",
+    "isActive",
+    "timeLimit",
+    "order",
+  ];
+
+  // Update fields if provided
+  for (const field of allowedFields) {
+    if (field in updateData && updateData[field] !== undefined) {
+      if (field === "content" || field === "hint" || field === "explanation" || field === "category") {
+        // Trim string fields
+        question[field] = typeof updateData[field] === "string" ? updateData[field].trim() : updateData[field];
+      } else {
+        question[field] = updateData[field];
+      }
+    }
+  }
+
+  // Validate question type if it was updated
+  const validTypes = ["multiple_choice", "true_false", "short_answer", "essay"];
+  if (!validTypes.includes(question.type)) {
+    const error = new Error("Loại câu hỏi không hợp lệ");
+    error.status = 400;
+    throw error;
+  }
+
+  // Type-specific validation
+  if (question.type === "multiple_choice") {
+    if (!question.options || !Array.isArray(question.options) || question.options.length < 2) {
+      const error = new Error("Câu hỏi trắc nghiệm phải có ít nhất 2 lựa chọn");
+      error.status = 400;
+      throw error;
+    }
+
+    const hasCorrectAnswer = question.options.some(opt => opt.isCorrect === true);
+    if (!hasCorrectAnswer) {
+      const error = new Error("Phải có ít nhất 1 đáp án đúng");
+      error.status = 400;
+      throw error;
+    }
+  } else if (question.type === "true_false") {
+    if (!question.options || !Array.isArray(question.options) || question.options.length !== 2) {
+      const error = new Error("Câu hỏi Đúng/Sai phải có đúng 2 lựa chọn");
+      error.status = 400;
+      throw error;
+    }
+
+    const hasCorrectAnswer = question.options.some(opt => opt.isCorrect === true);
+    if (!hasCorrectAnswer) {
+      const error = new Error("Phải có 1 đáp án đúng");
+      error.status = 400;
+      throw error;
+    }
+  } else if (question.type === "short_answer") {
+    if (!question.correctAnswer) {
+      const error = new Error("Câu hỏi trả lời ngắn phải có câu trả lời đúng");
+      error.status = 400;
+      throw error;
+    }
+  }
+
+  // Update the question in the array
+  examSet.questions[questionIndex] = question;
+
+  // Save exam set
+  const updatedExamSet = await examSet.save();
+
+  return updatedExamSet.populate("folderId", "name").populate("ownerId", "fullName email");
+};

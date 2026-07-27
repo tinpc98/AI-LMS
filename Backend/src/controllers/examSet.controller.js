@@ -1,5 +1,5 @@
 // File: src/controllers/examSet.controller.js
-import { createExamSetService, getExamSetsService, updateExamSetService, deleteExamSetService, restoreExamSetService, addQuestionToExamSetService } from "../services/examSet.services.js";
+import { createExamSetService, getExamSetsService, updateExamSetService, deleteExamSetService, restoreExamSetService, addQuestionToExamSetService, updateQuestionInExamSetService } from "../services/examSet.services.js";
 
 /**
  * Create new exam set
@@ -238,6 +238,49 @@ export const addQuestionToExamSet = async (req, res) => {
     return res.status(status).json({
       success: false,
       message: error.message || "Lỗi thêm câu hỏi",
+    });
+  }
+};
+
+/**
+ * Update question in exam set
+ * PATCH /api/exam-sets/:id/questions/:questionId
+ * Body: {
+ *   type?, content?, points?, difficulty?,
+ *   options?, correctAnswer?, acceptedAnswers?, caseSensitive?,
+ *   explanation?, feedbackCorrect?, feedbackIncorrect?,
+ *   category?, tags?, isActive?, timeLimit?, imageUrl?, hint?, order?
+ * }
+ */
+export const updateQuestionInExamSet = async (req, res) => {
+  try {
+    const { id, questionId } = req.params;
+    const userId = req.user.id; // From verifyUser middleware (JWT)
+    const updateData = req.body;
+
+    // Validate that update data is not empty
+    if (!updateData || Object.keys(updateData).length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Dữ liệu cập nhật là bắt buộc",
+      });
+    }
+
+    // Update question in exam set
+    const examSet = await updateQuestionInExamSetService(id, userId, questionId, updateData);
+
+    return res.status(200).json({
+      success: true,
+      message: "Cập nhật câu hỏi thành công",
+      data: examSet,
+    });
+  } catch (error) {
+    console.error("[ExamSet] Update question error:", error.message);
+
+    const status = error.status || 500;
+    return res.status(status).json({
+      success: false,
+      message: error.message || "Lỗi cập nhật câu hỏi",
     });
   }
 };
