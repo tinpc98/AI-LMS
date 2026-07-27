@@ -217,7 +217,7 @@ const classSchema = new Schema(
       type: Boolean,
       default: true,
     },
-    // Mở rộng Enum trạng thái theo nghiệp vụ mới (hỗ trợ cả giá trị cũ "Upcoming", "Active")
+    // Trạng thái vòng đời lớp học chuẩn hóa (loại bỏ giá trị legacy)
     status: {
       type: String,
       enum: [
@@ -226,9 +226,7 @@ const classSchema = new Schema(
         "Ongoing",
         "Completed",
         "Cancelled",
-        "Archived",
-        "Upcoming",
-        "Active",
+        "Archived"
       ],
       default: "Draft",
     },

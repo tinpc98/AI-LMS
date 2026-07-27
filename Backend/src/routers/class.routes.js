@@ -6,8 +6,10 @@ import {
   DeleteClass,
   UpdateClass,
   AssignTeacher,
+  UnassignTeacher,
   AssignStudent,
   RemoveStudent,
+  UpdateStudentStatus,
   AddResource,
   RemoveResource,
   ClassTrashList,
@@ -19,7 +21,7 @@ import { verifyUser, isAdmin, isTeacher } from "../middlewares/auth.middlewares.
 const route = Router();
 
 // API Thùng rác (phải đặt trước /:id)
-route.get("/trash", verifyUser, ClassTrashList);
+route.get("/trash", verifyUser, isAdmin, ClassTrashList);
 
 // Xem danh sách và chi tiết lớp học
 route.get("/", verifyUser, ClassList);
@@ -32,11 +34,14 @@ route.delete("/:id/resources/:resourceId", verifyUser, isTeacher, RemoveResource
 // Nhóm API quản trị dành riêng cho Admin
 route.post("/", verifyUser, isAdmin, AddNewClass);
 route.put("/:id", verifyUser, isAdmin, UpdateClass);
-route.put("/:id/assign-teacher", verifyUser, isAdmin, AssignTeacher);
+route.patch("/:id/assign-teacher", verifyUser, isAdmin, AssignTeacher);   // PATCH: chỉ update 2-3 field
+route.patch("/:id/unassign-teacher", verifyUser, isAdmin, UnassignTeacher); // Gỡ giáo viên
 route.post("/:id/students", verifyUser, isAdmin, AssignStudent);
 route.delete("/:id/students/:studentId", verifyUser, isAdmin, RemoveStudent);
-route.delete("/:id", verifyUser, isAdmin, DeleteClass);
+route.patch("/:id/students/:studentId/status", verifyUser, isTeacher, UpdateStudentStatus); // Admin hoặc Teacher
+route.patch("/:id/delete", verifyUser, isAdmin, DeleteClass);              // PATCH: soft delete (flag update)
 route.patch("/:id/restore", verifyUser, isAdmin, RestoreClass);
 route.delete("/:id/force", verifyUser, isAdmin, PermanentDeleteClass);
 
 export default route;
+

@@ -37,9 +37,15 @@ export const loginService = async (email, password) => {
   }
 
   // Bước 3: Tạo Access Token thời hạn 1 ngày
+  // JWT_SECRET là BẮT BUỘC – không dùng fallback để tránh rủi ro bảo mật nghiêm trọng
+  const jwtSecret = process.env.JWT_SECRET;
+  if (!jwtSecret) {
+    throw new Error("Cấu hình máy chủ lỗi: JWT_SECRET chưa được thiết lập trong biến môi trường!");
+  }
+
   const accessToken = jwt.sign(
     { id: user._id, email: user.email, role: user.role },
-    process.env.JWT_SECRET || "123456",
+    jwtSecret,
     { expiresIn: "1d" }
   );
 

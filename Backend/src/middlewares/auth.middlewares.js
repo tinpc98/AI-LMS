@@ -15,7 +15,14 @@ export const verifyUser = (req, res, next) => {
       return res.status(401).json({ message: "Định dạng token không hợp lệ!" });
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || "123456");
+    // JWT_SECRET là BẮT BUỘC – không fallback để tránh rủi ro bảo mật
+    const jwtSecret = process.env.JWT_SECRET;
+    if (!jwtSecret) {
+      console.error("[Auth] FATAL: JWT_SECRET chưa được thiết lập trong biến môi trường!");
+      return res.status(500).json({ message: "Lỗi cấu hình máy chủ. Vui lòng liên hệ quản trị viên." });
+    }
+
+    const decoded = jwt.verify(token, jwtSecret);
 
     // Chuẩn hóa đính kèm cả id và _id để tránh mismatch giữa các controllers
     const userId = decoded.id || decoded._id;
