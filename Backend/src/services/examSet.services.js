@@ -62,6 +62,21 @@ const normalizeExamSetTags = (tags) => {
   return normalizedTags;
 };
 
+const initializeVersionMetadata = (examSet) => {
+  if (!examSet) {
+    return;
+  }
+
+  examSet.versionNumber = 1;
+  examSet.version = 1;
+  examSet.previousVersionId = null;
+  examSet.isLatestVersion = true;
+
+  if (!examSet.rootExamSetId) {
+    examSet.rootExamSetId = examSet._id;
+  }
+};
+
 const normalizeQuestionOrder = (questions) => {
   if (!Array.isArray(questions)) {
     return [];
@@ -559,6 +574,8 @@ export const duplicateExamSetService = async (examSetId, currentUserId, currentU
     isDeleted: false,
   });
 
+  initializeVersionMetadata(duplicatedExamSet);
+
   recalculateExamSetMetrics(duplicatedExamSet);
 
   await duplicatedExamSet.save();
@@ -602,6 +619,8 @@ export const createExamSetService = async (ownerId, examData) => {
     tags: examData.tags || [],
     questions: [], // Empty by default
   });
+
+  initializeVersionMetadata(newExamSet);
 
   await newExamSet.save();
   return newExamSet;

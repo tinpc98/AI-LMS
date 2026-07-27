@@ -250,11 +250,66 @@ const examSetSchema = new Schema(
       min: 0,
     },
 
-    // Version number for tracking changes
+    // Version metadata for Exam Set versions
+    versionNumber: {
+      type: Number,
+      default: 1,
+      min: [1, "versionNumber phải lớn hơn hoặc bằng 1"],
+      validate: {
+        validator(value) {
+          return Number.isInteger(value);
+        },
+        message: "versionNumber phải là số nguyên",
+      },
+    },
+
     version: {
       type: Number,
       default: 1,
-      min: 1,
+      min: [1, "version phải lớn hơn hoặc bằng 1"],
+      validate: {
+        validator(value) {
+          return Number.isInteger(value);
+        },
+        message: "version phải là số nguyên",
+      },
+    },
+
+    rootExamSetId: {
+      type: Schema.Types.ObjectId,
+      ref: "ExamSet",
+      default: null,
+      validate: {
+        validator(value) {
+          return value === null || Schema.Types.ObjectId.isValid(String(value));
+        },
+        message: "rootExamSetId phải là ObjectId hợp lệ hoặc null",
+      },
+    },
+
+    previousVersionId: {
+      type: Schema.Types.ObjectId,
+      ref: "ExamSet",
+      default: null,
+      validate: [
+        {
+          validator(value) {
+            return value === null || Schema.Types.ObjectId.isValid(String(value));
+          },
+          message: "previousVersionId phải là ObjectId hợp lệ hoặc null",
+        },
+        {
+          validator(value) {
+            return value === null || String(value) !== String(this._id);
+          },
+          message: "previousVersionId không được trùng với _id của document",
+        },
+      ],
+    },
+
+    isLatestVersion: {
+      type: Boolean,
+      default: true,
     },
 
     // Tags for categorizing exam sets
@@ -295,6 +350,20 @@ examSetSchema.index({ ownerId: 1, folderId: 1 });
 
 // Index for finding published exam sets
 examSetSchema.index({ ownerId: 1, status: 1 });
+
+// Unique version number within the same root exam set lineage
+examSetSchema.index(
+  { rootExamSetId: 1, versionNumber: 1 },
+  {
+    unique: true,
+    partialFilterExpression: {
+      rootExamSetId: { $exists: true, $ne: null },
+    },
+  }
+);
+
+// Quickly query the latest version in a lineage
+examSetSchema.index({ rootExamSetId: 1, isLatestVersion: 1 });
 
 // Middleware to auto-update questionCount and totalPoints before save
 examSetSchema.pre("save", function (next) {
