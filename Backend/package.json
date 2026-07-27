@@ -15,7 +15,8 @@
     "test:examset-new-version": "node ./src/scripts/runExamSetNewVersionServiceTests.js",
     "test:examset-versions": "node ./src/scripts/runExamSetVersionsServiceTests.js",
     "test:examset-restore": "node ./src/scripts/runExamSetRestoreServiceTests.js",
-    "test:all": "npm run test:validator && npm run test:essay-validator && npm run test:examset-metrics && npm run test:examset-question-metrics-flow && npm run test:examset-detail && npm run test:examset-draft && npm run test:examset-new-version && npm run test:examset-versions && npm run test:examset-restore"
+    "test:examset-share": "node ./src/scripts/runExamSetShareModelTests.js",
+    "test:all": "npm run test:validator && npm run test:essay-validator && npm run test:examset-metrics && npm run test:examset-question-metrics-flow && npm run test:examset-detail && npm run test:examset-draft && npm run test:examset-new-version && npm run test:examset-versions && npm run test:examset-restore && npm run test:examset-share"
   },
   "author": "",
   "license": "ISC",
