@@ -110,3 +110,74 @@ export const getExamSetsService = async (ownerId, filters = {}) => {
     },
   };
 };
+
+/**
+ * Update exam set
+ * @param {string} examSetId - Exam set ID
+ * @param {string} ownerId - Current user ID (from JWT)
+ * @param {Object} updateData - Data to update
+ * @returns {Object} Updated exam set
+ */
+export const updateExamSetService = async (examSetId, ownerId, updateData) => {
+  // Find exam set and verify ownership
+  const examSet = await ExamSet.findOne({
+    _id: examSetId,
+    ownerId: ownerId,
+    isDeleted: false,
+  });
+
+  if (!examSet) {
+    const error = new Error("Bộ đề thi không tồn tại hoặc bạn không có quyền sửa");
+    error.status = 404;
+    throw error;
+  }
+
+  // Cannot update published exam sets
+  if (examSet.status === "published") {
+    const error = new Error("Không thể sửa bộ đề thi đã xuất bản");
+    error.status = 403;
+    throw error;
+  }
+
+  // Allowed fields to update
+  const allowedFields = ["title", "description", "tags", "folderId"];
+  const updateFields = {};
+
+  for (const field of allowedFields) {
+    if (field in updateData && updateData[field] !== undefined) {
+      updateFields[field] = updateData[field];
+    }
+  }
+
+  // If updating folderId, verify new folder exists and belongs to owner
+  if (updateFields.folderId) {
+    const newFolder = await Folder.findOne({
+      _id: updateFields.folderId,
+      ownerId: ownerId,
+      isDeleted: false,
+    });
+
+    if (!newFolder) {
+      const error = new Error("Folder không tồn tại hoặc bạn không có quyền truy cập");
+      error.status = 404;
+      throw error;
+    }
+  }
+
+  // Normalize string fields
+  if (updateFields.title) {
+    updateFields.title = updateFields.title.trim();
+  }
+
+  if (updateFields.description) {
+    updateFields.description = updateFields.description.trim();
+  }
+
+  // Update exam set
+  const updatedExamSet = await ExamSet.findByIdAndUpdate(examSetId, updateFields, {
+    new: true,
+    runValidators: true,
+  }).populate("folderId", "name").populate("ownerId", "fullName email");
+
+  return updatedExamSet;
+};
