@@ -80,6 +80,59 @@ export const examSetShareRevokeValidation = [
   handleValidationErrors,
 ];
 
+export const examSetShareListValidation = [
+  param("examSetId")
+    .notEmpty()
+    .withMessage("examSetId là bắt buộc")
+    .bail()
+    .isMongoId()
+    .withMessage("examSetId không hợp lệ"),
+
+  query("page")
+    .optional()
+    .isInt({ min: 1 })
+    .withMessage("page phải là số nguyên lớn hơn hoặc bằng 1")
+    .toInt(),
+
+  query("limit")
+    .optional()
+    .isInt({ min: 1, max: 100 })
+    .withMessage("limit phải là số nguyên từ 1 đến 100")
+    .toInt(),
+
+  query("status")
+    .optional()
+    .isIn(["ACTIVE", "REVOKED", "EXPIRED"])
+    .withMessage("status không hợp lệ"),
+
+  query("permission")
+    .optional()
+    .isIn(["VIEW", "EDIT"])
+    .withMessage("permission không hợp lệ"),
+
+  query("search")
+    .optional()
+    .isString()
+    .withMessage("search phải là chuỗi")
+    .trim()
+    .isLength({ max: 100 })
+    .withMessage("search không được vượt quá 100 ký tự"),
+
+  query("sortBy")
+    .optional()
+    .isIn(["createdAt", "updatedAt", "expiresAt", "status", "permission"])
+    .withMessage("sortBy không hợp lệ"),
+
+  query("sortOrder")
+    .optional()
+    .trim()
+    .toLowerCase()
+    .isIn(["asc", "desc"])
+    .withMessage("sortOrder không hợp lệ"),
+
+  handleValidationErrors,
+];
+
 export const loginValidation = [
   body("email")
     .trim()

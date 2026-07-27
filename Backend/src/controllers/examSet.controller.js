@@ -1,6 +1,5 @@
 // File: src/controllers/examSet.controller.js
-import { createExamSetService, getExamSetsService, updateExamSetService, deleteExamSetService, restoreExamSetService, addQuestionToExamSetService, updateQuestionInExamSetService, deleteQuestionFromExamSetService, reorderQuestionsInExamSetService, getExamSetDetailService, saveDraftExamSetService, duplicateExamSetService, updateExamSetTagsService, createNewExamSetVersionService, getExamSetVersionsService, restoreExamSetVersionService } from "../services/examSet.services.js";
-import { createExamSetShareService, revokeExamSetShareService } from "../services/examSet.services.js";
+import { createExamSetService, getExamSetsService, updateExamSetService, deleteExamSetService, restoreExamSetService, addQuestionToExamSetService, updateQuestionInExamSetService, deleteQuestionFromExamSetService, reorderQuestionsInExamSetService, getExamSetDetailService, saveDraftExamSetService, duplicateExamSetService, updateExamSetTagsService, createNewExamSetVersionService, getExamSetVersionsService, restoreExamSetVersionService, createExamSetShareService, revokeExamSetShareService, listExamSetSharesService } from "../services/examSet.services.js";
 import { Types } from "mongoose";
 
 /**
@@ -294,6 +293,34 @@ export const revokeExamSetShare = async (req, res) => {
     console.error("[ExamSet] Revoke share error:", error.message);
     const status = error.status || 500;
     return res.status(status).json({ success: false, message: error.message || "Lỗi thu hồi chia sẻ bộ đề thi" });
+  }
+};
+
+export const listExamSetShares = async (req, res) => {
+  try {
+    const { examSetId } = req.params;
+
+    if (!examSetId || !Types.ObjectId.isValid(examSetId)) {
+      return res.status(400).json({ success: false, message: "examSetId không hợp lệ" });
+    }
+
+    const { page, limit, status, permission, search, sortBy, sortOrder } = req.query;
+
+    const result = await listExamSetSharesService(examSetId, req.user.id, req.user.role, {
+      page,
+      limit,
+      status,
+      permission,
+      search,
+      sortBy,
+      sortOrder,
+    });
+
+    return res.status(200).json({ success: true, message: "Exam Set shares retrieved successfully", data: result });
+  } catch (error) {
+    console.error("[ExamSet] List share error:", error.message);
+    const status = error.status || 500;
+    return res.status(status).json({ success: false, message: error.message || "Lỗi lấy danh sách chia sẻ bộ đề thi" });
   }
 };
 

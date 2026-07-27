@@ -388,6 +388,154 @@ export const revokeExamSetShareService = async (examSetId, shareId, currentUserI
   return { statusCode: 200, message: "Share revoked successfully", data: updated };
 };
 
+const escapeRegex = (value) => {
+  return String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+};
+
+export const listExamSetSharesService = async (examSetId, currentUserId, currentUserRole, options = {}) => {
+  if (!examSetId || !Types.ObjectId.isValid(examSetId)) {
+    const error = new Error("examSetId không hợp lệ");
+    error.status = 400;
+    throw error;
+  }
+
+  const examSet = await ExamSet.findOne({ _id: examSetId, isDeleted: false });
+  if (!examSet) {
+    const error = new Error("Bộ đề thi không tồn tại");
+    error.status = 404;
+    throw error;
+  }
+
+  const userRole = String(currentUserRole || "").toLowerCase();
+  const isOwner = String(examSet.ownerId?._id || examSet.ownerId) === String(currentUserId);
+  const isAdmin = userRole === "admin";
+
+  if (!isOwner && !isAdmin) {
+    const error = new Error("Bạn không có quyền xem danh sách chia sẻ của bộ đề thi này");
+    error.status = 403;
+    throw error;
+  }
+
+  const page = Math.max(1, Number(options.page) || 1);
+  const limit = Math.max(1, Math.min(100, Number(options.limit) || 10));
+  const skip = (page - 1) * limit;
+
+  const filter = {
+    examSetId,
+  };
+
+  if (options.status) {
+    filter.status = options.status;
+  }
+
+  if (options.permission) {
+    filter.permission = options.permission;
+  }
+
+  const sortBy = ["createdAt", "updatedAt", "expiresAt", "status", "permission"].includes(options.sortBy)
+    ? options.sortBy
+    : "createdAt";
+  const sortOrder = String(options.sortOrder || "desc").toLowerCase() === "asc" ? 1 : -1;
+
+  let sharedWithFilterIds = null;
+  if (options.search) {
+    const searchValue = String(options.search).trim();
+    if (searchValue.length > 0) {
+      const regex = new RegExp(escapeRegex(searchValue), "i");
+      const users = await User.find({
+        isDeleted: false,
+        $or: [{ fullName: regex }, { email: regex }],
+      }).select("_id");
+
+      sharedWithFilterIds = users.map((user) => String(user._id));
+      if (sharedWithFilterIds.length === 0) {
+        return {
+          items: [],
+          pagination: {
+            page,
+            limit,
+            totalItems: 0,
+            totalPages: 0,
+            hasNextPage: false,
+            hasPreviousPage: false,
+          },
+        };
+      }
+
+      filter.sharedWithUserId = { $in: sharedWithFilterIds };
+    }
+  }
+
+  const [items, totalItems] = await Promise.all([
+    ExamSetShare.find(filter)
+      .sort({ [sortBy]: sortOrder })
+      .skip(skip)
+      .limit(limit)
+      .populate("sharedWithUserId", "fullName email role avatar status")
+      .populate("sharedBy", "fullName email role")
+      .populate("revokedBy", "fullName email role"),
+    ExamSetShare.countDocuments(filter),
+  ]);
+
+  const mappedItems = items.map((share) => {
+    const shareObject = share.toObject ? share.toObject() : share;
+    const effectiveStatus =
+      shareObject.status === EXAM_SET_SHARE_STATUS.ACTIVE && shareObject.expiresAt && new Date(shareObject.expiresAt).getTime() <= Date.now()
+        ? EXAM_SET_SHARE_STATUS.EXPIRED
+        : shareObject.status;
+
+    return {
+      _id: String(shareObject._id),
+      examSetId: String(shareObject.examSetId),
+      ownerId: String(shareObject.ownerId),
+      sharedWithUser: shareObject.sharedWithUserId
+        ? {
+            _id: String(shareObject.sharedWithUserId._id || shareObject.sharedWithUserId),
+            fullName: shareObject.sharedWithUserId.fullName || "",
+            email: shareObject.sharedWithUserId.email || "",
+            role: shareObject.sharedWithUserId.role || "",
+            avatar: shareObject.sharedWithUserId.avatar || "",
+            status: shareObject.sharedWithUserId.status || "",
+          }
+        : null,
+      permission: shareObject.permission,
+      status: shareObject.status,
+      effectiveStatus,
+      expiresAt: shareObject.expiresAt || null,
+      note: shareObject.note || "",
+      sharedBy: shareObject.sharedBy
+        ? {
+            _id: String(shareObject.sharedBy._id || shareObject.sharedBy),
+            fullName: shareObject.sharedBy.fullName || "",
+            email: shareObject.sharedBy.email || "",
+          }
+        : null,
+      revokedAt: shareObject.revokedAt || null,
+      revokedBy: shareObject.revokedBy
+        ? {
+            _id: String(shareObject.revokedBy._id || shareObject.revokedBy),
+            fullName: shareObject.revokedBy.fullName || "",
+            email: shareObject.revokedBy.email || "",
+          }
+        : null,
+      createdAt: shareObject.createdAt,
+      updatedAt: shareObject.updatedAt,
+    };
+  });
+
+  return {
+    items: mappedItems,
+    pagination: {
+      page,
+      limit,
+      totalItems,
+      totalPages: Math.ceil(totalItems / limit),
+      hasNextPage: page * limit < totalItems,
+      hasPreviousPage: page > 1,
+    },
+  };
+};
+
 /**
  * Get version history for an exam set lineage
  * @param {string} examSetId - source exam set id

@@ -18,7 +18,8 @@
     "test:examset-share": "node ./src/scripts/runExamSetShareModelTests.js",
     "test:examset-share-service": "node ./src/scripts/runExamSetShareServiceTests.js",
     "test:examset-share-revoke": "node ./src/scripts/runExamSetShareRevokeServiceTests.js",
-    "test:all": "npm run test:validator && npm run test:essay-validator && npm run test:examset-metrics && npm run test:examset-question-metrics-flow && npm run test:examset-detail && npm run test:examset-draft && npm run test:examset-new-version && npm run test:examset-versions && npm run test:examset-restore && npm run test:examset-share && npm run test:examset-share-service && npm run test:examset-share-revoke"
+    "test:examset-share-list": "node ./src/scripts/runExamSetShareListServiceTests.js",
+    "test:all": "npm run test:validator && npm run test:essay-validator && npm run test:examset-metrics && npm run test:examset-question-metrics-flow && npm run test:examset-detail && npm run test:examset-draft && npm run test:examset-new-version && npm run test:examset-versions && npm run test:examset-restore && npm run test:examset-share && npm run test:examset-share-service && npm run test:examset-share-revoke && npm run test:examset-share-list"
   },
   "author": "",
   "license": "ISC",
