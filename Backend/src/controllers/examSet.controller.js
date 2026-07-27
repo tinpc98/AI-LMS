@@ -1,5 +1,5 @@
 // File: src/controllers/examSet.controller.js
-import { createExamSetService, getExamSetsService, updateExamSetService, deleteExamSetService, restoreExamSetService } from "../services/examSet.services.js";
+import { createExamSetService, getExamSetsService, updateExamSetService, deleteExamSetService, restoreExamSetService, addQuestionToExamSetService } from "../services/examSet.services.js";
 
 /**
  * Create new exam set
@@ -181,6 +181,63 @@ export const restoreExamSet = async (req, res) => {
     return res.status(status).json({
       success: false,
       message: error.message || "Lỗi khôi phục bộ đề thi",
+    });
+  }
+};
+
+/**
+ * Add question to exam set
+ * POST /api/exam-sets/:id/questions
+ * Body: {
+ *   questionId, type, content, points?, difficulty?,
+ *   options?, correctAnswer?, acceptedAnswers?, caseSensitive?,
+ *   explanation?, feedbackCorrect?, feedbackIncorrect?,
+ *   category?, tags?, isActive?, timeLimit?, imageUrl?, hint?, order?
+ * }
+ */
+export const addQuestionToExamSet = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user.id; // From verifyUser middleware (JWT)
+    const questionData = req.body;
+
+    // Validate required fields
+    if (!questionData.questionId) {
+      return res.status(400).json({
+        success: false,
+        message: "questionId là bắt buộc",
+      });
+    }
+
+    if (!questionData.type) {
+      return res.status(400).json({
+        success: false,
+        message: "Loại câu hỏi là bắt buộc",
+      });
+    }
+
+    if (!questionData.content) {
+      return res.status(400).json({
+        success: false,
+        message: "Nội dung câu hỏi là bắt buộc",
+      });
+    }
+
+    // Add question to exam set
+    const examSet = await addQuestionToExamSetService(id, userId, questionData);
+
+    return res.status(201).json({
+      success: true,
+      message: "Thêm câu hỏi thành công",
+      data: examSet,
+    });
+  } catch (error) {
+    console.error("[ExamSet] Add question error:", error.message);
+
+    const status = error.status || 500;
+    return res.status(status).json({
+      success: false,
+      message: error.message || "Lỗi thêm câu hỏi",
     });
   }
 };

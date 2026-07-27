@@ -235,3 +235,134 @@ export const restoreExamSetService = async (examSetId, ownerId) => {
 
   return examSet;
 };
+
+/**
+ * Add question to exam set
+ * @param {string} examSetId - Exam set ID
+ * @param {string} ownerId - Current user ID (from JWT)
+ * @param {Object} questionData - Question data
+ * @returns {Object} Updated exam set with new question
+ */
+export const addQuestionToExamSetService = async (examSetId, ownerId, questionData) => {
+  // Validate required fields
+  if (!questionData.questionId) {
+    const error = new Error("questionId là bắt buộc");
+    error.status = 400;
+    throw error;
+  }
+
+  if (!questionData.type) {
+    const error = new Error("Loại câu hỏi là bắt buộc");
+    error.status = 400;
+    throw error;
+  }
+
+  if (!questionData.content) {
+    const error = new Error("Nội dung câu hỏi là bắt buộc");
+    error.status = 400;
+    throw error;
+  }
+
+  // Find exam set and verify ownership
+  const examSet = await ExamSet.findOne({
+    _id: examSetId,
+    ownerId: ownerId,
+    isDeleted: false,
+  });
+
+  if (!examSet) {
+    const error = new Error("Bộ đề thi không tồn tại hoặc bạn không có quyền truy cập");
+    error.status = 404;
+    throw error;
+  }
+
+  // Check if exam set is published (cannot add questions to published exams)
+  if (examSet.status === "published") {
+    const error = new Error("Không thể thêm câu hỏi vào bộ đề thi đã công bố");
+    error.status = 403;
+    throw error;
+  }
+
+  // Check if question ID already exists
+  const questionExists = examSet.questions.some(q => q.questionId === questionData.questionId);
+  if (questionExists) {
+    const error = new Error("questionId đã tồn tại trong bộ đề thi này");
+    error.status = 400;
+    throw error;
+  }
+
+  // Validate question type
+  const validTypes = ["multiple_choice", "true_false", "short_answer", "essay"];
+  if (!validTypes.includes(questionData.type)) {
+    const error = new Error("Loại câu hỏi không hợp lệ");
+    error.status = 400;
+    throw error;
+  }
+
+  // Type-specific validation
+  if (questionData.type === "multiple_choice") {
+    if (!questionData.options || !Array.isArray(questionData.options) || questionData.options.length < 2) {
+      const error = new Error("Câu hỏi trắc nghiệm phải có ít nhất 2 lựa chọn");
+      error.status = 400;
+      throw error;
+    }
+
+    const hasCorrectAnswer = questionData.options.some(opt => opt.isCorrect === true);
+    if (!hasCorrectAnswer) {
+      const error = new Error("Phải có ít nhất 1 đáp án đúng");
+      error.status = 400;
+      throw error;
+    }
+  } else if (questionData.type === "true_false") {
+    if (!questionData.options || !Array.isArray(questionData.options) || questionData.options.length !== 2) {
+      const error = new Error("Câu hỏi Đúng/Sai phải có đúng 2 lựa chọn");
+      error.status = 400;
+      throw error;
+    }
+
+    const hasCorrectAnswer = questionData.options.some(opt => opt.isCorrect === true);
+    if (!hasCorrectAnswer) {
+      const error = new Error("Phải có 1 đáp án đúng");
+      error.status = 400;
+      throw error;
+    }
+  } else if (questionData.type === "short_answer") {
+    if (!questionData.correctAnswer) {
+      const error = new Error("Câu hỏi trả lời ngắn phải có câu trả lời đúng");
+      error.status = 400;
+      throw error;
+    }
+  }
+
+  // Prepare new question object
+  const newQuestion = {
+    questionId: questionData.questionId.trim(),
+    order: questionData.order !== undefined ? questionData.order : examSet.questions.length,
+    type: questionData.type,
+    content: questionData.content.trim(),
+    imageUrl: questionData.imageUrl || null,
+    hint: questionData.hint ? questionData.hint.trim() : "",
+    points: questionData.points || 1,
+    difficulty: questionData.difficulty || "medium",
+    options: questionData.options || [],
+    correctAnswer: questionData.correctAnswer || "",
+    acceptedAnswers: questionData.acceptedAnswers || [],
+    caseSensitive: questionData.caseSensitive || false,
+    explanation: questionData.explanation ? questionData.explanation.trim() : "",
+    feedbackCorrect: questionData.feedbackCorrect || "Chính xác!",
+    feedbackIncorrect: questionData.feedbackIncorrect || "Sai rồi!",
+    category: questionData.category ? questionData.category.trim() : "",
+    tags: questionData.tags || [],
+    isActive: questionData.isActive !== undefined ? questionData.isActive : true,
+    timeLimit: questionData.timeLimit || null,
+  };
+
+  // Add question to array
+  examSet.questions.push(newQuestion);
+
+  // Auto-update questionCount (will be done by pre-save middleware)
+  // Save exam set
+  const updatedExamSet = await examSet.save();
+
+  return updatedExamSet.populate("folderId", "name").populate("ownerId", "fullName email");
+};
