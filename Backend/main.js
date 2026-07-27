@@ -19,6 +19,7 @@ import AttendanceRouter from "./src/routers/attendance.routes.js";
 import GradeRouter from "./src/routers/grade.routes.js";
 import AnnouncementRouter from "./src/routers/announcement.routes.js";
 import CourseRouter from "./src/routers/course.routes.js";
+import ExamSetRouter from "./src/routers/examSet.routes.js";
 
 // Kích hoạt cấu hình file .env
 dotenv.config();
@@ -84,6 +85,7 @@ app.use("/api/notifications", AnnouncementRouter);
 app.use("/api/questions", QuestionRouter);
 app.use("/api/exams", ExamRouter);
 app.use("/api/exam-attempts", ExamAttemptRouter);
+app.use("/api/exam-sets", ExamSetRouter);
 app.use("/api/live", LiveRouter);
 
 app.get("/", (req, res) => {

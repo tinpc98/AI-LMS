@@ -1,5 +1,6 @@
 // File: src/controllers/examSet.controller.js
-import { createExamSetService, getExamSetsService, updateExamSetService, deleteExamSetService, restoreExamSetService, addQuestionToExamSetService, updateQuestionInExamSetService, deleteQuestionFromExamSetService, reorderQuestionsInExamSetService } from "../services/examSet.services.js";
+import { createExamSetService, getExamSetsService, updateExamSetService, deleteExamSetService, restoreExamSetService, addQuestionToExamSetService, updateQuestionInExamSetService, deleteQuestionFromExamSetService, reorderQuestionsInExamSetService, getExamSetDetailService } from "../services/examSet.services.js";
+import { Types } from "mongoose";
 
 /**
  * Create new exam set
@@ -87,6 +88,36 @@ export const getExamSets = async (req, res) => {
     return res.status(status).json({
       success: false,
       message: error.message || "Lỗi lấy danh sách bộ đề thi",
+    });
+  }
+};
+
+export const getExamSetById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const user = req.user;
+
+    if (!id || !Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "examSetId không hợp lệ",
+      });
+    }
+
+    const examSet = await getExamSetDetailService(id, user);
+
+    return res.status(200).json({
+      success: true,
+      message: "Lấy chi tiết bộ đề thi thành công",
+      data: examSet,
+    });
+  } catch (error) {
+    console.error("[ExamSet] Get detail error:", error.message);
+
+    const status = error.status || 500;
+    return res.status(status).json({
+      success: false,
+      message: error.message || "Lỗi lấy chi tiết bộ đề thi",
     });
   }
 };

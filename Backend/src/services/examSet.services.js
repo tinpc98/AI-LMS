@@ -8,6 +8,118 @@ const EDITABLE_EXAM_STATUSES = ["draft"];
 const essayForbiddenFields = ["options", "correctAnswer", "acceptedAnswers", "caseSensitive"];
 const VALID_QUESTION_TYPES = ["multiple_choice", "true_false", "short_answer", "essay"];
 
+const normalizeQuestionOrder = (questions) => {
+  if (!Array.isArray(questions)) {
+    return [];
+  }
+  return [...questions].sort((a, b) => {
+    const aOrder = typeof a.order === "number" ? a.order : Number.MAX_SAFE_INTEGER;
+    const bOrder = typeof b.order === "number" ? b.order : Number.MAX_SAFE_INTEGER;
+    return aOrder - bOrder;
+  });
+};
+
+const buildExamSetDetailResponse = (examSet, access) => {
+  const examObj = examSet.toObject ? examSet.toObject() : examSet;
+  const owner = examObj.ownerId
+    ? {
+        id: String(examObj.ownerId._id || examObj.ownerId),
+        name: examObj.ownerId.fullName || examObj.ownerId.name || "",
+        avatar: examObj.ownerId.avatar || "",
+      }
+    : null;
+
+  const folder = examObj.folderId
+    ? {
+        id: String(examObj.folderId._id || examObj.folderId),
+        name: examObj.folderId.name || "",
+      }
+    : null;
+
+  const questions = normalizeQuestionOrder(examObj.questions || []).map((question) => {
+    const sanitizedQuestion = {
+      questionId: question.questionId,
+      order: question.order,
+      type: question.type,
+      content: question.content,
+      imageUrl: question.imageUrl || null,
+      hint: question.hint || "",
+      points: question.points,
+      difficulty: question.difficulty,
+      options: question.options || [],
+      correctAnswer: question.correctAnswer,
+      acceptedAnswers: question.acceptedAnswers || [],
+      caseSensitive: question.caseSensitive || false,
+      explanation: question.explanation || "",
+      feedbackCorrect: question.feedbackCorrect || "",
+      feedbackIncorrect: question.feedbackIncorrect || "",
+      suggestedAnswer: question.suggestedAnswer || "",
+      rubric: question.rubric || [],
+      category: question.category || "",
+      tags: question.tags || [],
+      isActive: question.isActive !== undefined ? question.isActive : true,
+      timeLimit: question.timeLimit !== undefined ? question.timeLimit : null,
+    };
+    return sanitizedQuestion;
+  });
+
+  return {
+    id: String(examObj._id),
+    title: examObj.title,
+    description: examObj.description || "",
+    status: examObj.status,
+    tags: examObj.tags || [],
+    questionCount: examObj.questionCount || 0,
+    totalPoints: examObj.totalPoints || 0,
+    version: examObj.version || 1,
+    questions,
+    owner,
+    folder,
+    access,
+    createdAt: examObj.createdAt,
+    updatedAt: examObj.updatedAt,
+  };
+};
+
+export const getExamSetDetailService = async (examSetId, user) => {
+  if (!examSetId || !Types.ObjectId.isValid(examSetId)) {
+    const error = new Error("examSetId không hợp lệ");
+    error.status = 400;
+    throw error;
+  }
+
+  const query = {
+    _id: examSetId,
+    isDeleted: false,
+  };
+
+  if (String(user.role || "").toLowerCase() !== "admin") {
+    query.ownerId = user.id;
+  }
+
+  const examSet = await ExamSet.findOne(query)
+    .populate("ownerId", "fullName avatar")
+    .populate("folderId", "name");
+
+  if (!examSet) {
+    const error = new Error("Bộ đề thi không tồn tại hoặc bạn không có quyền xem");
+    error.status = 404;
+    throw error;
+  }
+
+  const isOwner = String(examSet.ownerId?._id || examSet.ownerId) === String(user.id);
+  const access = {
+    isOwner,
+    permission: isOwner ? "OWNER" : "ADMIN",
+    canView: true,
+    canCopy: false,
+    canEdit: isOwner,
+    source: isOwner ? "OWNER" : "ADMIN",
+  };
+
+  return buildExamSetDetailResponse(examSet, access);
+};
+
 export const isEditableExamSetStatus = (status) => {
   return EDITABLE_EXAM_STATUSES.includes(String(status).toLowerCase());
 };

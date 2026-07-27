@@ -9,7 +9,8 @@
     "test:essay-validator": "node ./src/scripts/runEssayQuestionValidationTests.js",
     "test:examset-metrics": "node ./src/scripts/runExamSetMetricsTests.js",
     "test:examset-question-metrics-flow": "node ./src/scripts/runExamSetQuestionMetricsFlowTests.js",
-    "test:all": "npm run test:validator && npm run test:essay-validator && npm run test:examset-metrics && npm run test:examset-question-metrics-flow"
+    "test:examset-detail": "node ./src/scripts/runExamSetDetailServiceTests.js",
+    "test:all": "npm run test:validator && npm run test:essay-validator && npm run test:examset-metrics && npm run test:examset-question-metrics-flow && npm run test:examset-detail"
   },
   "author": "",
   "license": "ISC",

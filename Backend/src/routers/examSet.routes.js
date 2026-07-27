@@ -1,6 +1,6 @@
 // File: src/routers/examSet.routes.js
 import express from "express";
-import { createExamSet, getExamSets, updateExamSet, deleteExamSet, restoreExamSet, addQuestionToExamSet, updateQuestionInExamSet, deleteQuestionInExamSet, reorderQuestionsInExamSet } from "../controllers/examSet.controller.js";
+import { createExamSet, getExamSets, getExamSetById, updateExamSet, deleteExamSet, restoreExamSet, addQuestionToExamSet, updateQuestionInExamSet, deleteQuestionInExamSet, reorderQuestionsInExamSet } from "../controllers/examSet.controller.js";
 import { verifyUser } from "../middlewares/auth.middlewares.js";
 import { examSetQuestionCreateValidation, examSetQuestionUpdateValidation, reorderQuestionsValidation } from "../utils/validators.js";
 
@@ -22,6 +22,12 @@ router.post("/", createExamSet);
  * Query: folderId?, status?, page?, limit?
  */
 router.get("/", getExamSets);
+
+/**
+ * GET /api/exam-sets/:id
+ * Get detailed exam set
+ */
+router.get("/:id", getExamSetById);
 
 /**
  * POST /api/exam-sets/:id/questions
