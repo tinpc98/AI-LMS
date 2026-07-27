@@ -5,8 +5,8 @@ const handleValidationErrors = (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     return res.status(400).json({
+      success: false,
       message: "Dữ liệu không hợp lệ, vui lòng kiểm tra lại.",
-      // Sử dụng err.path cho các phiên bản mới, bọc lót err.param nếu dùng bản cũ
       errors: errors.array().map((err) => ({
         field: err.path || err.param,
         message: err.msg,
@@ -41,7 +41,7 @@ export const multipleChoiceQuestionValidation = [
     .notEmpty()
     .withMessage("Loại câu hỏi là bắt buộc")
     .equals("multiple_choice")
-    .withMessage("Type phải là MULTIPLE_CHOICE"),
+    .withMessage("Type phải là multiple_choice"),
 
   body("content")
     .trim()
@@ -73,6 +73,14 @@ export const multipleChoiceQuestionValidation = [
     for (const [index, option] of options.entries()) {
       if (!option || typeof option !== "object") {
         throw new Error(`options[${index}] phải là object`);
+      }
+
+      if (!option.id || typeof option.id !== "string" || option.id.trim() === "") {
+        throw new Error(`options[${index}].id là bắt buộc`);
+      }
+
+      if (!option.text || typeof option.text !== "string" || option.text.trim() === "") {
+        throw new Error(`options[${index}].text là bắt buộc`);
       }
 
       if (ids.has(option.id)) {
