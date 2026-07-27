@@ -130,7 +130,6 @@ export const getExamSetById = async (req, res) => {
 export const updateExamSet = async (req, res) => {
   try {
     const { id } = req.params;
-    const userId = req.user.id; // From verifyUser middleware (JWT)
     const updateData = req.body;
 
     // Validate input
@@ -142,7 +141,7 @@ export const updateExamSet = async (req, res) => {
     }
 
     // Update exam set
-    const examSet = await updateExamSetService(id, userId, updateData);
+    const examSet = await updateExamSetService(id, req.user.id, updateData);
 
     return res.status(200).json({
       success: true,
@@ -167,10 +166,9 @@ export const updateExamSet = async (req, res) => {
 export const deleteExamSet = async (req, res) => {
   try {
     const { id } = req.params;
-    const userId = req.user.id; // From verifyUser middleware (JWT)
 
     // Delete exam set
-    const examSet = await deleteExamSetService(id, userId);
+    const examSet = await deleteExamSetService(id, req.user.id);
 
     return res.status(200).json({
       success: true,
@@ -195,10 +193,9 @@ export const deleteExamSet = async (req, res) => {
 export const restoreExamSet = async (req, res) => {
   try {
     const { id } = req.params;
-    const userId = req.user.id; // From verifyUser middleware (JWT)
 
     // Restore exam set
-    const examSet = await restoreExamSetService(id, userId);
+    const examSet = await restoreExamSetService(id, req.user.id);
 
     return res.status(200).json({
       success: true,
@@ -229,10 +226,9 @@ export const restoreExamSet = async (req, res) => {
 export const addQuestionToExamSet = async (req, res) => {
   try {
     const { id } = req.params;
-    const userId = req.user.id; // From verifyUser middleware (JWT)
     const questionData = req.body;
 
-    const examSet = await addQuestionToExamSetService(id, userId, questionData);
+    const examSet = await addQuestionToExamSetService(id, req.user.id, questionData);
 
     return res.status(201).json({
       success: true,
@@ -263,7 +259,6 @@ export const addQuestionToExamSet = async (req, res) => {
 export const updateQuestionInExamSet = async (req, res) => {
   try {
     const { id, questionId } = req.params;
-    const userId = req.user.id; // From verifyUser middleware (JWT)
     const updateData = req.body;
 
     // Validate that update data is not empty
@@ -275,7 +270,7 @@ export const updateQuestionInExamSet = async (req, res) => {
     }
 
     // Update question in exam set
-    const examSet = await updateQuestionInExamSetService(id, userId, questionId, updateData);
+    const examSet = await updateQuestionInExamSetService(id, req.user.id, questionId, updateData);
 
     return res.status(200).json({
       success: true,
@@ -300,10 +295,8 @@ export const updateQuestionInExamSet = async (req, res) => {
 export const deleteQuestionInExamSet = async (req, res) => {
   try {
     const { id, questionId } = req.params;
-    const userId = req.user.id;
-    const userRole = req.user.role;
 
-    const examSet = await deleteQuestionFromExamSetService(id, userId, userRole, questionId);
+    const examSet = await deleteQuestionFromExamSetService(id, req.user.id, req.user.role, questionId);
 
     return res.status(200).json({
       success: true,
@@ -328,11 +321,9 @@ export const deleteQuestionInExamSet = async (req, res) => {
 export const reorderQuestionsInExamSet = async (req, res) => {
   try {
     const { id } = req.params;
-    const userId = req.user.id;
-    const userRole = req.user.role;
     const reorderItems = req.body.questions;
 
-    const examSet = await reorderQuestionsInExamSetService(id, userId, userRole, reorderItems);
+    const examSet = await reorderQuestionsInExamSetService(id, req.user.id, req.user.role, reorderItems);
 
     return res.status(200).json({
       success: true,

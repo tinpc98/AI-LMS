@@ -2,6 +2,7 @@
 import express from "express";
 import { createExamSet, getExamSets, getExamSetById, updateExamSet, deleteExamSet, restoreExamSet, addQuestionToExamSet, updateQuestionInExamSet, deleteQuestionInExamSet, reorderQuestionsInExamSet } from "../controllers/examSet.controller.js";
 import { verifyUser } from "../middlewares/auth.middlewares.js";
+import { requireExamSetEditAccess } from "../middlewares/examSetAccess.middlewares.js";
 import { examSetQuestionCreateValidation, examSetQuestionUpdateValidation, reorderQuestionsValidation } from "../utils/validators.js";
 
 const router = express.Router();
@@ -34,44 +35,44 @@ router.get("/:id", getExamSetById);
  * Add question to exam set
  * Body: { questionId, type, content, points?, ... }
  */
-router.post("/:id/questions", examSetQuestionCreateValidation, addQuestionToExamSet);
+router.post("/:id/questions", requireExamSetEditAccess, examSetQuestionCreateValidation, addQuestionToExamSet);
 
 /**
  * PATCH /api/exam-sets/:id/questions/:questionId
  * Update question in exam set
  * Body: { type?, content?, points?, difficulty?, options?, ... }
  */
-router.patch("/:id/questions/:questionId", examSetQuestionUpdateValidation, updateQuestionInExamSet);
+router.patch("/:id/questions/:questionId", requireExamSetEditAccess, examSetQuestionUpdateValidation, updateQuestionInExamSet);
 
 /**
  * PATCH /api/exam-sets/:id/questions/reorder
  * Reorder questions within exam set
  */
-router.patch("/:id/questions/reorder", reorderQuestionsValidation, reorderQuestionsInExamSet);
+router.patch("/:id/questions/reorder", requireExamSetEditAccess, reorderQuestionsValidation, reorderQuestionsInExamSet);
 
 /**
  * DELETE /api/exam-sets/:id/questions/:questionId
  * Delete question in exam set
  */
-router.delete("/:id/questions/:questionId", deleteQuestionInExamSet);
+router.delete("/:id/questions/:questionId", requireExamSetEditAccess, deleteQuestionInExamSet);
 
 /**
  * PATCH /api/exam-sets/:id
  * Update exam set (only owner, not published)
  * Body: { title?, description?, tags?, folderId? }
  */
-router.patch("/:id", updateExamSet);
+router.patch("/:id", requireExamSetEditAccess, updateExamSet);
 
 /**
  * DELETE /api/exam-sets/:id
  * Delete exam set (soft delete, only owner)
  */
-router.delete("/:id", deleteExamSet);
+router.delete("/:id", requireExamSetEditAccess, deleteExamSet);
 
 /**
  * PATCH /api/exam-sets/:id/restore
  * Restore exam set (undo soft delete, only owner)
  */
-router.patch("/:id/restore", restoreExamSet);
+router.patch("/:id/restore", requireExamSetEditAccess, restoreExamSet);
 
 export default router;
