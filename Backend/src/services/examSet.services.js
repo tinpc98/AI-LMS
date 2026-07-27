@@ -881,6 +881,168 @@ export const createNewExamSetVersionService = async (examSetId, currentUserId, c
   return newExamSet;
 };
 
+/**
+ * Restore a prior version by creating a new draft cloned from the given source version.
+ * The new version's previousVersionId points to the latest version in the lineage (NOT the restored source).
+ */
+export const restoreExamSetVersionService = async (sourceExamSetId, currentUserId, currentUserRole) => {
+  if (!sourceExamSetId || !Types.ObjectId.isValid(sourceExamSetId)) {
+    const error = new Error("examSetId không hợp lệ");
+    error.status = 400;
+    throw error;
+  }
+
+  const source = await ExamSet.findOne({ _id: sourceExamSetId, isDeleted: false });
+  if (!source) {
+    const error = new Error("Bộ đề thi không tồn tại hoặc đã bị xóa");
+    error.status = 404;
+    throw error;
+  }
+
+  const sourceOwnerId = source.ownerId ? String(source.ownerId._id || source.ownerId) : "";
+  const userRole = String(currentUserRole || "").toLowerCase();
+  const isOwner = sourceOwnerId === String(currentUserId);
+  const isAdmin = userRole === "admin";
+
+  if (!isOwner && !isAdmin) {
+    const error = new Error("Bạn không có quyền khôi phục phiên bản này");
+    error.status = 403;
+    throw error;
+  }
+
+  // Determine root id (fallback to source id if missing)
+  const rootId = source.rootExamSetId ? String(source.rootExamSetId) : String(source._id);
+
+  // Find the latest version in the lineage
+  const latest = await ExamSet.findOne({
+    $or: [
+      { rootExamSetId: rootId },
+      { _id: rootId, rootExamSetId: null },
+    ],
+    isDeleted: false,
+  })
+    .sort({ versionNumber: -1 });
+
+  if (!latest) {
+    const error = new Error("Không thể xác định phiên bản mới nhất của chuỗi");
+    error.status = 500;
+    throw error;
+  }
+
+  // Compute next version number
+  const nextVersionNumber = (typeof latest.versionNumber === "number" ? latest.versionNumber : (source.versionNumber || 1)) + 1;
+
+  // Prepare folder preservation if exists and belongs to owner
+  let folderId = null;
+  if (source.folderId) {
+    const folder = await Folder.findOne({ _id: source.folderId, ownerId: sourceOwnerId, isDeleted: false });
+    if (folder) folderId = source.folderId;
+  }
+
+  const sourceObj = source.toObject ? source.toObject() : source;
+
+  // Clone questions deeply with new ObjectIds
+  const clonedQuestions = Array.isArray(sourceObj.questions)
+    ? sourceObj.questions.map((q) => {
+        const cloned = {
+          ...q,
+          _id: new Types.ObjectId(),
+          options: Array.isArray(q.options) ? q.options.map((o) => ({ ...o })) : [],
+          acceptedAnswers: Array.isArray(q.acceptedAnswers) ? [...q.acceptedAnswers] : [],
+          rubric: Array.isArray(q.rubric) ? q.rubric.map((r) => ({ ...r })) : [],
+        };
+
+        delete cloned.isDeleted;
+        delete cloned.deletedAt;
+        delete cloned.createdAt;
+        delete cloned.updatedAt;
+
+        return cloned;
+      })
+    : [];
+
+  const excludedKeys = new Set([
+    "_id",
+    "id",
+    "createdAt",
+    "updatedAt",
+    "deletedAt",
+    "isDeleted",
+    "status",
+    "questionCount",
+    "totalPoints",
+    "version",
+    "versionNumber",
+    "rootExamSetId",
+    "previousVersionId",
+    "isLatestVersion",
+    "ownerId",
+    "reviewerId",
+    "reviewNotes",
+    "approvedBy",
+    "approvedAt",
+    "publishedAt",
+    "archivedAt",
+    "shareRecords",
+    "importHistory",
+    "auditLogs",
+    "usageStatistics",
+    "submissionData",
+    "attemptData",
+    "centerLibraryEntry",
+    "aiUsageLogs",
+  ]);
+
+  const newExamSetData = {
+    ownerId: sourceOwnerId,
+    folderId,
+    status: "draft",
+    questions: clonedQuestions,
+    questionCount: 0,
+    totalPoints: 0,
+    versionNumber: nextVersionNumber,
+    version: nextVersionNumber,
+    rootExamSetId: rootId,
+    previousVersionId: latest._id,
+    isLatestVersion: true,
+    isDeleted: false,
+  };
+
+  for (const [key, value] of Object.entries(sourceObj)) {
+    if (excludedKeys.has(key) || key === "questions") continue;
+    newExamSetData[key] = value;
+  }
+
+  const newExamSet = new ExamSet(newExamSetData);
+  recalculateExamSetMetrics(newExamSet);
+
+  // Mark latest as not latest and save both within try/catch to rollback on error
+  let latestUpdated = false;
+  latest.isLatestVersion = false;
+  await latest.save();
+  latestUpdated = true;
+
+  try {
+    await newExamSet.save();
+  } catch (err) {
+    const isDuplicateKey = err && (err.code === 11000 || err.codeName === "DuplicateKey");
+    if (isDuplicateKey) {
+      const duplicateError = new Error("Đã có phiên bản mới được tạo với cùng versionNumber. Vui lòng thử lại.");
+      duplicateError.status = 409;
+      throw duplicateError;
+    }
+
+    if (latestUpdated) {
+      latest.isLatestVersion = true;
+      await latest.save();
+    }
+
+    throw err;
+  }
+
+  return newExamSet;
+};
+
 export const createExamSetService = async (ownerId, examData) => {
   // Validate required fields
   if (!examData.folderId) {

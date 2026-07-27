@@ -1,6 +1,6 @@
 // File: src/routers/examSet.routes.js
 import express from "express";
-import { createExamSet, getExamSets, getExamSetById, saveDraftExamSet, duplicateExamSet, createNewExamSetVersion, getExamSetVersions, updateExamSet, updateExamSetTags, deleteExamSet, restoreExamSet, addQuestionToExamSet, updateQuestionInExamSet, deleteQuestionInExamSet, reorderQuestionsInExamSet } from "../controllers/examSet.controller.js";
+import { createExamSet, getExamSets, getExamSetById, saveDraftExamSet, duplicateExamSet, createNewExamSetVersion, getExamSetVersions, restoreExamSetVersion, updateExamSet, updateExamSetTags, deleteExamSet, restoreExamSet, addQuestionToExamSet, updateQuestionInExamSet, deleteQuestionInExamSet, reorderQuestionsInExamSet } from "../controllers/examSet.controller.js";
 import { verifyUser } from "../middlewares/auth.middlewares.js";
 import { requireExamSetDraftAccess, requireExamSetEditAccess } from "../middlewares/examSetAccess.middlewares.js";
 import { examSetQuestionCreateValidation, examSetQuestionUpdateValidation, reorderQuestionsValidation, examSetTagsValidation } from "../utils/validators.js";
@@ -48,6 +48,12 @@ router.post("/:examSetId/new-version", requireExamSetEditAccess, createNewExamSe
  * Get version history for the exam set lineage
  */
 router.get("/:examSetId/versions", requireExamSetEditAccess, examSetVersionsValidation, getExamSetVersions);
+
+/**
+ * POST /api/exam-sets/:examSetId/restore
+ * Create a new draft version cloned from an older version (restore)
+ */
+router.post("/:examSetId/restore", requireExamSetEditAccess, restoreExamSetVersion);
 
 /**
  * GET /api/exam-sets/:id

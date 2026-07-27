@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "nodemon main.js",
+    "test": "npm run test:all",
     "test:validator": "node ./src/scripts/runMultipleChoiceValidatorTests.js",
     "test:essay-validator": "node ./src/scripts/runEssayQuestionValidationTests.js",
     "test:examset-metrics": "node ./src/scripts/runExamSetMetricsTests.js",
@@ -13,7 +14,8 @@
     "test:examset-draft": "node ./src/scripts/runExamSetDraftWorkflowTests.js",
     "test:examset-new-version": "node ./src/scripts/runExamSetNewVersionServiceTests.js",
     "test:examset-versions": "node ./src/scripts/runExamSetVersionsServiceTests.js",
-    "test:all": "npm run test:validator && npm run test:essay-validator && npm run test:examset-metrics && npm run test:examset-question-metrics-flow && npm run test:examset-detail && npm run test:examset-draft && npm run test:examset-new-version && npm run test:examset-versions"
+    "test:examset-restore": "node ./src/scripts/runExamSetRestoreServiceTests.js",
+    "test:all": "npm run test:validator && npm run test:essay-validator && npm run test:examset-metrics && npm run test:examset-question-metrics-flow && npm run test:examset-detail && npm run test:examset-draft && npm run test:examset-new-version && npm run test:examset-versions && npm run test:examset-restore"
   },
   "author": "",
   "license": "ISC",

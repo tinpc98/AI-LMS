@@ -1,5 +1,5 @@
 // File: src/controllers/examSet.controller.js
-import { createExamSetService, getExamSetsService, updateExamSetService, deleteExamSetService, restoreExamSetService, addQuestionToExamSetService, updateQuestionInExamSetService, deleteQuestionFromExamSetService, reorderQuestionsInExamSetService, getExamSetDetailService, saveDraftExamSetService, duplicateExamSetService, updateExamSetTagsService, createNewExamSetVersionService, getExamSetVersionsService } from "../services/examSet.services.js";
+import { createExamSetService, getExamSetsService, updateExamSetService, deleteExamSetService, restoreExamSetService, addQuestionToExamSetService, updateQuestionInExamSetService, deleteQuestionFromExamSetService, reorderQuestionsInExamSetService, getExamSetDetailService, saveDraftExamSetService, duplicateExamSetService, updateExamSetTagsService, createNewExamSetVersionService, getExamSetVersionsService, restoreExamSetVersionService } from "../services/examSet.services.js";
 import { Types } from "mongoose";
 
 /**
@@ -228,6 +228,24 @@ export const getExamSetById = async (req, res) => {
       success: false,
       message: error.message || "Lỗi lấy chi tiết bộ đề thi",
     });
+  }
+};
+
+export const restoreExamSetVersion = async (req, res) => {
+  try {
+    const { examSetId } = req.params;
+
+    if (!examSetId || !Types.ObjectId.isValid(examSetId)) {
+      return res.status(400).json({ success: false, message: "examSetId không hợp lệ" });
+    }
+
+    const newVersion = await restoreExamSetVersionService(examSetId, req.user.id, req.user.role);
+
+    return res.status(201).json({ success: true, message: "Exam set restored as new version", data: newVersion });
+  } catch (error) {
+    console.error("[ExamSet] Restore-version error:", error.message);
+    const status = error.status || 500;
+    return res.status(status).json({ success: false, message: error.message || "Lỗi khôi phục phiên bản bộ đề thi" });
   }
 };
 
