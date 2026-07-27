@@ -9,7 +9,7 @@ export const ClassList = async (req, res) => {
   try {
     const userId = (req.user?.id || req.user?._id || "").toString();
     const userRole = (req.user?.role || "").toLowerCase();
-    const { search, courseId, status, page = 1, limit = 10 } = req.query;
+    const { search, courseId, status, page = 1, limit = 10, sort } = req.query;
 
     const filterConditions = [];
 
@@ -63,7 +63,7 @@ export const ClassList = async (req, res) => {
         .populate("courseId", "courseName subject grade status description")
         .populate("students.studentId", "fullName email avatar phone")
         .populate("resources.uploadedBy", "fullName email")
-        .sort({ createdAt: -1 })
+        .sort(sort ? sort.split(',').join(' ') : { createdAt: -1 })
         .skip(skip)
         .limit(limitNum)
         .lean(),
@@ -444,3 +444,142 @@ export const DeleteClass = async (req, res) => {
     return res.status(500).json({ message: error.message || "Lỗi khi xóa lớp học" });
   }
 };
+
+//=====================================================================================
+// Lấy danh sách lớp học trong thùng rác (isDeleted = true)
+export const ClassTrashList = async (req, res) => {
+  try {
+    const userId = (req.user?.id || req.user?._id || "").toString();
+    const userRole = (req.user?.role || "").toLowerCase();
+    const { search, courseId, status, page = 1, limit = 10, sort } = req.query;
+
+    const filterConditions = [];
+
+    // Phân quyền dữ liệu theo vai trò
+    if (userRole === "teacher") {
+      filterConditions.push({ teacherId: userId });
+    } else if (userRole === "student") {
+      filterConditions.push({ "students.studentId": userId });
+    }
+
+    if (search && search.trim() !== "") {
+      const searchRegex = new RegExp(search.trim(), "i");
+      filterConditions.push({
+        $or: [{ className: searchRegex }, { classCode: searchRegex }],
+      });
+    }
+
+    if (courseId && mongoose.Types.ObjectId.isValid(courseId)) {
+      filterConditions.push({ courseId });
+    }
+
+    if (status && status !== "ALL") {
+      filterConditions.push({ status });
+    }
+
+    // Yêu cầu lấy dữ liệu đã xóa
+    filterConditions.push({ isDeleted: true });
+
+    const finalQuery = filterConditions.length > 1 ? { $and: filterConditions } : filterConditions[0];
+
+    const pageNum = Math.max(1, Number(page) || 1);
+    const limitNum = Math.max(1, Number(limit) || 10);
+    const skip = (pageNum - 1) * limitNum;
+
+    const [classList, total] = await Promise.all([
+      classModel
+        .find(finalQuery)
+        .withDeleted()
+        .populate("teacherId", "fullName email avatar phone teachingSubjects")
+        .populate("assignedBy", "fullName email")
+        .populate("courseId", "courseName subject grade status description")
+        .populate("students.studentId", "fullName email avatar phone")
+        .populate("resources.uploadedBy", "fullName email")
+        .sort(sort ? sort.split(',').join(' ') : { createdAt: -1 })
+        .skip(skip)
+        .limit(limitNum)
+        .lean(),
+      classModel.countDocuments(finalQuery).withDeleted(),
+    ]);
+
+    return res.status(200).json({
+      success: true,
+      message: "Lấy danh sách thùng rác thành công",
+      data: classList,
+      pagination: {
+        total,
+        page: pageNum,
+        limit: limitNum,
+        totalPages: Math.ceil(total / limitNum),
+      },
+    });
+  } catch (error) {
+    console.error("[ClassController] ClassTrashList Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: error.message || "Lỗi khi lấy danh sách thùng rác",
+    });
+  }
+};
+
+//=====================================================================================
+// Phục hồi lớp học từ thùng rác (Dành cho Admin)
+export const RestoreClass = async (req, res) => {
+  const { id } = req.params;
+
+  if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+    return res.status(400).json({ success: false, message: "ID lớp học không hợp lệ!" });
+  }
+
+  try {
+    const restoredClass = await classModel.restore(id);
+
+    if (!restoredClass) {
+      return res.status(404).json({
+        success: false,
+        message: "Không tìm thấy lớp học trong thùng rác",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Phục hồi lớp học thành công",
+      data: restoredClass,
+    });
+  } catch (error) {
+    console.error("[ClassController] RestoreClass Error:", error);
+    return res.status(500).json({ success: false, message: error.message || "Lỗi khi phục hồi lớp học" });
+  }
+};
+
+//=====================================================================================
+// Xóa vĩnh viễn lớp học (Dành cho Admin)
+export const PermanentDeleteClass = async (req, res) => {
+  const { id } = req.params;
+
+  if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+    return res.status(400).json({ success: false, message: "ID lớp học không hợp lệ!" });
+  }
+
+  try {
+    // Đảm bảo chỉ được xóa vĩnh viễn record đã soft delete
+    const targetClass = await classModel.findOne({ _id: id, isDeleted: true }).withDeleted();
+    if (!targetClass) {
+      return res.status(404).json({
+        success: false,
+        message: "Không tìm thấy lớp học trong thùng rác để xóa vĩnh viễn",
+      });
+    }
+
+    await classModel.findByIdAndDelete(id);
+
+    return res.status(200).json({
+      success: true,
+      message: "Xóa vĩnh viễn lớp học thành công",
+    });
+  } catch (error) {
+    console.error("[ClassController] PermanentDeleteClass Error:", error);
+    return res.status(500).json({ success: false, message: error.message || "Lỗi khi xóa vĩnh viễn lớp học" });
+  }
+};
+
