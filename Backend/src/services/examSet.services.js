@@ -395,6 +395,94 @@ export const saveDraftExamSetService = async (examSet, draftData = {}) => {
   return savedExamSet;
 };
 
+export const duplicateExamSetService = async (examSetId, currentUserId, currentUserRole) => {
+  if (!examSetId || !Types.ObjectId.isValid(examSetId)) {
+    const error = new Error("examSetId không hợp lệ");
+    error.status = 400;
+    throw error;
+  }
+
+  const sourceExamSet = await ExamSet.findOne({
+    _id: examSetId,
+    isDeleted: false,
+  }).populate("ownerId", "fullName avatar").populate("folderId", "name");
+
+  if (!sourceExamSet) {
+    const error = new Error("Bộ đề thi không tồn tại hoặc đã bị xóa");
+    error.status = 404;
+    throw error;
+  }
+
+  const sourceOwnerId = sourceExamSet.ownerId ? String(sourceExamSet.ownerId._id || sourceExamSet.ownerId) : "";
+  const userRole = (currentUserRole || "").toLowerCase();
+  const isOwner = sourceOwnerId === String(currentUserId);
+  const isAdmin = userRole === "admin";
+
+  if (!isOwner && !isAdmin) {
+    const error = new Error("Bạn không có quyền duplicate bộ đề thi này");
+    error.status = 403;
+    throw error;
+  }
+
+  const sourceObject = sourceExamSet.toObject ? sourceExamSet.toObject() : sourceExamSet;
+  const sourceFolderId = sourceObject.folderId?._id || sourceObject.folderId || null;
+  const clonedQuestions = Array.isArray(sourceObject.questions)
+    ? sourceObject.questions.map((question) => ({
+        ...question,
+        _id: new Types.ObjectId(),
+        questionId: question.questionId || `q-${new Types.ObjectId().toString()}`,
+        order: question.order ?? 0,
+        points: question.points ?? question.score ?? 1,
+        isDeleted: undefined,
+        deletedAt: undefined,
+        createdAt: undefined,
+        updatedAt: undefined,
+      }))
+    : [];
+
+  const baseTitle = sourceObject.title || "Exam Set";
+  const duplicateTitle = /\s*-\s*Copy(?:\s*\d+)?$/i.test(baseTitle)
+    ? baseTitle
+    : `${baseTitle} - Copy`;
+
+  const nextFolderId = isOwner ? sourceFolderId : null;
+  if (nextFolderId) {
+    const folder = await Folder.findOne({
+      _id: nextFolderId,
+      ownerId: currentUserId,
+      isDeleted: false,
+    });
+
+    if (!folder) {
+      if (isOwner) {
+        const error = new Error("Folder hiện tại không thuộc quyền sở hữu của bạn");
+        error.status = 400;
+        throw error;
+      }
+    }
+  }
+
+  const duplicatedExamSet = new ExamSet({
+    _id: new Types.ObjectId(),
+    ownerId: currentUserId,
+    folderId: isOwner && nextFolderId ? nextFolderId : null,
+    title: duplicateTitle,
+    description: sourceObject.description || "",
+    tags: Array.isArray(sourceObject.tags) ? sourceObject.tags : [],
+    status: "draft",
+    questions: clonedQuestions,
+    questionCount: 0,
+    totalPoints: 0,
+    version: 1,
+    isDeleted: false,
+  });
+
+  recalculateExamSetMetrics(duplicatedExamSet);
+
+  await duplicatedExamSet.save();
+  return duplicatedExamSet.populate("folderId", "name").populate("ownerId", "fullName email");
+};
+
 export const createExamSetService = async (ownerId, examData) => {
   // Validate required fields
   if (!examData.folderId) {

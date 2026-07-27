@@ -187,7 +187,7 @@ const questionSchema = new Schema(
       min: 1,
     },
   },
-  { _id: false, timestamps: false }
+  { timestamps: false }
 );
 
 const examSetSchema = new Schema(
