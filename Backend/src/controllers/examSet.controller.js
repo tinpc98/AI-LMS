@@ -201,29 +201,6 @@ export const addQuestionToExamSet = async (req, res) => {
     const userId = req.user.id; // From verifyUser middleware (JWT)
     const questionData = req.body;
 
-    // Validate required fields
-    if (!questionData.questionId) {
-      return res.status(400).json({
-        success: false,
-        message: "questionId là bắt buộc",
-      });
-    }
-
-    if (!questionData.type) {
-      return res.status(400).json({
-        success: false,
-        message: "Loại câu hỏi là bắt buộc",
-      });
-    }
-
-    if (!questionData.content) {
-      return res.status(400).json({
-        success: false,
-        message: "Nội dung câu hỏi là bắt buộc",
-      });
-    }
-
-    // Add question to exam set
     const examSet = await addQuestionToExamSetService(id, userId, questionData);
 
     return res.status(201).json({
