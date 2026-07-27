@@ -345,6 +345,56 @@ const validateQuestionUpdatePayloadByType = (type, updateData, existingQuestion)
  * @param {Array} examData.tags - Tags (optional)
  * @returns {Object} Created exam set
  */
+export const saveDraftExamSetService = async (examSet, draftData = {}) => {
+  if (!examSet) {
+    const error = new Error("Bộ đề thi không tồn tại");
+    error.status = 404;
+    throw error;
+  }
+
+  const allowedFields = ["title", "description", "tags", "folderId"];
+  const updateFields = {};
+
+  for (const field of allowedFields) {
+    if (field in draftData && draftData[field] !== undefined) {
+      updateFields[field] = draftData[field];
+    }
+  }
+
+  if (updateFields.folderId) {
+    const folder = await Folder.findOne({
+      _id: updateFields.folderId,
+      ownerId: examSet.ownerId,
+      isDeleted: false,
+    });
+
+    if (!folder) {
+      const error = new Error("Folder không tồn tại hoặc bạn không có quyền truy cập");
+      error.status = 404;
+      throw error;
+    }
+  }
+
+  if (updateFields.title) {
+    updateFields.title = updateFields.title.trim();
+  }
+
+  if (updateFields.description) {
+    updateFields.description = updateFields.description.trim();
+  }
+
+  Object.assign(examSet, updateFields, { status: "draft" });
+
+  recalculateExamSetMetrics(examSet);
+
+  const savedExamSet = await examSet.save();
+  if (savedExamSet && typeof savedExamSet.populate === "function") {
+    return savedExamSet.populate("folderId", "name").populate("ownerId", "fullName email");
+  }
+
+  return savedExamSet;
+};
+
 export const createExamSetService = async (ownerId, examData) => {
   // Validate required fields
   if (!examData.folderId) {

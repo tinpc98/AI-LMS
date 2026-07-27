@@ -1,8 +1,8 @@
 // File: src/routers/examSet.routes.js
 import express from "express";
-import { createExamSet, getExamSets, getExamSetById, updateExamSet, deleteExamSet, restoreExamSet, addQuestionToExamSet, updateQuestionInExamSet, deleteQuestionInExamSet, reorderQuestionsInExamSet } from "../controllers/examSet.controller.js";
+import { createExamSet, getExamSets, getExamSetById, saveDraftExamSet, updateExamSet, deleteExamSet, restoreExamSet, addQuestionToExamSet, updateQuestionInExamSet, deleteQuestionInExamSet, reorderQuestionsInExamSet } from "../controllers/examSet.controller.js";
 import { verifyUser } from "../middlewares/auth.middlewares.js";
-import { requireExamSetEditAccess } from "../middlewares/examSetAccess.middlewares.js";
+import { requireExamSetDraftAccess, requireExamSetEditAccess } from "../middlewares/examSetAccess.middlewares.js";
 import { examSetQuestionCreateValidation, examSetQuestionUpdateValidation, reorderQuestionsValidation } from "../utils/validators.js";
 
 const router = express.Router();
@@ -23,6 +23,12 @@ router.post("/", createExamSet);
  * Query: folderId?, status?, page?, limit?
  */
 router.get("/", getExamSets);
+
+/**
+ * PATCH /api/exam-sets/:examSetId/save-draft
+ * Save current draft data for an exam set
+ */
+router.patch("/:examSetId/save-draft", requireExamSetDraftAccess, saveDraftExamSet);
 
 /**
  * GET /api/exam-sets/:id

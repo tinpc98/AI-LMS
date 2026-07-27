@@ -1,5 +1,5 @@
 // File: src/controllers/examSet.controller.js
-import { createExamSetService, getExamSetsService, updateExamSetService, deleteExamSetService, restoreExamSetService, addQuestionToExamSetService, updateQuestionInExamSetService, deleteQuestionFromExamSetService, reorderQuestionsInExamSetService, getExamSetDetailService } from "../services/examSet.services.js";
+import { createExamSetService, getExamSetsService, updateExamSetService, deleteExamSetService, restoreExamSetService, addQuestionToExamSetService, updateQuestionInExamSetService, deleteQuestionFromExamSetService, reorderQuestionsInExamSetService, getExamSetDetailService, saveDraftExamSetService } from "../services/examSet.services.js";
 import { Types } from "mongoose";
 
 /**
@@ -88,6 +88,35 @@ export const getExamSets = async (req, res) => {
     return res.status(status).json({
       success: false,
       message: error.message || "Lỗi lấy danh sách bộ đề thi",
+    });
+  }
+};
+
+export const saveDraftExamSet = async (req, res) => {
+  try {
+    const examSetId = req.params.examSetId || req.params.id;
+
+    if (!examSetId || !Types.ObjectId.isValid(examSetId)) {
+      return res.status(400).json({
+        success: false,
+        message: "examSetId không hợp lệ",
+      });
+    }
+
+    const examSet = await saveDraftExamSetService(req.examSet, req.body);
+
+    return res.status(200).json({
+      success: true,
+      message: "Lưu bản nháp thành công",
+      data: examSet,
+    });
+  } catch (error) {
+    console.error("[ExamSet] Save draft error:", error.message);
+
+    const status = error.status || 500;
+    return res.status(status).json({
+      success: false,
+      message: error.message || "Lỗi lưu bản nháp",
     });
   }
 };
