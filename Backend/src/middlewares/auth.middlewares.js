@@ -1,4 +1,6 @@
 // File: src/middlewares/auth.middlewares.js
+import jwt from "jsonwebtoken";
+
 /**
  * Authentication Middlewares
  * - verifyUser: Verify JWT token and authenticate user
@@ -15,23 +17,68 @@
  * @param {Function} next - Express next middleware function
  * 
  * Usage: router.get("/protected", verifyUser, handler)
+ * 
+ * Expected header: Authorization: Bearer <token>
  */
 export const verifyUser = (req, res, next) => {
   try {
-    // Business logic to be implemented
-    // 1. Extract token from Authorization header
-    // 2. Verify token signature and expiration
-    // 3. Attach user data to req.user
-    // 4. Call next() if successful
-    
-    res.status(401).json({
-      message: "Verify user middleware - not implemented",
-    });
+    // Step 1: Extract Authorization header
+    const authHeader = req.headers.authorization;
+
+    if (!authHeader) {
+      return res.status(401).json({
+        success: false,
+        message: "Token không được cung cấp",
+      });
+    }
+
+    // Step 2: Extract token from "Bearer <token>" format
+    const parts = authHeader.split(" ");
+    if (parts.length !== 2 || parts[0] !== "Bearer") {
+      return res.status(401).json({
+        success: false,
+        message: "Định dạng token không hợp lệ",
+      });
+    }
+
+    const token = parts[1];
+
+    // Step 3: Verify JWT token
+    const decoded = jwt.verify(
+      token,
+      process.env.JWT_SECRET || "your-secret-key-change-in-env"
+    );
+
+    // Step 4: Attach user data to req.user (lấy từ token, không từ body)
+    req.user = {
+      id: decoded.id,
+      email: decoded.email,
+      role: decoded.role,
+    };
+
+    // Step 5: Continue to next middleware/handler
+    next();
   } catch (error) {
-    console.error("[Auth Middleware] Verify user error:", error);
-    res.status(401).json({
-      message: "Authentication failed",
-      error: error.message,
+    console.error("[Auth Middleware] Verify user error:", error.message);
+
+    // Handle different JWT errors
+    if (error.name === "TokenExpiredError") {
+      return res.status(401).json({
+        success: false,
+        message: "Token đã hết hạn",
+      });
+    }
+
+    if (error.name === "JsonWebTokenError") {
+      return res.status(401).json({
+        success: false,
+        message: "Token không hợp lệ",
+      });
+    }
+
+    return res.status(401).json({
+      success: false,
+      message: "Xác thực thất bại",
     });
   }
 };
@@ -49,19 +96,32 @@ export const verifyUser = (req, res, next) => {
  */
 export const isTeacher = (req, res, next) => {
   try {
-    // Business logic to be implemented
-    // 1. Check if req.user exists
-    // 2. Check if user role is "teacher" or "admin"
-    // 3. Call next() if authorized, else return 403
-    
-    res.status(403).json({
-      message: "Is teacher middleware - not implemented",
-    });
+    // Check if req.user exists (set by verifyUser middleware)
+    if (!req.user) {
+      return res.status(401).json({
+        success: false,
+        message: "Bạn chưa đăng nhập",
+      });
+    }
+
+    // Check if user role is "Teacher" or "Admin"
+    const userRole = (req.user.role || "").toLowerCase();
+    const allowedRoles = ["teacher", "admin"];
+
+    if (!allowedRoles.includes(userRole)) {
+      return res.status(403).json({
+        success: false,
+        message: "Bạn không có quyền truy cập. Chỉ Giáo viên hoặc Admin mới được phép",
+      });
+    }
+
+    // User is authorized, continue to next handler
+    next();
   } catch (error) {
     console.error("[Auth Middleware] Is teacher error:", error);
     res.status(403).json({
-      message: "Authorization failed",
-      error: error.message,
+      success: false,
+      message: "Lỗi xác thực quyền hạn",
     });
   }
 };
@@ -79,19 +139,31 @@ export const isTeacher = (req, res, next) => {
  */
 export const isAdmin = (req, res, next) => {
   try {
-    // Business logic to be implemented
-    // 1. Check if req.user exists
-    // 2. Check if user role is "admin"
-    // 3. Call next() if authorized, else return 403
-    
-    res.status(403).json({
-      message: "Is admin middleware - not implemented",
-    });
+    // Check if req.user exists (set by verifyUser middleware)
+    if (!req.user) {
+      return res.status(401).json({
+        success: false,
+        message: "Bạn chưa đăng nhập",
+      });
+    }
+
+    // Check if user role is "Admin" only
+    const userRole = (req.user.role || "").toLowerCase();
+
+    if (userRole !== "admin") {
+      return res.status(403).json({
+        success: false,
+        message: "Bạn không có quyền truy cập. Chỉ Admin mới được phép",
+      });
+    }
+
+    // User is authorized, continue to next handler
+    next();
   } catch (error) {
     console.error("[Auth Middleware] Is admin error:", error);
     res.status(403).json({
-      message: "Authorization failed",
-      error: error.message,
+      success: false,
+      message: "Lỗi xác thực quyền hạn",
     });
   }
 };
@@ -109,19 +181,31 @@ export const isAdmin = (req, res, next) => {
  */
 export const isStudent = (req, res, next) => {
   try {
-    // Business logic to be implemented
-    // 1. Check if req.user exists
-    // 2. Check if user role is "student"
-    // 3. Call next() if authorized, else return 403
-    
-    res.status(403).json({
-      message: "Is student middleware - not implemented",
-    });
+    // Check if req.user exists (set by verifyUser middleware)
+    if (!req.user) {
+      return res.status(401).json({
+        success: false,
+        message: "Bạn chưa đăng nhập",
+      });
+    }
+
+    // Check if user role is "Student"
+    const userRole = (req.user.role || "").toLowerCase();
+
+    if (userRole !== "student") {
+      return res.status(403).json({
+        success: false,
+        message: "Bạn không có quyền truy cập. Chỉ Học sinh mới được phép",
+      });
+    }
+
+    // User is authorized, continue to next handler
+    next();
   } catch (error) {
     console.error("[Auth Middleware] Is student error:", error);
     res.status(403).json({
-      message: "Authorization failed",
-      error: error.message,
+      success: false,
+      message: "Lỗi xác thực quyền hạn",
     });
   }
 };
