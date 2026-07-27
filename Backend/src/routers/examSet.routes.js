@@ -1,6 +1,6 @@
 // File: src/routers/examSet.routes.js
 import express from "express";
-import { createExamSet, getExamSets, updateExamSet } from "../controllers/examSet.controller.js";
+import { createExamSet, getExamSets, updateExamSet, deleteExamSet, restoreExamSet } from "../controllers/examSet.controller.js";
 import { verifyUser } from "../middlewares/auth.middlewares.js";
 
 const router = express.Router();
@@ -28,5 +28,17 @@ router.get("/", getExamSets);
  * Body: { title?, description?, tags?, folderId? }
  */
 router.patch("/:id", updateExamSet);
+
+/**
+ * DELETE /api/exam-sets/:id
+ * Delete exam set (soft delete, only owner)
+ */
+router.delete("/:id", deleteExamSet);
+
+/**
+ * PATCH /api/exam-sets/:id/restore
+ * Restore exam set (undo soft delete, only owner)
+ */
+router.patch("/:id/restore", restoreExamSet);
 
 export default router;

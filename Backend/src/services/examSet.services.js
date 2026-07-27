@@ -181,3 +181,57 @@ export const updateExamSetService = async (examSetId, ownerId, updateData) => {
 
   return updatedExamSet;
 };
+
+/**
+ * Delete exam set (soft delete)
+ * @param {string} examSetId - Exam set ID
+ * @param {string} ownerId - Current user ID (from JWT)
+ * @returns {Object} Deleted exam set
+ */
+export const deleteExamSetService = async (examSetId, ownerId) => {
+  // Find exam set and verify ownership
+  const examSet = await ExamSet.findOne({
+    _id: examSetId,
+    ownerId: ownerId,
+    isDeleted: false,
+  });
+
+  if (!examSet) {
+    const error = new Error("Bộ đề thi không tồn tại hoặc bạn không có quyền xóa");
+    error.status = 404;
+    throw error;
+  }
+
+  // Soft delete: mark isDeleted = true
+  examSet.isDeleted = true;
+  await examSet.save();
+
+  return examSet;
+};
+
+/**
+ * Restore exam set (undo soft delete)
+ * @param {string} examSetId - Exam set ID
+ * @param {string} ownerId - Current user ID (from JWT)
+ * @returns {Object} Restored exam set
+ */
+export const restoreExamSetService = async (examSetId, ownerId) => {
+  // Find deleted exam set and verify ownership
+  const examSet = await ExamSet.findOne({
+    _id: examSetId,
+    ownerId: ownerId,
+    isDeleted: true,
+  }).withDeleted(); // Include soft deleted docs
+
+  if (!examSet) {
+    const error = new Error("Bộ đề thi không tồn tại hoặc bạn không có quyền khôi phục");
+    error.status = 404;
+    throw error;
+  }
+
+  // Restore: mark isDeleted = false
+  examSet.isDeleted = false;
+  await examSet.save();
+
+  return examSet;
+};

@@ -1,5 +1,5 @@
 // File: src/controllers/examSet.controller.js
-import { createExamSetService, getExamSetsService, updateExamSetService } from "../services/examSet.services.js";
+import { createExamSetService, getExamSetsService, updateExamSetService, deleteExamSetService, restoreExamSetService } from "../services/examSet.services.js";
 
 /**
  * Create new exam set
@@ -125,6 +125,62 @@ export const updateExamSet = async (req, res) => {
     return res.status(status).json({
       success: false,
       message: error.message || "Lỗi cập nhật bộ đề thi",
+    });
+  }
+};
+
+/**
+ * Delete exam set (soft delete)
+ * DELETE /api/exam-sets/:id
+ */
+export const deleteExamSet = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user.id; // From verifyUser middleware (JWT)
+
+    // Delete exam set
+    const examSet = await deleteExamSetService(id, userId);
+
+    return res.status(200).json({
+      success: true,
+      message: "Xóa bộ đề thi thành công",
+      data: examSet,
+    });
+  } catch (error) {
+    console.error("[ExamSet] Delete error:", error.message);
+
+    const status = error.status || 500;
+    return res.status(status).json({
+      success: false,
+      message: error.message || "Lỗi xóa bộ đề thi",
+    });
+  }
+};
+
+/**
+ * Restore exam set (undo soft delete)
+ * PATCH /api/exam-sets/:id/restore
+ */
+export const restoreExamSet = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user.id; // From verifyUser middleware (JWT)
+
+    // Restore exam set
+    const examSet = await restoreExamSetService(id, userId);
+
+    return res.status(200).json({
+      success: true,
+      message: "Khôi phục bộ đề thi thành công",
+      data: examSet,
+    });
+  } catch (error) {
+    console.error("[ExamSet] Restore error:", error.message);
+
+    const status = error.status || 500;
+    return res.status(status).json({
+      success: false,
+      message: error.message || "Lỗi khôi phục bộ đề thi",
     });
   }
 };
