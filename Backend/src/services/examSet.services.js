@@ -507,7 +507,7 @@ export const updateQuestionInExamSetService = async (examSetId, ownerId, questio
  * @param {Array} reorderItems
  * @returns {Object} Updated exam set
  */
-export const reorderQuestionsInExamSetService = async (examSetId, ownerId, reorderItems) => {
+export const reorderQuestionsInExamSetService = async (examSetId, currentUserId, currentUserRole, reorderItems) => {
   if (!examSetId || !Types.ObjectId.isValid(examSetId)) {
     const error = new Error("examSetId không hợp lệ");
     error.status = 400;
@@ -564,7 +564,6 @@ export const reorderQuestionsInExamSetService = async (examSetId, ownerId, reord
 
   const examSet = await ExamSet.findOne({
     _id: examSetId,
-    ownerId: ownerId,
     isDeleted: false,
   });
 
@@ -574,13 +573,25 @@ export const reorderQuestionsInExamSetService = async (examSetId, ownerId, reord
     throw error;
   }
 
-  if (examSet.status === "published") {
-    const error = new Error("Không thể reorder câu hỏi khi bộ đề thi đang ở trạng thái Published");
+  const userRole = (currentUserRole || "").toLowerCase();
+  const isOwner = examSet.ownerId.toString() === currentUserId;
+  const hasEditPermission = ["admin", "teacher"].includes(userRole);
+
+  if (!isOwner && !hasEditPermission) {
+    const error = new Error("Bạn không có quyền sắp xếp lại câu hỏi");
+    error.status = 403;
+    throw error;
+  }
+
+  if (examSet.status !== "draft") {
+    const error = new Error("Chỉ có thể sắp xếp lại câu hỏi khi bộ đề thi đang ở trạng thái draft");
     error.status = 403;
     throw error;
   }
 
   const existingQuestionIds = new Set(examSet.questions.map(q => q.questionId));
+  const reorderItemMap = new Map(normalizedItems.map(item => [item.questionId, item.order]));
+
   for (const { questionId } of normalizedItems) {
     if (!existingQuestionIds.has(questionId)) {
       const error = new Error(`Câu hỏi ${questionId} không tồn tại trong bộ đề thi`);
@@ -589,16 +600,25 @@ export const reorderQuestionsInExamSetService = async (examSetId, ownerId, reord
     }
   }
 
-  // Update orders on matching questions
+  const finalOrderSet = new Set();
+  for (const question of examSet.questions) {
+    const newOrder = reorderItemMap.has(question.questionId) ? reorderItemMap.get(question.questionId) : question.order;
+    if (finalOrderSet.has(newOrder)) {
+      const error = new Error("Không được phép duplicate order sau khi sắp xếp lại câu hỏi");
+      error.status = 400;
+      throw error;
+    }
+    finalOrderSet.add(newOrder);
+  }
+
   examSet.questions = examSet.questions.map(question => {
-    const reorderItem = normalizedItems.find(item => item.questionId === question.questionId);
-    if (reorderItem) {
-      question.order = reorderItem.order;
+    const reorderItem = reorderItemMap.get(question.questionId);
+    if (reorderItem !== undefined) {
+      question.order = reorderItem;
     }
     return question;
   });
 
-  // Sort the questions array by order ascending
   examSet.questions.sort((a, b) => a.order - b.order);
 
   const updatedExamSet = await examSet.save();

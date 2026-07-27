@@ -119,3 +119,20 @@ export const multipleChoiceQuestionValidation = [
 
   handleValidationErrors,
 ];
+
+export const reorderQuestionsValidation = [
+  body("questions")
+    .isArray({ min: 1 })
+    .withMessage("questions phải là một mảng và không được rỗng"),
+
+  body("questions.*.questionId")
+    .trim()
+    .notEmpty()
+    .withMessage("questionId là bắt buộc cho mỗi câu hỏi"),
+
+  body("questions.*.order")
+    .isInt({ min: 0 })
+    .withMessage("order phải là số nguyên không âm cho mỗi câu hỏi"),
+
+  handleValidationErrors,
+];

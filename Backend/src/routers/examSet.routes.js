@@ -2,7 +2,7 @@
 import express from "express";
 import { createExamSet, getExamSets, updateExamSet, deleteExamSet, restoreExamSet, addQuestionToExamSet, updateQuestionInExamSet, deleteQuestionInExamSet, reorderQuestionsInExamSet } from "../controllers/examSet.controller.js";
 import { verifyUser } from "../middlewares/auth.middlewares.js";
-import { multipleChoiceQuestionValidation } from "../utils/validators.js";
+import { multipleChoiceQuestionValidation, reorderQuestionsValidation } from "../utils/validators.js";
 
 const router = express.Router();
 
@@ -41,7 +41,7 @@ router.patch("/:id/questions/:questionId", updateQuestionInExamSet);
  * PATCH /api/exam-sets/:id/questions/reorder
  * Reorder questions within exam set
  */
-router.patch("/:id/questions/reorder", reorderQuestionsInExamSet);
+router.patch("/:id/questions/reorder", reorderQuestionsValidation, reorderQuestionsInExamSet);
 
 /**
  * DELETE /api/exam-sets/:id/questions/:questionId

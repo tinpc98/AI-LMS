@@ -298,9 +298,10 @@ export const reorderQuestionsInExamSet = async (req, res) => {
   try {
     const { id } = req.params;
     const userId = req.user.id;
+    const userRole = req.user.role;
     const reorderItems = req.body.questions;
 
-    const examSet = await reorderQuestionsInExamSetService(id, userId, reorderItems);
+    const examSet = await reorderQuestionsInExamSetService(id, userId, userRole, reorderItems);
 
     return res.status(200).json({
       success: true,
