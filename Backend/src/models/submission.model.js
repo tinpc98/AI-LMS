@@ -1,4 +1,5 @@
 import mongoose, { Schema, model } from "mongoose";
+import softDeletePlugin from "../plugins/softDelete.plugin.js";
 
 const submissionSchema = new Schema(
   {
@@ -73,6 +74,8 @@ const submissionSchema = new Schema(
 submissionSchema.index({ assignmentId: 1, studentId: 1 }, { unique: true });
 submissionSchema.index({ classId: 1, studentId: 1 });
 submissionSchema.index({ gradedBy: 1 });
+
+submissionSchema.plugin(softDeletePlugin);
 
 const Submission = model("Submission", submissionSchema);
 export default Submission;

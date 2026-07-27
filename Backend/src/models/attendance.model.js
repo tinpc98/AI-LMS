@@ -1,4 +1,5 @@
 import mongoose, { Schema, model } from "mongoose";
+import softDeletePlugin from "../plugins/softDelete.plugin.js";
 
 const attendanceSchema = new Schema(
   {
@@ -41,15 +42,15 @@ const attendanceSchema = new Schema(
   { timestamps: true }
 );
 
-// Compound Unique Index: Đảm bảo một học sinh chỉ có duy nhất 1 bản ghi điểm danh mỗi ngày trong một lớp
 attendanceSchema.index(
   { classId: 1, studentId: 1, date: 1 },
   { unique: true }
 );
 
-// Index bổ trợ phục vụ thống kê theo lớp hoặc theo học sinh
 attendanceSchema.index({ classId: 1, date: 1 });
 attendanceSchema.index({ studentId: 1 });
+
+attendanceSchema.plugin(softDeletePlugin);
 
 const Attendance = model("Attendance", attendanceSchema);
 export default Attendance;

@@ -119,7 +119,8 @@ export const updateQuestion = async (req, res) => {
 export const deleteQuestion = async (req, res) => {
   try {
     const { id } = req.params;
-    const deletedQ = await Question.findByIdAndDelete(id);
+    const userId = req.user?.id || req.user?._id;
+    const deletedQ = await Question.softDelete(id, userId);
 
     if (!deletedQ)
       return res.status(404).json({ message: "Không tìm thấy câu hỏi!" });

@@ -1,4 +1,5 @@
 import crypto from "crypto";
+import mongoose from "mongoose";
 import LiveSession from "../models/liveSession.model.js";
 import classModel from "../models/class.model.js";
 
@@ -6,8 +7,8 @@ export const createLiveSession = async (req, res) => {
   try {
     const { classId, title, scheduledStart, scheduledEnd } = req.body;
 
-    if (!classId) {
-      return res.status(400).json({ success: false, message: "classId is required" });
+    if (!classId || !mongoose.Types.ObjectId.isValid(classId)) {
+      return res.status(400).json({ success: false, message: "classId không hợp lệ!" });
     }
 
     const classInfo = await classModel.findById(classId).select("meetingRoomId");
@@ -61,6 +62,10 @@ export const createLiveSession = async (req, res) => {
 export const getActiveLiveSession = async (req, res) => {
   try {
     const { classId } = req.params;
+    if (!classId || !mongoose.Types.ObjectId.isValid(classId)) {
+      return res.status(200).json({ success: true, data: null });
+    }
+
     const activeSession = await LiveSession.findOne({ classId, status: "Live" });
 
     return res.status(200).json({ success: true, data: activeSession });
@@ -72,6 +77,9 @@ export const getActiveLiveSession = async (req, res) => {
 export const endLiveSession = async (req, res) => {
   try {
     const { classId } = req.body;
+    if (!classId || !mongoose.Types.ObjectId.isValid(classId)) {
+      return res.status(400).json({ success: false, message: "classId không hợp lệ!" });
+    }
 
     const session = await LiveSession.findOneAndUpdate(
       { classId, status: "Live" },
@@ -96,4 +104,3 @@ export const endLiveSession = async (req, res) => {
     return res.status(500).json({ success: false, message: error.message });
   }
 };
-

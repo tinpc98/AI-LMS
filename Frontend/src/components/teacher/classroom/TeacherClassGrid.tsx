@@ -84,7 +84,7 @@ export const TeacherClassGrid: React.FC<TeacherClassGridProps> = React.memo(({ c
                 flexDirection: "column",
                 height: "100%",
               }}
-              bodyStyle={{ padding: 20, flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between" }}
+              styles={{ body: { padding: 20, flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between" } }}
             >
               <div>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>

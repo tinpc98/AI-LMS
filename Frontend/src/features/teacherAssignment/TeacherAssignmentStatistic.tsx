@@ -10,7 +10,7 @@ const TeacherAssignmentStatistic = ({ stats }: TeacherAssignmentStatisticProps) 
   return (
     <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
       <Col xs={24} sm={12} lg={6}>
-        <Card bordered={false} bodyStyle={{ padding: "16px 20px" }}>
+        <Card bordered={false} styles={{ body: { padding: "16px 20px" } }}>
           <Statistic
             title="Total Classes"
             value={stats.totalClasses}
@@ -20,7 +20,7 @@ const TeacherAssignmentStatistic = ({ stats }: TeacherAssignmentStatisticProps) 
         </Card>
       </Col>
       <Col xs={24} sm={12} lg={6}>
-        <Card bordered={false} bodyStyle={{ padding: "16px 20px" }}>
+        <Card bordered={false} styles={{ body: { padding: "16px 20px" } }}>
           <Statistic
             title="Assigned"
             value={stats.assignedCount}
@@ -30,7 +30,7 @@ const TeacherAssignmentStatistic = ({ stats }: TeacherAssignmentStatisticProps) 
         </Card>
       </Col>
       <Col xs={24} sm={12} lg={6}>
-        <Card bordered={false} bodyStyle={{ padding: "16px 20px" }}>
+        <Card bordered={false} styles={{ body: { padding: "16px 20px" } }}>
           <Statistic
             title="Unassigned"
             value={stats.unassignedCount}
@@ -40,7 +40,7 @@ const TeacherAssignmentStatistic = ({ stats }: TeacherAssignmentStatisticProps) 
         </Card>
       </Col>
       <Col xs={24} sm={12} lg={6}>
-        <Card bordered={false} bodyStyle={{ padding: "16px 20px" }}>
+        <Card bordered={false} styles={{ body: { padding: "16px 20px" } }}>
           <Statistic
             title="Teaching Teachers"
             value={stats.activeTeachersCount}

@@ -25,7 +25,7 @@ export const GradeSubmissionModal: React.FC<GradeSubmissionModalProps> = React.m
     const studentIdStr = (studentObj?._id || submission?.studentId || "").toString();
     const studentCode = studentIdStr ? `STU-${studentIdStr.slice(-6).toUpperCase()}` : "STU-N/A";
 
-    const graderObj = typeof submission?.gradedBy === "object" ? submission.gradedBy : null;
+    const graderObj = typeof (submission as any)?.gradedBy === "object" ? (submission as any).gradedBy : null;
     const graderName = graderObj?.fullName || "";
 
     useEffect(() => {
@@ -33,7 +33,7 @@ export const GradeSubmissionModal: React.FC<GradeSubmissionModalProps> = React.m
         form.setFieldsValue({
           grade: submission.grade !== null && submission.grade !== undefined ? submission.grade : 10,
           feedback: submission.feedback || "",
-          aiFeedback: submission.aiFeedback || "",
+          aiFeedback: (submission as any).aiFeedback || "",
         });
       }
     }, [open, submission, form]);
@@ -80,8 +80,8 @@ export const GradeSubmissionModal: React.FC<GradeSubmissionModalProps> = React.m
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
                 <Space size={12}>
                   <Avatar
-                    src={studentObj?.avatar || undefined}
-                    icon={!studentObj?.avatar ? <UserOutlined /> : undefined}
+                    src={(studentObj as any)?.avatar || undefined}
+                    icon={!(studentObj as any)?.avatar ? <UserOutlined /> : undefined}
                     style={{ backgroundColor: "#1890ff" }}
                   />
                   <div>
@@ -148,9 +148,9 @@ export const GradeSubmissionModal: React.FC<GradeSubmissionModalProps> = React.m
             </div>
 
             {/* Previously Graded Info */}
-            {submission.gradedAt && (
+            {(submission as any).gradedAt && (
               <div style={{ fontSize: 12, color: "#8c8c8c", fontStyle: "italic" }}>
-                ℹ️ Được chấm bởi <b>{graderName || "Giáo viên"}</b> vào lúc {new Date(submission.gradedAt).toLocaleString("vi-VN")}
+                ℹ️ Được chấm bởi <b>{graderName || "Giáo viên"}</b> vào lúc {new Date((submission as any).gradedAt).toLocaleString("vi-VN")}
               </div>
             )}
           </div>

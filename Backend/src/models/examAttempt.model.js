@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import softDeletePlugin from "../plugins/softDelete.plugin.js";
 
 const examAttemptSchema = new mongoose.Schema(
   {
@@ -12,15 +13,11 @@ const examAttemptSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
-
-    // Trạng thái cực kỳ quan trọng để quản lý luồng thi
     status: {
       type: String,
       enum: ["IN_PROGRESS", "SUBMITTED", "PARTIALLY_GRADED", "GRADED"],
       default: "IN_PROGRESS",
     },
-
-    // Lưu đáp án học sinh đánh/viết
     answers: [
       {
         questionId: {
@@ -28,16 +25,14 @@ const examAttemptSchema = new mongoose.Schema(
           ref: "Question",
           required: true,
         },
-        selectedOption: { type: String }, // Dành cho trắc nghiệm
-        essayText: { type: String }, // Dành cho tự luận
-        pointsEarned: { type: Number, default: 0 }, // Điểm đạt được cho câu này
+        selectedOption: { type: String },
+        essayText: { type: String },
+        pointsEarned: { type: Number, default: 0 },
       },
     ],
-
     totalScore: { type: Number, default: 0 },
-
     startTime: { type: Date, default: Date.now },
-    endTime: { type: Date }, // Chốt lại khi nộp bài hoặc hết giờ
+    endTime: { type: Date },
     cheatCount: {
       type: Number,
       default: 0,
@@ -46,7 +41,6 @@ const examAttemptSchema = new mongoose.Schema(
       {
         cheatType: {
           type: String,
-          // Giới hạn các loại lỗi để dễ làm Filter/Thống kê sau này
           enum: [
             "TAB_SWITCH",
             "FULLSCREEN_EXIT",
@@ -65,8 +59,9 @@ const examAttemptSchema = new mongoose.Schema(
       default: 0,
     },
   },
-
   { timestamps: true },
 );
+
+examAttemptSchema.plugin(softDeletePlugin);
 
 export default mongoose.model("ExamAttempt", examAttemptSchema);

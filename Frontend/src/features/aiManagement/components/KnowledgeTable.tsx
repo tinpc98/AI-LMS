@@ -156,7 +156,7 @@ const KnowledgeTable = ({
     <div>
       <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
         <Col xs={24} sm={12} lg={6}>
-          <Card bordered={false} bodyStyle={{ padding: "14px 18px" }}>
+          <Card bordered={false} styles={{ body: { padding: "14px 18px" } }}>
             <Statistic
               title="Total Documents"
               value={stats.total}
@@ -166,7 +166,7 @@ const KnowledgeTable = ({
           </Card>
         </Col>
         <Col xs={24} sm={12} lg={6}>
-          <Card bordered={false} bodyStyle={{ padding: "14px 18px" }}>
+          <Card bordered={false} styles={{ body: { padding: "14px 18px" } }}>
             <Statistic
               title="Indexed"
               value={stats.indexed}
@@ -176,7 +176,7 @@ const KnowledgeTable = ({
           </Card>
         </Col>
         <Col xs={24} sm={12} lg={6}>
-          <Card bordered={false} bodyStyle={{ padding: "14px 18px" }}>
+          <Card bordered={false} styles={{ body: { padding: "14px 18px" } }}>
             <Statistic
               title="Pending"
               value={stats.pending}
@@ -186,7 +186,7 @@ const KnowledgeTable = ({
           </Card>
         </Col>
         <Col xs={24} sm={12} lg={6}>
-          <Card bordered={false} bodyStyle={{ padding: "14px 18px" }}>
+          <Card bordered={false} styles={{ body: { padding: "14px 18px" } }}>
             <Statistic
               title="Failed"
               value={stats.failed}

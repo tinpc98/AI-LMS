@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { Card, Input, Select, Segmented, Pagination, Alert, Button, Skeleton, Empty, Typography, Space } from "antd";
 import {
   SearchOutlined,
@@ -126,7 +126,7 @@ export default function ClassroomManagement() {
       )}
 
       {/* 2. Controls Toolbar (Search, Filter, Sort, View Toggle) */}
-      <Card style={{ borderRadius: 12, marginBottom: 24, boxShadow: "0 2px 8px rgba(0,0,0,0.04)" }} bodyStyle={{ padding: 16 }}>
+      <Card style={{ borderRadius: 12, marginBottom: 24, boxShadow: "0 2px 8px rgba(0,0,0,0.04)" }} styles={{ body: { padding: 16 } }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 16 }}>
           {/* Left: Search input */}
           <Input

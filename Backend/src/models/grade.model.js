@@ -1,4 +1,5 @@
 import mongoose, { Schema, model } from "mongoose";
+import softDeletePlugin from "../plugins/softDelete.plugin.js";
 
 const gradeSchema = new Schema(
   {
@@ -33,24 +34,20 @@ const gradeSchema = new Schema(
       default: 1,
       min: [0, "Tỷ trọng không được âm"],
     },
-    // Người chấm điểm (Giáo viên hoặc Admin)
     gradedBy: {
       type: Schema.Types.ObjectId,
       ref: "User",
       required: [true, "ID người chấm điểm là bắt buộc"],
     },
-    // Thời điểm chấm điểm
     gradedAt: {
       type: Date,
       default: Date.now,
     },
-    // Nhận xét/Phản hồi của người chấm
     feedback: {
       type: String,
       trim: true,
       default: "",
     },
-    // Gợi ý / Đánh giá tự động từ AI
     aiFeedback: {
       type: String,
       trim: true,
@@ -60,10 +57,11 @@ const gradeSchema = new Schema(
   { timestamps: true }
 );
 
-// Indexes tối ưu truy vấn bảng điểm theo lớp và theo học sinh
 gradeSchema.index({ classId: 1, studentId: 1 });
 gradeSchema.index({ studentId: 1, category: 1 });
 gradeSchema.index({ gradedBy: 1 });
+
+gradeSchema.plugin(softDeletePlugin);
 
 const Grade = model("Grade", gradeSchema);
 export default Grade;

@@ -1,4 +1,5 @@
 import mongoose, { Schema, model } from "mongoose";
+import softDeletePlugin from "../plugins/softDelete.plugin.js";
 
 const examQuestionSchema = new Schema(
   {
@@ -15,7 +16,7 @@ const examQuestionSchema = new Schema(
 const examSchema = new Schema(
   {
     title: { type: String, required: [true, "Tiêu đề đề thi là bắt buộc"], trim: true },
-    duration: { type: Number, required: [true, "Thời gian làm bài là bắt buộc"] }, // Thời gian làm bài (phút)
+    duration: { type: Number, required: [true, "Thời gian làm bài là bắt buộc"] },
 
     questions: [examQuestionSchema],
 
@@ -30,20 +31,17 @@ const examSchema = new Schema(
       required: [true, "Lớp học liên kết là bắt buộc"],
     },
 
-    // Người tạo bài thi
     createdBy: {
       type: Schema.Types.ObjectId,
       ref: "User",
       default: null,
     },
 
-    // Cờ đánh dấu đề thi được tạo tự động bằng AI
     isAIGenerated: {
       type: Boolean,
       default: false,
     },
 
-    // Prompt AI được sử dụng
     aiPromptUsed: {
       type: String,
       trim: true,
@@ -70,11 +68,9 @@ examSchema.index({ classId: 1 });
 examSchema.index({ createdBy: 1 });
 examSchema.index({ status: 1 });
 
-// Pre-save hook: Kích hoạt tự động kiểm tra tổng điểm phải chuẩn 10 trước khi lưu vào Database
 examSchema.pre("save", function () {
   if (this.questions && this.questions.length > 0) {
     const currentTotal = this.questions.reduce((sum, q) => sum + (q.points || 0), 0);
-    // Dùng toFixed(2) để tránh lỗi số thập phân của Javascript (vd: 0.1 + 0.2 = 0.300000004)
     if (parseFloat(currentTotal.toFixed(2)) !== 10) {
       throw new Error(
         `Tổng điểm của đề thi phải bằng đúng 10. Tổng hiện tại: ${currentTotal}`
@@ -82,6 +78,8 @@ examSchema.pre("save", function () {
     }
   }
 });
+
+examSchema.plugin(softDeletePlugin);
 
 const Exam = model("Exam", examSchema);
 export default Exam;

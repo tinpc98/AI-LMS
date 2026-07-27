@@ -1,4 +1,4 @@
-import React, { useState, ChangeEvent } from "react";
+import React, { useState, type ChangeEvent } from "react";
 import assignmentApi from "../../api/assignmentApi";
 import type { IAssignment } from "../../interface/assignmentInterface";
 

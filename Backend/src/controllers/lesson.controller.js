@@ -179,7 +179,7 @@ const lessonController = {
         await Promise.all(deletePromises);
       }
 
-      await Lesson.findByIdAndDelete(id);
+      await lesson.softDelete(teacherId);
       return res
         .status(200)
         .json({ message: "Xóa bài giảng và tài liệu liên quan thành công" });

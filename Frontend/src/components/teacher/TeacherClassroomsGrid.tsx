@@ -91,7 +91,7 @@ export const TeacherClassroomsGrid: React.FC<TeacherClassroomsGridProps> = React
           </div>
         }
         style={{ borderRadius: 12, marginBottom: 24, boxShadow: "0 2px 8px rgba(0,0,0,0.06)" }}
-        bodyStyle={{ padding: 20 }}
+        styles={{ body: { padding: 20 } }}
       >
         {paginatedClasses.length > 0 ? (
           <>
@@ -113,7 +113,7 @@ export const TeacherClassroomsGrid: React.FC<TeacherClassroomsGridProps> = React
                         display: "flex",
                         flexDirection: "column",
                       }}
-                      bodyStyle={{ padding: 16, flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between" }}
+                      styles={{ body: { padding: 16, flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between" } }}
                     >
                       <div>
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>

@@ -1,4 +1,5 @@
 import mongoose, { Schema, model } from "mongoose";
+import softDeletePlugin from "../plugins/softDelete.plugin.js";
 
 const announcementSchema = new Schema(
   {
@@ -29,7 +30,6 @@ const announcementSchema = new Schema(
       default: null,
       validate: {
         validator: function (value) {
-          // Nếu phạm vi là Class thì classId bắt buộc phải có
           if (this.scope === "Class") {
             return value != null;
           }
@@ -54,17 +54,17 @@ const announcementSchema = new Schema(
   { timestamps: true }
 );
 
-// Indexes nâng cao tốc độ truy vấn thông báo theo phạm vi và thời gian
 announcementSchema.index({ scope: 1, classId: 1 });
 announcementSchema.index({ createdBy: 1 });
 announcementSchema.index({ createdAt: -1 });
 
-// Pre-validate hook: Tự động xóa classId nếu scope = System
 announcementSchema.pre("validate", function () {
   if (this.scope === "System") {
     this.classId = null;
   }
 });
+
+announcementSchema.plugin(softDeletePlugin);
 
 const Announcement = model("Announcement", announcementSchema);
 export default Announcement;

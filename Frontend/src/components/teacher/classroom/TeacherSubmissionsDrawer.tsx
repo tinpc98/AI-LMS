@@ -148,8 +148,8 @@ export const TeacherSubmissionsDrawer: React.FC<TeacherSubmissionsDrawerProps> =
           return (
             <Space size={12}>
               <Avatar
-                src={studentObj?.avatar || undefined}
-                icon={!studentObj?.avatar ? <UserOutlined /> : undefined}
+                src={(studentObj as any)?.avatar || undefined}
+                icon={!(studentObj as any)?.avatar ? <UserOutlined /> : undefined}
                 style={{ backgroundColor: "#1890ff" }}
               />
               <div>
@@ -198,7 +198,7 @@ export const TeacherSubmissionsDrawer: React.FC<TeacherSubmissionsDrawerProps> =
         key: "gradeInfo",
         width: 200,
         render: (_, record) => {
-          const graderObj = typeof record.gradedBy === "object" ? record.gradedBy : null;
+          const graderObj = typeof (record as any).gradedBy === "object" ? (record as any).gradedBy : null;
           const graderName = graderObj?.fullName;
 
           return (

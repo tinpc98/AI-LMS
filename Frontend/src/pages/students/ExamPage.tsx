@@ -14,21 +14,21 @@ const ExamPage = () => {
   // ==========================================
   // 1. STATE BÀI LÀM VÀ AUTO-SAVE
   // ==========================================
-  const [questions, setQuestions] = useState([]);
+  const [questions, setQuestions] = useState<any[]>([]);
 
   // FIX LỖI TIMER 1: Đặt mặc định là null để biết chưa có dữ liệu BE
-  const [examDuration, setExamDuration] = useState(null);
-  const [examEndTime, setExamEndTime] = useState(null); // Lưu thời điểm kết thúc tuyệt đối
+  const [examDuration, setExamDuration] = useState<number | null>(null);
+  const [examEndTime, setExamEndTime] = useState<string | null>(null); // Lưu thời điểm kết thúc tuyệt đối
 
   const [isLoading, setIsLoading] = useState(true);
   const [currentIndex, setCurrentIndex] = useState(0);
 
-  const [answers, setAnswers] = useState(() => {
+  const [answers, setAnswers] = useState<Record<string, any>>(() => {
     const savedAnswers = localStorage.getItem("exam_draft_answers");
     return savedAnswers ? JSON.parse(savedAnswers) : {};
   });
 
-  const [flagged, setFlagged] = useState(() => {
+  const [flagged, setFlagged] = useState<Set<string>>(() => {
     const savedFlagged = localStorage.getItem("exam_draft_flagged");
     return savedFlagged ? new Set(JSON.parse(savedFlagged)) : new Set();
   });
@@ -79,7 +79,7 @@ const ExamPage = () => {
 
           setIsLoading(false);
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error("Lỗi khi tải đề thi:", error);
         setWarningMessage("Không thể tải dữ liệu đề thi. Đang quay lại...");
         setIsWarningVisible(true);
@@ -118,17 +118,11 @@ const ExamPage = () => {
       localStorage.removeItem("exam_draft_answers");
       localStorage.removeItem("exam_draft_flagged");
 
-      setModalType(isForced ? "warning" : "success");
-      setWarningMessage(
-        isForced
-          ? "Đã nộp bài do vi phạm nội quy! Đang thoát..."
-          : "Nộp bài thành công! Đang chuyển hướng...",
-      );
-
+      setWarningMessage("Nộp bài thành công! Đang chuyển về trang kết quả...");
       setTimeout(() => {
-        navigate("/");
+        navigate(`/student/exam-result/${attemptId}`);
       }, 2000);
-    } catch (error) {
+    } catch (error: any) {
       isSubmittingRef.current = false;
       console.error("Lỗi nộp bài:", error);
       setModalType("warning");
@@ -157,7 +151,7 @@ const ExamPage = () => {
   );
 
   const handleCheatAlert = useCallback(
-    async (reason, currentViolations) => {
+    async (reason: string, currentViolations: number) => {
       if (isSubmittingRef.current) return;
       console.log(`🚨 Lỗi: ${reason}. Số lần: ${currentViolations}`);
 
@@ -193,9 +187,9 @@ const ExamPage = () => {
   // ==========================================
   // 6. CÁC HÀM TƯƠNG TÁC VỚI CÂU HỎI
   // ==========================================
-  const currentQ = questions[currentIndex];
+  const currentQ = questions[currentIndex] as any;
 
-  const handleAnswerChange = (value) => {
+  const handleAnswerChange = (value: any) => {
     if (!currentQ) return;
     setAnswers((prev) => ({ ...prev, [currentQ._id]: value }));
   };
@@ -281,7 +275,7 @@ const ExamPage = () => {
             {/* Render Câu hỏi  */}
             {currentQ.type === "MCQ" ? (
               <div className="grid gap-4">
-                {currentQ.options?.map((opt, index) => {
+                {currentQ.options?.map((opt: any, index: number) => {
                   if (!opt) return null;
                   const label = String.fromCharCode(65 + index);
                   const isSelected = answers[currentQ._id] === opt;

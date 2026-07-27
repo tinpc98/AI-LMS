@@ -1,5 +1,5 @@
 import React from "react";
-import { Row, Col, Card, Statistic, Progress, Badge, Space, Typography } from "antd";
+import { Row, Col, Card, Statistic, Badge, Space, Typography } from "antd";
 import {
   BookOutlined,
   TeamOutlined,
@@ -40,7 +40,7 @@ export const TeacherQuickStats: React.FC<TeacherQuickStatsProps> = React.memo(
               borderLeft: "4px solid #1890ff",
               boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
             }}
-            bodyStyle={{ padding: "16px 20px" }}
+            styles={{ body: { padding: "16px 20px" } }}
           >
             <Statistic
               title={<Text type="secondary" style={{ fontSize: 13 }}>Lớp phụ trách</Text>}
@@ -65,7 +65,7 @@ export const TeacherQuickStats: React.FC<TeacherQuickStatsProps> = React.memo(
               borderLeft: "4px solid #52c41a",
               boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
             }}
-            bodyStyle={{ padding: "16px 20px" }}
+            styles={{ body: { padding: "16px 20px" } }}
           >
             <Statistic
               title={<Text type="secondary" style={{ fontSize: 13 }}>Tổng học sinh</Text>}
@@ -90,7 +90,7 @@ export const TeacherQuickStats: React.FC<TeacherQuickStatsProps> = React.memo(
               borderLeft: "4px solid #faad14",
               boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
             }}
-            bodyStyle={{ padding: "16px 20px" }}
+            styles={{ body: { padding: "16px 20px" } }}
           >
             <Statistic
               title={
@@ -120,7 +120,7 @@ export const TeacherQuickStats: React.FC<TeacherQuickStatsProps> = React.memo(
               borderLeft: "4px solid #ff4d4f",
               boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
             }}
-            bodyStyle={{ padding: "16px 20px" }}
+            styles={{ body: { padding: "16px 20px" } }}
           >
             <Statistic
               title={
@@ -150,7 +150,7 @@ export const TeacherQuickStats: React.FC<TeacherQuickStatsProps> = React.memo(
               borderLeft: "4px solid #722ed1",
               boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
             }}
-            bodyStyle={{ padding: "16px 20px" }}
+            styles={{ body: { padding: "16px 20px" } }}
           >
             <Statistic
               title={<Text type="secondary" style={{ fontSize: 13 }}>Thông báo</Text>}

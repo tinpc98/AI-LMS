@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import announcementService from "../services/announcement.service.js";
 import { sendSuccess, sendError } from "../utils/response.js";
 
@@ -8,8 +9,12 @@ export const createAnnouncement = async (req, res) => {
       return sendError(res, "Tiêu đề và nội dung thông báo là bắt buộc", 400);
     }
 
-    const createdBy = req.user.id;
-    const userRole = req.user.role;
+    if (classId && !mongoose.Types.ObjectId.isValid(classId)) {
+      return sendError(res, "ID lớp học không hợp lệ!", 400);
+    }
+
+    const createdBy = req.user.id || req.user._id;
+    const userRole = (req.user.role || "").toLowerCase();
 
     const result = await announcementService.createAnnouncement({
       title,
@@ -31,8 +36,8 @@ export const createAnnouncement = async (req, res) => {
 export const getAnnouncements = async (req, res) => {
   try {
     const { scope, classId, courseId, search, page, limit } = req.query;
-    const userId = req.user.id;
-    const userRole = req.user.role;
+    const userId = req.user.id || req.user._id;
+    const userRole = (req.user.role || "").toLowerCase();
 
     const { items, pagination } = await announcementService.getAnnouncements({
       scope,
@@ -54,6 +59,10 @@ export const getAnnouncements = async (req, res) => {
 export const getAnnouncementById = async (req, res) => {
   try {
     const { id } = req.params;
+    if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+      return sendError(res, "Thông báo không tồn tại!", 404);
+    }
+
     const result = await announcementService.getAnnouncementById(id);
     return sendSuccess(res, "Lấy chi tiết thông báo thành công", result);
   } catch (error) {
@@ -64,8 +73,12 @@ export const getAnnouncementById = async (req, res) => {
 export const updateAnnouncement = async (req, res) => {
   try {
     const { id } = req.params;
-    const userId = req.user.id;
-    const userRole = req.user.role;
+    if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+      return sendError(res, "Thông báo không tồn tại!", 404);
+    }
+
+    const userId = req.user.id || req.user._id;
+    const userRole = (req.user.role || "").toLowerCase();
 
     const result = await announcementService.updateAnnouncement(id, req.body, userId, userRole);
     return sendSuccess(res, "Cập nhật thông báo thành công", result);
@@ -77,8 +90,12 @@ export const updateAnnouncement = async (req, res) => {
 export const deleteAnnouncement = async (req, res) => {
   try {
     const { id } = req.params;
-    const userId = req.user.id;
-    const userRole = req.user.role;
+    if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+      return sendError(res, "Thông báo không tồn tại!", 404);
+    }
+
+    const userId = req.user.id || req.user._id;
+    const userRole = (req.user.role || "").toLowerCase();
 
     await announcementService.deleteAnnouncement(id, userId, userRole);
     return sendSuccess(res, "Xóa thông báo thành công");

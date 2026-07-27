@@ -34,7 +34,7 @@ export const TeacherClassHeader: React.FC<TeacherClassHeaderProps> = React.memo(
           marginBottom: 24,
           boxShadow: "0 8px 24px rgba(24, 144, 255, 0.25)",
         }}
-        bodyStyle={{ padding: "24px 32px" }}
+        styles={{ body: { padding: "24px 32px" } }}
       >
         <div style={{ marginBottom: 20 }}>
           <Space align="center">

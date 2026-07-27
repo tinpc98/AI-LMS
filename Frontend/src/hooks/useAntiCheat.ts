@@ -1,15 +1,15 @@
 import { useEffect, useRef } from "react";
 
-const useAntiCheat = (onCheatDetected) => {
+export type AntiCheatCallback = (reason: string, currentViolations: number) => void;
+
+const useAntiCheat = (onCheatDetected: AntiCheatCallback) => {
   const warningCount = useRef(0);
-  const lastTriggerTime = useRef(0); // Thêm biến lưu thời gian để chống tính đúp
+  const lastTriggerTime = useRef(0);
 
   useEffect(() => {
-    // Tạo 1 hàm chung để tăng biến đếm và gọi Modal
-    const triggerWarning = (reason) => {
+    const triggerWarning = (reason: string) => {
       const now = Date.now();
 
-      // FIX LỖI TÍNH ĐÚP: Nếu 2 sự kiện gian lận xảy ra cách nhau dưới 1 giây (1000ms), bỏ qua sự kiện thứ 2.
       if (now - lastTriggerTime.current < 1000) {
         return;
       }
@@ -19,14 +19,14 @@ const useAntiCheat = (onCheatDetected) => {
       onCheatDetected(reason, warningCount.current);
     };
 
-    const handleContextMenu = (e) => e.preventDefault();
+    const handleContextMenu = (e: MouseEvent) => e.preventDefault();
 
-    const handleClipboard = (e) => {
+    const handleClipboard = (e: Event) => {
       e.preventDefault();
       triggerWarning("Phát hiện hành vi sao chép/dán");
     };
 
-    const handleKeyDown = (e) => {
+    const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "F12") e.preventDefault();
       if (e.key === "F5" || (e.ctrlKey && e.key === "r")) {
         e.preventDefault();
