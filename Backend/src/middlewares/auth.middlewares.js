@@ -72,3 +72,11 @@ export const isAdmin = (req, res, next) => {
   }
   next();
 };
+
+export const isStudent = (req, res, next) => {
+  if (req.user && req.user.role === 'student') {
+    next();
+  } else {
+    return res.status(403).json({ success: false, message: "Forbidden: Student access required" });
+  }
+};

@@ -22,6 +22,7 @@ import CourseRouter from "./src/routers/course.routes.js";
 import DashboardRouter from "./src/routers/dashboard.routes.js";
 import ReportRouter from "./src/routers/report.routes.js";
 import NotificationRouter from "./src/routers/notification.routes.js";
+import ProgressRouter from "./src/routers/progress.routes.js";
 
 // Import Cron Setup
 import { initCronJobs } from "./src/cron/cron.setup.js";
@@ -95,8 +96,8 @@ app.use("/api/assignments", assignmentRouter);
 app.use("/api/attendances", AttendanceRouter);
 app.use("/api/grades", GradeRouter);
 app.use("/api/announcements", AnnouncementRouter);
-app.use("/api/notifications", AnnouncementRouter);
 app.use("/api/notifications", NotificationRouter); // Bulk & inbox endpoints
+app.use("/api/progress", ProgressRouter);
 
 // Routes Module Thi trực tuyến & Live
 app.use("/api/questions", QuestionRouter);

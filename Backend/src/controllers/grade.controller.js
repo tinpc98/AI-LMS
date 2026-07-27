@@ -47,6 +47,7 @@ export const getGradesByClass = async (req, res) => {
 };
 
 export const getGradesByStudent = async (req, res) => {
+  if (req.user.role === 'student' && req.user.id !== req.params.studentId) { return res.status(403).json({ success: false, message: "Forbidden: Cannot access other student's records." }); }
   try {
     let { studentId } = req.params;
     const { classId } = req.query;
@@ -75,6 +76,7 @@ export const getGradesByStudent = async (req, res) => {
 };
 
 export const getStudentGPA = async (req, res) => {
+  if (req.user.role === 'student' && req.user.id !== req.params.studentId) { return res.status(403).json({ success: false, message: "Forbidden: Cannot access other student's records." }); }
   try {
     const { classId, studentId: paramStudentId } = req.params;
     const loggedUserId = (req.user?.id || req.user?._id || "").toString();

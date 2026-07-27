@@ -28,3 +28,51 @@ export const getAdminDashboard = async (req, res) => {
     );
   }
 };
+
+/**
+ * GET /api/dashboard/teacher
+ * Trả về số liệu tổng quan dành cho giáo viên (Teacher Dashboard).
+ */
+export const getTeacherDashboard = async (req, res) => {
+  try {
+    const teacherId = req.user.id || req.user._id;
+    const metrics = await dashboardService.getTeacherMetrics(teacherId);
+
+    return sendSuccess(
+      res,
+      "Teacher dashboard metrics retrieved successfully",
+      metrics
+    );
+  } catch (error) {
+    console.error("[DashboardController] getTeacherDashboard Error:", error);
+    return sendError(
+      res,
+      error.message || "Lỗi nội bộ khi tổng hợp số liệu dashboard giáo viên",
+      500
+    );
+  }
+};
+
+/**
+ * GET /api/dashboard/student
+ * Trả về số liệu tổng quan dành cho học sinh (Student Dashboard).
+ */
+export const getStudentDashboard = async (req, res) => {
+  try {
+    const studentId = req.user.id || req.user._id;
+    const metrics = await dashboardService.getStudentMetrics(studentId);
+
+    return sendSuccess(
+      res,
+      "Student dashboard metrics retrieved successfully",
+      metrics
+    );
+  } catch (error) {
+    console.error("[DashboardController] getStudentDashboard Error:", error);
+    return sendError(
+      res,
+      error.message || "Lỗi nội bộ khi tổng hợp số liệu dashboard học sinh",
+      500
+    );
+  }
+};

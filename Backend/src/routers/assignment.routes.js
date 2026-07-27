@@ -1,6 +1,6 @@
 import express from "express";
 import assignmentController from "../controllers/assignment.controller.js";
-import { verifyUser, isTeacher } from "../middlewares/auth.middlewares.js";
+import { verifyUser, isTeacher, isStudent } from "../middlewares/auth.middlewares.js";
 import upload from "../middlewares/upload.middlewares.js";
 
 const router = express.Router();
@@ -58,6 +58,7 @@ router.get(
 router.post(
   "/submit/:assignmentId",
   verifyUser,
+  isStudent,
   upload.array("files", 5),
   assignmentController.submitAssignment
 );
@@ -66,6 +67,7 @@ router.post(
 router.delete(
   "/submit/:assignmentId",
   verifyUser,
+  isStudent,
   assignmentController.cancelSubmission
 );
 

@@ -48,6 +48,7 @@ export const getAttendanceByClass = async (req, res) => {
 };
 
 export const getAttendanceByStudent = async (req, res) => {
+  if (req.user.role === 'student' && req.user.id !== req.params.studentId) { return res.status(403).json({ success: false, message: "Forbidden: Cannot access other student's records." }); }
   try {
     let { studentId } = req.params;
     const { classId } = req.query;

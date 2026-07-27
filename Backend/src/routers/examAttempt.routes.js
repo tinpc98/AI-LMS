@@ -8,15 +8,15 @@ import {
   getAttemptsByExam,
   recordCheatWarning,
 } from "../controllers/examAttempt.controller.js";
-import { verifyUser, isTeacher } from "../middlewares/auth.middlewares.js";
+import { verifyUser, isTeacher, isStudent } from "../middlewares/auth.middlewares.js";
 
 const router = express.Router();
 
 // --- Tuyến đường dành cho Học sinh ---
-router.post("/start", verifyUser, startExam);
-router.post("/:id/submit", verifyUser, submitExam);
+router.post("/start", verifyUser, isStudent, startExam);
+router.post("/:id/submit", verifyUser, isStudent, submitExam);
 router.get("/:id", verifyUser, getExamAttemptDetail);
-router.post("/:id/warning", verifyUser, recordCheatWarning);
+router.post("/:id/warning", verifyUser, isStudent, recordCheatWarning);
 
 // --- Tuyến đường dành cho Giáo viên / Admin ---
 router.put("/:id/grade-essay", verifyUser, isTeacher, gradeEssaySubmit);
