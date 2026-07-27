@@ -1,12 +1,15 @@
-import crypto from "crypto";
-import mongoose from "mongoose";
-import classModel from "../models/class.model.js";
-import Course from "../models/course.model.js";
-import User from "../models/user.models.js";
-import classService from "../services/class.service.js";
+import fs from 'fs';
 
-// Lấy danh sách lớp học (Hỗ trợ phân trang, tìm kiếm và lọc theo vai trò)
-export const ClassList = async (req, res) => {
+let content = fs.readFileSync('src/controllers/class.controller.js', 'utf-8');
+
+// 1. Add classService import
+if (!content.includes('class.service.js')) {
+  content = content.replace('import User from "../models/user.models.js";', 'import User from "../models/user.models.js";\nimport classService from "../services/class.service.js";');
+}
+
+// 2. Rewrite ClassList
+const classListRegex = /export const ClassList = async \(req, res\) => \{[\s\S]*?\n\};/;
+const newClassList = `export const ClassList = async (req, res) => {
   try {
     const userId = (req.user?.id || req.user?._id || "").toString();
     const userRole = (req.user?.role || "").toLowerCase();
@@ -43,12 +46,12 @@ export const ClassList = async (req, res) => {
     console.error("[ClassController] ClassList Error:", error);
     return res.status(500).json({ success: false, message: error.message || "Lỗi nội bộ trên Server khi lấy danh sách lớp học" });
   }
-};
+};`;
+content = content.replace(classListRegex, newClassList);
 
-//=====================================================================================
-
-// Lấy chi tiết 1 lớp học theo ID
-export const ClassListById = async (req, res) => {
+// 3. Rewrite ClassListById for student check and success: true
+const classListByIdRegex = /export const ClassListById = async \(req, res\) => \{[\s\S]*?\n\};/;
+const newClassListById = `export const ClassListById = async (req, res) => {
   const { id } = req.params;
 
   if (!id || !mongoose.Types.ObjectId.isValid(id)) {
@@ -86,89 +89,12 @@ export const ClassListById = async (req, res) => {
     console.error("[ClassController] ClassListById Error:", error);
     return res.status(500).json({ success: false, message: error.message || "Lỗi khi tải chi tiết lớp học" });
   }
-};
+};`;
+content = content.replace(classListByIdRegex, newClassListById);
 
-//=====================================================================================
-// Tạo lớp học mới (Dành cho Admin)
-export const AddNewClass = async (req, res) => {
-  try {
-    const {
-      className,
-      courseId,
-      teacherId,
-      classCode,
-      room,
-      classRoom,
-      learningMode,
-      schedule,
-      startDate,
-      endDate,
-      maxStudents,
-      description,
-      note,
-      status,
-      isEnrollmentOpen,
-      students,
-      googleMeetLink,
-      googleCalendarEventId,
-      gradingWeight,
-    } = req.body;
-
-    if (!className || !courseId) {
-      return res.status(400).json({ success: false, message: "Vui lòng nhập tên lớp và khóa học" });
-    }
-
-    if (!mongoose.Types.ObjectId.isValid(courseId)) {
-      return res.status(400).json({ success: false, message: "ID khóa học không hợp lệ!" });
-    }
-
-    const courseExists = await Course.findById(courseId);
-    if (!courseExists) {
-      return res.status(404).json({ success: false, message: "Khóa học không tồn tại" });
-    }
-
-    if (teacherId && !mongoose.Types.ObjectId.isValid(teacherId)) {
-      return res.status(400).json({ success: false, message: "ID giáo viên không hợp lệ!" });
-    }
-
-    const meetingRoomId = `room_${crypto.randomBytes(4).toString("hex")}`;
-
-    const newClassData = {
-      className: className.trim(),
-      classCode: classCode?.trim() || `CLS-${Date.now().toString().slice(-6)}`,
-      courseId,
-      teacherId: teacherId || null,
-      assignedBy: req.user.id || req.user._id,
-      assignedAt: teacherId ? new Date() : null,
-      meetingRoomId,
-      googleMeetLink: googleMeetLink || "",
-      googleCalendarEventId: googleCalendarEventId || "",
-      classRoom: classRoom ?? room ?? "",
-      learningMode: learningMode || "Offline",
-      schedule: schedule || { days: [], startTime: "", endTime: "" },
-      gradingWeight: gradingWeight || { attendance: 10, assignment: 20, midterm: 30, final: 40 },
-      startDate: startDate || null,
-      endDate: endDate || null,
-      maxStudents: maxStudents || 30,
-      currentStudents: Array.isArray(students) ? students.length : 0,
-      students: Array.isArray(students) ? students : [],
-      description: description || "",
-      note: note || "",
-      isEnrollmentOpen: typeof isEnrollmentOpen === "boolean" ? isEnrollmentOpen : true,
-      status: status || "Draft",
-    };
-
-    const savedClass = await new classModel(newClassData).save();
-    return res.status(201).json({ success: true, message: "Tạo lớp học thành công", data: savedClass });
-  } catch (error) {
-    console.error("[ClassController] Create Error:", error);
-    return res.status(500).json({ success: false, message: error.message || "Lỗi khi tạo lớp học" });
-  }
-};
-
-//=====================================================================================
-// Cập nhật lớp học (Dành cho Admin)
-export const UpdateClass = async (req, res) => {
+// 4. UpdateClass full populate
+const updateClassRegex = /export const UpdateClass = async \(req, res\) => \{[\s\S]*?\n\};/;
+const newUpdateClass = `export const UpdateClass = async (req, res) => {
   const { id } = req.params;
 
   if (!id || !mongoose.Types.ObjectId.isValid(id)) {
@@ -198,11 +124,12 @@ export const UpdateClass = async (req, res) => {
     const isValidationError = error.name === "ValidationError";
     return res.status(isValidationError ? 400 : 500).json({ success: false, message: error.message || "Lỗi khi cập nhật lớp học" });
   }
-};
+};`;
+content = content.replace(updateClassRegex, newUpdateClass);
 
-//=====================================================================================
-// Phân công Giáo viên cho lớp học (Dành cho Admin)
-export const AssignTeacher = async (req, res) => {
+// 5. AssignTeacher populate teachingSubjects
+const assignTeacherRegex = /export const AssignTeacher = async \(req, res\) => \{[\s\S]*?\n\};/;
+const newAssignTeacher = `export const AssignTeacher = async (req, res) => {
   const { id } = req.params;
   const { teacherId } = req.body;
 
@@ -241,11 +168,12 @@ export const AssignTeacher = async (req, res) => {
     const isValidationError = error.name === "ValidationError";
     return res.status(isValidationError ? 400 : 500).json({ success: false, message: error.message || "Lỗi khi phân công giáo viên" });
   }
-};
+};`;
+content = content.replace(assignTeacherRegex, newAssignTeacher);
 
-//=====================================================================================
-// Thêm học sinh vào lớp (Dành cho Admin)
-export const AssignStudent = async (req, res) => {
+// 6. AssignStudent full populate
+const assignStudentRegex = /export const AssignStudent = async \(req, res\) => \{[\s\S]*?\n\};/;
+const newAssignStudent = `export const AssignStudent = async (req, res) => {
   const { id } = req.params;
   const { studentId } = req.body;
 
@@ -289,11 +217,12 @@ export const AssignStudent = async (req, res) => {
     const isValidationError = error.name === "ValidationError";
     return res.status(isValidationError ? 400 : 500).json({ success: false, message: error.message || "An error occurred while adding student to class." });
   }
-};
+};`;
+content = content.replace(assignStudentRegex, newAssignStudent);
 
-//=====================================================================================
-// Xóa / Gỡ học sinh khỏi lớp (Dành cho Admin)
-export const RemoveStudent = async (req, res) => {
+// 7. RemoveStudent full populate
+const removeStudentRegex = /export const RemoveStudent = async \(req, res\) => \{[\s\S]*?\n\};/;
+const newRemoveStudent = `export const RemoveStudent = async (req, res) => {
   const { id, studentId } = req.params;
 
   if (!id || !mongoose.Types.ObjectId.isValid(id) || !studentId || !mongoose.Types.ObjectId.isValid(studentId)) {
@@ -321,106 +250,13 @@ export const RemoveStudent = async (req, res) => {
     console.error("[ClassController] RemoveStudent Error:", error);
     return res.status(500).json({ success: false, message: error.message || "Lỗi khi xóa học sinh khỏi lớp" });
   }
-};
+};`;
+content = content.replace(removeStudentRegex, newRemoveStudent);
 
-//=====================================================================================
-// Thêm tài nguyên bài học vào lớp học (Dành cho Giáo viên / Admin)
-export const AddResource = async (req, res) => {
-  const { id } = req.params;
-  const { title, description, type, url } = req.body;
 
-  if (!id || !mongoose.Types.ObjectId.isValid(id)) {
-    return res.status(400).json({ success: false, message: "ID lớp học không hợp lệ!" });
-  }
-
-  try {
-    if (!title || !url) {
-      return res.status(400).json({ success: false, message: "Tiêu đề và URL tài nguyên là bắt buộc" });
-    }
-
-    const targetClass = await classModel.findById(id);
-    if (!targetClass) {
-      return res.status(404).json({ success: false, message: "Lớp học không tồn tại" });
-    }
-
-    const validTypes = ["Document", "Video", "Link", "Other"];
-    const resourceType = validTypes.includes(type) ? type : "Document";
-
-    const userId = req.user.id || req.user._id;
-
-    targetClass.resources.push({
-      title: title.trim(),
-      description: description?.trim() || "",
-      type: resourceType,
-      url: url.trim(),
-      uploadedBy: userId,
-      uploadedAt: new Date(),
-    });
-
-    await targetClass.save();
-
-    return res.status(200).json({ success: true, message: "Thêm tài nguyên thành công", data: targetClass });
-  } catch (error) {
-    console.error("[ClassController] AddResource Error:", error);
-    return res.status(400).json({ success: false, message: error.message || "Lỗi khi thêm tài nguyên bài học" });
-  }
-};
-
-//=====================================================================================
-// Xóa tài nguyên bài học (Dành cho Teacher/Admin)
-export const RemoveResource = async (req, res) => {
-  const { id, resourceId } = req.params;
-
-  if (!id || !mongoose.Types.ObjectId.isValid(id) || !resourceId || !mongoose.Types.ObjectId.isValid(resourceId)) {
-    return res.status(400).json({ success: false, message: "ID lớp học hoặc ID tài nguyên không hợp lệ!" });
-  }
-
-  try {
-    const targetClass = await classModel.findById(id);
-    if (!targetClass) {
-      return res.status(404).json({ success: false, message: "Lớp học không tồn tại" });
-    }
-
-    targetClass.resources = targetClass.resources.filter(
-      (r) => r._id && r._id.toString() !== resourceId.toString()
-    );
-
-    await targetClass.save();
-
-    return res.status(200).json({ success: true, message: "Xóa tài nguyên thành công", data: targetClass });
-  } catch (error) {
-    console.error("[ClassController] RemoveResource Error:", error);
-    return res.status(500).json({ success: false, message: error.message || "Lỗi khi xóa tài nguyên" });
-  }
-};
-
-//=====================================================================================
-// Xóa lớp học (Dành cho Admin)
-export const DeleteClass = async (req, res) => {
-  const { id } = req.params;
-
-  if (!id || !mongoose.Types.ObjectId.isValid(id)) {
-    return res.status(400).json({ success: false, message: "ID lớp học không hợp lệ!" });
-  }
-
-  try {
-    const userId = req.user?.id || req.user?._id;
-    const deleteClass = await classModel.softDelete(id, userId);
-
-    if (!deleteClass) {
-      return res.status(404).json({ success: false, message: "Lớp học không tồn tại",
-      });
-    }
-    return res.status(200).json({ success: true, message: "Xóa lớp học thành công", data: deleteClass });
-  } catch (error) {
-    console.error("[ClassController] DeleteClass Error:", error);
-    return res.status(500).json({ success: false, message: error.message || "Lỗi khi xóa lớp học" });
-  }
-};
-
-//=====================================================================================
-// Lấy danh sách lớp học trong thùng rác (isDeleted = true)
-export const ClassTrashList = async (req, res) => {
+// 8. ClassTrashList using Service
+const classTrashListRegex = /export const ClassTrashList = async \(req, res\) => \{[\s\S]*?\n\};/;
+const newClassTrashList = `export const ClassTrashList = async (req, res) => {
   try {
     const userId = (req.user?.id || req.user?._id || "").toString();
     const userRole = (req.user?.role || "").toLowerCase();
@@ -460,41 +296,13 @@ export const ClassTrashList = async (req, res) => {
     console.error("[ClassController] ClassTrashList Error:", error);
     return res.status(500).json({ success: false, message: error.message || "Lỗi khi lấy danh sách thùng rác" });
   }
-};
+};`;
+content = content.replace(classTrashListRegex, newClassTrashList);
 
-//=====================================================================================
-// Phục hồi lớp học từ thùng rác (Dành cho Admin)
-export const RestoreClass = async (req, res) => {
-  const { id } = req.params;
 
-  if (!id || !mongoose.Types.ObjectId.isValid(id)) {
-    return res.status(400).json({ success: false, message: "ID lớp học không hợp lệ!" });
-  }
-
-  try {
-    const restoredClass = await classModel.restore(id);
-
-    if (!restoredClass) {
-      return res.status(404).json({
-        success: false,
-        message: "Không tìm thấy lớp học trong thùng rác",
-      });
-    }
-
-    return res.status(200).json({
-      success: true,
-      message: "Phục hồi lớp học thành công",
-      data: restoredClass,
-    });
-  } catch (error) {
-    console.error("[ClassController] RestoreClass Error:", error);
-    return res.status(500).json({ success: false, message: error.message || "Lỗi khi phục hồi lớp học" });
-  }
-};
-
-//=====================================================================================
-// Xóa vĩnh viễn lớp học (Dành cho Admin)
-export const PermanentDeleteClass = async (req, res) => {
+// 9. PermanentDeleteClass missing
+const permDeleteRegex = /export const PermanentDeleteClass = async \(req, res\) => \{[\s\S]*?\n\};/;
+const newPermDelete = `export const PermanentDeleteClass = async (req, res) => {
   const { id } = req.params;
 
   if (!id || !mongoose.Types.ObjectId.isValid(id)) {
@@ -522,9 +330,12 @@ export const PermanentDeleteClass = async (req, res) => {
       message: error.message || "Lỗi khi xóa vĩnh viễn lớp học",
     });
   }
-};
+};`;
+content = content.replace(permDeleteRegex, newPermDelete);
 
-
+// 10. Add missing endpoints (UnassignTeacher, UpdateStudentStatus)
+if (!content.includes("UnassignTeacher")) {
+  const newFuncs = `
 
 //=====================================================================================
 // Gỡ Giáo viên khỏi lớp học (Dành cho Admin)
@@ -580,7 +391,7 @@ export const UpdateStudentStatus = async (req, res) => {
 
   const VALID_STATUSES = ["Enrolled", "Reserved", "Transferred", "Dropped"];
   if (!status || !VALID_STATUSES.includes(status)) {
-    return res.status(400).json({ success: false, message: `Trạng thái không hợp lệ. Giá trị cho phép: ${VALID_STATUSES.join(", ")}.` });
+    return res.status(400).json({ success: false, message: \`Trạng thái không hợp lệ. Giá trị cho phép: \${VALID_STATUSES.join(", ")}.\` });
   }
 
   try {
@@ -595,10 +406,20 @@ export const UpdateStudentStatus = async (req, res) => {
     }
 
     const updatedStudent = updatedClass.students.find((s) => s.studentId && s.studentId.toString() === studentId);
-    return res.status(200).json({ success: true, message: `Cập nhật trạng thái học sinh thành "${status}" thành công`, data: updatedStudent });
+    return res.status(200).json({ success: true, message: \`Cập nhật trạng thái học sinh thành "\${status}" thành công\`, data: updatedStudent });
   } catch (error) {
     console.error("[ClassController] UpdateStudentStatus Error:", error);
     const isValidationError = error.name === "ValidationError";
     return res.status(isValidationError ? 400 : 500).json({ success: false, message: error.message || "Lỗi khi cập nhật trạng thái học sinh" });
   }
 };
+`;
+  content += newFuncs;
+}
+
+// 11. Run Phase 4 format on AddNewClass, AddResource, RemoveResource, DeleteClass, RestoreClass
+content = content.replace(/\.status\((200|201)\)\.json\(\{\s*(?!success\s*:\s*(true|false),?\s*)message\s*:/g, '.status($1).json({ success: true, message:');
+content = content.replace(/\.status\(([45]\d\d)\)\.json\(\{\s*(?!success\s*:\s*(true|false),?\s*)message\s*:/g, '.status($1).json({ success: false, message:');
+content = content.replace(/\.json\(\{\s*message:/g, '.json({ success: false, message:');
+
+fs.writeFileSync('src/controllers/class.controller.js', content, 'utf-8');

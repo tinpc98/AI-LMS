@@ -19,18 +19,24 @@ import AttendanceRouter from "./src/routers/attendance.routes.js";
 import GradeRouter from "./src/routers/grade.routes.js";
 import AnnouncementRouter from "./src/routers/announcement.routes.js";
 import CourseRouter from "./src/routers/course.routes.js";
-import ExamSetRouter from "./src/routers/examSet.routes.js";
 
-// Kích hoạt cấu hình file .env
+// Kích hoạt cấu hình file .env – phải gọi TRƯỚC khi đọc bất kỳ biến môi trường nào
 dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 5000;
 
-// Lấy danh sách origin từ
-//  biến môi trường FRONTEND_ORIGINS (comma-separated).
-// Ví dụ: FRONTEND_ORIGINS=http://localhost:5173,http://localhost:5174
+// ── CORS: Strict origin whitelist ──────────────────────────────────────────
+// Biến FRONTEND_ORIGINS là BẮT BUỘC trong môi trường production.
+// Định dạng: chuỗi các origin cách nhau bởi dấu phẩy.
+// Ví dụ: FRONTEND_ORIGINS=https://app.example.com,https://admin.example.com
+if (!process.env.FRONTEND_ORIGINS && process.env.NODE_ENV === "production") {
+  console.error("❌ FATAL: Biến môi trường FRONTEND_ORIGINS chưa được cấu hình!");
+  process.exit(1);
+}
+
 const allowedOrigins = (
+  // Development fallback: chỉ cho phép localhost – KHÔNG dùng wildcard "*"
   process.env.FRONTEND_ORIGINS || "http://localhost:5173,http://127.0.0.1:5173"
 )
   .split(",")
@@ -39,14 +45,11 @@ const allowedOrigins = (
 
 const corsOptions = {
   origin: (origin, cb) => {
-    if (!origin || allowedOrigins.includes(origin)) {
-      return cb(null, true);
-    }
-
-    console.log("CORS blocked origin:", origin);
-    return cb(new Error(`Origin ${origin} không được phép bởi CORS`));
+    if (!origin) return cb(null, true);
+    if (allowedOrigins.includes(origin)) return cb(null, true);
+    return cb(new Error("Origin không được phép bởi CORS"));
   },
-  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  methods: ["GET", "POST", "PUT", "DELETE"],
   credentials: true,
   allowedHeaders: ["Content-Type", "Authorization"],
 };
@@ -77,12 +80,15 @@ app.use("/api/auth", UserRouter);
 app.use("/api/users", UserRouter);
 app.use("/api/classes", ClassRouter);
 app.use("/api/courses", CourseRouter);
+app.use("/api/dashboard", DashboardRouter);
+app.use("/api/reports", ReportRouter);
 app.use("/api/lesson", LessonRouter);
 app.use("/api/assignments", assignmentRouter);
 app.use("/api/attendances", AttendanceRouter);
 app.use("/api/grades", GradeRouter);
 app.use("/api/announcements", AnnouncementRouter);
 app.use("/api/notifications", AnnouncementRouter);
+app.use("/api/notifications", NotificationRouter); // Bulk & inbox endpoints
 
 // Routes Module Thi trực tuyến & Live
 app.use("/api/questions", QuestionRouter);
@@ -126,6 +132,10 @@ connectDB()
       console.log(`🚀 Server HTTP & Socket đang chạy tại cổng: ${port}`);
       console.log(`🔗 Endpoint test: http://localhost:${port}`);
       console.log(`==================================================`);
+      
+      // Khởi tạo các cron job nền của hệ thống
+      // Đặt runImmediately=false (mặc định) để cron chỉ chạy theo lịch
+      initCronJobs();
     });
   })
   .catch((error) => {

@@ -100,7 +100,8 @@ const userSchema = new Schema(
   }
 );
 
-// Indexes phục vụ tìm kiếm nhanh theo Role và Status
+// Indexes phục vụ tìm kiếm nhanh theo Email, Role và Status
+userSchema.index({ email: 1 }, { unique: true });
 userSchema.index({ role: 1 });
 userSchema.index({ status: 1 });
 

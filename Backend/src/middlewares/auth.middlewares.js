@@ -41,13 +41,14 @@ export const verifyUser = (req, res, next) => {
       });
     }
 
-    const token = parts[1];
+    // JWT_SECRET là BẮT BUỘC – không fallback để tránh rủi ro bảo mật
+    const jwtSecret = process.env.JWT_SECRET;
+    if (!jwtSecret) {
+      console.error("[Auth] FATAL: JWT_SECRET chưa được thiết lập trong biến môi trường!");
+      return res.status(500).json({ message: "Lỗi cấu hình máy chủ. Vui lòng liên hệ quản trị viên." });
+    }
 
-    // Step 3: Verify JWT token
-    const decoded = jwt.verify(
-      token,
-      process.env.JWT_SECRET || "your-secret-key-change-in-env"
-    );
+    const decoded = jwt.verify(token, jwtSecret);
 
     // Step 4: Attach user data to req.user (lấy từ token, không từ body)
     req.user = {
