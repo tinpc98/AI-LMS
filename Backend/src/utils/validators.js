@@ -22,6 +22,46 @@ const handleValidationErrors = (req, res, next) => {
   next();
 };
 
+export const examSetShareCreateValidation = [
+  body("sharedWithUserId")
+    .notEmpty()
+    .withMessage("sharedWithUserId là bắt buộc")
+    .bail()
+    .isMongoId()
+    .withMessage("sharedWithUserId không hợp lệ"),
+
+  body("permission")
+    .notEmpty()
+    .withMessage("permission là bắt buộc")
+    .bail()
+    .isIn(["VIEW", "EDIT"]) 
+    .withMessage("permission không hợp lệ"),
+
+  body("expiresAt")
+    .optional({ nullable: true })
+    .custom((value) => {
+      if (value === null) return true;
+      const d = new Date(value);
+      if (Number.isNaN(d.getTime())) {
+        throw new Error("expiresAt phải là ngày hợp lệ");
+      }
+      if (d.getTime() <= Date.now()) {
+        throw new Error("expiresAt phải là thời điểm tương lai");
+      }
+      return true;
+    }),
+
+  body("note")
+    .optional()
+    .isString()
+    .withMessage("note phải là chuỗi")
+    .trim()
+    .isLength({ max: 500 })
+    .withMessage("note tối đa 500 ký tự"),
+
+  handleValidationErrors,
+];
+
 export const loginValidation = [
   body("email")
     .trim()

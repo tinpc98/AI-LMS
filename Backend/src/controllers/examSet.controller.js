@@ -1,5 +1,6 @@
 // File: src/controllers/examSet.controller.js
 import { createExamSetService, getExamSetsService, updateExamSetService, deleteExamSetService, restoreExamSetService, addQuestionToExamSetService, updateQuestionInExamSetService, deleteQuestionFromExamSetService, reorderQuestionsInExamSetService, getExamSetDetailService, saveDraftExamSetService, duplicateExamSetService, updateExamSetTagsService, createNewExamSetVersionService, getExamSetVersionsService, restoreExamSetVersionService } from "../services/examSet.services.js";
+import { createExamSetShareService } from "../services/examSet.services.js";
 import { Types } from "mongoose";
 
 /**
@@ -246,6 +247,31 @@ export const restoreExamSetVersion = async (req, res) => {
     console.error("[ExamSet] Restore-version error:", error.message);
     const status = error.status || 500;
     return res.status(status).json({ success: false, message: error.message || "Lỗi khôi phục phiên bản bộ đề thi" });
+  }
+};
+
+export const createExamSetShare = async (req, res) => {
+  try {
+    const { examSetId } = req.params;
+
+    if (!examSetId || !Types.ObjectId.isValid(examSetId)) {
+      return res.status(400).json({ success: false, message: "examSetId không hợp lệ" });
+    }
+
+    const payload = {
+      sharedWithUserId: req.body.sharedWithUserId,
+      permission: req.body.permission,
+      expiresAt: req.body.expiresAt ?? null,
+      note: req.body.note ?? "",
+    };
+
+    const result = await createExamSetShareService(examSetId, req.user.id, req.user.role, payload);
+
+    return res.status(result.statusCode).json({ success: true, message: result.message, data: result.data });
+  } catch (error) {
+    console.error("[ExamSet] Create share error:", error.message);
+    const status = error.status || 500;
+    return res.status(status).json({ success: false, message: error.message || "Lỗi tạo chia sẻ bộ đề thi" });
   }
 };
 

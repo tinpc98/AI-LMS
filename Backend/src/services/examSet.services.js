@@ -1,6 +1,8 @@
 // File: src/services/examSet.services.js
 import { Types } from "mongoose";
 import ExamSet from "../models/examSet.model.js";
+import ExamSetShare, { EXAM_SET_SHARE_STATUS } from "../models/examSetShare.model.js";
+import User from "../models/user.models.js";
 import Folder from "../models/folder.model.js";
 import { recalculateExamSetMetrics } from "./examSet.metrics.js";
 
@@ -187,6 +189,134 @@ export const getExamSetDetailService = async (examSetId, user) => {
   };
 
   return buildExamSetDetailResponse(examSet, access);
+};
+
+/**
+ * Create or reactivate an ExamSetShare
+ * @param {string} examSetId
+ * @param {string} currentUserId
+ * @param {string} currentUserRole
+ * @param {Object} payload { sharedWithUserId, permission, expiresAt, note }
+ */
+export const createExamSetShareService = async (examSetId, currentUserId, currentUserRole, payload = {}) => {
+  const { sharedWithUserId, permission, expiresAt = null, note = "" } = payload;
+
+  if (!examSetId || !Types.ObjectId.isValid(examSetId)) {
+    const error = new Error("examSetId không hợp lệ");
+    error.status = 400;
+    throw error;
+  }
+
+  const examSet = await ExamSet.findOne({ _id: examSetId, isDeleted: false });
+  if (!examSet) {
+    const error = new Error("Bộ đề thi không tồn tại");
+    error.status = 404;
+    throw error;
+  }
+
+  const userRole = String(currentUserRole || "").toLowerCase();
+  const isOwner = String(examSet.ownerId?._id || examSet.ownerId) === String(currentUserId);
+  const isAdmin = userRole === "admin";
+
+  if (!isOwner && !isAdmin) {
+    const error = new Error("Bạn không có quyền chia sẻ bộ đề thi này");
+    error.status = 403;
+    throw error;
+  }
+
+  if (!sharedWithUserId || !Types.ObjectId.isValid(sharedWithUserId)) {
+    const error = new Error("sharedWithUserId không hợp lệ");
+    error.status = 400;
+    throw error;
+  }
+
+  // recipient must exist and be active
+  const recipient = await User.findOne({ _id: sharedWithUserId });
+  if (!recipient) {
+    const error = new Error("Người nhận không tồn tại");
+    error.status = 404;
+    throw error;
+  }
+
+  const recipientRole = String(recipient.role || "").toLowerCase();
+  if (recipientRole === "student") {
+    const error = new Error("Không thể chia sẻ cho Student");
+    error.status = 400;
+    throw error;
+  }
+
+  if (String(sharedWithUserId) === String(currentUserId)) {
+    const error = new Error("Không thể chia sẻ cho chính bạn");
+    error.status = 400;
+    throw error;
+  }
+
+  if (String(sharedWithUserId) === String(examSet.ownerId || examSet.ownerId?._id)) {
+    const error = new Error("Không thể chia sẻ cho Owner của bộ đề");
+    error.status = 400;
+    throw error;
+  }
+
+  if (recipient.status && String(recipient.status).toLowerCase() !== "active") {
+    const error = new Error("Không thể chia sẻ cho user đang bị vô hiệu hóa");
+    error.status = 400;
+    throw error;
+  }
+
+  if (expiresAt !== null) {
+    const d = new Date(expiresAt);
+    if (Number.isNaN(d.getTime()) || d.getTime() <= Date.now()) {
+      const error = new Error("expiresAt phải là thời điểm tương lai");
+      error.status = 422;
+      throw error;
+    }
+  }
+
+  // Permission valid
+  const allowed = ["VIEW", "EDIT"];
+  if (!allowed.includes(permission)) {
+    const error = new Error("permission không hợp lệ");
+    error.status = 400;
+    throw error;
+  }
+
+  // Check existing share record
+  const existing = await ExamSetShare.findOne({ examSetId, sharedWithUserId });
+
+  if (!existing) {
+    const newShare = new ExamSetShare({
+      examSetId,
+      ownerId: examSet.ownerId,
+      sharedWithUserId,
+      permission,
+      status: "ACTIVE",
+      sharedBy: currentUserId,
+      expiresAt: expiresAt || null,
+      note: (note || "").trim(),
+    });
+
+    const saved = await newShare.save();
+    return { statusCode: 201, message: "Exam Set shared successfully", data: saved };
+  }
+
+  // existing record found
+  if (String(existing.status) === String(EXAM_SET_SHARE_STATUS.ACTIVE)) {
+    const error = new Error("Share đang ACTIVE");
+    error.status = 409;
+    throw error;
+  }
+
+  // Reactivate revoked/expired
+  existing.permission = permission;
+  existing.expiresAt = expiresAt || null;
+  existing.note = (note || "").trim();
+  existing.status = EXAM_SET_SHARE_STATUS.ACTIVE;
+  existing.sharedBy = currentUserId;
+  existing.revokedAt = null;
+  existing.revokedBy = null;
+
+  const updated = await existing.save();
+  return { statusCode: 200, message: "Share re-activated successfully", data: updated };
 };
 
 /**
