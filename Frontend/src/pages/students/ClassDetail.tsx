@@ -1,6 +1,5 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import axios from "axios";
 import assignmentApi from "../../api/assignmentApi";
 import { classApi } from "../../api/classApi";
 import { lessonApi } from "../../api/lessonApi";
@@ -12,7 +11,6 @@ import LiveRoomModal from "../../components/features/LiveRoomModal";
 import SubmitAssignmentModal from "../../components/features/SubmitAssignmentModal";
 import { useJitsiLiveSession } from "../../hooks/useJitsiLiveSession";
 import type { IExam } from "../../interface/examInterface";
-import { StudentLiveSidebar } from "../../components/features/student/StudentLiveSidebar";
 import { toast } from "../../utils/toast";
 
 // Ant Design 5 & Common Components
@@ -61,7 +59,7 @@ export default function ClassDetail() {
     meetingRoomId,
     jwtToken,
     appId,
-    isLiveLoading,
+    isLiveLoading: _isLiveLoading,
     notificationMessage,
     setNotificationMessage,
     handleJoinLiveClass,
@@ -140,26 +138,6 @@ export default function ClassDetail() {
       setNotificationMessage(null);
     }
   }, [notificationMessage, setNotificationMessage]);
-  // Lọc lấy đề thi phù hợp để hiển thị (Yêu cầu 2: chỉ hiển thị trước giờ thi 1 tiếng)
-  const getVisibleExam = () => {
-    if (!exams || exams.length === 0) return null;
-    const now = new Date().getTime();
-
-    return exams.find((exam) => {
-      const startTime = new Date(exam.startTime).getTime();
-      const oneHourBefore = startTime - 60 * 60 * 1000;
-
-      // Giới hạn thời gian làm bài: sau khi kết thúc đề vẫn ẩn đi
-      const durationMs = (exam.duration || 45) * 60 * 1000;
-      const endTime = startTime + durationMs;
-
-      // Hiển thị từ lúc 1 tiếng trước giờ bắt đầu đến khi bài thi kết thúc hoàn toàn
-      return now >= oneHourBefore && now <= endTime;
-    });
-  };
-
-  const visibleExam = getVisibleExam();
-
   // ==============================================
   // 3. HÀM XỬ LÝ KHI BẤM "VÀO THI" Ở TAB 3
   // ==============================================
@@ -187,6 +165,7 @@ export default function ClassDetail() {
     }
     return () => clearInterval(timer);
   }, [examPopupState, countdown]);
+
   const formatTime = (seconds: number) => {
     if (seconds <= 0) return "00:00";
     const h = Math.floor(seconds / 3600);
@@ -196,37 +175,6 @@ export default function ClassDetail() {
     const s = (seconds % 60).toString().padStart(2, "0");
 
     return h > 0 ? `${h}:${m}:${s}` : `${m}:${s}`;
-  };
-
-  // ==============================================
-  // 4. HÀM XỬ LÝ KHI BẤM "VÀO PHÒNG THI"
-  // ==============================================
-  const handleJoinExamClick = (exam: any) => {
-    if (!exam) {
-      setExamPopupState("NO_EXAM");
-      setTimeout(() => setExamPopupState("NONE"), 3000);
-      return;
-    }
-
-    const now = new Date();
-    const startTime = new Date(exam.startTime);
-    const diffSeconds = Math.floor((startTime.getTime() - now.getTime()) / 1000);
-
-    setSelectedExam(exam);
-
-    if (diffSeconds > 300) {
-      // TRƯỜNG HỢP A: Thời gian chờ còn lớn hơn 5 phút -> Hiện popup chưa đến giờ thi (Yêu cầu 2)
-      setCountdown(diffSeconds);
-      setExamPopupState("NOT_YET_TIME");
-    } else if (diffSeconds > 0 && diffSeconds <= 300) {
-      // TRƯỜNG HỢP B: Còn dưới 5 phút -> Vào phòng chờ lấy chính xác thời gian còn lại (Yêu cầu 2)
-      // Ví dụ: vào lúc 11:58 cho ca thi 12:00, đếm ngược sẽ là 2 phút (120 giây) thực tế
-      setCountdown(diffSeconds);
-      setExamPopupState("COUNTDOWN");
-    } else {
-      // TRƯỜNG HỢP C: Đã qua giờ bắt đầu thi -> Tự động bypass phòng chờ vào thẳng bài thi (Yêu cầu 3)
-      handleStartAttemptDirectly(exam);
-    }
   };
 
   // ==============================================
@@ -302,7 +250,7 @@ export default function ClassDetail() {
     }
   };
 
-  const handleCancelSubmission = async (assignmentId: string) => {
+  const _handleCancelSubmission = async (assignmentId: string) => {
     try {
       await assignmentApi.cancelSubmission(assignmentId);
       setSubmittedAssignmentIds((prev) => prev.filter((id) => id !== assignmentId));
@@ -314,7 +262,7 @@ export default function ClassDetail() {
     }
   };
 
-  const openSubmitModal = (item: IAssignment) => {
+  const _openSubmitModal = (item: IAssignment) => {
     setSubmittingAssignment(item);
     setIsSubmitModalOpen(true);
   };
@@ -361,7 +309,31 @@ export default function ClassDetail() {
                   (s: any) =>
                     s.studentId === studentId ||
                     s.studentId?._id === studentId ||
-                    s.student ===   if (isLoading) {
+                    s.student === studentId ||
+                    s.student?._id === studentId
+                );
+                if (hasSubmitted) {
+                  submittedIds.push(item._id);
+                }
+              } catch (err) {
+                console.error("Lỗi khi kiểm tra bài nộp:", err);
+              }
+            })
+          );
+          setSubmittedAssignmentIds(submittedIds);
+        }
+      } catch (err: any) {
+        console.error("Lỗi tải thông tin lớp học:", err);
+        setErrorMsg(err.response?.data?.message || "Không thể tải thông tin lớp học.");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [classId]);
+
+  if (isLoading) {
     return (
       <PageContainer maxWidth="1400px">
         <Skeleton active avatar paragraph={{ rows: 4 }} style={{ marginBottom: 24 }} />
@@ -394,7 +366,7 @@ export default function ClassDetail() {
       <StudentClassHeader
         className={classInfo.className}
         classCode={classInfo.classCode}
-        subject={classInfo.subject || (classInfo as any).courseId?.subject || (classInfo as any).courseId?.courseName}
+        subject={(classInfo as any).subject || (classInfo as any).courseId?.subject || (classInfo as any).courseId?.courseName}
         status={classInfo.status as any}
         teacher={classInfo.teacherId as any}
       />
@@ -465,14 +437,14 @@ export default function ClassDetail() {
                   <OverviewCard
                     className={classInfo.className}
                     description={classInfo.description}
-                    startDate={classInfo.startDate}
-                    endDate={classInfo.endDate}
+                    startDate={(classInfo as any).startDate}
+                    endDate={(classInfo as any).endDate}
                     currentStudents={classInfo.students ? classInfo.students.length : (classInfo as any).currentStudents || 0}
-                    maxStudents={classInfo.maxStudents || 40}
+                    maxStudents={(classInfo as any).maxStudents || 40}
                     status={classInfo.status as any}
                     learningMode={classInfo.learningMode || "Offline"}
-                    googleMeetLink={classInfo.googleMeetLink}
-                    googleCalendarEventId={classInfo.googleCalendarEventId}
+                    googleMeetLink={(classInfo as any).googleMeetLink}
+                    googleCalendarEventId={(classInfo as any).googleCalendarEventId}
                   />
 
                   <LearningProgressCard
@@ -490,8 +462,8 @@ export default function ClassDetail() {
                   <TeacherInformationCard teacher={classInfo.teacherId as any} />
 
                   <NextSessionCard
-                    schedule={classInfo.schedule}
-                    classRoom={classInfo.classRoom}
+                    schedule={(classInfo as any).schedule}
+                    classRoom={(classInfo as any).classRoom}
                     isLiveNow={Boolean(meetingRoomId)}
                     onJoinLive={() => void handleJoinLiveClass()}
                   />
@@ -610,7 +582,7 @@ export default function ClassDetail() {
             {/* TAB 4: THI TRỰC TUYẾN (ONLINE EXAMS - SPRINT 3.4) */}
             {activeTab === "exams" && (
               <ExamsTab
-                exams={exams}
+                exams={exams as any}
                 loading={isLoading}
               />
             )}
@@ -649,7 +621,7 @@ export default function ClassDetail() {
                 rawLiveSession={null}
                 classInfo={classInfo}
                 loading={isLoading}
-                onJoinLiveRoom={(roomId) => void handleJoinLiveClass()}
+                onJoinLiveRoom={() => void handleJoinLiveClass()}
               />
             )}
 
@@ -744,7 +716,6 @@ export default function ClassDetail() {
               </div>
             )}
           </div>
-        </section>
 
         {/* 5. FOOTER STATS & INSIGHT DETAILS */}
         <section className="mt-8 grid grid-cols-12 gap-6">
@@ -801,7 +772,7 @@ export default function ClassDetail() {
             </div>
           </div>
         </section>
-      </main>
+      </div>
 
       {/* ==================================================== */}
       {/* CÁC POPUP TRẠNG THÁI LOBBY PHÒNG THI */}

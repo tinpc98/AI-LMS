@@ -15,5 +15,4 @@ export const liveApi = {
   endSession: (classId: string) =>
     axiosClient.post<ILiveSessionResponse>("/api/live/end", { classId }),
 };
-
-
+export default liveApi;

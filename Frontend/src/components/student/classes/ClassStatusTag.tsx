@@ -1,6 +1,6 @@
 import React from "react";
 import { Tag } from "antd";
-import type { StudentClassStatus } from "../../types/studentClass";
+import type { StudentClassStatus } from "../../../types/studentClass";
 
 interface ClassStatusTagProps {
   status: StudentClassStatus;

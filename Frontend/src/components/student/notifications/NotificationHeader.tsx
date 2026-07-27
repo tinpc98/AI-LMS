@@ -17,7 +17,7 @@ export const NotificationHeader: React.FC<NotificationHeaderProps> = React.memo(
       <div
         style={{
           display: "flex",
-          justify: "space-between",
+          justifyContent: "space-between",
           alignItems: "center",
           flexWrap: "wrap",
           gap: 16,

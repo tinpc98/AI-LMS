@@ -2,7 +2,7 @@ import React from "react";
 import { Card, Typography, Space, Button, Tag, Alert } from "antd";
 import { ClockCircleOutlined, InfoCircleOutlined, UserOutlined, BellOutlined } from "@ant-design/icons";
 import SessionStatusTag from "./SessionStatusTag";
-import type { IExtendedLiveSession } from "../../../types/studentLive";
+import type { IExtendedLiveSession } from "../../../../types/studentLive";
 
 const { Text, Paragraph, Title } = Typography;
 

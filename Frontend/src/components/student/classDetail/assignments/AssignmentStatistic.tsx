@@ -7,7 +7,7 @@ import {
   ExclamationCircleOutlined,
   TrophyOutlined,
 } from "@ant-design/icons";
-import type { StudentAssignmentStats } from "../../../types/studentAssignment";
+import type { StudentAssignmentStats } from "../../../../types/studentAssignment";
 
 interface AssignmentStatisticProps {
   stats: StudentAssignmentStats;

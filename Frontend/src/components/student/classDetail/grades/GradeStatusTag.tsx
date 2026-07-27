@@ -7,7 +7,7 @@ import {
   CloseCircleOutlined,
   StarOutlined,
 } from "@ant-design/icons";
-import type { GradeStatus } from "../../../types/studentGrade";
+import type { GradeStatus } from "../../../../types/studentGrade";
 
 interface GradeStatusTagProps {
   status: GradeStatus;

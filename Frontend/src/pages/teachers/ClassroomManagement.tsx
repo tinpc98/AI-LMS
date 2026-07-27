@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { Card, Input, Select, Segmented, Pagination, Alert, Button, Skeleton, Empty, Typography, Space } from "antd";
 import {
   SearchOutlined,

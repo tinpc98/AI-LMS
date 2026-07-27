@@ -11,7 +11,7 @@ import {
   QuestionCircleOutlined,
 } from "@ant-design/icons";
 import ExamStatusTag from "./ExamStatusTag";
-import type { IExtendedExam } from "../../../types/studentExam";
+import type { IExtendedExam } from "../../../../types/studentExam";
 
 const { Text, Paragraph } = Typography;
 
@@ -48,7 +48,7 @@ export const ExamCard: React.FC<ExamCardProps> = React.memo(
           height: "100%",
           display: "flex",
           flexDirection: "column",
-          justify: "space-between",
+          justifyContent: "space-between",
           transition: "all 0.3s ease",
         }}
         styles={{
@@ -132,7 +132,7 @@ export const ExamCard: React.FC<ExamCardProps> = React.memo(
               padding: "6px 12px",
               marginBottom: 14,
               display: "flex",
-              justify: "space-between",
+              justifyContent: "space-between",
               alignItems: "center",
             }}
           >

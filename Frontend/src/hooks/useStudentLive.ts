@@ -4,7 +4,6 @@ import type { ILiveSession } from "../interface/liveInterface";
 import type {
   IExtendedLiveSession,
   StudentLiveStats,
-  LiveSessionStatus,
 } from "../types/studentLive";
 
 export function useStudentLive(
@@ -21,12 +20,12 @@ export function useStudentLive(
       setLoading(true);
       liveApi
         .getActiveSession(classId)
-        .then((res) => {
+        .then((res: any) => {
           if (res.data?.data) {
             setActiveSession(res.data.data);
           }
         })
-        .catch((err) => {
+        .catch((err: any) => {
           console.warn("Không tìm thấy active live session:", err);
         })
         .finally(() => {

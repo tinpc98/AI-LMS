@@ -83,7 +83,7 @@ export const NotificationDetailDrawer: React.FC<NotificationDetailDrawerProps> =
               padding: "16px 20px",
               marginBottom: 20,
               display: "flex",
-              justify: "space-between",
+              justifyContent: "space-between",
               alignItems: "center",
             }}
           >
@@ -142,7 +142,7 @@ export const NotificationDetailDrawer: React.FC<NotificationDetailDrawerProps> =
                     key={idx}
                     style={{
                       display: "flex",
-                      justify: "space-between",
+                      justifyContent: "space-between",
                       alignItems: "center",
                       backgroundColor: "#fafafa",
                       padding: "8px 12px",

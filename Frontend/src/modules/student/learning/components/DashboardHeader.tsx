@@ -13,7 +13,7 @@ interface DashboardHeaderProps {
 }
 
 export const DashboardHeader: React.FC<DashboardHeaderProps> = React.memo(
-  ({ overview, learningScore, onRefresh, loading }) => {
+  ({ learningScore, onRefresh, loading }) => {
     return (
       <div
         style={{
@@ -24,7 +24,7 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = React.memo(
           boxShadow: "0 2px 10px rgba(0, 0, 0, 0.03)",
           border: "1px solid #f0f0f0",
           display: "flex",
-          justify: "space-between",
+          justifyContent: "space-between",
           alignItems: "center",
           flexWrap: "wrap",
           gap: 16,

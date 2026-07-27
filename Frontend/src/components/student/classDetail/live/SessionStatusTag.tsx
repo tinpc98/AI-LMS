@@ -7,7 +7,7 @@ import {
   StopOutlined,
   CloseCircleOutlined,
 } from "@ant-design/icons";
-import type { LiveSessionStatus } from "../../../types/studentLive";
+import type { LiveSessionStatus } from "../../../../types/studentLive";
 
 interface SessionStatusTagProps {
   status: LiveSessionStatus;

@@ -7,7 +7,7 @@ import {
   TrophyOutlined,
   CloseCircleOutlined,
 } from "@ant-design/icons";
-import type { StudentAssignmentStatus } from "../../../types/studentAssignment";
+import type { StudentAssignmentStatus } from "../../../../types/studentAssignment";
 
 interface AssignmentStatusTagProps {
   status: StudentAssignmentStatus;

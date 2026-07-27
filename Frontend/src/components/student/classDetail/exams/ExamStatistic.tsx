@@ -7,7 +7,7 @@ import {
   CheckCircleOutlined,
   TrophyOutlined,
 } from "@ant-design/icons";
-import type { StudentExamStats } from "../../../types/studentExam";
+import type { StudentExamStats } from "../../../../types/studentExam";
 
 interface ExamStatisticProps {
   stats: StudentExamStats;

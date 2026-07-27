@@ -8,7 +8,7 @@ import {
   ClockCircleOutlined,
 } from "@ant-design/icons";
 import ClassStatusTag from "../classes/ClassStatusTag";
-import type { StudentClassStatus } from "../../types/studentClass";
+import type { StudentClassStatus } from "../../../types/studentClass";
 
 const { Paragraph, Text } = Typography;
 

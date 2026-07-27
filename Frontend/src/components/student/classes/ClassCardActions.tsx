@@ -2,7 +2,7 @@ import React from "react";
 import { Button, Space, Badge } from "antd";
 import { VideoCameraOutlined, RightOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
-import type { StudentClassStatus } from "../../types/studentClass";
+import type { StudentClassStatus } from "../../../types/studentClass";
 
 interface ClassCardActionsProps {
   classId: string;

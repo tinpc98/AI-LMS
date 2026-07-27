@@ -62,7 +62,7 @@ export const AnnouncementAttachmentList: React.FC<AnnouncementAttachmentListProp
             key={idx}
             style={{
               display: "flex",
-              justify: "space-between",
+              justifyContent: "space-between",
               alignItems: "center",
               backgroundColor: "#fff",
               padding: "6px 12px",
@@ -70,9 +70,9 @@ export const AnnouncementAttachmentList: React.FC<AnnouncementAttachmentListProp
               border: "1px solid #e8e8e8",
             }}
           >
-            <Space size={8} ellipsis>
+            <Space size={8}>
               {getFileIcon(att.name, att.url)}
-              <Text style={{ fontSize: 13 }} ellipsis style={{ maxWidth: 300 }}>
+              <Text ellipsis style={{ fontSize: 13, maxWidth: 300 }}>
                 {att.name || `Tài liệu đính kèm ${idx + 1}`}
               </Text>
             </Space>

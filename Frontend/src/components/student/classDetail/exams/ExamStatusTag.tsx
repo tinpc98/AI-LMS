@@ -7,7 +7,7 @@ import {
   CheckCircleOutlined,
   LockOutlined,
 } from "@ant-design/icons";
-import type { StudentExamStatus } from "../../../types/studentExam";
+import type { StudentExamStatus } from "../../../../types/studentExam";
 
 interface ExamStatusTagProps {
   status: StudentExamStatus;

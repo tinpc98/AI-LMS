@@ -8,7 +8,7 @@ import {
   PlayCircleOutlined,
 } from "@ant-design/icons";
 import SessionStatusTag from "./SessionStatusTag";
-import type { IExtendedLiveSession } from "../../../types/studentLive";
+import type { IExtendedLiveSession } from "../../../../types/studentLive";
 
 const { Text, Title, Paragraph } = Typography;
 

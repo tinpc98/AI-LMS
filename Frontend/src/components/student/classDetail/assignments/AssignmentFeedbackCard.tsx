@@ -1,7 +1,7 @@
 import React from "react";
 import { Card, Typography, Space, Tag, Divider } from "antd";
 import { TrophyOutlined, CommentOutlined, RobotOutlined } from "@ant-design/icons";
-import type { ISubmission } from "../../../interface/assignmentInterface";
+import type { ISubmission } from "../../../../interface/assignmentInterface";
 
 const { Text, Paragraph, Title } = Typography;
 

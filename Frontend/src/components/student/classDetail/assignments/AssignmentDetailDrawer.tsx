@@ -11,7 +11,7 @@ import {
 import AssignmentStatusTag from "./AssignmentStatusTag";
 import AssignmentSubmissionCard from "./AssignmentSubmissionCard";
 import AssignmentFeedbackCard from "./AssignmentFeedbackCard";
-import type { IExtendedAssignment } from "../../../types/studentAssignment";
+import type { IExtendedAssignment } from "../../../../types/studentAssignment";
 
 const { Text, Paragraph, Title } = Typography;
 
@@ -163,7 +163,7 @@ export const AssignmentDetailDrawer: React.FC<AssignmentDetailDrawerProps> = Rea
                     key={idx}
                     style={{
                       display: "flex",
-                      justify: "space-between",
+                      justifyContent: "space-between",
                       alignItems: "center",
                       backgroundColor: "#fff",
                       padding: "8px 14px",
@@ -173,7 +173,7 @@ export const AssignmentDetailDrawer: React.FC<AssignmentDetailDrawerProps> = Rea
                   >
                     <Space size={8}>
                       <PaperClipOutlined style={{ color: "#1890ff" }} />
-                      <Text style={{ fontSize: 13 }} ellipsis style={{ maxWidth: 350 }}>
+                      <Text ellipsis style={{ fontSize: 13, maxWidth: 350 }}>
                         {att.name || `File đính kèm ${idx + 1}`}
                       </Text>
                     </Space>

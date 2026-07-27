@@ -6,7 +6,7 @@ import {
   CheckCircleOutlined,
   PushpinOutlined,
 } from "@ant-design/icons";
-import type { StudentAnnouncementStats } from "../../../types/studentAnnouncement";
+import type { StudentAnnouncementStats } from "../../../../types/studentAnnouncement";
 
 interface AnnouncementStatisticProps {
   stats: StudentAnnouncementStats;

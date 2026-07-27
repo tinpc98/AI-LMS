@@ -1,5 +1,4 @@
 import { useState, useCallback } from "react";
-import liveApi from "../api/liveApi";
 import { toast } from "../utils/toast";
 import type { IExtendedLiveSession } from "../types/studentLive";
 

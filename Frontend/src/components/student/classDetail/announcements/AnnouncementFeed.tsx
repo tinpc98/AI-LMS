@@ -2,7 +2,7 @@ import React from "react";
 import { Typography, Divider } from "antd";
 import { ClockCircleOutlined } from "@ant-design/icons";
 import AnnouncementCard from "./AnnouncementCard";
-import type { IExtendedAnnouncement } from "../../../types/studentAnnouncement";
+import type { IExtendedAnnouncement } from "../../../../types/studentAnnouncement";
 
 const { Title, Text } = Typography;
 

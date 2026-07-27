@@ -2,7 +2,7 @@ import React from "react";
 import { Card, Typography, Space, Button, Table } from "antd";
 import { InfoCircleOutlined, HistoryOutlined, VideoCameraOutlined } from "@ant-design/icons";
 import SessionStatusTag from "./SessionStatusTag";
-import type { IExtendedLiveSession } from "../../../types/studentLive";
+import type { IExtendedLiveSession } from "../../../../types/studentLive";
 
 const { Text } = Typography;
 

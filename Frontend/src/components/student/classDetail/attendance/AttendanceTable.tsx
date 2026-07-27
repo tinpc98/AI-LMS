@@ -2,7 +2,7 @@ import React from "react";
 import { Table, Button, Typography, Space, Card } from "antd";
 import { InfoCircleOutlined, ClockCircleOutlined, UserOutlined } from "@ant-design/icons";
 import AttendanceStatusTag from "./AttendanceStatusTag";
-import type { IExtendedAttendanceRecord } from "../../../types/studentAttendance";
+import type { IExtendedAttendanceRecord } from "../../../../types/studentAttendance";
 
 const { Text } = Typography;
 

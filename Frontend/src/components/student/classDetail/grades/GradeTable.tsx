@@ -2,7 +2,7 @@ import React from "react";
 import { Table, Tag, Button, Typography, Space, Tooltip, Card } from "antd";
 import { InfoCircleOutlined, TrophyOutlined } from "@ant-design/icons";
 import GradeStatusTag from "./GradeStatusTag";
-import type { IGradeItem } from "../../../types/studentGrade";
+import type { IGradeItem } from "../../../../types/studentGrade";
 
 const { Text } = Typography;
 

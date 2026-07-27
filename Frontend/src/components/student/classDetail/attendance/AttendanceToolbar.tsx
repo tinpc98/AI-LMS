@@ -1,7 +1,7 @@
 import React from "react";
 import { Input, Select, Row, Col, Space, Segmented } from "antd";
-import { SearchOutlined, FilterOutlined, TableOutlined, TimelineOutlined } from "@ant-design/icons";
-import type { StudentAttendanceFilterOptions } from "../../../types/studentAttendance";
+import { SearchOutlined, FilterOutlined, TableOutlined, HistoryOutlined } from "@ant-design/icons";
+import type { StudentAttendanceFilterOptions } from "../../../../types/studentAttendance";
 
 const { Option } = Select;
 
@@ -92,7 +92,7 @@ export const AttendanceToolbar: React.FC<AttendanceToolbarProps> = React.memo(
                 onChange={(val) => onViewModeChange(val as any)}
                 options={[
                   { label: "Bảng dữ liệu", value: "table", icon: <TableOutlined /> },
-                  { label: "Dòng thời gian", value: "timeline", icon: <TimelineOutlined /> },
+                  { label: "Dòng thời gian", value: "timeline", icon: <HistoryOutlined /> },
                 ]}
                 style={{ borderRadius: 8 }}
               />

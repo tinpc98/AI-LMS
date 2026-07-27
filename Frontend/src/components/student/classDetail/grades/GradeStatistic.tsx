@@ -8,7 +8,7 @@ import {
   FormOutlined,
   CalendarOutlined,
 } from "@ant-design/icons";
-import type { StudentGradeStats } from "../../../types/studentGrade";
+import type { StudentGradeStats } from "../../../../types/studentGrade";
 
 interface GradeStatisticProps {
   stats: StudentGradeStats;

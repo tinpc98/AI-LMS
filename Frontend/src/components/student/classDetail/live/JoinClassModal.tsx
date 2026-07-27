@@ -1,7 +1,7 @@
 import React from "react";
 import { Modal, Typography, Space, Alert } from "antd";
 import { PlayCircleOutlined, VideoCameraOutlined, UserOutlined } from "@ant-design/icons";
-import type { IExtendedLiveSession } from "../../../types/studentLive";
+import type { IExtendedLiveSession } from "../../../../types/studentLive";
 
 const { Text, Title } = Typography;
 

@@ -1,7 +1,7 @@
 import React from "react";
 import { Row, Col } from "antd";
 import ExamCard from "./ExamCard";
-import type { IExtendedExam } from "../../../types/studentExam";
+import type { IExtendedExam } from "../../../../types/studentExam";
 
 interface ExamListProps {
   exams: IExtendedExam[];

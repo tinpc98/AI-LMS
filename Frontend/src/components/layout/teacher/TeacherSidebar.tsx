@@ -114,8 +114,8 @@ export const TeacherSidebar: React.FC<TeacherSidebarProps> = React.memo(
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
               <Space size={10} style={{ minWidth: 0 }}>
                 <Avatar
-                  src={user?.avatar || undefined}
-                  icon={!user?.avatar ? <UserOutlined /> : undefined}
+                  src={(user as any)?.avatar || undefined}
+                  icon={!(user as any)?.avatar ? <UserOutlined /> : undefined}
                   style={{ backgroundColor: "#1890ff" }}
                 />
                 <div style={{ minWidth: 0, overflow: "hidden" }}>

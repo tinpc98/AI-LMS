@@ -7,7 +7,7 @@ import {
   CloseCircleOutlined,
   InfoCircleOutlined,
 } from "@ant-design/icons";
-import type { StudentAttendanceStats } from "../../../types/studentAttendance";
+import type { StudentAttendanceStats } from "../../../../types/studentAttendance";
 
 interface AttendanceStatisticProps {
   stats: StudentAttendanceStats;

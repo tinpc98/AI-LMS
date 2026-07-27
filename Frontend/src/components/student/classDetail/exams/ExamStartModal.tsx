@@ -1,7 +1,7 @@
 import React from "react";
 import { Modal, Typography, Space, Alert } from "antd";
 import { PlayCircleOutlined, ClockCircleOutlined, QuestionCircleOutlined } from "@ant-design/icons";
-import type { IExtendedExam } from "../../../types/studentExam";
+import type { IExtendedExam } from "../../../../types/studentExam";
 
 const { Text, Title, Paragraph } = Typography;
 

@@ -1,7 +1,7 @@
 import React from "react";
 import { Card, Progress, Alert, Row, Col, Typography, Space, Tag } from "antd";
 import { TrophyOutlined, SafetyCertificateOutlined, WarningOutlined } from "@ant-design/icons";
-import type { StudentAttendanceStats } from "../../../types/studentAttendance";
+import type { StudentAttendanceStats } from "../../../../types/studentAttendance";
 
 const { Text, Title } = Typography;
 

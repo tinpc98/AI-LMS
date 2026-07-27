@@ -1,7 +1,7 @@
 import React from "react";
 import { Drawer, Button, Typography, Space, Alert, Tag } from "antd";
-import { DownloadOutlined, EyeOutlined, ExternalLinkOutlined } from "@ant-design/icons";
-import type { ILearningMaterial } from "../../../types/learningMaterial";
+import { DownloadOutlined, EyeOutlined, ExportOutlined } from "@ant-design/icons";
+import type { ILearningMaterial } from "../../../../types/learningMaterial";
 import { getMaterialTypeMeta } from "./MaterialCard";
 
 const { Text, Title } = Typography;
@@ -103,7 +103,7 @@ export const MaterialPreviewDrawer: React.FC<MaterialPreviewDrawerProps> = React
                 </Text>
                 <Button
                   type="link"
-                  icon={<ExternalLinkOutlined />}
+                  icon={<ExportOutlined />}
                   href={item.url}
                   target="_blank"
                   rel="noopener noreferrer"

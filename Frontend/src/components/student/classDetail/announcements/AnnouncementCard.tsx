@@ -9,7 +9,7 @@ import {
 } from "@ant-design/icons";
 import AnnouncementTag from "./AnnouncementTag";
 import AnnouncementAttachmentList from "./AnnouncementAttachmentList";
-import type { IExtendedAnnouncement } from "../../../types/studentAnnouncement";
+import type { IExtendedAnnouncement } from "../../../../types/studentAnnouncement";
 
 const { Text, Paragraph, Title } = Typography;
 

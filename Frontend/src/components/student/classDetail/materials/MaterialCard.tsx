@@ -15,7 +15,7 @@ import {
   InfoCircleOutlined,
   UserOutlined,
 } from "@ant-design/icons";
-import type { ILearningMaterial } from "../../../types/learningMaterial";
+import type { ILearningMaterial } from "../../../../types/learningMaterial";
 
 const { Text, Paragraph } = Typography;
 
@@ -118,7 +118,7 @@ export const MaterialCard: React.FC<MaterialCardProps> = React.memo(
           height: "100%",
           display: "flex",
           flexDirection: "column",
-          justify: "space-between",
+          justifyContent: "space-between",
           transition: "all 0.3s ease",
         }}
         styles={{
@@ -180,7 +180,7 @@ export const MaterialCard: React.FC<MaterialCardProps> = React.memo(
           <div
             style={{
               display: "flex",
-              justify: "space-between",
+              justifyContent: "space-between",
               alignItems: "center",
               paddingTop: 12,
               borderTop: "1px dashed #f0f0f0",

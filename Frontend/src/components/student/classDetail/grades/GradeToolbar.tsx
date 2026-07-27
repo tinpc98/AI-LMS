@@ -1,7 +1,7 @@
 import React from "react";
 import { Input, Select, Row, Col, Space } from "antd";
 import { SearchOutlined, FilterOutlined, SortAscendingOutlined } from "@ant-design/icons";
-import type { StudentGradeFilterOptions } from "../../../types/studentGrade";
+import type { StudentGradeFilterOptions } from "../../../../types/studentGrade";
 
 const { Option } = Select;
 

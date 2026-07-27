@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useCallback } from "react";
-import { Row, Col, Alert, Result, Button, Skeleton, Space, Spin } from "antd";
+import { useState, useEffect, useCallback } from "react";
+import { Row, Col, Alert, Button } from "antd";
 import { ReloadOutlined } from "@ant-design/icons";
 import { useAuth } from "../../hooks/useAuth";
 import { classApi } from "../../api/classApi";
@@ -75,7 +75,7 @@ export default function HomePageTeacher() {
           const liveResults = await Promise.all(livePromises);
           const activeSessions = liveResults
             .filter((res) => res?.data?.data && res.data.data.status === "Live")
-            .map((res) => res.data.data);
+            .map((res) => res?.data?.data);
           setActiveLiveSessions(activeSessions);
         }
       } catch (e) {
@@ -106,7 +106,7 @@ export default function HomePageTeacher() {
       <TeacherWelcomeHeader
         fullName={user?.fullName}
         email={user?.email}
-        avatar={user?.avatar}
+        avatar={(user as any)?.avatar}
         loading={loading}
         onRefresh={fetchDashboardData}
       />

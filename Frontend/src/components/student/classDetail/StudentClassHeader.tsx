@@ -3,7 +3,7 @@ import { Button, Typography, Space, Avatar, Row, Col } from "antd";
 import { ArrowLeftOutlined, UserOutlined, BookOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import ClassStatusTag from "../classes/ClassStatusTag";
-import type { StudentClassStatus } from "../../types/studentClass";
+import type { StudentClassStatus } from "../../../types/studentClass";
 
 const { Title, Text } = Typography;
 

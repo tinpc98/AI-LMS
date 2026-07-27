@@ -1,7 +1,7 @@
 import React from "react";
 import { Card, Typography, Row, Col, Progress, Tooltip } from "antd";
 import { BarChartOutlined } from "@ant-design/icons";
-import type { IGradeItem } from "../../../types/studentGrade";
+import type { IGradeItem } from "../../../../types/studentGrade";
 
 const { Text } = Typography;
 

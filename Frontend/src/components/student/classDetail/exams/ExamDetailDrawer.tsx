@@ -8,7 +8,7 @@ import {
   SafetyCertificateOutlined,
 } from "@ant-design/icons";
 import ExamStatusTag from "./ExamStatusTag";
-import type { IExtendedExam } from "../../../types/studentExam";
+import type { IExtendedExam } from "../../../../types/studentExam";
 
 const { Text, Paragraph, Title } = Typography;
 

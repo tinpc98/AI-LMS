@@ -7,6 +7,8 @@ export interface IExtendedExam extends IExam {
   status: StudentExamStatus;
   isAvailableNow?: boolean;
   minutesRemaining?: number;
+  description?: string;
+  totalQuestions?: number;
 }
 
 export interface StudentExamFilterOptions {

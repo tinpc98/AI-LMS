@@ -1,7 +1,7 @@
 import React from "react";
 import { Card, Typography, Avatar, Space, Tooltip } from "antd";
 import { TeamOutlined, UserOutlined, CalendarOutlined, BookOutlined } from "@ant-design/icons";
-import type { IStudentClass } from "../../types/studentClass";
+import type { IStudentClass } from "../../../types/studentClass";
 import ClassStatusTag from "./ClassStatusTag";
 import ClassProgress from "./ClassProgress";
 import ClassCardActions from "./ClassCardActions";

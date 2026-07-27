@@ -151,7 +151,7 @@ export const CreateExamWizardDrawer: React.FC<CreateExamWizardDrawerProps> = Rea
 
     const handleNextStep2 = () => {
       if (selectedQuestionsList.length === 0) {
-        toast.warn("Vui lòng chọn ít nhất 1 câu hỏi cho bài kiểm tra!");
+        toast.warning("Vui lòng chọn ít nhất 1 câu hỏi cho bài kiểm tra!");
         return;
       }
       setCurrentStep(2);

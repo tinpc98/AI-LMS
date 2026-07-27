@@ -5,7 +5,7 @@ import { Link } from "react-router-dom";
 import type { TodayClassItem } from "../types/learningDashboard.types";
 import { formatSchedule } from "../utils/learningDashboard.utils";
 
-const { Text, Title } = Typography;
+const { Text } = Typography;
 
 interface TodayClassesWidgetProps {
   todayClasses: TodayClassItem[];
@@ -15,17 +15,18 @@ export const TodayClassesWidget: React.FC<TodayClassesWidgetProps> = React.memo(
   return (
     <Card
       title={
-        <span style={{ fontSize: 15, fontWeight: 700 }}>
-          <ClockCircleOutlined style={{ color: "#1890ff", marginRight: 6 }} /> Lịch học hôm nay ({todayClasses.length})
-        </span>
+        <Space size={8}>
+          <ClockCircleOutlined style={{ color: "#1890ff" }} />
+          <span>Lịch học hôm nay ({todayClasses.length})</span>
+        </Space>
       }
-      style={{ borderRadius: 16, border: "1px solid #f0f0f0", marginBottom: 24 }}
-      styles={{ body: { padding: 16 } }}
+      bordered={false}
+      style={{ borderRadius: 16, boxShadow: "0 2px 10px rgba(0, 0, 0, 0.03)" }}
     >
       {todayClasses.length === 0 ? (
-        <Text type="secondary" style={{ fontSize: 13, fontStyle: "italic" }}>
-          Hôm nay bạn không có lịch học trực tuyến nào.
-        </Text>
+        <div style={{ textAlign: "center", padding: "20px 0", color: "#8c8c8c" }}>
+          Không có buổi học nào được lên lịch cho hôm nay.
+        </div>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           {todayClasses.map((item) => (
@@ -37,7 +38,7 @@ export const TodayClassesWidget: React.FC<TodayClassesWidgetProps> = React.memo(
                 borderRadius: 12,
                 padding: "12px 16px",
                 display: "flex",
-                justify: "space-between",
+                justifyContent: "space-between",
                 alignItems: "center",
                 flexWrap: "wrap",
                 gap: 10,

@@ -6,7 +6,7 @@ import {
   CloseCircleOutlined,
   InfoCircleOutlined,
 } from "@ant-design/icons";
-import type { AttendanceStatus } from "../../../interface/attendanceInterface";
+import type { AttendanceStatus } from "../../../../interface/attendanceInterface";
 
 interface AttendanceStatusTagProps {
   status: AttendanceStatus;

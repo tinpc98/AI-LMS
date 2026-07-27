@@ -7,7 +7,7 @@ import {
   InfoCircleOutlined,
 } from "@ant-design/icons";
 import AttendanceStatusTag from "./AttendanceStatusTag";
-import type { IExtendedAttendanceRecord } from "../../../types/studentAttendance";
+import type { IExtendedAttendanceRecord } from "../../../../types/studentAttendance";
 
 const { Text, Title, Paragraph } = Typography;
 

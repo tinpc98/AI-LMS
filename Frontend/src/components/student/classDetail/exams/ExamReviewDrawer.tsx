@@ -7,7 +7,7 @@ import {
   BookOutlined,
 } from "@ant-design/icons";
 import ExamResultCard from "./ExamResultCard";
-import type { IExtendedExam } from "../../../types/studentExam";
+import type { IExtendedExam } from "../../../../types/studentExam";
 
 const { Text, Paragraph, Title } = Typography;
 

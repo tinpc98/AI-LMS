@@ -7,7 +7,7 @@ import {
   CalendarOutlined,
   TrophyOutlined,
 } from "@ant-design/icons";
-import type { StudentGradeStats } from "../../../types/studentGrade";
+import type { StudentGradeStats } from "../../../../types/studentGrade";
 
 const { Text, Title } = Typography;
 

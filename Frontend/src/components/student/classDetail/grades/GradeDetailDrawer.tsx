@@ -9,7 +9,7 @@ import {
   PercentageOutlined,
 } from "@ant-design/icons";
 import GradeStatusTag from "./GradeStatusTag";
-import type { IGradeItem } from "../../../types/studentGrade";
+import type { IGradeItem } from "../../../../types/studentGrade";
 
 const { Text, Paragraph, Title } = Typography;
 
@@ -69,7 +69,7 @@ export const GradeDetailDrawer: React.FC<GradeDetailDrawerProps> = React.memo(
                 padding: "16px 20px",
                 marginBottom: 20,
                 display: "flex",
-                justify: "space-between",
+                justifyContent: "space-between",
                 alignItems: "center",
               }}
             >

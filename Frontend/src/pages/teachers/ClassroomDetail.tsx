@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   Card,
@@ -178,7 +178,7 @@ export default function ClassroomDetail() {
   }
 
   const studentList = Array.isArray(classInfo.students) ? classInfo.students : [];
-  const resourceList = Array.isArray(classInfo.resources) ? classInfo.resources : [];
+  const resourceList = Array.isArray((classInfo as any).resources) ? (classInfo as any).resources : [];
   const teacherName = typeof classInfo.teacherId === "object" ? classInfo.teacherId?.fullName : "Giảng viên";
 
   const tabItems = [
@@ -417,7 +417,7 @@ export default function ClassroomDetail() {
               <Tag color="green">{classInfo.status || "Đang hoạt động"}</Tag>
             </Space>
             <Text style={{ color: "rgba(255,255,255,0.85)", display: "block", marginTop: 8, fontSize: 14 }}>
-              Sĩ số: {studentList.length} học sinh | Lịch học: {classInfo.schedule?.days?.join(", ") || "Tự do"}
+              Sĩ số: {studentList.length} học sinh | Lịch học: {(classInfo as any).schedule?.days?.join(", ") || "Tự do"}
             </Text>
           </div>
 

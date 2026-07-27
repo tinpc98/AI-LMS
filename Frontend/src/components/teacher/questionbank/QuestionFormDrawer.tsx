@@ -67,13 +67,13 @@ export const QuestionFormDrawer: React.FC<QuestionFormDrawerProps> = React.memo(
           ].filter(Boolean);
 
           if (options.length < 2) {
-            toast.warn("Vui lòng nhập ít nhất 2 phương án lựa chọn!");
+            toast.warning("Vui lòng nhập ít nhất 2 phương án lựa chọn!");
             setSubmitting(false);
             return;
           }
 
           if (!values.correctAnswer) {
-            toast.warn("Vui lòng chọn đáp án đúng cho câu hỏi trắc nghiệm!");
+            toast.warning("Vui lòng chọn đáp án đúng cho câu hỏi trắc nghiệm!");
             setSubmitting(false);
             return;
           }

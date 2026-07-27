@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import {
   Card,
   Table,
@@ -28,7 +28,6 @@ import {
   EyeOutlined,
   UploadOutlined,
   FileExcelOutlined,
-  FilePdfOutlined,
   ReloadOutlined,
   MoreOutlined,
 } from "@ant-design/icons";
@@ -75,8 +74,31 @@ export default function QuestionBank() {
   }, []);
 
   useEffect(() => {
-    fetchQuestions();
-  }, [fetchQuestions]);
+    let isMounted = true;
+    const loadData = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const response = await axiosClient.get("/api/questions");
+        if (isMounted) {
+          setQuestions(response.data.data || []);
+        }
+      } catch (err: any) {
+        if (isMounted) {
+          console.error("[QuestionBank] Fetch error:", err);
+          setError(err.message || "Không thể tải danh sách câu hỏi từ hệ thống!");
+        }
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    };
+    loadData();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   // Filter & Sort questions
   const filteredQuestions = useMemo(() => {

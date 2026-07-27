@@ -1,7 +1,7 @@
 import React from "react";
 import { Modal, Descriptions, Tag, Button, Typography, Space } from "antd";
 import { InfoCircleOutlined, DownloadOutlined, CopyOutlined, UserOutlined } from "@ant-design/icons";
-import type { ILearningMaterial } from "../../../types/learningMaterial";
+import type { ILearningMaterial } from "../../../../types/learningMaterial";
 import { getMaterialTypeMeta } from "./MaterialCard";
 
 const { Text, Paragraph } = Typography;

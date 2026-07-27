@@ -9,7 +9,7 @@ export interface ILiveSession {
   scheduledEnd?: string | null;
   actualStart?: string | null;
   actualEnd?: string | null;
-  status: "Scheduled" | "Live" | "Completed" | "Cancelled";
+  status: "Scheduled" | "Live" | "Completed" | "Cancelled" | "Upcoming" | "Missed";
   recordingUrl?: string;
   createdAt: string;
   updatedAt: string;

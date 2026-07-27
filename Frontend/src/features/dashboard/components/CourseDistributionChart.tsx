@@ -63,7 +63,7 @@ export const CourseDistributionChart: React.FC<CourseDistributionChartProps> = (
                   paddingAngle={3}
                   dataKey="count"
                   nameKey="subject"
-                  label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
+                  label={({ name, percent }) => `${name} (${((percent || 0) * 100).toFixed(0)}%)`}
                   labelLine={{ strokeWidth: 1 }}
                 >
                   {data.map((entry, index) => (

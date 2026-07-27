@@ -1,7 +1,7 @@
 import React from "react";
 import { Card, Typography, Space, Tag, Progress, Row, Col } from "antd";
 import { TrophyOutlined, CheckCircleOutlined, CloseCircleOutlined, ClockCircleOutlined } from "@ant-design/icons";
-import type { IExamAttempt } from "../../../api/examApi";
+import type { IExamAttempt } from "../../../../api/examApi";
 
 const { Text, Title } = Typography;
 

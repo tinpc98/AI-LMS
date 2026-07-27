@@ -4,7 +4,7 @@ import { ClockCircleOutlined, UserOutlined, VideoCameraOutlined, BookOutlined } 
 import { useNavigate } from "react-router-dom";
 import EmptyState from "../../common/EmptyState";
 
-import { formatSchedule } from "../../modules/student/learning/utils/learningDashboard.utils";
+import { formatSchedule } from "../../../modules/student/learning/utils/learningDashboard.utils";
 
 const { Title, Text } = Typography;
 

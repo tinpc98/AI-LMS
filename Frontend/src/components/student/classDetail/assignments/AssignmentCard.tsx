@@ -10,7 +10,7 @@ import {
   PaperClipOutlined,
 } from "@ant-design/icons";
 import AssignmentStatusTag from "./AssignmentStatusTag";
-import type { IExtendedAssignment } from "../../../types/studentAssignment";
+import type { IExtendedAssignment } from "../../../../types/studentAssignment";
 
 const { Text, Paragraph } = Typography;
 
@@ -147,7 +147,7 @@ export const AssignmentCard: React.FC<AssignmentCardProps> = React.memo(
               padding: "6px 12px",
               marginBottom: 14,
               display: "flex",
-              justify: "space-between",
+              justifyContent: "space-between",
               alignItems: "center",
             }}
           >

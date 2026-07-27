@@ -1,7 +1,7 @@
 import React from "react";
 import { Card, Row, Col, Progress, Typography } from "antd";
 import { PieChartOutlined } from "@ant-design/icons";
-import type { StudentAttendanceStats } from "../../../types/studentAttendance";
+import type { StudentAttendanceStats } from "../../../../types/studentAttendance";
 
 const { Text } = Typography;
 

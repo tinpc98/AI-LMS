@@ -1,7 +1,7 @@
 import React from "react";
 import { Card, Typography, Space, Button, Tag, Popconfirm } from "antd";
 import { PaperClipOutlined, DownloadOutlined, DeleteOutlined, CheckCircleOutlined } from "@ant-design/icons";
-import type { ISubmission } from "../../../interface/assignmentInterface";
+import type { ISubmission } from "../../../../interface/assignmentInterface";
 
 const { Text } = Typography;
 
@@ -42,12 +42,12 @@ export const AssignmentSubmissionCard: React.FC<AssignmentSubmissionCardProps> =
         {/* Submission Attachments */}
         {submission.attachments && submission.attachments.length > 0 ? (
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-            {submission.attachments.map((att, idx) => (
+            {submission.attachments.map((att: any, idx: number) => (
               <div
                 key={idx}
                 style={{
                   display: "flex",
-                  justify: "space-between",
+                  justifyContent: "space-between",
                   alignItems: "center",
                   backgroundColor: "#fff",
                   padding: "6px 12px",
@@ -55,9 +55,9 @@ export const AssignmentSubmissionCard: React.FC<AssignmentSubmissionCardProps> =
                   border: "1px solid #d9d9d9",
                 }}
               >
-                <Space size={6} ellipsis>
+                <Space size={6}>
                   <PaperClipOutlined style={{ color: "#1890ff" }} />
-                  <Text style={{ fontSize: 13 }} ellipsis style={{ maxWidth: 200 }}>
+                  <Text ellipsis style={{ fontSize: 13, maxWidth: 200 }}>
                     {att.name || `Tài liệu đính kèm ${idx + 1}`}
                   </Text>
                 </Space>

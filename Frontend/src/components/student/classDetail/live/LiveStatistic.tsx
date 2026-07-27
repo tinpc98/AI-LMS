@@ -6,7 +6,7 @@ import {
   CloseCircleOutlined,
   ClockCircleOutlined,
 } from "@ant-design/icons";
-import type { StudentLiveStats } from "../../../types/studentLive";
+import type { StudentLiveStats } from "../../../../types/studentLive";
 
 interface LiveStatisticProps {
   stats: StudentLiveStats;

@@ -8,7 +8,7 @@ import {
   NotificationOutlined,
   SettingOutlined,
 } from "@ant-design/icons";
-import type { AnnouncementTagType } from "../../../types/studentAnnouncement";
+import type { AnnouncementTagType } from "../../../../types/studentAnnouncement";
 
 interface AnnouncementTagProps {
   type?: AnnouncementTagType;

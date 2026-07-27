@@ -9,7 +9,7 @@ import {
 } from "@ant-design/icons";
 import AnnouncementTag from "./AnnouncementTag";
 import AnnouncementAttachmentList from "./AnnouncementAttachmentList";
-import type { IExtendedAnnouncement } from "../../../types/studentAnnouncement";
+import type { IExtendedAnnouncement } from "../../../../types/studentAnnouncement";
 
 const { Text, Paragraph, Title } = Typography;
 
@@ -78,7 +78,7 @@ export const AnnouncementDetailDrawer: React.FC<AnnouncementDetailDrawerProps> =
               padding: "14px 18px",
               marginBottom: 20,
               display: "flex",
-              justify: "space-between",
+              justifyContent: "space-between",
               alignItems: "center",
             }}
           >

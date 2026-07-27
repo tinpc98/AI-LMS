@@ -45,7 +45,7 @@ const FeatureList = ({
                   opacity: feature.enabled ? 1 : 0.75,
                   display: "flex",
                   flexDirection: "column",
-                  justify: "space-between",
+                  justifyContent: "space-between",
                 }}
                 styles={{ body: { padding: 20, display: "flex", flexDirection: "column", height: "100%" } }}
               >

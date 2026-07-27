@@ -1,7 +1,7 @@
 import React from "react";
 import { Row, Col } from "antd";
 import AssignmentCard from "./AssignmentCard";
-import type { IExtendedAssignment } from "../../../types/studentAssignment";
+import type { IExtendedAssignment } from "../../../../types/studentAssignment";
 
 interface AssignmentListProps {
   assignments: IExtendedAssignment[];

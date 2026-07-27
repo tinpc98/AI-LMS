@@ -1,7 +1,7 @@
 import React from "react";
 import { Row, Col } from "antd";
 import MaterialCard from "./MaterialCard";
-import type { ILearningMaterial } from "../../../types/learningMaterial";
+import type { ILearningMaterial } from "../../../../types/learningMaterial";
 
 interface MaterialListProps {
   materials: ILearningMaterial[];

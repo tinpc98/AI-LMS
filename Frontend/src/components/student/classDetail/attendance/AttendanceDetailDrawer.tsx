@@ -2,7 +2,7 @@ import React from "react";
 import { Drawer, Button, Typography, Space, Descriptions, Divider } from "antd";
 import { CalendarOutlined, ClockCircleOutlined, UserOutlined, CommentOutlined } from "@ant-design/icons";
 import AttendanceStatusTag from "./AttendanceStatusTag";
-import type { IExtendedAttendanceRecord } from "../../../types/studentAttendance";
+import type { IExtendedAttendanceRecord } from "../../../../types/studentAttendance";
 
 const { Text, Paragraph, Title } = Typography;
 
@@ -64,7 +64,7 @@ export const AttendanceDetailDrawer: React.FC<AttendanceDetailDrawerProps> = Rea
               padding: "16px 20px",
               marginBottom: 20,
               display: "flex",
-              justify: "space-between",
+              justifyContent: "space-between",
               alignItems: "center",
             }}
           >
