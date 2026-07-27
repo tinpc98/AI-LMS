@@ -235,3 +235,59 @@ export const optionalAuth = (req, res, next) => {
     next();
   }
 };
+
+/**
+ * Authorize Multiple Roles
+ * Higher-order middleware to check if user has one of the allowed roles
+ * Must be used after verifyUser middleware
+ * 
+ * Supported roles: "ADMIN", "TEACHER", "STUDENT", "REVIEWER"
+ * 
+ * @param {...string} allowedRoles - The roles that are allowed to access the route
+ * @returns {Function} Express middleware function
+ * 
+ * Usage:
+ *   router.post("/course", verifyUser, authorizeRoles("TEACHER", "ADMIN"), createCourse)
+ *   router.delete("/user/:id", verifyUser, authorizeRoles("ADMIN"), deleteUser)
+ *   router.get("/submission/:id", verifyUser, authorizeRoles("REVIEWER", "TEACHER", "ADMIN"), getSubmission)
+ */
+export const authorizeRoles = (...allowedRoles) => {
+  return (req, res, next) => {
+    try {
+      // Check if req.user exists (set by verifyUser middleware)
+      if (!req.user) {
+        return res.status(401).json({
+          success: false,
+          message: "Bạn chưa đăng nhập",
+        });
+      }
+
+      // Normalize user role to uppercase for comparison
+      const userRole = (req.user.role || "").toUpperCase();
+
+      // Normalize allowed roles to uppercase
+      const normalizedAllowedRoles = allowedRoles.map((role) =>
+        role.toUpperCase()
+      );
+
+      // Check if user role is in allowed roles
+      if (!normalizedAllowedRoles.includes(userRole)) {
+        return res.status(403).json({
+          success: false,
+          message: `Bạn không có quyền truy cập. Chỉ những người dùng với vai trò: ${normalizedAllowedRoles.join(
+            ", "
+          )} mới được phép`,
+        });
+      }
+
+      // User is authorized, continue to next handler
+      next();
+    } catch (error) {
+      console.error("[Auth Middleware] Authorize roles error:", error);
+      res.status(403).json({
+        success: false,
+        message: "Lỗi xác thực quyền hạn",
+      });
+    }
+  };
+};
