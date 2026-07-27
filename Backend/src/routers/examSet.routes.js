@@ -21,6 +21,7 @@ import {
   revokeExamSetShare,
   listExamSetShares,
   listSharedExamSets,
+  updateExamSetShareMetadata,
 } from "../controllers/examSet.controller.js";
 import { verifyUser } from "../middlewares/auth.middlewares.js";
 import {
@@ -37,6 +38,7 @@ import {
   examSetShareRevokeValidation,
   examSetShareListValidation,
   examSetSharedWithMeValidation,
+  examSetShareUpdateMetadataValidation,
 } from "../utils/validators.js";
 import { examSetVersionsValidation } from "../utils/validators.js";
 
@@ -102,6 +104,19 @@ router.post(
   requireExamSetEditAccess,
   examSetShareCreateValidation,
   createExamSetShare
+);
+
+/**
+ * PATCH /api/exam-sets/:examSetId/shares/:shareId
+ * Update share metadata: expiresAt and/or note
+ * Access: Owner, Admin only
+ * Must be placed BEFORE /:examSetId/shares/:shareId/revoke to avoid route conflict
+ */
+router.patch(
+  "/:examSetId/shares/:shareId",
+  requireExamSetEditAccess,
+  examSetShareUpdateMetadataValidation,
+  updateExamSetShareMetadata
 );
 
 /**

@@ -388,6 +388,153 @@ export const revokeExamSetShareService = async (examSetId, shareId, currentUserI
   return { statusCode: 200, message: "Share revoked successfully", data: updated };
 };
 
+/**
+ * Update share metadata: expiresAt and/or note
+ *
+ * Authorization: Owner or Admin only.
+ * Shared user (VIEW/EDIT) cannot update metadata.
+ *
+ * Business rules:
+ * - Share must be ACTIVE (REVOKED → 409).
+ * - ACTIVE share with expiresAt in the past can still be updated (re-extend).
+ * - No-op if no field actually changes → 409.
+ * - Only expiresAt and note are updated; all other fields remain unchanged.
+ *
+ * @param {string} examSetId - From URL param
+ * @param {string} shareId   - From URL param
+ * @param {string} currentUserId
+ * @param {string} currentUserRole
+ * @param {Object} payload   - { expiresAt?, note? } – already validated by express-validator
+ * @returns {{ statusCode, message, data }}
+ */
+export const updateExamSetShareMetadataService = async (
+  examSetId,
+  shareId,
+  currentUserId,
+  currentUserRole,
+  payload = {}
+) => {
+  // ── Step 1: Validate IDs (defensive – validator handles this first) ────────
+  if (!examSetId || !Types.ObjectId.isValid(examSetId)) {
+    const error = new Error("examSetId không hợp lệ");
+    error.status = 400;
+    throw error;
+  }
+
+  if (!shareId || !Types.ObjectId.isValid(shareId)) {
+    const error = new Error("shareId không hợp lệ");
+    error.status = 400;
+    throw error;
+  }
+
+  // ── Step 2: Find Exam Set (check soft delete) ─────────────────────────────
+  const examSet = await ExamSet.findOne({ _id: examSetId, isDeleted: false });
+  if (!examSet) {
+    const error = new Error("Bộ đề thi không tồn tại");
+    error.status = 404;
+    throw error;
+  }
+
+  // ── Step 3: Authorization – Owner or Admin only ───────────────────────────
+  const userRole = String(currentUserRole || "").toLowerCase();
+  const isOwner = String(examSet.ownerId?._id || examSet.ownerId) === String(currentUserId);
+  const isAdmin = userRole === "admin";
+
+  if (!isOwner && !isAdmin) {
+    const error = new Error("Bạn không có quyền cập nhật metadata chia sẻ này");
+    error.status = 403;
+    throw error;
+  }
+
+  // ── Step 4: Find Share – must belong to this Exam Set ────────────────────
+  const share = await ExamSetShare.findOne({
+    _id: shareId,
+    examSetId: examSet._id,
+  });
+
+  if (!share) {
+    const error = new Error("Share không tồn tại hoặc không thuộc bộ đề thi này");
+    error.status = 404;
+    throw error;
+  }
+
+  // ── Step 5: Share must be ACTIVE (REVOKED cannot be updated) ─────────────
+  if (String(share.status) === String(EXAM_SET_SHARE_STATUS.REVOKED)) {
+    const error = new Error("Share đã bị thu hồi, không thể cập nhật metadata");
+    error.status = 409;
+    throw error;
+  }
+
+  // Note: ACTIVE share with expiresAt in the past is allowed to be updated
+  // (Owner/Admin can re-extend). Middleware access check (not this service)
+  // controls whether the shared user can still access.
+
+  // ── Step 6: Build update object (whitelist only) ──────────────────────────
+  const hasExpiresAt = "expiresAt" in payload;
+  const hasNote = "note" in payload;
+
+  // ── Step 7: Normalize values ──────────────────────────────────────────────
+  let normalizedExpiresAt;
+  if (hasExpiresAt) {
+    if (payload.expiresAt === null) {
+      normalizedExpiresAt = null;
+    } else {
+      normalizedExpiresAt = new Date(payload.expiresAt);
+    }
+  }
+
+  let normalizedNote;
+  if (hasNote) {
+    if (payload.note === null) {
+      normalizedNote = null;
+    } else {
+      // Trim + normalize to null if empty string
+      const trimmed = String(payload.note).trim();
+      normalizedNote = trimmed === "" ? null : trimmed;
+    }
+  }
+
+  // ── Step 8: Detect no-op (compare only sent fields) ──────────────────────
+  let isNoOp = true;
+
+  if (hasExpiresAt) {
+    const currentTs = share.expiresAt ? new Date(share.expiresAt).getTime() : null;
+    const newTs = normalizedExpiresAt ? normalizedExpiresAt.getTime() : null;
+    if (currentTs !== newTs) isNoOp = false;
+  }
+
+  if (hasNote) {
+    // Compare normalized note (null vs null, or string vs string)
+    const currentNote = share.note === undefined || share.note === "" ? null : share.note;
+    const newNote = normalizedNote;
+    if (currentNote !== newNote) isNoOp = false;
+  }
+
+  if (isNoOp) {
+    const error = new Error("No share metadata changes detected");
+    error.status = 409;
+    throw error;
+  }
+
+  // ── Step 9: Apply changes via whitelist (never touch protected fields) ────
+  if (hasExpiresAt) {
+    share.expiresAt = normalizedExpiresAt;
+  }
+
+  if (hasNote) {
+    share.note = normalizedNote === null ? "" : normalizedNote;
+  }
+
+  // ── Step 10: Save ─────────────────────────────────────────────────────────
+  const updatedShare = await share.save({ validateModifiedOnly: true });
+
+  return {
+    statusCode: 200,
+    message: "Share metadata updated successfully",
+    data: updatedShare,
+  };
+};
+
 const escapeRegex = (value) => {
   return String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 };

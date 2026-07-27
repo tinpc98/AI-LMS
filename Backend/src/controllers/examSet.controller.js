@@ -1,5 +1,5 @@
 // File: src/controllers/examSet.controller.js
-import { createExamSetService, getExamSetsService, updateExamSetService, deleteExamSetService, restoreExamSetService, addQuestionToExamSetService, updateQuestionInExamSetService, deleteQuestionFromExamSetService, reorderQuestionsInExamSetService, getExamSetDetailService, saveDraftExamSetService, duplicateExamSetService, updateExamSetTagsService, createNewExamSetVersionService, getExamSetVersionsService, restoreExamSetVersionService, createExamSetShareService, revokeExamSetShareService, listExamSetSharesService, listSharedExamSetsService } from "../services/examSet.services.js";
+import { createExamSetService, getExamSetsService, updateExamSetService, deleteExamSetService, restoreExamSetService, addQuestionToExamSetService, updateQuestionInExamSetService, deleteQuestionFromExamSetService, reorderQuestionsInExamSetService, getExamSetDetailService, saveDraftExamSetService, duplicateExamSetService, updateExamSetTagsService, createNewExamSetVersionService, getExamSetVersionsService, restoreExamSetVersionService, createExamSetShareService, revokeExamSetShareService, listExamSetSharesService, listSharedExamSetsService, updateExamSetShareMetadataService } from "../services/examSet.services.js";
 import { Types } from "mongoose";
 
 /**
@@ -343,6 +343,43 @@ export const listSharedExamSets = async (req, res) => {
     console.error("[ExamSet] List shared-with-me error:", error.message);
     const status = error.status || 500;
     return res.status(status).json({ success: false, message: error.message || "Lỗi lấy danh sách bộ đề thi được chia sẻ" });
+  }
+};
+
+/**
+ * Update share metadata (expiresAt and/or note)
+ * PATCH /api/exam-sets/:examSetId/shares/:shareId
+ * Authorization: Owner or Admin only
+ */
+export const updateExamSetShareMetadata = async (req, res) => {
+  try {
+    const { examSetId, shareId } = req.params;
+
+    // Build payload from whitelist only – do NOT pass req.body directly
+    const payload = {};
+    if ("expiresAt" in req.body) payload.expiresAt = req.body.expiresAt;
+    if ("note" in req.body) payload.note = req.body.note;
+
+    const result = await updateExamSetShareMetadataService(
+      examSetId,
+      shareId,
+      req.user.id,
+      req.user.role,
+      payload
+    );
+
+    return res.status(result.statusCode).json({
+      success: true,
+      message: result.message,
+      data: result.data,
+    });
+  } catch (error) {
+    console.error("[ExamSet] Update share metadata error:", error.message);
+    const status = error.status || 500;
+    return res.status(status).json({
+      success: false,
+      message: error.message || "Lỗi cập nhật metadata chia sẻ bộ đề thi",
+    });
   }
 };
 

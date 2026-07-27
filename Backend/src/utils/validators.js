@@ -917,3 +917,78 @@ export const examSetVersionsValidation = [
 
   handleValidationErrors,
 ];
+
+/**
+ * Validation for PATCH /:examSetId/shares/:shareId
+ * Update share metadata: expiresAt and/or note
+ */
+export const examSetShareUpdateMetadataValidation = [
+  param("examSetId")
+    .notEmpty()
+    .withMessage("examSetId là bắt buộc")
+    .bail()
+    .isMongoId()
+    .withMessage("examSetId không hợp lệ"),
+
+  param("shareId")
+    .notEmpty()
+    .withMessage("shareId là bắt buộc")
+    .bail()
+    .isMongoId()
+    .withMessage("shareId không hợp lệ"),
+
+  // Reject unknown top-level fields (whitelist: expiresAt, note only)
+  body()
+    .custom((body) => {
+      const allowed = new Set(["expiresAt", "note"]);
+      const unknown = Object.keys(body || {}).filter((k) => !allowed.has(k));
+      if (unknown.length > 0) {
+        throw new Error(`Trường không được phép: ${unknown.join(", ")}`);
+      }
+      // At least one known field must be present
+      const hasExpiresAt = "expiresAt" in (body || {});
+      const hasNote = "note" in (body || {});
+      if (!hasExpiresAt && !hasNote) {
+        throw new Error("Body phải chứa ít nhất một trong: expiresAt, note");
+      }
+      return true;
+    }),
+
+  body("expiresAt")
+    .optional({ checkFalsy: false })
+    .custom((value) => {
+      // Allow explicit null to clear expiry
+      if (value === null) return true;
+      // Reject non-string/non-null types
+      if (typeof value !== "string") {
+        throw new Error("expiresAt phải là chuỗi ISO 8601 hoặc null");
+      }
+      if (value.trim() === "") {
+        throw new Error("expiresAt không được là chuỗi rỗng");
+      }
+      const d = new Date(value);
+      if (Number.isNaN(d.getTime())) {
+        throw new Error("expiresAt phải là ngày hợp lệ (ISO 8601)");
+      }
+      if (d.getTime() <= Date.now()) {
+        throw new Error("expiresAt phải là thời điểm trong tương lai");
+      }
+      return true;
+    }),
+
+  body("note")
+    .optional({ checkFalsy: false })
+    .custom((value) => {
+      // Allow explicit null to clear note
+      if (value === null) return true;
+      if (typeof value !== "string") {
+        throw new Error("note phải là chuỗi hoặc null");
+      }
+      if (value.trim().length > 500) {
+        throw new Error("note tối đa 500 ký tự");
+      }
+      return true;
+    }),
+
+  handleValidationErrors,
+];
