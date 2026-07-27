@@ -1,6 +1,6 @@
 import express from "express";
 import multer from "multer";
-import path from "path"; // Thêm thư viện có sẵn của Node.js để đọc đuôi file
+import path from "path";
 import {
   uploadExcelQuestions,
   getQuestions,
@@ -8,14 +8,13 @@ import {
   updateQuestion,
   deleteQuestion,
 } from "../controllers/question.controller.js";
-import Question from "../models/question.model.js";
+import { verifyUser, isTeacher } from "../middlewares/auth.middlewares.js";
 
 const router = express.Router();
 
 const upload = multer({
   storage: multer.memoryStorage(),
   fileFilter: (req, file, cb) => {
-    // 1. In ra console để biết Postman thực chất đang gửi cái gì lên
     console.log(
       "👉 File đang upload:",
       file.originalname,
@@ -23,10 +22,8 @@ const upload = multer({
       file.mimetype,
     );
 
-    // 2. Lấy đuôi file (VD: .xlsx)
     const ext = path.extname(file.originalname).toLowerCase();
 
-    // 3. Kiểm tra kết hợp cả 2 điều kiện cho an toàn tuyệt đối
     if (
       file.mimetype ===
         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ||
@@ -41,10 +38,11 @@ const upload = multer({
   },
 });
 
-router.post("/import-excel", upload.single("file"), uploadExcelQuestions);
-router.get("/", getQuestions);
-router.post("/", createQuestion);
-router.put("/:id", updateQuestion);
-router.delete("/:id", deleteQuestion);
+// Tất cả các thao tác trên Ngân hàng câu hỏi bắt buộc phải đăng nhập và có quyền Giáo viên / Admin
+router.post("/import-excel", verifyUser, isTeacher, upload.single("file"), uploadExcelQuestions);
+router.get("/", verifyUser, isTeacher, getQuestions);
+router.post("/", verifyUser, isTeacher, createQuestion);
+router.put("/:id", verifyUser, isTeacher, updateQuestion);
+router.delete("/:id", verifyUser, isTeacher, deleteQuestion);
 
 export default router;

@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import softDeletePlugin from "../plugins/softDelete.plugin.js";
 
 const lessonSchema = new mongoose.Schema(
   {
@@ -23,21 +24,18 @@ const lessonSchema = new mongoose.Schema(
         publicId: { type: String, required: true },
       },
     ],
-    // --- CÁC TRƯỜNG BỔ SUNG THỰC CHIẾN ---
     order: {
       type: Number,
       default: 0,
-      // Khi FE gọi tạo bài, có thể truyền order vào để xếp vị trí
     },
     isPublished: {
       type: Boolean,
-      default: true, // Mặc định tạo ra là hiển thị luôn (hoặc false tuỳ bạn)
+      default: true,
     },
     duration: {
-      type: Number, // Lưu thời gian học dự kiến (tính bằng phút)
+      type: Number,
       default: 0,
     },
-    // --------------------------------------
     classId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Class",
@@ -51,6 +49,11 @@ const lessonSchema = new mongoose.Schema(
   },
   { timestamps: true },
 );
+
+lessonSchema.index({ classId: 1, isPublished: 1, order: 1 });
+lessonSchema.index({ teacherId: 1 });
+
+lessonSchema.plugin(softDeletePlugin);
 
 const Lesson = mongoose.model("Lesson", lessonSchema);
 export default Lesson;

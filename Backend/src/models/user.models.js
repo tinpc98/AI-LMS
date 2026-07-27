@@ -1,5 +1,6 @@
 import bcrypt from "bcryptjs";
 import { Schema, model } from "mongoose";
+import softDeletePlugin from "../plugins/softDelete.plugin.js";
 
 // Schema khung giờ làm việc theo ngày cho Giáo viên
 const dayAvailabilitySchema = new Schema(
@@ -100,7 +101,7 @@ const userSchema = new Schema(
 );
 
 // Indexes phục vụ tìm kiếm nhanh theo Email, Role và Status
-// userSchema.index({ email: 1 }, { unique: true });
+userSchema.index({ email: 1 }, { unique: true });
 userSchema.index({ role: 1 });
 userSchema.index({ status: 1 });
 
@@ -118,6 +119,8 @@ userSchema.pre("save", async function () {
     this.password = await bcrypt.hash(passwordValue, salt);
   }
 });
+
+userSchema.plugin(softDeletePlugin);
 
 const User = model("User", userSchema);
 export default User;

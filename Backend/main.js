@@ -78,6 +78,7 @@ app.use("/api/assignments", assignmentRouter);
 app.use("/api/attendances", AttendanceRouter);
 app.use("/api/grades", GradeRouter);
 app.use("/api/announcements", AnnouncementRouter);
+app.use("/api/notifications", AnnouncementRouter);
 
 // Routes Module Thi trực tuyến & Live
 app.use("/api/questions", QuestionRouter);

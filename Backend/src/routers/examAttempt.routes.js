@@ -8,20 +8,19 @@ import {
   getAttemptsByExam,
   recordCheatWarning,
 } from "../controllers/examAttempt.controller.js";
+import { verifyUser, isTeacher } from "../middlewares/auth.middlewares.js";
 
 const router = express.Router();
 
-// Học sinh gửi bài làm lên để nộp và chấm điểm
-// :id ở đây là ID của ExamAttempt (phiên làm bài)
-router.post("/start", startExam);
+// --- Tuyến đường dành cho Học sinh ---
+router.post("/start", verifyUser, startExam);
+router.post("/:id/submit", verifyUser, submitExam);
+router.get("/:id", verifyUser, getExamAttemptDetail);
+router.post("/:id/warning", verifyUser, recordCheatWarning);
 
-router.post("/:id/submit", submitExam);
+// --- Tuyến đường dành cho Giáo viên / Admin ---
+router.put("/:id/grade-essay", verifyUser, isTeacher, gradeEssaySubmit);
+router.get("/:id/review", verifyUser, isTeacher, getAttemptForReview);
+router.get("/exam/:examId", verifyUser, isTeacher, getAttemptsByExam);
 
-router.put("/:id/grade-essay", gradeEssaySubmit);
-
-router.get("/:id/review", getAttemptForReview);
-
-router.get("/:id", getExamAttemptDetail);
-router.get("/exam/:examId", getAttemptsByExam);
-router.post("/:id/warning", recordCheatWarning);
 export default router;

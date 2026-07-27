@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import attendanceService from "../services/attendance.service.js";
 import { sendSuccess, sendError } from "../utils/response.js";
 
@@ -8,7 +9,7 @@ export const markAttendance = async (req, res) => {
       return sendError(res, "Vui lòng truyền đầy đủ classId, date và danh sách học sinh cần điểm danh", 400);
     }
 
-    const teacherId = req.user.id;
+    const teacherId = req.user.id || req.user._id;
     const result = await attendanceService.markAttendance({ classId, date, records, teacherId });
     return sendSuccess(res, "Điểm danh thành công", result);
   } catch (error) {
@@ -19,6 +20,10 @@ export const markAttendance = async (req, res) => {
 export const updateAttendance = async (req, res) => {
   try {
     const { id } = req.params;
+    if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+      return sendError(res, "ID bản ghi điểm danh không hợp lệ!", 400);
+    }
+
     const { status, note } = req.body;
     const result = await attendanceService.updateAttendance(id, { status, note });
     return sendSuccess(res, "Cập nhật điểm danh thành công", result);
@@ -30,6 +35,10 @@ export const updateAttendance = async (req, res) => {
 export const getAttendanceByClass = async (req, res) => {
   try {
     const { classId } = req.params;
+    if (!classId || !mongoose.Types.ObjectId.isValid(classId)) {
+      return sendError(res, "ID lớp học không hợp lệ!", 400);
+    }
+
     const { date } = req.query;
     const result = await attendanceService.getAttendanceByClass(classId, date);
     return sendSuccess(res, "Lấy danh sách điểm danh thành công", result);
@@ -40,11 +49,23 @@ export const getAttendanceByClass = async (req, res) => {
 
 export const getAttendanceByStudent = async (req, res) => {
   try {
-    const { studentId } = req.params;
+    let { studentId } = req.params;
     const { classId } = req.query;
 
-    // Phân quyền: Học sinh chỉ được xem điểm danh của chính mình trừ khi là Giáo viên/Admin
-    if (req.user.role === "Student" && req.user.id !== studentId) {
+    const loggedUserId = (req.user?.id || req.user?._id || "").toString();
+    const userRole = (req.user?.role || "").toLowerCase();
+
+    // Hỗ trợ alias "me" hoặc "my" hoặc nếu không truyền studentId
+    if (!studentId || studentId === "me" || studentId === "my") {
+      studentId = loggedUserId;
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(studentId)) {
+      return sendError(res, "ID học sinh không hợp lệ!", 400);
+    }
+
+    // Phân quyền: Học sinh chỉ được xem điểm danh của chính mình
+    if (userRole === "student" && loggedUserId !== studentId.toString()) {
       return sendError(res, "Bạn không có quyền xem điểm danh của học sinh khác", 403);
     }
 
@@ -58,6 +79,10 @@ export const getAttendanceByStudent = async (req, res) => {
 export const getAttendanceStats = async (req, res) => {
   try {
     const { classId } = req.params;
+    if (!classId || !mongoose.Types.ObjectId.isValid(classId)) {
+      return sendError(res, "ID lớp học không hợp lệ!", 400);
+    }
+
     const result = await attendanceService.getAttendanceStats(classId);
     return sendSuccess(res, "Lấy thống kê điểm danh thành công", result);
   } catch (error) {

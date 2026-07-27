@@ -17,24 +17,11 @@ const Login = () => {
     formState: { errors },
   } = useForm<User>();
 
-  // Nâng cấp: Tự động điều hướng thông minh dựa trên cả token lẫn role cũ
-  useEffect(() => {
-    const token = localStorage.getItem("accessToken");
-    const savedRole = localStorage.getItem("userRole")?.toLowerCase(); // Chuẩn hóa role về lowercase
-    if (token && savedRole) {
-      if (savedRole === "student") navigate("/");
-      else if (savedRole === "teacher") navigate("/teacher");
-      else if (savedRole === "admin") navigate("/admin");
-      else navigate("/");
-    }
-  }, [navigate]);
-
   // Hàm xử lý khi Form hợp lệ
   const onValid = async (data: User) => {
     try {
-      setIsLoading(true); // Bật trạng thái loading khi bắt đầu bắn API
+      setIsLoading(true);
 
-      // Gọi qua authApi tập trung bằng Axios
       const res = await authApi.login({
         email: data.email,
         password: data.password,
@@ -42,7 +29,7 @@ const Login = () => {
 
       const result = res.data;
 
-      // Lưu Token thông hành
+      // Lưu Token, Role & User Info khi đăng nhập thành công
       localStorage.setItem("accessToken", result.accessToken);
 
       const loggedInUser = result.data;
@@ -51,29 +38,31 @@ const Login = () => {
       if (normalizedRole) {
         localStorage.setItem("userRole", normalizedRole);
       }
+      if (loggedInUser) {
+        localStorage.setItem("user", JSON.stringify(loggedInUser));
+      }
 
       toast.success(result.message || "Đăng nhập thành công.");
 
-      // Phân quyền điều hướng (Authorization)
-      if (normalizedRole === "teacher") {
-        navigate("/teacher");
+      // Phân quyền điều hướng bằng React Router (Single Page Application - 0 RELOAD)
+      if (normalizedRole === "admin") {
+        navigate("/admin", { replace: true });
+      } else if (normalizedRole === "teacher") {
+        navigate("/teacher", { replace: true });
       } else if (normalizedRole === "student") {
-        navigate("/");
-      } else if (normalizedRole === "admin") {
-        navigate("/admin");
+        navigate("/student", { replace: true });
       } else {
-        navigate("/");
+        navigate("/student", { replace: true });
       }
     } catch (error: unknown) {
       if (axios.isAxiosError(error)) {
-        console.log("Lỗi đăng nhập:", error);
-        const serverMessage = error.response?.data?.message || "Email hoặc mật khẩu không chính xác!";
+        const serverMessage = error.response?.data?.message || "Tài khoản hoặc mật khẩu không chính xác!";
         toast.error(serverMessage);
       } else {
         toast.error("Đã xảy ra lỗi hệ thống không xác định.");
       }
     } finally {
-      setIsLoading(false); // Tắt trạng thái loading dù thành công hay thất bại
+      setIsLoading(false);
     }
   };
 

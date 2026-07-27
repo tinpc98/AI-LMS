@@ -121,8 +121,8 @@ export const TeacherHeader: React.FC<TeacherHeaderProps> = React.memo(
               className="user-dropdown-trigger"
             >
               <Avatar
-                src={user?.avatar || undefined}
-                icon={!user?.avatar ? <UserOutlined /> : undefined}
+                src={(user as any)?.avatar || undefined}
+                icon={!(user as any)?.avatar ? <UserOutlined /> : undefined}
                 style={{ backgroundColor: "#1890ff", border: "1px solid #e6f7ff" }}
               />
               {!isMobile && (

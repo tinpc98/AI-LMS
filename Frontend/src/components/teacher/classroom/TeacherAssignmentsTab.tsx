@@ -70,7 +70,7 @@ export const TeacherAssignmentsTab: React.FC<TeacherAssignmentsTabProps> = React
 
       const openCount = assignments.filter((a) => new Date(a.deadline) >= now).length;
       const closedCount = assignments.filter((a) => new Date(a.deadline) < now).length;
-      const aiGeneratedCount = assignments.filter((a) => a.isAIGenerated).length;
+      const aiGeneratedCount = assignments.filter((a) => (a as any).isAIGenerated).length;
 
       return { total, openCount, closedCount, aiGeneratedCount };
     }, [assignments]);
@@ -128,7 +128,7 @@ export const TeacherAssignmentsTab: React.FC<TeacherAssignmentsTabProps> = React
               <Text strong style={{ fontSize: 15 }}>
                 {record.title}
               </Text>
-              {record.isAIGenerated && <Tag color="purple">🤖 AI Created</Tag>}
+              {(record as any).isAIGenerated && <Tag color="purple">🤖 AI Created</Tag>}
             </Space>
             {record.description && (
               <Paragraph type="secondary" ellipsis={{ rows: 2 }} style={{ margin: "4px 0 0", fontSize: 13 }}>

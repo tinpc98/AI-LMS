@@ -1,37 +1,39 @@
 import { useState, useEffect, useRef } from "react";
 
-// Đổi tên biến thành durationInSeconds cho chuẩn logic với ExamPage
-const useExamTimer = (durationInSeconds, examId, onTimeUp) => {
-  const storageKey = `exam_endTime_${examId}`;
+const useExamTimer = (
+  durationInSeconds: number | null,
+  examId?: string,
+  onTimeUp?: () => void,
+  _examEndTime?: string | null
+) => {
+  const storageKey = `exam_endTime_${examId || "default"}`;
 
-  // TỐI ƯU 1: Dùng useRef để giữ hàm onTimeUp mới nhất, tránh lỗi re-render vô tận
   const onTimeUpRef = useRef(onTimeUp);
   useEffect(() => {
     onTimeUpRef.current = onTimeUp;
   }, [onTimeUp]);
 
-  // Đọc trực tiếp từ localStorage ngay khi khởi tạo
-  const [timeLeft, setTimeLeft] = useState(() => {
+  const [timeLeft, setTimeLeft] = useState<number | null>(() => {
+    if (!examId) return durationInSeconds;
     const endTime = localStorage.getItem(storageKey);
     if (endTime) {
       const remaining = Math.round((parseInt(endTime, 10) - Date.now()) / 1000);
       return remaining > 0 ? remaining : 0;
     }
-    return durationInSeconds; // Không nhân 60 nữa vì đây đã là Giây
+    return durationInSeconds;
   });
 
   useEffect(() => {
-    // TỐI ƯU 2: CHẶN LƯU VÀO LOCAL STORAGE KHI API CHƯA TRẢ VỀ DATA (duration <= 0)
     if (!durationInSeconds || durationInSeconds <= 0) return;
 
-    let endTime = localStorage.getItem(storageKey);
+    let endTimeStr = localStorage.getItem(storageKey);
+    let endTime: number;
 
-    if (!endTime) {
-      // Thiết lập mốc kết thúc (tính bằng milli-giây)
+    if (!endTimeStr) {
       endTime = Date.now() + durationInSeconds * 1000;
       localStorage.setItem(storageKey, endTime.toString());
     } else {
-      endTime = parseInt(endTime, 10);
+      endTime = parseInt(endTimeStr, 10);
     }
 
     const updateTimer = () => {
@@ -43,7 +45,6 @@ const useExamTimer = (durationInSeconds, examId, onTimeUp) => {
         setTimeLeft(0);
         localStorage.removeItem(storageKey);
 
-        // Gọi hàm nộp bài thông qua Ref
         if (onTimeUpRef.current) {
           onTimeUpRef.current();
         }
@@ -58,8 +59,7 @@ const useExamTimer = (durationInSeconds, examId, onTimeUp) => {
     return () => clearInterval(interval);
   }, [durationInSeconds, examId, storageKey]);
 
-  // TỐI ƯU 3: Viết lại hàm format thời gian để hỗ trợ đề thi dài hơn 60 phút (hiện cả giờ)
-  const formattedTime = () => {
+  const formattedTime = (): string => {
     if (timeLeft === null || timeLeft === undefined) return "00:00";
 
     const h = Math.floor(timeLeft / 3600)
@@ -70,7 +70,6 @@ const useExamTimer = (durationInSeconds, examId, onTimeUp) => {
       .padStart(2, "0");
     const s = (timeLeft % 60).toString().padStart(2, "0");
 
-    // Nếu đề thi trên 60 phút thì hiện 01:30:00, dưới 60 phút thì hiện 30:00
     return h === "00" ? `${m}:${s}` : `${h}:${m}:${s}`;
   };
 

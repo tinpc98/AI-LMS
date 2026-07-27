@@ -2,7 +2,6 @@ import React from "react";
 import { Row, Col, Card, Table, Tag, Progress, Statistic } from "antd";
 import { AppstoreOutlined, CheckCircleOutlined, ClockCircleOutlined, TeamOutlined } from "@ant-design/icons";
 import { mockClasses } from "../../../features/classManagement/class.mock";
-import { mockCourses } from "../../../features/courseManagement/course.mock";
 import {
   ResponsiveContainer,
   BarChart,
@@ -16,7 +15,6 @@ import {
 export const ClassReport: React.FC = () => {
   const activeClasses = mockClasses.filter((c) => c.status === "Active").length;
   const upcomingClasses = mockClasses.filter((c) => c.status === "Upcoming").length;
-  const completedClasses = mockClasses.filter((c) => c.status === "Completed").length;
 
   const classFillRateData = mockClasses.map((c) => ({
     name: c.className,
@@ -51,8 +49,10 @@ export const ClassReport: React.FC = () => {
       key: "schedule",
       render: (_: any, record: any) => (
         <div className="text-xs text-gray-600">
-          <div>{record.schedule.days?.join(", ")}</div>
-          <div>{record.schedule.startTime} - {record.schedule.endTime}</div>
+          <div>{record.schedule?.days?.join(", ") || "N/A"}</div>
+          <div>
+            {record.schedule?.startTime ? `${record.schedule.startTime} - ${record.schedule.endTime}` : "N/A"}
+          </div>
         </div>
       ),
     },

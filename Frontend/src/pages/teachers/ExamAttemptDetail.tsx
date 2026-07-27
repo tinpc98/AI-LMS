@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axiosClient from "../../api/axiosClient";
 import { toast } from "../../utils/toast";
@@ -23,7 +23,7 @@ export default function ExamAttemptDetail() {
         const data = response.data.data;
         setReviewData(data);
 
-        const initialGrades = {};
+        const initialGrades: Record<string, any> = {};
         data.answersDetail.forEach((ans: any) => {
           if (ans.type === "ESSAY") {
             initialGrades[ans.questionId] = ans.pointsEarned || 0;

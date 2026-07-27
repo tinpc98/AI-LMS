@@ -1,9 +1,14 @@
+import mongoose from "mongoose";
 import { loginService } from "../services/auth.services.js";
 import User from "../models/user.models.js";
 
 export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({ message: "Vui lòng nhập đầy đủ email và mật khẩu!" });
+    }
 
     if (process.env.NODE_ENV === "development") {
       console.log("[Auth] Login attempt:", {
@@ -22,7 +27,7 @@ export const login = async (req, res) => {
     }
 
     return res.status(200).json({
-      message: "Đăng nhập thành công rực rỡ!",
+      message: "Đăng nhập thành công!",
       accessToken: result.accessToken,
       data: result.user,
     });
@@ -37,7 +42,14 @@ export const login = async (req, res) => {
 
 export const getMyProfile = async (req, res) => {
   try {
-    const userId = req.user.id;
+    const userId = req.user.id || req.user._id;
+    if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(401).json({
+        success: false,
+        message: "Phiên làm việc không hợp lệ!",
+      });
+    }
+
     const user = await User.findById(userId).select("-password");
 
     if (!user) {
@@ -63,15 +75,23 @@ export const getMyProfile = async (req, res) => {
 
 export const updateMyProfile = async (req, res) => {
   try {
-    const userId = req.user.id;
+    const userId = req.user.id || req.user._id;
+    if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(401).json({
+        success: false,
+        message: "Phiên làm việc không hợp lệ!",
+      });
+    }
+
     const { fullName, phone, avatar, teachingSubjects, availabilitySchedule } = req.body;
+    const userRole = (req.user.role || "").toLowerCase();
 
     const updateData = {
       ...(fullName && { fullName }),
       ...(phone && { phone }),
       ...(avatar && { avatar }),
-      ...(req.user.role === "Teacher" && teachingSubjects && { teachingSubjects }),
-      ...(req.user.role === "Teacher" && availabilitySchedule && { availabilitySchedule }),
+      ...(userRole === "teacher" && teachingSubjects && { teachingSubjects }),
+      ...(userRole === "teacher" && availabilitySchedule && { availabilitySchedule }),
     };
 
     const updatedUser = await User.findByIdAndUpdate(userId, updateData, {
@@ -141,6 +161,10 @@ export const getAllUsers = async (req, res) => {
 export const getUserById = async (req, res) => {
   try {
     const { id } = req.params;
+    if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(404).json({ success: false, message: "Người dùng không tồn tại!" });
+    }
+
     const user = await User.findById(id).select("-password");
 
     if (!user) {
@@ -194,6 +218,10 @@ export const createUser = async (req, res) => {
 export const updateUser = async (req, res) => {
   try {
     const { id } = req.params;
+    if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "ID người dùng không hợp lệ!" });
+    }
+
     const { password, ...updateFields } = req.body;
 
     const user = await User.findById(id);
@@ -224,7 +252,12 @@ export const updateUser = async (req, res) => {
 export const deleteUser = async (req, res) => {
   try {
     const { id } = req.params;
-    const user = await User.findByIdAndDelete(id);
+    if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "ID người dùng không hợp lệ!" });
+    }
+
+    const adminUserId = req.user?.id || req.user?._id;
+    const user = await User.softDelete(id, adminUserId);
 
     if (!user) {
       return res.status(404).json({ message: "Người dùng không tồn tại" });

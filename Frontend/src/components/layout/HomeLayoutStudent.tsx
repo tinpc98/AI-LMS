@@ -1,20 +1,76 @@
+import React, { useState, useEffect, useCallback } from "react";
+import { Layout } from "antd";
 import { Outlet } from "react-router-dom";
-import SidebarStudent from "./SidebarStudent";
-import HeaderStudent from "./HeaderStudent";
 
-const HomeLayoutStudent = () => {
+import { StudentSidebar } from "./student/StudentSidebar";
+import { StudentHeader } from "./student/StudentHeader";
+import { StudentContent } from "./student/StudentContent";
+
+export const HomeLayoutStudent: React.FC = () => {
+  const [collapsed, setCollapsed] = useState<boolean>(false);
+  const [mobileOpen, setMobileOpen] = useState<boolean>(false);
+  const [isMobile, setIsMobile] = useState<boolean>(false);
+
+  // Auto detect viewport width for responsive behavior
+  const handleResize = useCallback(() => {
+    const width = window.innerWidth;
+    if (width < 768) {
+      setIsMobile(true);
+      setCollapsed(false);
+    } else if (width < 1024) {
+      setIsMobile(false);
+      setCollapsed(true);
+    } else {
+      setIsMobile(false);
+      setCollapsed(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, [handleResize]);
+
+  const toggleCollapse = useCallback(() => {
+    setCollapsed((prev) => !prev);
+  }, []);
+
+  const toggleMobileDrawer = useCallback(() => {
+    setMobileOpen((prev) => !prev);
+  }, []);
+
+  const handleMobileClose = useCallback(() => {
+    setMobileOpen(false);
+  }, []);
+
   return (
-    <div className="flex min-h-screen bg-background font-body-md text-body-md selection:bg-primary-container selection:text-on-primary-container">
-      <SidebarStudent />
+    <Layout style={{ minHeight: "100vh", backgroundColor: "#f5f5f5" }}>
+      {/* 1. Sidebar Navigation */}
+      <StudentSidebar
+        collapsed={collapsed}
+        onCollapse={setCollapsed}
+        mobileOpen={mobileOpen}
+        onMobileClose={handleMobileClose}
+        isMobile={isMobile}
+      />
 
-      <div className="flex flex-col flex-grow min-w-0">
-        <HeaderStudent />
+      {/* 2. Main Content Layout Area */}
+      <Layout style={{ flex: 1, minWidth: 0 }}>
+        {/* Sticky Header */}
+        <StudentHeader
+          collapsed={collapsed}
+          onToggleCollapse={toggleCollapse}
+          onToggleMobileDrawer={toggleMobileDrawer}
+          isMobile={isMobile}
+        />
 
-        <main className="p-6 flex-grow overflow-y-auto">
+        {/* Dynamic Page Content */}
+        <StudentContent>
           <Outlet />
-        </main>
-      </div>
-    </div>
+        </StudentContent>
+      </Layout>
+    </Layout>
   );
 };
 

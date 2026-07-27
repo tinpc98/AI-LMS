@@ -51,7 +51,8 @@ export const updateCourse = async (req, res) => {
 export const deleteCourse = async (req, res) => {
   try {
     const { id } = req.params;
-    await courseService.deleteCourse(id);
+    const userId = req.user?.id || req.user?._id;
+    await courseService.deleteCourse(id, userId);
     return sendSuccess(res, "Xóa khóa học thành công");
   } catch (error) {
     return sendError(res, error.message || "Lỗi khi xóa khóa học", 400);

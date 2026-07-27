@@ -8,6 +8,7 @@ const axiosClient = axios.create({
     "Content-Type": "application/json",
   },
 });
+
 // 1. REQUEST INTERCEPTOR: Tự động đính kèm Authorization Header nếu có Token
 axiosClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
@@ -18,7 +19,6 @@ axiosClient.interceptors.request.use(
         config.headers.Authorization = `Bearer ${token}`;
       }
 
-      // In log debug khi đang ở môi trường phát triển (Development)
       if (import.meta.env.DEV) {
         console.log(
           "[axios] Request:",
@@ -31,7 +31,6 @@ axiosClient.interceptors.request.use(
     }
     return config;
   },
-  // FIX LỖI: Định nghĩa kiểu dữ liệu là AxiosError thay vì any vô tổ chức
   (error: AxiosError) => {
     if (import.meta.env.DEV) {
       console.log("[axios] Request error:", error.message);
@@ -43,15 +42,12 @@ axiosClient.interceptors.request.use(
 // 2. RESPONSE INTERCEPTOR: Quản lý phản hồi và Tự động Logout khi Token hết hạn
 axiosClient.interceptors.response.use(
   (response) => {
-    // Log phản hồi thành công khi dev local
     if (import.meta.env.DEV) {
       console.log("[axios] Response:", response.status, response.config.url);
     }
     return response;
   },
-  // FIX LỖI: Định nghĩa kiểu dữ liệu là AxiosError để dập tắt lỗi Unexpected any
   (error: AxiosError) => {
-    // Log lỗi phản hồi khi dev local
     if (import.meta.env.DEV) {
       console.log(
         "[axios] Response error:",
@@ -60,14 +56,24 @@ axiosClient.interceptors.response.use(
       );
     }
 
-    // Tự động xử lý khi Token hết hạn (401) hoặc Không có quyền (403)
-    if (error.response?.status === 401) {
-      localStorage.removeItem("accessToken");
-      toast.error(
-        "Phiên đăng nhập của bạn đã hết hạn. Vui lòng đăng nhập lại!",
-        "Phiên hết hạn"
-      );
-      window.location.href = "/login";
+    const requestUrl = error.config?.url || "";
+    const isLoginRequest = requestUrl.includes("/api/auth/login");
+
+    // Chỉ tự động xử lý hết hạn phiên đăng nhập (401) cho các protected API, KHÔNG can thiệp vào API login
+    if (error.response?.status === 401 && !isLoginRequest) {
+      const token = localStorage.getItem("accessToken");
+      if (token) {
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("userRole");
+        localStorage.removeItem("user");
+        toast.error(
+          "Phiên đăng nhập của bạn đã hết hạn. Vui lòng đăng nhập lại!",
+          "Phiên hết hạn"
+        );
+        if (window.location.pathname !== "/login") {
+          window.location.href = "/login";
+        }
+      }
     } else if (error.response?.status === 403) {
       toast.error(
         "Bạn không có quyền thực hiện thao tác này!",
