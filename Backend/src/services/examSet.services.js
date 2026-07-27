@@ -501,6 +501,111 @@ export const updateQuestionInExamSetService = async (examSetId, ownerId, questio
 };
 
 /**
+ * Reorder questions within an exam set
+ * @param {string} examSetId
+ * @param {string} ownerId
+ * @param {Array} reorderItems
+ * @returns {Object} Updated exam set
+ */
+export const reorderQuestionsInExamSetService = async (examSetId, ownerId, reorderItems) => {
+  if (!examSetId || !Types.ObjectId.isValid(examSetId)) {
+    const error = new Error("examSetId không hợp lệ");
+    error.status = 400;
+    throw error;
+  }
+
+  if (!Array.isArray(reorderItems) || reorderItems.length === 0) {
+    const error = new Error("Payload questions phải là một mảng và không được rỗng");
+    error.status = 400;
+    throw error;
+  }
+
+  const questionIdSet = new Set();
+  const orderSet = new Set();
+  const normalizedItems = reorderItems.map((item, index) => {
+    if (!item || typeof item !== "object") {
+      const error = new Error(`questions[${index}] phải là object chứa questionId và order`);
+      error.status = 400;
+      throw error;
+    }
+
+    const { questionId, order } = item;
+
+    if (!questionId || typeof questionId !== "string" || questionId.trim() === "") {
+      const error = new Error(`questions[${index}].questionId là bắt buộc`);
+      error.status = 400;
+      throw error;
+    }
+
+    if (order === undefined || order === null || typeof order !== "number" || !Number.isInteger(order) || order < 0) {
+      const error = new Error(`questions[${index}].order phải là số nguyên không âm`);
+      error.status = 400;
+      throw error;
+    }
+
+    const trimmedId = questionId.trim();
+    if (questionIdSet.has(trimmedId)) {
+      const error = new Error("Không được phép duplicate questionId trong payload");
+      error.status = 400;
+      throw error;
+    }
+
+    if (orderSet.has(order)) {
+      const error = new Error("Không được phép duplicate order trong payload");
+      error.status = 400;
+      throw error;
+    }
+
+    questionIdSet.add(trimmedId);
+    orderSet.add(order);
+
+    return { questionId: trimmedId, order };
+  });
+
+  const examSet = await ExamSet.findOne({
+    _id: examSetId,
+    ownerId: ownerId,
+    isDeleted: false,
+  });
+
+  if (!examSet) {
+    const error = new Error("Bộ đề thi không tồn tại hoặc bạn không có quyền truy cập");
+    error.status = 404;
+    throw error;
+  }
+
+  if (examSet.status === "published") {
+    const error = new Error("Không thể reorder câu hỏi khi bộ đề thi đang ở trạng thái Published");
+    error.status = 403;
+    throw error;
+  }
+
+  const existingQuestionIds = new Set(examSet.questions.map(q => q.questionId));
+  for (const { questionId } of normalizedItems) {
+    if (!existingQuestionIds.has(questionId)) {
+      const error = new Error(`Câu hỏi ${questionId} không tồn tại trong bộ đề thi`);
+      error.status = 404;
+      throw error;
+    }
+  }
+
+  // Update orders on matching questions
+  examSet.questions = examSet.questions.map(question => {
+    const reorderItem = normalizedItems.find(item => item.questionId === question.questionId);
+    if (reorderItem) {
+      question.order = reorderItem.order;
+    }
+    return question;
+  });
+
+  // Sort the questions array by order ascending
+  examSet.questions.sort((a, b) => a.order - b.order);
+
+  const updatedExamSet = await examSet.save();
+  return updatedExamSet.populate("folderId", "name").populate("ownerId", "fullName email");
+};
+
+/**
  * Delete question from exam set
  * @param {string} examSetId
  * @param {string} currentUserId

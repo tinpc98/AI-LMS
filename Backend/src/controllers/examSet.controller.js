@@ -1,5 +1,5 @@
 // File: src/controllers/examSet.controller.js
-import { createExamSetService, getExamSetsService, updateExamSetService, deleteExamSetService, restoreExamSetService, addQuestionToExamSetService, updateQuestionInExamSetService, deleteQuestionFromExamSetService } from "../services/examSet.services.js";
+import { createExamSetService, getExamSetsService, updateExamSetService, deleteExamSetService, restoreExamSetService, addQuestionToExamSetService, updateQuestionInExamSetService, deleteQuestionFromExamSetService, reorderQuestionsInExamSetService } from "../services/examSet.services.js";
 
 /**
  * Create new exam set
@@ -309,6 +309,34 @@ export const deleteQuestionInExamSet = async (req, res) => {
     return res.status(status).json({
       success: false,
       message: error.message || "Lỗi xóa câu hỏi",
+    });
+  }
+};
+
+/**
+ * Reorder questions within exam set
+ * PATCH /api/exam-sets/:id/questions/reorder
+ */
+export const reorderQuestionsInExamSet = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user.id;
+    const reorderItems = req.body.questions;
+
+    const examSet = await reorderQuestionsInExamSetService(id, userId, reorderItems);
+
+    return res.status(200).json({
+      success: true,
+      message: "Sắp xếp lại câu hỏi thành công",
+      data: examSet,
+    });
+  } catch (error) {
+    console.error("[ExamSet] Reorder questions error:", error.message);
+
+    const status = error.status || 500;
+    return res.status(status).json({
+      success: false,
+      message: error.message || "Lỗi sắp xếp lại câu hỏi",
     });
   }
 };
