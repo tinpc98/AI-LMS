@@ -10,10 +10,16 @@ import {
   RemoveStudent,
   AddResource,
   RemoveResource,
+  ClassTrashList,
+  RestoreClass,
+  PermanentDeleteClass,
 } from "../controllers/class.controller.js";
 import { verifyUser, isAdmin, isTeacher } from "../middlewares/auth.middlewares.js";
 
 const route = Router();
+
+// API Thùng rác (phải đặt trước /:id)
+route.get("/trash", verifyUser, ClassTrashList);
 
 // Xem danh sách và chi tiết lớp học
 route.get("/", verifyUser, ClassList);
@@ -30,5 +36,7 @@ route.put("/:id/assign-teacher", verifyUser, isAdmin, AssignTeacher);
 route.post("/:id/students", verifyUser, isAdmin, AssignStudent);
 route.delete("/:id/students/:studentId", verifyUser, isAdmin, RemoveStudent);
 route.delete("/:id", verifyUser, isAdmin, DeleteClass);
+route.patch("/:id/restore", verifyUser, isAdmin, RestoreClass);
+route.delete("/:id/force", verifyUser, isAdmin, PermanentDeleteClass);
 
 export default route;
