@@ -1,5 +1,5 @@
 // File: src/controllers/examSet.controller.js
-import { createExamSetService } from "../services/examSet.services.js";
+import { createExamSetService, getExamSetsService } from "../services/examSet.services.js";
 
 /**
  * Create new exam set
@@ -49,6 +49,44 @@ export const createExamSet = async (req, res) => {
     return res.status(status).json({
       success: false,
       message: error.message || "Lỗi tạo bộ đề thi",
+    });
+  }
+};
+
+/**
+ * Get exam sets with filters
+ * GET /api/exam-sets
+ * Query: folderId?, status?, page?, limit?
+ */
+export const getExamSets = async (req, res) => {
+  try {
+    const userId = req.user.id; // From verifyUser middleware (JWT)
+    const { folderId, status, page = 1, limit = 10 } = req.query;
+
+    // Prepare filters
+    const filters = {
+      folderId,
+      status,
+      page,
+      limit,
+    };
+
+    // Get exam sets
+    const result = await getExamSetsService(userId, filters);
+
+    return res.status(200).json({
+      success: true,
+      message: "Lấy danh sách bộ đề thi thành công",
+      data: result.examSets,
+      pagination: result.pagination,
+    });
+  } catch (error) {
+    console.error("[ExamSet] Get error:", error.message);
+
+    const status = error.status || 500;
+    return res.status(status).json({
+      success: false,
+      message: error.message || "Lỗi lấy danh sách bộ đề thi",
     });
   }
 };

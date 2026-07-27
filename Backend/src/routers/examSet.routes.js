@@ -1,6 +1,6 @@
 // File: src/routers/examSet.routes.js
 import express from "express";
-import { createExamSet } from "../controllers/examSet.controller.js";
+import { createExamSet, getExamSets } from "../controllers/examSet.controller.js";
 import { verifyUser } from "../middlewares/auth.middlewares.js";
 
 const router = express.Router();
@@ -14,5 +14,12 @@ router.use(verifyUser);
  * Body: { folderId, title, description?, tags? }
  */
 router.post("/", createExamSet);
+
+/**
+ * GET /api/exam-sets
+ * Get exam sets with filters
+ * Query: folderId?, status?, page?, limit?
+ */
+router.get("/", getExamSets);
 
 export default router;
