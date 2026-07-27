@@ -1,57 +1,104 @@
-import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
-import User from "../models/user.models.js";
+// File: src/services/auth.services.js
+/**
+ * Authentication Service
+ * Contains all business logic for authentication
+ * - User registration and login
+ * - Token management
+ * - Password operations
+ */
 
+/**
+ * Register new user
+ * @param {Object} userData - User registration data
+ * @returns {Object} User data with token
+ */
+export const registerService = async (userData) => {
+  // Business logic to be implemented
+  throw new Error("Register service not implemented");
+};
+
+/**
+ * Login user
+ * @param {string} email - User email
+ * @param {string} password - User password
+ * @returns {Object} User data with access token
+ */
 export const loginService = async (email, password) => {
-  // Chuẩn hóa email đầu vào để tìm kiếm chính xác tuyệt đối
-  const normalizedEmail = String(email).trim().toLowerCase();
+  // Business logic to be implemented
+  throw new Error("Login service not implemented");
+};
 
-  // Bước 1: Tìm xem email này có tồn tại trong hệ thống không (bao gồm tài khoản đã xóa để kiểm tra vô hiệu hóa)
-  const user = await User.findOne({ email: normalizedEmail }).withDeleted();
-  if (!user) {
-    const error = new Error("Tài khoản hoặc email không tồn tại trên hệ thống!");
-    error.status = 401;
-    throw error;
-  }
+/**
+ * Logout user
+ * @param {string} userId - User ID
+ * @param {string} token - User token
+ * @returns {Object} Logout result
+ */
+export const logoutService = async (userId, token) => {
+  // Business logic to be implemented
+  throw new Error("Logout service not implemented");
+};
 
-  // Phân vùng kiểm tra tài khoản đã bị vô hiệu hóa / Soft Delete
-  if (user.isDeleted) {
-    const error = new Error("Tài khoản đã bị vô hiệu hóa.");
-    error.status = 403;
-    throw error;
-  }
+/**
+ * Refresh access token
+ * @param {string} refreshToken - Refresh token
+ * @returns {Object} New access token
+ */
+export const refreshTokenService = async (refreshToken) => {
+  // Business logic to be implemented
+  throw new Error("Refresh token service not implemented");
+};
 
-  // Bước 2: Đối chiếu mật khẩu thô người dùng nhập với mật khẩu đã băm (hash) trong DB
-  const isMatch = await bcrypt.compare(password, user.password);
-  if (!isMatch) {
-    const error = new Error("Mật khẩu không chính xác, vui lòng thử lại!");
-    error.status = 401;
-    throw error;
-  }
+/**
+ * Get user profile
+ * @param {string} userId - User ID
+ * @returns {Object} User profile data
+ */
+export const getUserProfileService = async (userId) => {
+  // Business logic to be implemented
+  throw new Error("Get user profile service not implemented");
+};
 
-  // Kiểm tra tài khoản có bị khóa hay không
-  if (user.status === "Inactive" || user.status === "Locked") {
-    const error = new Error("Tài khoản của bạn đã bị khóa hoặc ngừng hoạt động!");
-    error.status = 403;
-    throw error;
-  }
+/**
+ * Update user profile
+ * @param {string} userId - User ID
+ * @param {Object} updateData - Data to update
+ * @returns {Object} Updated user data
+ */
+export const updateUserProfileService = async (userId, updateData) => {
+  // Business logic to be implemented
+  throw new Error("Update user profile service not implemented");
+};
 
-  // Bước 3: Tạo Access Token thời hạn 1 ngày
-  const accessToken = jwt.sign(
-    { id: user._id, email: user.email, role: user.role },
-    process.env.JWT_SECRET || "123456",
-    { expiresIn: "1d" }
-  );
+/**
+ * Change user password
+ * @param {string} userId - User ID
+ * @param {string} currentPassword - Current password
+ * @param {string} newPassword - New password
+ * @returns {Object} Result
+ */
+export const changePasswordService = async (userId, currentPassword, newPassword) => {
+  // Business logic to be implemented
+  throw new Error("Change password service not implemented");
+};
 
-  // Bước 4: Trả dữ liệu sạch về cho Controller
-  return {
-    accessToken,
-    user: {
-      id: user._id,
-      fullName: user.fullName,
-      email: user.email,
-      role: user.role,
-      avatar: user.avatar || "",
-    },
-  };
+/**
+ * Send password reset email
+ * @param {string} email - User email
+ * @returns {Object} Result
+ */
+export const forgotPasswordService = async (email) => {
+  // Business logic to be implemented
+  throw new Error("Forgot password service not implemented");
+};
+
+/**
+ * Reset password with token
+ * @param {string} token - Reset token
+ * @param {string} newPassword - New password
+ * @returns {Object} Result
+ */
+export const resetPasswordService = async (token, newPassword) => {
+  // Business logic to be implemented
+  throw new Error("Reset password service not implemented");
 };

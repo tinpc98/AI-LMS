@@ -1,67 +1,153 @@
 // File: src/middlewares/auth.middlewares.js
-import jwt from "jsonwebtoken";
+/**
+ * Authentication Middlewares
+ * - verifyUser: Verify JWT token and authenticate user
+ * - authorize: Check user roles and permissions
+ */
 
-// Kiểm tra xem người dùng đã đăng nhập hay chưa
+/**
+ * Verify User Authentication
+ * Middleware to check if user is authenticated
+ * Extracts and validates JWT token from Authorization header
+ * 
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @param {Function} next - Express next middleware function
+ * 
+ * Usage: router.get("/protected", verifyUser, handler)
+ */
 export const verifyUser = (req, res, next) => {
-  const { authorization } = req.headers;
-
-  if (!authorization) {
-    return res.status(401).json({ message: "Bạn chưa đăng nhập hệ thống!" });
-  }
-
   try {
-    const token = authorization.split(" ")[1]; // Tách chuỗi "Bearer <token>"
-    if (!token) {
-      return res.status(401).json({ message: "Định dạng token không hợp lệ!" });
-    }
+    // Business logic to be implemented
+    // 1. Extract token from Authorization header
+    // 2. Verify token signature and expiration
+    // 3. Attach user data to req.user
+    // 4. Call next() if successful
+    
+    res.status(401).json({
+      message: "Verify user middleware - not implemented",
+    });
+  } catch (error) {
+    console.error("[Auth Middleware] Verify user error:", error);
+    res.status(401).json({
+      message: "Authentication failed",
+      error: error.message,
+    });
+  }
+};
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || "123456");
+/**
+ * Authorize User Role - Teacher
+ * Middleware to check if user has Teacher or Admin role
+ * Must be used after verifyUser middleware
+ * 
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @param {Function} next - Express next middleware function
+ * 
+ * Usage: router.get("/admin", verifyUser, isTeacher, handler)
+ */
+export const isTeacher = (req, res, next) => {
+  try {
+    // Business logic to be implemented
+    // 1. Check if req.user exists
+    // 2. Check if user role is "teacher" or "admin"
+    // 3. Call next() if authorized, else return 403
+    
+    res.status(403).json({
+      message: "Is teacher middleware - not implemented",
+    });
+  } catch (error) {
+    console.error("[Auth Middleware] Is teacher error:", error);
+    res.status(403).json({
+      message: "Authorization failed",
+      error: error.message,
+    });
+  }
+};
 
-    // Chuẩn hóa đính kèm cả id và _id để tránh mismatch giữa các controllers
-    const userId = decoded.id || decoded._id;
-    req.user = {
-      ...decoded,
-      id: userId,
-      _id: userId,
-    };
+/**
+ * Authorize User Role - Admin
+ * Middleware to check if user has Admin role only
+ * Must be used after verifyUser middleware
+ * 
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @param {Function} next - Express next middleware function
+ * 
+ * Usage: router.get("/admin", verifyUser, isAdmin, handler)
+ */
+export const isAdmin = (req, res, next) => {
+  try {
+    // Business logic to be implemented
+    // 1. Check if req.user exists
+    // 2. Check if user role is "admin"
+    // 3. Call next() if authorized, else return 403
+    
+    res.status(403).json({
+      message: "Is admin middleware - not implemented",
+    });
+  } catch (error) {
+    console.error("[Auth Middleware] Is admin error:", error);
+    res.status(403).json({
+      message: "Authorization failed",
+      error: error.message,
+    });
+  }
+};
 
+/**
+ * Authorize User Role - Student
+ * Middleware to check if user has Student role
+ * Must be used after verifyUser middleware
+ * 
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @param {Function} next - Express next middleware function
+ * 
+ * Usage: router.get("/student", verifyUser, isStudent, handler)
+ */
+export const isStudent = (req, res, next) => {
+  try {
+    // Business logic to be implemented
+    // 1. Check if req.user exists
+    // 2. Check if user role is "student"
+    // 3. Call next() if authorized, else return 403
+    
+    res.status(403).json({
+      message: "Is student middleware - not implemented",
+    });
+  } catch (error) {
+    console.error("[Auth Middleware] Is student error:", error);
+    res.status(403).json({
+      message: "Authorization failed",
+      error: error.message,
+    });
+  }
+};
+
+/**
+ * Optional Authentication
+ * Middleware to check authentication but not require it
+ * Useful for endpoints that have different behavior for logged-in vs non-logged-in users
+ * 
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @param {Function} next - Express next middleware function
+ * 
+ * Usage: router.get("/data", optionalAuth, handler)
+ */
+export const optionalAuth = (req, res, next) => {
+  try {
+    // Business logic to be implemented
+    // 1. Try to extract and verify token
+    // 2. If valid, attach user data to req.user
+    // 3. If invalid or missing, continue without user data
+    // 4. Always call next()
+    
     next();
   } catch (error) {
-    return res
-      .status(401)
-      .json({ message: "Token không hợp lệ hoặc đã hết hạn!" });
+    console.error("[Auth Middleware] Optional auth error:", error);
+    next();
   }
-};
-
-// Kiểm tra xem có phải Giáo viên hoặc Admin hay không
-export const isTeacher = (req, res, next) => {
-  if (!req.user) {
-    return res
-      .status(401)
-      .json({ message: "Bạn chưa đăng nhập hoặc không có thông tin xác thực!" });
-  }
-  const userRole = (req.user.role || "").toLowerCase();
-  const allowedRoles = ["teacher", "admin"];
-  if (!allowedRoles.includes(userRole)) {
-    return res.status(403).json({
-      message: "Quyền truy cập bị từ chối. Chỉ Giáo viên hoặc Admin mới được phép thực hiện chức năng này",
-    });
-  }
-  next();
-};
-
-// Kiểm tra xem có phải Admin hay không
-export const isAdmin = (req, res, next) => {
-  if (!req.user) {
-    return res
-      .status(401)
-      .json({ message: "Bạn chưa đăng nhập hoặc không có thông tin xác thực!" });
-  }
-  const userRole = (req.user.role || "").toLowerCase();
-  if (userRole !== "admin") {
-    return res.status(403).json({
-      message: "Quyền truy cập bị từ chối. Chỉ Quản trị viên (Admin) mới có quyền quản lý hệ thống",
-    });
-  }
-  next();
 };
