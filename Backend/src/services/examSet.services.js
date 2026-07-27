@@ -189,6 +189,116 @@ export const getExamSetDetailService = async (examSetId, user) => {
   return buildExamSetDetailResponse(examSet, access);
 };
 
+/**
+ * Get version history for an exam set lineage
+ * @param {string} examSetId - source exam set id
+ * @param {string} currentUserId
+ * @param {string} currentUserRole
+ * @param {Object} options - { page, limit, sort }
+ */
+export const getExamSetVersionsService = async (examSetId, currentUserId, currentUserRole, options = {}) => {
+  if (!examSetId || !Types.ObjectId.isValid(examSetId)) {
+    const error = new Error("examSetId không hợp lệ");
+    error.status = 400;
+    throw error;
+  }
+
+  const source = await ExamSet.findOne({ _id: examSetId, isDeleted: false }).lean();
+  if (!source) {
+    const error = new Error("Bộ đề thi không tồn tại hoặc đã bị xóa");
+    error.status = 404;
+    throw error;
+  }
+
+  const userRole = String(currentUserRole || "").toLowerCase();
+  const isOwner = String(source.ownerId || source.ownerId?._id || "") === String(currentUserId);
+  const isAdmin = userRole === "admin";
+
+  if (!isOwner && !isAdmin) {
+    // Follow existing convention: return 404 to avoid revealing resource
+    const error = new Error("Bộ đề thi không tồn tại hoặc bạn không có quyền truy cập");
+    error.status = 404;
+    throw error;
+  }
+
+  const rootId = source.rootExamSetId ? String(source.rootExamSetId) : String(source._id);
+
+  // Build base filter: include root doc and any doc that references rootExamSetId
+  const filter = {
+    $or: [
+      { _id: rootId },
+      { rootExamSetId: rootId },
+    ],
+    isDeleted: false,
+  };
+
+  // If not admin, restrict to same owner as source to avoid leaking cross-owner lineage
+  if (!isAdmin) {
+    filter.ownerId = String(source.ownerId);
+  }
+
+  const page = Math.max(1, Number(options.page) || 1);
+  const limit = Math.max(1, Math.min(100, Number(options.limit) || 20));
+  const sortDir = String(options.sort || "desc").toLowerCase() === "asc" ? 1 : -1;
+
+  const projection = {
+    questions: 0,
+    settings: 0,
+    shareRecords: 0,
+    auditLogs: 0,
+    aiUsageLogs: 0,
+    reviewNotes: 0,
+    __v: 0,
+  };
+
+  const query = ExamSet.find(filter).select(projection).lean();
+
+  // Sorting by versionNumber only
+  query.sort({ versionNumber: sortDir });
+
+  const skip = (page - 1) * limit;
+  query.skip(skip).limit(limit);
+
+  const [items, total] = await Promise.all([
+    query.exec(),
+    ExamSet.countDocuments(filter),
+  ]);
+
+  const versions = (items || []).map((doc) => ({
+    id: String(doc._id),
+    title: doc.title,
+    versionNumber: doc.versionNumber,
+    versionLabel: doc.versionLabel || null,
+    versionNote: doc.versionNote || null,
+    status: doc.status,
+    rootExamSetId: doc.rootExamSetId ? String(doc.rootExamSetId) : String(doc._id),
+    previousVersionId: doc.previousVersionId ? String(doc.previousVersionId) : null,
+    isLatestVersion: !!doc.isLatestVersion,
+    ownerId: doc.ownerId ? String(doc.ownerId) : null,
+    questionCount: doc.questionCount || 0,
+    totalPoints: doc.totalPoints || 0,
+    publishedAt: doc.publishedAt || null,
+    approvedAt: doc.approvedAt || null,
+    archivedAt: doc.archivedAt || null,
+    createdAt: doc.createdAt,
+    updatedAt: doc.updatedAt,
+  }));
+
+  return {
+    rootExamSetId: rootId,
+    currentExamSetId: String(source._id),
+    versions,
+    pagination: {
+      page,
+      limit,
+      totalItems: total,
+      totalPages: Math.max(1, Math.ceil(total / limit)),
+      hasNextPage: page * limit < total,
+      hasPreviousPage: page > 1,
+    },
+  };
+};
+
 export const isEditableExamSetStatus = (status) => {
   return EDITABLE_EXAM_STATUSES.includes(String(status).toLowerCase());
 };

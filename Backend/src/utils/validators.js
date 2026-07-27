@@ -1,4 +1,4 @@
-import { body, validationResult } from "express-validator";
+import { body, validationResult, query } from "express-validator";
 
 const stripTags = (value) => {
   if (typeof value !== "string") {
@@ -735,6 +735,28 @@ export const reorderQuestionsValidation = [
   body("questions.*.order")
     .isInt({ min: 0 })
     .withMessage("order phải là số nguyên không âm cho mỗi câu hỏi"),
+
+  handleValidationErrors,
+];
+
+export const examSetVersionsValidation = [
+  query("page")
+    .optional()
+    .isInt({ min: 1 })
+    .withMessage("page phải là số nguyên >= 1")
+    .toInt(),
+
+  query("limit")
+    .optional()
+    .isInt({ min: 1, max: 100 })
+    .withMessage("limit phải là số nguyên giữa 1 và 100")
+    .toInt(),
+
+  query("sort")
+    .optional()
+    .trim()
+    .isIn(["asc", "desc"])
+    .withMessage("sort chỉ chấp nhận 'asc' hoặc 'desc'"),
 
   handleValidationErrors,
 ];

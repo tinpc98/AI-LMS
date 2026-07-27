@@ -1,5 +1,5 @@
 // File: src/controllers/examSet.controller.js
-import { createExamSetService, getExamSetsService, updateExamSetService, deleteExamSetService, restoreExamSetService, addQuestionToExamSetService, updateQuestionInExamSetService, deleteQuestionFromExamSetService, reorderQuestionsInExamSetService, getExamSetDetailService, saveDraftExamSetService, duplicateExamSetService, updateExamSetTagsService, createNewExamSetVersionService } from "../services/examSet.services.js";
+import { createExamSetService, getExamSetsService, updateExamSetService, deleteExamSetService, restoreExamSetService, addQuestionToExamSetService, updateQuestionInExamSetService, deleteQuestionFromExamSetService, reorderQuestionsInExamSetService, getExamSetDetailService, saveDraftExamSetService, duplicateExamSetService, updateExamSetTagsService, createNewExamSetVersionService, getExamSetVersionsService } from "../services/examSet.services.js";
 import { Types } from "mongoose";
 
 /**
@@ -176,6 +176,28 @@ export const createNewExamSetVersion = async (req, res) => {
       success: false,
       message: error.message || "Lỗi tạo phiên bản mới của bộ đề thi",
     });
+  }
+};
+
+export const getExamSetVersions = async (req, res) => {
+  try {
+    const { examSetId } = req.params;
+
+    if (!examSetId || !Types.ObjectId.isValid(examSetId)) {
+      return res.status(400).json({ success: false, message: "examSetId không hợp lệ" });
+    }
+
+    const page = req.query.page ? Number(req.query.page) : undefined;
+    const limit = req.query.limit ? Number(req.query.limit) : undefined;
+    const sort = req.query.sort ? String(req.query.sort) : undefined;
+
+    const result = await getExamSetVersionsService(examSetId, req.user.id, req.user.role, { page, limit, sort });
+
+    return res.status(200).json({ success: true, message: "Exam set version history retrieved successfully", data: result });
+  } catch (error) {
+    console.error("[ExamSet] Get versions error:", error.message);
+    const status = error.status || 500;
+    return res.status(status).json({ success: false, message: error.message || "Lỗi lấy lịch sử phiên bản bộ đề thi" });
   }
 };
 
