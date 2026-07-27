@@ -6,7 +6,10 @@
   "scripts": {
     "dev": "nodemon main.js",
     "test:validator": "node ./src/scripts/runMultipleChoiceValidatorTests.js",
-    "test:essay-validator": "node ./src/scripts/runEssayQuestionValidationTests.js"
+    "test:essay-validator": "node ./src/scripts/runEssayQuestionValidationTests.js",
+    "test:examset-metrics": "node ./src/scripts/runExamSetMetricsTests.js",
+    "test:examset-question-metrics-flow": "node ./src/scripts/runExamSetQuestionMetricsFlowTests.js",
+    "test:all": "npm run test:validator && npm run test:essay-validator && npm run test:examset-metrics && npm run test:examset-question-metrics-flow"
   },
   "author": "",
   "license": "ISC",

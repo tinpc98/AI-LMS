@@ -367,6 +367,54 @@ const tests = [
     expectedMessageFragment: "ESSAY không sử dụng correctAnswer",
   },
   {
+    name: "Create ESSAY with questionCount blocked",
+    middleware: examSetQuestionCreateValidation,
+    payload: {
+      questionId: "essay-22",
+      type: "essay",
+      content: "Phân tích MVC.",
+      score: 5,
+      difficulty: "medium",
+      questionCount: 10,
+    },
+    expectedSuccess: false,
+    expectedMessageFragment: "questionCount không được phép gửi từ client",
+  },
+  {
+    name: "Create ESSAY with totalPoints blocked",
+    middleware: examSetQuestionCreateValidation,
+    payload: {
+      questionId: "essay-23",
+      type: "essay",
+      content: "Phân tích MVC.",
+      score: 5,
+      difficulty: "medium",
+      totalPoints: 20,
+    },
+    expectedSuccess: false,
+    expectedMessageFragment: "totalPoints không được phép gửi từ client",
+  },
+  {
+    name: "Update ESSAY with questionCount blocked",
+    middleware: examSetQuestionUpdateValidation,
+    payload: {
+      type: "essay",
+      questionCount: 5,
+    },
+    expectedSuccess: false,
+    expectedMessageFragment: "questionCount không được phép gửi từ client",
+  },
+  {
+    name: "Update ESSAY with totalPoints blocked",
+    middleware: examSetQuestionUpdateValidation,
+    payload: {
+      type: "essay",
+      totalPoints: 10,
+    },
+    expectedSuccess: false,
+    expectedMessageFragment: "totalPoints không được phép gửi từ client",
+  },
+  {
     name: "Update ESSAY valid partial suggestedAnswer",
     middleware: examSetQuestionUpdateValidation,
     payload: {

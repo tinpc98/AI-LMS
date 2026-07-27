@@ -1,5 +1,6 @@
 import { Schema, model } from "mongoose";
 import softDeletePlugin from "../plugins/softDelete.plugin.js";
+import { recalculateExamSetMetrics } from "../services/examSet.metrics.js";
 
 /**
  * Question Subdocument Schema
@@ -297,11 +298,7 @@ examSetSchema.index({ ownerId: 1, status: 1 });
 
 // Middleware to auto-update questionCount and totalPoints before save
 examSetSchema.pre("save", function (next) {
-  this.questionCount = this.questions.length;
-  this.totalPoints = this.questions.reduce((sum, question) => {
-    const points = typeof question.points === "number" ? question.points : 0;
-    return sum + points;
-  }, 0);
+  recalculateExamSetMetrics(this);
   next();
 });
 

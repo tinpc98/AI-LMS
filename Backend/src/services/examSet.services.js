@@ -2,6 +2,7 @@
 import { Types } from "mongoose";
 import ExamSet from "../models/examSet.model.js";
 import Folder from "../models/folder.model.js";
+import { recalculateExamSetMetrics } from "./examSet.metrics.js";
 
 const EDITABLE_EXAM_STATUSES = ["draft"];
 const essayForbiddenFields = ["options", "correctAnswer", "acceptedAnswers", "caseSensitive"];
@@ -137,6 +138,87 @@ const normalizeQuestionPayload = (type, questionData) => {
     if (questionData.options === undefined || questionData.options === null) {
       const correctAnswerValue = normalizeBooleanAnswer(questionData.correctAnswer);
       questionData.options = buildTrueFalseOptions(correctAnswerValue);
+    }
+  }
+};
+
+const resolveUpdateField = (field, updateData, existingQuestion) => {
+  if (updateData[field] !== undefined) {
+    return updateData[field];
+  }
+  return existingQuestion?.[field];
+};
+
+const validateQuestionUpdatePayloadByType = (type, updateData, existingQuestion) => {
+  const normalizedType = String(type || "").trim().toLowerCase();
+  const effectiveOptions = resolveUpdateField("options", updateData, existingQuestion);
+  const effectiveCorrectAnswer = resolveUpdateField("correctAnswer", updateData, existingQuestion);
+  const effectivePoints = resolveUpdateField("points", updateData, existingQuestion);
+  const effectiveScore = resolveUpdateField("score", updateData, existingQuestion);
+
+  if (normalizedType === "multiple_choice") {
+    if (updateData.options !== undefined) {
+      if (!Array.isArray(effectiveOptions) || effectiveOptions.length < 2) {
+        const error = new Error("Câu hỏi trắc nghiệm phải có ít nhất 2 lựa chọn");
+        error.status = 400;
+        throw error;
+      }
+    }
+
+    if (updateData.correctAnswer !== undefined && Array.isArray(effectiveOptions)) {
+      const matchById = effectiveOptions.some((option) => option.id === updateData.correctAnswer);
+      const matchByText = effectiveOptions.some((option) => option.text === updateData.correctAnswer);
+      if (!matchById && !matchByText) {
+        const error = new Error("correctAnswer phải tồn tại trong options");
+        error.status = 400;
+        throw error;
+      }
+    }
+  }
+
+  if (normalizedType === "true_false") {
+    if (updateData.correctAnswer !== undefined) {
+      const normalizedAnswer = normalizeBooleanAnswer(updateData.correctAnswer);
+      if (normalizedAnswer === undefined) {
+        const error = new Error("correctAnswer phải là boolean hoặc 'true'/'false' cho true_false");
+        error.status = 400;
+        throw error;
+      }
+    }
+
+    if (updateData.options !== undefined) {
+      if (!Array.isArray(effectiveOptions) || effectiveOptions.length !== 2) {
+        const error = new Error("Câu hỏi Đúng/Sai phải có đúng 2 lựa chọn");
+        error.status = 400;
+        throw error;
+      }
+      const normalized = effectiveOptions.map((option) => {
+        if (!option || typeof option !== "object") {
+          const error = new Error("TRUE_FALSE options phải là object");
+          error.status = 400;
+          throw error;
+        }
+        return String(option.text || "").trim().toLowerCase();
+      });
+      if (!normalized.includes("true") || !normalized.includes("false")) {
+        const error = new Error("TRUE_FALSE options phải gồm True và False");
+        error.status = 400;
+        throw error;
+      }
+    }
+  }
+
+  if (normalizedType === "short_answer") {
+    if (updateData.correctAnswer !== undefined && String(updateData.correctAnswer).trim() === "") {
+      const error = new Error("correctAnswer là bắt buộc cho short_answer");
+      error.status = 400;
+      throw error;
+    }
+  }
+
+  if (normalizedType === "essay") {
+    if (updateData.score !== undefined || updateData.points !== undefined || updateData.type !== undefined) {
+      ensureEssayQuestionFieldsAllowed(normalizedType, updateData, existingQuestion);
     }
   }
 };
@@ -422,7 +504,11 @@ export const addQuestionToExamSetService = async (examSetId, ownerId, questionDa
     throw error;
   }
 
-  // Validate question type
+  // Normalize and validate question type
+  if (typeof questionData.type === "string") {
+    questionData.type = questionData.type.trim().toLowerCase();
+  }
+
   if (!VALID_QUESTION_TYPES.includes(questionData.type)) {
     const error = new Error("Loại câu hỏi không hợp lệ");
     error.status = 400;
@@ -456,7 +542,7 @@ export const addQuestionToExamSetService = async (examSetId, ownerId, questionDa
         : 1,
     difficulty: questionData.difficulty || "medium",
     options: questionData.options || [],
-    correctAnswer: questionData.correctAnswer || "",
+    correctAnswer: questionData.correctAnswer !== undefined ? questionData.correctAnswer : "",
     acceptedAnswers: questionData.acceptedAnswers || [],
     caseSensitive: questionData.caseSensitive || false,
     explanation: questionData.explanation ? questionData.explanation.trim() : "",
@@ -473,8 +559,9 @@ export const addQuestionToExamSetService = async (examSetId, ownerId, questionDa
   // Add question to array
   examSet.questions.push(newQuestion);
 
-  // Auto-update questionCount (will be done by pre-save middleware)
-  // Save exam set
+  // Recalculate metrics explicitly in service before save
+  recalculateExamSetMetrics(examSet);
+
   const updatedExamSet = await examSet.save();
 
   return updatedExamSet.populate("folderId", "name").populate("ownerId", "fullName email");
@@ -526,15 +613,27 @@ export const updateQuestionInExamSetService = async (examSetId, ownerId, questio
     throw error;
   }
 
-  const effectiveType = updateData.type || question.type;
+  const effectiveType = updateData.type ? String(updateData.type).trim().toLowerCase() : question.type;
   if (!VALID_QUESTION_TYPES.includes(effectiveType)) {
     const error = new Error("Loại câu hỏi không hợp lệ");
     error.status = 400;
     throw error;
   }
 
-  validateQuestionPayloadByType(effectiveType, updateData);
-  normalizeQuestionPayload(effectiveType, updateData);
+  updateData.type = effectiveType;
+  const mergedQuestion = {
+    ...question.toObject(),
+    ...updateData,
+    type: effectiveType,
+  };
+
+  validateQuestionPayloadByType(effectiveType, mergedQuestion);
+  validateQuestionUpdatePayloadByType(effectiveType, updateData, question);
+  normalizeQuestionPayload(effectiveType, mergedQuestion);
+
+  if (effectiveType === "true_false" && updateData.correctAnswer !== undefined && updateData.options === undefined) {
+    question.options = mergedQuestion.options;
+  }
 
   if (updateData.score !== undefined) {
     question.points = updateData.score;
@@ -624,6 +723,9 @@ export const updateQuestionInExamSetService = async (examSetId, ownerId, questio
 
   // Update the question in the array
   examSet.questions[questionIndex] = question;
+
+  // Recalculate metrics explicitly in service before save
+  recalculateExamSetMetrics(examSet);
 
   // Save exam set
   const updatedExamSet = await examSet.save();
@@ -814,6 +916,8 @@ export const deleteQuestionFromExamSetService = async (examSetId, currentUserId,
   }
 
   examSet.questions.splice(questionIndex, 1);
+
+  recalculateExamSetMetrics(examSet);
 
   const updatedExamSet = await examSet.save();
   return updatedExamSet.populate("folderId", "name").populate("ownerId", "fullName email");

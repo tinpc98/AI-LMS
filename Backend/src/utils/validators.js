@@ -570,7 +570,16 @@ const runUpdateTypeSpecificValidators = async (req, res, next) => {
   next();
 };
 
+const rejectClientMetrics = (field) =>
+  body(field)
+    .optional()
+    .custom(() => {
+      throw new Error(`${field} không được phép gửi từ client`);
+    });
+
 export const examSetQuestionCreateValidation = [
+  rejectClientMetrics("questionCount"),
+  rejectClientMetrics("totalPoints"),
   body("questionId")
     .trim()
     .notEmpty()
@@ -620,6 +629,8 @@ export const examSetQuestionCreateValidation = [
 ];
 
 export const examSetQuestionUpdateValidation = [
+  rejectClientMetrics("questionCount"),
+  rejectClientMetrics("totalPoints"),
   body("type")
     .optional()
     .trim()
