@@ -87,10 +87,10 @@ class AISummaryController {
   // POST /api/ai/lectures/:lessonId/summary/:summaryId/approve
   async approveSummary(req, res) {
     try {
-      const { summaryId } = req.params;
+      const { lessonId, summaryId } = req.params;
       const userId = req.user.id || req.user._id;
 
-      const summary = await aiSummaryService.approveSummary(summaryId, userId);
+      const summary = await aiSummaryService.approveSummary(lessonId, summaryId, userId);
 
       return res.status(200).json({
         success: true,
@@ -118,11 +118,11 @@ class AISummaryController {
   // POST /api/ai/lectures/:lessonId/summary/:summaryId/reject
   async rejectSummary(req, res) {
     try {
-      const { summaryId } = req.params;
+      const { lessonId, summaryId } = req.params;
       const { reason } = req.body;
       const userId = req.user.id || req.user._id;
 
-      const summary = await aiSummaryService.rejectSummary(summaryId, userId, reason);
+      const summary = await aiSummaryService.rejectSummary(lessonId, summaryId, userId, reason);
 
       return res.status(200).json({
         success: true,

@@ -54,7 +54,7 @@ async function runTests() {
 
     // TEST 3: Prompt Manager
     console.log("\n3. Testing Prompt Manager:");
-    const summaryPrompt = promptManager.build("summary", { title: "Bài 1", contentText: "Nội dung bài 1" });
+    const summaryPrompt = promptManager.build("summary", { contentText: "Nội dung Bài 1" });
     assert(summaryPrompt.name === "summary", "PromptManager builds summary prompt template");
     assert(summaryPrompt.prompt.includes("Bài 1"), "Prompt incorporates variables correctly");
 

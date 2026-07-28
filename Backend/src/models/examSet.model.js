@@ -366,9 +366,8 @@ examSetSchema.index(
 examSetSchema.index({ rootExamSetId: 1, isLatestVersion: 1 });
 
 // Middleware to auto-update questionCount and totalPoints before save
-examSetSchema.pre("save", function (next) {
+examSetSchema.pre("save", function () {
   recalculateExamSetMetrics(this);
-  next();
 });
 
 const ExamSet = model("ExamSet", examSetSchema);

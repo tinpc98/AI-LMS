@@ -26,6 +26,7 @@ import ExamSetRouter from "./src/routers/examSet.routes.js";
 import AISummaryRouter from "./src/routers/aiSummary.routes.js";
 import { initCronJobs } from "./src/cron/cron.setup.js";
 import aiUsageService from "./src/ai/services/aiUsage.service.js";
+import FolderRouter from "./src/routers/folder.routes.js";
 
 // Kích hoạt cấu hình file .env – phải gọi TRƯỚC khi đọc bất kỳ biến môi trường nào
 dotenv.config();
@@ -96,6 +97,8 @@ app.use("/api/grades", GradeRouter);
 app.use("/api/announcements", AnnouncementRouter);
 app.use("/api/notifications", NotificationRouter); // Bulk & inbox endpoints
 
+app.use("/api/folders", FolderRouter);
+
 // Routes Module Thi trực tuyến & Live
 app.use("/api/questions", QuestionRouter);
 app.use("/api/exams", ExamRouter);
@@ -141,7 +144,7 @@ connectDB()
       console.log(`🚀 Server HTTP & Socket đang chạy tại cổng: ${port}`);
       console.log(`🔗 Endpoint test: http://localhost:${port}`);
       console.log(`==================================================`);
-      
+
       // Khởi tạo các cron job nền của hệ thống
       // Đặt runImmediately=false (mặc định) để cron chỉ chạy theo lịch
       initCronJobs();

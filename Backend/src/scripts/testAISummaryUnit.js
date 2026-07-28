@@ -65,6 +65,63 @@ async function runUnitTests() {
     assert.strictEqual(cleaned, "HelloWorld!");
   });
 
+  await runTest("Extractor: Lỗi phân tích file DOCX hỏng", async () => {
+    try {
+      await lessonContentExtractor.extractDocx(Buffer.from("Fake DOCX content"));
+      assert.fail("Nên throw lỗi khi parse DOCX hỏng");
+    } catch (err) {
+      assert.strictEqual(err.code, "AI_INVALID_INPUT");
+      assert.strictEqual(err.status, 415);
+    }
+  });
+
+  await runTest("Extractor: Lỗi phân tích file PDF hỏng (AIError mapping)", async () => {
+    try {
+      await lessonContentExtractor.extractPdf(Buffer.from("Fake PDF content"));
+      assert.fail("Nên throw lỗi khi parse PDF hỏng");
+    } catch (err) {
+      assert.strictEqual(err.code, "AI_INVALID_INPUT");
+      assert.strictEqual(err.status, 415);
+    }
+  });
+
+  // 3. Router Tests
+  await runTest("Router: Load thành công không lỗi (không dùng cookie-express)", async () => {
+    const routerModule = await import("../routers/aiSummary.routes.js");
+    assert.ok(routerModule.default, "Router loaded");
+  });
+
+  // 4. Controller & IDOR Tests (Mocking)
+  await runTest("Controller: Truyền lessonId và IDOR bắt được", async () => {
+    const aiSummaryController = (await import("../controllers/aiSummary.controller.js")).default;
+    const aiSummaryService = (await import("../ai/services/aiSummary.service.js")).default;
+    
+    let findOneParams = null;
+    
+    // Mock Service function
+    const originalApprove = aiSummaryService.approveSummary;
+    aiSummaryService.approveSummary = async (lessonId, summaryId, userId) => {
+      findOneParams = { lessonId, summaryId };
+      throw new AIError("Mock Error", "MOCK", 400); // Stop execution
+    };
+
+    const req = {
+      params: { lessonId: "L1", summaryId: "S1" },
+      user: { id: "U1" }
+    };
+    const res = {
+      status: (code) => ({ json: (data) => ({ code, data }) })
+    };
+
+    const result = await aiSummaryController.approveSummary(req, res);
+    
+    // Restore
+    aiSummaryService.approveSummary = originalApprove;
+
+    assert.strictEqual(findOneParams.lessonId, "L1", "lessonId phải được truyền xuống service");
+    assert.strictEqual(findOneParams.summaryId, "S1", "summaryId phải được truyền xuống service");
+  });
+
   console.log(`\n🏁 Kết quả Unit Test: ${passed} PASS, ${failed} FAIL`);
   if (failed > 0) process.exit(1);
 }

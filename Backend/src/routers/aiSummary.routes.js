@@ -1,6 +1,6 @@
-import { Router } from "cookie-express";
+import { Router } from "express";
 import aiSummaryController from "../controllers/aiSummary.controller.js";
-import { requireAuth } from "../middlewares/auth.middlewares.js";
+import { verifyUser as requireAuth } from "../middlewares/auth.middlewares.js";
 import { checkAILessonAccess } from "../middlewares/aiLessonAccess.middlewares.js";
 import { checkAIQuota } from "../middlewares/aiQuota.middlewares.js";
 import { aiSummaryRateLimit } from "../middlewares/aiSummaryRateLimit.middlewares.js";

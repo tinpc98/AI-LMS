@@ -73,11 +73,23 @@ class LessonContentExtractorService {
    * Extract text from PDF buffer
    */
   async extractPdf(buffer) {
+    const { PDFParse } = require("pdf-parse");
+    let parser = null;
     try {
-      const data = await pdf(buffer);
-      return this.cleanText(data.text);
+      parser = new PDFParse({ data: buffer });
+      const result = await parser.getText();
+      return this.cleanText(result.text);
     } catch (error) {
+      console.error("[LessonContentExtractor] Lỗi phân tích file PDF:", error);
       throw new AIError("Lỗi phân tích file PDF. File có thể bị hỏng hoặc không đúng định dạng.", AIErrorCode.AI_INVALID_INPUT, 415);
+    } finally {
+      if (parser && typeof parser.destroy === 'function') {
+        try {
+          await parser.destroy();
+        } catch (e) {
+          console.error("[LessonContentExtractor] Lỗi khi destroy parser PDF:", e);
+        }
+      }
     }
   }
 
@@ -89,6 +101,7 @@ class LessonContentExtractorService {
       const result = await mammoth.extractRawText({ buffer });
       return this.cleanText(result.value);
     } catch (error) {
+      console.error("[LessonContentExtractor] Lỗi phân tích file DOCX:", error);
       throw new AIError("Lỗi phân tích file DOCX. File có thể bị hỏng hoặc không đúng định dạng.", AIErrorCode.AI_INVALID_INPUT, 415);
     }
   }

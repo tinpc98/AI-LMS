@@ -22,8 +22,9 @@ import {
   listExamSetShares,
   listSharedExamSets,
   updateExamSetShareMetadata,
+  importExcelExamSet,
 } from "../controllers/examSet.controller.js";
-import { verifyUser } from "../middlewares/auth.middlewares.js";
+import { verifyUser, isTeacher } from "../middlewares/auth.middlewares.js";
 import {
   requireExamSetDraftAccess,
   requireExamSetEditAccess,
@@ -41,8 +42,28 @@ import {
   examSetShareUpdateMetadataValidation,
 } from "../utils/validators.js";
 import { examSetVersionsValidation } from "../utils/validators.js";
+import multer from "multer";
 
 const router = express.Router();
+
+// Multer Config
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5MB
+  },
+  fileFilter: (req, file, cb) => {
+    if (
+      file.mimetype === "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ||
+      file.mimetype === "application/vnd.ms-excel" ||
+      file.originalname.match(/\.(xlsx|xls)$/)
+    ) {
+      cb(null, true);
+    } else {
+      cb(new Error("Chỉ cho phép file Excel (.xlsx, .xls)"), false);
+    }
+  },
+});
 
 // All routes require authentication
 router.use(verifyUser);
@@ -60,6 +81,25 @@ router.post("/", createExamSet);
  * Query: folderId?, status?, page?, limit?
  */
 router.get("/", getExamSets);
+
+/**
+ * POST /api/exam-sets/import-excel
+ * Import exam set from Excel file
+ * Access: Teacher, Admin
+ */
+router.post(
+  "/import-excel",
+  isTeacher,
+  (req, res, next) => {
+    upload.single("file")(req, res, function (err) {
+      if (err) {
+        return res.status(415).json({ success: false, message: err.message });
+      }
+      next();
+    });
+  },
+  importExcelExamSet
+);
 
 /**
  * PATCH /api/exam-sets/:examSetId/save-draft

@@ -91,14 +91,14 @@ class AISummaryService {
   /**
    * Duyệt bản tóm tắt (Teacher/Admin)
    */
-  async approveSummary(summaryId, userId) {
+  async approveSummary(lessonId, summaryId, userId) {
     const session = await mongoose.startSession();
     try {
       let approvedDoc = null;
       await session.withTransaction(async () => {
-        const summary = await AISummary.findById(summaryId).session(session);
+        const summary = await AISummary.findOne({ _id: summaryId, lessonId }).session(session);
         if (!summary) {
-          throw new AIError("Không tìm thấy bản tóm tắt.", AIErrorCode.AI_INVALID_INPUT, 404);
+          throw new AIError("Không tìm thấy bản tóm tắt hoặc không thuộc bài giảng này.", AIErrorCode.AI_INVALID_INPUT, 404);
         }
 
         if (summary.status === "approved") {
@@ -132,14 +132,14 @@ class AISummaryService {
   /**
    * Từ chối bản tóm tắt (Teacher/Admin)
    */
-  async rejectSummary(summaryId, userId, reason) {
+  async rejectSummary(lessonId, summaryId, userId, reason) {
     const session = await mongoose.startSession();
     try {
       let rejectedDoc = null;
       await session.withTransaction(async () => {
-        const summary = await AISummary.findById(summaryId).session(session);
+        const summary = await AISummary.findOne({ _id: summaryId, lessonId }).session(session);
         if (!summary) {
-          throw new AIError("Không tìm thấy bản tóm tắt.", AIErrorCode.AI_INVALID_INPUT, 404);
+          throw new AIError("Không tìm thấy bản tóm tắt hoặc không thuộc bài giảng này.", AIErrorCode.AI_INVALID_INPUT, 404);
         }
 
         if (summary.status !== "draft") {
