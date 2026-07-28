@@ -24,8 +24,10 @@
     "test:examset-access-middleware": "node ./src/scripts/runExamSetAccessMiddlewareTests.js",
     "test:examset-share-update-metadata": "node ./src/scripts/runExamSetShareUpdateMetadataServiceTests.js",
     "test:ai-core": "node ./src/scripts/testAICoreFoundation.js",
+    "test:ai-summary": "node ./src/scripts/testAISummaryUnit.js",
+    "test:ai-summary-integration": "node -e \"process.env.NODE_ENV='test'; import('./src/scripts/testAISummaryIntegration.js').catch(e => { console.error(e); process.exit(1); })\"",
     "test:ai-db": "node -e \"process.env.NODE_ENV='test'; import('./src/scripts/auditSprint1DBTests.js').catch(e => { console.error(e); process.exit(1); })\"",
-    "test:all": "npm run test:validator && npm run test:essay-validator && npm run test:examset-metrics && npm run test:examset-question-metrics-flow && npm run test:examset-detail && npm run test:examset-draft && npm run test:examset-new-version && npm run test:examset-versions && npm run test:examset-restore && npm run test:examset-share && npm run test:examset-share-service && npm run test:examset-share-revoke && npm run test:examset-share-list && npm run test:examset-shared-with-me && npm run test:examset-access-middleware && npm run test:examset-share-update-metadata && npm run test:ai-core"
+    "test:all": "npm run test:validator && npm run test:essay-validator && npm run test:examset-metrics && npm run test:examset-question-metrics-flow && npm run test:examset-detail && npm run test:examset-draft && npm run test:examset-new-version && npm run test:examset-versions && npm run test:examset-restore && npm run test:examset-share && npm run test:examset-share-service && npm run test:examset-share-revoke && npm run test:examset-share-list && npm run test:examset-shared-with-me && npm run test:examset-access-middleware && npm run test:examset-share-update-metadata && npm run test:ai-core && npm run test:ai-summary && npm run test:ai-summary-integration"
   },
   "author": "",
   "license": "ISC",
@@ -41,11 +43,13 @@
     "express": "^5.2.1",
     "express-validator": "^7.3.2",
     "jsonwebtoken": "^9.0.3",
+    "mammoth": "^1.12.0",
     "mongoose": "^9.8.0",
     "mongoose-paginate-v2": "^1.9.4",
     "multer": "^2.2.0",
     "node-cron": "^4.6.0",
     "nodemon": "^3.1.14",
+    "pdf-parse": "^2.4.5",
     "socket.io": "^4.8.3",
     "socket.io-client": "^4.8.3",
     "xlsx": "^0.18.5"
