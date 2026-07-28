@@ -100,13 +100,21 @@ const ClassFormModal = forwardRef<ClassFormModalHandle, ClassFormModalProps>(fun
         <Form.Item name="classCode" label="Class Code" rules={[{ required: true, message: "Class code is required" }]}>
           <Input placeholder="Class code" />
         </Form.Item>
-        <Form.Item name="courseId" label="Course" rules={[{ required: true, message: "Course is required" }]}> 
+        <Form.Item name="courseId" label="Course" rules={[{ required: true, message: "Course is required" }]}>
           <Select options={courseOptions.map((item) => ({ label: item.label, value: item.id }))} />
         </Form.Item>
         <Form.Item name="teacherId" label="Teacher">
-          <Select allowClear options={mergedTeacherOptions.map((item) => ({ label: item.label, value: item.id }))} />
+          <Select
+            allowClear
+            options={mergedTeacherOptions.map((item) => ({ label: item.label, value: item.id }))}
+            disabled={
+              mode === "edit" &&
+              ["Completed", "Cancelled", "Archived"]
+                .includes(initialValues?.status || "")
+            }
+          />
         </Form.Item>
-        <Form.Item name="learningMode" label="Learning Mode" rules={[{ required: true, message: "Learning mode is required" }]}> 
+        <Form.Item name="learningMode" label="Learning Mode" rules={[{ required: true, message: "Learning mode is required" }]}>
           <Select
             options={[
               { label: "Offline", value: "Offline" },
@@ -121,7 +129,7 @@ const ClassFormModal = forwardRef<ClassFormModalHandle, ClassFormModalProps>(fun
         <Form.Item name="joinCode" label="Join Code">
           <Input placeholder="Optional join code" />
         </Form.Item>
-        <Form.Item name="startDate" label="Start Date" rules={[{ required: true, message: "Start date is required" }]}> 
+        <Form.Item name="startDate" label="Start Date" rules={[{ required: true, message: "Start date is required" }]}>
           <Input type="date" />
         </Form.Item>
         <Form.Item
@@ -156,7 +164,7 @@ const ClassFormModal = forwardRef<ClassFormModalHandle, ClassFormModalProps>(fun
             </Form.Item>
           </Input.Group>
         </Form.Item>
-        <Form.Item name="maxStudents" label="Max Students" rules={[{ required: true, message: "Max students is required" }, { type: "number", min: 1, message: "Must be greater than 0" }]}> 
+        <Form.Item name="maxStudents" label="Max Students" rules={[{ required: true, message: "Max students is required" }, { type: "number", min: 1, message: "Must be greater than 0" }]}>
           <InputNumber min={1} style={{ width: "100%" }} />
         </Form.Item>
         <Form.Item name="description" label="Description">
@@ -168,7 +176,7 @@ const ClassFormModal = forwardRef<ClassFormModalHandle, ClassFormModalProps>(fun
         <Form.Item name="isEnrollmentOpen" valuePropName="checked">
           <Checkbox>Enrollment Open</Checkbox>
         </Form.Item>
-        <Form.Item name="status" label="Status" rules={[{ required: true, message: "Status is required" }]}> 
+        <Form.Item name="status" label="Status" rules={[{ required: true, message: "Status is required" }]}>
           <Select
             options={[
               { label: "Draft", value: "Draft" },
