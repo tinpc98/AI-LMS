@@ -1,0 +1,376 @@
+import { Schema, model } from "mongoose";
+import softDeletePlugin from "../plugins/softDelete.plugin.js";
+import { recalculateExamSetMetrics } from "../services/examSet.metrics.js";
+
+/**
+ * Question Subdocument Schema
+ * Questions are embedded in ExamSet (no separate collection)
+ * Supports: multiple_choice, true_false, short_answer, essay
+ */
+const questionSchema = new Schema(
+  {
+    // ========== IDENTIFICATION ==========
+    // Unique question ID within the exam set (auto-generated or custom)
+    questionId: {
+      type: String,
+      required: [true, "questionId là bắt buộc"],
+      trim: true,
+    },
+
+    // Question order/position in exam
+    order: {
+      type: Number,
+      required: [true, "Thứ tự câu hỏi là bắt buộc"],
+      min: 0,
+    },
+
+    // ========== QUESTION CONTENT ==========
+    // Question type: multiple_choice, true_false, short_answer, essay
+    type: {
+      type: String,
+      enum: ["multiple_choice", "true_false", "short_answer", "essay"],
+      required: [true, "Loại câu hỏi là bắt buộc"],
+    },
+
+    // Main question text/content
+    content: {
+      type: String,
+      required: [true, "Nội dung câu hỏi là bắt buộc"],
+      trim: true,
+    },
+
+    // Optional: Image/attachment URL for visual questions
+    imageUrl: {
+      type: String,
+      default: null,
+    },
+
+    // Optional: Hint for students (shown during attempt)
+    hint: {
+      type: String,
+      default: "",
+      maxlength: 500,
+    },
+
+    // ========== SCORING ==========
+    // Points/marks for this question
+    points: {
+      type: Number,
+      required: [true, "Điểm câu hỏi là bắt buộc"],
+      default: 1,
+      min: 0,
+      max: 1000,
+    },
+
+    // Difficulty level: easy, medium, hard
+    difficulty: {
+      type: String,
+      enum: ["easy", "medium", "hard"],
+      default: "medium",
+    },
+
+    // ========== ANSWER & VERIFICATION ==========
+    // For MULTIPLE_CHOICE: Array of answer options
+    options: [
+      {
+        _id: false,
+        id: {
+          type: String,
+          required: true,
+        },
+        text: {
+          type: String,
+          required: [true, "Nội dung option là bắt buộc"],
+        },
+        isCorrect: {
+          type: Boolean,
+          default: false,
+        },
+      },
+    ],
+
+    // Correct answer for TRUE_FALSE, SHORT_ANSWER, MULTIPLE_CHOICE
+    // - string for multiple_choice / short_answer
+    // - boolean or string for true_false
+    correctAnswer: {
+      type: Schema.Types.Mixed,
+      default: "",
+    },
+
+    // Accepted variations of correct answer (for SHORT_ANSWER)
+    acceptedAnswers: [
+      {
+        type: String,
+        trim: true,
+      },
+    ],
+
+    // Is correct answer case-sensitive? (for SHORT_ANSWER)
+    caseSensitive: {
+      type: Boolean,
+      default: false,
+    },
+
+    // ========== FEEDBACK & EXPLANATION ==========
+    // Explanation of correct answer (shown after submission)
+    explanation: {
+      type: String,
+      default: "",
+      maxlength: 2000,
+    },
+
+    // Positive feedback (shown for correct answers)
+    feedbackCorrect: {
+      type: String,
+      default: "Chính xác!",
+    },
+
+    // Negative feedback (shown for incorrect answers)
+    feedbackIncorrect: {
+      type: String,
+      default: "Sai rồi!",
+    },
+
+    // Suggested reference answer for essay questions
+    suggestedAnswer: {
+      type: String,
+      default: "",
+      trim: true,
+      maxlength: 10000,
+    },
+
+    // Rubric for essay grading
+    rubric: [
+      {
+        _id: false,
+        criterion: {
+          type: String,
+          required: [true, "Tiêu chí rubric là bắt buộc"],
+          trim: true,
+          maxlength: 500,
+        },
+        maxScore: {
+          type: Number,
+          required: [true, "Điểm tối đa cho tiêu chí là bắt buộc"],
+          min: 0,
+        },
+      },
+    ],
+
+    // ========== CATEGORIZATION & METADATA ==========
+    // Sub-category/topic of question
+    category: {
+      type: String,
+      default: "",
+      trim: true,
+    },
+
+    // Tags for filtering/organization
+    tags: [
+      {
+        type: String,
+        trim: true,
+      },
+    ],
+
+    // ========== STATUS & TIMING ==========
+    // Is question active? (false = question skipped in exams)
+    isActive: {
+      type: Boolean,
+      default: true,
+    },
+
+    // Optional: Time limit for this specific question (in seconds)
+    timeLimit: {
+      type: Number,
+      default: null,
+      min: 1,
+    },
+  },
+  { timestamps: false }
+);
+
+const examSetSchema = new Schema(
+  {
+    // ID of the exam set owner (Teacher/Admin)
+    ownerId: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      required: [true, "ownerId là bắt buộc"],
+      index: true,
+    },
+
+    // Folder ID where this exam set belongs
+    folderId: {
+      type: Schema.Types.ObjectId,
+      ref: "Folder",
+      required: [true, "folderId là bắt buộc"],
+      index: true,
+    },
+
+    // Exam set title
+    title: {
+      type: String,
+      required: [true, "Tiêu đề là bắt buộc"],
+      trim: true,
+      minlength: 1,
+      maxlength: 255,
+    },
+
+    // Exam set description
+    description: {
+      type: String,
+      trim: true,
+      default: "",
+      maxlength: 2000,
+    },
+
+    // Status: draft, published, archived
+    status: {
+      type: String,
+      enum: ["draft", "published", "archived"],
+      default: "draft",
+      index: true,
+    },
+
+    // Questions array (subdocuments)
+    questions: [questionSchema],
+
+    // Auto-calculated: Total number of questions
+    questionCount: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+
+    // Auto-calculated: Total points for all questions
+    totalPoints: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+
+    // Version metadata for Exam Set versions
+    versionNumber: {
+      type: Number,
+      default: 1,
+      min: [1, "versionNumber phải lớn hơn hoặc bằng 1"],
+      validate: {
+        validator(value) {
+          return Number.isInteger(value);
+        },
+        message: "versionNumber phải là số nguyên",
+      },
+    },
+
+    version: {
+      type: Number,
+      default: 1,
+      min: [1, "version phải lớn hơn hoặc bằng 1"],
+      validate: {
+        validator(value) {
+          return Number.isInteger(value);
+        },
+        message: "version phải là số nguyên",
+      },
+    },
+
+    rootExamSetId: {
+      type: Schema.Types.ObjectId,
+      ref: "ExamSet",
+      default: null,
+      validate: {
+        validator(value) {
+          return value === null || Schema.Types.ObjectId.isValid(String(value));
+        },
+        message: "rootExamSetId phải là ObjectId hợp lệ hoặc null",
+      },
+    },
+
+    previousVersionId: {
+      type: Schema.Types.ObjectId,
+      ref: "ExamSet",
+      default: null,
+      validate: [
+        {
+          validator(value) {
+            return value === null || Schema.Types.ObjectId.isValid(String(value));
+          },
+          message: "previousVersionId phải là ObjectId hợp lệ hoặc null",
+        },
+        {
+          validator(value) {
+            return value === null || String(value) !== String(this._id);
+          },
+          message: "previousVersionId không được trùng với _id của document",
+        },
+      ],
+    },
+
+    isLatestVersion: {
+      type: Boolean,
+      default: true,
+    },
+
+    // Tags for categorizing exam sets
+    tags: [
+      {
+        type: String,
+        trim: true,
+      },
+    ],
+
+    // Soft delete flag
+    isDeleted: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
+  },
+  {
+    timestamps: true,
+    toJSON: {
+      transform: (doc, ret) => {
+        return ret;
+      },
+    },
+    toObject: {
+      transform: (doc, ret) => {
+        return ret;
+      },
+    },
+  }
+);
+
+// Apply soft delete plugin
+examSetSchema.plugin(softDeletePlugin);
+
+// Compound index for owner and folder
+examSetSchema.index({ ownerId: 1, folderId: 1 });
+
+// Index for finding published exam sets
+examSetSchema.index({ ownerId: 1, status: 1 });
+
+// Unique version number within the same root exam set lineage
+examSetSchema.index(
+  { rootExamSetId: 1, versionNumber: 1 },
+  {
+    unique: true,
+    partialFilterExpression: {
+      rootExamSetId: { $exists: true, $ne: null },
+    },
+  }
+);
+
+// Quickly query the latest version in a lineage
+examSetSchema.index({ rootExamSetId: 1, isLatestVersion: 1 });
+
+// Middleware to auto-update questionCount and totalPoints before save
+examSetSchema.pre("save", function (next) {
+  recalculateExamSetMetrics(this);
+  next();
+});
+
+const ExamSet = model("ExamSet", examSetSchema);
+
+export default ExamSet;

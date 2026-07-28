@@ -22,8 +22,7 @@ import CourseRouter from "./src/routers/course.routes.js";
 import DashboardRouter from "./src/routers/dashboard.routes.js";
 import ReportRouter from "./src/routers/report.routes.js";
 import NotificationRouter from "./src/routers/notification.routes.js";
-
-// Import Cron Setup
+import ExamSetRouter from "./src/routers/examSet.routes.js";
 import { initCronJobs } from "./src/cron/cron.setup.js";
 
 // Kích hoạt cấu hình file .env – phải gọi TRƯỚC khi đọc bất kỳ biến môi trường nào
@@ -51,13 +50,11 @@ const allowedOrigins = (
 
 const corsOptions = {
   origin: (origin, cb) => {
-    // Cho phép các request không có Origin header (Postman, server-to-server, curl)
     if (!origin) return cb(null, true);
     if (allowedOrigins.includes(origin)) return cb(null, true);
-    // Từ chối origin không nằm trong whitelist
-    return cb(new Error(`CORS: Origin "${origin}" không được phép truy cập!`));
+    return cb(new Error("Origin không được phép bởi CORS"));
   },
-  methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
+  methods: ["GET", "POST", "PUT", "DELETE"],
   credentials: true,
   allowedHeaders: ["Content-Type", "Authorization"],
 };
@@ -95,13 +92,13 @@ app.use("/api/assignments", assignmentRouter);
 app.use("/api/attendances", AttendanceRouter);
 app.use("/api/grades", GradeRouter);
 app.use("/api/announcements", AnnouncementRouter);
-app.use("/api/notifications", AnnouncementRouter);
 app.use("/api/notifications", NotificationRouter); // Bulk & inbox endpoints
 
 // Routes Module Thi trực tuyến & Live
 app.use("/api/questions", QuestionRouter);
 app.use("/api/exams", ExamRouter);
 app.use("/api/exam-attempts", ExamAttemptRouter);
+app.use("/api/exam-sets", ExamSetRouter);
 app.use("/api/live", LiveRouter);
 
 app.get("/", (req, res) => {

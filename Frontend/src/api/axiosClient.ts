@@ -63,16 +63,12 @@ axiosClient.interceptors.response.use(
     if (error.response?.status === 401 && !isLoginRequest) {
       const token = localStorage.getItem("accessToken");
       if (token) {
-        localStorage.removeItem("accessToken");
-        localStorage.removeItem("userRole");
-        localStorage.removeItem("user");
         toast.error(
-          "Phiên đăng nhập của bạn đã hết hạn. Vui lòng đăng nhập lại!",
+          "Phiên đăng nhập của bạn đã hết hạn hoặc không hợp lệ. Vui lòng đăng nhập lại!",
           "Phiên hết hạn"
         );
-        if (window.location.pathname !== "/login") {
-          window.location.href = "/login";
-        }
+        // Phát sự kiện toàn cục để useAuth tự động logout an toàn qua React Router (0 RELOAD)
+        window.dispatchEvent(new Event("unauthorized-logout"));
       }
     } else if (error.response?.status === 403) {
       toast.error(
