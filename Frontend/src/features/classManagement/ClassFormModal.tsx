@@ -79,6 +79,27 @@ const ClassFormModal = forwardRef<ClassFormModalHandle, ClassFormModalProps>(fun
     await onSubmit(trimmedValues);
   };
 
+  const getDisabledStatus = (currentStatus: string | undefined, optionStatus: string): boolean => {
+    const status = currentStatus || "Draft";
+    if (status === optionStatus) return false;
+
+    switch (status) {
+      case "Draft":
+        return optionStatus !== "Ready";
+      case "Ready":
+        return optionStatus !== "Ongoing";
+      case "Ongoing":
+        return !["Completed", "Cancelled"].includes(optionStatus);
+      case "Completed":
+        return optionStatus !== "Archived";
+      case "Cancelled":
+      case "Archived":
+        return true;
+      default:
+        return false;
+    }
+  };
+
   return (
     <Modal
       open={open}
@@ -179,13 +200,17 @@ const ClassFormModal = forwardRef<ClassFormModalHandle, ClassFormModalProps>(fun
         <Form.Item name="status" label="Status" rules={[{ required: true, message: "Status is required" }]}>
           <Select
             options={[
-              { label: "Draft", value: "Draft" },
-              { label: "Ready", value: "Ready" },
-              { label: "Ongoing", value: "Ongoing" },
-              { label: "Completed", value: "Completed" },
-              { label: "Cancelled", value: "Cancelled" },
-              { label: "Archived", value: "Archived" },
-            ]}
+              "Draft",
+              "Ready",
+              "Ongoing",
+              "Completed",
+              "Cancelled",
+              "Archived",
+            ].map((status) => ({
+              label: status,
+              value: status,
+              disabled: getDisabledStatus(initialValues?.status, status),
+            }))}
           />
         </Form.Item>
       </Form>
