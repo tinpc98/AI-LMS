@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import { loginService } from "../services/auth.services.js";
+import { loginService, getUserTrashService, restoreUserService, permanentDeleteUserService } from "../services/auth.services.js";
 import User from "../models/user.models.js";
 
 export const login = async (req, res) => {
@@ -266,5 +266,55 @@ export const deleteUser = async (req, res) => {
     return res.status(200).json({ success: true, message: "Xóa người dùng thành công" });
   } catch (error) {
     return res.status(500).json({ success: false, message: "Lỗi khi xóa người dùng" });
+  }
+};
+
+export const getUserTrash = async (req, res) => {
+  try {
+    const result = await getUserTrashService(req.query);
+    return res.status(200).json({
+      success: true,
+      message: "Lấy danh sách thùng rác thành công",
+      data: result.users,
+      pagination: result.pagination,
+    });
+  } catch (error) {
+    const status = error.status || 500;
+    return res.status(status).json({ success: false, message: error.message || "Lỗi khi lấy danh sách thùng rác" });
+  }
+};
+
+export const restoreUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const restoredUser = await restoreUserService(id);
+    
+    // Convert to object and delete password if exists
+    const data = restoredUser.toObject ? restoredUser.toObject() : restoredUser;
+    delete data.password;
+
+    return res.status(200).json({
+      success: true,
+      message: "Khôi phục người dùng thành công",
+      data,
+    });
+  } catch (error) {
+    const status = error.status || 500;
+    return res.status(status).json({ success: false, message: error.message || "Lỗi khi khôi phục người dùng" });
+  }
+};
+
+export const permanentDeleteUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+    await permanentDeleteUserService(id);
+    
+    return res.status(200).json({
+      success: true,
+      message: "Xóa vĩnh viễn người dùng thành công",
+    });
+  } catch (error) {
+    const status = error.status || 500;
+    return res.status(status).json({ success: false, message: error.message || "Lỗi khi xóa vĩnh viễn người dùng" });
   }
 };

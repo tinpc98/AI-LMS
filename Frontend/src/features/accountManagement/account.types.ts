@@ -9,6 +9,8 @@ export interface AccountRecord {
   role: AccountRole;
   status: AccountStatus;
   avatar?: string;
+  isDeleted?: boolean;
+  deletedAt?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -17,6 +19,8 @@ export interface AccountFilters {
   search: string;
   role: AccountRole | "All";
   status: AccountStatus | "All";
+  page?: number;
+  limit?: number;
 }
 
 export interface AccountFormValues {
@@ -28,4 +32,18 @@ export interface AccountFormValues {
   password?: string;
   confirmPassword?: string;
   avatar?: string;
+}
+
+export interface Pagination {
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+export interface ApiResponse<T> {
+  success: boolean;
+  message: string;
+  data: T;
+  pagination?: Pagination;
 }

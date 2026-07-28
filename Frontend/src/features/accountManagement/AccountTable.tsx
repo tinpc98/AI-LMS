@@ -10,8 +10,13 @@ interface AccountTableProps {
   onView: (account: AccountRecord) => void;
   onEdit: (account: AccountRecord) => void;
   onToggleLock: (account: AccountRecord) => void;
-  onResetPassword: (account: AccountRecord) => void;
-  onDelete: (account: AccountRecord) => void;
+  onResetPassword?: (account: AccountRecord) => void;
+  onDelete?: (account: AccountRecord) => void;
+  onRestore?: (account: AccountRecord) => void;
+  onPermanentDelete?: (account: AccountRecord) => void;
+  isTrash?: boolean;
+  pagination?: any;
+  onChange?: (pagination: any, filters: any, sorter: any) => void;
 }
 
 const AccountTable = ({
@@ -22,6 +27,11 @@ const AccountTable = ({
   onToggleLock,
   onResetPassword,
   onDelete,
+  onRestore,
+  onPermanentDelete,
+  isTrash,
+  pagination,
+  onChange,
 }: AccountTableProps) => {
   const columns = [
     {
@@ -37,7 +47,7 @@ const AccountTable = ({
       title: "Full Name",
       dataIndex: "fullName",
       key: "fullName",
-      sorter: (a: AccountRecord, b: AccountRecord) => a.fullName.localeCompare(b.fullName),
+      sorter: true,
     },
     {
       title: "Email",
@@ -72,21 +82,44 @@ const AccountTable = ({
       key: "actions",
       render: (_: unknown, record: AccountRecord) => (
         <div style={{ display: "flex", gap: 6 }}>
-          <Tooltip title="View">
-            <Button size="small" icon={<EyeOutlined />} onClick={() => onView(record)} />
-          </Tooltip>
-          <Tooltip title="Edit">
-            <Button size="small" icon={<EditOutlined />} onClick={() => onEdit(record)} />
-          </Tooltip>
-          <Tooltip title={record.status === "Locked" ? "Unlock" : "Lock"}>
-            <Button size="small" icon={record.status === "Locked" ? <UnlockOutlined /> : <LockOutlined />} onClick={() => onToggleLock(record)} />
-          </Tooltip>
-          <Tooltip title="Reset Password">
-            <Button size="small" icon={<KeyOutlined />} onClick={() => onResetPassword(record)} />
-          </Tooltip>
-          <Tooltip title="Delete">
-            <Button size="small" danger icon={<DeleteOutlined />} onClick={() => onDelete(record)} />
-          </Tooltip>
+          {isTrash ? (
+            <>
+              {onRestore && (
+                <Tooltip title="Restore">
+                  <Button size="small" icon={<UnlockOutlined />} onClick={() => onRestore(record)} />
+                </Tooltip>
+              )}
+              {onPermanentDelete && (
+                <Tooltip title="Permanent Delete">
+                  <Button size="small" danger icon={<DeleteOutlined />} onClick={() => onPermanentDelete(record)} />
+                </Tooltip>
+              )}
+            </>
+          ) : (
+            <>
+              <Tooltip title="View">
+                <Button size="small" icon={<EyeOutlined />} onClick={() => onView(record)} />
+              </Tooltip>
+              <Tooltip title="Edit">
+                <Button size="small" icon={<EditOutlined />} onClick={() => onEdit(record)} />
+              </Tooltip>
+              {onToggleLock && (
+                <Tooltip title={record.status === "Locked" ? "Unlock" : "Lock"}>
+                  <Button size="small" icon={record.status === "Locked" ? <UnlockOutlined /> : <LockOutlined />} onClick={() => onToggleLock(record)} />
+                </Tooltip>
+              )}
+              {onResetPassword && (
+                <Tooltip title="Reset Password">
+                  <Button size="small" icon={<KeyOutlined />} onClick={() => onResetPassword(record)} />
+                </Tooltip>
+              )}
+              {onDelete && (
+                <Tooltip title="Delete">
+                  <Button size="small" danger icon={<DeleteOutlined />} onClick={() => onDelete(record)} />
+                </Tooltip>
+              )}
+            </>
+          )}
         </div>
       ),
     },
@@ -98,7 +131,8 @@ const AccountTable = ({
       columns={columns}
       dataSource={data}
       loading={loading}
-      pagination={{ pageSize: 6 }}
+      pagination={pagination}
+      onChange={onChange}
       locale={{
         emptyText: loading ? null : (
           <Empty description="No accounts found" />

@@ -239,8 +239,8 @@ const classSchema = new Schema(
 );
 
 // Indexes nâng cao hiệu năng truy vấn
-classSchema.index({ classCode: 1 }, { unique: true, sparse: true });
-classSchema.index({ meetingRoomId: 1 }, { unique: true });
+// classSchema.index({ classCode: 1 }, { unique: true, sparse: true });
+// classSchema.index({ meetingRoomId: 1 }, { unique: true });
 classSchema.index({ teacherId: 1 });
 classSchema.index({ courseId: 1 });
 classSchema.index({ "students.studentId": 1 });

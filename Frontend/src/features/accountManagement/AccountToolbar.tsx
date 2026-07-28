@@ -6,7 +6,7 @@ interface AccountToolbarProps {
   filters: AccountFilters;
   onFiltersChange: (filters: AccountFilters) => void;
   onRefresh: () => void;
-  onCreate: () => void;
+  onCreate?: () => void;
 }
 
 const AccountToolbar = ({ filters, onFiltersChange, onRefresh, onCreate }: AccountToolbarProps) => {
@@ -53,11 +53,13 @@ const AccountToolbar = ({ filters, onFiltersChange, onRefresh, onCreate }: Accou
           Refresh
         </Button>
       </Col>
-      <Col xs={24} sm={12} md={4}>
-        <Button type="primary" icon={<PlusOutlined />} onClick={onCreate} block>
-          Create Account
-        </Button>
-      </Col>
+      {onCreate && (
+        <Col xs={24} sm={12} md={4}>
+          <Button type="primary" icon={<PlusOutlined />} onClick={onCreate} block>
+            Create Account
+          </Button>
+        </Col>
+      )}
     </Row>
   );
 };
