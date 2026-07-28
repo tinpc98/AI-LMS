@@ -2,6 +2,8 @@ import { useNavigate } from "react-router-dom";
 import { useCallback, useEffect, useState } from "react";
 import type User from "../interface/userInterface";
 
+import { disconnectSocket } from "../services/socketClient";
+
 export const useAuth = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState<User | null>(() => {
@@ -10,6 +12,7 @@ export const useAuth = () => {
   });
 
   const logout = useCallback(() => {
+    disconnectSocket();
     localStorage.removeItem("accessToken");
     localStorage.removeItem("user");
     localStorage.removeItem("userRole");

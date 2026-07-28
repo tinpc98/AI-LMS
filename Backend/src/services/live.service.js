@@ -59,14 +59,14 @@ export const createSessionService = async ({ classId, title, scheduledStart, sch
 
   if (io) {
     io.to(`room_class_${classId}`).emit("LIVE_SESSION_STARTED", {
-      classId,
-      sessionId: session._id,
+      classId: classId.toString(),
+      sessionId: session._id.toString(),
       roomName: session.roomName,
-      meetingRoomId: session.roomName,
       sessionNumber: session.sessionNumber,
       title: session.title,
       actualStart: session.actualStart,
       status: session.status,
+      timestamp: new Date().toISOString(),
     });
     console.log(`📢 [LIVE_SERVICE] Started cho lớp ${classId} với roomName: ${session.roomName}`);
   }
@@ -176,7 +176,10 @@ export const endSessionService = async ({ sessionId, classId, userId, io }) => {
   if (io) {
     io.to(`room_class_${targetClassId}`).emit("LIVE_SESSION_ENDED", {
       classId: targetClassId,
-      sessionId: session._id,
+      sessionId: session._id.toString(),
+      status: "Completed",
+      actualEnd: session.actualEnd,
+      timestamp: new Date().toISOString(),
     });
     console.log(`📢 [LIVE_SERVICE] Ended cho lớp ${targetClassId}`);
   }
