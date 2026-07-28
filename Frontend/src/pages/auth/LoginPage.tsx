@@ -27,23 +27,23 @@ const Login = () => {
         password: data.password,
       });
 
-      const response = res.data;
-      const result = response.data;
+      // Backend trả về: { message: "...", accessToken: "...", data: { id, fullName, email, role, avatar } }
+      const { accessToken, data: loggedInUser, message } = res.data;
 
-      // Lưu Token, Role & User Info khi đăng nhập thành công
-      localStorage.setItem("accessToken", result.accessToken);
+      if (!accessToken) {
+        throw new Error("Không nhận được token xác thực từ hệ thống!");
+      }
 
-      const loggedInUser = result.user;
       const normalizedRole = String(loggedInUser?.role || "").toLowerCase();
 
-      if (normalizedRole) {
-        localStorage.setItem("userRole", normalizedRole);
-      }
+      // Lưu Token, Role & User Info khi đăng nhập thành công
+      localStorage.setItem("accessToken", accessToken);
+      localStorage.setItem("userRole", normalizedRole);
       if (loggedInUser) {
         localStorage.setItem("user", JSON.stringify(loggedInUser));
       }
 
-      toast.success(result.message || "Đăng nhập thành công.");
+      toast.success(message || "Đăng nhập thành công.");
 
       // Phân quyền điều hướng bằng React Router (Single Page Application - 0 RELOAD)
       if (normalizedRole === "admin") {
