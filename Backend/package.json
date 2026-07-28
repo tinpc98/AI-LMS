@@ -23,7 +23,8 @@
     "test:examset-share-list": "node ./src/scripts/runExamSetShareListServiceTests.js",
     "test:examset-shared-with-me": "node ./src/scripts/runExamSetSharedWithMeServiceTests.js",
     "test:examset-access-middleware": "node ./src/scripts/runExamSetAccessMiddlewareTests.js",
-    "test:examset-share-update-metadata": "node ./src/scripts/runExamSetShareUpdateMetadataServiceTests.js",
+    "migrate:live-session:dry": "node ./src/scripts/migrateLiveSessionV2.js --dry-run",
+    "migrate:live-session:apply": "node ./src/scripts/migrateLiveSessionV2.js --apply",
     "test:all": "npm run test:validator && npm run test:essay-validator && npm run test:examset-metrics && npm run test:examset-question-metrics-flow && npm run test:examset-detail && npm run test:examset-draft && npm run test:examset-new-version && npm run test:examset-versions && npm run test:examset-restore && npm run test:examset-share && npm run test:examset-share-service && npm run test:examset-share-revoke && npm run test:examset-share-list && npm run test:examset-shared-with-me && npm run test:examset-access-middleware && npm run test:examset-share-update-metadata"
   },
   "author": "",

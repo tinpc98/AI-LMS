@@ -141,10 +141,11 @@ async function runSprintJ2SecurityTests() {
     await generateJaasTokenForSession(reqEnrolledToken, resEnrolledToken);
 
     assert(resEnrolledToken.statusCode === 200, "Student Enrolled lấy Token JaaS thành công (200 OK)");
-    assert(resEnrolledToken.jsonData?.moderator === false, "Student Enrolled nhận Token với moderator = false");
+    const enrolledTokenData = resEnrolledToken.jsonData?.data || resEnrolledToken.jsonData;
+    assert(enrolledTokenData?.moderator === false, "Student Enrolled nhận Token với moderator = false");
 
     // Giải mã JWT Payload để verify claims
-    const decodedStudentToken = jwt.decode(resEnrolledToken.jsonData?.token);
+    const decodedStudentToken = jwt.decode(enrolledTokenData?.token);
     assert(decodedStudentToken.room === activeSession.roomName, `JWT claim room = ${activeSession.roomName} (KHÔNG PHẢI WILDCARD *)`);
     assert(decodedStudentToken.context.user.moderator === false, "JWT Payload context.user.moderator = false");
 
@@ -159,8 +160,9 @@ async function runSprintJ2SecurityTests() {
     await generateJaasTokenForSession(reqOwnerToken, resOwnerToken);
 
     assert(resOwnerToken.statusCode === 200, "Teacher Owner lấy Token JaaS thành công (200 OK)");
-    assert(resOwnerToken.jsonData?.moderator === true, "Teacher Owner nhận Token với moderator = true");
-    const decodedOwnerToken = jwt.decode(resOwnerToken.jsonData?.token);
+    const ownerTokenData = resOwnerToken.jsonData?.data || resOwnerToken.jsonData;
+    assert(ownerTokenData?.moderator === true, "Teacher Owner nhận Token với moderator = true");
+    const decodedOwnerToken = jwt.decode(ownerTokenData?.token);
     assert(decodedOwnerToken.context.user.moderator === true, "JWT Payload context.user.moderator = true cho Teacher Owner");
 
     // 8. Test Teacher Non-Owner ngắt Session -> Bị chặn 403 (checkClassTeacherOwnership)
