@@ -6,7 +6,6 @@
   "scripts": {
     "predev": "kill-port 5000",
     "dev": "nodemon main.js",
-    
     "test": "npm run test:all",
     "test:validator": "node ./src/scripts/runMultipleChoiceValidatorTests.js",
     "test:essay-validator": "node ./src/scripts/runEssayQuestionValidationTests.js",
@@ -24,13 +23,16 @@
     "test:examset-shared-with-me": "node ./src/scripts/runExamSetSharedWithMeServiceTests.js",
     "test:examset-access-middleware": "node ./src/scripts/runExamSetAccessMiddlewareTests.js",
     "test:examset-share-update-metadata": "node ./src/scripts/runExamSetShareUpdateMetadataServiceTests.js",
-    "test:all": "npm run test:validator && npm run test:essay-validator && npm run test:examset-metrics && npm run test:examset-question-metrics-flow && npm run test:examset-detail && npm run test:examset-draft && npm run test:examset-new-version && npm run test:examset-versions && npm run test:examset-restore && npm run test:examset-share && npm run test:examset-share-service && npm run test:examset-share-revoke && npm run test:examset-share-list && npm run test:examset-shared-with-me && npm run test:examset-access-middleware && npm run test:examset-share-update-metadata"
+    "test:ai-core": "node ./src/scripts/testAICoreFoundation.js",
+    "test:ai-db": "node -e \"process.env.NODE_ENV='test'; import('./src/scripts/auditSprint1DBTests.js').catch(e => { console.error(e); process.exit(1); })\"",
+    "test:all": "npm run test:validator && npm run test:essay-validator && npm run test:examset-metrics && npm run test:examset-question-metrics-flow && npm run test:examset-detail && npm run test:examset-draft && npm run test:examset-new-version && npm run test:examset-versions && npm run test:examset-restore && npm run test:examset-share && npm run test:examset-share-service && npm run test:examset-share-revoke && npm run test:examset-share-list && npm run test:examset-shared-with-me && npm run test:examset-access-middleware && npm run test:examset-share-update-metadata && npm run test:ai-core"
   },
   "author": "",
   "license": "ISC",
   "description": "",
   "dependencies": {
     "@faker-js/faker": "^10.5.0",
+    "@google/generative-ai": "^0.24.1",
     "bcryptjs": "^3.0.3",
     "cloudinary": "^2.10.0",
     "cors": "^2.8.6",
