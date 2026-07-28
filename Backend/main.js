@@ -54,7 +54,7 @@ const corsOptions = {
     if (allowedOrigins.includes(origin)) return cb(null, true);
     return cb(new Error("Origin không được phép bởi CORS"));
   },
-  methods: ["GET", "POST", "PUT", "DELETE"],
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
   credentials: true,
   allowedHeaders: ["Content-Type", "Authorization"],
 };
@@ -136,7 +136,7 @@ connectDB()
       console.log(`🚀 Server HTTP & Socket đang chạy tại cổng: ${port}`);
       console.log(`🔗 Endpoint test: http://localhost:${port}`);
       console.log(`==================================================`);
-      
+
       // Khởi tạo các cron job nền của hệ thống
       // Đặt runImmediately=false (mặc định) để cron chỉ chạy theo lịch
       initCronJobs();

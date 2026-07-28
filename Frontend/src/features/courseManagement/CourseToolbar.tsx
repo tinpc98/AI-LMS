@@ -6,7 +6,7 @@ interface CourseToolbarProps {
   filters: CourseFilters;
   onFiltersChange: (filters: CourseFilters) => void;
   onRefresh: () => void;
-  onCreate: () => void;
+  onCreate?: () => void;
 }
 
 const CourseToolbar = ({ filters, onFiltersChange, onRefresh, onCreate }: CourseToolbarProps) => {
@@ -55,11 +55,13 @@ const CourseToolbar = ({ filters, onFiltersChange, onRefresh, onCreate }: Course
           Refresh
         </Button>
       </Col>
-      <Col xs={24} sm={12} md={4}>
-        <Button type="primary" icon={<PlusOutlined />} onClick={onCreate} block>
-          Create Course
-        </Button>
-      </Col>
+      {onCreate && (
+        <Col xs={24} sm={12} md={4}>
+          <Button type="primary" icon={<PlusOutlined />} onClick={onCreate} block>
+            Create Course
+          </Button>
+        </Col>
+      )}
     </Row>
   );
 };
