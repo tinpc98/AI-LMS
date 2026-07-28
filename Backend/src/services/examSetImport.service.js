@@ -129,6 +129,13 @@ const parseOptionsAndCorrectAnswer = (rawOptions, rawCorrectAnswer, type, rowNum
   return { options, correctAnswer: finalCorrectAnswer };
 };
 
+const normalizeContentKey = (value) =>
+  String(value)
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, " ")
+    .normalize("NFC");
+
 import mongoose from "mongoose";
 
 export const importExcelToExamSet = async ({
@@ -140,12 +147,27 @@ export const importExcelToExamSet = async ({
 }) => {
   if (!fileBuffer) {
     const err = new Error("Thiếu file Excel");
-    err.status = 400;
+    err.statusCode = 400;
     throw err;
   }
-  if (!title) {
+  const normalizedTitle = typeof title === "string" ? title.trim() : "";
+  const normalizedDescription = typeof description === "string" ? description.trim() : "";
+
+  if (!normalizedTitle) {
     const err = new Error("Thiếu tiêu đề bộ đề");
-    err.status = 400;
+    err.statusCode = 400;
+    throw err;
+  }
+
+  if (normalizedTitle.length > 255) {
+    const err = new Error("Tiêu đề vượt quá 255 ký tự");
+    err.statusCode = 422;
+    throw err;
+  }
+
+  if (normalizedDescription.length > 2000) {
+    const err = new Error("Mô tả vượt quá 2000 ký tự");
+    err.statusCode = 422;
     throw err;
   }
 
@@ -154,13 +176,13 @@ export const importExcelToExamSet = async ({
   
   if (!normalizedFolderId) {
     const error = new Error("Thiếu folderId");
-    error.status = 400;
+    error.statusCode = 400;
     throw error;
   }
 
   if (!mongoose.Types.ObjectId.isValid(normalizedFolderId)) {
     const error = new Error("folderId không hợp lệ");
-    error.status = 400;
+    error.statusCode = 400;
     throw error;
   }
 
@@ -168,12 +190,12 @@ export const importExcelToExamSet = async ({
   const folder = await Folder.findOne({ _id: normalizedFolderId, isDeleted: false });
   if (!folder) {
     const folderErr = new Error("Folder không tồn tại");
-    folderErr.status = 404;
+    folderErr.statusCode = 404;
     throw folderErr;
   }
   if (String(folder.ownerId) !== String(ownerId)) {
     const authErr = new Error("Không có quyền truy cập Folder");
-    authErr.status = 403;
+    authErr.statusCode = 403;
     throw authErr;
   }
 
@@ -220,7 +242,7 @@ export const importExcelToExamSet = async ({
       }
 
       // Deduplication based on lowercase content
-      const contentKey = content.toLowerCase();
+      const contentKey = normalizeContentKey(content);
       if (seenContent.has(contentKey)) {
         continue; // Bỏ qua câu trùng lặp trong cùng file
       }
@@ -243,9 +265,15 @@ export const importExcelToExamSet = async ({
         throw e;
       }
 
-      let points = Number(row.points);
-      if (isNaN(points) || points < 0) {
-        points = 1; // Default
+      const rawPoints = String(row.points ?? "").trim();
+      let points = 1;
+      if (rawPoints !== "") {
+        points = Number(rawPoints);
+        if (!Number.isFinite(points) || points < 0) {
+          const error = new Error(`Dòng ${rowNum}: Điểm số không hợp lệ`);
+          error.statusCode = 422;
+          throw error;
+        }
       }
 
       const tagsRaw = String(row.tags || "");
@@ -276,12 +304,18 @@ export const importExcelToExamSet = async ({
       throw err;
     }
 
+    if (questions.length > 500) {
+      const err = new Error("Vượt quá giới hạn 500 câu hỏi trong một lần import");
+      err.statusCode = 422;
+      throw err;
+    }
+
     // 4. Khởi tạo ExamSet
     const examSet = new ExamSet({
       ownerId,
-      folderId,
-      title,
-      description: description || "",
+      folderId: normalizedFolderId,
+      title: normalizedTitle,
+      description: normalizedDescription,
       status: "draft",
       questions,
       version: 1,

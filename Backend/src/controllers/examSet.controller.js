@@ -632,29 +632,25 @@ export const reorderQuestionsInExamSet = async (req, res) => {
  * POST /api/exam-sets/import-excel
  * Import exam set from Excel
  */
-export const importExcelExamSet = async (req, res) => {
-  try {
-    console.log("[ExamSet Import] content-type:", req.headers["content-type"]);
-    console.log("[ExamSet Import] body keys:", Object.keys(req.body || {}));
-    console.log("[ExamSet Import] folderId:", req.body?.folderId);
-    console.log("[ExamSet Import] file:", req.file?.originalname);
+export const createImportExcelExamSetHandler = ({ importService = importExcelToExamSet } = {}) => {
+  return async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ success: false, message: "Vui lòng đính kèm file Excel" });
+      }
 
-    if (!req.file) {
-      return res.status(400).json({ success: false, message: "Vui lòng đính kèm file Excel" });
-    }
+      const { folderId, title, description } = req.body || {};
+      const ownerId = req.user.id || req.user._id; // From verifyUser middleware
 
-    const { folderId, title, description } = req.body;
-    const ownerId = req.user.id || req.user._id; // From verifyUser middleware
+      const examSet = await importService({
+        fileBuffer: req.file.buffer,
+        ownerId,
+        folderId,
+        title,
+        description
+      });
 
-    const examSet = await importExcelToExamSet({
-      fileBuffer: req.file.buffer,
-      ownerId,
-      folderId,
-      title,
-      description
-    });
-
-    return res.status(201).json({
+      return res.status(201).json({
       success: true,
       message: "Đã tạo bộ đề từ Excel thành công",
       data: {
@@ -668,10 +664,13 @@ export const importExcelExamSet = async (req, res) => {
     });
   } catch (error) {
     console.error("[ExamSet] Import Excel error:", error.message);
-    const status = error.statusCode || 500;
+    const status = error.status || error.statusCode || 500;
     return res.status(status).json({
       success: false,
       message: error.message || "Lỗi import từ file Excel",
     });
   }
+  };
 };
+
+export const importExcelExamSet = createImportExcelExamSetHandler();

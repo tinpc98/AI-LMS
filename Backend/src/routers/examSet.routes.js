@@ -46,23 +46,40 @@ import multer from "multer";
 
 const router = express.Router();
 
+export const excelFileFilter = (req, file, cb) => {
+  if (
+    file.mimetype === "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ||
+    file.mimetype === "application/vnd.ms-excel"
+  ) {
+    if (file.originalname.match(/\.(xlsx|xls)$/i)) {
+      cb(null, true);
+    } else {
+      cb(new Error("MIME type hợp lệ nhưng extension không hợp lệ"), false);
+    }
+  } else {
+    cb(new Error("Chỉ cho phép file Excel (.xlsx, .xls) với MIME type chuẩn"), false);
+  }
+};
+
+export const mapExcelUploadError = (err) => {
+  if (err instanceof multer.MulterError) {
+    if (err.code === "LIMIT_FILE_SIZE") {
+      return { status: 413, message: "Kích thước file vượt quá giới hạn 5MB" };
+    }
+    return { status: 400, message: err.message };
+  } else if (err) {
+    return { status: 415, message: err.message };
+  }
+  return null;
+};
+
 // Multer Config
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: {
     fileSize: 5 * 1024 * 1024, // 5MB
   },
-  fileFilter: (req, file, cb) => {
-    if (
-      file.mimetype === "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ||
-      file.mimetype === "application/vnd.ms-excel" ||
-      file.originalname.match(/\.(xlsx|xls)$/)
-    ) {
-      cb(null, true);
-    } else {
-      cb(new Error("Chỉ cho phép file Excel (.xlsx, .xls)"), false);
-    }
-  },
+  fileFilter: excelFileFilter,
 });
 
 // All routes require authentication
@@ -82,6 +99,16 @@ router.post("/", createExamSet);
  */
 router.get("/", getExamSets);
 
+export const uploadExcelMiddleware = (req, res, next) => {
+  upload.single("file")(req, res, function (err) {
+    const mappedErr = mapExcelUploadError(err);
+    if (mappedErr) {
+      return res.status(mappedErr.status).json({ success: false, message: mappedErr.message });
+    }
+    next();
+  });
+};
+
 /**
  * POST /api/exam-sets/import-excel
  * Import exam set from Excel file
@@ -90,14 +117,7 @@ router.get("/", getExamSets);
 router.post(
   "/import-excel",
   isTeacher,
-  (req, res, next) => {
-    upload.single("file")(req, res, function (err) {
-      if (err) {
-        return res.status(415).json({ success: false, message: err.message });
-      }
-      next();
-    });
-  },
+  uploadExcelMiddleware,
   importExcelExamSet
 );
 

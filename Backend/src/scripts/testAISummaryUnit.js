@@ -65,9 +65,37 @@ async function runUnitTests() {
     assert.strictEqual(cleaned, "HelloWorld!");
   });
 
+  const fs = await import("fs");
+  const path = await import("path");
+  const fixturePath = (filename) => path.join(process.cwd(), "src", "scripts", "fixtures", filename);
+
+  await runTest("Extractor: PDF thật hợp lệ trích xuất được text", async () => {
+    const buf = fs.readFileSync(fixturePath("valid-summary.pdf"));
+    const text = await lessonContentExtractor.extractPdf(buf);
+    assert.ok(text.includes("Hello World"), "Text extracted from PDF");
+  });
+
+  await runTest("Extractor: DOCX thật hợp lệ trích xuất được text", async () => {
+    const buf = fs.readFileSync(fixturePath("valid-summary.docx"));
+    const text = await lessonContentExtractor.extractDocx(buf);
+    assert.ok(text.includes("Hello DOCX"), "Text extracted from DOCX");
+  });
+
+  await runTest("Extractor: Lỗi phân tích file PDF hỏng (AIError mapping)", async () => {
+    try {
+      const buf = fs.readFileSync(fixturePath("corrupted.pdf"));
+      await lessonContentExtractor.extractPdf(buf);
+      assert.fail("Nên throw lỗi khi parse PDF hỏng");
+    } catch (err) {
+      assert.strictEqual(err.code, "AI_INVALID_INPUT");
+      assert.strictEqual(err.status, 415);
+    }
+  });
+
   await runTest("Extractor: Lỗi phân tích file DOCX hỏng", async () => {
     try {
-      await lessonContentExtractor.extractDocx(Buffer.from("Fake DOCX content"));
+      const buf = fs.readFileSync(fixturePath("corrupted.docx"));
+      await lessonContentExtractor.extractDocx(buf);
       assert.fail("Nên throw lỗi khi parse DOCX hỏng");
     } catch (err) {
       assert.strictEqual(err.code, "AI_INVALID_INPUT");
@@ -75,10 +103,20 @@ async function runUnitTests() {
     }
   });
 
-  await runTest("Extractor: Lỗi phân tích file PDF hỏng (AIError mapping)", async () => {
+  await runTest("Extractor: PDF buffer rỗng trả 415", async () => {
     try {
-      await lessonContentExtractor.extractPdf(Buffer.from("Fake PDF content"));
-      assert.fail("Nên throw lỗi khi parse PDF hỏng");
+      await lessonContentExtractor.extractPdf(Buffer.from(""));
+      assert.fail("Nên throw lỗi");
+    } catch (err) {
+      assert.strictEqual(err.code, "AI_INVALID_INPUT");
+      assert.strictEqual(err.status, 415);
+    }
+  });
+
+  await runTest("Extractor: DOCX buffer rỗng trả 415", async () => {
+    try {
+      await lessonContentExtractor.extractDocx(Buffer.from(""));
+      assert.fail("Nên throw lỗi");
     } catch (err) {
       assert.strictEqual(err.code, "AI_INVALID_INPUT");
       assert.strictEqual(err.status, 415);
@@ -100,30 +138,128 @@ async function runUnitTests() {
     
     // Mock Service function
     const originalApprove = aiSummaryService.approveSummary;
-    aiSummaryService.approveSummary = async (lessonId, summaryId, userId) => {
-      findOneParams = { lessonId, summaryId };
-      throw new AIError("Mock Error", "MOCK", 400); // Stop execution
-    };
+    try {
+      aiSummaryService.approveSummary = async (lessonId, summaryId, userId) => {
+        findOneParams = { lessonId, summaryId };
+        throw new AIError("Mock Error", "MOCK", 400); // Stop execution
+      };
 
-    const req = {
-      params: { lessonId: "L1", summaryId: "S1" },
-      user: { id: "U1" }
-    };
-    const res = {
-      status: (code) => ({ json: (data) => ({ code, data }) })
-    };
+      const req = {
+        params: { lessonId: "L1", summaryId: "S1" },
+        user: { id: "U1" }
+      };
+      const res = {
+        status: (code) => ({ json: (data) => ({ code, data }) })
+      };
 
-    const result = await aiSummaryController.approveSummary(req, res);
+      await aiSummaryController.approveSummary(req, res);
+
+      assert.strictEqual(findOneParams.lessonId, "L1", "lessonId phải được truyền xuống service");
+      assert.strictEqual(findOneParams.summaryId, "S1", "summaryId phải được truyền xuống service");
+    } finally {
+      aiSummaryService.approveSummary = originalApprove;
+    }
+  });
+
+  await runTest("IDOR: approveSummary chặn truy cập chéo bài học (Cross-Lesson IDOR)", async () => {
+    const aiSummaryService = (await import("../ai/services/aiSummary.service.js")).default;
+    const mongoose = (await import("mongoose")).default;
+    const AISummary = (await import("../models/aiSummary.model.js")).default;
+    const Lesson = (await import("../models/lesson.model.js")).default;
     
-    // Restore
-    aiSummaryService.approveSummary = originalApprove;
+    // Mock mongoose startSession
+    const originalStartSession = mongoose.startSession;
+    let endSessionCalled = false;
+    mongoose.startSession = async () => ({
+      withTransaction: async (cb) => cb(),
+      endSession: () => { endSessionCalled = true; }
+    });
 
-    assert.strictEqual(findOneParams.lessonId, "L1", "lessonId phải được truyền xuống service");
-    assert.strictEqual(findOneParams.summaryId, "S1", "summaryId phải được truyền xuống service");
+    // Mock AISummary.findOne to simulate cross-lesson
+    const originalFindOne = AISummary.findOne;
+    let findOneQuery = null;
+    AISummary.findOne = (query) => {
+      findOneQuery = query;
+      // Trả về null nếu lessonId không khớp (mô phỏng db behavior)
+      return { session: () => null }; 
+    };
+
+    const originalSave = AISummary.prototype.save;
+    let saveCalled = false;
+    AISummary.prototype.save = async function() { saveCalled = true; };
+
+    const originalUpdateMany = Lesson.updateMany;
+    let updateManyCalled = false;
+    Lesson.updateMany = async () => { updateManyCalled = true; };
+
+    try {
+      await aiSummaryService.approveSummary("lesson_A", "summary_B", "teacher1");
+      assert.fail("Phải throw lỗi");
+    } catch (error) {
+      assert.strictEqual(error.status, 404);
+      assert.strictEqual(findOneQuery.lessonId, "lesson_A");
+      assert.strictEqual(findOneQuery._id, "summary_B");
+      assert.strictEqual(saveCalled, false, "Không được gọi save() khi lỗi 404");
+      assert.strictEqual(updateManyCalled, false, "Không được gọi updateMany() khi lỗi 404");
+      assert.strictEqual(endSessionCalled, true, "Phải gọi endSession()");
+    } finally {
+      mongoose.startSession = originalStartSession;
+      AISummary.findOne = originalFindOne;
+      AISummary.prototype.save = originalSave;
+      Lesson.updateMany = originalUpdateMany;
+    }
+  });
+
+  await runTest("IDOR: rejectSummary chặn truy cập chéo bài học (Cross-Lesson IDOR)", async () => {
+    const aiSummaryService = (await import("../ai/services/aiSummary.service.js")).default;
+    const mongoose = (await import("mongoose")).default;
+    const AISummary = (await import("../models/aiSummary.model.js")).default;
+    const Lesson = (await import("../models/lesson.model.js")).default;
+    
+    // Mock mongoose startSession
+    const originalStartSession = mongoose.startSession;
+    let endSessionCalled = false;
+    mongoose.startSession = async () => ({
+      withTransaction: async (cb) => cb(),
+      endSession: () => { endSessionCalled = true; }
+    });
+
+    // Mock AISummary.findOne to simulate cross-lesson
+    const originalFindOne = AISummary.findOne;
+    let findOneQuery = null;
+    AISummary.findOne = (query) => {
+      findOneQuery = query;
+      return { session: () => null }; 
+    };
+
+    const originalSave = AISummary.prototype.save;
+    let saveCalled = false;
+    AISummary.prototype.save = async function() { saveCalled = true; };
+
+    const originalUpdateMany = Lesson.updateMany;
+    let updateManyCalled = false;
+    Lesson.updateMany = async () => { updateManyCalled = true; };
+
+    try {
+      await aiSummaryService.rejectSummary("lesson_A", "summary_B", "teacher1", "Lý do");
+      assert.fail("Phải throw lỗi");
+    } catch (error) {
+      assert.strictEqual(error.status, 404);
+      assert.strictEqual(findOneQuery.lessonId, "lesson_A");
+      assert.strictEqual(findOneQuery._id, "summary_B");
+      assert.strictEqual(saveCalled, false, "Không được gọi save() khi lỗi 404");
+      assert.strictEqual(updateManyCalled, false, "Không được gọi updateMany() khi lỗi 404");
+      assert.strictEqual(endSessionCalled, true, "Phải gọi endSession()");
+    } finally {
+      mongoose.startSession = originalStartSession;
+      AISummary.findOne = originalFindOne;
+      AISummary.prototype.save = originalSave;
+      Lesson.updateMany = originalUpdateMany;
+    }
   });
 
   console.log(`\n🏁 Kết quả Unit Test: ${passed} PASS, ${failed} FAIL`);
-  if (failed > 0) process.exit(1);
+  process.exitCode = failed > 0 ? 1 : 0;
 }
 
 runUnitTests();

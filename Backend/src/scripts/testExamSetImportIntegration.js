@@ -115,7 +115,7 @@ async function runIntegrationTests() {
       });
       assertTest(false, "Should throw Thiếu folderId");
     } catch (err) {
-      assertTest(err.status === 400 && err.message === "Thiếu folderId", "Trả về 400 Thiếu folderId");
+      assertTest(err.statusCode === 400 && err.message === "Thiếu folderId", "Trả về 400 Thiếu folderId");
     }
 
     // folderId không hợp lệ
@@ -125,7 +125,7 @@ async function runIntegrationTests() {
       });
       assertTest(false, "Should throw folderId không hợp lệ");
     } catch (err) {
-      assertTest(err.status === 400 && err.message === "folderId không hợp lệ", "Trả về 400 folderId không hợp lệ");
+      assertTest(err.statusCode === 400 && err.message === "folderId không hợp lệ", "Trả về 400 folderId không hợp lệ");
     }
 
     // Folder không tồn tại
@@ -135,7 +135,7 @@ async function runIntegrationTests() {
       });
       assertTest(false, "Should throw Folder không tồn tại");
     } catch (err) {
-      assertTest(err.status === 404 && err.message === "Folder không tồn tại", "Trả về 404 Folder không tồn tại");
+      assertTest(err.statusCode === 404 && err.message === "Folder không tồn tại", "Trả về 404 Folder không tồn tại");
     }
 
     // Folder thuộc người khác
@@ -145,7 +145,7 @@ async function runIntegrationTests() {
       });
       assertTest(false, "Should throw Không có quyền truy cập Folder");
     } catch (err) {
-      assertTest(err.status === 403 && err.message === "Không có quyền truy cập Folder", "Trả về 403 Không có quyền truy cập Folder");
+      assertTest(err.statusCode === 403 && err.message === "Không có quyền truy cập Folder", "Trả về 403 Không có quyền truy cập Folder");
     }
 
   } catch (error) {

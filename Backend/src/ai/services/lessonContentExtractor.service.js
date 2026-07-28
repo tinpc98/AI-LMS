@@ -1,6 +1,5 @@
 import { createRequire } from "module";
 const require = createRequire(import.meta.url);
-const pdf = require("pdf-parse");
 import mammoth from "mammoth";
 import { AIError, AIErrorCode } from "../../utils/aiError.js";
 
@@ -69,25 +68,54 @@ class LessonContentExtractorService {
       .trim();
   }
 
-  /**
-   * Extract text from PDF buffer
-   */
   async extractPdf(buffer) {
-    const { PDFParse } = require("pdf-parse");
-    let parser = null;
+    let parser;
+
     try {
-      parser = new PDFParse({ data: buffer });
+      if (!Buffer.isBuffer(buffer) || buffer.length === 0) {
+        throw new AIError(
+          "File PDF rỗng hoặc không hợp lệ.",
+          AIErrorCode.AI_INVALID_INPUT,
+          415
+        );
+      }
+
+      if (this.pdfParserFactory) {
+        parser = this.pdfParserFactory(buffer);
+      } else {
+        const { PDFParse } = require("pdf-parse");
+        parser = new PDFParse({ data: buffer });
+      }
+
       const result = await parser.getText();
+
       return this.cleanText(result.text);
     } catch (error) {
-      console.error("[LessonContentExtractor] Lỗi phân tích file PDF:", error);
-      throw new AIError("Lỗi phân tích file PDF. File có thể bị hỏng hoặc không đúng định dạng.", AIErrorCode.AI_INVALID_INPUT, 415);
+      if (error instanceof AIError) {
+        throw error;
+      }
+
+      console.error(
+        "[LessonContentExtractor] Lỗi phân tích file PDF:",
+        error.message
+      );
+
+      throw new AIError(
+        "Lỗi phân tích file PDF. File có thể bị hỏng hoặc không đúng định dạng.",
+        AIErrorCode.AI_INVALID_INPUT,
+        415
+      );
     } finally {
-      if (parser && typeof parser.destroy === 'function') {
+      if (parser) {
         try {
-          await parser.destroy();
-        } catch (e) {
-          console.error("[LessonContentExtractor] Lỗi khi destroy parser PDF:", e);
+          if (typeof parser.destroy === 'function') {
+            await parser.destroy();
+          }
+        } catch (destroyError) {
+          console.error(
+            "[LessonContentExtractor] Không thể giải phóng PDF parser:",
+            destroyError.message
+          );
         }
       }
     }
@@ -98,11 +126,32 @@ class LessonContentExtractorService {
    */
   async extractDocx(buffer) {
     try {
+      if (!Buffer.isBuffer(buffer) || buffer.length === 0) {
+        throw new AIError(
+          "File DOCX rỗng hoặc không hợp lệ.",
+          AIErrorCode.AI_INVALID_INPUT,
+          415
+        );
+      }
+
       const result = await mammoth.extractRawText({ buffer });
+
       return this.cleanText(result.value);
     } catch (error) {
-      console.error("[LessonContentExtractor] Lỗi phân tích file DOCX:", error);
-      throw new AIError("Lỗi phân tích file DOCX. File có thể bị hỏng hoặc không đúng định dạng.", AIErrorCode.AI_INVALID_INPUT, 415);
+      if (error instanceof AIError) {
+        throw error;
+      }
+
+      console.error(
+        "[LessonContentExtractor] Lỗi phân tích file DOCX:",
+        error.message
+      );
+
+      throw new AIError(
+        "Lỗi phân tích file DOCX. File có thể bị hỏng hoặc không đúng định dạng.",
+        AIErrorCode.AI_INVALID_INPUT,
+        415
+      );
     }
   }
 

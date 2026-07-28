@@ -1,3 +1,4 @@
+import "dotenv/config";
 import dotenv from "dotenv";
 import express from "express";
 import cors from "cors"; // Thêm thư viện cấu hình cho phép Frontend gọi API

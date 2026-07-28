@@ -23,6 +23,8 @@
     "test:examset-shared-with-me": "node ./src/scripts/runExamSetSharedWithMeServiceTests.js",
     "test:examset-access-middleware": "node ./src/scripts/runExamSetAccessMiddlewareTests.js",
     "test:examset-share-update-metadata": "node ./src/scripts/runExamSetShareUpdateMetadataServiceTests.js",
+    "test:examset-import-unit": "node ./src/scripts/testExamSetImportUnit.js",
+    "test:examset-import-integration": "node -e \"process.env.NODE_ENV='test'; import('./src/scripts/testExamSetImportIntegration.js').catch(e => { console.error(e); process.exit(1); })\"",
     "test:ai-core": "node ./src/scripts/testAICoreFoundation.js",
     "test:ai-summary": "node ./src/scripts/testAISummaryUnit.js",
     "test:ai-summary-integration": "node -e \"process.env.NODE_ENV='test'; import('./src/scripts/testAISummaryIntegration.js').catch(e => { console.error(e); process.exit(1); })\"",
