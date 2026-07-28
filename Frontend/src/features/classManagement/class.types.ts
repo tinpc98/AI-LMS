@@ -1,14 +1,38 @@
+export interface Pagination {
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+export interface ApiResponse<T> {
+  success: boolean;
+  message: string;
+  data: T;
+  pagination?: Pagination;
+  errors?: any;
+}
+
 export type ClassLearningMode = "Offline" | "Online" | "Hybrid";
-export type ClassStatus = "Upcoming" | "Active" | "Completed" | "Cancelled";
+export type ClassStatus =
+  | "Draft"
+  | "Ready"
+  | "Ongoing"
+  | "Completed"
+  | "Cancelled"
+  | "Archived";
 
 export interface ClassRecord {
-  id: string;
+  id: string; // Mapped from _id
   className: string;
   classCode: string;
   courseId: string;
   teacherId?: string | null;
-  joinCode: string;
-  classroom: string;
+  assignedBy?: string | null;
+  joinCode?: string;
+  classRoom: string;
+  meetingRoomId?: string;
+  googleMeetLink?: string;
   learningMode: ClassLearningMode;
   startDate: string;
   endDate: string;
@@ -19,11 +43,12 @@ export interface ClassRecord {
   };
   maxStudents: number;
   currentStudents: number;
-  students: string[];
+  students: any[];
   description: string;
   note: string;
   isEnrollmentOpen: boolean;
   status: ClassStatus;
+  isDeleted?: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -33,15 +58,19 @@ export interface ClassFilters {
   courseId: string;
   learningMode: ClassLearningMode | "All";
   status: ClassStatus | "All";
+  page?: number;
+  limit?: number;
+  sortField?: string;
+  sortOrder?: "ascend" | "descend";
 }
 
 export interface ClassFormValues {
   className: string;
   classCode: string;
   courseId: string;
-  teacherId: string;
-  joinCode: string;
-  classroom: string;
+  teacherId?: string;
+  joinCode?: string;
+  classRoom: string;
   learningMode: ClassLearningMode;
   startDate: string;
   endDate: string;

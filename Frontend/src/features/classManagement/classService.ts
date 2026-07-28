@@ -1,121 +1,83 @@
-import type { ClassFilters, ClassFormValues, ClassRecord } from "./class.types";
-import { mockClasses } from "./mockClasses";
+import axiosClient from "../../api/axiosClient";
+import type { ApiResponse, ClassFilters, ClassFormValues, ClassRecord } from "./class.types";
 import { mockCourses } from "../courseManagement/course.mock";
 import { mockUsers } from "../accountManagement/account.mock";
 
-const delay = (ms: number) => new Promise((resolve) => window.setTimeout(resolve, ms));
-
-const normalizeText = (value: string) => value.trim().toLowerCase();
+const mapClass = (c: any): ClassRecord => {
+  return {
+    ...c,
+    id: c._id,
+    courseId: c.courseId?._id || c.courseId,
+    teacherId: c.teacherId?._id || c.teacherId,
+    assignedBy: c.assignedBy?._id || c.assignedBy,
+  };
+};
 
 export const classService = {
-  async getClasses(filters: ClassFilters): Promise<ClassRecord[]> {
-    await delay(500);
-
-    return mockClasses.filter((item) => {
-      const matchesSearch =
-        !filters.search ||
-        [item.className, item.classCode, item.joinCode, item.classroom].some((value) =>
-          normalizeText(value).includes(normalizeText(filters.search)),
-        );
-
-      const matchesCourse = !filters.courseId || item.courseId === filters.courseId;
-      const matchesLearningMode = filters.learningMode === "All" || item.learningMode === filters.learningMode;
-      const matchesStatus = filters.status === "All" || item.status === filters.status;
-
-      return matchesSearch && matchesCourse && matchesLearningMode && matchesStatus;
-    });
+  async getClasses(filters: ClassFilters, isTrash = false): Promise<ApiResponse<ClassRecord[]>> {
+    const params: Record<string, any> = { ...filters };
+    if (params.learningMode === "All") delete params.learningMode;
+    if (params.status === "All") delete params.status;
+    
+    const endpoint = isTrash ? "/api/classes/trash" : "/api/classes";
+    const res = await axiosClient.get<ApiResponse<any[]>>(endpoint, { params });
+    return {
+      ...res.data,
+      data: res.data.data.map(mapClass),
+    };
   },
 
   async getCourseOptions() {
-    await delay(200);
-    return mockCourses.map((course) => ({ id: course.id, label: course.courseName }));
+    // Optional: fetch real courses if needed. For now, keep mock or use real courseService.
+    try {
+      const res = await axiosClient.get("/api/courses", { params: { limit: 1000 } });
+      return res.data.data.map((c: any) => ({ id: c._id, label: c.courseName }));
+    } catch {
+      return mockCourses.map((course) => ({ id: course.id, label: course.courseName }));
+    }
   },
 
   async getTeacherOptions() {
-    await delay(200);
-    return mockUsers
-      .filter((user) => user.role === "Teacher")
-      .map((user) => ({ id: user.id, label: user.fullName }));
+    // Optional: fetch real teachers if needed.
+    try {
+      const res = await axiosClient.get("/api/users", { params: { role: "teacher", limit: 1000 } });
+      return res.data.data.map((u: any) => ({ id: u._id, label: u.fullName }));
+    } catch {
+      return mockUsers
+        .filter((user) => user.role === "Teacher")
+        .map((user) => ({ id: user.id, label: user.fullName }));
+    }
   },
 
-  async getClassById(id: string): Promise<ClassRecord | undefined> {
-    await delay(300);
-    return mockClasses.find((item) => item.id === id);
+  async getClassById(id: string): Promise<ClassRecord> {
+    const res = await axiosClient.get<ApiResponse<any>>(`/api/classes/${id}`);
+    return mapClass(res.data.data);
   },
 
   async createClass(payload: ClassFormValues): Promise<ClassRecord> {
-    await delay(400);
-    const newClass: ClassRecord = {
-      id: `class-${Date.now()}`,
-      className: payload.className.trim(),
-      classCode: payload.classCode.trim(),
-      courseId: payload.courseId,
-      teacherId: payload.teacherId || null,
-      joinCode: payload.joinCode.trim(),
-      classroom: payload.classroom.trim(),
-      learningMode: payload.learningMode,
-      startDate: payload.startDate,
-      endDate: payload.endDate,
-      schedule: payload.schedule,
-      maxStudents: payload.maxStudents,
-      currentStudents: 0,
-      students: [],
-      description: payload.description.trim(),
-      note: payload.note.trim(),
-      isEnrollmentOpen: payload.isEnrollmentOpen,
-      status: payload.status,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-
-    mockClasses.unshift(newClass);
-    return newClass;
+    const res = await axiosClient.post<ApiResponse<any>>("/api/classes", payload);
+    return mapClass(res.data.data);
   },
 
   async updateClass(id: string, payload: ClassFormValues): Promise<ClassRecord> {
-    await delay(400);
-    const index = mockClasses.findIndex((item) => item.id === id);
-    if (index === -1) throw new Error("Class not found");
-
-    const updated: ClassRecord = {
-      ...mockClasses[index],
-      className: payload.className.trim(),
-      classCode: payload.classCode.trim(),
-      courseId: payload.courseId,
-      teacherId: payload.teacherId || null,
-      joinCode: payload.joinCode.trim(),
-      classroom: payload.classroom.trim(),
-      learningMode: payload.learningMode,
-      startDate: payload.startDate,
-      endDate: payload.endDate,
-      schedule: payload.schedule,
-      maxStudents: payload.maxStudents,
-      description: payload.description.trim(),
-      note: payload.note.trim(),
-      isEnrollmentOpen: payload.isEnrollmentOpen,
-      status: payload.status,
-      updatedAt: new Date().toISOString(),
-    };
-
-    mockClasses[index] = updated;
-    return updated;
+    const res = await axiosClient.put<ApiResponse<any>>(`/api/classes/${id}`, payload);
+    return mapClass(res.data.data);
   },
 
   async updateStatus(id: string, status: ClassRecord["status"]): Promise<ClassRecord> {
-    await delay(300);
-    const index = mockClasses.findIndex((item) => item.id === id);
-    if (index === -1) throw new Error("Class not found");
-
-    const updated = { ...mockClasses[index], status, updatedAt: new Date().toISOString() };
-    mockClasses[index] = updated;
-    return updated;
+    const res = await axiosClient.put<ApiResponse<any>>(`/api/classes/${id}`, { status });
+    return mapClass(res.data.data);
   },
 
   async deleteClass(id: string): Promise<void> {
-    await delay(300);
-    const index = mockClasses.findIndex((item) => item.id === id);
-    if (index === -1) throw new Error("Class not found");
+    await axiosClient.patch(`/api/classes/${id}/delete`);
+  },
 
-    mockClasses.splice(index, 1);
+  async restoreClass(id: string): Promise<void> {
+    await axiosClient.patch(`/api/classes/${id}/restore`);
+  },
+
+  async permanentDeleteClass(id: string): Promise<void> {
+    await axiosClient.delete(`/api/classes/${id}/force`);
   },
 };

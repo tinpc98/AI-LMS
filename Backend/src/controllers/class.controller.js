@@ -265,7 +265,10 @@ export const AssignStudent = async (req, res) => {
 
     const updatedClass = await classModel.findOneAndUpdate(
       { _id: id, isEnrollmentOpen: true, "students.studentId": { $ne: studentId }, $expr: { $lt: [{ $size: { $ifNull: ["$students", []] } }, "$maxStudents"] } },
-      { $push: { students: { studentId, joinedAt: new Date(), status: "Enrolled" } } },
+      { 
+        $push: { students: { studentId, joinedAt: new Date(), status: "Enrolled" } },
+        $inc: { currentStudents: 1 }
+      },
       { new: true, runValidators: true }
     )
     .populate("teacherId", "fullName email avatar phone teachingSubjects")
@@ -301,10 +304,13 @@ export const RemoveStudent = async (req, res) => {
   }
 
   try {
-    const updatedClass = await classModel.findByIdAndUpdate(
-      id,
-      { $pull: { students: { studentId } } },
-      { new: true }
+    const updatedClass = await classModel.findOneAndUpdate(
+      { _id: id, "students.studentId": studentId },
+      { 
+        $pull: { students: { studentId } },
+        $inc: { currentStudents: -1 }
+      },
+      { new: true, runValidators: true }
     )
     .populate("teacherId", "fullName email avatar phone teachingSubjects")
     .populate("assignedBy", "fullName email")
@@ -513,7 +519,10 @@ export const PermanentDeleteClass = async (req, res) => {
       });
     }
 
-    return res.status(204).send();
+    return res.status(200).json({
+      success: true,
+      message: "Xóa vĩnh viễn lớp học thành công",
+    });
   } catch (error) {
     console.error("[ClassController] PermanentDeleteClass Error:", error);
     const isValidationError = error.name === "ValidationError";

@@ -1,4 +1,4 @@
-import { Descriptions, Drawer } from "antd";
+import { Descriptions, Drawer, Tag } from "antd";
 import type { ClassRecord } from "./class.types";
 
 interface ClassDetailDrawerProps {
@@ -19,14 +19,24 @@ const ClassDetailDrawer = ({ open, classRecord, onClose, courseOptions, teacherO
           <Descriptions.Item label="Course">{courseOptions.find((item) => item.id === classRecord.courseId)?.label || classRecord.courseId}</Descriptions.Item>
           <Descriptions.Item label="Teacher">{classRecord.teacherId ? teacherOptions.find((item) => item.id === classRecord.teacherId)?.label || classRecord.teacherId : "—"}</Descriptions.Item>
           <Descriptions.Item label="Learning Mode">{classRecord.learningMode}</Descriptions.Item>
-          <Descriptions.Item label="Room">{classRecord.classroom || "—"}</Descriptions.Item>
+          <Descriptions.Item label="Room">{classRecord.classRoom || "—"}</Descriptions.Item>
+          <Descriptions.Item label="Meeting Room ID">{classRecord.meetingRoomId || "—"}</Descriptions.Item>
           <Descriptions.Item label="Join Code">{classRecord.joinCode || "—"}</Descriptions.Item>
-          <Descriptions.Item label="Schedule">{`${classRecord.schedule.days.join(", ")} • ${classRecord.schedule.startTime}-${classRecord.schedule.endTime}`}</Descriptions.Item>
+          <Descriptions.Item label="Google Meet Link">
+            {classRecord.googleMeetLink ? (
+              <a href={classRecord.googleMeetLink} target="_blank" rel="noopener noreferrer">
+                Link
+              </a>
+            ) : (
+              "—"
+            )}
+          </Descriptions.Item>
+          <Descriptions.Item label="Schedule">{`${classRecord.schedule?.days?.join(", ") || ""} • ${classRecord.schedule?.startTime || ""}-${classRecord.schedule?.endTime || ""}`}</Descriptions.Item>
           <Descriptions.Item label="Students">{`${classRecord.currentStudents}/${classRecord.maxStudents}`}</Descriptions.Item>
           <Descriptions.Item label="Enrollment">{classRecord.isEnrollmentOpen ? "Open" : "Closed"}</Descriptions.Item>
           <Descriptions.Item label="Description">{classRecord.description || "—"}</Descriptions.Item>
           <Descriptions.Item label="Notes">{classRecord.note || "—"}</Descriptions.Item>
-          <Descriptions.Item label="Status">{classRecord.status}</Descriptions.Item>
+          <Descriptions.Item label="Status"><Tag>{classRecord.status}</Tag></Descriptions.Item>
           <Descriptions.Item label="Start Date">{new Date(classRecord.startDate).toLocaleDateString("vi-VN")}</Descriptions.Item>
           <Descriptions.Item label="End Date">{new Date(classRecord.endDate).toLocaleDateString("vi-VN")}</Descriptions.Item>
           <Descriptions.Item label="Created At">{new Date(classRecord.createdAt).toLocaleString("vi-VN")}</Descriptions.Item>

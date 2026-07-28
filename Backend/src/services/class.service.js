@@ -84,10 +84,16 @@ class ClassService {
     const limitNum = Math.max(1, Number(limit) || 10);
     const skip = (pageNum - 1) * limitNum;
 
-    // Xử lý Sorting (Whitelist - Ngăn ngừa sort injection)
-    const SORT_WHITELIST = ["createdAt", "className", "startDate", "endDate", "maxStudents", "status"];
+    // Xử lý Sorting (Hỗ trợ Ant Design Table format: sortField & sortOrder = 'ascend' | 'descend')
+    const { sortField, sortOrder } = query;
+    const SORT_WHITELIST = ["createdAt", "className", "startDate", "endDate", "maxStudents", "status", "classCode"];
     let sortOption = { createdAt: -1 }; // Mặc định
-    if (sort && sort.trim()) {
+
+    if (sortField && SORT_WHITELIST.includes(sortField)) {
+      const direction = sortOrder === "ascend" || sortOrder === "asc" ? 1 : -1;
+      sortOption = { [sortField]: direction };
+    } else if (sort && sort.trim()) {
+      // Fallback cho tham số sort kiểu cũ (VD: -className)
       const parts = sort.split(",").map((s) => s.trim()).filter(Boolean);
       const sortObj = {};
       parts.forEach((part) => {

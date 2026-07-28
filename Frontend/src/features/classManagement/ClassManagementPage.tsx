@@ -1,4 +1,4 @@
-import { Card, message, Typography } from "antd";
+import { Card, message, Typography, Tabs } from "antd";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { ClassFormModalHandle } from "./ClassFormModal";
 import ClassDetailDrawer from "./ClassDetailDrawer";
@@ -7,39 +7,57 @@ import ClassTable from "./ClassTable";
 import ClassToolbar from "./ClassToolbar";
 import DeleteConfirmModal from "./DeleteConfirmModal";
 import { classService } from "./classService";
-import type { ClassFilters, ClassFormValues, ClassRecord, ClassStatus } from "./class.types";
+import type { ClassFilters, ClassFormValues, ClassRecord, ClassStatus, Pagination } from "./class.types";
 
 const initialFilters: ClassFilters = {
   search: "",
   courseId: "",
   learningMode: "All",
   status: "All",
+  page: 1,
+  limit: 10,
 };
 
 const ClassManagementPage = () => {
+  const [activeTab, setActiveTab] = useState("active");
   const [classes, setClasses] = useState<ClassRecord[]>([]);
+  const [pagination, setPagination] = useState<Pagination | undefined>();
   const [filters, setFilters] = useState<ClassFilters>(initialFilters);
   const [loading, setLoading] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [detailOpen, setDetailOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleteMode, setDeleteMode] = useState<"soft" | "force">("soft");
   const [selectedClass, setSelectedClass] = useState<ClassRecord | undefined>();
   const [mode, setMode] = useState<"create" | "edit">("create");
   const [courseOptions, setCourseOptions] = useState<Array<{ id: string; label: string }>>([]);
   const [teacherOptions, setTeacherOptions] = useState<Array<{ id: string; label: string }>>([]);
   const formRef = useRef<ClassFormModalHandle | null>(null);
+  
+  // Debounce search filter
+  const [debouncedFilters, setDebouncedFilters] = useState<ClassFilters>(initialFilters);
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedFilters(filters);
+    }, 500);
+    return () => clearTimeout(handler);
+  }, [filters]);
 
   const loadClasses = async () => {
     setLoading(true);
     try {
+      const isTrash = activeTab === "trash";
       const [classResponse, courseResponse, teacherResponse] = await Promise.all([
-        classService.getClasses(filters),
+        classService.getClasses(debouncedFilters, isTrash),
         classService.getCourseOptions(),
         classService.getTeacherOptions(),
       ]);
-      setClasses(classResponse);
+      setClasses(classResponse.data);
+      setPagination(classResponse.pagination);
       setCourseOptions(courseResponse);
       setTeacherOptions(teacherResponse);
+    } catch {
+      message.error("Failed to load classes");
     } finally {
       setLoading(false);
     }
@@ -47,7 +65,12 @@ const ClassManagementPage = () => {
 
   useEffect(() => {
     void loadClasses();
-  }, [filters]);
+  }, [debouncedFilters, activeTab]);
+
+  const handleTabChange = (key: string) => {
+    setActiveTab(key);
+    setFilters(initialFilters);
+  };
 
   const openCreateModal = () => {
     setMode("create");
@@ -95,6 +118,13 @@ const ClassManagementPage = () => {
 
   const handleDeleteRequest = (classRecord: ClassRecord) => {
     setSelectedClass(classRecord);
+    setDeleteMode("soft");
+    setDeleteOpen(true);
+  };
+
+  const handleForceDeleteRequest = (classRecord: ClassRecord) => {
+    setSelectedClass(classRecord);
+    setDeleteMode("force");
     setDeleteOpen(true);
   };
 
@@ -102,16 +132,39 @@ const ClassManagementPage = () => {
     if (!selectedClass) return;
 
     try {
-      await classService.deleteClass(selectedClass.id);
-      message.success("Class deleted successfully");
+      if (deleteMode === "soft") {
+        await classService.deleteClass(selectedClass.id);
+        message.success("Class moved to trash");
+      } else {
+        await classService.permanentDeleteClass(selectedClass.id);
+        message.success("Class permanently deleted");
+      }
       setDeleteOpen(false);
       await loadClasses();
     } catch {
-      message.error("Unable to delete the class");
+      message.error("Unable to complete the request");
     }
   };
 
-  const filteredCount = useMemo(() => classes.length, [classes]);
+  const handleRestore = async (classRecord: ClassRecord) => {
+    try {
+      await classService.restoreClass(classRecord.id);
+      message.success("Class restored successfully");
+      await loadClasses();
+    } catch {
+      message.error("Failed to restore class");
+    }
+  };
+
+  const handleTableChange = (newPagination: any, _filters: any, sorter: any) => {
+    setFilters((prev) => ({
+      ...prev,
+      page: newPagination.current,
+      limit: newPagination.pageSize,
+      sortField: sorter.field,
+      sortOrder: sorter.order,
+    }));
+  };
 
   return (
     <div>
@@ -125,11 +178,16 @@ const ClassManagementPage = () => {
       </div>
 
       <Card bordered={false}>
+        <Tabs activeKey={activeTab} onChange={handleTabChange}>
+          <Tabs.TabPane tab="Active Classes" key="active" />
+          <Tabs.TabPane tab="Trash" key="trash" />
+        </Tabs>
+
         <ClassToolbar
           filters={filters}
-          onFiltersChange={setFilters}
+          onFiltersChange={(newFilters) => setFilters({ ...newFilters, page: 1 })}
           onRefresh={() => void loadClasses()}
-          onCreate={openCreateModal}
+          onCreate={activeTab !== "trash" ? openCreateModal : undefined}
           courseOptions={courseOptions}
           learningModeOptions={[
             { label: "All Modes", value: "All" },
@@ -140,19 +198,26 @@ const ClassManagementPage = () => {
         />
 
         <div style={{ marginTop: 16 }}>
-          <Typography.Text type="secondary">Showing {filteredCount} class(es)</Typography.Text>
+          <Typography.Text type="secondary">
+            Showing {pagination?.total || 0} class(es)
+          </Typography.Text>
         </div>
 
         <div style={{ marginTop: 16 }}>
           <ClassTable
             data={classes}
             loading={loading}
+            activeTab={activeTab}
+            pagination={pagination}
+            onChange={handleTableChange}
             courseOptions={courseOptions}
             teacherOptions={teacherOptions}
             onView={handleView}
             onEdit={openEditModal}
             onChangeStatus={handleChangeStatus}
             onDelete={handleDeleteRequest}
+            onRestore={handleRestore}
+            onForceDelete={handleForceDeleteRequest}
           />
         </div>
       </Card>
@@ -176,7 +241,12 @@ const ClassManagementPage = () => {
         teacherOptions={teacherOptions}
       />
 
-      <DeleteConfirmModal open={deleteOpen} className={selectedClass?.className} onConfirm={confirmDelete} onCancel={() => setDeleteOpen(false)} />
+      <DeleteConfirmModal 
+        open={deleteOpen} 
+        className={selectedClass?.className} 
+        onConfirm={confirmDelete} 
+        onCancel={() => setDeleteOpen(false)} 
+      />
     </div>
   );
 };
