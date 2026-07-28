@@ -17,7 +17,7 @@ const ClassDetailDrawer = ({ open, classRecord, onClose, courseOptions, teacherO
           <Descriptions.Item label="Class Name">{classRecord.className}</Descriptions.Item>
           <Descriptions.Item label="Class Code">{classRecord.classCode || "—"}</Descriptions.Item>
           <Descriptions.Item label="Course">{courseOptions.find((item) => item.id === classRecord.courseId)?.label || classRecord.courseId}</Descriptions.Item>
-          <Descriptions.Item label="Teacher">{classRecord.teacherId ? teacherOptions.find((item) => item.id === classRecord.teacherId)?.label || classRecord.teacherId : "—"}</Descriptions.Item>
+          <Descriptions.Item label="Teacher">{classRecord.teacher ? classRecord.teacher.fullName : "—"}</Descriptions.Item>
           <Descriptions.Item label="Learning Mode">{classRecord.learningMode}</Descriptions.Item>
           <Descriptions.Item label="Room">{classRecord.classRoom || "—"}</Descriptions.Item>
           <Descriptions.Item label="Meeting Room ID">{classRecord.meetingRoomId || "—"}</Descriptions.Item>

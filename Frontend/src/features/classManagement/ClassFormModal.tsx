@@ -1,5 +1,5 @@
 import { Checkbox, Form, Input, InputNumber, Modal, Select } from "antd";
-import { forwardRef, useEffect, useImperativeHandle } from "react";
+import { forwardRef, useEffect, useImperativeHandle, useMemo } from "react";
 import type { ClassFormValues, ClassRecord, CourseOption, TeacherOption } from "./class.types";
 
 interface ClassFormModalProps {
@@ -21,6 +21,17 @@ const ClassFormModal = forwardRef<ClassFormModalHandle, ClassFormModalProps>(fun
   ref,
 ) {
   const [form] = Form.useForm<ClassFormValues>();
+
+  const mergedTeacherOptions = useMemo(() => {
+    const options = [...teacherOptions];
+    if (initialValues?.teacher) {
+      const exists = options.some(opt => opt.id === initialValues.teacher?.id);
+      if (!exists) {
+        options.push({ id: initialValues.teacher.id, label: initialValues.teacher.fullName });
+      }
+    }
+    return options;
+  }, [teacherOptions, initialValues]);
 
   useEffect(() => {
     if (open) {
@@ -93,7 +104,7 @@ const ClassFormModal = forwardRef<ClassFormModalHandle, ClassFormModalProps>(fun
           <Select options={courseOptions.map((item) => ({ label: item.label, value: item.id }))} />
         </Form.Item>
         <Form.Item name="teacherId" label="Teacher">
-          <Select allowClear options={teacherOptions.map((item) => ({ label: item.label, value: item.id }))} />
+          <Select allowClear options={mergedTeacherOptions.map((item) => ({ label: item.label, value: item.id }))} />
         </Form.Item>
         <Form.Item name="learningMode" label="Learning Mode" rules={[{ required: true, message: "Learning mode is required" }]}> 
           <Select
