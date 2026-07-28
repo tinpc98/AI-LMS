@@ -2,6 +2,7 @@ import { summaryPromptTemplate } from "./summary.prompt.js";
 import { examPromptTemplate } from "./exam.prompt.js";
 import { gradingPromptTemplate } from "./grading.prompt.js";
 import { chatPromptTemplate } from "./chat.prompt.js";
+import { questionGenerationPromptTemplate } from "./questionGeneration.prompt.js";
 import { AIError, AIErrorCode } from "../../utils/aiError.js";
 
 class PromptManager {
@@ -11,6 +12,7 @@ class PromptManager {
     this.registerTemplate(examPromptTemplate);
     this.registerTemplate(gradingPromptTemplate);
     this.registerTemplate(chatPromptTemplate);
+    this.registerTemplate(questionGenerationPromptTemplate);
   }
 
   registerTemplate(template) {

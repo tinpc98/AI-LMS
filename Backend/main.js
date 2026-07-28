@@ -25,6 +25,7 @@ import ReportRouter from "./src/routers/report.routes.js";
 import NotificationRouter from "./src/routers/notification.routes.js";
 import ExamSetRouter from "./src/routers/examSet.routes.js";
 import AISummaryRouter from "./src/routers/aiSummary.routes.js";
+import AIQuestionRouter from "./src/routers/aiQuestion.routes.js";
 import { initCronJobs } from "./src/cron/cron.setup.js";
 import aiUsageService from "./src/ai/services/aiUsage.service.js";
 import FolderRouter from "./src/routers/folder.routes.js";
@@ -109,6 +110,7 @@ app.use("/api/live", LiveRouter);
 
 // AI Module Routes
 app.use("/api/ai/lectures", AISummaryRouter);
+app.use("/api/ai/lectures/:lessonId/question-sets", AIQuestionRouter);
 
 app.get("/", (req, res) => {
   res

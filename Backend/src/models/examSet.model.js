@@ -233,6 +233,21 @@ const examSetSchema = new Schema(
       index: true,
     },
 
+    // Fingerprint để kiểm tra chống trùng lặp (Idempotency) khi generate từ AI
+    aiSourceFingerprint: {
+      type: String,
+      trim: true,
+      default: null,
+      maxlength: 64,
+    },
+
+    // Reference tới log sử dụng AI
+    aiUsageId: {
+      type: Schema.Types.ObjectId,
+      ref: "AIUsage",
+      default: null,
+    },
+
     // Questions array (subdocuments)
     questions: [questionSchema],
 
