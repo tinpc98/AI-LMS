@@ -20,7 +20,7 @@ export const StudentQuickActions: React.FC = React.memo(() => {
       icon: <RocketOutlined style={{ fontSize: 22, color: "#1890ff" }} />,
       bgColor: "#e6f7ff",
       borderColor: "#91d5ff",
-      onClick: () => navigate("/myclasses"),
+      onClick: () => navigate("/student/myclasses"),
     },
     {
       key: "my-classes",
@@ -28,7 +28,7 @@ export const StudentQuickActions: React.FC = React.memo(() => {
       icon: <BookOutlined style={{ fontSize: 22, color: "#722ed1" }} />,
       bgColor: "#f9f0ff",
       borderColor: "#d3ade6",
-      onClick: () => navigate("/myclasses"),
+      onClick: () => navigate("/student/myclasses"),
     },
     {
       key: "my-assignments",
@@ -36,7 +36,7 @@ export const StudentQuickActions: React.FC = React.memo(() => {
       icon: <FileTextOutlined style={{ fontSize: 22, color: "#fa8c16" }} />,
       bgColor: "#fff7e6",
       borderColor: "#ffd591",
-      onClick: () => navigate("/studentassignment"),
+      onClick: () => navigate("/student/studentassignment"),
     },
     {
       key: "my-grades",
@@ -44,7 +44,7 @@ export const StudentQuickActions: React.FC = React.memo(() => {
       icon: <TrophyOutlined style={{ fontSize: 22, color: "#52c41a" }} />,
       bgColor: "#f6ffed",
       borderColor: "#b7eb8f",
-      onClick: () => navigate("/profile"),
+      onClick: () => navigate("/student/profile"),
     },
   ];
 

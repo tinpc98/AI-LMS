@@ -47,7 +47,7 @@ export const StudentAssignmentOverview: React.FC<StudentAssignmentOverviewProps>
         extra={
           <Button
             type="link"
-            onClick={() => navigate("/studentassignment")}
+            onClick={() => navigate("/student/studentassignment")}
             style={{ padding: 0 }}
           >
             Tất cả <RightOutlined style={{ fontSize: 10 }} />
@@ -91,8 +91,8 @@ export const StudentAssignmentOverview: React.FC<StudentAssignmentOverviewProps>
                       onClick={() =>
                         navigate(
                           item.classId
-                            ? `/classdetail/${item.classId}`
-                            : `/studentassignment/${item.id}`
+                            ? `/student/classdetail/${item.classId}`
+                            : `/student/studentassignment/${item.id}`
                         )
                       }
                       style={{ borderRadius: 6 }}

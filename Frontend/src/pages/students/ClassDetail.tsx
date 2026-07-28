@@ -351,7 +351,7 @@ export default function ClassDetail() {
           type="error"
           showIcon
           action={
-            <Link to="/myclasses">
+            <Link to="/student/myclasses">
               <span style={{ color: "#1890ff", fontWeight: 700 }}>Quay lại danh sách lớp học</span>
             </Link>
           }

@@ -119,7 +119,7 @@ export const StudentTodayClasses: React.FC<StudentTodayClassesProps> = React.mem
                         type="primary"
                         danger
                         icon={<VideoCameraOutlined />}
-                        onClick={() => navigate(`/classdetail/${cls.id}`)}
+                        onClick={() => navigate(`/student/classdetail/${cls.id}`)}
                         style={{ borderRadius: 8 }}
                       >
                         Vào lớp
@@ -127,7 +127,7 @@ export const StudentTodayClasses: React.FC<StudentTodayClassesProps> = React.mem
                     ) : (
                       <Button
                         type="default"
-                        onClick={() => navigate(`/classdetail/${cls.id}`)}
+                        onClick={() => navigate(`/student/classdetail/${cls.id}`)}
                         style={{ borderRadius: 8 }}
                       >
                         Xem chi tiết

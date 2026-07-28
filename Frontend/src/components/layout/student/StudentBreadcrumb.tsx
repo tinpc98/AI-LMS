@@ -4,14 +4,13 @@ import { Link, useLocation } from "react-router-dom";
 import { HomeOutlined } from "@ant-design/icons";
 
 const breadcrumbNameMap: Record<string, string> = {
-  "/": "Trang chủ Dashboard",
-  "/myclasses": "Lớp học của tôi",
-  "/classdetail": "Chi tiết lớp học",
-  "/studentassignment": "Bài tập sinh viên",
-  "/lessonview": "Nội dung bài học",
-  "/schedule": "Lịch học",
-  "/notifications": "Thông báo",
-  "/profile": "Hồ sơ cá nhân",
+  "/student": "Trang chủ Dashboard",
+  "/student/myclasses": "Lớp học của tôi",
+  "/student/classdetail": "Chi tiết lớp học",
+  "/student/studentassignment": "Bài tập sinh viên",
+  "/student/lessonview": "Nội dung bài học",
+  "/student/notifications": "Thông báo",
+  "/student/profile": "Hồ sơ cá nhân",
 };
 
 export const StudentBreadcrumb: React.FC = React.memo(() => {
@@ -24,7 +23,7 @@ export const StudentBreadcrumb: React.FC = React.memo(() => {
       return [
         {
           title: (
-            <Link to="/">
+            <Link to="/student">
               <HomeOutlined /> <span style={{ marginLeft: 4 }}>Trang chủ</span>
             </Link>
           ),
@@ -36,7 +35,7 @@ export const StudentBreadcrumb: React.FC = React.memo(() => {
       const url = `/${pathSnippets.slice(0, index + 1).join("/")}`;
 
       const baseRouteKey = Object.keys(breadcrumbNameMap).find(
-        (key) => key !== "/" && (url === key || url.startsWith(`${key}/`))
+        (key) => key !== "/student" && (url === key || url.startsWith(`${key}/`))
       );
 
       const title = baseRouteKey ? breadcrumbNameMap[baseRouteKey] : pathSnippets[index];
@@ -50,7 +49,7 @@ export const StudentBreadcrumb: React.FC = React.memo(() => {
     return [
       {
         title: (
-          <Link to="/">
+          <Link to="/student">
             <HomeOutlined />
           </Link>
         ),

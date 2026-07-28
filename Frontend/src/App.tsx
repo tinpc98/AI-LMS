@@ -48,6 +48,12 @@ const PageLoadingFallback = () => (
   </div>
 );
 
+// Legacy Redirect Handler cho tuyến đường /classdetail/:classId cũ
+const LegacyClassDetailRedirect = () => {
+  const { classId } = useParams<{ classId: string }>();
+  return <Navigate to={`/student/classdetail/${classId || ""}`} replace />;
+};
+
 function App() {
   return (
     <>
@@ -75,6 +81,9 @@ function App() {
               <Route path="lessonview" element={<LessonView />} />
               <Route path="notifications" element={<NotificationCenterPage />} />
             </Route>
+
+            {/* Legacy redirect tương thích ngược cho link cũ /classdetail/:classId */}
+            <Route path="/classdetail/:classId" element={<LegacyClassDetailRedirect />} />
 
             <Route path="/exam/:attemptId" element={<ExamPage />} />
           </Route>

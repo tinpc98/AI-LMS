@@ -31,7 +31,7 @@ export const ClassCardActions: React.FC<ClassCardActionsProps> = React.memo(
               danger={isLiveActive}
               icon={isLiveActive ? <VideoCameraOutlined /> : undefined}
               size="small"
-              onClick={() => navigate(`/classdetail/${classId}`)}
+              onClick={() => navigate(`/student/classdetail/${classId}`)}
               style={{ borderRadius: 8 }}
             >
               Vào lớp
@@ -41,7 +41,7 @@ export const ClassCardActions: React.FC<ClassCardActionsProps> = React.memo(
           <Button
             type="default"
             size="small"
-            onClick={() => navigate(`/classdetail/${classId}`)}
+            onClick={() => navigate(`/student/classdetail/${classId}`)}
             style={{ borderRadius: 8 }}
           >
             Chi tiết lớp <RightOutlined style={{ fontSize: 10 }} />
