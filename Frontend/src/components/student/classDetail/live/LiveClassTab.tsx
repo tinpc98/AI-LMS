@@ -1,52 +1,87 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Typography, Row, Col, Divider } from "antd";
 import LiveStatistic from "./LiveStatistic";
 import CurrentLiveCard from "./CurrentLiveCard";
-import UpcomingSessionCard from "./UpcomingSessionCard";
-import SessionHistory from "./SessionHistory";
-import ScheduleTimeline from "./ScheduleTimeline";
-import JoinClassModal from "./JoinClassModal";
-import SessionDetailDrawer from "./SessionDetailDrawer";
 import LiveEmptyState from "./LiveEmptyState";
 import LiveLoadingSkeleton from "./LiveLoadingSkeleton";
-import useStudentLive from "../../../../hooks/useStudentLive";
-import useLiveSession from "../../../../hooks/useLiveSession";
-import type { ILiveSession } from "../../../../interface/liveInterface";
+import useLiveSessionState from "../../../../hooks/useLiveSessionState";
+import useJaasConference from "../../../../hooks/useJaasConference";
+import useLiveSessionSocket from "../../../../hooks/useLiveSessionSocket";
+import LiveRoomModal from "../../../features/LiveRoomModal";
+import type { IExtendedLiveSession, StudentLiveStats } from "../../../../types/studentLive";
 
 const { Title, Text } = Typography;
 
 interface LiveClassTabProps {
   classId?: string;
-  rawLiveSession?: ILiveSession | null;
   classInfo?: any;
-  loading?: boolean;
-  onJoinLiveRoom?: (meetingRoomId: string) => void;
 }
 
 export const LiveClassTab: React.FC<LiveClassTabProps> = React.memo(
-  ({ classId, rawLiveSession, classInfo, loading = false, onJoinLiveRoom }) => {
-    // Custom Hooks
+  ({ classId, classInfo }) => {
+    // 1. Modular Hooks V2
     const {
-      loading: liveLoading,
-      currentLiveItem,
-      upcomingSessions,
-      pastSessions,
-      stats,
-    } = useStudentLive(classId, rawLiveSession, classInfo);
+      activeSession,
+      isLoadingActive,
+      fetchActiveSession,
+    } = useLiveSessionState({ classId });
 
     const {
-      selectedSession,
-      isJoinModalOpen,
-      isDetailOpen,
-      openJoinModal,
-      closeJoinModal,
-      openDetail,
-      closeDetail,
-      handleConfirmJoin,
-    } = useLiveSession(onJoinLiveRoom);
+      conference,
+      isPreparingConference,
+      isModalOpen,
+      openConference,
+      closeConference,
+    } = useJaasConference();
 
-    const isLoading = loading || liveLoading;
-    const hasAnyContent = currentLiveItem || upcomingSessions.length > 0 || pastSessions.length > 0;
+    useLiveSessionSocket({
+      classId,
+      isTeacher: false,
+      onSessionStarted: () => void fetchActiveSession(),
+      onSessionEnded: () => {
+        closeConference();
+        void fetchActiveSession();
+      },
+    });
+
+    useEffect(() => {
+      if (classId) {
+        void fetchActiveSession();
+      }
+    }, [classId, fetchActiveSession]);
+
+    const isSessionLive = activeSession?.status === "Live";
+
+    const currentLiveItem: IExtendedLiveSession | null = isSessionLive && activeSession
+      ? {
+          _id: activeSession.id || activeSession._id || `live-${classId}`,
+          classId: activeSession.classId || classId || "",
+          meetingRoomId: activeSession.roomName || activeSession.meetingRoomId || "",
+          sessionNumber: activeSession.sessionNumber || 1,
+          title: activeSession.title || `Buổi học trực tuyến lớp ${classInfo?.className || ""}`,
+          createdBy: typeof activeSession.createdBy === "object" ? activeSession.createdBy.name : "",
+          status: "Live",
+          isLiveNow: true,
+          platform: "8x8 JaaS",
+          teacherName: typeof activeSession.createdBy === "object" ? activeSession.createdBy.name : (classInfo?.teacher?.fullName || "Giảng viên"),
+          createdAt: activeSession.createdAt || new Date().toISOString(),
+          updatedAt: activeSession.updatedAt || new Date().toISOString(),
+        }
+      : null;
+
+    const stats: StudentLiveStats = {
+      total: currentLiveItem ? 1 : 0,
+      attended: 0,
+      missed: 0,
+      upcoming: currentLiveItem ? 1 : 0,
+    };
+
+    const handleJoinSession = (session: IExtendedLiveSession) => {
+      const sessionId = activeSession?.id || activeSession?._id || session._id;
+      if (sessionId) {
+        void openConference(sessionId);
+      }
+    };
 
     return (
       <div style={{ padding: "8px 0" }}>
@@ -57,74 +92,33 @@ export const LiveClassTab: React.FC<LiveClassTabProps> = React.memo(
               🎥 Học trực tuyến (Live Sessions)
             </Title>
             <Text type="secondary" style={{ fontSize: 13 }}>
-              Tham gia các buổi học trực tuyến qua video, xem lịch học cố định và xem lịch sử các buổi học đã diễn ra.
+              Tham gia các buổi học trực tuyến qua video 8x8 JaaS bảo mật.
             </Text>
           </div>
 
-          {/* 4 Statistic Cards */}
           <LiveStatistic stats={stats} />
         </div>
 
         {/* 2. Loading Skeleton vs Content */}
-        {isLoading ? (
-          <LiveLoadingSkeleton count={4} />
-        ) : !hasAnyContent ? (
+        {isLoadingActive || isPreparingConference ? (
+          <LiveLoadingSkeleton count={2} />
+        ) : !currentLiveItem ? (
           <LiveEmptyState />
         ) : (
           <div>
-            {/* 3. Hero Card for Currently Active Live Session */}
-            {currentLiveItem && (
-              <CurrentLiveCard
-                session={currentLiveItem}
-                onJoin={openJoinModal}
-                onDetail={openDetail}
-              />
-            )}
-
-            {/* 4. Upcoming Sessions & Weekly Schedule */}
-            <Row gutter={[24, 24]} style={{ marginBottom: 24 }}>
-              <Col xs={24} lg={14}>
-                <Title level={5} style={{ marginBottom: 16, color: "#1f2937" }}>
-                  📅 Các buổi học sắp diễn ra ({upcomingSessions.length})
-                </Title>
-                {upcomingSessions.length === 0 ? (
-                  <Text type="secondary" style={{ fontSize: 13, fontStyle: "italic" }}>
-                    Hiện không có lịch học sắp diễn ra nào khác.
-                  </Text>
-                ) : (
-                  upcomingSessions.map((session) => (
-                    <UpcomingSessionCard key={session._id} session={session} onDetail={openDetail} />
-                  ))
-                )}
-              </Col>
-
-              <Col xs={24} lg={10}>
-                {/* Schedule Timeline */}
-                <ScheduleTimeline schedule={classInfo?.schedule || []} />
-              </Col>
-            </Row>
-
-            <Divider style={{ margin: "24px 0" }} />
-
-            {/* 5. Past Sessions History */}
-            <SessionHistory sessions={pastSessions} onDetail={openDetail} />
+            <CurrentLiveCard
+              session={currentLiveItem}
+              onJoin={handleJoinSession}
+              onDetail={() => {}}
+            />
           </div>
         )}
 
-        {/* 6. Join Class Confirmation Modal */}
-        <JoinClassModal
-          open={isJoinModalOpen}
-          session={selectedSession}
-          onClose={closeJoinModal}
-          onConfirm={handleConfirmJoin}
-        />
-
-        {/* 7. Session Detail Drawer */}
-        <SessionDetailDrawer
-          open={isDetailOpen}
-          session={selectedSession}
-          onClose={closeDetail}
-          onJoin={openJoinModal}
+        {/* 3. JaaS Live Room Modal */}
+        <LiveRoomModal
+          isOpen={isModalOpen}
+          onClose={closeConference}
+          conference={conference}
         />
       </div>
     );
