@@ -25,8 +25,13 @@ import NotificationRouter from "./src/routers/notification.routes.js";
 import ExamSetRouter from "./src/routers/examSet.routes.js";
 import { initCronJobs } from "./src/cron/cron.setup.js";
 
+import { validateJaasConfig } from "./src/controllers/jaas.controller.js";
+
 // Kích hoạt cấu hình file .env – phải gọi TRƯỚC khi đọc bất kỳ biến môi trường nào
 dotenv.config();
+
+// Kiểm tra cấu hình 8x8 JaaS khi khởi động (Fail-fast config check)
+validateJaasConfig();
 
 const app = express();
 const port = process.env.PORT || 5000;

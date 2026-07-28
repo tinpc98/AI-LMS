@@ -13,5 +13,7 @@ npm-debug.log*
 .vscode/
 
 keys/
+*.pk
+*.pem
 
 docs/
