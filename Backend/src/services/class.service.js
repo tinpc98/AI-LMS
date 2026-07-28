@@ -76,6 +76,17 @@ class ClassService {
       filterConditions.push({ startDate: dateFilter });
     }
 
+    // 8. Lọc nâng cao: Lớp đã/chưa có giáo viên phụ trách (isAssigned)
+    if (query.isAssigned !== undefined) {
+      // Support string 'true'/'false' or boolean true/false
+      const isAssigned = String(query.isAssigned).toLowerCase() === "true";
+      if (isAssigned) {
+        filterConditions.push({ teacherId: { $ne: null } });
+      } else {
+        filterConditions.push({ teacherId: null });
+      }
+    }
+
     // Tổng hợp điều kiện truy vấn Mongoose
     const finalQuery = filterConditions.length === 1 ? filterConditions[0] : { $and: filterConditions };
 
