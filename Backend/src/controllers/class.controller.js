@@ -215,7 +215,22 @@ export const AssignTeacher = async (req, res) => {
   }
 
   try {
-    const teacherExists = await User.findOne({ _id: teacherId, role: "teacher", isDeleted: false });
+    // Validate Class Status before assigning
+    const targetClass = await classModel.findById(id);
+    if (!targetClass) {
+      return res.status(404).json({ success: false, message: "Lớp học không tồn tại" });
+    }
+
+    const allowedStatuses = ["Draft", "Ready", "Ongoing"];
+    if (!allowedStatuses.includes(targetClass.status)) {
+      return res.status(400).json({ 
+        success: false, 
+        message: `Không thể phân công giáo viên cho lớp học đang ở trạng thái: ${targetClass.status}` 
+      });
+    }
+
+    // Fix: MongoDB is case-sensitive, User role enum is "Teacher" (PascalCase)
+    const teacherExists = await User.findOne({ _id: teacherId, role: "Teacher", isDeleted: false });
     if (!teacherExists) {
       return res.status(400).json({ success: false, message: "Giáo viên không hợp lệ" });
     }
@@ -265,7 +280,10 @@ export const AssignStudent = async (req, res) => {
 
     const updatedClass = await classModel.findOneAndUpdate(
       { _id: id, isEnrollmentOpen: true, "students.studentId": { $ne: studentId }, $expr: { $lt: [{ $size: { $ifNull: ["$students", []] } }, "$maxStudents"] } },
-      { $push: { students: { studentId, joinedAt: new Date(), status: "Enrolled" } } },
+      { 
+        $push: { students: { studentId, joinedAt: new Date(), status: "Enrolled" } },
+        $inc: { currentStudents: 1 }
+      },
       { new: true, runValidators: true }
     )
     .populate("teacherId", "fullName email avatar phone teachingSubjects")
@@ -301,10 +319,13 @@ export const RemoveStudent = async (req, res) => {
   }
 
   try {
-    const updatedClass = await classModel.findByIdAndUpdate(
-      id,
-      { $pull: { students: { studentId } } },
-      { new: true }
+    const updatedClass = await classModel.findOneAndUpdate(
+      { _id: id, "students.studentId": studentId },
+      { 
+        $pull: { students: { studentId } },
+        $inc: { currentStudents: -1 }
+      },
+      { new: true, runValidators: true }
     )
     .populate("teacherId", "fullName email avatar phone teachingSubjects")
     .populate("assignedBy", "fullName email")
@@ -513,7 +534,10 @@ export const PermanentDeleteClass = async (req, res) => {
       });
     }
 
-    return res.status(204).send();
+    return res.status(200).json({
+      success: true,
+      message: "Xóa vĩnh viễn lớp học thành công",
+    });
   } catch (error) {
     console.error("[ClassController] PermanentDeleteClass Error:", error);
     const isValidationError = error.name === "ValidationError";
@@ -536,6 +560,20 @@ export const UnassignTeacher = async (req, res) => {
   }
 
   try {
+    // Validate Class Status before unassigning
+    const targetClass = await classModel.findById(id);
+    if (!targetClass) {
+      return res.status(404).json({ success: false, message: "Lớp học không tồn tại" });
+    }
+
+    const allowedStatuses = ["Draft", "Ready", "Ongoing"];
+    if (!allowedStatuses.includes(targetClass.status)) {
+      return res.status(400).json({ 
+        success: false, 
+        message: `Không thể gỡ phân công giáo viên cho lớp học đang ở trạng thái: ${targetClass.status}` 
+      });
+    }
+
     const updatedClass = await classModel.findByIdAndUpdate(
       id,
       {

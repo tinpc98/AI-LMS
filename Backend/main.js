@@ -59,7 +59,7 @@ const corsOptions = {
     if (allowedOrigins.includes(origin)) return cb(null, true);
     return cb(new Error("Origin không được phép bởi CORS"));
   },
-  methods: ["GET", "POST", "PUT", "DELETE"],
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
   credentials: true,
   allowedHeaders: ["Content-Type", "Authorization"],
 };
