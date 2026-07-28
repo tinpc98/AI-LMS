@@ -87,7 +87,8 @@ app.use("/api/classes", ClassRouter);
 app.use("/api/courses", CourseRouter);
 app.use("/api/dashboard", DashboardRouter);
 app.use("/api/reports", ReportRouter);
-app.use("/api/lesson", LessonRouter);
+app.use("/api/lessons", LessonRouter);
+app.use("/api/lesson", LessonRouter); // Deprecated alias for backward compatibility
 app.use("/api/assignments", assignmentRouter);
 app.use("/api/attendances", AttendanceRouter);
 app.use("/api/grades", GradeRouter);

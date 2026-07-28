@@ -1,6 +1,7 @@
 import ExamAttempt from "../models/examAttempt.model.js";
 import Exam from "../models/exam.model.js";
 import Question from "../models/question.model.js";
+import { compareAnswers } from "../utils/answerScoring.js";
 
 const gradeSubmission = async (attemptId, studentAnswers) => {
   // 1. Tìm phiên làm bài và populate thông tin Đề thi để lấy cấu trúc điểm số
@@ -52,28 +53,7 @@ const gradeSubmission = async (attemptId, studentAnswers) => {
     let pointsEarned = 0;
 
     if (questionConfig.type === "MCQ") {
-      console.log("====================================");
-      console.log("Question:", questionConfig.content);
-      console.log("Question Type:", questionConfig.type);
-      console.log("Allocated Points:", allocatedPoints);
-
-      console.log(
-        "Correct Answer:",
-        JSON.stringify(questionConfig.correctAnswer),
-      );
-
-      console.log("Student Answer:", JSON.stringify(ans.selectedOption));
-
-      const correctAnswer = String(questionConfig.correctAnswer || "").trim();
-      const studentAnswer = String(ans.selectedOption || "").trim();
-
-      console.log("Correct (trim):", JSON.stringify(correctAnswer));
-      console.log("Student (trim):", JSON.stringify(studentAnswer));
-
-      const isCorrect = correctAnswer === studentAnswer;
-
-      console.log("isCorrect =", isCorrect);
-      console.log("====================================");
+      const isCorrect = compareAnswers(questionConfig.correctAnswer, ans.selectedOption);
 
       if (isCorrect) {
         pointsEarned = allocatedPoints;

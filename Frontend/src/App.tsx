@@ -6,6 +6,7 @@ import "./App.css";
 import ToastContainer from "./components/common/ToastContainer";
 import PublicRoute from "./components/common/PublicRoute";
 import ProtectedRoute from "./components/common/ProtectedRoute";
+import RoleRedirector from "./components/common/RoleRedirector";
 
 // Auth Components (Lazy Loaded)
 const LoginPage = lazy(() => import("./pages/auth/LoginPage"));
@@ -53,6 +54,9 @@ function App() {
       <ToastContainer />
       <Suspense fallback={<PageLoadingFallback />}>
         <Routes>
+          {/* Root Redirector */}
+          <Route path="/" element={<RoleRedirector />} />
+
           {/* ================= PUBLIC / AUTH ROUTES ================= */}
           <Route element={<PublicRoute />}>
             <Route path="/login" element={<LoginPage />} />
@@ -64,17 +68,6 @@ function App() {
             <Route path="/student" element={<HomeLayoutStudent />}>
               <Route index element={<HomePageStudent />} />
               <Route path="dashboard" element={<HomePageStudent />} />
-              <Route path="myclasses" element={<MyClasses />} />
-              <Route path="studentassignment" element={<StudentAssignment />} />
-              <Route path="classdetail/:classId" element={<ClassDetail />} />
-              <Route path="studentassignment/:assignmentId" element={<StudentAssignment />} />
-              <Route path="lessonview" element={<LessonView />} />
-              <Route path="notifications" element={<NotificationCenterPage />} />
-            </Route>
-
-            {/* Tuyến đường / giữ tương thích ngược */}
-            <Route path="/" element={<HomeLayoutStudent />}>
-              <Route index element={<HomePageStudent />} />
               <Route path="myclasses" element={<MyClasses />} />
               <Route path="studentassignment" element={<StudentAssignment />} />
               <Route path="classdetail/:classId" element={<ClassDetail />} />
@@ -99,19 +92,19 @@ function App() {
           </Route>
 
           {/* ================= ADMIN PROTECTED ROUTES ================= */}
-          {/* <Route element={<ProtectedRoute allowedRoles={["admin"]} />}> */}
-          <Route path="/admin" element={<AdminLayout />}>
-            <Route index element={<DashboardPage />} />
-            <Route path="accounts" element={<AccountManagementPage />} />
-            <Route path="courses" element={<CourseManagementPage />} />
-            <Route path="classes" element={<ClassManagementPage />} />
-            <Route path="teacher-assignment" element={<TeacherAssignmentPage />} />
-            <Route path="ai-management" element={<AIManagementPage />} />
-            <Route path="reports" element={<ReportPage />} />
-            <Route path="profile" element={<ProfilePage />} />
-            <Route path="system" element={<AdminPage title="System Management" description="Configure system-wide settings." />} />
+          <Route element={<ProtectedRoute allowedRoles={["admin"]} />}>
+            <Route path="/admin" element={<AdminLayout />}>
+              <Route index element={<DashboardPage />} />
+              <Route path="accounts" element={<AccountManagementPage />} />
+              <Route path="courses" element={<CourseManagementPage />} />
+              <Route path="classes" element={<ClassManagementPage />} />
+              <Route path="teacher-assignment" element={<TeacherAssignmentPage />} />
+              <Route path="ai-management" element={<AIManagementPage />} />
+              <Route path="reports" element={<ReportPage />} />
+              <Route path="profile" element={<ProfilePage />} />
+              <Route path="system" element={<AdminPage title="System Management" description="Configure system-wide settings." />} />
+            </Route>
           </Route>
-          {/* </Route> */}
 
           {/* ================= 404 NOT FOUND ================= */}
           <Route path="*" element={<h2 style={{ textAlign: "center", marginTop: 40 }}>Trang không tồn tại!</h2>} />

@@ -2,21 +2,29 @@ import mongoose from "mongoose";
 import examAttemptService from "../services/examAttempt.service.js";
 import ExamAttempt from "../models/examAttempt.model.js";
 import Question from "../models/question.model.js";
+import Exam from "../models/exam.model.js";
+import { checkClassTeacherOwnership } from "../middlewares/auth.middlewares.js";
 
 // =======================================================
 // 1. API CHO HỌC SINH: Bắt đầu làm bài thi
 // =======================================================
 export const startExam = async (req, res) => {
   try {
-    const { examId, studentId: bodyStudentId } = req.body;
-
-    const studentId = req.user?.id || req.user?._id || bodyStudentId;
+    const { examId } = req.body;
+    // Bắt buộc lấy studentId từ token của người dùng đăng nhập
+    const studentId = (req.user?.id || req.user?._id)?.toString();
+    const userRole = (req.user?.role || "").toLowerCase();
 
     if (!examId || !studentId || !mongoose.Types.ObjectId.isValid(examId) || !mongoose.Types.ObjectId.isValid(studentId)) {
       return res.status(400).json({
         success: false,
         message: `Lỗi hệ thống: ID kỳ thi (${examId || "Thiếu"}) - ID học sinh (${studentId || "Thiếu"}) không hợp lệ!`,
       });
+    }
+
+    const exam = await Exam.findById(examId);
+    if (!exam) {
+      return res.status(404).json({ success: false, message: "Kỳ thi không tồn tại!" });
     }
 
     // === BƯỚC 1: KIỂM TRA LỊCH SỬ LÀM BÀI ===
@@ -80,6 +88,8 @@ export const startExam = async (req, res) => {
 export const getExamAttemptDetail = async (req, res) => {
   try {
     const attemptId = req.params.id;
+    const userId = (req.user?.id || req.user?._id)?.toString();
+    const userRole = (req.user?.role || "").toLowerCase();
 
     if (!attemptId || !mongoose.Types.ObjectId.isValid(attemptId)) {
       return res.status(400).json({ success: false, message: "ID bài thi không hợp lệ!" });
@@ -97,6 +107,11 @@ export const getExamAttemptDetail = async (req, res) => {
       return res
         .status(404)
         .json({ success: false, message: "Không tìm thấy phiên làm bài thi!" });
+    }
+
+    // WA IDOR: Học sinh chỉ được phép xem lượt thi của chính mình
+    if (userRole === "student" && attempt.studentId?.toString() !== userId) {
+      return res.status(403).json({ success: false, message: "Bạn không có quyền xem lượt thi của người khác!" });
     }
 
     const exam = attempt.examId;
@@ -149,6 +164,8 @@ export const submitExam = async (req, res) => {
   try {
     const attemptId = req.params.id;
     const { answers } = req.body;
+    const userId = (req.user?.id || req.user?._id)?.toString();
+    const userRole = (req.user?.role || "").toLowerCase();
 
     if (!attemptId || !mongoose.Types.ObjectId.isValid(attemptId)) {
       return res.status(400).json({ message: "ID bài thi không hợp lệ!" });
@@ -156,6 +173,16 @@ export const submitExam = async (req, res) => {
 
     if (!answers || !Array.isArray(answers)) {
       return res.status(400).json({ message: "Dữ liệu bài làm không hợp lệ!" });
+    }
+
+    const attempt = await ExamAttempt.findById(attemptId);
+    if (!attempt) {
+      return res.status(404).json({ message: "Không tìm thấy phiên làm bài thi!" });
+    }
+
+    // VÁ IDOR: Học sinh chỉ được nộp lượt thi của chính mình
+    if (userRole === "student" && attempt.studentId?.toString() !== userId) {
+      return res.status(403).json({ message: "Bạn không có quyền nộp bài thi của người khác!" });
     }
 
     const gradedAttempt = await examAttemptService.gradeSubmission(
@@ -188,11 +215,23 @@ export const getAttemptForReview = async (req, res) => {
 
     const attempt = await ExamAttempt.findById(attemptId)
       .populate("studentId", "fullName email studentCode avatar")
-      .populate("examId", "title topic duration questions")
+      .populate("examId", "title topic duration questions classId")
       .lean();
 
     if (!attempt) {
       return res.status(404).json({ message: "Không tìm thấy bài làm!" });
+    }
+
+    // Ownership Check: Đảm bảo Giáo viên/Admin phụ trách lớp thi đó mới có quyền xem
+    if (attempt.examId?.classId) {
+      const isAuthorized = await checkClassTeacherOwnership(
+        attempt.examId.classId,
+        req.user?.id || req.user?._id,
+        req.user?.role
+      );
+      if (!isAuthorized) {
+        return res.status(403).json({ success: false, message: "Bạn không có quyền xem lượt thi này!" });
+      }
     }
 
     const validAnswers = (attempt.answers || []).filter((ans) => ans && ans.questionId);
@@ -258,6 +297,22 @@ export const gradeEssaySubmit = async (req, res) => {
         .json({ message: "Dữ liệu chấm điểm không hợp lệ!" });
     }
 
+    const attempt = await ExamAttempt.findById(attemptId).populate("examId");
+    if (!attempt) {
+      return res.status(404).json({ message: "Không tìm thấy phiên làm bài thi!" });
+    }
+
+    if (attempt.examId?.classId) {
+      const isAuthorized = await checkClassTeacherOwnership(
+        attempt.examId.classId,
+        req.user?.id || req.user?._id,
+        req.user?.role
+      );
+      if (!isAuthorized) {
+        return res.status(403).json({ message: "Bạn không có quyền chấm bài thi của lớp này!" });
+      }
+    }
+
     const updatedAttempt = await examAttemptService.gradeEssay(
       attemptId,
       essayGrades,
@@ -273,7 +328,7 @@ export const gradeEssaySubmit = async (req, res) => {
 };
 
 // =======================================================
-// 6. Lấy danh sách sinh viên trong lớp
+// 6. Lấy danh sách bài thi theo Exam (Dành cho Giáo viên/Admin)
 // =======================================================
 export const getAttemptsByExam = async (req, res) => {
   try {
@@ -286,6 +341,22 @@ export const getAttemptsByExam = async (req, res) => {
         data: [],
         stats: { total: 0, graded: 0, pending: 0 },
       });
+    }
+
+    const exam = await Exam.findById(examId);
+    if (!exam) {
+      return res.status(404).json({ success: false, message: "Kỳ thi không tồn tại!" });
+    }
+
+    if (exam.classId) {
+      const isAuthorized = await checkClassTeacherOwnership(
+        exam.classId,
+        req.user?.id || req.user?._id,
+        req.user?.role
+      );
+      if (!isAuthorized) {
+        return res.status(403).json({ success: false, message: "Bạn không có quyền xem các bài làm của kỳ thi này!" });
+      }
     }
 
     const attempts = await ExamAttempt.find({ examId: examId })
@@ -319,6 +390,7 @@ export const getAttemptsByExam = async (req, res) => {
 export const recordCheatWarning = async (req, res) => {
   try {
     const attemptId = req.params.id;
+    const userId = (req.user?.id || req.user?._id)?.toString();
 
     if (!attemptId || !mongoose.Types.ObjectId.isValid(attemptId)) {
       return res.status(400).json({ success: false, message: "ID phiên làm bài không hợp lệ!" });
@@ -329,6 +401,10 @@ export const recordCheatWarning = async (req, res) => {
       return res
         .status(404)
         .json({ success: false, message: "Không tìm thấy phiên làm bài!" });
+    }
+
+    if (attempt.studentId?.toString() !== userId) {
+      return res.status(403).json({ success: false, message: "Bạn không có quyền cập nhật phiên làm bài này!" });
     }
 
     attempt.cheatWarnings = (attempt.cheatWarnings || 0) + 1;

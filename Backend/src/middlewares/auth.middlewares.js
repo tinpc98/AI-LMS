@@ -78,3 +78,18 @@ export const isAdmin = (req, res, next) => {
   }
   next();
 };
+
+// Helper kiem tra quyen so huong lop hoc cua Giao vien (hoac Admin)
+export const checkClassTeacherOwnership = async (classId, userId, userRole) => {
+  if (!classId) return false;
+  const role = (userRole || "").toLowerCase();
+  if (role === "admin") return true;
+  if (role !== "teacher") return false;
+
+  const ClassModel = (await import("../models/class.model.js")).default;
+  const targetClass = await ClassModel.findById(classId);
+  if (!targetClass) return false;
+
+  return targetClass.teacherId?.toString() === userId?.toString();
+};
+

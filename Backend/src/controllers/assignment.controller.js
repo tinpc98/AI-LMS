@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 import Assignment from "../models/assignment.model.js";
 import Submission from "../models/submission.model.js";
 import cloudinary from "../config/cloudinary.js";
+import { checkClassTeacherOwnership } from "../middlewares/auth.middlewares.js";
 
 // Helper function: Đẩy file lên thư mục riêng của Assignments
 const uploadToCloudinary = (fileBuffer, originalName) => {
@@ -43,6 +44,11 @@ const assignmentController = {
 
       if (!mongoose.Types.ObjectId.isValid(classId)) {
         return res.status(400).json({ message: "ID lớp học không hợp lệ!" });
+      }
+
+      const isAuthorized = await checkClassTeacherOwnership(classId, teacherId, req.user?.role);
+      if (!isAuthorized) {
+        return res.status(403).json({ message: "Bạn không có quyền tạo bài tập cho lớp học này!" });
       }
 
       let attachments = [];
@@ -92,10 +98,21 @@ const assignmentController = {
         return res.status(404).json({ message: "Không tìm thấy bài nộp này" });
       }
 
+      const assignment = await Assignment.findById(submission.assignmentId);
+      if (!assignment) {
+        return res.status(404).json({ message: "Bài tập không tồn tại" });
+      }
+
+      const userId = req.user.id || req.user._id;
+      const isAuthorized = await checkClassTeacherOwnership(assignment.classId, userId, req.user?.role);
+      if (!isAuthorized) {
+        return res.status(403).json({ message: "Bạn không có quyền chấm bài nộp của lớp học này!" });
+      }
+
       submission.grade = grade;
       submission.feedback = feedback || "";
       if (aiFeedback !== undefined) submission.aiFeedback = aiFeedback;
-      submission.gradedBy = req.user.id || req.user._id;
+      submission.gradedBy = userId;
       submission.gradedAt = new Date();
       submission.status = "graded";
 
@@ -125,11 +142,10 @@ const assignmentController = {
         return res.status(404).json({ message: "Bài tập không tồn tại" });
       }
 
-      const userId = (req.user.id || req.user._id).toString();
-      const userRole = (req.user.role || "").toLowerCase();
-
-      if (userRole !== "admin" && assignment.teacherId?.toString() !== userId) {
-        return res.status(403).json({ message: "Bạn không có quyền sửa bài tập này" });
+      const userId = req.user.id || req.user._id;
+      const isAuthorized = await checkClassTeacherOwnership(assignment.classId, userId, req.user?.role);
+      if (!isAuthorized) {
+        return res.status(403).json({ message: "Bạn không có quyền sửa bài tập này!" });
       }
 
       let newAttachments = assignment.attachments || [];
@@ -167,11 +183,10 @@ const assignmentController = {
         return res.status(404).json({ message: "Bài tập không tồn tại" });
       }
 
-      const userId = (req.user.id || req.user._id).toString();
-      const userRole = (req.user.role || "").toLowerCase();
-
-      if (userRole !== "admin" && assignment.teacherId?.toString() !== userId) {
-        return res.status(403).json({ message: "Bạn không có quyền xóa bài tập này" });
+      const userId = req.user.id || req.user._id;
+      const isAuthorized = await checkClassTeacherOwnership(assignment.classId, userId, req.user?.role);
+      if (!isAuthorized) {
+        return res.status(403).json({ message: "Bạn không có quyền xóa bài tập này!" });
       }
 
       await Assignment.softDelete(id, userId);
@@ -227,12 +242,23 @@ const assignmentController = {
     }
   },
 
-  // 7. Lấy danh sách bài nộp của một assignment
+  // 7. Lấy danh sách bài nộp của một assignment (Chỉ Giáo viên phân công / Admin)
   getSubmissionsByAssignment: async (req, res) => {
     try {
       const { assignmentId } = req.params;
       if (!assignmentId || !mongoose.Types.ObjectId.isValid(assignmentId)) {
         return res.status(200).json({ submissions: [], data: [] });
+      }
+
+      const assignment = await Assignment.findById(assignmentId);
+      if (!assignment) {
+        return res.status(404).json({ message: "Bài tập không tồn tại!" });
+      }
+
+      const userId = req.user.id || req.user._id;
+      const isAuthorized = await checkClassTeacherOwnership(assignment.classId, userId, req.user?.role);
+      if (!isAuthorized) {
+        return res.status(403).json({ message: "Bạn không có quyền xem bài nộp của bài tập này!" });
       }
 
       const submissions = await Submission.find({ assignmentId })
