@@ -66,6 +66,11 @@ export interface DashboardResponse {
     count: number;
   }[];
 
+  studentRegistrationChart: {
+    month: string;
+    count: number;
+  }[];
+
   courseDistribution: {
     courseId: string;
     courseName: string;

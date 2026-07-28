@@ -111,7 +111,10 @@ export const useDashboardQuery = () => {
     recentClasses: data?.recentClasses ?? [],
     recentUsers: data?.recentUsers ?? [],
     // Unsupported mock features return empty arrays
-    registrationChart: [],
+    registrationChart: (data?.studentRegistrationChart ?? []).map(item => ({
+      month: item.month,
+      students: item.count
+    })),
     aiChart: [],
     activities: [],
   };

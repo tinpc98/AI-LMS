@@ -26,6 +26,10 @@ class DashboardService {
    * @returns {Promise<Object>} Object chứa các metrics của hệ thống.
    */
   async getAdminMetrics() {
+    const now = new Date();
+    const oneYearAgo = new Date(now.getFullYear(), now.getMonth() - 11, 1);
+    oneYearAgo.setHours(0, 0, 0, 0);
+
     // Chạy song song tất cả các query đếm & aggregation – không await tuần tự
     const [
       totalUsers,
@@ -40,7 +44,8 @@ class DashboardService {
       classStatusChart,
       courseDistribution,
       recentClasses,
-      recentUsers
+      recentUsers,
+      rawStudentReg
     ] = await Promise.all([
       // Tổng người dùng chưa bị xóa mềm (mọi role)
       User.countDocuments({ isDeleted: false }),
@@ -154,8 +159,44 @@ class DashboardService {
         .sort({ createdAt: -1 })
         .limit(5)
         .select("fullName email avatar role status createdAt")
-        .lean()
+        .lean(),
+
+      // PART 6: Student Registration Chart (Raw Aggregation)
+      User.aggregate([
+        {
+          $match: {
+            role: "Student",
+            isDeleted: false,
+            createdAt: { $gte: oneYearAgo }
+          }
+        },
+        {
+          $group: {
+            _id: {
+              year: { $year: "$createdAt" },
+              month: { $month: "$createdAt" }
+            },
+            count: { $sum: 1 }
+          }
+        }
+      ])
     ]);
+
+    // PROCESS STUDENT REGISTRATION CHART
+    const monthsName = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const studentRegistrationChart = [];
+    
+    for (let i = 11; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const y = d.getFullYear();
+      const m = d.getMonth() + 1; // 1-12
+      
+      const found = rawStudentReg.find(item => item._id.year === y && item._id.month === m);
+      studentRegistrationChart.push({
+        month: monthsName[m - 1],
+        count: found ? found.count : 0
+      });
+    }
 
     // PART 6: Thông tin sức khỏe hệ thống – giữ nguyên
     const systemHealth = {
@@ -179,7 +220,8 @@ class DashboardService {
       classStatusChart,
       courseDistribution,
       recentClasses,
-      recentUsers
+      recentUsers,
+      studentRegistrationChart
     };
   }
 }
