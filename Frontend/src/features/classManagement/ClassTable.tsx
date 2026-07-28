@@ -67,11 +67,11 @@ const ClassTable = ({
     },
     {
       title: "Teacher",
-      dataIndex: "teacherId",
-      key: "teacherId",
+      dataIndex: "teacher",
+      key: "teacher",
       width: 150,
       ellipsis: true,
-      render: (value?: string | null) => (value ? teacherOptions.find((item) => item.id === value)?.label || value : "—"),
+      render: (teacher?: { id: string; fullName: string } | null) => teacher ? teacher.fullName : "—",
     },
     {
       title: "Learning Mode",

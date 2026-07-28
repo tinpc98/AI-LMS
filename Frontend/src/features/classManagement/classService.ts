@@ -9,6 +9,7 @@ const mapClass = (c: any): ClassRecord => {
     id: c._id,
     courseId: c.courseId?._id || c.courseId,
     teacherId: c.teacherId?._id || c.teacherId,
+    teacher: c.teacherId?._id ? { id: c.teacherId._id, fullName: c.teacherId.fullName } : null,
     assignedBy: c.assignedBy?._id || c.assignedBy,
   };
 };

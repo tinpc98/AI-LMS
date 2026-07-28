@@ -28,6 +28,7 @@ export interface ClassRecord {
   classCode: string;
   courseId: string;
   teacherId?: string | null;
+  teacher?: { id: string; fullName: string } | null;
   assignedBy?: string | null;
   joinCode?: string;
   classRoom: string;
