@@ -63,6 +63,16 @@ const assignmentApi = {
     return response.data.submission;
   },
 
+  // Học sinh xem bài nộp cá nhân
+  getMySubmission: async (assignmentId: string): Promise<ISubmission | null> => {
+    try {
+      const response = await axiosClient.get<{ submission: ISubmission }>(`/api/assignments/my-submission/${assignmentId}`);
+      return (response.data as any).submission ?? (response.data as any).data ?? null;
+    } catch {
+      return null;
+    }
+  },
+
   // Học sinh nộp bài / nộp lại bài
   submitAssignment: async (assignmentId: string, formData: FormData): Promise<any> => {
     return axiosClient.post(`/api/assignments/submit/${assignmentId}`, formData, {

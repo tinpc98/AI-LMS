@@ -54,6 +54,13 @@ router.get(
   assignmentController.getSubmissionsByAssignment
 );
 
+// Học sinh xem bài nộp cá nhân
+router.get(
+  "/my-submission/:assignmentId",
+  verifyUser,
+  assignmentController.getMySubmission
+);
+
 // Học sinh Nộp bài / Nộp lại bài (Đính kèm max 5 file bài làm)
 router.post(
   "/submit/:assignmentId",
