@@ -137,11 +137,11 @@ const classSchema = new Schema(
       type: [classStudentSchema],
       default: [],
     },
+    // Legacy Field (Deprecated): Mã phòng Jitsi dùng chung cũ
     meetingRoomId: {
       type: String,
-      required: true,
-      unique: true,
-      immutable: true,
+      required: false,
+      default: null,
       trim: true,
     },
     // Đường dẫn Google Meet phục vụ học trực tuyến

@@ -131,8 +131,6 @@ export const AddNewClass = async (req, res) => {
       return res.status(400).json({ success: false, message: "ID giáo viên không hợp lệ!" });
     }
 
-    const meetingRoomId = `room_${crypto.randomBytes(4).toString("hex")}`;
-
     const newClassData = {
       className: className.trim(),
       classCode: classCode?.trim() || `CLS-${Date.now().toString().slice(-6)}`,
@@ -140,7 +138,7 @@ export const AddNewClass = async (req, res) => {
       teacherId: teacherId || null,
       assignedBy: req.user.id || req.user._id,
       assignedAt: teacherId ? new Date() : null,
-      meetingRoomId,
+      meetingRoomId: null, // Legacy field (Deprecated) - Sprint J1</span>
       googleMeetLink: googleMeetLink || "",
       googleCalendarEventId: googleCalendarEventId || "",
       classRoom: classRoom ?? room ?? "",
