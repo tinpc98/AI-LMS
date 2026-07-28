@@ -33,7 +33,7 @@ const ClassManagementPage = () => {
   const [courseOptions, setCourseOptions] = useState<Array<{ id: string; label: string }>>([]);
   const [teacherOptions, setTeacherOptions] = useState<Array<{ id: string; label: string }>>([]);
   const formRef = useRef<ClassFormModalHandle | null>(null);
-  
+
   // Debounce search filter
   const [debouncedFilters, setDebouncedFilters] = useState<ClassFilters>(initialFilters);
   useEffect(() => {
@@ -105,9 +105,32 @@ const ClassManagementPage = () => {
     setDetailOpen(true);
   };
 
+  const getNextStatus = (status: ClassStatus): ClassStatus | null => {
+    switch (status) {
+      case "Draft":
+        return "Ready";
+
+      case "Ready":
+        return "Ongoing";
+
+      case "Ongoing":
+        return "Completed";
+
+      case "Completed":
+        return "Archived";
+
+      default:
+        return null;
+    }
+  };
+
   const handleChangeStatus = async (classRecord: ClassRecord) => {
     try {
-      const nextStatus: ClassStatus = classRecord.status === "Active" ? "Completed" : classRecord.status === "Completed" ? "Cancelled" : "Active";
+      const nextStatus = getNextStatus(classRecord.status);
+      if (!nextStatus) {
+        message.warning("This status cannot be changed");
+        return;
+      }
       await classService.updateStatus(classRecord.id, nextStatus);
       message.success(`Status changed to ${nextStatus}`);
       await loadClasses();
@@ -115,6 +138,7 @@ const ClassManagementPage = () => {
       message.error("Unable to update class status");
     }
   };
+
 
   const handleDeleteRequest = (classRecord: ClassRecord) => {
     setSelectedClass(classRecord);
@@ -241,11 +265,11 @@ const ClassManagementPage = () => {
         teacherOptions={teacherOptions}
       />
 
-      <DeleteConfirmModal 
-        open={deleteOpen} 
-        className={selectedClass?.className} 
-        onConfirm={confirmDelete} 
-        onCancel={() => setDeleteOpen(false)} 
+      <DeleteConfirmModal
+        open={deleteOpen}
+        className={selectedClass?.className}
+        onConfirm={confirmDelete}
+        onCancel={() => setDeleteOpen(false)}
       />
     </div>
   );
