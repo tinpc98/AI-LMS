@@ -382,6 +382,11 @@ export const RemoveResource = async (req, res) => {
   }
 
   try {
+    const isAuthorized = await checkClassTeacherOwnership(id, req.user?.id || req.user?._id, req.user?.role);
+    if (!isAuthorized) {
+      return res.status(403).json({ success: false, message: "Bạn không có quyền xóa tài nguyên của lớp học này!" });
+    }
+
     const targetClass = await classModel.findById(id);
     if (!targetClass) {
       return res.status(404).json({ success: false, message: "Lớp học không tồn tại" });

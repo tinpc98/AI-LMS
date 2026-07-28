@@ -1,8 +1,24 @@
 import { Router } from "express";
-import { sendBulkNotification } from "../controllers/notification.controller.js";
+import {
+  sendBulkNotification,
+  getMyNotifications,
+  markAsRead,
+  markAllAsRead,
+} from "../controllers/notification.controller.js";
 import { verifyUser, isAdmin } from "../middlewares/auth.middlewares.js";
 
 const router = Router();
+
+// Lấy danh sách thông báo cá nhân của người dùng đang đăng nhập
+router.get("/", verifyUser, getMyNotifications);
+
+// Đánh dấu tất cả thông báo là đã đọc (Hỗ trợ cả PUT và PATCH)
+router.put("/read-all", verifyUser, markAllAsRead);
+router.patch("/read-all", verifyUser, markAllAsRead);
+
+// Đánh dấu 1 thông báo là đã đọc (Hỗ trợ cả PUT và PATCH)
+router.put("/:id/read", verifyUser, markAsRead);
+router.patch("/:id/read", verifyUser, markAsRead);
 
 /**
  * POST /api/notifications/send-bulk

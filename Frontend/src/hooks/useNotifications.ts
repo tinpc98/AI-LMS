@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import notificationApi from "../api/notificationApi";
+import { toast } from "../utils/toast";
 import type {
   INotificationItem,
   NotificationFilterOptions,
@@ -141,16 +142,32 @@ export function useNotifications() {
 
   // Handlers
   const markAsRead = useCallback(async (id: string) => {
-    setNotifications((prev) =>
-      prev.map((item) => (item._id === id ? { ...item, isRead: true } : item))
-    );
-    await notificationApi.markAsRead(id);
-  }, []);
+    const targetItem = notifications.find((n) => n._id === id);
+    if (!targetItem || targetItem.isRead) return; // Không gọi lại API nếu thông báo đã đọc
+
+    try {
+      await notificationApi.markAsRead(id);
+      setNotifications((prev) =>
+        prev.map((item) => (item._id === id ? { ...item, isRead: true } : item))
+      );
+    } catch (err: any) {
+      console.error("[useNotifications] markAsRead error:", err);
+      toast.error(err.response?.data?.message || "Không thể cập nhật trạng thái thông báo.");
+    }
+  }, [notifications]);
 
   const markAllAsRead = useCallback(async () => {
-    setNotifications((prev) => prev.map((item) => ({ ...item, isRead: true })));
-    await notificationApi.markAllAsRead();
-  }, []);
+    const hasUnread = notifications.some((n) => !n.isRead);
+    if (!hasUnread) return;
+
+    try {
+      await notificationApi.markAllAsRead();
+      setNotifications((prev) => prev.map((item) => ({ ...item, isRead: true })));
+    } catch (err: any) {
+      console.error("[useNotifications] markAllAsRead error:", err);
+      toast.error(err.response?.data?.message || "Không thể đánh dấu tất cả thông báo.");
+    }
+  }, [notifications]);
 
   const handleSearchChange = useCallback((value: string) => {
     setFilters((prev) => ({ ...prev, searchQuery: value }));

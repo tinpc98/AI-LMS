@@ -11,10 +11,12 @@ import GradeDetailDrawer from "./GradeDetailDrawer";
 import useStudentGrades from "../../../../hooks/useStudentGrades";
 import useGradeDetail from "../../../../hooks/useGradeDetail";
 import type { IGrade } from "../../../../api/gradeApi";
+import gradeApi from "../../../../api/gradeApi";
 
 const { Title, Text } = Typography;
 
 interface GradesTabProps {
+  classId?: string;
   rawGrades?: IGrade[];
   assignments?: any[];
   submittedAssignmentIds?: string[];
@@ -24,6 +26,7 @@ interface GradesTabProps {
 
 export const GradesTab: React.FC<GradesTabProps> = React.memo(
   ({
+    classId,
     rawGrades = [],
     assignments = [],
     submittedAssignmentIds = [],
@@ -40,6 +43,30 @@ export const GradesTab: React.FC<GradesTabProps> = React.memo(
       handleStatusFilterChange,
       handleSortChange,
     } = useStudentGrades(rawGrades, assignments, submittedAssignmentIds, exams);
+
+    const [serverGpa, setServerGpa] = React.useState<number | null>(null);
+
+    React.useEffect(() => {
+      if (classId) {
+        gradeApi
+          .getStudentGPA(classId, "me")
+          .then((res) => {
+            if (res.gpa !== null && res.gpa !== undefined) {
+              setServerGpa(res.gpa);
+            }
+          })
+          .catch((err) => {
+            console.error("[GradesTab] GPA fetch error:", err);
+          });
+      }
+    }, [classId]);
+
+    const displayStats = React.useMemo(() => {
+      if (serverGpa !== null) {
+        return { ...stats, gpa: serverGpa };
+      }
+      return stats;
+    }, [stats, serverGpa]);
 
     const { selectedGrade, isDetailOpen, openDetail, closeDetail } = useGradeDetail();
 
@@ -62,11 +89,11 @@ export const GradesTab: React.FC<GradesTabProps> = React.memo(
           </div>
 
           {/* 6 Statistic Cards */}
-          <GradeStatistic stats={stats} />
+          <GradeStatistic stats={displayStats} />
         </div>
 
         {/* 2. Progress Overview Dashboard */}
-        <GradeOverview stats={stats} />
+        <GradeOverview stats={displayStats} />
 
         {/* 3. Bar Distribution Chart */}
         <GradeChart items={filteredGradeItems} />

@@ -1,11 +1,17 @@
-import { useState, type ChangeEvent } from "react";
+import { useState, useEffect, type ChangeEvent } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { Spin, Alert, Button } from "antd";
 import assignmentApi from "../../api/assignmentApi";
+import type { IAssignment } from "../../interface/assignmentInterface";
 import { toast } from "../../utils/toast";
 
 const StudentAssignmentContent = () => {
   const { assignmentId } = useParams<{ assignmentId: string }>();
   const navigate = useNavigate();
+  const [assignment, setAssignment] = useState<IAssignment | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [q1Answer, setQ1Answer] = useState("");
   const [q2Answer, setQ2Answer] = useState("");
@@ -13,6 +19,29 @@ const StudentAssignmentContent = () => {
   const [q3Optimize, setQ3Optimize] = useState("");
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const fetchAssignmentDetail = async () => {
+    if (!assignmentId) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await assignmentApi.getAssignmentById(assignmentId);
+      setAssignment(data);
+    } catch (err: any) {
+      console.error("[StudentAssignment] Fetch error:", err);
+      setError(err.response?.data?.message || "Không thể tải thông tin bài tập!");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (assignmentId) {
+      fetchAssignmentDetail();
+    } else {
+      setLoading(false);
+    }
+  }, [assignmentId]);
 
   const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     const filesArray = Array.from(event.target.files ?? []);
@@ -65,6 +94,32 @@ const StudentAssignmentContent = () => {
     }
   };
 
+  if (loading) {
+    return (
+      <main className="ml-[280px] pt-16 h-screen flex items-center justify-center bg-surface">
+        <Spin size="large" tip="Đang tải thông tin bài tập..." />
+      </main>
+    );
+  }
+
+  if (error) {
+    return (
+      <main className="ml-[280px] pt-16 h-screen p-10 bg-surface">
+        <Alert
+          message="Lỗi nạp bài tập"
+          description={error}
+          type="error"
+          showIcon
+          action={<Button type="primary" danger onClick={fetchAssignmentDetail}>Thử lại</Button>}
+        />
+      </main>
+    );
+  }
+
+  const deadlineFormatted = assignment?.dueDate
+    ? new Date(assignment.dueDate).toLocaleString("vi-VN")
+    : "Không có hạn nộp";
+
   return (
     <main className="ml-[280px] pt-16 h-screen flex flex-col bg-surface relative">
       {/* Content Area */}
@@ -76,22 +131,38 @@ const StudentAssignmentContent = () => {
             <div className="bg-white rounded-xl border border-outline-variant p-8 mb-8">
               <div className="flex items-center justify-between mb-4">
                 <span className="px-3 py-1 bg-primary/10 text-primary text-body-sm font-semibold rounded-full uppercase tracking-wider">
-                  Cấu trúc dữ liệu & Giải thuật
+                  {assignment?.title || "Bài tập lớp học"}
                 </span>
-                <span className="text-on-surface-variant text-body-sm">Hạn nộp: 23:59 - 15/10/2023</span>
+                <span className="text-on-surface-variant text-body-sm">Hạn nộp: {deadlineFormatted}</span>
               </div>
-              <h3 className="font-headline-md text-headline-md text-on-surface mb-4">Hướng dẫn làm bài</h3>
+              <h3 className="font-headline-md text-headline-md text-on-surface mb-4">
+                {assignment?.title || "Hướng dẫn làm bài"}
+              </h3>
               <p className="text-on-surface-variant leading-relaxed mb-4">
-                Bài tập này gồm 3 phần: Trắc nghiệm lý thuyết, câu hỏi ngắn và phân tích mã nguồn. Vui lòng đọc kỹ yêu
-                cầu trước khi trả lời. Bạn có thể sử dụng AI Assistant để nhận gợi ý nếu gặp khó khăn, nhưng tuyệt đối
-                không sao chép lời giải.
+                {assignment?.description || "Vui lòng đọc kỹ yêu cầu bài tập và hoàn thành các câu hỏi bên dưới."}
               </p>
+              {assignment?.attachments && assignment.attachments.length > 0 && (
+                <div className="mb-4 space-y-2">
+                  <h5 className="font-bold text-sm text-on-surface">Tài liệu đính kèm từ Giảng viên:</h5>
+                  {assignment.attachments.map((att: any, idx: number) => (
+                    <a
+                      key={att.publicId || idx}
+                      href={att.url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center gap-2 text-primary underline text-body-sm mr-4"
+                    >
+                      📎 {att.name || "File đính kèm"}
+                    </a>
+                  ))}
+                </div>
+              )}
               <div className="flex gap-4 p-4 bg-surface-container-low rounded-lg border border-primary/10">
                 <span className="material-symbols-outlined text-primary" data-icon="info">
                   info
                 </span>
                 <span className="text-body-sm text-on-surface">
-                  Mỗi câu hỏi có số điểm khác nhau được ghi rõ ở góc phải. Tổng điểm: 10.0
+                  Mỗi câu hỏi có số điểm khác nhau được ghi rõ ở góc phải.
                 </span>
               </div>
             </div>

@@ -229,6 +229,42 @@ class NotificationService {
       notificationsSent: insertResult.length,
     };
   }
+
+  // Lấy danh sách thông báo inbox của người dùng hiện tại
+  async getMyNotifications(userId) {
+    if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
+      return [];
+    }
+    return await Notification.find({ recipientId: userId })
+      .populate("senderId", "fullName email avatar")
+      .sort({ createdAt: -1 })
+      .lean();
+  }
+
+  // Đánh dấu 1 thông báo là đã đọc
+  async markAsRead(notificationId, userId) {
+    if (!mongoose.Types.ObjectId.isValid(notificationId)) {
+      throw new Error("ID thông báo không hợp lệ!");
+    }
+    const notif = await Notification.findOneAndUpdate(
+      { _id: notificationId, recipientId: userId },
+      { $set: { isRead: true, readAt: new Date() } },
+      { new: true }
+    );
+    if (!notif) {
+      throw new Error("Thông báo không tồn tại hoặc không thuộc quyền sở hữu!");
+    }
+    return notif;
+  }
+
+  // Đánh dấu tất cả thông báo là đã đọc
+  async markAllAsRead(userId) {
+    if (!userId) return { modifiedCount: 0 };
+    return await Notification.updateMany(
+      { recipientId: userId, isRead: false },
+      { $set: { isRead: true, readAt: new Date() } }
+    );
+  }
 }
 
 export default new NotificationService();
