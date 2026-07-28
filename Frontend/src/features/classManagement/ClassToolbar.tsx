@@ -6,7 +6,7 @@ interface ClassToolbarProps {
   filters: ClassFilters;
   onFiltersChange: (filters: ClassFilters) => void;
   onRefresh: () => void;
-  onCreate: () => void;
+  onCreate?: () => void;
   courseOptions: Array<{ id: string; label: string }>;
   learningModeOptions: Array<{ label: string; value: ClassLearningMode | "All" }>;
 }
@@ -49,10 +49,12 @@ const ClassToolbar = ({ filters, onFiltersChange, onRefresh, onCreate, courseOpt
           onChange={(value: ClassStatus | "All") => onFiltersChange({ ...filters, status: value })}
           options={[
             { label: "All Status", value: "All" },
-            { label: "Upcoming", value: "Upcoming" },
-            { label: "Active", value: "Active" },
+            { label: "Draft", value: "Draft" },
+            { label: "Ready", value: "Ready" },
+            { label: "Ongoing", value: "Ongoing" },
             { label: "Completed", value: "Completed" },
             { label: "Cancelled", value: "Cancelled" },
+            { label: "Archived", value: "Archived" },
           ]}
         />
       </Col>
@@ -61,11 +63,13 @@ const ClassToolbar = ({ filters, onFiltersChange, onRefresh, onCreate, courseOpt
           Refresh
         </Button>
       </Col>
-      <Col xs={24} sm={12} md={2}>
-        <Button type="primary" icon={<PlusOutlined />} onClick={onCreate} block>
-          Create
-        </Button>
-      </Col>
+      {onCreate && (
+        <Col xs={24} sm={12} md={2}>
+          <Button type="primary" icon={<PlusOutlined />} onClick={onCreate} block>
+            Create
+          </Button>
+        </Col>
+      )}
     </Row>
   );
 };
