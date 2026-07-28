@@ -99,6 +99,7 @@ class DashboardService {
             _id: 0,
             courseId: "$_id",
             courseName: "$courseInfo.courseName",
+            subject: "$courseInfo.subject",
             classCount: 1
           }
         },

@@ -74,6 +74,7 @@ export interface DashboardResponse {
   courseDistribution: {
     courseId: string;
     courseName: string;
+    subject?: string;
     classCount: number;
   }[];
 
