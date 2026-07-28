@@ -19,6 +19,11 @@ import AttendanceRouter from "./src/routers/attendance.routes.js";
 import GradeRouter from "./src/routers/grade.routes.js";
 import AnnouncementRouter from "./src/routers/announcement.routes.js";
 import CourseRouter from "./src/routers/course.routes.js";
+import DashboardRouter from "./src/routers/dashboard.routes.js";
+import ReportRouter from "./src/routers/report.routes.js";
+import NotificationRouter from "./src/routers/notification.routes.js";
+import ExamSetRouter from "./src/routers/examSet.routes.js";
+import { initCronJobs } from "./src/cron/cron.setup.js";
 
 // Kích hoạt cấu hình file .env – phải gọi TRƯỚC khi đọc bất kỳ biến môi trường nào
 dotenv.config();
@@ -87,7 +92,6 @@ app.use("/api/assignments", assignmentRouter);
 app.use("/api/attendances", AttendanceRouter);
 app.use("/api/grades", GradeRouter);
 app.use("/api/announcements", AnnouncementRouter);
-app.use("/api/notifications", AnnouncementRouter);
 app.use("/api/notifications", NotificationRouter); // Bulk & inbox endpoints
 
 // Routes Module Thi trực tuyến & Live

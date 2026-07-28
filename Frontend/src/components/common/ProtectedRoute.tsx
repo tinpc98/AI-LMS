@@ -9,8 +9,11 @@ export default function ProtectedRoute({ allowedRoles }: Props) {
   const rawRole = localStorage.getItem("userRole");
   const role = rawRole?.toLowerCase();
 
-  // 1. Nếu không có Access Token -> Chuyển hướng về /login
-  if (!token) {
+  // 1. Nếu không có Access Token hoặc Token hỏng -> Chuyển hướng về /login
+  if (!token || token === "undefined" || token === "null") {
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("userRole");
+    localStorage.removeItem("user");
     return <Navigate to="/login" replace />;
   }
 
