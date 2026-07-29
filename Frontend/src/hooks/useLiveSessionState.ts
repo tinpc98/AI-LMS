@@ -87,6 +87,13 @@ export function useLiveSessionState({ classId, autoFetchActive = true }: UseLive
       } catch (err: unknown) {
         const normalized = normalizeLiveSessionError(err);
         setError(normalized);
+        
+        if (normalized.code === "LIVE_SESSION_ALREADY_ACTIVE" || normalized.code === "SESSION_ALREADY_ACTIVE") {
+          await fetchActiveSession();
+          toast.error("Lớp học đã có một buổi học đang diễn ra. Hệ thống đã tải lại trạng thái hiện tại.");
+          return;
+        }
+
         toast.error(`Không thể bắt đầu buổi học: ${normalized.message}`);
         throw err;
       } finally {
