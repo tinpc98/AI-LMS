@@ -4,6 +4,7 @@ node_modules/
 # Bỏ qua file chứa mật khẩu kết nối database, bảo mật
 .env
 .env.local
+.env.example    
 
 # Bỏ qua các file log hệ thống khi chạy lỗi
 *.log
