@@ -66,10 +66,20 @@ export const sendBulkNotification = async (req, res) => {
 export const getMyNotifications = async (req, res) => {
   try {
     const userId = req.user.id || req.user._id;
-    const notifications = await notificationService.getMyNotifications(userId);
+    const notifications = await notificationService.getMyNotifications(userId, req.query);
     return sendSuccess(res, "Lấy danh sách thông báo thành công", notifications);
   } catch (error) {
     return sendError(res, error.message || "Lỗi khi lấy danh sách thông báo", 500);
+  }
+};
+
+export const getUnreadCount = async (req, res) => {
+  try {
+    const userId = req.user.id || req.user._id;
+    const unreadCount = await notificationService.getUnreadCount(userId);
+    return sendSuccess(res, "Lấy số lượng thông báo chưa đọc thành công", { unreadCount });
+  } catch (error) {
+    return sendError(res, error.message || "Lỗi khi lấy số lượng thông báo chưa đọc", 500);
   }
 };
 

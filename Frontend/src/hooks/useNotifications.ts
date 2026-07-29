@@ -6,21 +6,29 @@ import type {
   NotificationFilterOptions,
   NotificationStats,
 } from "../types/studentNotification";
+import { io, Socket } from "socket.io-client";
+import { mapNotificationItem } from "../api/notificationApi";
+
+const SOCKET_URL = import.meta.env.VITE_API_URL?.replace("/api", "") || "http://localhost:5000";
 
 export function useNotifications() {
   const [notifications, setNotifications] = useState<INotificationItem[]>([]);
+  const [unreadCount, setUnreadCount] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(true);
   const [filters, setFilters] = useState<NotificationFilterOptions>({
     searchQuery: "",
     category: "all",
     sortBy: "newest",
   });
+  const socketRef = useRef<Socket | null>(null);
 
   const fetchNotifications = useCallback(async () => {
     setLoading(true);
     try {
       const data = await notificationApi.getNotifications();
       setNotifications(data);
+      const unread = data.filter((n) => !n.isRead).length;
+      setUnreadCount(unread);
     } catch (err) {
       console.warn("Không thể tải thông báo từ API:", err);
     } finally {
@@ -31,6 +39,35 @@ export function useNotifications() {
   useEffect(() => {
     fetchNotifications();
   }, [fetchNotifications]);
+
+  // Socket Connection & Listeners
+  useEffect(() => {
+    const token = localStorage.getItem("token") || sessionStorage.getItem("token");
+    if (!token) return;
+
+    socketRef.current = io(SOCKET_URL, {
+      transports: ["websocket", "polling"],
+      reconnection: true,
+    });
+
+    socketRef.current.on("connect", () => {
+      socketRef.current?.emit("AUTHENTICATE_SOCKET", { token });
+    });
+
+    socketRef.current.on("notification:new", (newNotifRaw: any) => {
+      const newNotif = mapNotificationItem(newNotifRaw);
+      setNotifications((prev) => {
+        // Tránh trùng lặp
+        if (prev.some((n) => n._id === newNotif._id)) return prev;
+        return [newNotif, ...prev];
+      });
+      setUnreadCount((prev) => prev + 1);
+    });
+
+    return () => {
+      socketRef.current?.disconnect();
+    };
+  }, []);
 
   // Enrich notifications with Date Group
   const enrichedNotifications: INotificationItem[] = useMemo(() => {
@@ -150,6 +187,7 @@ export function useNotifications() {
       setNotifications((prev) =>
         prev.map((item) => (item._id === id ? { ...item, isRead: true } : item))
       );
+      setUnreadCount((prev) => Math.max(0, prev - 1));
     } catch (err: any) {
       console.error("[useNotifications] markAsRead error:", err);
       toast.error(err.response?.data?.message || "Không thể cập nhật trạng thái thông báo.");
@@ -163,6 +201,7 @@ export function useNotifications() {
     try {
       await notificationApi.markAllAsRead();
       setNotifications((prev) => prev.map((item) => ({ ...item, isRead: true })));
+      setUnreadCount(0);
     } catch (err: any) {
       console.error("[useNotifications] markAllAsRead error:", err);
       toast.error(err.response?.data?.message || "Không thể đánh dấu tất cả thông báo.");
@@ -182,6 +221,8 @@ export function useNotifications() {
   }, []);
 
   return {
+    notifications,
+    unreadCount,
     loading,
     filters,
     stats,

@@ -2,6 +2,7 @@ import { Router } from "express";
 import {
   sendBulkNotification,
   getMyNotifications,
+  getUnreadCount,
   markAsRead,
   markAllAsRead,
 } from "../controllers/notification.controller.js";
@@ -11,6 +12,9 @@ const router = Router();
 
 // Lấy danh sách thông báo cá nhân của người dùng đang đăng nhập
 router.get("/", verifyUser, getMyNotifications);
+
+// Lấy số lượng thông báo chưa đọc
+router.get("/unread-count", verifyUser, getUnreadCount);
 
 // Đánh dấu tất cả thông báo là đã đọc (Hỗ trợ cả PUT và PATCH)
 router.put("/read-all", verifyUser, markAllAsRead);

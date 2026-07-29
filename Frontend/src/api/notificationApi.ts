@@ -11,15 +11,15 @@ export const mapNotificationItem = (item: any): INotificationItem => {
   return {
     _id: item._id || item.id || `notif-${Date.now()}`,
     title: item.title || "Thông báo",
-    description: item.content || item.description || "",
-    category: (item.type || item.category || "system") as any,
+    description: item.message || item.content || item.description || "",
+    category: (item.type === "LIVE_SESSION_CREATED" ? "live" : (item.type || item.category || "system")) as any,
     priority: item.priority || "normal",
     isRead: Boolean(item.isRead),
     createdAt: item.createdAt || new Date().toISOString(),
-    className: item.className || item.metadata?.className || undefined,
-    classId: item.classId || item.metadata?.classId || undefined,
+    className: item.classId?.className || item.className || item.metadata?.className || undefined,
+    classId: item.classId?._id || item.classId || item.metadata?.classId || undefined,
     senderName,
-    targetRoute: item.link || item.targetRoute || undefined,
+    targetRoute: item.actionUrl || item.link || item.targetRoute || undefined,
     attachments: item.attachments || [],
   };
 };
@@ -43,6 +43,12 @@ export const notificationApi = {
   // Đánh dấu tất cả thông báo là đã đọc
   markAllAsRead: async (): Promise<void> => {
     await axiosClient.put("/api/notifications/read-all");
+  },
+
+  // Lấy số lượng thông báo chưa đọc
+  getUnreadCount: async (): Promise<{ unreadCount: number }> => {
+    const response = await axiosClient.get("/api/notifications/unread-count");
+    return response.data?.data || { unreadCount: 0 };
   },
 };
 

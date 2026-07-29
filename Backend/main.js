@@ -82,6 +82,8 @@ app.set("io", io); // Lưu io instance để gọi từ các controllers
 // Kích hoạt luồng lắng nghe sự kiện Real-time
 socketHandler(io);
 liveSocketHandler(io);
+import notificationSocketHandler from "./src/sockets/notification.socket.js";
+notificationSocketHandler(io);
 
 // ==========================================
 // ĐĂNG KÝ CÁC API ROUTES

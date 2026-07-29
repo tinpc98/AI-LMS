@@ -5,6 +5,7 @@ import classModel from "../models/class.model.js";
 import { generateLiveSessionRoomName } from "../utils/liveSessionHelper.js";
 import { mapLiveSessionResponse } from "../utils/liveSession.mapper.js";
 import { LiveError, LIVE_ERROR_CODES } from "../validators/live.validator.js";
+import notificationService from "./notification.service.js";
 
 /**
  * Service xử lý Business Logic của LiveSession
@@ -16,7 +17,7 @@ export const createSessionService = async ({ classId, title, scheduledStart, sch
     throw new LiveError("classId không hợp lệ!", 400, LIVE_ERROR_CODES.INVALID_CLASS_ID);
   }
 
-  const classInfo = await classModel.findById(classId).select("_id isDeleted teacherId nextLiveSessionNumber");
+  const classInfo = await classModel.findById(classId).select("_id className isDeleted teacherId nextLiveSessionNumber students");
   if (!classInfo || classInfo.isDeleted) {
     throw new LiveError("Lớp học không tồn tại hoặc đã bị xóa!", 404, LIVE_ERROR_CODES.CLASS_NOT_FOUND);
   }
@@ -87,6 +88,14 @@ export const createSessionService = async ({ classId, title, scheduledStart, sch
     });
     console.log(`📢 [LIVE_SERVICE] Started cho lớp ${classId} với roomName: ${session.roomName}`);
   }
+
+  // Bắn thông báo realtime cho Student (chạy bất đồng bộ, không chờ)
+  notificationService.notifyLiveSessionCreated({
+    session: session,
+    classInfo: classInfo,
+    teacherInfo: populatedSession.createdBy,
+    io: io
+  }).catch(err => console.error("❌ Notification Error in createSessionService:", err));
 
   return mapLiveSessionResponse(populatedSession);
 };
