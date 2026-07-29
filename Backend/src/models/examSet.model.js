@@ -233,6 +233,21 @@ const examSetSchema = new Schema(
       index: true,
     },
 
+    // Fingerprint để kiểm tra chống trùng lặp (Idempotency) khi generate từ AI
+    aiSourceFingerprint: {
+      type: String,
+      trim: true,
+      default: null,
+      maxlength: 64,
+    },
+
+    // Reference tới log sử dụng AI
+    aiUsageId: {
+      type: Schema.Types.ObjectId,
+      ref: "AIUsage",
+      default: null,
+    },
+
     // Questions array (subdocuments)
     questions: [questionSchema],
 
@@ -366,9 +381,8 @@ examSetSchema.index(
 examSetSchema.index({ rootExamSetId: 1, isLatestVersion: 1 });
 
 // Middleware to auto-update questionCount and totalPoints before save
-examSetSchema.pre("save", function (next) {
+examSetSchema.pre("save", function () {
   recalculateExamSetMetrics(this);
-  next();
 });
 
 const ExamSet = model("ExamSet", examSetSchema);

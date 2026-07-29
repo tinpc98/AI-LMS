@@ -18,3 +18,5 @@ keys/
 *.pem
 
 docs/
+
+.env.example/

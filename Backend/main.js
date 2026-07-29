@@ -1,3 +1,4 @@
+import "dotenv/config";
 import dotenv from "dotenv";
 import express from "express";
 import cors from "cors"; // Thêm thư viện cấu hình cho phép Frontend gọi API
@@ -23,7 +24,14 @@ import DashboardRouter from "./src/routers/dashboard.routes.js";
 import ReportRouter from "./src/routers/report.routes.js";
 import NotificationRouter from "./src/routers/notification.routes.js";
 import ExamSetRouter from "./src/routers/examSet.routes.js";
+import AISummaryRouter from "./src/routers/aiSummary.routes.js";
+import AIQuestionRouter from "./src/routers/aiQuestion.routes.js";
+import AIGradingRouter from "./src/routers/aiGrading.routes.js";
+import AIKnowledgeRouter from "./src/routers/aiKnowledge.routes.js";
+import AIChatRouter from "./src/routers/aiChat.routes.js";
 import { initCronJobs } from "./src/cron/cron.setup.js";
+import aiUsageService from "./src/ai/services/aiUsage.service.js";
+import FolderRouter from "./src/routers/folder.routes.js";
 
 import { validateJaasConfig } from "./src/controllers/jaas.controller.js";
 
@@ -102,12 +110,21 @@ app.use("/api/grades", GradeRouter);
 app.use("/api/announcements", AnnouncementRouter);
 app.use("/api/notifications", NotificationRouter); // Bulk & inbox endpoints
 
+app.use("/api/folders", FolderRouter);
+
 // Routes Module Thi trực tuyến & Live
 app.use("/api/questions", QuestionRouter);
 app.use("/api/exams", ExamRouter);
 app.use("/api/exam-attempts", ExamAttemptRouter);
 app.use("/api/exam-sets", ExamSetRouter);
 app.use("/api/live", LiveRouter);
+
+// AI Module Routes
+app.use("/api/ai/lectures", AISummaryRouter);
+app.use("/api/ai/lectures/:lessonId/question-sets", AIQuestionRouter);
+app.use("/api/ai/exam-attempts", AIGradingRouter);
+app.use("/api/ai/lessons", AIKnowledgeRouter);
+app.use("/api/ai/chat", AIChatRouter);
 
 app.get("/", (req, res) => {
   res
@@ -148,6 +165,11 @@ connectDB()
       // Khởi tạo các cron job nền của hệ thống
       // Đặt runImmediately=false (mặc định) để cron chỉ chạy theo lịch
       initCronJobs();
+
+      // Đảm bảo cấu hình AIConfig đã được lưu sẵn trong DB
+      aiUsageService.getOrCreateConfig()
+        .then(() => console.log("🤖 AI Core Foundation: Đã đồng bộ cấu hình AIConfig"))
+        .catch((err) => console.error("⚠️ AI Core Foundation Config Init Error:", err.message));
     });
   })
   .catch((error) => {

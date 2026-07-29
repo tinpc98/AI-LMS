@@ -1,5 +1,6 @@
 import cron from "node-cron";
 import cronService from "../services/cron.service.js";
+import { runAIPendingRecovery } from "./jobs/aiPendingRecovery.job.js";
 
 /**
  * initCronJobs – Khởi tạo và đăng ký tất cả các cron job của hệ thống.
@@ -69,4 +70,24 @@ export const initCronJobs = (runImmediately = false) => {
         console.error("[CRON ERROR] ❌ Initial Class Status Update Failed:", error);
       });
   }
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // JOB 2: Tự động dọn dẹp AI Usage bị kẹt (Pending Recovery)
+  // Lịch: Mỗi 5 phút (*/5 * * * *)
+  // ──────────────────────────────────────────────────────────────────────────
+  cron.schedule(
+    "*/5 * * * *",
+    async () => {
+      try {
+        const result = await runAIPendingRecovery();
+        if (result.totalRecovered > 0) {
+          console.log(`[CRON] ♻️ AI Pending Recovery: Khôi phục thành công ${result.totalRecovered} requests bị kẹt.`);
+        }
+      } catch (error) {
+        console.error("[CRON ERROR] ❌ AI Pending Recovery Failed:", error);
+      }
+    },
+    { scheduled: true }
+  );
+  console.log("[CRON] 📅 Đã đăng ký job: AI Pending Recovery (lịch: */5 * * * *)");
 };
