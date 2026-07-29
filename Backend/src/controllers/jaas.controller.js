@@ -16,20 +16,13 @@ export { validateJaasConfig, getJaasAppId, getJaasApiKeyId, getJaasDomain, getPr
 export const generateJaasTokenForSession = async (req, res) => {
   try {
     const { sessionId } = req.params;
-    const { roomName: legacyRoomName } = req.body;
     const user = req.user;
-    const isLegacy = Boolean(req.originalUrl?.endsWith("/jaas-token"));
 
     const result = await generateJaasTokenService({
       sessionId,
-      legacyRoomName,
       user,
-      isLegacy,
+      isLegacy: false,
     });
-
-    if (isLegacy) {
-      return res.status(200).json(result);
-    }
 
     return res.status(200).json({
       success: true,
@@ -43,6 +36,4 @@ export const generateJaasTokenForSession = async (req, res) => {
     return res.status(500).json({ success: false, message: `Lỗi tạo JWT JaaS: ${error.message}` });
   }
 };
-
-export const generateJaasToken = generateJaasTokenForSession;
 

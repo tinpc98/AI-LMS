@@ -57,7 +57,7 @@ export const validateJaasConfig = () => {
  * Service sinh JWT JaaS cho phiên LiveSession
  * QUYẾT ĐỊNH CHÍNH THỨC: Admin KHÔNG ĐƯỢC PHÉP nhận Token.
  */
-export const generateJaasTokenService = async ({ sessionId, legacyRoomName, user, isLegacy = false }) => {
+export const generateJaasTokenService = async ({ sessionId, user }) => {
   const userRole = (user?.role || "").toLowerCase();
 
   // Admin bị CHẶN HOÀN TOÀN
@@ -81,13 +81,7 @@ export const generateJaasTokenService = async ({ sessionId, legacyRoomName, user
   let targetSession = null;
 
   if (sessionId) {
-    targetSession = await LiveSession.findById(sessionId);
-  } else if (legacyRoomName) {
-    targetSession = await LiveSession.findOne({
-      $or: [{ roomName: legacyRoomName }, { meetingRoomId: legacyRoomName }],
-      status: "Live",
-      isDeleted: false,
-    });
+    targetSession = await LiveSession.findById(sessionId).lean();
   }
 
   if (!targetSession || targetSession.isDeleted) {
@@ -106,7 +100,7 @@ export const generateJaasTokenService = async ({ sessionId, legacyRoomName, user
     );
   }
 
-  const classInfo = await classModel.findById(targetSession.classId);
+  const classInfo = await classModel.findById(targetSession.classId).lean();
   if (!classInfo || classInfo.isDeleted) {
     throw new LiveError("Lớp học liên kết không tồn tại!", 404, LIVE_ERROR_CODES.CLASS_NOT_FOUND);
   }
@@ -163,15 +157,7 @@ export const generateJaasTokenService = async ({ sessionId, legacyRoomName, user
     },
   });
 
-  if (isLegacy) {
-    return {
-      success: true,
-      token,
-      appId,
-      domain: getJaasDomain(),
-      roomName: targetRoomName,
-    };
-  }
+
 
   return {
     sessionId: targetSession._id.toString(),

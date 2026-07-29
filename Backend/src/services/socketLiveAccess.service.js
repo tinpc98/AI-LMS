@@ -34,7 +34,7 @@ export const checkSocketLiveClassAccess = async (user, classId) => {
   // 3. Tra cứu Class chưa bị Soft Delete
   const targetClass = await Class.findOne({ _id: classId, isDeleted: false }).select(
     "_id teacherId students className"
-  );
+  ).lean();
 
   if (!targetClass) {
     return {

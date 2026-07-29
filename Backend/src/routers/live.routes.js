@@ -12,11 +12,6 @@ import { checkClassTeacherOwnership, checkClassEnrollment } from "../middlewares
 
 const router = express.Router();
 
-// --- 1. Tuyến Đường Legacy (Tương Thích Ngược FE V1) ---
-router.post("/create", verifyUser, isTeacher, checkClassTeacherOwnership, createLiveSession);
-router.get("/active/:classId", verifyUser, checkClassEnrollment, getActiveLiveSession);
-router.post("/end", verifyUser, isTeacher, checkClassTeacherOwnership, endLiveSession);
-router.post("/jaas-token", verifyUser, checkClassEnrollment, generateJaasToken);
 
 // --- 2. Tuyến Đường REST API V2 Chuẩn Mục Tiêu (Sprint J3 & J4) ---
 // Tạo buổi học mới (Teacher Owner)

@@ -74,16 +74,16 @@ export const createSessionService = async ({ classId, title, scheduledStart, sch
   return mapLiveSessionResponse(populatedSession);
 };
 
-// 2. Lấy phiên học trực tuyến đang diễn ra (Get Active Session)
-export const getActiveSessionService = async (classId, isLegacy = false) => {
+export const getActiveSessionService = async (classId) => {
   if (!classId || !mongoose.Types.ObjectId.isValid(classId)) {
     return null;
   }
 
   const activeSession = await LiveSession.findOne({ classId, status: "Live", isDeleted: false })
-    .populate("createdBy", "fullName name email");
+    .populate("createdBy", "fullName name email")
+    .lean();
 
-  return activeSession ? mapLiveSessionResponse(activeSession, { isLegacy }) : null;
+  return activeSession ? mapLiveSessionResponse(activeSession, { isLegacy: false }) : null;
 };
 
 // 3. Lấy chi tiết phiên học trực tuyến (Get Session Detail)
@@ -94,7 +94,8 @@ export const getSessionDetailService = async (sessionId) => {
 
   const session = await LiveSession.findOne({ _id: sessionId, isDeleted: false })
     .populate("createdBy", "fullName name email")
-    .populate("endedBy", "fullName name email");
+    .populate("endedBy", "fullName name email")
+    .lean();
 
   if (!session) {
     throw new LiveError("Buổi học trực tuyến không tồn tại hoặc đã bị xóa!", 404, LIVE_ERROR_CODES.SESSION_NOT_FOUND);

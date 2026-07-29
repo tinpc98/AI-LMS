@@ -39,13 +39,12 @@ export const createLiveSession = async (req, res) => {
   }
 };
 
-// 2. GET /api/live/classes/:classId/active (V2) & GET /api/live/active/:classId (Legacy)
+// 2. GET /api/live/classes/:classId/active (V2)
 export const getActiveLiveSession = async (req, res) => {
   try {
     const { classId } = req.params;
-    const isLegacy = Boolean(req.originalUrl?.includes("/active/"));
 
-    const data = await getActiveSessionService(classId, isLegacy);
+    const data = await getActiveSessionService(classId, false);
 
     return res.status(200).json({ success: true, data });
   } catch (error) {
