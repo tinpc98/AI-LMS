@@ -9,62 +9,17 @@ import {
   Tooltip,
   Legend,
 } from "recharts";
-import type { DashboardResponse } from "../dashboard.types";
+import type { ClassStatusItem } from "../dashboard.types";
 
 const { Title, Text } = Typography;
 
 interface ClassStatusChartProps {
-  data?: DashboardResponse["classStatusChart"];
+  data: ClassStatusItem[];
   loading?: boolean;
 }
 
-interface ClassStatusStatistic {
-  name: string;
-  value: number;
-  color: string;
-}
-
-const transformClassStatusData = (data: DashboardResponse["classStatusChart"] = []): ClassStatusStatistic[] => {
-  const grouped: Record<string, { value: number; color: string }> = {
-    "Sắp mở": { value: 0, color: "#faad14" }, // Orange
-    "Đang hoạt động": { value: 0, color: "#52c41a" }, // Green
-    "Đã xong": { value: 0, color: "#1677ff" }, // Blue
-    "Đã hủy": { value: 0, color: "#ff4d4f" }, // Red
-  };
-
-  data.forEach((item) => {
-    switch (item.status) {
-      case "Draft":
-      case "Ready":
-        grouped["Sắp mở"].value += item.count;
-        break;
-      case "Ongoing":
-        grouped["Đang hoạt động"].value += item.count;
-        break;
-      case "Completed":
-        grouped["Đã xong"].value += item.count;
-        break;
-      case "Cancelled":
-        grouped["Đã hủy"].value += item.count;
-        break;
-      default:
-        break;
-    }
-  });
-
-  // Only return categories that have at least 1 class
-  return Object.keys(grouped)
-    .filter((key) => grouped[key].value > 0)
-    .map((key) => ({
-      name: key,
-      value: grouped[key].value,
-      color: grouped[key].color,
-    }));
-};
-
-export const ClassStatusChart: React.FC<ClassStatusChartProps> = ({ data = [], loading }) => {
-  const transformedData = transformClassStatusData(data);
-  const totalClasses = transformedData.reduce((acc, curr) => acc + curr.value, 0);
+export const ClassStatusChart: React.FC<ClassStatusChartProps> = ({ data, loading }) => {
+  const totalClasses = data.reduce((acc, curr) => acc + curr.count, 0);
 
   return (
     <motion.div
@@ -99,16 +54,16 @@ export const ClassStatusChart: React.FC<ClassStatusChartProps> = ({ data = [], l
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
-                  data={transformedData}
+                  data={data}
                   cx="50%"
                   cy="45%"
                   innerRadius={60}
                   outerRadius={90}
                   paddingAngle={4}
-                  dataKey="value"
-                  nameKey="name"
+                  dataKey="count"
+                  nameKey="statusLabel"
                 >
-                  {transformedData.map((entry, index) => (
+                  {data.map((entry, index) => (
                     <Cell key={`cell-status-${index}`} fill={entry.color} />
                   ))}
                 </Pie>
@@ -119,7 +74,7 @@ export const ClassStatusChart: React.FC<ClassStatusChartProps> = ({ data = [], l
                     border: "none",
                     boxShadow: "0 4px 16px rgba(0, 0, 0, 0.12)",
                   }}
-                  formatter={(value: any, name: any) => [`${value} lớp`, name]}
+                  formatter={(value: any, name: any) => [`${value} lớp học`, name]}
                 />
                 <Legend verticalAlign="bottom" height={36} iconType="circle" />
               </PieChart>

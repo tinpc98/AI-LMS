@@ -128,17 +128,8 @@ export const getAllUsers = async (req, res) => {
         { email: { $regex: search, $options: "i" } },
       ];
     }
-    const validRoles = ["Admin", "Teacher", "Student"];
-
-    if (role) {
-      const normalizedRole =
-        role.charAt(0).toUpperCase() +
-        role.slice(1).toLowerCase();
-
-      if (validRoles.includes(normalizedRole)) {
-        query.role = normalizedRole;
-      }
-    }
+    if (role) query.role = role;
+    if (status) query.status = status;
 
     const skip = (Number(page) - 1) * Number(limit);
 
@@ -297,7 +288,7 @@ export const restoreUser = async (req, res) => {
   try {
     const { id } = req.params;
     const restoredUser = await restoreUserService(id);
-
+    
     // Convert to object and delete password if exists
     const data = restoredUser.toObject ? restoredUser.toObject() : restoredUser;
     delete data.password;
@@ -317,7 +308,7 @@ export const permanentDeleteUser = async (req, res) => {
   try {
     const { id } = req.params;
     await permanentDeleteUserService(id);
-
+    
     return res.status(200).json({
       success: true,
       message: "Xóa vĩnh viễn người dùng thành công",

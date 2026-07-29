@@ -4,19 +4,19 @@ import { UserOutlined, EyeOutlined, ArrowRightOutlined } from "@ant-design/icons
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import type { ColumnsType } from "antd/es/table";
-import type { RecentClassRecord } from "../dashboard.types";
+import type { TodayClassRecord } from "../dashboard.types";
 
 const { Title, Text } = Typography;
 
 interface TodayClassesTableProps {
-  classes: RecentClassRecord[];
+  classes: TodayClassRecord[];
   loading?: boolean;
 }
 
 export const TodayClassesTable: React.FC<TodayClassesTableProps> = ({ classes, loading }) => {
   const navigate = useNavigate();
 
-  const columns: ColumnsType<RecentClassRecord> = [
+  const columns: ColumnsType<TodayClassRecord> = [
     {
       title: "Lớp học",
       dataIndex: "className",
@@ -27,70 +27,75 @@ export const TodayClassesTable: React.FC<TodayClassesTableProps> = ({ classes, l
             {text}
           </Text>
           <Text type="secondary" style={{ fontSize: "12px" }}>
-            {record.classCode}
+            {record.classCode} • {record.days}
           </Text>
         </div>
       ),
     },
     {
       title: "Giáo viên",
+      dataIndex: "teacherName",
       key: "teacherName",
-      render: (_, record) => {
-        const teacherName = record.teacher?.fullName ?? "Chưa phân công";
-        return (
-          <Space size="small">
-            <Avatar
-              icon={<UserOutlined />}
-              style={{ backgroundColor: teacherName === "Chưa phân công" ? "#faad14" : "#1677ff" }}
-            />
-            <Text
-              style={{
-                fontSize: "13px",
-                color: teacherName === "Chưa phân công" ? "#d48806" : "#262626",
-                fontWeight: teacherName === "Chưa phân công" ? 500 : 400,
-              }}
-            >
-              {teacherName}
-            </Text>
-          </Space>
-        );
-      },
+      render: (teacherName, record) => (
+        <Space size="small">
+          <Avatar
+            src={record.teacherAvatar}
+            icon={<UserOutlined />}
+            style={{ backgroundColor: teacherName === "Chưa phân công" ? "#faad14" : "#1677ff" }}
+          />
+          <Text
+            style={{
+              fontSize: "13px",
+              color: teacherName === "Chưa phân công" ? "#d48806" : "#262626",
+              fontWeight: teacherName === "Chưa phân công" ? 500 : 400,
+            }}
+          >
+            {teacherName}
+          </Text>
+        </Space>
+      ),
     },
     {
       title: "Khóa học",
+      dataIndex: "courseName",
       key: "courseName",
-      render: (_, record) => (
+      render: (text) => (
         <Text style={{ fontSize: "13px", color: "#595959" }}>
-          {record.course?.courseName ?? "N/A"}
+          {text}
         </Text>
       ),
     },
     {
-      title: "Ngày tạo",
-      dataIndex: "createdAt",
-      key: "createdAt",
-      render: (date) => (
-        <Tag color="blue" style={{ borderRadius: "4px" }}>
-          {new Date(date).toLocaleDateString("vi-VN")}
-        </Tag>
-      ),
+      title: "Thời gian",
+      dataIndex: "time",
+      key: "time",
+      render: (time) => <Tag color="blue" style={{ borderRadius: "4px" }}>{time}</Tag>,
     },
     {
       title: "Sĩ số",
       key: "students",
       render: (_, record) => {
-        const current = record.studentCount ?? 0;
-        const max = record.maxStudents || 1;
-        const percent = Math.round((current / max) * 100);
+        const percent = Math.round((record.currentStudents / record.maxStudents) * 100);
         return (
           <div style={{ width: 120 }}>
             <div style={{ display: "flex", justifyContent: "space-between", fontSize: "12px", marginBottom: 2 }}>
-              <span>{current}/{max}</span>
+              <span>{record.currentStudents}/{record.maxStudents}</span>
               <span style={{ color: "#8c8c8c" }}>{percent}%</span>
             </div>
             <Progress percent={percent} size="small" showInfo={false} strokeColor={percent >= 100 ? "#ff4d4f" : "#1677ff"} />
           </div>
         );
+      },
+    },
+    {
+      title: "Hình thức",
+      dataIndex: "learningMode",
+      key: "learningMode",
+      render: (mode: "Offline" | "Online" | "Hybrid") => {
+        let color = "geekblue";
+        if (mode === "Online") color = "purple";
+        if (mode === "Hybrid") color = "cyan";
+        return <Tag color={color} style={{ borderRadius: "4px" }}>{mode}</Tag>;
       },
     },
     {

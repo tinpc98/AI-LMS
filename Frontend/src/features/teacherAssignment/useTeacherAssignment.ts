@@ -1,8 +1,9 @@
-import { useState, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { message } from "antd";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type {
+  AccountRecord,
   ClassRecord,
+  CourseRecord,
   TeacherAssignmentFilters,
   TeacherAssignmentStats,
 } from "./teacherAssignment.types";
@@ -17,8 +18,12 @@ const initialFilters: TeacherAssignmentFilters = {
 };
 
 export const useTeacherAssignment = () => {
-  const queryClient = useQueryClient();
+  const [classes, setClasses] = useState<ClassRecord[]>([]);
+  const [allClasses, setAllClasses] = useState<ClassRecord[]>([]);
+  const [teachers, setTeachers] = useState<AccountRecord[]>([]);
+  const [courses, setCourses] = useState<CourseRecord[]>([]);
   const [filters, setFilters] = useState<TeacherAssignmentFilters>(initialFilters);
+  const [loading, setLoading] = useState(false);
 
   // Modal / Drawer state
   const [assignModalOpen, setAssignModalOpen] = useState(false);
@@ -26,56 +31,32 @@ export const useTeacherAssignment = () => {
   const [removeModalOpen, setRemoveModalOpen] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [selectedClass, setSelectedClass] = useState<ClassRecord | undefined>();
+  const [actionLoading, setActionLoading] = useState(false);
 
-  // Fetch data
-  const { data: classes = [], isLoading: classesLoading } = useQuery({
-    queryKey: ["teacher-assignments", "classes", filters],
-    queryFn: () => teacherAssignmentService.getClasses(filters),
-  });
+  const loadData = useCallback(async () => {
+    setLoading(true);
+    try {
+      const [filteredClassesRes, allClassesRes, teachersRes, coursesRes] = await Promise.all([
+        teacherAssignmentService.getClasses(filters),
+        teacherAssignmentService.getAllClasses(),
+        teacherAssignmentService.getTeachers(),
+        teacherAssignmentService.getCourses(),
+      ]);
 
-  const { data: allClasses = [], isLoading: allClassesLoading } = useQuery({
-    queryKey: ["teacher-assignments", "allClasses"],
-    queryFn: () => teacherAssignmentService.getAllClasses(),
-  });
+      setClasses(filteredClassesRes);
+      setAllClasses(allClassesRes);
+      setTeachers(teachersRes);
+      setCourses(coursesRes);
+    } catch {
+      message.error("Failed to load assignment data.");
+    } finally {
+      setLoading(false);
+    }
+  }, [filters]);
 
-  const { data: teachers = [], isLoading: teachersLoading } = useQuery({
-    queryKey: ["teacher-assignments", "teachers"],
-    queryFn: () => teacherAssignmentService.getTeachers(),
-  });
-
-  const { data: courses = [], isLoading: coursesLoading } = useQuery({
-    queryKey: ["teacher-assignments", "courses"],
-    queryFn: () => teacherAssignmentService.getCourses(),
-  });
-
-  const loading = classesLoading || allClassesLoading || teachersLoading || coursesLoading;
-
-  // Mutations
-  const assignMutation = useMutation({
-    mutationFn: ({ classId, teacherId }: { classId: string; teacherId: string }) =>
-      teacherAssignmentService.assignTeacher(classId, teacherId),
-    onSuccess: () => {
-      message.success("Teacher assigned successfully!");
-      setAssignModalOpen(false);
-      setChangeModalOpen(false);
-      void queryClient.invalidateQueries({ queryKey: ["teacher-assignments"] });
-    },
-    onError: (err: any) => {
-      message.error(err?.response?.data?.message || "Failed to assign teacher.");
-    },
-  });
-
-  const removeMutation = useMutation({
-    mutationFn: (classId: string) => teacherAssignmentService.removeTeacher(classId),
-    onSuccess: () => {
-      message.success("Teacher assignment removed successfully.");
-      setRemoveModalOpen(false);
-      void queryClient.invalidateQueries({ queryKey: ["teacher-assignments"] });
-    },
-    onError: (err: any) => {
-      message.error(err?.response?.data?.message || "Failed to remove teacher assignment.");
-    },
-  });
+  useEffect(() => {
+    void loadData();
+  }, [loadData]);
 
   // Dynamic Teaching Load calculation
   const teachingLoadMap = useMemo(() => {
@@ -121,22 +102,41 @@ export const useTeacherAssignment = () => {
     setDrawerOpen(true);
   };
 
-  const handleAssign = (classId: string, teacherId: string) => {
-    assignMutation.mutate({ classId, teacherId });
+  const handleAssign = async (classId: string, teacherId: string) => {
+    try {
+      await teacherAssignmentService.assignTeacher(classId, teacherId);
+      message.success("Teacher assigned successfully!");
+      setAssignModalOpen(false);
+      await loadData();
+    } catch {
+      message.error("Failed to assign teacher.");
+    }
   };
 
-  const handleChange = (classId: string, newTeacherId: string) => {
-    assignMutation.mutate({ classId, teacherId: newTeacherId });
+  const handleChange = async (classId: string, newTeacherId: string) => {
+    try {
+      await teacherAssignmentService.changeTeacher(classId, newTeacherId);
+      message.success("Teacher updated successfully!");
+      setChangeModalOpen(false);
+      await loadData();
+    } catch {
+      message.error("Failed to update teacher assignment.");
+    }
   };
 
-  const handleRemove = () => {
+  const handleRemove = async () => {
     if (!selectedClass) return;
-    removeMutation.mutate(selectedClass.id);
-  };
-
-  // Provide a stub loadData so components calling void loadData() don't break
-  const loadData = () => {
-    void queryClient.invalidateQueries({ queryKey: ["teacher-assignments"] });
+    setActionLoading(true);
+    try {
+      await teacherAssignmentService.removeTeacher(selectedClass.id);
+      message.success("Teacher assignment removed successfully.");
+      setRemoveModalOpen(false);
+      await loadData();
+    } catch {
+      message.error("Failed to remove teacher assignment.");
+    } finally {
+      setActionLoading(false);
+    }
   };
 
   const selectedTeacher = useMemo(() => {
@@ -154,6 +154,7 @@ export const useTeacherAssignment = () => {
     loading,
     stats,
     teachingLoadMap,
+    // Modal states
     assignModalOpen,
     setAssignModalOpen,
     changeModalOpen,
@@ -164,7 +165,8 @@ export const useTeacherAssignment = () => {
     setDrawerOpen,
     selectedClass,
     selectedTeacher,
-    actionLoading: assignMutation.isPending || removeMutation.isPending,
+    actionLoading,
+    // Handlers
     loadData,
     openAssignModal,
     openChangeModal,

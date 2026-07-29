@@ -213,22 +213,7 @@ export const AssignTeacher = async (req, res) => {
   }
 
   try {
-    // Validate Class Status before assigning
-    const targetClass = await classModel.findById(id);
-    if (!targetClass) {
-      return res.status(404).json({ success: false, message: "Lớp học không tồn tại" });
-    }
-
-    const allowedStatuses = ["Draft", "Ready", "Ongoing"];
-    if (!allowedStatuses.includes(targetClass.status)) {
-      return res.status(400).json({ 
-        success: false, 
-        message: `Không thể phân công giáo viên cho lớp học đang ở trạng thái: ${targetClass.status}` 
-      });
-    }
-
-    // Fix: MongoDB is case-sensitive, User role enum is "Teacher" (PascalCase)
-    const teacherExists = await User.findOne({ _id: teacherId, role: "Teacher", isDeleted: false });
+    const teacherExists = await User.findOne({ _id: teacherId, role: "teacher", isDeleted: false });
     if (!teacherExists) {
       return res.status(400).json({ success: false, message: "Giáo viên không hợp lệ" });
     }
@@ -563,20 +548,6 @@ export const UnassignTeacher = async (req, res) => {
   }
 
   try {
-    // Validate Class Status before unassigning
-    const targetClass = await classModel.findById(id);
-    if (!targetClass) {
-      return res.status(404).json({ success: false, message: "Lớp học không tồn tại" });
-    }
-
-    const allowedStatuses = ["Draft", "Ready", "Ongoing"];
-    if (!allowedStatuses.includes(targetClass.status)) {
-      return res.status(400).json({ 
-        success: false, 
-        message: `Không thể gỡ phân công giáo viên cho lớp học đang ở trạng thái: ${targetClass.status}` 
-      });
-    }
-
     const updatedClass = await classModel.findByIdAndUpdate(
       id,
       {

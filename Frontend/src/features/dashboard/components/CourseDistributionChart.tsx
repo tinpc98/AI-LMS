@@ -9,57 +9,19 @@ import {
   Tooltip,
   Legend,
 } from "recharts";
-import type { DashboardResponse } from "../dashboard.types";
+import type { CourseDistributionItem } from "../dashboard.types";
 
 const { Title, Text } = Typography;
 
 interface CourseDistributionChartProps {
-  data?: DashboardResponse["courseDistribution"];
+  data: CourseDistributionItem[];
   loading?: boolean;
 }
 
-interface SubjectStatistic {
-  subject: string;
-  total: number;
-}
-
-const groupCoursesBySubject = (data: DashboardResponse["courseDistribution"] = []): SubjectStatistic[] => {
-  const grouped: Record<string, number> = {};
-
-  data.forEach((item) => {
-    // Subject must come only from backend response field "subject".
-    // If subject is missing, ignore that item or show "Unknown".
-    const subjectName = item.subject || "Unknown";
-
-    if (!grouped[subjectName]) {
-      grouped[subjectName] = 0;
-    }
-    // Aggregate the total number of classes (or courses)
-    grouped[subjectName] += item.classCount;
-  });
-
-  return Object.keys(grouped).map((key) => ({
-    subject: key,
-    total: grouped[key],
-  }));
-};
-
 export const CourseDistributionChart: React.FC<CourseDistributionChartProps> = ({
-  data = [],
+  data,
   loading,
 }) => {
-  // Define a curated color palette for courses
-  const COLORS = ["#1677ff", "#722ed1", "#fa8c16", "#52c41a", "#eb2f96", "#13c2c2", "#faad14", "#f5222d"];
-
-  const subjectData = groupCoursesBySubject(data);
-
-  // Transform data into chart format
-  const transformedData = subjectData.map((item, index) => ({
-    name: item.subject,
-    value: item.total,
-    color: COLORS[index % COLORS.length],
-  }));
-
   return (
     <motion.div
       initial={{ opacity: 0, y: 15 }}
@@ -82,7 +44,7 @@ export const CourseDistributionChart: React.FC<CourseDistributionChartProps> = (
             Phân bổ khóa học theo môn 📚
           </Title>
           <Text type="secondary" style={{ fontSize: "13px" }}>
-            Tỷ lệ phân bổ theo các môn học
+            Tỷ lệ các khóa học Toán, Lý, Hóa, Tiếng Anh
           </Text>
         </div>
 
@@ -93,18 +55,18 @@ export const CourseDistributionChart: React.FC<CourseDistributionChartProps> = (
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
-                  data={transformedData}
+                  data={data}
                   cx="50%"
                   cy="45%"
                   innerRadius={0}
                   outerRadius={90}
                   paddingAngle={3}
-                  dataKey="value"
-                  nameKey="name"
+                  dataKey="count"
+                  nameKey="subject"
                   label={({ name, percent }) => `${name} (${((percent || 0) * 100).toFixed(0)}%)`}
                   labelLine={{ strokeWidth: 1 }}
                 >
-                  {transformedData.map((entry, index) => (
+                  {data.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.color} />
                   ))}
                 </Pie>
@@ -115,7 +77,7 @@ export const CourseDistributionChart: React.FC<CourseDistributionChartProps> = (
                     border: "none",
                     boxShadow: "0 4px 16px rgba(0, 0, 0, 0.12)",
                   }}
-                  formatter={(value: any, name: any) => [`${value} khóa/lớp`, name]}
+                  formatter={(value: any, name: any) => [`${value} khóa học`, name]}
                 />
                 <Legend verticalAlign="bottom" height={36} iconType="circle" />
               </PieChart>
