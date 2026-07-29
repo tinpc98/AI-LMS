@@ -3,6 +3,60 @@ import classModel from "../models/class.model.js";
 import LiveSession from "../models/liveSession.model.js";
 import { LIVE_ERROR_CODES, sendLiveError } from "../validators/live.validator.js";
 
+// ============================================================================
+// 1. RESOLVER MIDDLEWARES (PHÂN GIẢI DỮ LIỆU)
+// Mục tiêu: Bóc tách ID từ nhiều nguồn khác nhau (body, params) và gộp chung 
+// vào biến `req.classContextId` để các middleware phân quyền phía sau đọc.
+// ============================================================================
+
+export const resolveClassIdFromBody = (req, res, next) => {
+  const classId = req.body?.classId;
+  if (!classId || !mongoose.Types.ObjectId.isValid(classId)) {
+    return sendLiveError(res, 400, LIVE_ERROR_CODES.INVALID_CLASS_ID, "ID lớp học không hợp lệ hoặc bị thiếu trong body!");
+  }
+  req.classContextId = classId;
+  return next();
+};
+
+export const resolveClassIdFromParams = (req, res, next) => {
+  const classId = req.params?.classId;
+  if (!classId || !mongoose.Types.ObjectId.isValid(classId)) {
+    return sendLiveError(res, 400, LIVE_ERROR_CODES.INVALID_CLASS_ID, "ID lớp học không hợp lệ hoặc bị thiếu trong đường dẫn!");
+  }
+  req.classContextId = classId;
+  return next();
+};
+
+export const resolveLiveSession = async (req, res, next) => {
+  try {
+    const sessionId = req.params?.sessionId;
+    if (!sessionId || !mongoose.Types.ObjectId.isValid(sessionId)) {
+      return sendLiveError(res, 400, LIVE_ERROR_CODES.INVALID_SESSION_ID, "sessionId không hợp lệ!");
+    }
+    
+    // Select the necessary fields to determine class context and deleted status
+    const session = await LiveSession.findById(sessionId).select("classId status isDeleted roomName");
+    
+    if (!session || session.isDeleted) {
+      return sendLiveError(res, 404, LIVE_ERROR_CODES.SESSION_NOT_FOUND, "Buổi học trực tuyến không tồn tại hoặc đã bị xóa!");
+    }
+    
+    req.liveSession = session;
+    req.classContextId = session.classId?.toString();
+    return next();
+  } catch (error) {
+    console.error("[LiveAuthMW] resolveLiveSession Error:", error);
+    return res.status(500).json({ success: false, message: "Lỗi hệ thống khi tải thông tin buổi học" });
+  }
+};
+
+
+// ============================================================================
+// 2. AUTHORIZATION MIDDLEWARES (PHÂN QUYỀN TRUY CẬP)
+// Yêu cầu: Phải đặt SAU các Resolver Middlewares ở trên.
+// Chỉ đọc từ `req.classContextId`.
+// ============================================================================
+
 /**
  * Middleware kiểm tra quyền Quyền sở hữu Lớp học dành cho Giáo viên (Teacher Owner Check)
  * QUYẾT ĐỊNH CHÍNH THỨC: Admin KHÔNG ĐƯỢC PHÉP vận hành Live Session.
@@ -21,38 +75,12 @@ export const checkClassTeacherOwnership = async (req, res, next) => {
       );
     }
 
-    let classId = req.params.classId || req.body.classId;
-    const { sessionId } = req.params;
-
-    if (!classId && sessionId) {
-      if (!mongoose.Types.ObjectId.isValid(sessionId)) {
-        return sendLiveError(
-          res,
-          400,
-          LIVE_ERROR_CODES.INVALID_SESSION_ID,
-          "sessionId không hợp lệ!"
-        );
-      }
-      const session = await LiveSession.findById(sessionId).select("classId status isDeleted");
-      if (!session || session.isDeleted) {
-        return sendLiveError(
-          res,
-          404,
-          LIVE_ERROR_CODES.SESSION_NOT_FOUND,
-          "Buổi học trực tuyến không tồn tại hoặc đã bị xóa!"
-        );
-      }
-      classId = session.classId?.toString();
-      req.liveSession = session;
-    }
-
-    if (!classId || !mongoose.Types.ObjectId.isValid(classId)) {
-      return sendLiveError(
-        res,
-        400,
-        LIVE_ERROR_CODES.INVALID_CLASS_ID,
-        "ID lớp học không hợp lệ!"
-      );
+    const classId = req.classContextId;
+    if (!classId) {
+      return res.status(500).json({ 
+        success: false, 
+        message: "Lỗi logic Backend: Chưa khai báo Resolver Middleware trước Authorization Middleware." 
+      });
     }
 
     const classInfo = await classModel.findById(classId);
@@ -103,38 +131,12 @@ export const checkClassEnrollment = async (req, res, next) => {
       );
     }
 
-    let classId = req.params.classId || req.body.classId;
-    const { sessionId } = req.params;
-
-    if (!classId && sessionId) {
-      if (!mongoose.Types.ObjectId.isValid(sessionId)) {
-        return sendLiveError(
-          res,
-          400,
-          LIVE_ERROR_CODES.INVALID_SESSION_ID,
-          "sessionId không hợp lệ!"
-        );
-      }
-      const session = await LiveSession.findById(sessionId).select("classId status isDeleted roomName");
-      if (!session || session.isDeleted) {
-        return sendLiveError(
-          res,
-          404,
-          LIVE_ERROR_CODES.SESSION_NOT_FOUND,
-          "Buổi học trực tuyến không tồn tại hoặc đã bị xóa!"
-        );
-      }
-      classId = session.classId?.toString();
-      req.liveSession = session;
-    }
-
-    if (!classId || !mongoose.Types.ObjectId.isValid(classId)) {
-      return sendLiveError(
-        res,
-        400,
-        LIVE_ERROR_CODES.INVALID_CLASS_ID,
-        "ID lớp học không hợp lệ!"
-      );
+    const classId = req.classContextId;
+    if (!classId) {
+      return res.status(500).json({ 
+        success: false, 
+        message: "Lỗi logic Backend: Chưa khai báo Resolver Middleware trước Authorization Middleware." 
+      });
     }
 
     const classInfo = await classModel.findById(classId);
