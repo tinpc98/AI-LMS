@@ -23,7 +23,8 @@ export const startExam = async (req, res) => {
       });
     }
 
-    if (req.user.role !== "student") {
+    const userRole = String(req.user?.role || "").toLowerCase();
+    if (userRole !== "student") {
       return res.status(403).json({
         success: false,
         message: "Chỉ học sinh mới được phép làm bài thi!",
