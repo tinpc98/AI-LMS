@@ -41,6 +41,7 @@ export const TeacherLiveSessionTab: React.FC<TeacherLiveSessionTabProps> = React
   ({ classId, className = "Lớp học", teacherName = "Giảng viên" }) => {
     const navigate = useNavigate();
     const location = useLocation();
+    const [activeCount, setActiveCount] = React.useState<number>(0);
 
     // 1. Hooks V2 Modular
     const {
@@ -61,6 +62,7 @@ export const TeacherLiveSessionTab: React.FC<TeacherLiveSessionTabProps> = React
       onSessionEnded: () => {
         void fetchActiveSession();
       },
+      onParticipantsUpdated: (count) => setActiveCount(count),
     });
 
     useEffect(() => {
@@ -256,6 +258,10 @@ export const TeacherLiveSessionTab: React.FC<TeacherLiveSessionTabProps> = React
 
                   <Tag color="cyan" style={{ fontSize: 13, fontFamily: "monospace" }}>
                     Room: {currentRoomName}
+                  </Tag>
+
+                  <Tag color="blue" style={{ fontSize: 13 }}>
+                    Học sinh tham gia: {activeCount}
                   </Tag>
                 </div>
 

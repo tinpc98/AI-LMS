@@ -6,6 +6,7 @@ import { generateLiveSessionRoomName } from "../utils/liveSessionHelper.js";
 import { mapLiveSessionResponse } from "../utils/liveSession.mapper.js";
 import { LiveError, LIVE_ERROR_CODES } from "../validators/live.validator.js";
 import notificationService from "./notification.service.js";
+import attendanceService from "./attendance.service.js";
 
 /**
  * Service xử lý Business Logic của LiveSession
@@ -209,6 +210,37 @@ export const endSessionService = async ({ sessionId, classId, userId, io }) => {
       timestamp: new Date().toISOString(),
     });
     console.log(`📢 [LIVE_SERVICE] Ended cho lớp ${targetClassId}`);
+  }
+
+  // Bắn thông báo realtime (Session Ended)
+  const classInfo = await classModel.findById(targetClassId).lean();
+  notificationService.notifyLiveSessionEnded({
+    session,
+    classInfo,
+    teacherInfo: session.endedBy,
+    io
+  }).catch(err => console.error("❌ Notification Error in notifyLiveSessionEnded:", err));
+
+  // Tự động đồng bộ Điểm danh (Attendance)
+  try {
+    if (session.participants && session.participants.length > 0) {
+      const records = session.participants.map(p => ({
+        studentId: p.studentId,
+        status: p.durationSeconds > 60 ? "Present" : "Absent", // Vd: > 1 phút tính là có mặt
+        note: `Điểm danh tự động từ Live Session (Tham gia ${Math.round(p.durationSeconds / 60)} phút)`
+      }));
+
+      // Gọi logic điểm danh
+      await attendanceService.markAttendance({
+        classId: targetClassId,
+        date: new Date().toISOString().split('T')[0], // Ngày hiện tại (chỉ lấy YYYY-MM-DD)
+        records,
+        teacherId: userId
+      });
+      console.log(`✅ [LIVE_SERVICE] Đã đồng bộ điểm danh cho ${records.length} học sinh.`);
+    }
+  } catch (error) {
+    console.error("❌ [LIVE_SERVICE] Attendance Sync Error:", error.message);
   }
 
   return mapLiveSessionResponse(session);

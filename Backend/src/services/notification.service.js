@@ -318,6 +318,80 @@ class NotificationService {
     }
   }
 
+  /**
+   * Tạo thông báo khi Teacher kết thúc Live Session và emit qua Socket
+   */
+  async notifyLiveSessionEnded({ session, classInfo, teacherInfo, io }) {
+    if (!session || !classInfo) return;
+
+    try {
+      const activeStudents = (classInfo.students || []).filter(
+        (s) => s.status === "Enrolled" && s.studentId
+      );
+
+      if (activeStudents.length === 0) return;
+
+      const actorId = typeof teacherInfo === "object" ? teacherInfo._id : teacherInfo;
+
+      const bulkOps = activeStudents.map((s) => {
+        const recipientId = typeof s.studentId === "object" ? s.studentId._id : s.studentId;
+        
+        return {
+          updateOne: {
+            filter: {
+              recipientId: new mongoose.Types.ObjectId(recipientId),
+              type: "LIVE_SESSION_ENDED",
+              entityId: new mongoose.Types.ObjectId(session._id),
+            },
+            update: {
+              $setOnInsert: {
+                recipientId: new mongoose.Types.ObjectId(recipientId),
+                actorId: actorId ? new mongoose.Types.ObjectId(actorId) : null,
+                senderId: actorId ? new mongoose.Types.ObjectId(actorId) : null,
+                title: "Buổi học trực tuyến kết thúc",
+                message: `Giảng viên đã kết thúc buổi học trực tuyến của lớp ${classInfo.className || "của bạn"}`,
+                content: `Giảng viên đã kết thúc buổi học trực tuyến của lớp ${classInfo.className || "của bạn"}`,
+                type: "LIVE_SESSION_ENDED",
+                entityType: "LIVE_SESSION",
+                entityId: new mongoose.Types.ObjectId(session._id),
+                classId: new mongoose.Types.ObjectId(session.classId),
+                actionUrl: `/student/classes/${session.classId}`,
+                link: `/student/classes/${session.classId}`,
+                metadata: {
+                  className: classInfo.className,
+                  sessionNumber: session.sessionNumber,
+                  duration: session.actualEnd ? Math.round((session.actualEnd.getTime() - session.actualStart.getTime())/60000) : 0
+                },
+                isRead: false,
+                readAt: null
+              }
+            },
+            upsert: true
+          }
+        };
+      });
+
+      const result = await Notification.bulkWrite(bulkOps, { ordered: false });
+      
+      if (result.upsertedCount > 0 && io) {
+        const upsertedIds = Object.values(result.upsertedIds);
+        
+        const newNotifications = await Notification.find({ _id: { $in: upsertedIds } })
+          .populate("actorId senderId", "fullName email avatar")
+          .lean();
+
+        newNotifications.forEach((notif) => {
+          io.to(`user:${notif.recipientId}`).emit("notification:new", notif);
+        });
+        
+        console.log(`✅ [NotificationService] Đã tạo và emit ${result.upsertedCount} thông báo LiveSession_ENDED.`);
+      }
+
+    } catch (error) {
+      console.error("❌ [NotificationService] notifyLiveSessionEnded Error:", error);
+    }
+  }
+
   // Lấy danh sách thông báo inbox của người dùng hiện tại (có phân trang)
   async getMyNotifications(userId, queryOptions = {}) {
     if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
