@@ -38,6 +38,7 @@ export function useLiveSessionSocket({
   onSessionStarted,
   onSessionEnded,
   onNetworkChange,
+  onParticipantsUpdated,
 }: UseLiveSessionSocketProps) {
   const [isOnline, setIsOnline] = useState<boolean>(navigator.onLine);
   const [isSocketConnected, setIsSocketConnected] = useState<boolean>(false);

@@ -1,5 +1,6 @@
 import { useState, useCallback } from "react";
-import analyticsApi, { IStudentAnalytics, ITeacherAnalytics } from "../api/analyticsApi";
+import analyticsApi from "../api/analyticsApi";
+import type { IStudentAnalytics, ITeacherAnalytics } from "../api/analyticsApi";
 
 export function useAnalytics(classId?: string) {
   const [studentDashboard, setStudentDashboard] = useState<IStudentAnalytics | null>(null);

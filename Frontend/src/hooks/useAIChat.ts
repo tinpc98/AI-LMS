@@ -1,5 +1,6 @@
 import { useState, useCallback } from "react";
-import aiApi, { IChatMessage, IChatSession } from "../api/aiApi";
+import aiApi from "../api/aiApi";
+import type { IChatMessage, IChatSession } from "../api/aiApi";
 import { toast } from "../utils/toast";
 
 export function useAIChat(lessonId?: string) {
