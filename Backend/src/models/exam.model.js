@@ -4,11 +4,18 @@ import softDeletePlugin from "../plugins/softDelete.plugin.js";
 const examQuestionSchema = new Schema(
   {
     questionId: {
-      type: Schema.Types.ObjectId,
-      ref: "Question",
+      type: Schema.Types.Mixed, // Could be ObjectId for legacy Question, or String/ObjectId for snapshot ID
       required: true,
     },
     points: { type: Number, required: true },
+    isSnapshot: {
+      type: Boolean,
+      default: false,
+    },
+    snapshotData: {
+      type: Schema.Types.Mixed, // Stores the complete question object from ExamSet
+      default: null,
+    },
   },
   { _id: false }
 );
@@ -45,6 +52,12 @@ const examSchema = new Schema(
     aiPromptUsed: {
       type: String,
       trim: true,
+      default: null,
+    },
+
+    aiSourceExamSetId: {
+      type: Schema.Types.ObjectId,
+      ref: "ExamSet",
       default: null,
     },
 

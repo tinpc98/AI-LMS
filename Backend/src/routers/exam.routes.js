@@ -7,6 +7,7 @@ import {
   getExamsByClass,
   getAllExams,
   getExamById,
+  generateFromExamSet,
 } from "../controllers/exam.controller.js";
 import { verifyUser, isTeacher } from "../middlewares/auth.middlewares.js";
 
@@ -19,6 +20,7 @@ router.get("/:id", verifyUser, getExamById);
 // Giáo viên và Admin có quyền Tạo/Sửa/Xóa Đề thi
 router.post("/", verifyUser, isTeacher, createExam);
 router.post("/generate-auto", verifyUser, isTeacher, autoGenerateExam);
+router.post("/generate-from-examset", verifyUser, isTeacher, generateFromExamSet);
 router.put("/:id", verifyUser, isTeacher, updateExam);
 router.delete("/:id", verifyUser, isTeacher, deleteExam);
 

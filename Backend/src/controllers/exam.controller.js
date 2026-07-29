@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import examService from "../services/exam.service.js";
+import aiExamGenerationService from "../ai/services/aiExamGeneration.service.js";
 import Exam from "../models/exam.model.js";
 import classModel from "../models/class.model.js";
 
@@ -237,8 +238,105 @@ export const getExamById = async (req, res) => {
       return res.status(404).json({ message: "Không tìm thấy kỳ thi!" });
     }
 
+    // Polyfill for AI Exam Generation snapshot data
+    if (exam.questions && exam.questions.length > 0) {
+      exam.questions = exam.questions.map((q) => {
+        if (q.isSnapshot && q.snapshotData) {
+          // If the question was snapshot from ExamSet, we map it into `questionId` to simulate populate()
+          return {
+            ...q,
+            questionId: q.snapshotData,
+          };
+        }
+        return q;
+      });
+    }
+
     return res.status(200).json({ data: exam });
   } catch (error) {
     return res.status(500).json({ message: error.message || "Lỗi hệ thống khi tải chi tiết đề thi." });
+  }
+};
+
+// 8. Tạo đề thi từ ExamSet (Sprint 4 AI Blueprint Engine)
+export const generateFromExamSet = async (req, res) => {
+  try {
+    const {
+      classId,
+      examSetId,
+      title,
+      description,
+      durationMinutes,
+      totalQuestions,
+      totalPoints,
+      questionTypeDistribution,
+      difficultyDistribution,
+      shuffleQuestions,
+      shuffleOptions,
+    } = req.body;
+
+    // Validate essential inputs
+    if (!classId || !mongoose.Types.ObjectId.isValid(classId)) {
+      return res.status(400).json({ message: "ID lớp học không hợp lệ!" });
+    }
+    if (!examSetId || !mongoose.Types.ObjectId.isValid(examSetId)) {
+      return res.status(400).json({ message: "ID bộ đề không hợp lệ!" });
+    }
+    if (!title || typeof title !== "string" || title.trim() === "") {
+      return res.status(400).json({ message: "Tiêu đề không hợp lệ!" });
+    }
+    if (!Number.isInteger(durationMinutes) || durationMinutes <= 0) {
+      return res.status(400).json({ message: "Thời gian làm bài phải là số nguyên dương!" });
+    }
+    if (!Number.isInteger(totalQuestions) || totalQuestions <= 0) {
+      return res.status(400).json({ message: "Tổng số câu hỏi phải là số nguyên dương!" });
+    }
+    if (typeof totalPoints !== "number" || totalPoints <= 0) {
+      return res.status(400).json({ message: "Tổng điểm phải là số dương!" });
+    }
+    if (typeof questionTypeDistribution !== "object" || typeof difficultyDistribution !== "object") {
+      return res.status(400).json({ message: "Phân bố câu hỏi không hợp lệ!" });
+    }
+
+    const targetClass = await classModel.findOne({ _id: classId, isDeleted: false });
+    if (!targetClass) {
+      return res.status(404).json({ message: "Lớp học không tồn tại!" });
+    }
+    
+    // Check if Teacher has access to the class
+    const userId = (req.user._id || req.user.id || "").toString();
+    const userRole = (req.user.role || "").toLowerCase();
+    
+    if (userRole !== "admin") {
+      const classTeacherId = (targetClass.teacherId?._id || targetClass.teacherId || "").toString();
+      if (classTeacherId !== userId) {
+        return res.status(403).json({ message: "Bạn không có quyền tạo đề thi cho lớp học này!" });
+      }
+    }
+
+    const newExam = await aiExamGenerationService.generateExamFromSet({
+      userId,
+      classId,
+      examSetId,
+      blueprint: {
+        title: title.trim(),
+        description,
+        durationMinutes,
+        totalQuestions,
+        totalPoints,
+        questionTypeDistribution,
+        difficultyDistribution,
+        shuffleQuestions: !!shuffleQuestions,
+        shuffleOptions: !!shuffleOptions,
+      }
+    });
+
+    return res.status(201).json({
+      message: "Tạo đề thi nháp từ bộ đề thành công!",
+      data: newExam,
+    });
+  } catch (error) {
+    const status = error.statusCode || 500;
+    return res.status(status).json({ message: error.message || "Lỗi hệ thống khi sinh đề thi." });
   }
 };
