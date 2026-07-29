@@ -1,5 +1,5 @@
 import React, { lazy, Suspense } from "react";
-import { Route, Routes } from "react-router-dom";
+import { Route, Routes, useParams, Navigate } from "react-router-dom";
 import { Spin } from "antd";
 import "./App.css";
 
@@ -42,6 +42,9 @@ const ReportPage = lazy(() => import("./pages/Report/ReportPage"));
 const ProfilePage = lazy(() => import("./pages/admin/Profile/ProfilePage"));
 const AdminPage = lazy(() => import("./pages/admin/AdminPage"));
 
+const LiveSessionLayout = lazy(() => import("./components/layout/LiveSessionLayout"));
+const LiveSessionPage = lazy(() => import("./pages/live/LiveSessionPage"));
+
 const PageLoadingFallback = () => (
   <div style={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "100vh" }}>
     <Spin size="large" tip="Đang tải trang..." />
@@ -81,6 +84,11 @@ function App() {
               <Route path="lessonview" element={<LessonView />} />
               <Route path="notifications" element={<NotificationCenterPage />} />
             </Route>
+            
+            {/* Live Session Route cho Student (Full màn hình, không Header/Sidebar) */}
+            <Route path="/student/live" element={<LiveSessionLayout />}>
+              <Route path=":sessionId" element={<LiveSessionPage />} />
+            </Route>
 
             {/* Legacy redirect tương thích ngược cho link cũ /classdetail/:classId */}
             <Route path="/classdetail/:classId" element={<LegacyClassDetailRedirect />} />
@@ -97,6 +105,11 @@ function App() {
               <Route path="questionbank" element={<QuestionBank />} />
               <Route path="examresults/:examId" element={<ExamResults />} />
               <Route path="exam-review/:attemptId" element={<ExamAttemptDetail />} />
+            </Route>
+            
+            {/* Live Session Route cho Teacher (Full màn hình, không Header/Sidebar) */}
+            <Route path="/teacher/live" element={<LiveSessionLayout />}>
+              <Route path=":sessionId" element={<LiveSessionPage />} />
             </Route>
           </Route>
 

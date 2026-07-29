@@ -1,4 +1,5 @@
 import React, { useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Typography, Alert, Button } from "antd";
 import { DisconnectOutlined, ReloadOutlined } from "@ant-design/icons";
 import LiveStatistic from "./LiveStatistic";
@@ -6,9 +7,7 @@ import CurrentLiveCard from "./CurrentLiveCard";
 import LiveEmptyState from "./LiveEmptyState";
 import LiveLoadingSkeleton from "./LiveLoadingSkeleton";
 import useLiveSessionState from "../../../../hooks/useLiveSessionState";
-import useJaasConference from "../../../../hooks/useJaasConference";
 import useLiveSessionSocket from "../../../../hooks/useLiveSessionSocket";
-import LiveRoomModal from "../../../features/LiveRoomModal";
 import LiveSessionErrorBoundary from "../../../features/LiveSessionErrorBoundary";
 import type { IExtendedLiveSession, StudentLiveStats } from "../../../../types/studentLive";
 
@@ -24,6 +23,9 @@ export interface LiveClassTabProps {
 
 export const LiveClassTab: React.FC<LiveClassTabProps> = React.memo(
   ({ classId, classInfo, onJoinLiveRoom }) => {
+    const navigate = useNavigate();
+    const location = useLocation();
+
     // 1. Modular Hooks V2
     const {
       activeSession,
@@ -32,25 +34,11 @@ export const LiveClassTab: React.FC<LiveClassTabProps> = React.memo(
       fetchActiveSession,
     } = useLiveSessionState({ classId });
 
-    const {
-      conference,
-      status: conferenceStatus,
-      error: conferenceError,
-      isOpen: isModalOpen,
-      openConference,
-      retryConference,
-      closeConference,
-      forceCloseConference,
-    } = useJaasConference();
-
     const { isOnline } = useLiveSessionSocket({
       classId,
       isTeacher: false,
       onSessionStarted: () => void fetchActiveSession(),
-      onSessionEnded: (data) => {
-        if (!data?.sessionId || (conference?.sessionId && data.sessionId === conference.sessionId)) {
-          forceCloseConference();
-        }
+      onSessionEnded: () => {
         void fetchActiveSession();
       },
     });
@@ -99,7 +87,7 @@ export const LiveClassTab: React.FC<LiveClassTabProps> = React.memo(
       }
       const sessionId = activeSession?.id || (activeSession as any)?._id || session._id || session.id;
       if (sessionId) {
-        void openConference(sessionId);
+        navigate(`/student/live/${sessionId}`, { state: { classId, returnUrl: location.pathname } });
       }
     };
 
@@ -120,12 +108,12 @@ export const LiveClassTab: React.FC<LiveClassTabProps> = React.memo(
           )}
 
           {/* Alert Hiển thị Lỗi nếu có */}
-          {(sessionStateError || conferenceError) && (
+          {sessionStateError && (
             <Alert
               type="error"
               showIcon
-              message={sessionStateError?.title || conferenceError?.title || "Lỗi tham gia buổi học"}
-              description={sessionStateError?.message || conferenceError?.message}
+              message={sessionStateError.title || "Lỗi tham gia buổi học"}
+              description={sessionStateError.message}
               style={{ marginBottom: 16, borderRadius: 12 }}
               action={
                 <Button
@@ -156,7 +144,7 @@ export const LiveClassTab: React.FC<LiveClassTabProps> = React.memo(
           </div>
 
           {/* 2. Loading Skeleton vs Content */}
-          {isLoadingActive || conferenceStatus === "preparing" ? (
+          {isLoadingActive ? (
             <LiveLoadingSkeleton count={2} />
           ) : !currentLiveItem ? (
             <LiveEmptyState />
@@ -169,16 +157,6 @@ export const LiveClassTab: React.FC<LiveClassTabProps> = React.memo(
               />
             </div>
           )}
-
-          {/* 3. JaaS Live Room Modal */}
-          <LiveRoomModal
-            isOpen={isModalOpen}
-            onClose={closeConference}
-            conference={conference}
-            status={conferenceStatus}
-            error={conferenceError}
-            onRetry={retryConference}
-          />
         </div>
       </LiveSessionErrorBoundary>
     );

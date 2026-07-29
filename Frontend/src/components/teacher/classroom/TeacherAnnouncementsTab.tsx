@@ -273,7 +273,6 @@ export const TeacherAnnouncementsTab: React.FC<TeacherAnnouncementsTabProps> = R
                 type="primary"
                 icon={<PlusOutlined />}
                 onClick={() => {
-                  setEditingAnnouncement(null);
                   setIsCreateModalOpen(true);
                 }}
                 style={{ fontWeight: 600, borderRadius: 8 }}
@@ -393,7 +392,6 @@ export const TeacherAnnouncementsTab: React.FC<TeacherAnnouncementsTabProps> = R
                     type="primary"
                     icon={<PlusOutlined />}
                     onClick={() => {
-                      setEditingAnnouncement(null);
                       setIsCreateModalOpen(true);
                     }}
                     style={{ borderRadius: 6 }}

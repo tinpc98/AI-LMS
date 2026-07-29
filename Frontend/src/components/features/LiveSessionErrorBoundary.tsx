@@ -1,4 +1,4 @@
-import React, { Component, ErrorInfo, ReactNode } from "react";
+import React, { Component, type ErrorInfo, type ReactNode } from "react";
 import { Card, Button, Typography, Space } from "antd";
 import { WarningOutlined, ReloadOutlined, CloseCircleOutlined } from "@ant-design/icons";
 

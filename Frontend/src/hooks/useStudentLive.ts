@@ -48,8 +48,10 @@ export function useStudentLive(
 
     return {
       _id: session._id || `live-${classId}`,
+      id: session.id || session._id || `live-${classId}`,
       classId: session.classId || classId || "",
-      meetingRoomId: session.meetingRoomId || `room-${classId}`,
+      roomName: session.roomName || session.meetingRoomId || `room-${classId}`,
+      meetingRoomId: session.meetingRoomId || session.roomName || `room-${classId}`,
       sessionNumber: session.sessionNumber || 1,
       title: session.title || `Buổi học trực tuyến lớp ${classInfo?.name || ""}`,
       createdBy: session.createdBy || "",
@@ -77,7 +79,9 @@ export function useStudentLive(
 
         list.push({
           _id: `upcoming-${idx}`,
+          id: `upcoming-${idx}`,
           classId: classId || "",
+          roomName: `room-upcoming-${idx}`,
           meetingRoomId: `room-upcoming-${idx}`,
           sessionNumber: idx + 2,
           title: `Buổi ${idx + 2}: ${sched.dayOfWeek || "Lịch học tiếp theo"} (${sched.time || "08:00 - 10:30"})`,
@@ -103,7 +107,9 @@ export function useStudentLive(
     const list: IExtendedLiveSession[] = [
       {
         _id: "past-1",
+        id: "past-1",
         classId: classId || "",
+        roomName: "room-past-1",
         meetingRoomId: "room-past-1",
         sessionNumber: 1,
         title: "Buổi 1: Tổng quan môn học & Giới thiệu chương trình",
@@ -118,7 +124,9 @@ export function useStudentLive(
       },
       {
         _id: "past-2",
+        id: "past-2",
         classId: classId || "",
+        roomName: "room-past-2",
         meetingRoomId: "room-past-2",
         sessionNumber: 2,
         title: "Buổi 2: Hướng dẫn thực hành dự án & Thảo luận nhóm",

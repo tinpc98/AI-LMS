@@ -1,4 +1,5 @@
 import React, { useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import {
   Card,
   Row,
@@ -25,9 +26,7 @@ import {
 } from "@ant-design/icons";
 
 import useLiveSessionState from "../../../hooks/useLiveSessionState";
-import useJaasConference from "../../../hooks/useJaasConference";
 import useLiveSessionSocket from "../../../hooks/useLiveSessionSocket";
-import LiveRoomModal from "../../features/LiveRoomModal";
 import LiveSessionErrorBoundary from "../../features/LiveSessionErrorBoundary";
 
 const { Title, Text, Paragraph } = Typography;
@@ -40,6 +39,9 @@ interface TeacherLiveSessionTabProps {
 
 export const TeacherLiveSessionTab: React.FC<TeacherLiveSessionTabProps> = React.memo(
   ({ classId, className = "Lớp học", teacherName = "Giảng viên" }) => {
+    const navigate = useNavigate();
+    const location = useLocation();
+
     // 1. Hooks V2 Modular
     const {
       activeSession,
@@ -52,26 +54,11 @@ export const TeacherLiveSessionTab: React.FC<TeacherLiveSessionTabProps> = React
       endSession,
     } = useLiveSessionState({ classId });
 
-    const {
-      conference,
-      status: conferenceStatus,
-      error: conferenceError,
-      isOpen: isModalOpen,
-      openConference,
-      retryConference,
-      closeConference,
-      forceCloseConference,
-      setConferenceStatus,
-    } = useJaasConference();
-
     const { isOnline, isSocketConnected } = useLiveSessionSocket({
       classId,
       isTeacher: true,
       onSessionStarted: () => void fetchActiveSession(),
-      onSessionEnded: (data) => {
-        if (!data?.sessionId || (conference?.sessionId && data.sessionId === conference.sessionId)) {
-          forceCloseConference();
-        }
+      onSessionEnded: () => {
         void fetchActiveSession();
       },
     });
@@ -89,7 +76,7 @@ export const TeacherLiveSessionTab: React.FC<TeacherLiveSessionTabProps> = React
       try {
         const newSession = await createSession();
         if (newSession && newSession.id) {
-          await openConference(newSession.id);
+          navigate(`/teacher/live/${newSession.id}`, { state: { classId, returnUrl: location.pathname } });
         }
       } catch (err) {
         console.error("[TeacherLiveSessionTab] handleStart Error:", err);
@@ -99,7 +86,7 @@ export const TeacherLiveSessionTab: React.FC<TeacherLiveSessionTabProps> = React
     const handleJoin = async () => {
       const targetId = activeSession?.id || (activeSession as any)?._id;
       if (targetId) {
-        await openConference(targetId);
+        navigate(`/teacher/live/${targetId}`, { state: { classId, returnUrl: location.pathname } });
       } else {
         await fetchActiveSession();
       }
@@ -108,14 +95,13 @@ export const TeacherLiveSessionTab: React.FC<TeacherLiveSessionTabProps> = React
     const handleEnd = async () => {
       try {
         await endSession();
-        forceCloseConference();
         await fetchActiveSession();
       } catch (err) {
         console.error("[TeacherLiveSessionTab] handleEnd Error:", err);
       }
     };
 
-    const isActionLoading = isLoadingActive || isCreating || conferenceStatus === "preparing" || isEnding;
+    const isActionLoading = isLoadingActive || isCreating || isEnding;
 
     return (
       <LiveSessionErrorBoundary onReset={fetchActiveSession}>
@@ -146,12 +132,12 @@ export const TeacherLiveSessionTab: React.FC<TeacherLiveSessionTabProps> = React
           )}
 
           {/* Alert Hiển thị Lỗi nếu có */}
-          {(sessionStateError || conferenceError) && (
+          {sessionStateError && (
             <Alert
               type="error"
               showIcon
-              message={sessionStateError?.title || conferenceError?.title || "Lỗi phiên học"}
-              description={sessionStateError?.message || conferenceError?.message}
+              message={sessionStateError.title || "Lỗi phiên học"}
+              description={sessionStateError.message}
               style={{ borderRadius: 12 }}
               action={
                 <Button
@@ -345,16 +331,6 @@ export const TeacherLiveSessionTab: React.FC<TeacherLiveSessionTabProps> = React
               <Descriptions.Item label="Bảo mật Token">RS256 JWT Signed Token (Scoped Room)</Descriptions.Item>
             </Descriptions>
           </Card>
-
-          {/* Live Room Modal */}
-          <LiveRoomModal
-            isOpen={isModalOpen}
-            onClose={closeConference}
-            conference={conference}
-            status={conferenceStatus}
-            error={conferenceError}
-            onRetry={retryConference}
-          />
         </div>
       </LiveSessionErrorBoundary>
     );
