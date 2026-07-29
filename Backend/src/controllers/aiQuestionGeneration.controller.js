@@ -2,6 +2,7 @@ import aiQuestionGenerationService from "../ai/services/aiQuestionGeneration.ser
 import Folder from "../models/folder.model.js";
 import { AIError, AIErrorCode } from "../utils/aiError.js";
 import { validationResult } from "express-validator";
+import { AIInputBudget } from "../ai/utils/aiInputBudget.js";
 
 class AIQuestionGenerationController {
   
@@ -16,13 +17,29 @@ class AIQuestionGenerationController {
         throw new AIError("Học sinh không có quyền sinh bộ đề", AIErrorCode.AI_FEATURE_DISABLED, 403);
       }
 
+      const questionCount = Number(req.body.questionCount);
+      AIInputBudget.validateQuestionCount(questionCount);
+
+      const questionTypes = req.body.questionTypes || {};
+      const difficultyDistribution = req.body.difficultyDistribution || {};
+
+      const sumTypes = Object.values(questionTypes).reduce((a, b) => a + Number(b), 0);
+      if (sumTypes !== questionCount) {
+        throw new AIError(`Tổng số lượng theo loại câu hỏi (${sumTypes}) phải bằng questionCount (${questionCount})`, AIErrorCode.AI_INVALID_INPUT, 400);
+      }
+
+      const sumDifficulty = Object.values(difficultyDistribution).reduce((a, b) => a + Number(b), 0);
+      if (sumDifficulty !== questionCount) {
+        throw new AIError(`Tổng số lượng theo độ khó (${sumDifficulty}) phải bằng questionCount (${questionCount})`, AIErrorCode.AI_INVALID_INPUT, 400);
+      }
+
       const requestConfig = {
         folderId: req.body.folderId,
         title: String(req.body.title || "").trim().substring(0, 255),
         description: String(req.body.description || "").trim().substring(0, 2000),
-        questionCount: Number(req.body.questionCount), // Assured to be int by express-validator
-        questionTypes: req.body.questionTypes,
-        difficultyDistribution: req.body.difficultyDistribution,
+        questionCount: questionCount,
+        questionTypes: questionTypes,
+        difficultyDistribution: difficultyDistribution,
         defaultPoints: 1,
         language: String(req.body.language || "vi").trim(),
         instructions: String(req.body.instructions || "").trim().substring(0, 2000)

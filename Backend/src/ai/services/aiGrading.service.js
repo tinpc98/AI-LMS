@@ -7,6 +7,7 @@ import { resolveExamQuestions } from "../../utils/examQuestionResolver.js";
 import { gradingPromptTemplate } from "../prompts/grading.prompt.js";
 import { validateGradingOutput } from "../validators/gradingOutput.validator.js";
 import { AIError, AIErrorCode } from "../../utils/aiError.js";
+import { AIInputBudget } from "../utils/aiInputBudget.js";
 
 const deepCanonicalize = (obj) => {
   if (obj === null || typeof obj !== "object") return obj;
@@ -78,6 +79,13 @@ const generateGradeSuggestion = async ({
     maxScore,
     language: "vi", // Hoặc lấy từ thiết lập của bài thi nếu có
   };
+
+  // Validate budgets for Grading
+  AIInputBudget.validateGradingBudget(promptData.studentAnswer, "Bài làm của học sinh");
+  AIInputBudget.validateGradingBudget(promptData.referenceAnswer, "Đáp án tham khảo");
+  if (promptData.rubric) {
+    AIInputBudget.validateGradingBudget(JSON.stringify(promptData.rubric), "Tiêu chí chấm điểm (Rubric)");
+  }
 
   const fingerprintPayload = {
     attemptId,

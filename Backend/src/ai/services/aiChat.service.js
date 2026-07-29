@@ -5,8 +5,8 @@ import Lesson from "../../models/lesson.model.js";
 import Class from "../../models/class.model.js";
 import { AIError, AIErrorCode } from "../../utils/aiError.js";
 import aiCoreService from "./aiCore.service.js";
-import aiVectorRetrieverService from "./aiVectorRetriever.service.js";
 import chatOutputValidator from "../validators/chatOutput.validator.js";
+import { AIInputBudget } from "../utils/aiInputBudget.js";
 
 class AIChatService {
   /**
@@ -197,7 +197,18 @@ class AIChatService {
       chatHistory.reverse();
       const priorHistory = chatHistory.slice(0, -1);
 
-      // 6. Gọi AI Core với Structured Output (ủy quyền hoàn toàn lifecycle Quota)
+      const promptParams = {
+        classTitle: classDoc.className || "Lớp học",
+        lessonTitle: lesson.title,
+        contextChunks: validContextChunks,
+        chatHistory: priorHistory,
+        userQuestion: message
+      };
+
+      // 6. Kiểm tra lại toàn bộ Budget trước khi gọi AI Core
+      AIInputBudget.validateTextBudget(JSON.stringify(promptParams), "AI Chat/RAG");
+
+      // 6.5. Gọi AI Core với Structured Output (ủy quyền hoàn toàn lifecycle Quota)
       const responseSchema = {
         type: "object",
         properties: {
@@ -216,13 +227,7 @@ class AIChatService {
         userRole,
         feature: "chatbot",
         templateName: "chat",
-        promptParams: {
-          classTitle: classDoc.className || "Lớp học",
-          lessonTitle: lesson.title,
-          contextChunks: validContextChunks,
-          chatHistory: priorHistory,
-          userQuestion: message
-        },
+        promptParams: promptParams,
         referenceId: sessionId,
         referenceType: "AIChatSession",
         responseSchema,

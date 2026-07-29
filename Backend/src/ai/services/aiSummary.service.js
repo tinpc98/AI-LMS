@@ -5,6 +5,7 @@ import lessonContentExtractor from "./lessonContentExtractor.service.js";
 import aiCoreService from "./aiCore.service.js";
 import { summaryOutputValidator } from "../validators/summaryOutput.validator.js";
 import { AIError, AIErrorCode } from "../../utils/aiError.js";
+import { AIInputBudget } from "../utils/aiInputBudget.js";
 
 const SUMMARY_PROMPT_VERSION = "v1.0"; // Change this to invalidate old fingerprints if prompt changes drastically
 
@@ -32,6 +33,9 @@ class AISummaryService {
 
     // 1. Trích xuất nội dung bài giảng
     const { text: contentText, warnings: sourceWarnings } = await lessonContentExtractor.extractLessonContent(lesson);
+
+    // Kiểm tra giới hạn đầu vào
+    AIInputBudget.validateTextBudget(contentText, "AI Summary");
 
     // 2. Tính fingerprint
     const fingerprint = this.generateFingerprint({
