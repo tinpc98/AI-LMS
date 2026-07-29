@@ -59,26 +59,26 @@ export interface IRankingResponse {
 const learningApi = {
   // Progress
   getStudentProgress: (classId: string) => {
-    return axiosClient.get<ILessonProgress[]>(`/learning/progress/class/${classId}`);
+    return axiosClient.get<ILessonProgress[]>(`/api/learning/progress/class/${classId}`);
   },
   updateLessonProgress: (payload: { lessonId: string; classId: string; progress: number; durationSeconds?: number }) => {
-    return axiosClient.post<ILessonProgress>(`/learning/progress`, payload);
+    return axiosClient.post<ILessonProgress>(`/api/learning/progress`, payload);
   },
 
   // Ranking
   getClassRanking: (classId: string, params?: any) => {
-    return axiosClient.get<IRankingResponse>(`/learning/ranking/class/${classId}`, { params });
+    return axiosClient.get<IRankingResponse>(`/api/learning/ranking/class/${classId}`, { params });
   },
   getStudentRanking: (classId: string, studentId: string = "me") => {
-    return axiosClient.get<IStudentRank>(`/learning/ranking/student/${studentId}`, { params: { classId } });
+    return axiosClient.get<IStudentRank>(`/api/learning/ranking/student/${studentId}`, { params: { classId } });
   },
 
   // Gamification
   getMyBadges: () => {
-    return axiosClient.get<IStudentBadge[]>(`/learning/badges`);
+    return axiosClient.get<IStudentBadge[]>(`/api/learning/badges`);
   },
   getMyActivities: (params?: { classId?: string }) => {
-    return axiosClient.get<ILearningActivity[]>(`/learning/activities`, { params });
+    return axiosClient.get<ILearningActivity[]>(`/api/learning/activities`, { params });
   },
 };
 

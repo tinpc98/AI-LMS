@@ -41,10 +41,10 @@ export interface ITeacherAnalytics {
 
 const analyticsApi = {
   getStudentDashboard: (classId: string) => {
-    return axiosClient.get<IStudentAnalytics>(`/analytics/student/dashboard/${classId}`);
+    return axiosClient.get<IStudentAnalytics>(`/api/analytics/student/dashboard/${classId}`);
   },
   getTeacherDashboard: (classId: string) => {
-    return axiosClient.get<ITeacherAnalytics>(`/analytics/teacher/dashboard/${classId}`);
+    return axiosClient.get<ITeacherAnalytics>(`/api/analytics/teacher/dashboard/${classId}`);
   },
   getTeacherExportUrl: (classId: string) => {
     // Generate full URL for direct download
