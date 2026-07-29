@@ -129,7 +129,7 @@ class AIQuestionGenerationService {
     
     // Validate if AI generated no questions
     if (!questions || questions.length === 0) {
-      throw new AIError("AI không sinh ra được câu hỏi nào hợp lệ.", AIErrorCode.AI_INVALID_OUTPUT, 422);
+      throw new AIError("AI không sinh ra được câu hỏi nào hợp lệ.", AIErrorCode.AI_OUTPUT_INVALID, 422);
     }
 
     const normalizedUsageId = aiResult.usageId && mongoose.Types.ObjectId.isValid(aiResult.usageId) ? aiResult.usageId : null;

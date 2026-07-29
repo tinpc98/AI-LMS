@@ -87,7 +87,7 @@ const runTests = async () => {
       { questionId: mockLegacyQuestionId, selectedOption: "5" } // Sai
     ];
 
-    await examAttemptService.gradeSubmission(mockAttemptId, studentAnswers);
+    await examAttemptService.gradeSubmission(mockAttemptId, studentAnswers, mockStudentId.toString());
 
     assertEqual("Test 1: gradeSubmission snapshot (Mixed IDs)", mockAttempt.totalScore, 5);
     assertEqual("Test 2: Status updated to GRADED", mockAttempt.status, "GRADED");

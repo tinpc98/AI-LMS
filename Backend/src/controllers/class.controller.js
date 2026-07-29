@@ -273,7 +273,7 @@ export const AssignStudent = async (req, res) => {
   }
 
   try {
-    const studentExists = await User.findOne({ _id: studentId, role: "student", isDeleted: false });
+    const studentExists = await User.findOne({ _id: studentId, role: "Student", isDeleted: false });
     if (!studentExists) {
       return res.status(400).json({ success: false, message: "Student not found or invalid role." });
     }

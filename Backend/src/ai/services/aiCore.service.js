@@ -27,27 +27,34 @@ class AICoreService {
     }
 
     const config = await aiUsageService.getOrCreateConfig();
-    const providerName = preferredProviderName || config.defaultProvider || "google-gemini";
+    const providerName = process.env.AI_PROVIDER || preferredProviderName || config.defaultProvider || "google-gemini";
 
     if (providerName === "mock") return this.mockProvider;
 
+    const modelName = process.env.AI_MODEL || config.defaultModel;
+    if (!modelName) {
+      throw new AIError("Chưa cấu hình model name cho AI Provider!", AIErrorCode.AI_CONFIG_ERROR, 500);
+    }
+
     let provider = this.providers.get(providerName);
+    if (provider) {
+        provider.modelName = modelName; 
+    }
 
     // Lazy load Gemini if key became available in env
     if (!provider && providerName === "google-gemini") {
       if (process.env.GEMINI_API_KEY) {
-        provider = new GeminiAIProvider(process.env.GEMINI_API_KEY, config.defaultModel);
+        provider = new GeminiAIProvider(process.env.GEMINI_API_KEY, modelName);
         this.providers.set("google-gemini", provider);
       }
     }
 
     if (!provider) {
-      if (process.env.NODE_ENV === "production") {
-        throw new AIError(`Cấu hình AI Core chưa sẵn sàng: Thiếu API Key cho provider '${providerName}' trên Production!`, AIErrorCode.AI_PROVIDER_ERROR, 500);
+      if (process.env.AI_MOCK_MODE === "false") {
+        throw new AIError(`Cấu hình AI Core chưa sẵn sàng: Thiếu API Key hoặc cấu hình sai cho provider '${providerName}'!`, AIErrorCode.AI_CONFIG_ERROR, 500);
       }
-      // Fallback to mock if Gemini key is missing to prevent total server failure
-      console.warn(`[AICoreService] ⚠️ Provider '${providerName}' not available or unconfigured. Falling back to Mock Provider.`);
-      return this.mockProvider;
+      
+      throw new AIError(`Cấu hình AI Core chưa sẵn sàng: Thiếu API Key cho provider '${providerName}'!`, AIErrorCode.AI_CONFIG_ERROR, 500);
     }
 
     return provider;
@@ -119,6 +126,7 @@ class AICoreService {
 
       return {
         data: validatedData,
+        usageId,
         usage: {
           inputTokens: result.inputTokens,
           outputTokens: result.outputTokens,

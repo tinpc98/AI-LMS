@@ -200,12 +200,6 @@ export class MockAIProvider extends BaseAIProvider {
           feedback: "Phân tích tốt nội dung",
         },
         {
-          criterion: "Ví dụ minh họa",
-          scoreEarned: 3.5,
-          maxScore: 4,
-          feedback: "Còn thiếu một vài ví dụ",
-        },
-        {
           criterion: "Trình bày",
           scoreEarned: 3.5,
           maxScore: 4,

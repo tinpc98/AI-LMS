@@ -68,9 +68,24 @@ const aiGradingSuggestionSchema = new Schema(
     },
     status: {
       type: String,
-      enum: ["PENDING_REVIEW", "ACCEPTED", "REJECTED", "SUPERSEDED"],
+      enum: ["PENDING_REVIEW", "ACCEPTED", "REJECTED", "ADJUSTED"],
       default: "PENDING_REVIEW",
     },
+    // ---- Human in the loop audit ----
+    action: {
+      type: String,
+      enum: ["accept", "adjust", "reject"],
+    },
+    finalScore: {
+      type: Number,
+    },
+    teacherFeedback: {
+      type: String,
+    },
+    previousPointsEarned: {
+      type: Number,
+    },
+    // ---------------------------------
     reviewedBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",

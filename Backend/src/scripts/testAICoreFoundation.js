@@ -122,7 +122,8 @@ async function runTests() {
       config: { isGloballyEnabled: true, defaultProvider: "mock", featureFlags: { summary: true } },
     });
     aiUsageService.recordUsage = async () => {};
-    aiUsageService.reserveQuota = async () => new mongoose.Types.ObjectId();
+    const usageIdTest = new mongoose.Types.ObjectId();
+    aiUsageService.reserveQuota = async () => usageIdTest;
     aiUsageService.finalizeUsage = async () => {};
 
     const coreResult = await aiCoreService.executeStructuredAI({
@@ -130,12 +131,42 @@ async function runTests() {
       userRole: "teacher",
       feature: "summary",
       templateName: "summary",
-      promptParams: { title: "Bài học 1", contentText: "Nội dung bài học" },
+      promptParams: { title: "BAi h?c 1", contentText: "NTi dung bAi h?c" },
       validatorFunc: validateSummaryOutput,
     });
 
     assert(coreResult && coreResult.data && coreResult.data.summary !== undefined, "executeStructuredAI returns validated data");
     assert(coreResult.usage && coreResult.usage.provider === "mock", "executeStructuredAI uses Mock Provider in mock mode");
+    assert(coreResult.usageId === usageIdTest, "executeStructuredAI returns usageId from AIUsageService");
+
+    // TEST 8: AI Feature Flag Mapping
+    console.log("\n8. Testing AI Feature Flag Mapping:");
+    try {
+      const originalCheckUserQuota = aiUsageService.constructor.prototype.checkUserQuota.bind(aiUsageService);
+      aiUsageService.checkUserQuota = originalCheckUserQuota;
+
+      const configMock = { isGloballyEnabled: true, featureFlags: { "questionGen": false } };
+      aiUsageService.getOrCreateConfig = async () => configMock;
+      await aiUsageService.checkUserQuota(dummyUserId, "student", "question-gen");
+      assert(false, "Feature flag mapping failed to block disabled feature");
+    } catch (e) {
+      assert(e.code === AIErrorCode.AI_FEATURE_DISABLED, "Feature flag mapping correctly blocked question-gen via questionGen flag");
+    }
+
+    // TEST 9: AI Provider Config & Fallback
+    console.log("\n9. Testing AI Provider Config & Fallback:");
+    process.env.AI_MOCK_MODE = "false";
+    const originalEnv = process.env.NODE_ENV;
+    process.env.NODE_ENV = "development";
+    process.env.AI_PROVIDER = "google-gemini";
+    delete process.env.GEMINI_API_KEY;
+    try {
+      await aiCoreService.resolveProvider();
+      assert(false, "resolveProvider did not throw on missing key when MOCK_MODE=false");
+    } catch (e) {
+      assert(e.code === AIErrorCode.AI_CONFIG_ERROR, "resolveProvider throws AI_CONFIG_ERROR when MOCK_MODE=false and key missing");
+    }
+    process.env.NODE_ENV = originalEnv;
 
   } catch (error) {
     console.error("❌ Exception during test execution:", error);

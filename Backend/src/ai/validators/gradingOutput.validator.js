@@ -40,7 +40,8 @@ export const validateGradingOutput = (rawResponse, maxScore) => {
     throw new AIError("aiFeedback quá dài (vượt quá 2000 ký tự)", AIErrorCode.AI_OUTPUT_INVALID, 502);
   }
 
-  const warnings = Array.isArray(parsedData.warnings) ? parsedData.warnings : [];
+  let finalSuggestedScore = parsedData.suggestedScore;
+  const warnings = Array.isArray(parsedData.warnings) ? [...parsedData.warnings] : [];
   if (parsedData.confidence < 0.6) {
     warnings.push("Confidence score thấp, giáo viên cần kiểm tra kỹ lại kết quả chấm.");
   }
@@ -55,10 +56,10 @@ export const validateGradingOutput = (rawResponse, maxScore) => {
       if (!item.criterion || typeof item.criterion !== "string") {
         throw new AIError(`Tiêu chí chấm điểm [${idx}] thiếu tên criterion`, AIErrorCode.AI_OUTPUT_INVALID, 502);
       }
-      if (typeof item.scoreEarned !== "number" || item.scoreEarned < 0) {
+      if (typeof item.scoreEarned !== "number" || !Number.isFinite(item.scoreEarned) || item.scoreEarned < 0) {
         throw new AIError(`Tiêu chí [${item.criterion}] có scoreEarned không hợp lệ`, AIErrorCode.AI_OUTPUT_INVALID, 502);
       }
-      if (typeof item.maxScore !== "number" || item.maxScore <= 0) {
+      if (typeof item.maxScore !== "number" || !Number.isFinite(item.maxScore) || item.maxScore <= 0) {
         throw new AIError(`Tiêu chí [${item.criterion}] có maxScore không hợp lệ`, AIErrorCode.AI_OUTPUT_INVALID, 502);
       }
       if (item.scoreEarned > item.maxScore) {
@@ -80,17 +81,23 @@ export const validateGradingOutput = (rawResponse, maxScore) => {
       });
     }
 
-    if (totalCriterionMax > maxScore) {
-      throw new AIError(
-        `Tổng điểm các tiêu chí (${totalCriterionMax}) vượt quá tổng điểm câu hỏi (${maxScore})`,
-        AIErrorCode.AI_OUTPUT_INVALID,
-        502
-      );
+      if (totalCriterionMax > maxScore) {
+        throw new AIError(
+          `Tổng điểm các tiêu chí (${totalCriterionMax}) vượt quá tổng điểm câu hỏi (${maxScore})`,
+          AIErrorCode.AI_OUTPUT_INVALID,
+          502
+        );
+      }
+
+      // AI-FIX-04: Đồng bộ điểm tổng nếu có sai lệch với tổng điểm thành phần
+      if (Math.abs(totalCriterionEarned - finalSuggestedScore) > 0.01) {
+        finalSuggestedScore = Number(totalCriterionEarned.toFixed(2));
+        warnings.push(`Điểm đề xuất đã được tự động điều chỉnh thành ${finalSuggestedScore} để khớp với tổng điểm các tiêu chí.`);
+      }
     }
-  }
 
   return {
-    suggestedScore: parsedData.suggestedScore,
+    suggestedScore: finalSuggestedScore,
     confidence: parsedData.confidence,
     aiFeedback: parsedData.aiFeedback.trim(),
     criterionScores,

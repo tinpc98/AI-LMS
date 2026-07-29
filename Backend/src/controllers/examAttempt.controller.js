@@ -2,6 +2,8 @@ import mongoose from "mongoose";
 import examAttemptService from "../services/examAttempt.service.js";
 import ExamAttempt from "../models/examAttempt.model.js";
 import Question from "../models/question.model.js";
+import { resolveExamQuestions } from "../utils/examQuestionResolver.js";
+import { verifyClassTeacherAccess } from "../utils/classAuth.helper.js";
 
 // =======================================================
 // 1. API CHO HỌC SINH: Bắt đầu làm bài thi
@@ -184,6 +186,7 @@ export const submitExam = async (req, res) => {
   try {
     const attemptId = req.params.id;
     const { answers } = req.body;
+    const userId = req.user?.id || req.user?._id;
 
     if (!attemptId || !mongoose.Types.ObjectId.isValid(attemptId)) {
       return res.status(400).json({ message: "ID bài thi không hợp lệ!" });
@@ -196,6 +199,7 @@ export const submitExam = async (req, res) => {
     const gradedAttempt = await examAttemptService.gradeSubmission(
       attemptId,
       answers,
+      userId
     );
 
     return res.status(200).json({
@@ -234,14 +238,11 @@ export const getAttemptForReview = async (req, res) => {
     const exam = attempt.examId;
 
     // Check Teacher IDOR: Teacher must be in the same class (or admin)
-    if (req.user.role === "teacher") {
-      const classInfo = await mongoose.model("Class").findOne({
-        _id: exam.classId,
-        isDeleted: false,
-        $or: [{ createdBy: userId }, { teachers: userId }]
-      });
-      if (!classInfo) {
-        return res.status(403).json({ message: "Bạn không có quyền chấm bài của lớp này!" });
+    if (req.user.role === "teacher" || req.user.role === "admin") {
+      try {
+        await verifyClassTeacherAccess(exam.classId, userId, req.user.role);
+      } catch (authError) {
+        return res.status(authError.status || 403).json({ success: false, message: authError.message });
       }
     }
 
@@ -313,6 +314,16 @@ export const gradeEssaySubmit = async (req, res) => {
         .json({ message: "Dữ liệu chấm điểm không hợp lệ!" });
     }
 
+    const userId = req.user?.id || req.user?._id;
+    const attempt = await ExamAttempt.findById(attemptId).populate("examId");
+    if (!attempt) return res.status(404).json({ message: "Không tìm thấy bài làm!" });
+    
+    try {
+      await verifyClassTeacherAccess(attempt.examId.classId, userId, req.user.role);
+    } catch (authError) {
+      return res.status(authError.status || 403).json({ success: false, message: authError.message });
+    }
+
     const updatedAttempt = await examAttemptService.gradeEssay(
       attemptId,
       essayGrades,
@@ -341,6 +352,16 @@ export const getAttemptsByExam = async (req, res) => {
         data: [],
         stats: { total: 0, graded: 0, pending: 0 },
       });
+    }
+
+    const userId = req.user?.id || req.user?._id;
+    const exam = await mongoose.model("Exam").findById(examId);
+    if (!exam) return res.status(404).json({ message: "Không tìm thấy đề thi!" });
+
+    try {
+      await verifyClassTeacherAccess(exam.classId, userId, req.user.role);
+    } catch (authError) {
+      return res.status(authError.status || 403).json({ success: false, message: authError.message });
     }
 
     const attempts = await ExamAttempt.find({ examId: examId })
@@ -374,6 +395,8 @@ export const getAttemptsByExam = async (req, res) => {
 export const recordCheatWarning = async (req, res) => {
   try {
     const attemptId = req.params.id;
+    const { cheatType } = req.body;
+    const userId = req.user?.id || req.user?._id;
 
     if (!attemptId || !mongoose.Types.ObjectId.isValid(attemptId)) {
       return res.status(400).json({ success: false, message: "ID phiên làm bài không hợp lệ!" });
@@ -386,11 +409,31 @@ export const recordCheatWarning = async (req, res) => {
         .json({ success: false, message: "Không tìm thấy phiên làm bài!" });
     }
 
+    // IDOR Check
+    if (attempt.studentId.toString() !== userId.toString()) {
+      return res.status(404).json({ success: false, message: "Không tìm thấy phiên làm bài!" });
+    }
+
+    // Only allow when IN_PROGRESS
+    if (attempt.status !== "IN_PROGRESS") {
+      return res.status(400).json({ success: false, message: "Chỉ ghi nhận gian lận khi bài thi đang diễn ra!" });
+    }
+
     attempt.cheatWarnings = (attempt.cheatWarnings || 0) + 1;
+    
+    // Log if valid enum
+    const validCheatTypes = ["switch_tab", "lose_focus", "multiple_faces", "no_face", "unauthorized_device", "suspicious_audio"];
+    const typeToLog = validCheatTypes.includes(cheatType) ? cheatType : "switch_tab";
+    
+    attempt.cheatLogs.push({
+      timestamp: new Date(),
+      cheatType: typeToLog
+    });
+
     await attempt.save();
 
     console.log(
-      `🚨 Đã ghi nhận gian lận cho attempt ${attemptId}. Tổng số lần: ${attempt.cheatWarnings}`,
+      `🚨 Đã ghi nhận gian lận (${typeToLog}) cho attempt ${attemptId}. Tổng số lần: ${attempt.cheatWarnings}`,
     );
 
     return res.status(200).json({

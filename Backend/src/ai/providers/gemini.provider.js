@@ -1,4 +1,4 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GoogleGenAI } from "@google/genai";
 import { BaseAIProvider } from "./base.provider.js";
 import { AIError, AIErrorCode } from "../../utils/aiError.js";
 
@@ -6,22 +6,29 @@ import { AIError, AIErrorCode } from "../../utils/aiError.js";
  * Google Gemini AI Provider Implementation
  */
 export class GeminiAIProvider extends BaseAIProvider {
-  constructor(apiKey = process.env.GEMINI_API_KEY, modelName = "gemini-1.5-flash") {
+  constructor(apiKey = process.env.GEMINI_API_KEY, modelName) {
     super("google-gemini", modelName);
     this.apiKey = apiKey;
     if (this.apiKey) {
-      this.genAI = new GoogleGenerativeAI(this.apiKey);
+      this.ai = new GoogleGenAI({ apiKey: this.apiKey });
     }
   }
 
   /**
-   * Ensure API key is configured
+   * Ensure API key and model name are configured
    */
   _ensureConfigured() {
     if (!this.apiKey) {
       throw new AIError(
         "Chưa cấu hình GEMINI_API_KEY trong biến môi trường!",
-        AIErrorCode.AI_CONFIG_MISSING,
+        AIErrorCode.AI_CONFIG_ERROR,
+        500
+      );
+    }
+    if (!this.modelName) {
+      throw new AIError(
+        "Chưa cấu hình model name cho Google Gemini API!",
+        AIErrorCode.AI_CONFIG_ERROR,
         500
       );
     }
@@ -53,20 +60,18 @@ export class GeminiAIProvider extends BaseAIProvider {
 
     const executionPromise = (async () => {
       try {
-        const model = this.genAI.getGenerativeModel({
+        const response = await this.ai.models.generateContent({
           model: this.modelName,
-          systemInstruction: systemInstruction || undefined,
-          generationConfig: {
+          contents: prompt,
+          config: {
+            systemInstruction: systemInstruction || undefined,
             temperature,
             maxOutputTokens: maxTokens,
           },
         });
 
-        const result = await model.generateContent(prompt);
-        const response = await result.response;
-        const text = response.text();
+        const text = response.text || "";
 
-        // Estimate token counts if metadata not directly available
         const usageMetadata = response.usageMetadata || {};
         const inputTokens = usageMetadata.promptTokenCount || Math.ceil(prompt.length / 4);
         const outputTokens = usageMetadata.candidatesTokenCount || Math.ceil(text.length / 4);
@@ -92,6 +97,7 @@ export class GeminiAIProvider extends BaseAIProvider {
     const executionPromise = (async () => {
       try {
         const generationConfig = {
+          systemInstruction: systemInstruction || undefined,
           temperature,
           maxOutputTokens: maxTokens,
           responseMimeType: "application/json",
@@ -101,15 +107,13 @@ export class GeminiAIProvider extends BaseAIProvider {
           generationConfig.responseSchema = responseSchema;
         }
 
-        const model = this.genAI.getGenerativeModel({
+        const response = await this.ai.models.generateContent({
           model: this.modelName,
-          systemInstruction: systemInstruction || undefined,
-          generationConfig,
+          contents: prompt,
+          config: generationConfig,
         });
 
-        const result = await model.generateContent(prompt);
-        const response = await result.response;
-        const rawText = response.text();
+        const rawText = response.text || "";
 
         let data;
         try {

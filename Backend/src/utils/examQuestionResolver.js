@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import Question from "../models/question.model.js";
 
 /**
@@ -16,7 +17,13 @@ export const resolveExamQuestions = async (exam, targetQuestionIds = null) => {
   // 1. Phân loại câu hỏi thành snapshot hoặc legacy
   for (const q of exam.questions) {
     if (!q || !q.questionId) continue;
-    const qIdStr = q.questionId.toString();
+    
+    // Normalize ID an toàn: xử lý populated document
+    let rawId = q.questionId;
+    if (rawId && typeof rawId === "object" && rawId._id) {
+      rawId = rawId._id;
+    }
+    const qIdStr = rawId.toString();
 
     // Nếu có filter targetQuestionIds, bỏ qua những câu không nằm trong filter
     if (targetQuestionIds && !targetQuestionIds.includes(qIdStr)) {
@@ -66,11 +73,17 @@ export const resolveExamQuestions = async (exam, targetQuestionIds = null) => {
 
   // 2. Tải các câu hỏi Legacy chưa được populate
   if (legacyQuestionIdsToFetch.size > 0) {
-    const legacyQuestions = await Question.find({
-      _id: { $in: Array.from(legacyQuestionIdsToFetch) },
-    }).lean();
+    // S5-FIX-09: Lọc các ID hợp lệ để tránh Mongoose CastError 500
+    const validLegacyIds = Array.from(legacyQuestionIdsToFetch).filter(id => 
+      mongoose.Types.ObjectId.isValid(id)
+    );
 
-    for (const lq of legacyQuestions) {
+    if (validLegacyIds.length > 0) {
+      const legacyQuestions = await Question.find({
+        _id: { $in: validLegacyIds },
+      }).lean();
+
+      for (const lq of legacyQuestions) {
       const qIdStr = lq._id.toString();
       const config = examQuestionsConfig.get(qIdStr);
       questionMap.set(qIdStr, {
@@ -88,6 +101,7 @@ export const resolveExamQuestions = async (exam, targetQuestionIds = null) => {
       });
     }
   }
-
+  }
+  
   return questionMap;
 };

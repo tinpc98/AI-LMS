@@ -47,7 +47,18 @@ class AIUsageService {
     if (!config.isGloballyEnabled) {
       throw new AIError("Tính năng AI toàn hệ thống hiện đang tạm khóa bởi Quản trị viên!", AIErrorCode.AI_FEATURE_DISABLED, 403);
     }
-    if (config.featureFlags && config.featureFlags[feature] === false) {
+
+    const FEATURE_FLAG_MAP = {
+      summary: "summary",
+      "question-gen": "questionGen",
+      "exam-gen": "examGen",
+      grading: "grading",
+      chatbot: "chatbot",
+    };
+
+    const mappedFeature = FEATURE_FLAG_MAP[feature] || feature;
+
+    if (config.featureFlags && config.featureFlags[mappedFeature] === false) {
       throw new AIError(`Tính năng AI (${feature}) hiện đang bị tạm khóa!`, AIErrorCode.AI_FEATURE_DISABLED, 403);
     }
 
@@ -72,11 +83,29 @@ class AIUsageService {
     return crypto.createHash("sha256").update(String(prompt)).digest("hex").slice(0, 32);
   }
 
-  calculateCost(inputTokens = 0, outputTokens = 0, provider = "google-gemini") {
-    if (provider === "mock") return 0;
-    const inputCost = (inputTokens / 1000000) * 0.075;
-    const outputCost = (outputTokens / 1000000) * 0.30;
-    return Number((inputCost + outputCost).toFixed(6));
+  calculateCost(inputTokens = 0, outputTokens = 0, provider = "google-gemini", model = "gemini-1.5-flash") {
+    if (provider === "mock") return { cost: 0, estimated: false };
+    
+    let inputCostRate = 0;
+    let outputCostRate = 0;
+    let isEstimated = false;
+
+    if (model.includes("gemini-1.5-flash")) {
+      inputCostRate = 0.075 / 1000000;
+      outputCostRate = 0.30 / 1000000;
+    } else if (model.includes("gemini-1.5-pro")) {
+      inputCostRate = 1.25 / 1000000;
+      outputCostRate = 5.00 / 1000000;
+    } else {
+      // Fallback
+      inputCostRate = 0.075 / 1000000;
+      outputCostRate = 0.30 / 1000000;
+      isEstimated = true;
+      console.warn(`[AIUsageService] Không có bảng giá cho model: ${model}. Dùng giá trị ước tính.`);
+    }
+
+    const totalCost = (inputTokens * inputCostRate) + (outputTokens * outputCostRate);
+    return { cost: Number(totalCost.toFixed(6)), estimated: isEstimated };
   }
 
   /**
@@ -154,17 +183,17 @@ class AIUsageService {
         }
 
         const totalTokens = inputTokens + outputTokens;
-        const estimatedCost = this.calculateCost(inputTokens, outputTokens, usage.provider);
-        const promptHash = prompt ? this.hashPrompt(prompt) : null;
+        const { cost: calculatedCost, estimated: isEstimated } = this.calculateCost(inputTokens, outputTokens, usage.provider, usage.model);
         
+        usage.status = status;
         usage.inputTokens = inputTokens;
         usage.outputTokens = outputTokens;
         usage.totalTokens = totalTokens;
-        usage.estimatedCost = estimatedCost;
+        usage.estimatedCost = calculatedCost; // using legacy estimatedCost field
         usage.durationMs = durationMs;
-        usage.status = status;
         usage.errorMessage = errorMessage;
-        usage.promptHash = promptHash;
+        usage.promptHash = this.hashPrompt(prompt);
+        usage.quotaState = "finalized";
 
         if (status === "success") {
           usage.quotaState = "consumed";
