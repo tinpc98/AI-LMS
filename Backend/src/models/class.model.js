@@ -137,11 +137,11 @@ const classSchema = new Schema(
       type: [classStudentSchema],
       default: [],
     },
+    // Legacy Field (Deprecated): Mã phòng Jitsi dùng chung cũ
     meetingRoomId: {
       type: String,
-      required: true,
-      unique: true,
-      immutable: true,
+      required: false,
+      default: null,
       trim: true,
     },
     // Đường dẫn Google Meet phục vụ học trực tuyến
@@ -202,6 +202,12 @@ const classSchema = new Schema(
       type: Number,
       default: 0,
       min: 0,
+    },
+    nextLiveSessionNumber: {
+      type: Number,
+      // Default to 0 so when first incremented it becomes 1.
+      // But it's actually not strictly needed if we migrate.
+      default: 0,
     },
     description: {
       type: String,

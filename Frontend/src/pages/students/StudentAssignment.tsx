@@ -1,11 +1,18 @@
-import { useState, type ChangeEvent } from "react";
+import { useState, useEffect, type ChangeEvent } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { Spin, Alert, Button, Modal, Tag, Space } from "antd";
 import assignmentApi from "../../api/assignmentApi";
+import type { IAssignment, ISubmission } from "../../interface/assignmentInterface";
 import { toast } from "../../utils/toast";
 
 const StudentAssignmentContent = () => {
   const { assignmentId } = useParams<{ assignmentId: string }>();
   const navigate = useNavigate();
+  const [assignment, setAssignment] = useState<IAssignment | null>(null);
+  const [mySubmission, setMySubmission] = useState<ISubmission | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [q1Answer, setQ1Answer] = useState("");
   const [q2Answer, setQ2Answer] = useState("");
@@ -13,6 +20,33 @@ const StudentAssignmentContent = () => {
   const [q3Optimize, setQ3Optimize] = useState("");
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const fetchAssignmentDetail = async () => {
+    if (!assignmentId) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const [assignmentData, submissionData] = await Promise.all([
+        assignmentApi.getAssignmentById(assignmentId),
+        assignmentApi.getMySubmission(assignmentId).catch(() => null),
+      ]);
+      setAssignment(assignmentData);
+      setMySubmission(submissionData);
+    } catch (err: any) {
+      console.error("[StudentAssignment] Fetch error:", err);
+      setError(err.response?.data?.message || "Không thể tải thông tin bài tập!");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (assignmentId) {
+      fetchAssignmentDetail();
+    } else {
+      setLoading(false);
+    }
+  }, [assignmentId]);
 
   const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     const filesArray = Array.from(event.target.files ?? []);
@@ -30,6 +64,30 @@ const StudentAssignmentContent = () => {
 
   const removeFile = (index: number) => {
     setSelectedFiles((prev) => prev.filter((_, fileIndex) => fileIndex !== index));
+  };
+
+  const handleCancelSubmission = () => {
+    if (!assignmentId) return;
+    Modal.confirm({
+      title: "Xác nhận hủy bài nộp?",
+      content: "Sau khi hủy, bài nộp hiện tại sẽ không còn được tính là đã nộp. Bạn cần nộp lại bài trước thời hạn quy định.",
+      okText: "Xác nhận hủy",
+      okType: "danger",
+      cancelText: "Quay lại",
+      onOk: async () => {
+        try {
+          setIsSubmitting(true);
+          await assignmentApi.cancelSubmission(assignmentId);
+          toast.success("Đã hủy bài nộp thành công!");
+          await fetchAssignmentDetail();
+        } catch (err: any) {
+          console.error("Lỗi khi hủy bài nộp:", err);
+          toast.error(err.response?.data?.message || "Hủy bài nộp thất bại. Vui lòng thử lại!");
+        } finally {
+          setIsSubmitting(false);
+        }
+      },
+    });
   };
 
   const handleSubmitAssignment = async () => {
@@ -54,16 +112,56 @@ const StudentAssignmentContent = () => {
       });
 
       await assignmentApi.submitAssignment(assignmentId, formData);
-      toast.success("Nộp bài tập thành công!");
+      toast.success(mySubmission ? "Nộp lại bài tập thành công!" : "Nộp bài tập thành công!");
       setIsModalOpen(false);
-      navigate(-1);
-    } catch (error) {
-      console.error("Lỗi khi nộp bài:", error);
-      toast.error("Nộp bài thất bại. Vui lòng thử lại sau.");
+      await fetchAssignmentDetail();
+    } catch (err: any) {
+      console.error("Lỗi khi nộp bài:", err);
+      toast.error(err.response?.data?.message || "Nộp bài thất bại. Vui lòng thử lại sau.");
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  if (loading) {
+    return (
+      <main className="ml-[280px] pt-16 h-screen flex items-center justify-center bg-surface">
+        <Spin size="large" tip="Đang tải thông tin bài tập..." />
+      </main>
+    );
+  }
+
+  if (error) {
+    return (
+      <main className="ml-[280px] pt-16 h-screen p-10 bg-surface">
+        <Alert
+          message="Lỗi nạp bài tập"
+          description={error}
+          type="error"
+          showIcon
+          action={<Button type="primary" danger onClick={fetchAssignmentDetail}>Thử lại</Button>}
+        />
+      </main>
+    );
+  }
+
+  const deadlineFormatted = assignment?.deadline
+    ? new Date(assignment.deadline).toLocaleString("vi-VN")
+    : "Không có hạn nộp";
+
+  const isGraded = Boolean(
+    mySubmission && (mySubmission.grade !== null && mySubmission.grade !== undefined || mySubmission.status === "graded")
+  );
+  const isPassedDeadline = Boolean(
+    assignment?.deadline && new Date() > new Date(assignment.deadline)
+  );
+  const isActiveSubmitted = Boolean(
+    mySubmission && ["submitted", "late", "resubmitted"].includes(mySubmission.status)
+  );
+  const isWithdrawn = Boolean(mySubmission?.status === "withdrawn");
+
+  const canCancel = isActiveSubmitted && !isGraded && !isPassedDeadline;
+  const canSubmit = !isGraded && !isPassedDeadline;
 
   return (
     <main className="ml-[280px] pt-16 h-screen flex flex-col bg-surface relative">
@@ -72,28 +170,95 @@ const StudentAssignmentContent = () => {
         {/* Questions Column */}
         <section className="flex-1 overflow-y-auto custom-scrollbar px-10 py-8">
           <div className="max-w-[800px] mx-auto">
+            {/* Status Alert Banners */}
+            {isGraded && (
+              <Alert
+                type="warning"
+                message="Bài nộp đã được Giáo viên chấm điểm"
+                description={`Điểm số: ${mySubmission?.grade}/100 điểm. ${
+                  mySubmission?.feedback ? `Lời phê: "${mySubmission.feedback}"` : ""
+                } Bạn không thể nộp lại hoặc hủy bài nộp.`}
+                showIcon
+                style={{ marginBottom: 24, borderRadius: 12 }}
+              />
+            )}
+            {!isGraded && isPassedDeadline && (
+              <Alert
+                type="error"
+                message="Bài tập đã quá hạn deadline"
+                description="Hạn nộp bài tập đã kết thúc. Bạn không thể thực hiện nộp bài hoặc hủy bài nộp nữa."
+                showIcon
+                style={{ marginBottom: 24, borderRadius: 12 }}
+              />
+            )}
+
             {/* Assignment Info Header */}
             <div className="bg-white rounded-xl border border-outline-variant p-8 mb-8">
               <div className="flex items-center justify-between mb-4">
-                <span className="px-3 py-1 bg-primary/10 text-primary text-body-sm font-semibold rounded-full uppercase tracking-wider">
-                  Cấu trúc dữ liệu & Giải thuật
-                </span>
-                <span className="text-on-surface-variant text-body-sm">Hạn nộp: 23:59 - 15/10/2023</span>
+                <Space align="center">
+                  <span className="px-3 py-1 bg-primary/10 text-primary text-body-sm font-semibold rounded-full uppercase tracking-wider">
+                    {assignment?.title || "Bài tập lớp học"}
+                  </span>
+                  {isGraded ? (
+                    <Tag color="gold" style={{ borderRadius: 6, fontWeight: 700 }}>
+                      🏆 Đã chấm: {mySubmission?.grade}/100 điểm
+                    </Tag>
+                  ) : isActiveSubmitted ? (
+                    <Tag color="success" style={{ borderRadius: 6, fontWeight: 700 }}>
+                      🟢 Đã nộp bài {mySubmission?.status === "late" ? "(Muộn)" : mySubmission?.status === "resubmitted" ? "(Đã nộp lại)" : ""}
+                    </Tag>
+                  ) : isWithdrawn ? (
+                    <Tag color="warning" style={{ borderRadius: 6, fontWeight: 700 }}>
+                      🟡 Đã hủy bài nộp
+                    </Tag>
+                  ) : (
+                    <Tag color="default" style={{ borderRadius: 6 }}>
+                      ⚪ Chưa nộp bài
+                    </Tag>
+                  )}
+                </Space>
+                <span className="text-on-surface-variant text-body-sm">Hạn nộp: {deadlineFormatted}</span>
               </div>
-              <h3 className="font-headline-md text-headline-md text-on-surface mb-4">Hướng dẫn làm bài</h3>
+              <h3 className="font-headline-md text-headline-md text-on-surface mb-4">
+                {assignment?.title || "Hướng dẫn làm bài"}
+              </h3>
               <p className="text-on-surface-variant leading-relaxed mb-4">
-                Bài tập này gồm 3 phần: Trắc nghiệm lý thuyết, câu hỏi ngắn và phân tích mã nguồn. Vui lòng đọc kỹ yêu
-                cầu trước khi trả lời. Bạn có thể sử dụng AI Assistant để nhận gợi ý nếu gặp khó khăn, nhưng tuyệt đối
-                không sao chép lời giải.
+                {assignment?.description || "Vui lòng đọc kỹ yêu cầu bài tập và hoàn thành các câu hỏi bên dưới."}
               </p>
-              <div className="flex gap-4 p-4 bg-surface-container-low rounded-lg border border-primary/10">
-                <span className="material-symbols-outlined text-primary" data-icon="info">
-                  info
-                </span>
-                <span className="text-body-sm text-on-surface">
-                  Mỗi câu hỏi có số điểm khác nhau được ghi rõ ở góc phải. Tổng điểm: 10.0
-                </span>
-              </div>
+              {assignment?.attachments && assignment.attachments.length > 0 && (
+                <div className="mb-4 space-y-2">
+                  <h5 className="font-bold text-sm text-on-surface">Tài liệu đính kèm từ Giảng viên:</h5>
+                  {assignment.attachments.map((att: any, idx: number) => (
+                    <a
+                      key={att.publicId || idx}
+                      href={att.url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center gap-2 text-primary underline text-body-sm mr-4"
+                    >
+                      📎 {att.name || "File đính kèm"}
+                    </a>
+                  ))}
+                </div>
+              )}
+              {mySubmission && mySubmission.attachments && mySubmission.attachments.length > 0 && (
+                <div className="mt-4 p-4 bg-surface-container-low rounded-xl border border-outline-variant">
+                  <h5 className="font-bold text-sm text-on-surface mb-2">Tệp bài làm hiện tại của bạn:</h5>
+                  <div className="space-y-1">
+                    {mySubmission.attachments.map((att: any, idx: number) => (
+                      <a
+                        key={att.publicId || idx}
+                        href={att.url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center gap-2 text-primary underline text-body-sm mr-4"
+                      >
+                        📄 {att.name || "Tệp bài làm"}
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Question List */}
@@ -286,14 +451,21 @@ const StudentAssignmentContent = () => {
           </div>
         </div>
         <div className="flex items-center gap-4">
-          <button className="px-6 py-2 border border-outline-variant text-on-surface font-bold rounded-xl hover:bg-slate-50 transition-colors">
-            Lưu nháp
-          </button>
+          {canCancel && (
+            <button
+              className="px-6 py-2 border border-red-300 text-red-600 font-bold rounded-xl hover:bg-red-50 transition-colors disabled:opacity-50"
+              onClick={handleCancelSubmission}
+              disabled={isSubmitting}
+            >
+              Hủy bài nộp
+            </button>
+          )}
           <button
-            className="px-8 py-2 bg-primary text-white font-bold rounded-xl hover:bg-primary-container transition-all active:scale-95 shadow-md shadow-primary/20"
+            className="px-8 py-2 bg-primary text-white font-bold rounded-xl hover:bg-primary-container transition-all active:scale-95 shadow-md shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed"
             onClick={() => setIsModalOpen(true)}
+            disabled={!canSubmit || isSubmitting}
           >
-            Nộp bài
+            {isActiveSubmitted ? "Nộp lại bài tập" : "Nộp bài tập"}
           </button>
         </div>
       </footer>

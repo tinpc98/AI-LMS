@@ -1,65 +1,52 @@
 import React, { useEffect, useState } from "react";
-import { Modal, Form, Input, Button, Space, Typography } from "antd";
+import { Modal, Form, Input, Button, Space } from "antd";
 import { NotificationOutlined, CheckCircleOutlined } from "@ant-design/icons";
 import announcementApi from "../../../api/announcementApi";
-import type { IAnnouncement } from "../../../api/announcementApi";
 import { toast } from "../../../utils/toast";
-
-const { Text } = Typography;
 
 interface CreateAnnouncementModalProps {
   open: boolean;
   onClose: () => void;
   classId: string;
-  initialData?: IAnnouncement | null;
   onSaved?: () => void;
 }
 
 export const CreateAnnouncementModal: React.FC<CreateAnnouncementModalProps> = React.memo(
-  ({ open, onClose, classId, initialData, onSaved }) => {
+  ({ open, onClose, classId, onSaved }) => {
     const [form] = Form.useForm();
     const [submitting, setSubmitting] = useState(false);
 
-    const isEditing = !!initialData?._id;
-
     useEffect(() => {
       if (open) {
-        if (initialData) {
-          form.setFieldsValue({
-            title: initialData.title || "",
-            content: initialData.content || "",
-          });
-        } else {
-          form.resetFields();
-        }
+        form.resetFields();
       }
-    }, [open, initialData, form]);
+    }, [open, form]);
 
     const handleSubmit = async (values: any) => {
-      if (!classId && !isEditing) return;
+      if (!classId) return;
+      const titleTrimmed = values.title?.trim();
+      const contentTrimmed = values.content?.trim();
+
+      if (!titleTrimmed || !contentTrimmed) {
+        toast.error("Vui lòng nhập đầy đủ tiêu đề và nội dung thông báo!");
+        return;
+      }
+
       setSubmitting(true);
 
       try {
-        if (isEditing && initialData) {
-          await announcementApi.updateAnnouncement(initialData._id, {
-            title: values.title.trim(),
-            content: values.content.trim(),
-          });
-          toast.success("Cập nhật thông báo lớp học thành công!");
-        } else {
-          await announcementApi.createAnnouncement({
-            title: values.title.trim(),
-            content: values.content.trim(),
-            classId,
-            scope: "Class",
-          });
-          toast.success("Đăng thông báo mới cho lớp thành công!");
-        }
+        await announcementApi.createAnnouncement({
+          title: titleTrimmed,
+          content: contentTrimmed,
+          classId,
+          scope: "Class",
+        });
+        toast.success("Đăng thông báo mới cho lớp thành công!");
 
         onClose();
         if (onSaved) onSaved();
       } catch (err: any) {
-        toast.error(err.response?.data?.message || "Lỗi khi lưu thông báo!");
+        toast.error(err.response?.data?.message || "Lỗi khi đăng thông báo!");
       } finally {
         setSubmitting(false);
       }
@@ -70,7 +57,7 @@ export const CreateAnnouncementModal: React.FC<CreateAnnouncementModalProps> = R
         title={
           <Space align="center">
             <NotificationOutlined style={{ color: "#1890ff" }} />
-            <span>{isEditing ? "Chỉnh sửa thông báo lớp học" : "Đăng thông báo mới cho lớp học"}</span>
+            <span>Đăng thông báo mới cho lớp học</span>
           </Space>
         }
         open={open}
@@ -98,7 +85,7 @@ export const CreateAnnouncementModal: React.FC<CreateAnnouncementModalProps> = R
           <div style={{ display: "flex", justifyContent: "flex-end", gap: 12, marginTop: 24 }}>
             <Button onClick={onClose}>Hủy</Button>
             <Button type="primary" htmlType="submit" loading={submitting} icon={<CheckCircleOutlined />}>
-              {isEditing ? "Lưu thay đổi" : "Đăng thông báo"}
+              Đăng thông báo
             </Button>
           </div>
         </Form>

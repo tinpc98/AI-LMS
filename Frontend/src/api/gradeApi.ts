@@ -16,6 +16,34 @@ export interface IGrade {
   updatedAt?: string;
 }
 
+export interface StudentGPAResponse {
+  classId: string;
+  studentId: string;
+  gpa: number | null;
+  weights?: {
+    attendance?: number;
+    assignment?: number;
+    midterm?: number;
+    final?: number;
+  };
+  gradesCount?: number;
+  detail?: IGrade[];
+}
+
+export const mapGPAResponse = (data: any): StudentGPAResponse => {
+  const gpaRaw = data?.gpa;
+  const gpa = (gpaRaw === null || gpaRaw === undefined) ? null : Number(gpaRaw);
+
+  return {
+    classId: data?.classId || "",
+    studentId: data?.studentId || "",
+    gpa: Number.isNaN(gpa) ? null : gpa,
+    weights: data?.weights || undefined,
+    gradesCount: data?.gradesCount || 0,
+    detail: data?.detail || [],
+  };
+};
+
 export const gradeApi = {
   // Lấy bảng điểm của toàn bộ lớp học
   getGradesByClass: async (classId: string): Promise<IGrade[]> => {
@@ -46,12 +74,13 @@ export const gradeApi = {
     return response.data.data ?? response.data ?? [];
   },
 
-  // Lấy tổng kết GPA môn học của học sinh
-  getStudentGPA: async (classId: string, studentId: string): Promise<any> => {
+  // Lấy tổng kết GPA môn học của học sinh từ Backend API
+  getStudentGPA: async (classId: string, studentId: string = "me"): Promise<StudentGPAResponse> => {
     const response = await axiosClient.get<{ success?: boolean; data: any }>(
       `/api/grades/gpa/${classId}/${studentId}`
     );
-    return response.data.data ?? response.data;
+    const raw = response.data.data ?? response.data;
+    return mapGPAResponse(raw);
   },
 };
 

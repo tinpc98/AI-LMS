@@ -33,8 +33,16 @@ const submissionSchema = new Schema(
     ],
     status: {
       type: String,
-      enum: ["submitted", "late", "graded"],
+      enum: ["submitted", "late", "graded", "withdrawn", "resubmitted"],
       default: "submitted",
+    },
+    withdrawnAt: {
+      type: Date,
+      default: null,
+    },
+    resubmittedAt: {
+      type: Date,
+      default: null,
     },
     // Điểm số giữ nguyên
     grade: {

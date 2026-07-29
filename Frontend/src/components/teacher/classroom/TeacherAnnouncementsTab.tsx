@@ -62,7 +62,6 @@ export const TeacherAnnouncementsTab: React.FC<TeacherAnnouncementsTabProps> = R
 
     // Modal & Drawer states
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-    const [editingAnnouncement, setEditingAnnouncement] = useState<IAnnouncement | null>(null);
     const [selectedAnnouncement, setSelectedAnnouncement] = useState<IAnnouncement | null>(null);
     const [isDetailDrawerOpen, setIsDetailDrawerOpen] = useState(false);
 
@@ -274,7 +273,6 @@ export const TeacherAnnouncementsTab: React.FC<TeacherAnnouncementsTabProps> = R
                 type="primary"
                 icon={<PlusOutlined />}
                 onClick={() => {
-                  setEditingAnnouncement(null);
                   setIsCreateModalOpen(true);
                 }}
                 style={{ fontWeight: 600, borderRadius: 8 }}
@@ -345,18 +343,6 @@ export const TeacherAnnouncementsTab: React.FC<TeacherAnnouncementsTabProps> = R
                           </Button>
                         </Tooltip>
 
-                        <Tooltip title="Chỉnh sửa thông báo">
-                          <Button
-                            type="text"
-                            size="small"
-                            icon={<EditOutlined />}
-                            onClick={() => {
-                              setEditingAnnouncement(item);
-                              setIsCreateModalOpen(true);
-                            }}
-                          />
-                        </Tooltip>
-
                         <Popconfirm
                           title="Xóa thông báo này?"
                           description="Hành động này sẽ xóa hoàn toàn thông báo khỏi lớp học."
@@ -406,7 +392,6 @@ export const TeacherAnnouncementsTab: React.FC<TeacherAnnouncementsTabProps> = R
                     type="primary"
                     icon={<PlusOutlined />}
                     onClick={() => {
-                      setEditingAnnouncement(null);
                       setIsCreateModalOpen(true);
                     }}
                     style={{ borderRadius: 6 }}
@@ -429,12 +414,8 @@ export const TeacherAnnouncementsTab: React.FC<TeacherAnnouncementsTabProps> = R
 
         <CreateAnnouncementModal
           open={isCreateModalOpen}
-          onClose={() => {
-            setIsCreateModalOpen(false);
-            setEditingAnnouncement(null);
-          }}
+          onClose={() => setIsCreateModalOpen(false)}
           classId={classId}
-          initialData={editingAnnouncement}
           onSaved={fetchAnnouncements}
         />
       </div>

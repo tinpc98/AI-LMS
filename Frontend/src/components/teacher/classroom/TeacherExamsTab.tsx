@@ -34,9 +34,11 @@ import {
   EyeOutlined,
   RocketOutlined,
   StopOutlined,
+  CopyOutlined,
 } from "@ant-design/icons";
 
 import examApi from "../../../api/examApi";
+import examSetApi from "../../../api/examSetApi";
 import type { IExam } from "../../../api/examApi";
 import { toast } from "../../../utils/toast";
 import { TeacherExamAttemptsDrawer } from "./TeacherExamAttemptsDrawer";
@@ -137,6 +139,18 @@ export const TeacherExamsTab: React.FC<TeacherExamsTabProps> = React.memo(
       }
     };
 
+    // Handle Duplicate Exam Set
+    const handleDuplicateExamSet = async (examId: string) => {
+      if (!examId) return;
+      try {
+        await examSetApi.duplicateExamSet(examId);
+        toast.success("Nhân bản bộ đề thi thành công!");
+        fetchExams();
+      } catch (err: any) {
+        toast.error(err.response?.data?.message || "Lỗi khi nhân bản bộ đề thi!");
+      }
+    };
+
     // Handle Publish / Unpublish status change
     const handleToggleStatus = async (exam: IExam) => {
       const newStatus = exam.status === "PUBLISHED" ? "DRAFT" : "PUBLISHED";
@@ -227,6 +241,12 @@ export const TeacherExamsTab: React.FC<TeacherExamsTabProps> = React.memo(
                 setSelectedExam(record);
                 setIsAttemptsDrawerOpen(true);
               },
+            },
+            {
+              key: "duplicate",
+              icon: <CopyOutlined />,
+              label: "Nhân bản bộ đề",
+              onClick: () => handleDuplicateExamSet(record._id),
             },
             {
               key: "toggleStatus",

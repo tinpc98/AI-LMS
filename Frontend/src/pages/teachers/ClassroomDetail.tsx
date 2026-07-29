@@ -37,7 +37,6 @@ import type { IAssignment } from "../../interface/assignmentInterface";
 import type { ILesson } from "../../interface/lessonInterface";
 
 import CreateLessonModal from "../../components/features/CreateLessonModal";
-import LiveRoomModal from "../../components/features/LiveRoomModal";
 import { useJitsiLiveSession } from "../../hooks/useJitsiLiveSession";
 
 import { TeacherClassOverviewTab } from "../../components/teacher/classroom/TeacherClassOverviewTab";
@@ -455,14 +454,6 @@ export default function ClassroomDetail() {
         lessonData={editingLesson}
         onCreated={handleLessonCreated}
         onUpdated={handleLessonUpdated}
-      />
-
-      <LiveRoomModal
-        isOpen={isLiveRoomOpen}
-        onClose={() => setIsLiveRoomOpen(false)}
-        meetingRoomId={meetingRoomId}
-        jwtToken={jwtToken}
-        appId={appId}
       />
     </div>
   );
