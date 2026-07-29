@@ -29,6 +29,7 @@ import type { ExamPopupState } from "../../components/student/classDetail/exams/
 import { useJitsiLiveSession } from "../../hooks/useJitsiLiveSession";
 import { useStudentLive } from "../../hooks/useStudentLive";
 import { useLearningAnalytics } from "../../hooks/useLearningAnalytics";
+import { useAnalytics } from "../../hooks/useAnalytics";
 import { Tooltip, Avatar, List, Progress } from "antd";
 import { TrophyOutlined, StarOutlined, ClockCircleOutlined, ThunderboltOutlined } from "@ant-design/icons";
 
@@ -87,6 +88,15 @@ export default function ClassDetail() {
       fetchMyBadges();
     }
   }, [classId, fetchStudentProgress, fetchClassRanking, fetchMyRank, fetchMyBadges]);
+
+  // Sprint 7: Real Analytics
+  const { studentDashboard, fetchStudentDashboard } = useAnalytics(classId);
+
+  useEffect(() => {
+    if (classId) {
+      fetchStudentDashboard();
+    }
+  }, [classId, fetchStudentDashboard]);
 
   // Exams & Lobby States
   const [exams, setExams] = useState<IExam[]>([]);
@@ -276,16 +286,16 @@ export default function ClassDetail() {
           {activeTab === "overview" && (
             <div>
               <StatisticSection
-                attendanceRate={95}
-                completedAssignments={submittedAssignmentIds.length}
+                attendanceRate={
+                  studentDashboard?.attendance?.total
+                    ? Math.round((studentDashboard.attendance.present / studentDashboard.attendance.total) * 100)
+                    : 0
+                }
+                completedAssignments={studentDashboard?.assignment?.completed || 0}
                 totalAssignments={assignments.length}
                 completedExams={exams.filter((e: any) => e.score !== null && e.score !== undefined).length}
                 totalExams={exams.length}
-                overallProgress={
-                  progressData.length > 0 
-                  ? Math.round(progressData.reduce((acc, curr) => acc + curr.progress, 0) / Math.max(lessons.length, 1))
-                  : 0
-                }
+                overallProgress={studentDashboard?.progress?.averageProgress || 0}
               />
               <Row gutter={[24, 24]}>
                 <Col xs={24} lg={15} xl={16}>
@@ -301,12 +311,12 @@ export default function ClassDetail() {
                     googleCalendarEventId={(classInfo as any).googleCalendarEventId}
                   />
                   <LearningProgressCard
-                    progressPercent={85}
-                    completedAssignments={submittedAssignmentIds.length}
+                    progressPercent={studentDashboard?.progress?.averageProgress || 0}
+                    completedAssignments={studentDashboard?.assignment?.completed || 0}
                     totalAssignments={assignments.length}
                     completedExams={exams.filter((e: any) => e.score !== null && e.score !== undefined).length}
                     totalExams={exams.length}
-                    averageScore={8.5}
+                    averageScore={studentDashboard?.assignment?.averageScore || 0}
                   />
                 </Col>
                 <Col xs={24} lg={9} xl={8}>
