@@ -5,6 +5,7 @@ import { Outlet } from "react-router-dom";
 import { StudentSidebar } from "./student/StudentSidebar";
 import { StudentHeader } from "./student/StudentHeader";
 import { StudentContent } from "./student/StudentContent";
+import { AIChatWidget } from "../common/AIChatWidget";
 
 export const HomeLayoutStudent: React.FC = () => {
   const [collapsed, setCollapsed] = useState<boolean>(false);
@@ -70,6 +71,9 @@ export const HomeLayoutStudent: React.FC = () => {
           <Outlet />
         </StudentContent>
       </Layout>
+
+      {/* Global AI Chat Widget for Student */}
+      <AIChatWidget />
     </Layout>
   );
 };

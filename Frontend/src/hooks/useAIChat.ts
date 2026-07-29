@@ -54,7 +54,17 @@ export function useAIChat(lessonId?: string) {
       });
     } catch (err: any) {
       console.error("[useAIChat] Send message error:", err);
-      toast.error(err.response?.data?.message || "Lỗi khi gửi tin nhắn tới AI.");
+      
+      let errorMsg = "Lỗi khi gửi tin nhắn tới AI.";
+      if (err.response?.status === 429) {
+        errorMsg = "Bạn đã sử dụng hết lượt AI hiện tại (Quota exceeded). Vui lòng thử lại sau.";
+      } else if (err.response?.data?.message) {
+        errorMsg = err.response.data.message;
+      }
+      
+      toast.error(errorMsg);
+      setError(errorMsg);
+      
       // Tùy chọn: Gỡ tin nhắn cuối cùng nếu lỗi
       setMessages((prev) => prev.slice(0, -1));
     } finally {

@@ -95,8 +95,12 @@ export function AIQuestionGeneratorModal({ isOpen, onClose, lessonId, folderId, 
           hardCount: 2,
         }}
       >
-        <div className="bg-indigo-50 border border-indigo-100 rounded-lg p-4 mb-6 text-sm text-indigo-800">
-          Hệ thống AI sẽ phân tích nội dung bài học để sinh ra bộ câu hỏi trắc nghiệm và tự luận phù hợp nhất.
+        <div className="bg-indigo-50 border border-indigo-100 rounded-lg p-4 mb-6 text-sm text-indigo-800 flex flex-col gap-2">
+          <p>Hệ thống AI sẽ phân tích nội dung bài học để sinh ra bộ câu hỏi trắc nghiệm và tự luận phù hợp nhất.</p>
+          <div className="flex items-center gap-1.5 text-amber-600 font-medium bg-amber-50 p-2 rounded border border-amber-100 w-fit">
+            <span className="material-symbols-outlined text-[16px]">warning</span>
+            Nội dung do AI đề xuất — giáo viên cần kiểm tra kỹ trước khi xuất bản.
+          </div>
         </div>
 
         <Form.Item
