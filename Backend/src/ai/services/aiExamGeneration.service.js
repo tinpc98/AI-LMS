@@ -1,21 +1,22 @@
 import mongoose from "mongoose";
 import ExamSet from "../../models/examSet.model.js";
+import ExamSetShare from "../../models/examSetShare.model.js";
+import User from "../../models/user.models.js";
 import Exam from "../../models/exam.model.js";
 import crypto from "crypto";
 
 const generateFingerprint = (userId, classId, examSetId, blueprint) => {
-  // Canonicalize blueprint keys
-  const replacer = (key, value) =>
-    value instanceof Object && !Array.isArray(value)
-      ? Object.keys(value)
-          .sort()
-          .reduce((sorted, k) => {
-            sorted[k] = value[k];
-            return sorted;
-          }, {})
-      : value;
+  // S4-FIX-02: Canonicalize blueprint deeply using deterministic stringify
+  const canonicalize = (obj) => {
+    if (obj === null || typeof obj !== 'object') return obj;
+    if (Array.isArray(obj)) return obj.map(canonicalize);
+    return Object.keys(obj).sort().reduce((acc, key) => {
+      acc[key] = canonicalize(obj[key]);
+      return acc;
+    }, {});
+  };
 
-  const blueprintStr = JSON.stringify(blueprint, replacer);
+  const blueprintStr = JSON.stringify(canonicalize(blueprint));
   const data = `${userId.toString()}|${classId.toString()}|${examSetId.toString()}|${blueprintStr}`;
 
   return crypto.createHash("sha256").update(data).digest("hex");
@@ -166,7 +167,7 @@ const selectQuestionsByBlueprint = (pool, blueprint) => {
 };
 
 const generateExamFromSet = async ({ userId, classId, examSetId, blueprint }) => {
-  const { title, description, durationMinutes, totalPoints } = blueprint;
+  const { title, durationMinutes, totalPoints } = blueprint;
 
   // 1. Lấy ExamSet và kiểm tra quyền
   const examSet = await ExamSet.findOne({ _id: examSetId, isDeleted: false }).lean();
@@ -176,26 +177,33 @@ const generateExamFromSet = async ({ userId, classId, examSetId, blueprint }) =>
     throw err;
   }
 
-  // IDOR check: Only owner or if there's a sharing mechanism (simplified to owner for now as per requirement)
-  if (examSet.ownerId.toString() !== userId.toString()) {
-    const err = new Error("Bạn không có quyền sử dụng ExamSet này.");
-    err.statusCode = 403;
-    throw err;
+  // S4-FIX-05: IDOR check with Role and Sharing
+  const user = await User.findById(userId).lean();
+  const userRole = (user?.role || "").toLowerCase();
+  
+  if (userRole !== "admin" && examSet.ownerId.toString() !== userId.toString()) {
+    const share = await ExamSetShare.findOne({
+      examSetId,
+      sharedWithUserId: userId,
+      status: "ACTIVE",
+      $or: [{ expiresAt: null }, { expiresAt: { $gt: new Date() } }],
+      permission: { $in: ["VIEW", "EDIT"] }
+    }).lean();
+
+    if (!share) {
+      const err = new Error("Bạn không có quyền sử dụng ExamSet này.");
+      err.statusCode = 404; // Use 404 to avoid enumeration
+      throw err;
+    }
   }
 
-  // 2. Check Idempotency (Fingerprint)
+  // 2. Check Idempotency (Fingerprint) - S4-FIX-02
   const fingerprint = generateFingerprint(userId, classId, examSetId, blueprint);
-  // Optional: check if an Exam with this fingerprint already exists to return 409
-  // Since Exam doesn't have a fingerprint field yet, we rely on checking aiPromptUsed or similar, or just allow it if not strictly required.
-  // Actually, to prevent spam, we can check if there's a DRAFT exam by this user with the same title and class in the last few minutes.
-  // The requirement says: "Cùng input trả 409 nếu request đã tạo Exam draft."
-  // Let's implement an atomic-like check on title and classId and status DRAFT for now.
+  
   const existingDraft = await Exam.findOne({
-    classId,
     createdBy: userId,
     status: "DRAFT",
-    aiSourceExamSetId: examSetId,
-    title,
+    aiSourceFingerprint: fingerprint,
   });
 
   if (existingDraft) {
@@ -228,7 +236,8 @@ const generateExamFromSet = async ({ userId, classId, examSetId, blueprint }) =>
     status: "DRAFT", // Luôn là DRAFT
     isAIGenerated: true, // Được sinh từ AI Backend module
     aiSourceExamSetId: examSetId,
-    aiPromptUsed: `Blueprint Fingerprint: ${fingerprint}`,
+    aiSourceFingerprint: fingerprint,
+    aiPromptUsed: `Blueprint Sinh Đề Thi`, // Just for reference
     maxScore: totalPoints,
     questions: examQuestionsFormatted,
   });

@@ -83,6 +83,12 @@ class LessonContentExtractorService {
       if (this.pdfParserFactory) {
         parser = this.pdfParserFactory(buffer);
       } else {
+        // S4-FIX-08: Polyfill DOMMatrix for pdf-parse runtime regression
+        if (typeof global.DOMMatrix === "undefined") {
+          global.DOMMatrix = class DOMMatrix {
+            constructor() { return [1, 0, 0, 1, 0, 0]; }
+          };
+        }
         const { PDFParse } = require("pdf-parse");
         parser = new PDFParse({ data: buffer });
       }

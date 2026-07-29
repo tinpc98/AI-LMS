@@ -207,7 +207,7 @@ export const getAllExams = async (req, res) => {
       const startTime = new Date(exam.startTime).getTime();
       const endTime = startTime + exam.duration * 60000;
 
-      if (now > endTime && exam.status !== "COMPLETED") {
+      if (now > endTime && exam.status === "PUBLISHED") {
         exam.status = "COMPLETED";
         await exam.save();
       }
@@ -238,17 +238,53 @@ export const getExamById = async (req, res) => {
       return res.status(404).json({ message: "Không tìm thấy kỳ thi!" });
     }
 
+    const userId = (req.user._id || req.user.id || "").toString();
+    const userRole = (req.user.role || "").toLowerCase();
+    const targetClass = await classModel.findById(exam.classId).lean();
+
+    // S4-FIX-01: RBAC & IDOR check
+    if (userRole === "student") {
+      if (!targetClass) return res.status(404).json({ message: "Không tìm thấy kỳ thi!" });
+      const isStudentInClass = targetClass.students?.some(s => s.studentId?.toString() === userId);
+      if (!isStudentInClass) return res.status(404).json({ message: "Không tìm thấy kỳ thi!" });
+      if (exam.status !== "PUBLISHED" && exam.status !== "COMPLETED") return res.status(404).json({ message: "Không tìm thấy kỳ thi!" });
+    } else if (userRole === "teacher") {
+      const classTeacherId = (targetClass?.teacherId?._id || targetClass?.teacherId || "").toString();
+      const isCreator = (exam.createdBy?._id || exam.createdBy || "").toString() === userId;
+      if (classTeacherId !== userId && !isCreator) {
+        return res.status(403).json({ message: "Bạn không có quyền truy cập đề thi này!" });
+      }
+    }
+
     // Polyfill for AI Exam Generation snapshot data
     if (exam.questions && exam.questions.length > 0) {
       exam.questions = exam.questions.map((q) => {
-        if (q.isSnapshot && q.snapshotData) {
-          // If the question was snapshot from ExamSet, we map it into `questionId` to simulate populate()
-          return {
-            ...q,
-            questionId: q.snapshotData,
-          };
+        let questionData = q.isSnapshot && q.snapshotData ? q.snapshotData : q.questionId;
+        
+        // S4-FIX-01: Redact answers for student
+        if (userRole === "student" && questionData) {
+          const safeData = { ...questionData };
+          delete safeData.correctAnswer;
+          delete safeData.acceptedAnswers;
+          delete safeData.suggestedAnswer;
+          delete safeData.rubric;
+          delete safeData.explanation;
+          delete safeData.feedbackCorrect;
+          delete safeData.feedbackIncorrect;
+          if (Array.isArray(safeData.options)) {
+            safeData.options = safeData.options.map(opt => {
+              const safeOpt = { ...opt };
+              delete safeOpt.isCorrect;
+              return safeOpt;
+            });
+          }
+          questionData = safeData;
         }
-        return q;
+
+        return {
+          ...q,
+          questionId: questionData,
+        };
       });
     }
 
@@ -265,7 +301,6 @@ export const generateFromExamSet = async (req, res) => {
       classId,
       examSetId,
       title,
-      description,
       durationMinutes,
       totalQuestions,
       totalPoints,
@@ -285,17 +320,33 @@ export const generateFromExamSet = async (req, res) => {
     if (!title || typeof title !== "string" || title.trim() === "") {
       return res.status(400).json({ message: "Tiêu đề không hợp lệ!" });
     }
+    if (title.length > 255) {
+      return res.status(400).json({ message: "Tiêu đề quá dài!" });
+    }
     if (!Number.isInteger(durationMinutes) || durationMinutes <= 0) {
       return res.status(400).json({ message: "Thời gian làm bài phải là số nguyên dương!" });
     }
     if (!Number.isInteger(totalQuestions) || totalQuestions <= 0) {
       return res.status(400).json({ message: "Tổng số câu hỏi phải là số nguyên dương!" });
     }
-    if (typeof totalPoints !== "number" || totalPoints <= 0) {
-      return res.status(400).json({ message: "Tổng điểm phải là số dương!" });
+    if (typeof totalPoints !== "number" || totalPoints !== 10) {
+      return res.status(400).json({ message: "Tổng điểm phải bằng đúng 10!" }); // S4-FIX-03
     }
-    if (typeof questionTypeDistribution !== "object" || typeof difficultyDistribution !== "object") {
+    if (!questionTypeDistribution || typeof questionTypeDistribution !== "object" || Array.isArray(questionTypeDistribution) || 
+        !difficultyDistribution || typeof difficultyDistribution !== "object" || Array.isArray(difficultyDistribution)) {
       return res.status(400).json({ message: "Phân bố câu hỏi không hợp lệ!" });
+    }
+
+    const validTypes = ["multiple_choice", "true_false", "short_answer", "essay"];
+    const validDiffs = ["easy", "medium", "hard"];
+    
+    for (const [key, value] of Object.entries(questionTypeDistribution)) {
+      if (!validTypes.includes(key)) return res.status(400).json({ message: `Loại câu hỏi ${key} không hợp lệ!` });
+      if (!Number.isInteger(value) || value < 0) return res.status(400).json({ message: "Giá trị phân bổ phải là số nguyên >= 0!" });
+    }
+    for (const [key, value] of Object.entries(difficultyDistribution)) {
+      if (!validDiffs.includes(key)) return res.status(400).json({ message: `Độ khó ${key} không hợp lệ!` });
+      if (!Number.isInteger(value) || value < 0) return res.status(400).json({ message: "Giá trị phân bổ phải là số nguyên >= 0!" });
     }
 
     const targetClass = await classModel.findOne({ _id: classId, isDeleted: false });
@@ -320,7 +371,6 @@ export const generateFromExamSet = async (req, res) => {
       examSetId,
       blueprint: {
         title: title.trim(),
-        description,
         durationMinutes,
         totalQuestions,
         totalPoints,

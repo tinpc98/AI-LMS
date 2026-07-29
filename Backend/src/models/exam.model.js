@@ -61,6 +61,11 @@ const examSchema = new Schema(
       default: null,
     },
 
+    aiSourceFingerprint: {
+      type: String,
+      default: null,
+    },
+
     maxScore: {
       type: Number,
       default: 10,
