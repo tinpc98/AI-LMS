@@ -1,20 +1,5 @@
-import { mockUsers } from "../accountManagement/account.mock";
-import { mockCourses } from "../courseManagement/course.mock";
-import { mockClasses } from "../classManagement/class.mock";
-import { mockAILogs } from "../aiManagement/mock/aiLogs.mock";
-import { mockLiveSessions } from "../classManagement/liveSessions.mock";
-import { mockNotifications } from "../notifications/notifications.mock";
-import type {
-  DashboardData,
-  OverviewCardItem,
-  RegistrationChartItem,
-  CourseDistributionItem,
-  ClassStatusItem,
-  AIUsageItem,
-  TodayClassRecord,
-} from "./dashboard.types";
-
-const delay = (ms: number) => new Promise((resolve) => window.setTimeout(resolve, ms));
+import axiosClient from "../../api/axiosClient";
+import type { DashboardResponse } from "./dashboard.types";
 
 export const dashboardService = {
   async getDashboardData(): Promise<DashboardData> {
@@ -194,9 +179,8 @@ export const dashboardService = {
     };
 
     mockClasses.forEach((c) => {
-      const status = c.status === "Ready" ? "Upcoming" : c.status;
-      if ((statusCounts as any)[status] !== undefined) {
-        (statusCounts as any)[status] += 1;
+      if (statusCounts[c.status] !== undefined) {
+        statusCounts[c.status] += 1;
       }
     });
 
@@ -267,7 +251,7 @@ export const dashboardService = {
         currentStudents: item.currentStudents,
         maxStudents: item.maxStudents,
         learningMode: item.learningMode,
-        status: (item.status === "Ready" ? "Upcoming" : item.status) as any,
+        status: item.status,
       };
     });
 

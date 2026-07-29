@@ -1,6 +1,6 @@
 import React from "react";
 import { Row, Col, Alert } from "antd";
-import { useDashboard } from "./hooks/useDashboard";
+import { useDashboardQuery } from "./hooks/useDashboardQuery";
 import { DashboardHeader } from "./components/DashboardHeader";
 import { StatisticCards } from "./components/StatisticCards";
 import { RegistrationChart } from "./components/RegistrationChart";
@@ -8,7 +8,7 @@ import { CourseDistributionChart } from "./components/CourseDistributionChart";
 import { ClassStatusChart } from "./components/ClassStatusChart";
 import { AIUsageChart } from "./components/AIUsageChart";
 import { TodayClassesTable } from "./components/TodayClassesTable";
-import { RecentActivities } from "./components/RecentActivities";
+import { RecentUsersTable } from "./components/RecentUsersTable";
 import { QuickAccess } from "./components/QuickAccess";
 
 export const DashboardPage: React.FC = () => {
@@ -18,12 +18,12 @@ export const DashboardPage: React.FC = () => {
     refetch,
     overviewCards,
     registrationChart,
-    courseChart,
-    classChart,
+    courseDistribution,
+    classStatusChart,
     aiChart,
-    todayClasses,
-    activities,
-  } = useDashboard();
+    recentClasses,
+    recentUsers,
+  } = useDashboardQuery();
 
   return (
     <div style={{ padding: "8px 0" }}>
@@ -33,7 +33,7 @@ export const DashboardPage: React.FC = () => {
           description={error.message}
           type="error"
           showIcon
-          action={<span style={{ cursor: "pointer", fontWeight: 600 }} onClick={refetch}>Thử lại</span>}
+          action={<span style={{ cursor: "pointer", fontWeight: 600 }} onClick={() => refetch()}>Thử lại</span>}
           style={{ marginBottom: "20px", borderRadius: "12px" }}
         />
       )}
@@ -53,27 +53,27 @@ export const DashboardPage: React.FC = () => {
           <RegistrationChart data={registrationChart} loading={loading} />
         </Col>
         <Col xs={24} lg={9} xl={8}>
-          <CourseDistributionChart data={courseChart} loading={loading} />
+          <CourseDistributionChart data={courseDistribution} loading={loading} />
         </Col>
       </Row>
 
       {/* 5. Class Status (Donut Chart) & AI Usage (Bar Chart) */}
       <Row gutter={[16, 16]} style={{ marginBottom: "24px" }}>
         <Col xs={24} lg={10} xl={9}>
-          <ClassStatusChart data={classChart} loading={loading} />
+          <ClassStatusChart data={classStatusChart} loading={loading} />
         </Col>
         <Col xs={24} lg={14} xl={15}>
           <AIUsageChart data={aiChart} loading={loading} />
         </Col>
       </Row>
 
-      {/* 6. Today's Classes Table & Recent Activities Timeline */}
+      {/* 6. Today's Classes Table & Recent Users List */}
       <Row gutter={[16, 16]}>
         <Col xs={24} xl={16}>
-          <TodayClassesTable classes={todayClasses} loading={loading} />
+          <TodayClassesTable classes={recentClasses} loading={loading} />
         </Col>
         <Col xs={24} xl={8}>
-          <RecentActivities activities={activities} loading={loading} />
+          <RecentUsersTable users={recentUsers} loading={loading} />
         </Col>
       </Row>
     </div>
