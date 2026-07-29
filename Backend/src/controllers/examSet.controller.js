@@ -1,5 +1,5 @@
-// File: src/controllers/examSet.controller.js
 import { createExamSetService, getExamSetsService, updateExamSetService, deleteExamSetService, restoreExamSetService, addQuestionToExamSetService, updateQuestionInExamSetService, deleteQuestionFromExamSetService, reorderQuestionsInExamSetService, getExamSetDetailService, saveDraftExamSetService, duplicateExamSetService, updateExamSetTagsService, createNewExamSetVersionService, getExamSetVersionsService, restoreExamSetVersionService, createExamSetShareService, revokeExamSetShareService, listExamSetSharesService, listSharedExamSetsService, updateExamSetShareMetadataService } from "../services/examSet.services.js";
+import { importExcelToExamSet } from "../services/examSetImport.service.js";
 import { Types } from "mongoose";
 
 /**
@@ -627,3 +627,50 @@ export const reorderQuestionsInExamSet = async (req, res) => {
     });
   }
 };
+
+/**
+ * POST /api/exam-sets/import-excel
+ * Import exam set from Excel
+ */
+export const createImportExcelExamSetHandler = ({ importService = importExcelToExamSet } = {}) => {
+  return async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ success: false, message: "Vui lòng đính kèm file Excel" });
+      }
+
+      const { folderId, title, description } = req.body || {};
+      const ownerId = req.user.id || req.user._id; // From verifyUser middleware
+
+      const examSet = await importService({
+        fileBuffer: req.file.buffer,
+        ownerId,
+        folderId,
+        title,
+        description
+      });
+
+      return res.status(201).json({
+      success: true,
+      message: "Đã tạo bộ đề từ Excel thành công",
+      data: {
+        _id: examSet._id,
+        title: examSet.title,
+        status: examSet.status,
+        questionCount: examSet.questionCount,
+        totalPoints: examSet.totalPoints,
+        questions: examSet.questions
+      }
+    });
+  } catch (error) {
+    console.error("[ExamSet] Import Excel error:", error.message);
+    const status = error.status || error.statusCode || 500;
+    return res.status(status).json({
+      success: false,
+      message: error.message || "Lỗi import từ file Excel",
+    });
+  }
+  };
+};
+
+export const importExcelExamSet = createImportExcelExamSetHandler();
