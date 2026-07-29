@@ -78,3 +78,61 @@ export const isAdmin = (req, res, next) => {
   }
   next();
 };
+
+// Helper kiem tra quyen so huong lop hoc cua Giao vien (hoac Admin)
+export const checkClassTeacherOwnership = async (classId, userId, userRole) => {
+  if (!classId) return false;
+  const role = (userRole || "").toLowerCase();
+  if (role === "admin") return true;
+  if (role !== "teacher") return false;
+
+  const ClassModel = (await import("../models/class.model.js")).default;
+  const targetClass = await ClassModel.findById(classId);
+  if (!targetClass) return false;
+
+  return targetClass.teacherId?.toString() === userId?.toString();
+};
+
+// Middleware kiểm tra quyền xem chi tiết 1 bài nộp (Student, Teacher, Admin)
+export const canViewSubmission = async (req, res, next) => {
+  try {
+    const { submissionId } = req.params;
+    if (!submissionId) return res.status(400).json({ message: "INVALID_ID" });
+
+    const SubmissionModel = (await import("../models/submission.model.js")).default;
+    const submission = await SubmissionModel.findById(submissionId).lean();
+    
+    if (!submission) {
+      return res.status(404).json({ message: "SUBMISSION_NOT_FOUND" });
+    }
+
+    const userId = req.user._id.toString();
+    const userRole = (req.user.role || "").toLowerCase();
+
+    if (userRole === "admin") {
+      req.submission = submission;
+      return next();
+    }
+
+    if (userRole === "student") {
+      if (submission.studentId.toString() !== userId) {
+        return res.status(403).json({ message: "SUBMISSION_ACCESS_DENIED" });
+      }
+      req.submission = submission;
+      return next();
+    }
+
+    if (userRole === "teacher") {
+      const isAuthorized = await checkClassTeacherOwnership(submission.classId, userId, userRole);
+      if (!isAuthorized) {
+        return res.status(403).json({ message: "SUBMISSION_ACCESS_DENIED" });
+      }
+      req.submission = submission;
+      return next();
+    }
+
+    return res.status(403).json({ message: "SUBMISSION_ACCESS_DENIED" });
+  } catch (error) {
+    return res.status(500).json({ message: error.message || "Lỗi kiểm tra quyền truy cập bài nộp" });
+  }
+};

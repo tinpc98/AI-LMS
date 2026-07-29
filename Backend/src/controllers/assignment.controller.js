@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 import Assignment from "../models/assignment.model.js";
 import Submission from "../models/submission.model.js";
 import cloudinary from "../config/cloudinary.js";
+import { checkClassTeacherOwnership } from "../middlewares/auth.middlewares.js";
 
 // Helper function: Đẩy file lên thư mục riêng của Assignments
 const uploadToCloudinary = (fileBuffer, originalName) => {
@@ -43,6 +44,11 @@ const assignmentController = {
 
       if (!mongoose.Types.ObjectId.isValid(classId)) {
         return res.status(400).json({ message: "ID lớp học không hợp lệ!" });
+      }
+
+      const isAuthorized = await checkClassTeacherOwnership(classId, teacherId, req.user?.role);
+      if (!isAuthorized) {
+        return res.status(403).json({ message: "Bạn không có quyền tạo bài tập cho lớp học này!" });
       }
 
       let attachments = [];
@@ -92,10 +98,21 @@ const assignmentController = {
         return res.status(404).json({ message: "Không tìm thấy bài nộp này" });
       }
 
+      const assignment = await Assignment.findById(submission.assignmentId);
+      if (!assignment) {
+        return res.status(404).json({ message: "Bài tập không tồn tại" });
+      }
+
+      const userId = req.user.id || req.user._id;
+      const isAuthorized = await checkClassTeacherOwnership(assignment.classId, userId, req.user?.role);
+      if (!isAuthorized) {
+        return res.status(403).json({ message: "Bạn không có quyền chấm bài nộp của lớp học này!" });
+      }
+
       submission.grade = grade;
       submission.feedback = feedback || "";
       if (aiFeedback !== undefined) submission.aiFeedback = aiFeedback;
-      submission.gradedBy = req.user.id || req.user._id;
+      submission.gradedBy = userId;
       submission.gradedAt = new Date();
       submission.status = "graded";
 
@@ -125,11 +142,10 @@ const assignmentController = {
         return res.status(404).json({ message: "Bài tập không tồn tại" });
       }
 
-      const userId = (req.user.id || req.user._id).toString();
-      const userRole = (req.user.role || "").toLowerCase();
-
-      if (userRole !== "admin" && assignment.teacherId?.toString() !== userId) {
-        return res.status(403).json({ message: "Bạn không có quyền sửa bài tập này" });
+      const userId = req.user.id || req.user._id;
+      const isAuthorized = await checkClassTeacherOwnership(assignment.classId, userId, req.user?.role);
+      if (!isAuthorized) {
+        return res.status(403).json({ message: "Bạn không có quyền sửa bài tập này!" });
       }
 
       let newAttachments = assignment.attachments || [];
@@ -167,11 +183,10 @@ const assignmentController = {
         return res.status(404).json({ message: "Bài tập không tồn tại" });
       }
 
-      const userId = (req.user.id || req.user._id).toString();
-      const userRole = (req.user.role || "").toLowerCase();
-
-      if (userRole !== "admin" && assignment.teacherId?.toString() !== userId) {
-        return res.status(403).json({ message: "Bạn không có quyền xóa bài tập này" });
+      const userId = req.user.id || req.user._id;
+      const isAuthorized = await checkClassTeacherOwnership(assignment.classId, userId, req.user?.role);
+      if (!isAuthorized) {
+        return res.status(403).json({ message: "Bạn không có quyền xóa bài tập này!" });
       }
 
       await Assignment.softDelete(id, userId);
@@ -227,12 +242,23 @@ const assignmentController = {
     }
   },
 
-  // 7. Lấy danh sách bài nộp của một assignment
+  // 7. Lấy danh sách bài nộp của một assignment (Chỉ Giáo viên phân công / Admin)
   getSubmissionsByAssignment: async (req, res) => {
     try {
       const { assignmentId } = req.params;
       if (!assignmentId || !mongoose.Types.ObjectId.isValid(assignmentId)) {
         return res.status(200).json({ submissions: [], data: [] });
+      }
+
+      const assignment = await Assignment.findById(assignmentId);
+      if (!assignment) {
+        return res.status(404).json({ message: "Bài tập không tồn tại!" });
+      }
+
+      const userId = req.user.id || req.user._id;
+      const isAuthorized = await checkClassTeacherOwnership(assignment.classId, userId, req.user?.role);
+      if (!isAuthorized) {
+        return res.status(403).json({ message: "Bạn không có quyền xem bài nộp của bài tập này!" });
       }
 
       const submissions = await Submission.find({ assignmentId })
@@ -249,8 +275,47 @@ const assignmentController = {
     }
   },
 
-  // 8. Học sinh Nộp bài
+  // 8. Lấy chi tiết 1 bài nộp (Đã được xác thực quyền qua canViewSubmission middleware)
+  getSubmissionById: async (req, res) => {
+    try {
+      // req.submission đã được gán bởi middleware canViewSubmission
+      return res.status(200).json({ success: true, submission: req.submission, data: req.submission });
+    } catch (error) {
+      return res.status(500).json({ message: error.message || "Lỗi server khi lấy bài nộp" });
+    }
+  },
+
+  // 9. Lấy bài nộp cá nhân của Học sinh
+  getMySubmission: async (req, res) => {
+    try {
+      const { assignmentId } = req.params;
+      
+      if (!req.user || (!req.user.id && !req.user._id)) {
+        return res.status(401).json({ message: "UNAUTHENTICATED" });
+      }
+      const studentId = req.user.id || req.user._id;
+
+      if (!assignmentId || !mongoose.Types.ObjectId.isValid(assignmentId)) {
+        return res.status(400).json({ message: "INVALID_ID" });
+      }
+
+      const submission = await Submission.findOne({ assignmentId, studentId }).lean();
+      
+      if (!submission) {
+        return res.status(404).json({ message: "SUBMISSION_NOT_FOUND" });
+      }
+      
+      return res.status(200).json({ success: true, submission, data: submission });
+    } catch (error) {
+      return res
+        .status(500)
+        .json({ message: error.message || "Lỗi server khi lấy bài nộp cá nhân" });
+    }
+  },
+
+  // 9. Học sinh Nộp bài / Nộp lại bài
   submitAssignment: async (req, res) => {
+    let newAttachments = [];
     try {
       const { assignmentId } = req.params;
       const { content } = req.body;
@@ -261,15 +326,31 @@ const assignmentController = {
       }
 
       const assignment = await Assignment.findById(assignmentId);
-      if (!assignment) {
-        return res.status(404).json({ message: "Bài tập không tồn tại" });
+      if (!assignment || assignment.isDeleted) {
+        return res.status(404).json({ message: "Bài tập không tồn tại hoặc đã bị xóa!" });
       }
+
+      // Check existing submission (including soft-deleted)
+      let submission = await Submission.findOne({ assignmentId, studentId }).withDeleted();
 
       const now = new Date();
       const isLate = now > new Date(assignment.deadline);
-      const status = isLate ? "late" : "submitted";
 
-      let newAttachments = [];
+      // Business Rule: If already graded, block resubmission!
+      if (submission && (submission.grade !== null && submission.grade !== undefined || submission.status === "graded")) {
+        return res.status(409).json({
+          message: "Bài nộp đã được Giáo viên chấm điểm. Bạn không thể nộp lại bài nữa!",
+        });
+      }
+
+      // Business Rule: If resubmitting (previously submitted or withdrawn) after deadline, block resubmission!
+      if (submission && submission.status !== "withdrawn" && isLate) {
+        return res.status(400).json({
+          message: "Bài tập đã quá hạn deadline. Bạn không thể chỉnh sửa hoặc nộp lại bài!",
+        });
+      }
+
+      // Upload new files to Cloudinary if provided
       if (req.files && req.files.length > 0) {
         const uploadPromises = req.files.map((file) =>
           uploadToCloudinary(file.buffer, file.originalname)
@@ -277,28 +358,35 @@ const assignmentController = {
         newAttachments = await Promise.all(uploadPromises);
       }
 
-      let submission = await Submission.findOne({ assignmentId, studentId });
+      const status = isLate ? "late" : submission ? "resubmitted" : "submitted";
 
       if (submission) {
-        if (newAttachments.length > 0 && submission.attachments.length > 0) {
+        // Destroy old Cloudinary attachments if new files uploaded
+        if (newAttachments.length > 0 && submission.attachments && submission.attachments.length > 0) {
           const deletePromises = submission.attachments
             .filter((file) => file && file.publicId)
             .map((file) => cloudinary.uploader.destroy(file.publicId).catch(() => null));
           await Promise.all(deletePromises);
         }
 
-        if (content) submission.content = content;
+        if (content !== undefined) submission.content = content;
         if (newAttachments.length > 0) submission.attachments = newAttachments;
         submission.status = status;
+        submission.resubmittedAt = now;
+        submission.isDeleted = false;
+        submission.grade = null;
+        submission.feedback = "";
+        submission.gradedAt = null;
 
         await submission.save();
         return res.status(200).json({
-          message: "Cập nhật bài nộp (Nộp lại) thành công",
+          message: "Nộp lại bài tập thành công",
           submission,
           data: submission,
         });
       }
 
+      // First-time submission
       submission = new Submission({
         assignmentId,
         studentId,
@@ -309,15 +397,22 @@ const assignmentController = {
       });
 
       await submission.save();
-      return res.status(201).json({ message: "Nộp bài thành công", submission, data: submission });
+      return res.status(201).json({ message: "Nộp bài tập thành công", submission, data: submission });
     } catch (error) {
+      // Rollback Cloudinary upload if DB save failed
+      if (newAttachments.length > 0) {
+        const rollbackPromises = newAttachments
+          .filter((file) => file && file.publicId)
+          .map((file) => cloudinary.uploader.destroy(file.publicId).catch(() => null));
+        await Promise.all(rollbackPromises);
+      }
       return res
         .status(500)
         .json({ message: error.message || "Lỗi server khi nộp bài" });
     }
   },
 
-  // 9. Học sinh Hủy nộp bài
+  // 10. Học sinh Hủy nộp bài
   cancelSubmission: async (req, res) => {
     try {
       const { assignmentId } = req.params;
@@ -327,11 +422,32 @@ const assignmentController = {
         return res.status(400).json({ message: "ID bài tập không hợp lệ!" });
       }
 
-      const submission = await Submission.findOne({ assignmentId, studentId });
-      if (!submission) {
-        return res.status(404).json({ message: "Không tìm thấy bài nộp để hủy" });
+      const assignment = await Assignment.findById(assignmentId);
+      if (!assignment || assignment.isDeleted) {
+        return res.status(404).json({ message: "Bài tập không tồn tại hoặc đã bị xóa!" });
       }
 
+      // Business Rule: Check deadline
+      const now = new Date();
+      if (now > new Date(assignment.deadline)) {
+        return res.status(400).json({
+          message: "Bài tập đã quá hạn deadline. Bạn không thể hủy bài nộp nữa!",
+        });
+      }
+
+      const submission = await Submission.findOne({ assignmentId, studentId }).withDeleted();
+      if (!submission || submission.status === "withdrawn") {
+        return res.status(404).json({ message: "Không tìm thấy bài nộp hợp lệ để hủy!" });
+      }
+
+      // Business Rule: Cannot cancel graded submission
+      if (submission.grade !== null && submission.grade !== undefined || submission.status === "graded") {
+        return res.status(409).json({
+          message: "Bài nộp đã được Giáo viên chấm điểm. Bạn không thể hủy bài nộp!",
+        });
+      }
+
+      // Delete Cloudinary attachments
       if (submission.attachments && submission.attachments.length > 0) {
         const deletePromises = submission.attachments
           .filter((file) => file && file.publicId)
@@ -339,9 +455,18 @@ const assignmentController = {
         await Promise.all(deletePromises);
       }
 
-      await submission.softDelete(studentId);
+      submission.status = "withdrawn";
+      submission.withdrawnAt = now;
+      submission.attachments = [];
+      submission.content = "";
+      await submission.save();
 
-      return res.status(200).json({ message: "Đã hủy nộp bài thành công" });
+      return res.status(200).json({
+        success: true,
+        message: "Đã hủy bài nộp thành công",
+        submission,
+        data: submission,
+      });
     } catch (error) {
       return res
         .status(500)

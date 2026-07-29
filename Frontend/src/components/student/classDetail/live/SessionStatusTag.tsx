@@ -7,10 +7,10 @@ import {
   StopOutlined,
   CloseCircleOutlined,
 } from "@ant-design/icons";
-import type { LiveSessionStatus } from "../../../../types/studentLive";
+import type { StudentLiveSessionStatus } from "../../../../types/studentLive";
 
 interface SessionStatusTagProps {
-  status: LiveSessionStatus;
+  status: StudentLiveSessionStatus;
 }
 
 export const SessionStatusTag: React.FC<SessionStatusTagProps> = React.memo(({ status }) => {

@@ -20,7 +20,9 @@ export type ClassStatus =
   | "Ongoing"
   | "Completed"
   | "Cancelled"
-  | "Archived";
+  | "Archived"
+  | "Active" // Legacy
+  | "Upcoming"; // Legacy
 
 export interface ClassRecord {
   id: string; // Mapped from _id

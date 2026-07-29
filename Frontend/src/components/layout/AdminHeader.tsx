@@ -33,6 +33,7 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({
   const handleLogout = () => {
     localStorage.removeItem("accessToken");
     localStorage.removeItem("userRole");
+    localStorage.removeItem("user");
     navigate("/login", { replace: true });
   };
 

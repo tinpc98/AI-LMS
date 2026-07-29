@@ -62,7 +62,7 @@ export const AssignmentOverviewWidget: React.FC<AssignmentOverviewWidgetProps> =
                   </Text>
 
                   {item.classId && (
-                    <Link to={`/classdetail/${item.classId}?tab=assignments`}>
+                    <Link to={`/student/classdetail/${item.classId}?tab=assignments`}>
                       <Button type="link" size="small" style={{ fontSize: 12, padding: 0 }}>
                         Chi tiết bài tập
                       </Button>

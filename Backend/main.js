@@ -25,8 +25,13 @@ import NotificationRouter from "./src/routers/notification.routes.js";
 import ExamSetRouter from "./src/routers/examSet.routes.js";
 import { initCronJobs } from "./src/cron/cron.setup.js";
 
+import { validateJaasConfig } from "./src/controllers/jaas.controller.js";
+
 // Kích hoạt cấu hình file .env – phải gọi TRƯỚC khi đọc bất kỳ biến môi trường nào
 dotenv.config();
+
+// Kiểm tra cấu hình 8x8 JaaS khi khởi động (Fail-fast config check)
+validateJaasConfig();
 
 const app = express();
 const port = process.env.PORT || 5000;
@@ -77,6 +82,8 @@ app.set("io", io); // Lưu io instance để gọi từ các controllers
 // Kích hoạt luồng lắng nghe sự kiện Real-time
 socketHandler(io);
 liveSocketHandler(io);
+import notificationSocketHandler from "./src/sockets/notification.socket.js";
+notificationSocketHandler(io);
 
 // ==========================================
 // ĐĂNG KÝ CÁC API ROUTES
@@ -87,7 +94,8 @@ app.use("/api/classes", ClassRouter);
 app.use("/api/courses", CourseRouter);
 app.use("/api/dashboard", DashboardRouter);
 app.use("/api/reports", ReportRouter);
-app.use("/api/lesson", LessonRouter);
+app.use("/api/lessons", LessonRouter);
+app.use("/api/lesson", LessonRouter); // Deprecated alias for backward compatibility
 app.use("/api/assignments", assignmentRouter);
 app.use("/api/attendances", AttendanceRouter);
 app.use("/api/grades", GradeRouter);

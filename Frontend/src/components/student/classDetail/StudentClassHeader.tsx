@@ -48,7 +48,7 @@ export const StudentClassHeader: React.FC<StudentClassHeaderProps> = React.memo(
           <Button
             type="text"
             icon={<ArrowLeftOutlined />}
-            onClick={() => navigate("/myclasses")}
+            onClick={() => navigate("/student/myclasses")}
             style={{ paddingLeft: 0, fontSize: 14, color: "#595959" }}
           >
             Quay lại danh sách lớp học

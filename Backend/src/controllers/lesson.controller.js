@@ -1,5 +1,6 @@
 import Lesson from "../models/lesson.model.js";
 import cloudinary from "../config/cloudinary.js";
+import { checkClassTeacherOwnership } from "../middlewares/auth.middlewares.js";
 
 // Helper function: Đẩy Buffer từ RAM lên Cloudinary bằng Stream
 const uploadToCloudinary = (fileBuffer, originalName) => {
@@ -37,12 +38,17 @@ const lessonController = {
         isPublished,
         duration,
       } = req.body;
-      const teacherId = req.user.id;
+      const teacherId = req.user.id || req.user._id;
 
       if (!title || !classId) {
         return res
           .status(400)
           .json({ message: "Thiếu thông tin bắt buộc: Tiêu đề hoặc ClassId" });
+      }
+
+      const isAuthorized = await checkClassTeacherOwnership(classId, teacherId, req.user?.role);
+      if (!isAuthorized) {
+        return res.status(403).json({ message: "Bạn không có quyền tạo bài giảng cho lớp học này!" });
       }
 
       let attachments = [];
@@ -91,8 +97,7 @@ const lessonController = {
       const query = { classId };
 
       // [Thực chiến] Phân quyền hiển thị: Học sinh chỉ thấy bài đã Publish
-      // Nếu req.user.role là 'student' (hoặc tuỳ cách bạn đặt tên role), thì thêm điều kiện này
-      if (req.user && req.user.role !== "teacher") {
+      if (req.user && req.user.role !== "teacher" && req.user.role !== "admin") {
         query.isPublished = true;
       }
 
@@ -114,13 +119,17 @@ const lessonController = {
       const { id } = req.params;
       const { title, description, videoUrl, order, isPublished, duration } =
         req.body;
-      const teacherId = req.user.id;
+      const userId = req.user.id || req.user._id;
 
-      const lesson = await Lesson.findOne({ _id: id, teacherId });
+      const lesson = await Lesson.findById(id);
       if (!lesson) {
+        return res.status(404).json({ message: "Bài giảng không tồn tại" });
+      }
+
+      const isAuthorized = await checkClassTeacherOwnership(lesson.classId, userId, req.user?.role);
+      if (!isAuthorized) {
         return res.status(403).json({
-          message:
-            "Bạn không có quyền sửa bài giảng này hoặc bài giảng không tồn tại",
+          message: "Bạn không có quyền sửa bài giảng này!",
         });
       }
 
@@ -162,13 +171,17 @@ const lessonController = {
   deleteLesson: async (req, res) => {
     try {
       const { id } = req.params;
-      const teacherId = req.user.id;
+      const userId = req.user.id || req.user._id;
 
-      const lesson = await Lesson.findOne({ _id: id, teacherId });
+      const lesson = await Lesson.findById(id);
       if (!lesson) {
+        return res.status(404).json({ message: "Bài giảng không tồn tại" });
+      }
+
+      const isAuthorized = await checkClassTeacherOwnership(lesson.classId, userId, req.user?.role);
+      if (!isAuthorized) {
         return res.status(403).json({
-          message:
-            "Bạn không có quyền xóa bài giảng này hoặc bài giảng không tồn tại",
+          message: "Bạn không có quyền xóa bài giảng này!",
         });
       }
 
@@ -179,7 +192,7 @@ const lessonController = {
         await Promise.all(deletePromises);
       }
 
-      await lesson.softDelete(teacherId);
+      await lesson.softDelete(userId);
       return res
         .status(200)
         .json({ message: "Xóa bài giảng và tài liệu liên quan thành công" });
