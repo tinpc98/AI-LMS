@@ -91,7 +91,7 @@ const TeacherAssignmentDrawer = ({
         </Descriptions.Item>
 
         <Descriptions.Item label="Classroom Location">
-          {classRecord.classroom || "N/A"}
+          {classRecord.classRoom || "N/A"}
         </Descriptions.Item>
 
         <Descriptions.Item label="Students Enrolled">

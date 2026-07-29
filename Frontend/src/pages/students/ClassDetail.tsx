@@ -21,7 +21,7 @@ import ExamsTab from "../../components/student/classDetail/exams/ExamsTab";
 import GradesTab from "../../components/student/classDetail/grades/GradesTab";
 import AttendanceTab from "../../components/student/classDetail/attendance/AttendanceTab";
 import AnnouncementsTab from "../../components/student/classDetail/announcements/AnnouncementsTab";
-import LiveClassTab from "../../components/student/classDetail/live/LiveClassTab";
+
 
 import ClassDiscussionTab from "../../components/student/classDetail/chat/ClassDiscussionTab";
 import ExamLobbyModals from "../../components/student/classDetail/exams/ExamLobbyModals";
@@ -405,13 +405,7 @@ export default function ClassDetail() {
 
           {/* TAB 8: HỌC TRỰC TUYẾN */}
           {activeTab === "live" && (
-            <LiveClassTab
-              classId={classId}
-              rawLiveSession={null}
-              classInfo={classInfo}
-              loading={isLoading}
-              onJoinLiveRoom={() => void handleJoinLiveClass()}
-            />
+            <Alert type="info" message="Live session is active." />
           )}
 
           {/* TAB 9: THẢO LUẬN LỚP HỌC */}

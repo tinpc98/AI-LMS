@@ -18,7 +18,7 @@ export function useStudentLive(
     if (classId) {
       setLoading(true);
       liveApi
-        .getActiveSession(classId)
+        .getActiveLiveSession(classId)
         .then((res: any) => {
           if (res.data?.data) {
             setActiveSession(res.data.data);

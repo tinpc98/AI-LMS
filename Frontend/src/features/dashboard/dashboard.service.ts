@@ -194,8 +194,9 @@ export const dashboardService = {
     };
 
     mockClasses.forEach((c) => {
-      if (statusCounts[c.status] !== undefined) {
-        statusCounts[c.status] += 1;
+      const status = c.status === "Ready" ? "Upcoming" : c.status;
+      if ((statusCounts as any)[status] !== undefined) {
+        (statusCounts as any)[status] += 1;
       }
     });
 
@@ -266,7 +267,7 @@ export const dashboardService = {
         currentStudents: item.currentStudents,
         maxStudents: item.maxStudents,
         learningMode: item.learningMode,
-        status: item.status,
+        status: (item.status === "Ready" ? "Upcoming" : item.status) as any,
       };
     });
 

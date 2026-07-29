@@ -34,15 +34,6 @@ export const liveApi = {
   endLiveSession: (sessionId: string) =>
     axiosClient.patch<ILiveSessionResponse>(`/api/live/sessions/${sessionId}/end`),
 
-  // --- DEPRECATED V1 ALIASES (Duy trì tạm thời cho compatibility cũ nếu có) ---
-  createSession: (data: ICreateLiveSessionRequest) =>
-    axiosClient.post<ILiveSessionResponse>("/api/live/create", data),
-  getActiveSession: (classId: string) =>
-    axiosClient.get<ILiveSessionResponse>(`/api/live/active/${classId}`),
-  getJaasToken: (meetingRoomId: string) =>
-    axiosClient.post<IJaasTokenResponse>("/api/live/jaas-token", { roomName: meetingRoomId }),
-  endSession: (classId: string) =>
-    axiosClient.post<ILiveSessionResponse>("/api/live/end", { classId }),
 };
 
 export default liveApi;

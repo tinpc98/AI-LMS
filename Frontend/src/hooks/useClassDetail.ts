@@ -60,7 +60,7 @@ export const useClassDetail = (classId?: string): UseClassDetailReturn => {
       const fetchedClass = classRes.data?.data || classRes.data;
       setClassInfo(fetchedClass);
 
-      const rawLessons = lessonRes.data?.lessons || lessonRes.lessons || [];
+      const rawLessons = (lessonRes as any).data?.lessons || (lessonRes as any).lessons || [];
       const publishedLessons = (rawLessons as ILesson[])
         .filter((l) => l.isPublished)
         .sort((a, b) => (a.order || 0) - (b.order || 0));
