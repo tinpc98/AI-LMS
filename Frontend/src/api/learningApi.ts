@@ -58,27 +58,33 @@ export interface IRankingResponse {
 
 const learningApi = {
   // Progress
-  getStudentProgress: (classId: string) => {
-    return axiosClient.get<ILessonProgress[]>(`/api/learning/progress/class/${classId}`);
+  getStudentProgress: async (classId: string) => {
+    const response = await axiosClient.get<ILessonProgress[]>(`/api/learning/progress/class/${classId}`);
+    return (response.data as any).data ?? response.data ?? [];
   },
-  updateLessonProgress: (payload: { lessonId: string; classId: string; progress: number; durationSeconds?: number }) => {
-    return axiosClient.post<ILessonProgress>(`/api/learning/progress`, payload);
+  updateLessonProgress: async (payload: { lessonId: string; classId: string; progress: number; durationSeconds?: number }) => {
+    const response = await axiosClient.post<ILessonProgress>(`/api/learning/progress`, payload);
+    return (response.data as any).data ?? response.data;
   },
 
   // Ranking
-  getClassRanking: (classId: string, params?: any) => {
-    return axiosClient.get<IRankingResponse>(`/api/learning/ranking/class/${classId}`, { params });
+  getClassRanking: async (classId: string, params?: any) => {
+    const response = await axiosClient.get<IRankingResponse>(`/api/learning/ranking/class/${classId}`, { params });
+    return (response.data as any).data ?? response.data;
   },
-  getStudentRanking: (classId: string, studentId: string = "me") => {
-    return axiosClient.get<IStudentRank>(`/api/learning/ranking/student/${studentId}`, { params: { classId } });
+  getStudentRanking: async (classId: string, studentId: string = "me") => {
+    const response = await axiosClient.get<IStudentRank>(`/api/learning/ranking/student/${studentId}`, { params: { classId } });
+    return (response.data as any).data ?? response.data;
   },
 
   // Gamification
-  getMyBadges: () => {
-    return axiosClient.get<IStudentBadge[]>(`/api/learning/badges`);
+  getMyBadges: async () => {
+    const response = await axiosClient.get<IStudentBadge[]>(`/api/learning/badges`);
+    return (response.data as any).data ?? response.data ?? [];
   },
-  getMyActivities: (params?: { classId?: string }) => {
-    return axiosClient.get<ILearningActivity[]>(`/api/learning/activities`, { params });
+  getMyActivities: async (params?: { classId?: string }) => {
+    const response = await axiosClient.get<ILearningActivity[]>(`/api/learning/activities`, { params });
+    return (response.data as any).data ?? response.data ?? [];
   },
 };
 

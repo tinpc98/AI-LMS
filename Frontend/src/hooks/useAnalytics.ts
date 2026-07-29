@@ -13,7 +13,7 @@ export function useAnalytics(classId?: string) {
       setLoading(true);
       const data = await analyticsApi.getStudentDashboard(classId);
       // Backend sendSuccess wraps data in response.data.data
-      setStudentDashboard((data as any).data || data);
+      setStudentDashboard(data);
     } catch (error) {
       console.error(error);
     } finally {
@@ -26,7 +26,7 @@ export function useAnalytics(classId?: string) {
     try {
       setLoading(true);
       const data = await analyticsApi.getTeacherDashboard(classId);
-      setTeacherDashboard((data as any).data || data);
+      setTeacherDashboard(data);
     } catch (error) {
       console.error(error);
     } finally {

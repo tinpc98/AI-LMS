@@ -40,11 +40,13 @@ export interface ITeacherAnalytics {
 }
 
 const analyticsApi = {
-  getStudentDashboard: (classId: string) => {
-    return axiosClient.get<IStudentAnalytics>(`/api/analytics/student/dashboard/${classId}`);
+  getStudentDashboard: async (classId: string) => {
+    const response = await axiosClient.get<IStudentAnalytics>(`/api/analytics/student/dashboard/${classId}`);
+    return (response.data as any).data ?? response.data;
   },
-  getTeacherDashboard: (classId: string) => {
-    return axiosClient.get<ITeacherAnalytics>(`/api/analytics/teacher/dashboard/${classId}`);
+  getTeacherDashboard: async (classId: string) => {
+    const response = await axiosClient.get<ITeacherAnalytics>(`/api/analytics/teacher/dashboard/${classId}`);
+    return (response.data as any).data ?? response.data;
   },
   getTeacherExportUrl: (classId: string) => {
     // Generate full URL for direct download

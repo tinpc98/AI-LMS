@@ -15,7 +15,7 @@ export function useLearningAnalytics(classId?: string) {
     if (!classId) return;
     try {
       setLoading(true);
-      const { data } = await learningApi.getStudentProgress(classId);
+      const data = await learningApi.getStudentProgress(classId);
       setProgressData(data);
     } catch (error) {
       console.error(error);
@@ -27,7 +27,7 @@ export function useLearningAnalytics(classId?: string) {
   const updateProgress = useCallback(async (lessonId: string, progress: number, durationSeconds?: number) => {
     if (!classId) return;
     try {
-      const { data } = await learningApi.updateLessonProgress({ classId, lessonId, progress, durationSeconds });
+      const data = await learningApi.updateLessonProgress({ classId, lessonId, progress, durationSeconds });
       // Update local state
       setProgressData(prev => {
         const idx = prev.findIndex(p => p.lessonId === lessonId);
@@ -47,7 +47,7 @@ export function useLearningAnalytics(classId?: string) {
     if (!classId) return;
     try {
       setLoading(true);
-      const { data } = await learningApi.getClassRanking(classId, params);
+      const data = await learningApi.getClassRanking(classId, params);
       setClassRanking(data);
     } catch (error) {
       console.error(error);
@@ -60,7 +60,7 @@ export function useLearningAnalytics(classId?: string) {
   const fetchMyRank = useCallback(async () => {
     if (!classId) return;
     try {
-      const { data } = await learningApi.getStudentRanking(classId);
+      const data = await learningApi.getStudentRanking(classId);
       setMyRank(data);
     } catch (error) {
       console.error(error);
@@ -69,7 +69,7 @@ export function useLearningAnalytics(classId?: string) {
 
   const fetchMyBadges = useCallback(async () => {
     try {
-      const { data } = await learningApi.getMyBadges();
+      const data = await learningApi.getMyBadges();
       setBadges(data);
     } catch (error) {
       console.error(error);
@@ -78,7 +78,7 @@ export function useLearningAnalytics(classId?: string) {
 
   const fetchMyActivities = useCallback(async () => {
     try {
-      const { data } = await learningApi.getMyActivities({ classId });
+      const data = await learningApi.getMyActivities({ classId });
       setActivities(data);
     } catch (error) {
       console.error(error);
