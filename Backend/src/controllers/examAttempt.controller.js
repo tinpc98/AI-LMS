@@ -193,8 +193,9 @@ export const getExamAttemptDetail = async (req, res) => {
 
       const safeOptions =
         details.options?.map((option) => {
+          if (typeof option === 'string') return option;
           const safeOption =
-            typeof option.toObject === "function"
+            typeof option?.toObject === "function"
               ? option.toObject()
               : { ...option };
 

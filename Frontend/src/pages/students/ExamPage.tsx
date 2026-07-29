@@ -3,13 +3,41 @@ import { useParams, useNavigate } from "react-router-dom";
 import useExamTimer from "./../../hooks/useExamTimer";
 import axiosClient from "../../api/axiosClient";
 import useAntiCheat from "./../../hooks/useAntiCheat";
+import ExamErrorBoundary from "./ExamErrorBoundary";
 
-const ExamPage = () => {
+const ExamPageContent = () => {
   const { attemptId } = useParams();
   const navigate = useNavigate();
 
   // CỜ QUAN TRỌNG: Dùng để chặn bộ đếm gian lận chạy khi đang nộp bài
   const isSubmittingRef = useRef(false);
+  const examContainerRef = useRef<HTMLDivElement>(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      if (document.fullscreenElement) {
+        setIsFullscreen(true);
+      } else {
+        setIsFullscreen(false);
+        // Hiển thị cảnh báo nhỏ khi thoát fullscreen (tuỳ chọn)
+      }
+    };
+    document.addEventListener("fullscreenchange", handleFullscreenChange);
+    return () => document.removeEventListener("fullscreenchange", handleFullscreenChange);
+  }, []);
+
+  const enterFullscreen = async () => {
+    try {
+      if (examContainerRef.current) {
+        await examContainerRef.current.requestFullscreen();
+      }
+    } catch (err) {
+      console.warn("Không thể bật chế độ toàn màn hình:", err);
+      // Nếu trình duyệt chặn, vẫn cho phép làm bài
+      setIsFullscreen(true);
+    }
+  };
 
   // ==========================================
   // 1. STATE BÀI LÀM VÀ AUTO-SAVE
@@ -126,6 +154,9 @@ const ExamPage = () => {
       setWarningMessage("Nộp bài thành công! Đang chuyển về trang kết quả...");
 
       setTimeout(() => {
+        if (document.fullscreenElement) {
+          document.exitFullscreen().catch(err => console.error("Error exiting fullscreen:", err));
+        }
         if (examClassId) {
           navigate(`/student/classdetail/${examClassId}`);
         } else {
@@ -241,7 +272,21 @@ const ExamPage = () => {
   }
 
   return (
-    <div className="bg-background text-on-surface font-sans min-h-screen overflow-hidden flex flex-col">
+    <div ref={examContainerRef} className="bg-background text-on-surface font-sans min-h-screen overflow-hidden flex flex-col relative">
+      {!isFullscreen && (
+        <div className="absolute inset-0 z-[200] flex flex-col items-center justify-center bg-white backdrop-blur-md bg-opacity-95">
+          <h2 className="text-3xl font-bold mb-4 text-primary">Chế độ thi toàn màn hình</h2>
+          <p className="mb-8 text-gray-600 max-w-md text-center text-lg">
+            Bài thi yêu cầu làm việc trong chế độ toàn màn hình để đảm bảo tính công bằng.
+          </p>
+          <button
+            onClick={enterFullscreen}
+            className="px-8 py-4 bg-primary text-white font-bold text-lg rounded-xl shadow-xl hover:bg-primary/90 transition-all transform hover:scale-105"
+          >
+            Vào toàn màn hình và bắt đầu làm bài
+          </button>
+        </div>
+      )}
       {/* Top Header */}
       <header className="h-16 shrink-0 bg-surface border-b border-outline-variant flex justify-between items-center px-8 z-50">
         <span className="font-bold text-xl text-primary">Academia AI Pro</span>
@@ -270,7 +315,7 @@ const ExamPage = () => {
           <div className="max-w-4xl mx-auto">
             <div className="flex justify-between items-start mb-8">
               <h2 className="text-2xl font-bold">
-                Câu {currentIndex + 1}: {currentQ.content}
+                Câu {currentIndex + 1}: {typeof currentQ.content === 'string' ? currentQ.content : 'Nội dung câu hỏi không hợp lệ'}
               </h2>
               <button
                 onClick={toggleFlag}
@@ -300,7 +345,9 @@ const ExamPage = () => {
                       >
                         {label}
                       </div>
-                      <span className="font-medium text-lg">{opt}</span>
+                      <span className="font-medium text-lg">
+                        {typeof opt === 'string' ? opt : 'Lựa chọn không hợp lệ'}
+                      </span>
                     </button>
                   );
                 })}
@@ -422,5 +469,11 @@ const ExamPage = () => {
     </div>
   );
 };
+
+const ExamPage = () => (
+  <ExamErrorBoundary>
+    <ExamPageContent />
+  </ExamErrorBoundary>
+);
 
 export default ExamPage;
