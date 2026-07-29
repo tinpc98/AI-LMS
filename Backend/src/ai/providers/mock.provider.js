@@ -189,15 +189,21 @@ export class MockAIProvider extends BaseAIProvider {
   buildGradingMock() {
     return {
       suggestedScore: 8.5,
-      confidence: 0.9,
+      confidence: 0.95,
       aiFeedback:
-        "Bài làm trả lời đúng các ý chính. Cần bổ sung ví dụ minh họa.",
+        "Bài làm trả lời đúng các ý chính. Cần bổ sung ví dụ minh họa để bài hoàn thiện hơn.",
       criterionScores: [
         {
           criterion: "Nội dung",
           scoreEarned: 5,
           maxScore: 6,
-          feedback: "Tốt",
+          feedback: "Phân tích tốt nội dung",
+        },
+        {
+          criterion: "Ví dụ minh họa",
+          scoreEarned: 3.5,
+          maxScore: 4,
+          feedback: "Còn thiếu một vài ví dụ",
         },
         {
           criterion: "Trình bày",
@@ -206,6 +212,7 @@ export class MockAIProvider extends BaseAIProvider {
           feedback: "Rõ ràng",
         },
       ],
+      warnings: [],
     };
   }
 

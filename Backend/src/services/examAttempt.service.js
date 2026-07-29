@@ -1,6 +1,7 @@
 import ExamAttempt from "../models/examAttempt.model.js";
 import Exam from "../models/exam.model.js";
 import Question from "../models/question.model.js";
+import { resolveExamQuestions } from "../utils/examQuestionResolver.js";
 
 const gradeSubmission = async (attemptId, studentAnswers) => {
   // 1. Tìm phiên làm bài và populate thông tin Đề thi để lấy cấu trúc điểm số
@@ -27,53 +28,41 @@ const gradeSubmission = async (attemptId, studentAnswers) => {
     attempt.endTime = now;
   }
 
-  // 3. Tạo một Map để tra cứu nhanh số điểm phân bổ cho từng câu hỏi trong Đề thi này
-  const examPointsMap = new Map(
-    exam.questions.map((q) => [q.questionId.toString(), q.points]),
-  );
-
-  // 4. Lấy danh sách chi tiết các Câu hỏi từ DB
-  const questionIds = exam.questions.map((q) => q.questionId);
-  const dbQuestions = await Question.find({ _id: { $in: questionIds } });
-  const dbQuestionsMap = new Map(dbQuestions.map((q) => [q._id.toString(), q]));
+  // 3. Sử dụng resolver để lấy cấu hình câu hỏi (hỗ trợ cả Snapshot và Legacy)
+  const questionMap = await resolveExamQuestions(exam);
 
   let totalScore = 0;
   let hasEssay = false;
   const processedAnswers = [];
+  const processedQuestionIds = new Set(); // Chống duplicate answers
 
-  // 5. Bắt đầu vòng lặp chấm điểm
+  // 4. Bắt đầu vòng lặp chấm điểm
   for (const ans of studentAnswers) {
+    if (!ans || !ans.questionId) continue;
     const qIdStr = ans.questionId.toString();
-    const questionConfig = dbQuestionsMap.get(qIdStr);
-    const allocatedPoints = examPointsMap.get(qIdStr) || 0;
+    
+    // Ngăn duplicate answers
+    if (processedQuestionIds.has(qIdStr)) {
+      continue;
+    }
 
+    const questionConfig = questionMap.get(qIdStr);
+    
+    // Ngăn ID lạ không thuộc đề thi
     if (!questionConfig) continue;
+    
+    processedQuestionIds.add(qIdStr);
+
+    const allocatedPoints = questionConfig.points || 0;
+    const qType = questionConfig.type?.toLowerCase();
 
     let pointsEarned = 0;
 
-    if (questionConfig.type === "MCQ") {
-      console.log("====================================");
-      console.log("Question:", questionConfig.content);
-      console.log("Question Type:", questionConfig.type);
-      console.log("Allocated Points:", allocatedPoints);
-
-      console.log(
-        "Correct Answer:",
-        JSON.stringify(questionConfig.correctAnswer),
-      );
-
-      console.log("Student Answer:", JSON.stringify(ans.selectedOption));
-
+    if (qType === "mcq" || qType === "multiple_choice" || qType === "true_false") {
       const correctAnswer = String(questionConfig.correctAnswer || "").trim();
       const studentAnswer = String(ans.selectedOption || "").trim();
 
-      console.log("Correct (trim):", JSON.stringify(correctAnswer));
-      console.log("Student (trim):", JSON.stringify(studentAnswer));
-
-      const isCorrect = correctAnswer === studentAnswer;
-
-      console.log("isCorrect =", isCorrect);
-      console.log("====================================");
+      const isCorrect = correctAnswer === studentAnswer && studentAnswer !== "";
 
       if (isCorrect) {
         pointsEarned = allocatedPoints;
@@ -81,21 +70,28 @@ const gradeSubmission = async (attemptId, studentAnswers) => {
       }
 
       processedAnswers.push({
-        questionId: questionConfig._id,
+        questionId: questionConfig.questionId,
+        questionSource: questionConfig.source,
         selectedOption: ans.selectedOption,
         pointsEarned: Number(pointsEarned.toFixed(2)),
       });
-    } else if (questionConfig.type === "ESSAY") {
+    } else if (qType === "essay" || qType === "short_answer") {
       hasEssay = true;
       processedAnswers.push({
-        questionId: questionConfig._id,
+        questionId: questionConfig.questionId,
+        questionSource: questionConfig.source,
         essayText: ans.essayText,
         pointsEarned: 0, // Tạm thời 0 điểm, đợi GV chấm
       });
     }
   }
 
-  // 6. Cập nhật trạng thái và lưu kết quả (An toàn chống NaN)
+  if (processedAnswers.length === 0) {
+    // Tránh việc array rỗng khi truyền dữ liệu bậy bạ
+    throw new Error("Không có câu trả lời nào hợp lệ thuộc bài thi này!");
+  }
+
+  // 5. Cập nhật trạng thái và lưu kết quả (An toàn chống NaN)
   attempt.answers = processedAnswers;
   attempt.totalScore = Number(totalScore.toFixed(2));
   attempt.status = hasEssay ? "PARTIALLY_GRADED" : "GRADED";

@@ -8,15 +8,44 @@ import Question from "../models/question.model.js";
 // =======================================================
 export const startExam = async (req, res) => {
   try {
-    const { examId, studentId: bodyStudentId } = req.body;
+    const { examId } = req.body;
+    const studentId = req.user?.id || req.user?._id;
 
-    const studentId = req.user?.id || req.user?._id || bodyStudentId;
-
-    if (!examId || !studentId || !mongoose.Types.ObjectId.isValid(examId) || !mongoose.Types.ObjectId.isValid(studentId)) {
+    if (!examId || !studentId || !mongoose.Types.ObjectId.isValid(examId)) {
       return res.status(400).json({
         success: false,
-        message: `Lỗi hệ thống: ID kỳ thi (${examId || "Thiếu"}) - ID học sinh (${studentId || "Thiếu"}) không hợp lệ!`,
+        message: "Lỗi hệ thống: ID kỳ thi không hợp lệ!",
       });
+    }
+
+    if (req.user.role !== "student") {
+      return res.status(403).json({ success: false, message: "Chỉ học sinh mới được phép làm bài thi!" });
+    }
+
+    const exam = await Exam.findOne({ _id: examId, isDeleted: false }).lean();
+    if (!exam) {
+      return res.status(404).json({ success: false, message: "Kỳ thi không tồn tại hoặc đã bị xóa!" });
+    }
+
+    if (exam.status !== "PUBLISHED") {
+      return res.status(403).json({ success: false, message: "Kỳ thi chưa được mở hoặc đã kết thúc!" });
+    }
+
+    // Check Class enrollment
+    const classInfo = await mongoose.model("Class").findOne({
+      _id: exam.classId,
+      isDeleted: false,
+      "students.studentId": studentId,
+      "students.status": "Enrolled",
+    });
+
+    if (!classInfo) {
+      return res.status(403).json({ success: false, message: "Bạn không thuộc danh sách lớp thi này!" });
+    }
+
+    // Check time constraints (optional rule based on startTime)
+    if (exam.startTime && new Date() < new Date(exam.startTime)) {
+      return res.status(403).json({ success: false, message: "Kỳ thi chưa tới giờ bắt đầu!" });
     }
 
     // === BƯỚC 1: KIỂM TRA LỊCH SỬ LÀM BÀI ===
@@ -80,18 +109,13 @@ export const startExam = async (req, res) => {
 export const getExamAttemptDetail = async (req, res) => {
   try {
     const attemptId = req.params.id;
+    const userId = req.user?.id || req.user?._id;
 
     if (!attemptId || !mongoose.Types.ObjectId.isValid(attemptId)) {
       return res.status(400).json({ success: false, message: "ID bài thi không hợp lệ!" });
     }
 
-    const attempt = await ExamAttempt.findById(attemptId).populate({
-      path: "examId",
-      populate: {
-        path: "questions.questionId",
-        select: "-correctAnswer",
-      },
-    });
+    const attempt = await ExamAttempt.findById(attemptId).lean();
 
     if (!attempt) {
       return res
@@ -99,7 +123,11 @@ export const getExamAttemptDetail = async (req, res) => {
         .json({ success: false, message: "Không tìm thấy phiên làm bài thi!" });
     }
 
-    const exam = attempt.examId;
+    if (attempt.studentId.toString() !== userId.toString() && req.user.role === "student") {
+      return res.status(404).json({ success: false, message: "Không tìm thấy phiên làm bài thi!" });
+    }
+
+    const exam = await mongoose.model("Exam").findById(attempt.examId).lean();
     if (!exam) {
       return res.status(404).json({
         success: false,
@@ -107,21 +135,28 @@ export const getExamAttemptDetail = async (req, res) => {
       });
     }
 
-    // Lắp ráp dữ liệu thành mảng questions phẳng để Frontend dễ render
-    const formattedQuestions = (exam.questions || [])
-      .map((q) => {
-        const details = q.questionId;
-        if (!details) return null;
+    // Resolve questions using common utility
+    const { resolveExamQuestions } = await import("../utils/examQuestionResolver.js");
+    const questionMap = await resolveExamQuestions(exam);
 
-        return {
-          _id: details._id,
-          type: details.type,
-          content: details.content,
-          options: details.options,
-          points: q.points,
-        };
-      })
-      .filter((q) => q !== null);
+    const formattedQuestions = [];
+    for (const q of exam.questions) {
+      const qIdStr = q.questionId.toString();
+      const details = questionMap.get(qIdStr);
+      if (!details) continue;
+
+      formattedQuestions.push({
+        _id: details.questionId,
+        type: details.type,
+        content: details.content,
+        options: details.options?.map(opt => {
+          const safeOpt = { ...opt };
+          delete safeOpt.isCorrect;
+          return safeOpt;
+        }) || [],
+        points: details.points,
+      });
+    }
 
     return res.status(200).json({
       success: true,
@@ -181,6 +216,7 @@ export const submitExam = async (req, res) => {
 export const getAttemptForReview = async (req, res) => {
   try {
     const attemptId = req.params.id;
+    const userId = req.user?.id || req.user?._id;
 
     if (!attemptId || !mongoose.Types.ObjectId.isValid(attemptId)) {
       return res.status(400).json({ success: false, message: "ID bài thi không hợp lệ!" });
@@ -188,22 +224,41 @@ export const getAttemptForReview = async (req, res) => {
 
     const attempt = await ExamAttempt.findById(attemptId)
       .populate("studentId", "fullName email studentCode avatar")
-      .populate("examId", "title topic duration questions")
+      .populate("examId", "title topic duration questions classId")
       .lean();
 
     if (!attempt) {
       return res.status(404).json({ message: "Không tìm thấy bài làm!" });
     }
 
+    const exam = attempt.examId;
+
+    // Check Teacher IDOR: Teacher must be in the same class (or admin)
+    if (req.user.role === "teacher") {
+      const classInfo = await mongoose.model("Class").findOne({
+        _id: exam.classId,
+        isDeleted: false,
+        $or: [{ createdBy: userId }, { teachers: userId }]
+      });
+      if (!classInfo) {
+        return res.status(403).json({ message: "Bạn không có quyền chấm bài của lớp này!" });
+      }
+    }
+
+    // Dùng resolver để lấy thông tin câu hỏi (hỗ trợ cả Snapshot và Legacy)
+    const { resolveExamQuestions } = await import("../utils/examQuestionResolver.js");
+    const questionMap = await resolveExamQuestions(exam);
+
     const validAnswers = (attempt.answers || []).filter((ans) => ans && ans.questionId);
-    const questionIds = validAnswers.map((ans) => ans.questionId);
-    const questions = await Question.find({ _id: { $in: questionIds } }).lean();
-    const questionMap = new Map(questions.map((q) => [q._id.toString(), q]));
 
     const reviewData = {
       attemptId: attempt._id,
       student: attempt.studentId,
-      examInfo: attempt.examId,
+      examInfo: {
+        title: exam.title,
+        topic: exam.topic,
+        duration: exam.duration,
+      },
       status: attempt.status,
       totalScore: attempt.totalScore,
       submittedAt: attempt.endTime,

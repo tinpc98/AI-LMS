@@ -13,14 +13,17 @@ import { verifyUser, isTeacher } from "../middlewares/auth.middlewares.js";
 
 const router = express.Router();
 
+// 1. Các route tĩnh (STATIC ROUTES) ĐẶT TRƯỚC
+// Giáo viên và Admin có quyền Tạo/Sửa/Xóa Đề thi
+router.post("/generate-from-examset", verifyUser, isTeacher, generateFromExamSet);
+router.post("/generate-auto", verifyUser, isTeacher, autoGenerateExam);
+router.post("/", verifyUser, isTeacher, createExam);
+
+// 2. Các route động (DYNAMIC ROUTES) ĐẶT SAU
 router.get("/class/:classId", verifyUser, getExamsByClass);
 router.get("/", verifyUser, getAllExams);
 router.get("/:id", verifyUser, getExamById);
 
-// Giáo viên và Admin có quyền Tạo/Sửa/Xóa Đề thi
-router.post("/", verifyUser, isTeacher, createExam);
-router.post("/generate-auto", verifyUser, isTeacher, autoGenerateExam);
-router.post("/generate-from-examset", verifyUser, isTeacher, generateFromExamSet);
 router.put("/:id", verifyUser, isTeacher, updateExam);
 router.delete("/:id", verifyUser, isTeacher, deleteExam);
 
