@@ -465,19 +465,29 @@ export const getAttemptsByExam = async (req, res) => {
       });
     }
 
-    const attempts = await ExamAttempt.find({ examId })
-      .populate({
-        path: "studentId",
-        select: "fullName studentCode avatar",
-      })
-      .sort({ createdAt: -1 });
+    const page = Math.max(1, Number(req.query.page) || 1);
+    const limit = Math.max(1, Number(req.query.limit) || 100);
+    const skip = (page - 1) * limit;
+
+    const [attempts, allAttempts] = await Promise.all([
+      ExamAttempt.find({ examId })
+        .populate({
+          path: "studentId",
+          select: "fullName studentCode avatar",
+        })
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+      ExamAttempt.find({ examId }).select("status").lean()
+    ]);
 
     const stats = {
-      total: attempts.length,
-      graded: attempts.filter(
+      total: allAttempts.length,
+      graded: allAttempts.filter(
         (attempt) => attempt.status === "GRADED",
       ).length,
-      pending: attempts.filter(
+      pending: allAttempts.filter(
         (attempt) => attempt.status === "SUBMITTED",
       ).length,
     };
@@ -487,6 +497,12 @@ export const getAttemptsByExam = async (req, res) => {
       message: "Lấy danh sách bài thi thành công",
       data: attempts,
       stats,
+      pagination: {
+        total: allAttempts.length,
+        page,
+        limit,
+        totalPages: Math.ceil(allAttempts.length / limit)
+      }
     });
   } catch (error) {
     console.error("Lỗi khi lấy danh sách bài thi:", error);
