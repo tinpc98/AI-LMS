@@ -186,6 +186,56 @@ export class GeminiAIProvider extends BaseAIProvider {
 
     return this.withTimeout(executionPromise, timeoutMs, "generateJSON");
   }
+
+  async generateEmbedding({ text, taskType = "RETRIEVAL_DOCUMENT", dimensions = 768, timeoutMs = 30000 }) {
+    this._ensureConfigured();
+    const startTime = Date.now();
+
+    const executionPromise = (async () => {
+      try {
+        if (!text || typeof text !== "string" || text.trim() === "") {
+          throw new AIError("Nội dung text để nhúng không hợp lệ hoặc bị rỗng", AIErrorCode.AI_INVALID_INPUT, 400);
+        }
+
+        const embeddingModel = process.env.AI_EMBEDDING_MODEL || "gemini-embedding-2";
+
+        const response = await this.ai.models.embedContent({
+          model: embeddingModel,
+          contents: text,
+          config: {
+            taskType,
+            outputDimensionality: dimensions,
+          },
+        });
+
+        const vector = response.embeddings?.[0]?.values;
+
+        if (!Array.isArray(vector)) {
+          throw new AIError("Gemini không trả về mảng vector hợp lệ", AIErrorCode.AI_PROVIDER_ERROR, 502);
+        }
+
+        if (vector.length !== dimensions) {
+          throw new AIError(`Vector trả về (${vector.length} chiều) không khớp với số chiều yêu cầu (${dimensions} chiều)`, AIErrorCode.AI_PROVIDER_ERROR, 502);
+        }
+
+        for (let i = 0; i < vector.length; i++) {
+          const num = vector[i];
+          if (typeof num !== "number" || !Number.isFinite(num)) {
+            throw new AIError("Vector chứa giá trị không hợp lệ (NaN/Infinity)", AIErrorCode.AI_PROVIDER_ERROR, 502);
+          }
+        }
+
+        return {
+          embedding: vector,
+          durationMs: Date.now() - startTime,
+        };
+      } catch (error) {
+        this._handleError(error, "generateEmbedding");
+      }
+    })();
+
+    return this.withTimeout(executionPromise, timeoutMs, "generateEmbedding");
+  }
 }
 
 export default GeminiAIProvider;

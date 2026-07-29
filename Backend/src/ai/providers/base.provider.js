@@ -56,6 +56,23 @@ export class BaseAIProvider {
   }
 
   /**
+   * Generate vector embedding for text
+   * @param {Object} options
+   * @param {string} options.text
+   * @param {string} [options.taskType="RETRIEVAL_DOCUMENT"]
+   * @param {number} [options.dimensions=768]
+   * @param {number} [options.timeoutMs=30000]
+   * @returns {Promise<{ embedding: number[], durationMs: number }>}
+   */
+  async generateEmbedding({ text, taskType = "RETRIEVAL_DOCUMENT", dimensions = 768, timeoutMs = 30000 }) {
+    throw new AIError(
+      `generateEmbedding() method not implemented in ${this.name}`,
+      AIErrorCode.AI_PROVIDER_ERROR,
+      500
+    );
+  }
+
+  /**
    * Calculate timeout promise helper
    */
   withTimeout(promise, ms, operationName = "AI Request") {

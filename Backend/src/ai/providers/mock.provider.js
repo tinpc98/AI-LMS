@@ -1,3 +1,4 @@
+import crypto from "crypto";
 import { BaseAIProvider } from "./base.provider.js";
 
 /**
@@ -441,6 +442,35 @@ export class MockAIProvider extends BaseAIProvider {
 
     return {
       questions,
+    };
+  }
+
+  async generateEmbedding({ text, taskType = "RETRIEVAL_DOCUMENT", dimensions = 768, timeoutMs = 30000 }) {
+    const startTime = Date.now();
+    await this.waitForDelay();
+    this.throwSimulatedErrorIfNeeded();
+
+    if (!text || typeof text !== "string" || text.trim() === "") {
+      throw new Error("Mock AI Provider: Text rỗng không hợp lệ.");
+    }
+
+    // Deterministic hash based on text and taskType
+    const hash = crypto.createHash("sha256").update(text + "|" + taskType).digest("hex");
+    let seed = parseInt(hash.slice(0, 8), 16);
+    
+    const random = () => {
+      const x = Math.sin(seed++) * 10000;
+      return x - Math.floor(x);
+    };
+
+    const vector = new Array(dimensions);
+    for (let i = 0; i < dimensions; i++) {
+      vector[i] = random() * 2 - 1;
+    }
+
+    return {
+      embedding: vector,
+      durationMs: Date.now() - startTime
     };
   }
 }

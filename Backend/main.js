@@ -27,6 +27,8 @@ import ExamSetRouter from "./src/routers/examSet.routes.js";
 import AISummaryRouter from "./src/routers/aiSummary.routes.js";
 import AIQuestionRouter from "./src/routers/aiQuestion.routes.js";
 import AIGradingRouter from "./src/routers/aiGrading.routes.js";
+import AIKnowledgeRouter from "./src/routers/aiKnowledge.routes.js";
+import AIChatRouter from "./src/routers/aiChat.routes.js";
 import { initCronJobs } from "./src/cron/cron.setup.js";
 import aiUsageService from "./src/ai/services/aiUsage.service.js";
 import FolderRouter from "./src/routers/folder.routes.js";
@@ -113,6 +115,8 @@ app.use("/api/live", LiveRouter);
 app.use("/api/ai/lectures", AISummaryRouter);
 app.use("/api/ai/lectures/:lessonId/question-sets", AIQuestionRouter);
 app.use("/api/ai/exam-attempts", AIGradingRouter);
+app.use("/api/ai/lessons", AIKnowledgeRouter);
+app.use("/api/ai/chat", AIChatRouter);
 
 app.get("/", (req, res) => {
   res
