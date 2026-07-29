@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { liveApi } from "../api/liveApi";
 import type { ILiveSession } from "../interface/liveInterface";
 import type { LiveSessionError } from "../types/liveSession";
@@ -15,6 +15,7 @@ export function useLiveSessionState({ classId, autoFetchActive = true }: UseLive
   const [history, setHistory] = useState<ILiveSession[]>([]);
   const [pagination, setPagination] = useState({ page: 1, limit: 10, totalItems: 0, totalPages: 0 });
 
+  const isCreatingRef = React.useRef<boolean>(false);
   const [isLoadingActive, setIsLoadingActive] = useState<boolean>(false);
   const [isCreating, setIsCreating] = useState<boolean>(false);
   const [isEnding, setIsEnding] = useState<boolean>(false);
@@ -67,6 +68,11 @@ export function useLiveSessionState({ classId, autoFetchActive = true }: UseLive
   const createSession = useCallback(
     async (title?: string) => {
       if (!classId) throw new Error("Thiếu classId để tạo buổi học!");
+      if (isCreatingRef.current) {
+        console.warn("[useLiveSessionState] Blocked double createSession request");
+        return;
+      }
+      isCreatingRef.current = true;
       setIsCreating(true);
       setError(null);
       try {
@@ -84,6 +90,7 @@ export function useLiveSessionState({ classId, autoFetchActive = true }: UseLive
         toast.error(`Không thể bắt đầu buổi học: ${normalized.message}`);
         throw err;
       } finally {
+        isCreatingRef.current = false;
         setIsCreating(false);
       }
     },

@@ -203,6 +203,12 @@ const classSchema = new Schema(
       default: 0,
       min: 0,
     },
+    nextLiveSessionNumber: {
+      type: Number,
+      // Default to 0 so when first incremented it becomes 1.
+      // But it's actually not strictly needed if we migrate.
+      default: 0,
+    },
     description: {
       type: String,
       trim: true,

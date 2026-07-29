@@ -6,7 +6,7 @@ import {
   getLiveSessionHistory,
   endLiveSession,
 } from "../controllers/live.controller.js";
-import { generateJaasToken, generateJaasTokenForSession } from "../controllers/jaas.controller.js";
+import {  generateJaasTokenForSession } from "../controllers/jaas.controller.js";
 import { verifyUser, isTeacher } from "../middlewares/auth.middlewares.js";
 import { checkClassTeacherOwnership, checkClassEnrollment } from "../middlewares/liveAuth.middlewares.js";
 

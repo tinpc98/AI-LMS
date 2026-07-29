@@ -16,13 +16,13 @@ export const createSessionService = async ({ classId, title, scheduledStart, sch
     throw new LiveError("classId không hợp lệ!", 400, LIVE_ERROR_CODES.INVALID_CLASS_ID);
   }
 
-  const classInfo = await classModel.findById(classId).select("_id isDeleted teacherId");
+  const classInfo = await classModel.findById(classId).select("_id isDeleted teacherId nextLiveSessionNumber");
   if (!classInfo || classInfo.isDeleted) {
     throw new LiveError("Lớp học không tồn tại hoặc đã bị xóa!", 404, LIVE_ERROR_CODES.CLASS_NOT_FOUND);
   }
 
   // Kiểm tra xem đã có phiên Live nào đang diễn ra hay chưa
-  const existingActive = await LiveSession.findOne({ classId, status: "Live", isDeleted: false });
+  const existingActive = await LiveSession.findOne({ classId, status: "Live", isDeleted: false }).lean();
   if (existingActive) {
     throw new LiveError(
       "Lớp học đã có một buổi học trực tuyến đang diễn ra.",
@@ -32,9 +32,26 @@ export const createSessionService = async ({ classId, title, scheduledStart, sch
     );
   }
 
-  // Tính sessionNumber tiếp theo
-  const lastSession = await LiveSession.findOne({ classId }).sort({ sessionNumber: -1 }).select("sessionNumber");
-  const nextSessionNumber = lastSession?.sessionNumber ? lastSession.sessionNumber + 1 : 1;
+  // Khởi tạo Counter nếu class chưa từng được cấp (Migration gracefully)
+  if (classInfo.nextLiveSessionNumber === undefined) {
+    const lastSession = await LiveSession.findOne({ classId }).sort({ sessionNumber: -1 }).select("sessionNumber").lean();
+    const currentMax = lastSession?.sessionNumber || 0;
+    
+    // Set initial value only if it still doesn't exist to prevent race on migration itself
+    await classModel.updateOne(
+      { _id: classId, nextLiveSessionNumber: { $exists: false } },
+      { $set: { nextLiveSessionNumber: currentMax } }
+    );
+  }
+
+  // Tăng Counter Atomically để chống mọi Race Conditions và ngắt duplicate
+  const updatedClass = await classModel.findOneAndUpdate(
+    { _id: classId },
+    { $inc: { nextLiveSessionNumber: 1 } },
+    { new: true, select: "nextLiveSessionNumber" }
+  );
+
+  const nextSessionNumber = updatedClass.nextLiveSessionNumber;
 
   // PHƯƠNG ÁN A: Khởi tạo ObjectId trước để sinh roomName độc nhất
   const sessionId = new mongoose.Types.ObjectId();
