@@ -49,6 +49,8 @@ const ExamPage = () => {
   const [modalType, setModalType] = useState("warning");
   const MAX_WARNINGS = 5;
 
+  const [examClassId, setExamClassId] = useState<string | null>(null);
+
   // ==========================================
   // 3. FETCH DỮ LIỆU ĐỀ THI TỪ BACKEND
   // ==========================================
@@ -72,6 +74,9 @@ const ExamPage = () => {
           if (data.examInfo?.duration) {
             setExamDuration(data.examInfo.duration); // (Ví dụ: 5 phút)
           }
+          if (data.examInfo?.classId) {
+            setExamClassId(data.examInfo.classId);
+          }
           // TỐT NHẤT: Backend nên trả về thời điểm kết thúc tuyệt đối (endTime)
           if (data.endTime) {
             setExamEndTime(data.endTime);
@@ -83,7 +88,7 @@ const ExamPage = () => {
         console.error("Lỗi khi tải đề thi:", error);
         setWarningMessage("Không thể tải dữ liệu đề thi. Đang quay lại...");
         setIsWarningVisible(true);
-        setTimeout(() => navigate("/"), 2000);
+        setTimeout(() => navigate("/student/myclasses"), 2000);
       }
     };
     if (attemptId) fetchExamData();
@@ -119,8 +124,13 @@ const ExamPage = () => {
       localStorage.removeItem("exam_draft_flagged");
 
       setWarningMessage("Nộp bài thành công! Đang chuyển về trang kết quả...");
+
       setTimeout(() => {
-        navigate(`/student/exam-result/${attemptId}`);
+        if (examClassId) {
+          navigate(`/student/classdetail/${examClassId}`);
+        } else {
+          navigate("/student/myclasses");
+        }
       }, 2000);
     } catch (error: any) {
       isSubmittingRef.current = false;

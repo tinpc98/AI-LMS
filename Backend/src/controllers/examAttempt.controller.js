@@ -220,6 +220,7 @@ export const getExamAttemptDetail = async (req, res) => {
           title: exam.title,
           duration: exam.duration,
           startTime: exam.startTime,
+          classId: exam.classId,
         },
         questions: formattedQuestions,
       },
