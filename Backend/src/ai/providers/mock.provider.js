@@ -454,18 +454,33 @@ export class MockAIProvider extends BaseAIProvider {
       throw new Error("Mock AI Provider: Text rỗng không hợp lệ.");
     }
 
-    // Deterministic hash based on text and taskType
-    const hash = crypto.createHash("sha256").update(text + "|" + taskType).digest("hex");
-    let seed = parseInt(hash.slice(0, 8), 16);
+    // Deterministic Token-Overlap Embedding (S6-FE-03)
+    const normalized = text.normalize("NFC").toLowerCase().trim();
+    const tokens = normalized.split(/\s+/);
     
-    const random = () => {
-      const x = Math.sin(seed++) * 10000;
-      return x - Math.floor(x);
-    };
+    let vector = new Array(dimensions).fill(0);
+    
+    // Hash từng token vào vị trí vector ổn định, cộng trọng số
+    for (const token of tokens) {
+      if (!token) continue;
+      const hash = crypto.createHash("md5").update(token).digest("hex");
+      const idx1 = parseInt(hash.slice(0, 4), 16) % dimensions;
+      const idx2 = parseInt(hash.slice(4, 8), 16) % dimensions;
+      const idx3 = parseInt(hash.slice(8, 12), 16) % dimensions;
+      
+      vector[idx1] += 1.0;
+      vector[idx2] += 0.5;
+      vector[idx3] += 0.25;
+    }
 
-    const vector = new Array(dimensions);
+    // L2-normalize vector
+    let sumSq = 0;
     for (let i = 0; i < dimensions; i++) {
-      vector[i] = random() * 2 - 1;
+        sumSq += vector[i] * vector[i];
+    }
+    const magnitude = Math.sqrt(sumSq) || 1;
+    for (let i = 0; i < dimensions; i++) {
+        vector[i] = vector[i] / magnitude;
     }
 
     return {

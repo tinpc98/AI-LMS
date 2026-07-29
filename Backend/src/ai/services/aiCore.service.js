@@ -71,6 +71,7 @@ class AICoreService {
     promptParams = {},
     referenceId = null,
     referenceType = null,
+    responseSchema = null,
     validatorFunc = null,
     timeoutMs = 30000,
   }) {
@@ -104,6 +105,7 @@ class AICoreService {
       result = await provider.generateJSON({
         prompt: builtPrompt.prompt,
         systemInstruction: builtPrompt.systemInstruction,
+        responseSchema,
         timeoutMs,
       });
 

@@ -5,32 +5,60 @@ import Lesson from "../../models/lesson.model.js";
 import Class from "../../models/class.model.js";
 import { AIError, AIErrorCode } from "../../utils/aiError.js";
 import aiCoreService from "./aiCore.service.js";
-import aiUsageService from "./aiUsage.service.js";
 import aiVectorRetrieverService from "./aiVectorRetriever.service.js";
 import chatOutputValidator from "../validators/chatOutput.validator.js";
 
 class AIChatService {
   /**
-   * Tạo hash fingerprint cho câu hỏi để chống spam / double-submit
+   * Tạo hash fingerprint cho nội dung (ngăn double-click)
    */
-  generateRequestFingerprint(sessionId, message) {
+  generateContentFingerprint(sessionId, message) {
     return crypto.createHash("sha256").update(sessionId + "|" + message).digest("hex");
   }
 
-  async getAiConfig() {
-    const aiConfig = await aiUsageService.getOrCreateConfig();
-    const defaultProvider = aiConfig.defaultProvider || "google-gemini";
-    let providerService;
-    
-    if (defaultProvider === "mock") {
-      const { MockAIProvider } = await import("../providers/mock.provider.js");
-      providerService = new MockAIProvider();
-    } else {
-      const { GeminiAIProvider } = await import("../providers/gemini.provider.js");
-      providerService = new GeminiAIProvider();
+  /**
+   * Validate Access Session & Parent Entities
+   */
+  async _validateSessionAccess(sessionId, userId, userRole) {
+    const session = await AIChatSession.findById(sessionId);
+    if (!session || session.status === "deleted") {
+      throw new AIError("Phiên trò chuyện không tồn tại hoặc đã bị xóa.", AIErrorCode.AI_INVALID_INPUT, 404);
     }
+    if (session.userId.toString() !== userId.toString()) {
+      throw new AIError("Bạn không có quyền truy cập phiên trò chuyện này.", AIErrorCode.AI_FEATURE_DISABLED, 403);
+    }
+
+    const lesson = await Lesson.findById(session.lessonId).lean();
+    if (!lesson || lesson.isDeleted) {
+      throw new AIError("Bài giảng không tồn tại hoặc đã bị xóa.", AIErrorCode.AI_INVALID_INPUT, 404);
+    }
+
+    const classDoc = await Class.findById(session.classId).lean();
+    if (!classDoc || classDoc.isDeleted || classDoc._id.toString() !== lesson.classId.toString()) {
+      throw new AIError("Lớp học không tồn tại hoặc dữ liệu không nhất quán.", AIErrorCode.AI_INVALID_INPUT, 404);
+    }
+
+    const role = (userRole || "").toLowerCase();
     
-    return providerService;
+    if (role === "teacher") {
+      if (String(classDoc.teacherId) !== String(userId)) {
+        throw new AIError("Bạn không phải là giáo viên phụ trách lớp học này.", AIErrorCode.AI_FEATURE_DISABLED, 403);
+      }
+    } else if (role === "student") {
+      if (!lesson.isPublished) {
+        throw new AIError("Bài giảng này chưa được xuất bản.", AIErrorCode.AI_FEATURE_DISABLED, 403);
+      }
+      const isEnrolled = classDoc.students && classDoc.students.some(s => 
+        String(s.studentId) === String(userId) && s.status === "Enrolled"
+      );
+      if (!isEnrolled) {
+        throw new AIError("Bạn không phải là học sinh hợp lệ của lớp học này.", AIErrorCode.AI_FEATURE_DISABLED, 403);
+      }
+    } else if (role !== "admin") {
+      throw new AIError("Vai trò không được phép truy cập Chat.", AIErrorCode.AI_FEATURE_DISABLED, 403);
+    }
+
+    return { session, lesson, classDoc };
   }
 
   /**
@@ -47,6 +75,21 @@ class AIChatService {
   }
 
   /**
+   * Kiểm tra nhanh prompt injection
+   */
+  _isObviousPromptInjection(message) {
+    const lower = message.toLowerCase();
+    const blacklist = [
+       "quên các hướng dẫn", "bỏ qua các hướng dẫn", "ignore previous instructions", 
+       "system prompt", "đáp án", "đề thi", "bài kiểm tra", "api key", "secret"
+    ];
+    for (const word of blacklist) {
+        if (lower.includes(word)) return true;
+    }
+    return false;
+  }
+
+  /**
    * Gửi tin nhắn và nhận phản hồi từ AI
    */
   async sendMessage({ sessionId, userId, userRole, message }) {
@@ -59,37 +102,35 @@ class AIChatService {
       throw new AIError(`Nội dung tin nhắn quá dài (tối đa ${maxChars} ký tự).`, AIErrorCode.AI_INVALID_INPUT, 400);
     }
 
-    // 1. Kiểm tra session
-    const session = await AIChatSession.findById(sessionId);
-    if (!session || session.status === "deleted") {
-      throw new AIError("Phiên trò chuyện không tồn tại hoặc đã bị xóa.", AIErrorCode.AI_INVALID_INPUT, 404);
-    }
-    if (session.userId.toString() !== userId.toString()) {
-      throw new AIError("Bạn không có quyền truy cập phiên trò chuyện này.", AIErrorCode.AI_FEATURE_DISABLED, 403);
-    }
+    // 1. Kiểm tra quyền và tính toàn vẹn (Full Validation)
+    const { session, lesson, classDoc } = await this._validateSessionAccess(sessionId, userId, userRole);
 
-    // Lấy thông tin bài học
-    const lesson = await Lesson.findById(session.lessonId).lean();
-    if (!lesson) {
-      throw new AIError("Bài giảng không tồn tại.", AIErrorCode.AI_INVALID_INPUT, 404);
-    }
-    const classDoc = await Class.findById(session.classId).lean();
-    if (!classDoc) {
-      throw new AIError("Lớp học không tồn tại.", AIErrorCode.AI_INVALID_INPUT, 404);
-    }
-
-    const requestFingerprint = this.generateRequestFingerprint(sessionId, message);
+    const contentFingerprint = this.generateContentFingerprint(sessionId, message);
     
-    // Chống double submit (nếu message giống hệt gửi liên tục)
+    // Chống double submit trong 5 giây
     const recentMsg = await AIChatMessage.findOne({
       sessionId,
       userId,
       role: "user",
-      requestFingerprint
+      requestFingerprint: contentFingerprint
     }).sort({ createdAt: -1 });
     
     if (recentMsg && (Date.now() - recentMsg.createdAt.getTime() < 5000)) {
        throw new AIError("Bạn đang gửi tin nhắn quá nhanh. Vui lòng chờ vài giây.", AIErrorCode.AI_PROVIDER_ERROR, 429);
+    }
+
+    // 1.5. Chặn Prompt Injection mức độ thấp
+    if (this._isObviousPromptInjection(message)) {
+       const userMsg = await AIChatMessage.create({
+          sessionId, userId, role: "user", content: message, requestFingerprint: contentFingerprint
+       });
+       const safeFallbackMsg = await AIChatMessage.create({
+          sessionId, userId, role: "assistant",
+          content: "Tôi chỉ hỗ trợ giải đáp kiến thức bài học trong phạm vi tài liệu này. Tôi không thể cung cấp đáp án hoặc thực hiện các yêu cầu nằm ngoài phạm vi môn học.",
+          citations: [], confidence: 0, requestFingerprint: userMsg._id.toString()
+       });
+       await AIChatSession.findByIdAndUpdate(sessionId, { lastMessageAt: new Date() });
+       return { message: safeFallbackMsg, retrievedChunks: [] };
     }
 
     // Lưu user message
@@ -98,57 +139,37 @@ class AIChatService {
       userId,
       role: "user",
       content: message,
-      requestFingerprint
+      requestFingerprint: contentFingerprint
     });
 
     try {
-      // 2. Reserve quota
-      const aiUsageId = await aiUsageService.reserveQuota({
-        userId,
-        userRole,
-        feature: "chatbot",
-        referenceId: sessionId,
-        referenceType: "AIChatSession",
-      });
-
-      // 3. Embed câu hỏi
-      const provider = await this.getAiConfig();
+      // 2. Embed câu hỏi
+      const provider = await aiCoreService.resolveProvider();
       const embeddingModel = process.env.AI_EMBEDDING_MODEL || "gemini-embedding-2";
       const dimensions = parseInt(process.env.AI_EMBEDDING_DIMENSIONS) || 768;
 
       const embedRes = await provider.generateEmbedding({
         text: message,
-        taskType: "RETRIEVAL_QUERY", // Task type cho query (hoặc tuỳ model)
+        taskType: "RETRIEVAL_QUERY",
         dimensions
       });
       const queryVector = embedRes.embedding;
 
-      // 4. Retrieve Vector
+      // 3. Retrieve Vector
       const retrievedChunks = await aiVectorRetrieverService.retrieveChunks({
         queryVector,
         classId: session.classId.toString(),
         lessonId: session.lessonId.toString(),
       });
 
-      // 5. Kiểm tra kết quả retrieve (nếu không có đủ thông tin)
+      // 4. Kiểm tra kết quả retrieve
       if (retrievedChunks.length === 0) {
-        // Hoàn trả quota vì không đủ context để trả lời
-        await aiUsageService.finalizeUsage(aiUsageId, {
-          status: "failed",
-          errorMessage: "Không tìm thấy nội dung phù hợp trong bài học để trả lời.",
-        });
-
         const safeFallbackMsg = await AIChatMessage.create({
-          sessionId,
-          userId,
-          role: "assistant",
+          sessionId, userId, role: "assistant",
           content: "Tôi chưa tìm thấy thông tin này trong tài liệu bài học. Vui lòng hỏi các nội dung nằm trong phạm vi bài giảng.",
-          citations: [],
-          confidence: 0,
-          aiUsageId,
-          requestFingerprint
+          citations: [], confidence: 0,
+          requestFingerprint: userMessageDoc._id.toString()
         });
-        
         await AIChatSession.findByIdAndUpdate(sessionId, { lastMessageAt: new Date() });
         return { message: safeFallbackMsg, retrievedChunks: [] };
       }
@@ -166,19 +187,17 @@ class AIChatService {
          }
       }
 
-      // 6. Lấy lịch sử chat
+      // 5. Lấy lịch sử chat
       const maxHistory = parseInt(process.env.RAG_MAX_HISTORY_MESSAGES) || 10;
       const chatHistory = await AIChatMessage.find({ sessionId })
          .sort({ createdAt: -1 })
-         .limit(maxHistory + 1) // +1 để bao gồm userMessageDoc vừa tạo
+         .limit(maxHistory + 1) // +1 vì đã có userMessageDoc
          .lean();
          
-      // Lật ngược lại để đúng thứ tự thời gian
       chatHistory.reverse();
-      // Bỏ tin nhắn cuối cùng (chính là userMessageDoc vừa tạo)
       const priorHistory = chatHistory.slice(0, -1);
 
-      // 7. Gọi AI Core với Structured Output
+      // 6. Gọi AI Core với Structured Output (ủy quyền hoàn toàn lifecycle Quota)
       const responseSchema = {
         type: "object",
         properties: {
@@ -193,36 +212,36 @@ class AIChatService {
       };
 
       const aiResponse = await aiCoreService.executeStructuredAI({
+        userId,
+        userRole,
         feature: "chatbot",
         templateName: "chat",
-        templateParams: {
-          classTitle: classDoc.title || classDoc.name,
+        promptParams: {
+          classTitle: classDoc.className || "Lớp học",
           lessonTitle: lesson.title,
           contextChunks: validContextChunks,
           chatHistory: priorHistory,
           userQuestion: message
         },
+        referenceId: sessionId,
+        referenceType: "AIChatSession",
         responseSchema,
-        aiUsageId
+        validatorFunc: (rawOutput) => chatOutputValidator.validate(rawOutput, validContextChunks),
       });
 
-      // 8. Validate Output (Xác thực citations)
-      const validatedOutput = chatOutputValidator.validate(aiResponse.data, validContextChunks);
-
-      // 9. Lưu Assistant Message
+      // 7. Lưu Assistant Message
       const assistantMessageDoc = await AIChatMessage.create({
         sessionId,
         userId,
         role: "assistant",
-        content: validatedOutput.answer,
-        citations: validatedOutput.citations,
-        confidence: validatedOutput.confidence,
-        warnings: validatedOutput.warnings,
-        aiUsageId,
-        requestFingerprint // Gán cùng fingerprint để chống double insert cùng response
+        content: aiResponse.data.answer,
+        citations: aiResponse.data.citations,
+        confidence: aiResponse.data.confidence,
+        warnings: aiResponse.data.warnings,
+        aiUsageId: aiResponse.usageId,
+        requestFingerprint: userMessageDoc._id.toString()
       });
 
-      // Update session lastMessageAt
       await AIChatSession.findByIdAndUpdate(sessionId, { lastMessageAt: new Date() });
 
       return {
@@ -231,14 +250,14 @@ class AIChatService {
           answer: assistantMessageDoc.content,
           citations: assistantMessageDoc.citations,
           confidence: assistantMessageDoc.confidence,
-          followUpQuestions: validatedOutput.followUpQuestions,
+          followUpQuestions: aiResponse.data.followUpQuestions,
           warnings: assistantMessageDoc.warnings,
           createdAt: assistantMessageDoc.createdAt
         },
         usage: {
-          inputTokens: aiResponse.inputTokens,
-          outputTokens: aiResponse.outputTokens,
-          durationMs: aiResponse.durationMs
+          inputTokens: aiResponse.usage.inputTokens,
+          outputTokens: aiResponse.usage.outputTokens,
+          durationMs: aiResponse.usage.durationMs
         }
       };
 
@@ -247,25 +266,25 @@ class AIChatService {
     }
   }
 
-  async getChatHistory(sessionId, userId, page = 1, limit = 20) {
-    const session = await AIChatSession.findById(sessionId);
-    if (!session || session.status === "deleted") {
-      throw new AIError("Phiên trò chuyện không tồn tại.", AIErrorCode.AI_INVALID_INPUT, 404);
-    }
-    if (session.userId.toString() !== userId.toString()) {
-      throw new AIError("Bạn không có quyền truy cập phiên trò chuyện này.", AIErrorCode.AI_FEATURE_DISABLED, 403);
-    }
+  async getChatHistory(sessionId, userId, userRole, page = 1, limit = 20) {
+    await this._validateSessionAccess(sessionId, userId, userRole);
 
     const skip = (page - 1) * limit;
-    const messages = await AIChatMessage.find({ sessionId })
+    const rawMessages = await AIChatMessage.find({ sessionId })
        .sort({ createdAt: -1 })
        .skip(skip)
        .limit(limit)
        .lean();
     
-    // Đảo ngược để list đúng chiều
-    messages.reverse();
-
+    const messages = rawMessages.map(msg => ({
+       messageId: msg._id,
+       role: msg.role,
+       content: msg.content,
+       citations: msg.citations,
+       confidence: msg.confidence,
+       warnings: msg.warnings,
+       createdAt: msg.createdAt
+    })).reverse();
     const total = await AIChatMessage.countDocuments({ sessionId });
     
     return {

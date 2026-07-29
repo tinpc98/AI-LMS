@@ -6,32 +6,16 @@ import AISummary from "../../models/aiSummary.model.js";
 import textChunker from "./textChunker.service.js";
 import lessonContentExtractor from "./lessonContentExtractor.service.js";
 import { AIError, AIErrorCode } from "../../utils/aiError.js";
-import aiUsageService from "./aiUsage.service.js";
+import aiCoreService from "./aiCore.service.js";
 import crypto from "crypto";
 
 class AIKnowledgeIndexingService {
   /**
    * Tạo fingerprint cho nguồn dữ liệu
    */
-  generateFingerprint(content, model, dimensions, configHash) {
+  generateFingerprint(content, providerName, model, dimensions, configHash) {
     if (!content) return null;
-    return crypto.createHash("sha256").update(content + "|" + model + "|" + dimensions + "|" + configHash).digest("hex");
-  }
-
-  async getAiConfig() {
-    const aiConfig = await aiUsageService.getOrCreateConfig();
-    const defaultProvider = aiConfig.defaultProvider || "google-gemini";
-    let providerService;
-    
-    if (defaultProvider === "mock") {
-      const { MockAIProvider } = await import("../providers/mock.provider.js");
-      providerService = new MockAIProvider();
-    } else {
-      const { GeminiAIProvider } = await import("../providers/gemini.provider.js");
-      providerService = new GeminiAIProvider();
-    }
-    
-    return providerService;
+    return crypto.createHash("sha256").update(content + "|" + providerName + "|" + model + "|" + dimensions + "|" + configHash).digest("hex");
   }
 
   /**
@@ -58,7 +42,7 @@ class AIKnowledgeIndexingService {
   /**
    * Index một source cụ thể
    */
-  async indexSource(sourceData, { lessonId, classId, userId, provider, embeddingModel, dimensions, chunkConfig }) {
+  async indexSource(sourceData, { lessonId, classId, userId, provider, embeddingModel, dimensions, chunkConfig, force }) {
     const { sourceType, sourceId, sourceName, content } = sourceData;
     
     if (!content || content.trim().length === 0) {
@@ -66,15 +50,17 @@ class AIKnowledgeIndexingService {
     }
 
     const configHash = `max${chunkConfig.maxChars}_ov${chunkConfig.overlapChars}`;
-    const fingerprint = this.generateFingerprint(content, embeddingModel, dimensions, configHash);
+    const providerName = provider.getName();
+    const fingerprint = this.generateFingerprint(content, providerName, embeddingModel, dimensions, configHash);
 
     // Kiểm tra xem đã index chưa
     const existingSource = await AIKnowledgeSource.findOne({
       lessonId,
-      sourceFingerprint: fingerprint
+      sourceType,
+      sourceId
     }).sort({ indexVersion: -1 });
 
-    if (existingSource && existingSource.status === "ready") {
+    if (!force && existingSource && existingSource.sourceFingerprint === fingerprint && existingSource.status === "ready") {
       return { status: "ready", message: "Đã index trước đó", source: existingSource };
     }
 
@@ -110,6 +96,21 @@ class AIKnowledgeIndexingService {
       // 2. Lấy Embeddings
       const embeddings = await this.embedChunksSafely(chunksText, provider, dimensions);
 
+      // Validate dimensions & NaN
+      if (embeddings.length !== chunksText.length) {
+          throw new Error("Số lượng vector không khớp với số lượng chunk");
+      }
+      for (const vector of embeddings) {
+          if (!vector || vector.length !== dimensions) {
+              throw new Error(`Vector không đúng dimensions (Yêu cầu: ${dimensions})`);
+          }
+          for (const num of vector) {
+             if (typeof num !== "number" || !Number.isFinite(num)) {
+                 throw new Error("Vector chứa NaN hoặc Infinity");
+             }
+          }
+      }
+
       // 3. Tạo documents chunk
       const chunkDocs = chunksText.map((text, i) => ({
         sourceId: newSource._id,
@@ -125,11 +126,17 @@ class AIKnowledgeIndexingService {
         indexVersion: nextVersion,
         sourceName,
         sourceType,
-        status: "ready"
+        status: "ready" // Sẽ được insert sau
       }));
 
       // 4. Lưu toàn bộ chunks
-      await AIKnowledgeChunk.insertMany(chunkDocs);
+      try {
+         await AIKnowledgeChunk.insertMany(chunkDocs);
+      } catch (insertError) {
+         // Cleanup chunks của source hiện tại nếu insert fail
+         await AIKnowledgeChunk.deleteMany({ sourceId: newSource._id });
+         throw insertError;
+      }
 
       // 5. Cập nhật status thành ready
       newSource.status = "ready";
@@ -171,6 +178,8 @@ class AIKnowledgeIndexingService {
       newSource.errorCode = error.code || AIErrorCode.AI_PROVIDER_ERROR;
       newSource.safeErrorMessage = error.message;
       await newSource.save();
+      // Xóa chunk mồ côi nếu có
+      await AIKnowledgeChunk.deleteMany({ sourceId: newSource._id });
       throw error;
     }
   }
@@ -191,11 +200,12 @@ class AIKnowledgeIndexingService {
     const embeddingModel = process.env.AI_EMBEDDING_MODEL || "gemini-embedding-2";
     const dimensions = parseInt(process.env.AI_EMBEDDING_DIMENSIONS) || 768;
 
-    const provider = await this.getAiConfig();
+    const provider = await aiCoreService.resolveProvider();
     const chunkConfig = { maxChars, overlapChars };
 
     let successCount = 0;
     let failedCount = 0;
+    let skippedCount = 0;
     let totalChunks = 0;
     const results = [];
 
@@ -207,11 +217,15 @@ class AIKnowledgeIndexingService {
         sourceId: "lesson_" + lesson._id.toString(),
         sourceName: "Thông tin bài giảng",
         content: lessonText
-      }, { lessonId, classId, userId, provider, embeddingModel, dimensions, chunkConfig });
-      results.push(resText);
+      }, { lessonId, classId, userId, provider, embeddingModel, dimensions, chunkConfig, force });
+      
       if (resText.status === "ready") {
           successCount++;
           totalChunks += (resText.source?.chunkCount || 0);
+      } else if (resText.status === "skipped") {
+          skippedCount++;
+      } else {
+          failedCount++;
       }
     } catch (err) {
       console.error("[Index Lesson] Failed to index text:", err.message);
@@ -235,6 +249,7 @@ class AIKnowledgeIndexingService {
             content = await lessonContentExtractor.extractDocx(buffer);
             sType = "attachment_docx";
           } else {
+             skippedCount++;
              continue;
           }
 
@@ -244,11 +259,15 @@ class AIKnowledgeIndexingService {
                 sourceId: attachment.publicId || attachment._id?.toString() || attachment.url,
                 sourceName: attachment.name,
                 content
-             }, { lessonId, classId, userId, provider, embeddingModel, dimensions, chunkConfig });
-             results.push(resAtt);
+             }, { lessonId, classId, userId, provider, embeddingModel, dimensions, chunkConfig, force });
+             
              if (resAtt.status === "ready") {
                  successCount++;
                  totalChunks += (resAtt.source?.chunkCount || 0);
+             } else if (resAtt.status === "skipped") {
+                 skippedCount++;
+             } else {
+                 failedCount++;
              }
           }
         } catch (err) {
@@ -260,7 +279,7 @@ class AIKnowledgeIndexingService {
 
     // 3. Index Summary (Nếu có bản được duyệt)
     try {
-        const approvedSummary = await AISummary.findOne({ lessonId, status: "APPROVED" });
+        const approvedSummary = await AISummary.findOne({ lessonId, status: "approved" });
         if (approvedSummary) {
            let sumContent = "TÓM TẮT BÀI GIẢNG:\n";
            sumContent += approvedSummary.summary + "\n\nCÁC ĐIỂM CHÍNH:\n";
@@ -271,26 +290,37 @@ class AIKnowledgeIndexingService {
                 sourceId: "summary_" + approvedSummary._id.toString(),
                 sourceName: "Tóm tắt bài giảng",
                 content: sumContent
-             }, { lessonId, classId, userId, provider, embeddingModel, dimensions, chunkConfig });
-             results.push(resSum);
+             }, { lessonId, classId, userId, provider, embeddingModel, dimensions, chunkConfig, force });
+             
              if (resSum.status === "ready") {
                  successCount++;
                  totalChunks += (resSum.source?.chunkCount || 0);
+             } else if (resSum.status === "skipped") {
+                 skippedCount++;
+             } else {
+                 failedCount++;
              }
+        } else {
+             skippedCount++; // Không có bản duyệt
         }
     } catch (err) {
         console.error("[Index Lesson] Failed to index summary:", err.message);
+        failedCount++;
     }
-
-    if (successCount === 0 && failedCount > 0) {
-       throw new AIError("Lập chỉ mục thất bại cho tất cả tài liệu.", AIErrorCode.AI_PROVIDER_ERROR, 500);
-    }
+    
+    let overallStatus = "ready";
+    if (successCount === 0 && failedCount > 0) overallStatus = "failed";
+    else if (failedCount > 0) overallStatus = "partial";
+    else if (successCount === 0) overallStatus = "skipped";
 
     return {
         lessonId,
-        status: "ready",
-        sourceCount: successCount,
+        status: overallStatus,
+        sourceCount: successCount + failedCount + skippedCount,
         chunkCount: totalChunks,
+        successCount,
+        failedCount,
+        skippedCount,
         embeddingModel,
         embeddingDimensions: dimensions,
         indexedAt: new Date()

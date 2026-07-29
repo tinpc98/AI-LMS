@@ -7,7 +7,7 @@ class ChatOutputValidator {
    */
   validate(rawOutput, retrievedChunks = []) {
     if (!rawOutput || typeof rawOutput !== "object") {
-      throw new AIError("Output chatbot không hợp lệ (không phải JSON).", AIErrorCode.AI_INVALID_OUTPUT, 500);
+      throw new AIError("Output chatbot không hợp lệ (không phải JSON).", AIErrorCode.AI_OUTPUT_INVALID, 500);
     }
 
     const validOutput = {
@@ -19,12 +19,12 @@ class ChatOutputValidator {
     };
 
     if (typeof rawOutput.answer !== "string" || rawOutput.answer.trim() === "") {
-      throw new AIError("Chatbot không trả về câu trả lời hợp lệ.", AIErrorCode.AI_INVALID_OUTPUT, 500);
+      throw new AIError("Chatbot không trả về câu trả lời hợp lệ.", AIErrorCode.AI_OUTPUT_INVALID, 500);
     }
     
-    // Check for obvious secret leakage in Markdown code fences
-    if (/```[\s\S]*(API_KEY|SECRET|PASSWORD|JWT|TOKEN)[\s\S]*```/i.test(rawOutput.answer)) {
-       throw new AIError("Phát hiện nguy cơ rò rỉ dữ liệu nhạy cảm trong câu trả lời.", AIErrorCode.AI_INVALID_OUTPUT, 500);
+    // Check for obvious secret leakage anywhere in the answer
+    if (/(API_KEY|API KEY|GEMINI_API_KEY|JWT_SECRET|PASSWORD|CLOUDINARY_API_SECRET|MONGO_URI|Bearer token|mongodb:\/\/|mongodb\+srv:\/\/)/i.test(rawOutput.answer)) {
+       throw new AIError("Phát hiện nguy cơ rò rỉ dữ liệu nhạy cảm trong câu trả lời.", AIErrorCode.AI_OUTPUT_INVALID, 500);
     }
 
     validOutput.answer = rawOutput.answer.trim();
@@ -75,6 +75,14 @@ class ChatOutputValidator {
           }
         }
       }
+    }
+
+    // Xử lý khi không có citation hợp lệ
+    const isFallback = validOutput.answer.includes("Tôi chưa tìm thấy thông tin này");
+    if (validOutput.citations.length === 0 && !isFallback) {
+        validOutput.confidence = 0;
+        validOutput.citations = [];
+        validOutput.answer = "Tôi chưa tìm thấy thông tin này trong tài liệu bài học.";
     }
 
     return validOutput;
