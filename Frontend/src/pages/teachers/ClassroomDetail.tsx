@@ -49,6 +49,7 @@ import { TeacherExamsTab } from "../../components/teacher/classroom/TeacherExams
 import { TeacherAnnouncementsTab } from "../../components/teacher/classroom/TeacherAnnouncementsTab";
 import { TeacherLiveSessionTab } from "../../components/teacher/classroom/TeacherLiveSessionTab";
 import { TeacherGradebookTab } from "../../components/teacher/classroom/TeacherGradebookTab";
+import { TeacherAnalyticsTab } from "../../components/teacher/classroom/TeacherAnalyticsTab";
 import { toast } from "../../utils/toast";
 
 const { Title, Text, Paragraph } = Typography;
@@ -323,6 +324,18 @@ export default function ClassroomDetail() {
           onRefresh={loadClassroom}
           loading={isLoading}
         />
+      ),
+    },
+    {
+      key: "analytics",
+      label: (
+        <Space>
+          <TrophyOutlined />
+          <span>Thành tích</span>
+        </Space>
+      ),
+      children: (
+        <TeacherAnalyticsTab classId={classId!} />
       ),
     },
     {

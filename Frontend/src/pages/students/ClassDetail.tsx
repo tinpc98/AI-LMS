@@ -28,8 +28,9 @@ import ExamLobbyModals from "../../components/student/classDetail/exams/ExamLobb
 import type { ExamPopupState } from "../../components/student/classDetail/exams/ExamLobbyModals";
 import { useJitsiLiveSession } from "../../hooks/useJitsiLiveSession";
 import { useStudentLive } from "../../hooks/useStudentLive";
-
-// MOCK_RANKINGS has been removed. Feature deferred to Sprint 4.
+import { useLearningAnalytics } from "../../hooks/useLearningAnalytics";
+import { Tooltip, Avatar, List, Progress } from "antd";
+import { TrophyOutlined, StarOutlined, ClockCircleOutlined, ThunderboltOutlined } from "@ant-design/icons";
 
 export default function ClassDetail() {
   const { classId } = useParams<{ classId: string }>();
@@ -65,6 +66,27 @@ export default function ClassDetail() {
   useEffect(() => {
     refreshLiveSession();
   }, [jitsiActiveSession, refreshLiveSession]);
+
+  // Sprint 6: Learning Analytics (Ranking, Badges, Activities)
+  const {
+    progressData,
+    classRanking,
+    myRank,
+    badges,
+    fetchStudentProgress,
+    fetchClassRanking,
+    fetchMyRank,
+    fetchMyBadges
+  } = useLearningAnalytics(classId);
+
+  useEffect(() => {
+    if (classId) {
+      fetchStudentProgress();
+      fetchClassRanking({ limit: 5 }); // Top 5
+      fetchMyRank();
+      fetchMyBadges();
+    }
+  }, [classId, fetchStudentProgress, fetchClassRanking, fetchMyRank, fetchMyBadges]);
 
   // Exams & Lobby States
   const [exams, setExams] = useState<IExam[]>([]);
@@ -259,7 +281,11 @@ export default function ClassDetail() {
                 totalAssignments={assignments.length}
                 completedExams={exams.filter((e: any) => e.score !== null && e.score !== undefined).length}
                 totalExams={exams.length}
-                overallProgress={85}
+                overallProgress={
+                  progressData.length > 0 
+                  ? Math.round(progressData.reduce((acc, curr) => acc + curr.progress, 0) / Math.max(lessons.length, 1))
+                  : 0
+                }
               />
               <Row gutter={[24, 24]}>
                 <Col xs={24} lg={15} xl={16}>
@@ -408,32 +434,73 @@ export default function ClassDetail() {
           {activeTab === "chat" && <ClassDiscussionTab />}
         </div>
 
-        {/* 5. FOOTER INSIGHTS */}
+        {/* 5. FOOTER INSIGHTS & GAMIFICATION */}
         <section className="mt-8 grid grid-cols-12 gap-6 p-6 border-t border-gray-100">
           <div className="col-span-12 md:col-span-4 bg-white p-6 rounded-xl border border-outline-variant shadow-sm">
             <h4 className="font-semibold mb-4 flex items-center text-sm sm:text-base">
-              <span className="material-symbols-outlined mr-2 text-primary">analytics</span>
-              Xếp hạng lớp học
+              <TrophyOutlined className="mr-2 text-yellow-500" />
+              Bảng xếp hạng lớp học
             </h4>
-            <div className="space-y-3">
-              <div className="text-center py-6 text-on-surface-variant">
-                <span className="material-symbols-outlined text-4xl mb-2 opacity-50">leaderboard</span>
-                <p className="text-sm font-medium">Bảng xếp hạng sẽ ra mắt ở bản cập nhật Sprint 4.</p>
-              </div>
+            <div className="space-y-4">
+              {classRanking && classRanking.items.length > 0 ? (
+                <List
+                  itemLayout="horizontal"
+                  dataSource={classRanking.items}
+                  renderItem={(item, index) => (
+                    <List.Item>
+                      <List.Item.Meta
+                        avatar={<Avatar src={item.avatar}>{item.fullName[0]}</Avatar>}
+                        title={<span className="font-semibold">{index + 1}. {item.fullName}</span>}
+                        description={<span className="text-xs text-gray-500">{item.totalXP} XP</span>}
+                      />
+                      {index === 0 && <StarOutlined className="text-yellow-500" />}
+                    </List.Item>
+                  )}
+                />
+              ) : (
+                <div className="text-center py-6 text-on-surface-variant">
+                  <span className="material-symbols-outlined text-4xl mb-2 opacity-50">leaderboard</span>
+                  <p className="text-sm font-medium">Chưa có dữ liệu xếp hạng.</p>
+                </div>
+              )}
             </div>
           </div>
 
-          <div className="col-span-12 md:col-span-8 bg-surface-container-low p-6 rounded-xl border border-outline-variant border-dashed flex items-center justify-center text-center">
-            <div className="space-y-3 max-w-xl">
-              <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center text-primary shadow-inner mx-auto">
-                <span className="material-symbols-outlined text-2xl">auto_awesome</span>
-              </div>
-              <div>
-                <h4 className="font-bold text-on-surface text-sm sm:text-base">AI Learning Insights</h4>
-                <p className="text-xs sm:text-sm text-secondary mt-1 px-4">
-                  Tính năng phân tích quá trình học tập bằng AI đang được phát triển và sẽ sớm ra mắt (Sprint 4).
-                </p>
-              </div>
+          <div className="col-span-12 md:col-span-8 bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-xl border border-blue-100 shadow-sm flex flex-col justify-center">
+            <div className="space-y-4 w-full">
+              <h4 className="font-bold text-blue-800 text-sm sm:text-base flex items-center">
+                <ThunderboltOutlined className="mr-2" />
+                Thành tích của tôi
+              </h4>
+              <Row gutter={16}>
+                <Col span={8}>
+                  <div className="bg-white p-4 rounded-lg shadow-sm text-center">
+                    <p className="text-xs text-gray-500 mb-1">Thứ hạng</p>
+                    <p className="text-2xl font-bold text-blue-600">#{myRank?.rank || "-"}</p>
+                  </div>
+                </Col>
+                <Col span={8}>
+                  <div className="bg-white p-4 rounded-lg shadow-sm text-center">
+                    <p className="text-xs text-gray-500 mb-1">Điểm XP</p>
+                    <p className="text-2xl font-bold text-green-600">{myRank?.totalXP || 0}</p>
+                  </div>
+                </Col>
+                <Col span={8}>
+                  <div className="bg-white p-4 rounded-lg shadow-sm text-center">
+                    <p className="text-xs text-gray-500 mb-1">Huy hiệu</p>
+                    <p className="text-2xl font-bold text-purple-600">{badges.length}</p>
+                  </div>
+                </Col>
+              </Row>
+              {badges.length > 0 && (
+                <div className="mt-4 flex gap-2 overflow-x-auto">
+                  {badges.map(b => (
+                    <Tooltip title={b.title} key={b._id}>
+                      <Avatar src={b.icon} size={40} className="border-2 border-yellow-400" />
+                    </Tooltip>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </section>

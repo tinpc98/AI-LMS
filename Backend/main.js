@@ -23,6 +23,7 @@ import CourseRouter from "./src/routers/course.routes.js";
 import DashboardRouter from "./src/routers/dashboard.routes.js";
 import ReportRouter from "./src/routers/report.routes.js";
 import NotificationRouter from "./src/routers/notification.routes.js";
+import LearningRouter from "./src/routers/learning.routes.js";
 import ExamSetRouter from "./src/routers/examSet.routes.js";
 import AISummaryRouter from "./src/routers/aiSummary.routes.js";
 import AIQuestionRouter from "./src/routers/aiQuestion.routes.js";
@@ -109,6 +110,7 @@ app.use("/api/attendances", AttendanceRouter);
 app.use("/api/grades", GradeRouter);
 app.use("/api/announcements", AnnouncementRouter);
 app.use("/api/notifications", NotificationRouter); // Bulk & inbox endpoints
+app.use("/api/learning", LearningRouter); // Gamification & Analytics
 
 app.use("/api/folders", FolderRouter);
 
