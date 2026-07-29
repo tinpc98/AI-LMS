@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
 import { liveApi } from "../api/liveApi";
 import type { ILiveSession } from "../interface/liveInterface";
+import type { LiveSessionError } from "../types/liveSession";
+import { normalizeLiveSessionError } from "../utils/liveSessionError";
 import { toast } from "../utils/toast";
 
 interface UseLiveSessionStateProps {
@@ -17,9 +19,9 @@ export function useLiveSessionState({ classId, autoFetchActive = true }: UseLive
   const [isCreating, setIsCreating] = useState<boolean>(false);
   const [isEnding, setIsEnding] = useState<boolean>(false);
   const [isLoadingHistory, setIsLoadingHistory] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<LiveSessionError | null>(null);
 
-  // 1. Fetch Active Session từ API V2 (/api/live/classes/:classId/active)
+  // 1. Fetch Active Session V2 (/api/live/classes/:classId/active)
   const fetchActiveSession = useCallback(async () => {
     if (!classId) return;
     setIsLoadingActive(true);
@@ -30,28 +32,36 @@ export function useLiveSessionState({ classId, autoFetchActive = true }: UseLive
       setActiveSession(data);
     } catch (err: unknown) {
       console.warn("[useLiveSessionState] fetchActiveSession Error:", err);
-      setActiveSession(null);
+      const normalized = normalizeLiveSessionError(err);
+      if (normalized.originalStatus === 404) {
+        setActiveSession(null);
+      } else {
+        setError(normalized);
+      }
     } finally {
       setIsLoadingActive(false);
     }
   }, [classId]);
 
-  // 2. Fetch History từ API V2 (/api/live/classes/:classId/sessions)
-  const fetchHistory = useCallback(async (page = 1, limit = 10) => {
-    if (!classId) return;
-    setIsLoadingHistory(true);
-    try {
-      const res = await liveApi.getLiveSessionHistory(classId, { page, limit });
-      if (res?.data?.data) {
-        setHistory(res.data.data.items || []);
-        setPagination(res.data.data.pagination || { page, limit, totalItems: 0, totalPages: 0 });
+  // 2. Fetch History V2 (/api/live/classes/:classId/sessions)
+  const fetchHistory = useCallback(
+    async (page = 1, limit = 10) => {
+      if (!classId) return;
+      setIsLoadingHistory(true);
+      try {
+        const res = await liveApi.getLiveSessionHistory(classId, { page, limit });
+        if (res?.data?.data) {
+          setHistory(res.data.data.items || []);
+          setPagination(res.data.data.pagination || { page, limit, totalItems: 0, totalPages: 0 });
+        }
+      } catch (err: unknown) {
+        console.warn("[useLiveSessionState] fetchHistory Error:", err);
+      } finally {
+        setIsLoadingHistory(false);
       }
-    } catch (err: unknown) {
-      console.warn("[useLiveSessionState] fetchHistory Error:", err);
-    } finally {
-      setIsLoadingHistory(false);
-    }
-  }, [classId]);
+    },
+    [classId]
+  );
 
   // 3. Create Session V2 (/api/live/sessions)
   const createSession = useCallback(
@@ -69,10 +79,9 @@ export function useLiveSessionState({ classId, autoFetchActive = true }: UseLive
         toast.success("Đã bắt đầu buổi học trực tuyến.");
         return createdSession;
       } catch (err: unknown) {
-        const errorObj = err as { response?: { data?: { message?: string } }; message?: string };
-        const msg = errorObj?.response?.data?.message || errorObj?.message || "Không thể tạo buổi học.";
-        setError(msg);
-        toast.error(`Không thể bắt đầu buổi học: ${msg}`);
+        const normalized = normalizeLiveSessionError(err);
+        setError(normalized);
+        toast.error(`Không thể bắt đầu buổi học: ${normalized.message}`);
         throw err;
       } finally {
         setIsCreating(false);
@@ -84,7 +93,7 @@ export function useLiveSessionState({ classId, autoFetchActive = true }: UseLive
   // 4. End Session V2 (/api/live/sessions/:sessionId/end)
   const endSession = useCallback(
     async (sessionIdParam?: string) => {
-      const targetId = sessionIdParam || activeSession?.id || activeSession?._id;
+      const targetId = sessionIdParam || activeSession?.id || (activeSession as any)?._id;
       if (!targetId) {
         toast.error("Không tìm thấy sessionId để kết thúc.");
         return null;
@@ -96,9 +105,9 @@ export function useLiveSessionState({ classId, autoFetchActive = true }: UseLive
         toast.success("Đã kết thúc buổi học trực tuyến.");
         return res?.data?.data || null;
       } catch (err: unknown) {
-        const errorObj = err as { response?: { data?: { message?: string } }; message?: string };
-        const msg = errorObj?.response?.data?.message || errorObj?.message || "Không thể kết thúc buổi học.";
-        toast.error(`Lỗi khi kết thúc buổi học: ${msg}`);
+        const normalized = normalizeLiveSessionError(err);
+        setError(normalized);
+        toast.error(`Lỗi khi kết thúc buổi học: ${normalized.message}`);
         throw err;
       } finally {
         setIsEnding(false);

@@ -1,5 +1,5 @@
-import { useEffect, useCallback, useRef } from "react";
-import { connectSocket } from "../services/socketClient";
+import { useEffect, useCallback, useRef, useState } from "react";
+import { connectSocket, getSocket } from "../services/socketClient";
 import { toast } from "../utils/toast";
 
 export interface LiveSessionSocketEventData {
@@ -27,6 +27,7 @@ interface UseLiveSessionSocketProps {
   isTeacher?: boolean;
   onSessionStarted?: (data: LiveSessionSocketEventData) => void;
   onSessionEnded?: (data: LiveSessionSocketEventData) => void;
+  onNetworkChange?: (isOnline: boolean) => void;
 }
 
 export function useLiveSessionSocket({
@@ -34,47 +35,87 @@ export function useLiveSessionSocket({
   isTeacher = false,
   onSessionStarted,
   onSessionEnded,
+  onNetworkChange,
 }: UseLiveSessionSocketProps) {
+  const [isOnline, setIsOnline] = useState<boolean>(navigator.onLine);
+  const [isSocketConnected, setIsSocketConnected] = useState<boolean>(false);
+
   const onStartedRef = useRef(onSessionStarted);
   const onEndedRef = useRef(onSessionEnded);
+  const onNetworkChangeRef = useRef(onNetworkChange);
 
   useEffect(() => {
     onStartedRef.current = onSessionStarted;
     onEndedRef.current = onSessionEnded;
-  }, [onSessionStarted, onSessionEnded]);
+    onNetworkChangeRef.current = onNetworkChange;
+  }, [onSessionStarted, onSessionEnded, onNetworkChange]);
 
-  const handleSessionStarted = useCallback((data: LiveSessionSocketEventData) => {
-    console.log("📢 [Socket V2] LIVE_SESSION_STARTED received:", data);
-    if (data?.classId && data.classId !== classId) return;
+  // 1. Lắng nghe trạng thái mạng Online/Offline
+  useEffect(() => {
+    const handleOnline = () => {
+      setIsOnline(true);
+      if (onNetworkChangeRef.current) onNetworkChangeRef.current(true);
+    };
 
-    if (!isTeacher) {
-      toast.info(`📢 Lớp học trực tuyến "${data.title || "Buổi học"}" vừa bắt đầu! Bạn có thể tham gia ngay.`);
-    }
+    const handleOffline = () => {
+      setIsOnline(false);
+      if (onNetworkChangeRef.current) onNetworkChangeRef.current(false);
+      toast.warning("Mất kết nối mạng. Buổi học trực tuyến có thể bị gián đoạn.");
+    };
 
-    if (onStartedRef.current) {
-      onStartedRef.current(data);
-    }
-  }, [classId, isTeacher]);
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
 
-  const handleSessionEnded = useCallback((data: LiveSessionSocketEventData) => {
-    console.log("📢 [Socket V2] LIVE_SESSION_ENDED received:", data);
-    if (data?.classId && data.classId !== classId) return;
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
+  }, []);
 
-    if (!isTeacher) {
-      toast.info("Buổi học trực tuyến đã kết thúc.");
-    }
+  const handleSessionStarted = useCallback(
+    (data: LiveSessionSocketEventData) => {
+      console.log("📢 [Socket V2] LIVE_SESSION_STARTED received:", data);
+      if (data?.classId && data.classId !== classId) return;
 
-    if (onEndedRef.current) {
-      onEndedRef.current(data);
-    }
-  }, [classId, isTeacher]);
+      if (!isTeacher) {
+        toast.info(`📢 Lớp học trực tuyến "${data.title || "Buổi học"}" vừa bắt đầu! Bạn có thể tham gia ngay.`);
+      }
+
+      if (onStartedRef.current) {
+        onStartedRef.current(data);
+      }
+    },
+    [classId, isTeacher]
+  );
+
+  const handleSessionEnded = useCallback(
+    (data: LiveSessionSocketEventData) => {
+      console.log("📢 [Socket V2] LIVE_SESSION_ENDED received:", data);
+      if (data?.classId && data.classId !== classId) return;
+
+      if (!isTeacher) {
+        toast.info("Giáo viên đã kết thúc buổi học.");
+      }
+
+      if (onEndedRef.current) {
+        onEndedRef.current(data);
+      }
+    },
+    [classId, isTeacher]
+  );
 
   useEffect(() => {
     if (!classId) return;
 
     const socket = connectSocket();
 
-    // 1. Emit JOIN_CLASS_ROOM với payload chỉ có { classId } và Acknowledgement Callback
+    const updateConnectStatus = () => {
+      setIsSocketConnected(socket.connected);
+    };
+
+    updateConnectStatus();
+
+    // Join room với payload { classId } và Callback Ack
     const joinRoom = () => {
       socket.emit("JOIN_CLASS_ROOM", { classId }, (res: SocketAckResponse) => {
         if (res && !res.success) {
@@ -92,11 +133,13 @@ export function useLiveSessionSocket({
 
     joinRoom();
 
-    // 2. Đăng ký exact event handlers
+    // Đăng ký listeners
     socket.on("LIVE_SESSION_STARTED", handleSessionStarted);
     socket.on("LIVE_SESSION_ENDED", handleSessionEnded);
+    socket.on("connect", updateConnectStatus);
+    socket.on("disconnect", updateConnectStatus);
 
-    // 3. Tự động re-join room khi socket reconnect
+    // Tự động re-join room khi socket reconnect
     const handleReconnect = () => {
       console.log("🔄 [Socket Reconnected] Re-joining class room:", classId);
       joinRoom();
@@ -111,11 +154,18 @@ export function useLiveSessionSocket({
     return () => {
       socket.off("LIVE_SESSION_STARTED", handleSessionStarted);
       socket.off("LIVE_SESSION_ENDED", handleSessionEnded);
+      socket.off("connect", updateConnectStatus);
+      socket.off("disconnect", updateConnectStatus);
       socket.off("connect", handleReconnect);
 
       socket.emit("LEAVE_CLASS_ROOM", { classId }, () => {});
     };
   }, [classId, handleSessionStarted, handleSessionEnded]);
+
+  return {
+    isOnline,
+    isSocketConnected,
+  };
 }
 
 export default useLiveSessionSocket;
