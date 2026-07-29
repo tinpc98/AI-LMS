@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import liveApi from "../api/liveApi";
 import type { ILiveSession } from "../interface/liveInterface";
 import type {
@@ -14,8 +14,7 @@ export function useStudentLive(
   const [activeSession, setActiveSession] = useState<ILiveSession | null>(rawLiveSession || null);
   const [loading, setLoading] = useState(false);
 
-  // Fetch active session from API if classId is provided
-  useEffect(() => {
+  const refreshLiveSession = useCallback(() => {
     if (classId) {
       setLoading(true);
       liveApi
@@ -23,15 +22,23 @@ export function useStudentLive(
         .then((res: any) => {
           if (res.data?.data) {
             setActiveSession(res.data.data);
+          } else {
+            setActiveSession(null);
           }
         })
         .catch((err: any) => {
           console.warn("Không tìm thấy active live session:", err);
+          setActiveSession(null);
         })
         .finally(() => {
           setLoading(false);
         });
     }
+  }, [classId]);
+
+  // Fetch active session from API if classId is provided
+  useEffect(() => {
+    refreshLiveSession();
   }, [classId]);
 
   // Current Live Session Hero item
@@ -160,6 +167,7 @@ export function useStudentLive(
     upcomingSessions,
     pastSessions,
     stats,
+    refreshLiveSession,
   };
 }
 

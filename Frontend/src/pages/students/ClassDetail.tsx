@@ -11,6 +11,7 @@ import PageContainer from "../../components/common/PageContainer";
 import StudentClassHeader from "../../components/student/classDetail/StudentClassHeader";
 import StatisticSection from "../../components/student/classDetail/StatisticSection";
 import OverviewCard from "../../components/student/classDetail/OverviewCard";
+import LiveSessionCard from "../../components/student/classDetail/LiveSessionCard";
 import TeacherInformationCard from "../../components/student/classDetail/TeacherInformationCard";
 import NextSessionCard from "../../components/student/classDetail/NextSessionCard";
 import LearningProgressCard from "../../components/student/classDetail/LearningProgressCard";
@@ -26,6 +27,7 @@ import ClassDiscussionTab from "../../components/student/classDetail/chat/ClassD
 import ExamLobbyModals from "../../components/student/classDetail/exams/ExamLobbyModals";
 import type { ExamPopupState } from "../../components/student/classDetail/exams/ExamLobbyModals";
 import { useJitsiLiveSession } from "../../hooks/useJitsiLiveSession";
+import { useStudentLive } from "../../hooks/useStudentLive";
 
 const MOCK_RANKINGS = [
   { rank: 1, name: "Trần Quốc Quân", short: "TQ", score: 9.8, bg: "bg-yellow-100 text-yellow-700 border-yellow-200", isUser: false },
@@ -52,10 +54,21 @@ export default function ClassDetail() {
   // Custom hook for Live Session
   const {
     meetingRoomId,
-    notificationMessage,
-    setNotificationMessage,
+    activeSession: jitsiActiveSession,
     handleJoinLiveClass,
   } = useJitsiLiveSession({ classId, isTeacher: false });
+
+  const {
+    currentLiveItem,
+    upcomingSessions,
+    pastSessions,
+    refreshLiveSession,
+  } = useStudentLive(classId, jitsiActiveSession, classInfo);
+
+  // Sync state when Socket notifies useJitsiLiveSession that session started/ended
+  useEffect(() => {
+    refreshLiveSession();
+  }, [jitsiActiveSession, refreshLiveSession]);
 
   // Exams & Lobby States
   const [exams, setExams] = useState<IExam[]>([]);
@@ -77,12 +90,7 @@ export default function ClassDetail() {
     fetchClassExams();
   }, [classId]);
 
-  useEffect(() => {
-    if (notificationMessage) {
-      toast.info(notificationMessage, "Buổi học trực tuyến");
-      setNotificationMessage(null);
-    }
-  }, [notificationMessage, setNotificationMessage]);
+  // Remove old notification message effect since it's handled globally now
 
   useEffect(() => {
     let timer: NodeJS.Timeout;
@@ -268,7 +276,6 @@ export default function ClassDetail() {
                     maxStudents={(classInfo as any).maxStudents || 40}
                     status={classInfo.status as any}
                     learningMode={classInfo.learningMode || "Offline"}
-                    googleMeetLink={(classInfo as any).googleMeetLink}
                     googleCalendarEventId={(classInfo as any).googleCalendarEventId}
                   />
                   <LearningProgressCard
@@ -281,6 +288,12 @@ export default function ClassDetail() {
                   />
                 </Col>
                 <Col xs={24} lg={9} xl={8}>
+                  <LiveSessionCard
+                    currentLiveItem={currentLiveItem}
+                    upcomingSessions={upcomingSessions}
+                    pastSessions={pastSessions}
+                    onJoinLive={() => void handleJoinLiveClass()}
+                  />
                   <TeacherInformationCard teacher={classInfo.teacherId as any} />
                   <NextSessionCard
                     schedule={(classInfo as any).schedule}
