@@ -29,11 +29,7 @@ import type { ExamPopupState } from "../../components/student/classDetail/exams/
 import { useJitsiLiveSession } from "../../hooks/useJitsiLiveSession";
 import { useStudentLive } from "../../hooks/useStudentLive";
 
-const MOCK_RANKINGS = [
-  { rank: 1, name: "Trần Quốc Quân", short: "TQ", score: 9.8, bg: "bg-yellow-100 text-yellow-700 border-yellow-200", isUser: false },
-  { rank: 2, name: "Lê Anh", short: "LA", score: 9.5, bg: "bg-slate-100 text-slate-700 border-slate-200", isUser: false },
-  { rank: 12, name: "Bạn (Minh Quân)", short: "MQ", score: 8.5, bg: "bg-primary-container text-on-primary-container", isUser: true },
-];
+// MOCK_RANKINGS has been removed. Feature deferred to Sprint 4.
 
 export default function ClassDetail() {
   const { classId } = useParams<{ classId: string }>();
@@ -420,25 +416,10 @@ export default function ClassDetail() {
               Xếp hạng lớp học
             </h4>
             <div className="space-y-3">
-              {MOCK_RANKINGS.map((user, idx) => (
-                <div
-                  key={idx}
-                  className={`flex items-center justify-between p-2 rounded-lg ${user.isUser ? "bg-primary-container/10 border border-primary/20" : ""}`}
-                >
-                  <div className="flex items-center space-x-3 min-w-0">
-                    <span className={`text-xs font-bold w-4 text-center ${user.isUser ? "text-primary" : "text-secondary"}`}>
-                      {user.rank}
-                    </span>
-                    <div className={`w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center font-bold text-xs border ${user.bg}`}>
-                      {user.short}
-                    </div>
-                    <span className={`text-xs sm:text-sm truncate ${user.isUser ? "font-bold" : "font-medium"}`}>
-                      {user.name}
-                    </span>
-                  </div>
-                  <span className="text-xs sm:text-sm font-bold text-primary ml-2">{user.score}</span>
-                </div>
-              ))}
+              <div className="text-center py-6 text-on-surface-variant">
+                <span className="material-symbols-outlined text-4xl mb-2 opacity-50">leaderboard</span>
+                <p className="text-sm font-medium">Bảng xếp hạng sẽ ra mắt ở bản cập nhật Sprint 4.</p>
+              </div>
             </div>
           </div>
 
@@ -450,7 +431,7 @@ export default function ClassDetail() {
               <div>
                 <h4 className="font-bold text-on-surface text-sm sm:text-base">AI Learning Insights</h4>
                 <p className="text-xs sm:text-sm text-secondary mt-1 px-4">
-                  "Hệ thống nhận thấy lớp học đang triển khai chương trình học mới. Bạn hãy hoàn thành việc xem các video bài giảng thực tế để nắm chắc kiến thức!"
+                  Tính năng phân tích quá trình học tập bằng AI đang được phát triển và sẽ sớm ra mắt (Sprint 4).
                 </p>
               </div>
             </div>
