@@ -78,15 +78,9 @@ export const useClassDetail = (classId?: string): UseClassDetailReturn => {
         await Promise.all(
           fetchedAssignments.map(async (item: IAssignment) => {
             try {
-              const subs = await assignmentApi.getSubmissionsByAssignment(item._id);
-              const hasSubmitted = subs.some(
-                (s: any) =>
-                  s.studentId === studentId ||
-                  s.studentId?._id === studentId ||
-                  s.student === studentId ||
-                  s.student?._id === studentId
-              );
-              if (hasSubmitted) {
+              const submission = await assignmentApi.getMySubmission(item._id);
+              // Consider submitted if a submission exists and it's not withdrawn
+              if (submission && submission.status !== "withdrawn") {
                 submittedIds.push(item._id);
               }
             } catch {

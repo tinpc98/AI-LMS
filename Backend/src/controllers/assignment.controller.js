@@ -275,17 +275,36 @@ const assignmentController = {
     }
   },
 
-  // 8. Lấy bài nộp cá nhân của Học sinh
+  // 8. Lấy chi tiết 1 bài nộp (Đã được xác thực quyền qua canViewSubmission middleware)
+  getSubmissionById: async (req, res) => {
+    try {
+      // req.submission đã được gán bởi middleware canViewSubmission
+      return res.status(200).json({ success: true, submission: req.submission, data: req.submission });
+    } catch (error) {
+      return res.status(500).json({ message: error.message || "Lỗi server khi lấy bài nộp" });
+    }
+  },
+
+  // 9. Lấy bài nộp cá nhân của Học sinh
   getMySubmission: async (req, res) => {
     try {
       const { assignmentId } = req.params;
+      
+      if (!req.user || (!req.user.id && !req.user._id)) {
+        return res.status(401).json({ message: "UNAUTHENTICATED" });
+      }
       const studentId = req.user.id || req.user._id;
 
       if (!assignmentId || !mongoose.Types.ObjectId.isValid(assignmentId)) {
-        return res.status(400).json({ message: "ID bài tập không hợp lệ!" });
+        return res.status(400).json({ message: "INVALID_ID" });
       }
 
       const submission = await Submission.findOne({ assignmentId, studentId }).lean();
+      
+      if (!submission) {
+        return res.status(404).json({ message: "SUBMISSION_NOT_FOUND" });
+      }
+      
       return res.status(200).json({ success: true, submission, data: submission });
     } catch (error) {
       return res

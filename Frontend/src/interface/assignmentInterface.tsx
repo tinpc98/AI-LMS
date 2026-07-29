@@ -24,7 +24,7 @@ export interface ISubmission {
   classId: string;
   content?: string;
   attachments: IAttachment[];
-  status: "submitted" | "late" | "graded";
+  status: "submitted" | "late" | "graded" | "withdrawn" | "resubmitted";
   grade: number | null;
   feedback?: string;
   createdAt: string;

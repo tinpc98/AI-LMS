@@ -63,12 +63,23 @@ const assignmentApi = {
     return response.data.submission;
   },
 
+  // Xem chi tiết 1 bài nộp cụ thể (đã được xác thực quyền)
+  getSubmissionById: async (submissionId: string): Promise<ISubmission | null> => {
+    try {
+      const response = await axiosClient.get<{ submission: ISubmission }>(`/api/assignments/submissions/detail/${submissionId}`);
+      return response.data.submission ?? (response.data as any).data ?? null;
+    } catch {
+      return null;
+    }
+  },
+
   // Học sinh xem bài nộp cá nhân
   getMySubmission: async (assignmentId: string): Promise<ISubmission | null> => {
     try {
-      const response = await axiosClient.get<{ submission: ISubmission }>(`/api/assignments/my-submission/${assignmentId}`);
+      const response = await axiosClient.get<{ submission: ISubmission }>(`/api/assignments/${assignmentId}/my-submission`);
       return (response.data as any).submission ?? (response.data as any).data ?? null;
-    } catch {
+    } catch (err: any) {
+      if (err.response?.status === 404) return null; // No submission found
       return null;
     }
   },

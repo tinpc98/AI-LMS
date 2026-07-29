@@ -1,6 +1,6 @@
 import express from "express";
 import assignmentController from "../controllers/assignment.controller.js";
-import { verifyUser, isTeacher } from "../middlewares/auth.middlewares.js";
+import { verifyUser, isTeacher, canViewSubmission } from "../middlewares/auth.middlewares.js";
 import upload from "../middlewares/upload.middlewares.js";
 
 const router = express.Router();
@@ -54,9 +54,17 @@ router.get(
   assignmentController.getSubmissionsByAssignment
 );
 
+// Xem chi tiết 1 bài nộp cụ thể (Giáo viên hoặc Học sinh có quyền)
+router.get(
+  "/submissions/detail/:submissionId",
+  verifyUser,
+  canViewSubmission,
+  assignmentController.getSubmissionById
+);
+
 // Học sinh xem bài nộp cá nhân
 router.get(
-  "/my-submission/:assignmentId",
+  "/:assignmentId/my-submission",
   verifyUser,
   assignmentController.getMySubmission
 );

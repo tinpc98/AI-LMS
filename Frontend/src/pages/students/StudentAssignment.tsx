@@ -145,8 +145,8 @@ const StudentAssignmentContent = () => {
     );
   }
 
-  const deadlineFormatted = assignment?.dueDate
-    ? new Date(assignment.dueDate).toLocaleString("vi-VN")
+  const deadlineFormatted = assignment?.deadline
+    ? new Date(assignment.deadline).toLocaleString("vi-VN")
     : "Không có hạn nộp";
 
   const isGraded = Boolean(
