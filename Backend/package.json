@@ -34,6 +34,7 @@
     "test:exam-attempt-snapshot": "node ./src/scripts/testExamAttemptSnapshotUnit.js",
     "test:ai-db": "node -e \"process.env.NODE_ENV='test'; import('./src/scripts/auditSprint1DBTests.js').catch(e => { console.error(e); process.exit(1); })\"",
     "test:all": "npm run test:validator && npm run test:essay-validator && npm run test:examset-metrics && npm run test:examset-question-metrics-flow && npm run test:examset-detail && npm run test:examset-draft && npm run test:examset-new-version && npm run test:examset-versions && npm run test:examset-restore && npm run test:examset-share && npm run test:examset-share-service && npm run test:examset-share-revoke && npm run test:examset-share-list && npm run test:examset-shared-with-me && npm run test:examset-access-middleware && npm run test:examset-share-update-metadata && npm run test:ai-core && npm run test:ai-summary && npm run test:ai-question-generation && npm run test:ai-exam-generation && npm run test:ai-grading && npm run test:exam-attempt-snapshot && npm run test:ai-summary-integration",
+    "test:ai-provider-unit": "node ./src/scripts/testGeminiProviderUnit.js",
     "test:ai-provider-smoke": "node ./src/scripts/testGeminiProviderSmoke.js"
   },
   "author": "",

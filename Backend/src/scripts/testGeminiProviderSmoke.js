@@ -3,70 +3,94 @@ import { GeminiAIProvider } from "../ai/providers/gemini.provider.js";
 
 const runSmokeTest = async () => {
   if (process.env.RUN_REAL_AI_SMOKE !== "true") {
-    console.log("⏭️ Bỏ qua smoke test Gemini thật (Cần cờ RUN_REAL_AI_SMOKE=true)");
-    process.exit(0);
+    throw new Error("Smoke test thật chỉ chạy khi RUN_REAL_AI_SMOKE=true");
   }
 
-  if (process.env.AI_MOCK_MODE === "true") {
-    console.error("❌ Cấu hình sai: AI_MOCK_MODE đang là true. Cần false để chạy thật.");
-    process.exit(1);
+  if (process.env.AI_MOCK_MODE !== "false") {
+    throw new Error("Smoke test thật yêu cầu AI_MOCK_MODE=false");
   }
 
-  if (!process.env.GEMINI_API_KEY) {
-    console.error("❌ Thiếu GEMINI_API_KEY.");
-    process.exit(1);
+  if (!process.env.GEMINI_API_KEY?.trim()) {
+    throw new Error("Thiếu GEMINI_API_KEY");
   }
 
-  if (!process.env.AI_MODEL) {
-    console.error("❌ Thiếu AI_MODEL.");
-    process.exit(1);
+  if (!process.env.AI_MODEL?.trim()) {
+    throw new Error("Thiếu AI_MODEL");
   }
 
   console.log("==========================================");
-  console.log("🔥 BẮT ĐẦU SMOKE TEST GEMINI PROVIDER THẬT");
+  console.log("BẮT ĐẦU SMOKE TEST GEMINI PROVIDER THẬT");
   console.log("==========================================\n");
 
-  try {
-    const provider = new GeminiAIProvider(process.env.GEMINI_API_KEY, process.env.AI_MODEL);
-    
-    if (provider.getName() !== "google-gemini") {
-      throw new Error(`Tên provider không đúng: ${provider.getName()}`);
-    }
+  const provider = new GeminiAIProvider(process.env.GEMINI_API_KEY, process.env.AI_MODEL);
 
-    if (!provider.getModelName()) {
-      throw new Error("Không có model name");
-    }
+  const responseSchema = {
+    type: "object",
+    properties: {
+      success: {
+        type: "boolean",
+      },
+      message: {
+        type: "string",
+      },
+    },
+    required: ["success", "message"],
+    additionalProperties: false,
+  };
 
-    console.log(`[1] Khởi tạo Provider thành công: ${provider.getName()} | Model: ${provider.getModelName()}`);
+  const prompt = `
+Trả về một JSON object xác nhận Gemini API hoạt động.
 
-    // Call generateJSON
-    const prompt = "Please reply with a valid JSON object containing exactly one key 'message' with the value 'hello'.";
-    
-    const result = await provider.generateJSON({
-      prompt,
-      temperature: 0.1,
-      maxTokens: 50,
-      timeoutMs: 15000, // short timeout
-      responseSchema: {
-        type: "object",
-        properties: {
-          message: { type: "string" }
-        }
-      }
-    });
+Yêu cầu:
+- success phải là true.
+- message phải là "Gemini API hoạt động".
+- Không dùng Markdown code fence.
+- Không trả nội dung ngoài JSON.
+`;
 
-    if (!result.data || result.data.message?.toLowerCase() !== "hello") {
-      throw new Error("Dữ liệu trả về không khớp JSON yêu cầu.");
-    }
+  const result = await provider.generateJSON({
+    prompt,
+    systemInstruction: "Bạn là hệ thống kiểm thử API. Chỉ trả về JSON hợp lệ.",
+    responseSchema,
+    temperature: 0,
+    maxTokens: 512,
+    timeoutMs: 30000,
+  });
 
-    console.log(`[2] Generate JSON thành công. Duration: ${result.durationMs}ms`);
-    console.log(`[3] Input Tokens: ${result.inputTokens} | Output Tokens: ${result.outputTokens}`);
-    console.log("\n✅ SMOKE TEST PASSED.");
-    process.exit(0);
-  } catch (error) {
-    console.error(`\n❌ SMOKE TEST THẤT BẠI: ${error.message}`);
-    process.exit(1);
+  console.log(`Provider: ${provider.getName()}`);
+  console.log(`Model: ${provider.getModelName()}`);
+  console.log(`Structured Output: PASS`);
+
+  if (!result?.data) {
+    throw new Error("Provider không trả về data");
   }
+
+  if (result.data.success !== true) {
+    throw new Error("Gemini không trả về success=true");
+  }
+
+  if (result.data.message !== "Gemini API hoạt động") {
+    throw new Error("Gemini trả về message không đúng contract");
+  }
+
+  console.log(`JSON Validation: PASS`);
+  console.log(`Input Tokens: ${result.inputTokens}`);
+  console.log(`Output Tokens: ${result.outputTokens}`);
+  console.log(`Finish Reason: ${result.finishReason}`);
 };
 
-runSmokeTest();
+async function main() {
+  try {
+    await runSmokeTest();
+    console.log("\nGEMINI PROVIDER SMOKE TEST PASS");
+    process.exitCode = 0;
+  } catch (error) {
+    console.error(`\n❌ SMOKE TEST THẤT BẠI: ${error.message}`);
+    if (error.details) {
+      console.error(error.details);
+    }
+    process.exitCode = 1;
+  }
+}
+
+main();
