@@ -3,6 +3,7 @@ import dotenv from "dotenv";
 import express from "express";
 import cors from "cors"; // Thêm thư viện cấu hình cho phép Frontend gọi API
 import { connectDB } from "./src/config/database.js";
+import { validateEnv, getAllowedOrigins } from "./src/config/env.js";
 import socketHandler from "./src/sockets/exam.socket.js"; // 3. Import bộ xử lý Real-time
 import liveSocketHandler from "./src/sockets/live.socket.js"; // Import xử lý Socket phòng học online
 import { createServer } from "http";
@@ -40,28 +41,17 @@ import { validateJaasConfig } from "./src/controllers/jaas.controller.js";
 // Kích hoạt cấu hình file .env – phải gọi TRƯỚC khi đọc bất kỳ biến môi trường nào
 dotenv.config();
 
-// Kiểm tra cấu hình 8x8 JaaS khi khởi động (Fail-fast config check)
+// Kiểm tra các biến môi trường bắt buộc (Fail-fast nếu thiếu)
+validateEnv();
+
+// Kiểm tra cấu hình 8x8 JaaS khi khởi động (tính năng tùy chọn, chỉ cảnh báo nếu thiếu)
 validateJaasConfig();
 
 const app = express();
 const port = process.env.PORT || 5000;
 
 // ── CORS: Strict origin whitelist ──────────────────────────────────────────
-// Biến FRONTEND_ORIGINS là BẮT BUỘC trong môi trường production.
-// Định dạng: chuỗi các origin cách nhau bởi dấu phẩy.
-// Ví dụ: FRONTEND_ORIGINS=https://app.example.com,https://admin.example.com
-if (!process.env.FRONTEND_ORIGINS && process.env.NODE_ENV === "production") {
-  console.error("❌ FATAL: Biến môi trường FRONTEND_ORIGINS chưa được cấu hình!");
-  process.exit(1);
-}
-
-const allowedOrigins = (
-  // Development fallback: chỉ cho phép localhost – KHÔNG dùng wildcard "*"
-  process.env.FRONTEND_ORIGINS || "http://localhost:5173,http://127.0.0.1:5173"
-)
-  .split(",")
-  .map((u) => u.trim())
-  .filter(Boolean);
+const allowedOrigins = getAllowedOrigins();
 
 const corsOptions = {
   origin: (origin, cb) => {

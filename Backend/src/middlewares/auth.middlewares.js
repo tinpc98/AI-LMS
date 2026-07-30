@@ -16,7 +16,7 @@ export const verifyUser = async (req, res, next) => {
       return res.status(401).json({ message: "Định dạng token không hợp lệ!" });
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || "123456");
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
     // Chuẩn hóa đính kèm cả id và _id để tránh mismatch giữa các controllers
     const userId = decoded.id || decoded._id;

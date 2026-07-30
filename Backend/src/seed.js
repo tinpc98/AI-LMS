@@ -15,7 +15,12 @@ import ExamAttempt from "./models/examAttempt.model.js";
 
 dotenv.config();
 
-const MONGO_URI = process.env.MONGO_URI || "mongodb+srv://admin:admin123@cluster0.wissmyr.mongodb.net/AI-LMS?appName=Cluster0";
+const MONGO_URI = process.env.MONGO_URI;
+
+if (!MONGO_URI) {
+    console.error("❌ FATAL: Thiếu biến môi trường MONGO_URI, không thể chạy seed script.");
+    process.exit(1);
+}
 
 // Tạo Model Course tạm thời (do class.model.js dùng ref: "Course")
 const courseSchema = new mongoose.Schema({ title: String, code: String });
