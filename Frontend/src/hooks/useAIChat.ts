@@ -1,14 +1,17 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import aiApi from "../api/aiApi";
-import type { IChatMessage, IChatSession } from "../api/aiApi";
+import type { IChatMessage, AIChatSession } from "../api/aiApi";
 import { toast } from "../utils/toast";
 
+export type AIChatInitStatus = "idle" | "initializing" | "ready" | "error";
+
 export function useAIChat(lessonId?: string) {
-  const [session, setSession] = useState<IChatSession | null>(null);
+  const [session, setSession] = useState<AIChatSession | null>(null);
   const [messages, setMessages] = useState<IChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isTyping, setIsTyping] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [initStatus, setInitStatus] = useState<AIChatInitStatus>("idle");
   
   const initRef = useRef<string | null>(null);
 
@@ -18,18 +21,22 @@ export function useAIChat(lessonId?: string) {
     setMessages([]);
     setError(null);
     setIsLoading(false);
+    setInitStatus("idle");
     initRef.current = null;
   }, [lessonId]);
 
   const initSession = useCallback(async () => {
     if (!lessonId) {
+      setInitStatus("error");
       setError("AI Scholar hiện chỉ hỗ trợ trong ngữ cảnh bài học. Vui lòng vào một bài học cụ thể để bắt đầu.");
       return;
     }
 
-    if (initRef.current === lessonId) return;
-    initRef.current = lessonId;
+    const contextKey = `lessonId:${lessonId}`;
+    if (initRef.current === contextKey) return;
+    initRef.current = contextKey;
 
+    setInitStatus("initializing");
     setIsLoading(true);
     setError(null);
     try {
@@ -37,24 +44,53 @@ export function useAIChat(lessonId?: string) {
       setSession(newSession);
       if (newSession.messages && newSession.messages.length > 0) {
         setMessages(newSession.messages);
-      } else if (newSession._id) {
+      } else if (newSession.id) {
         // Fallback fetch history if messages array isn't populated directly
-        const history = await aiApi.getChatHistory(newSession._id);
+        const history = await aiApi.getChatHistory(newSession.id);
         setMessages(history);
       }
+      setInitStatus("ready");
     } catch (err: any) {
-      console.error("[useAIChat] Init session error:", err);
+      console.error("[AI Chat] init failed", {
+        status: err.response?.status,
+        data: err.response?.data,
+        url: err.config?.url,
+        method: err.config?.method
+      });
       initRef.current = null; // reset so user can retry
-      setError(err.response?.data?.message || "Không thể khởi tạo phiên trò chuyện AI.");
-      toast.error(err.response?.data?.message || "Không thể khởi tạo phiên trò chuyện AI.");
+      setInitStatus("error");
+      
+      let errorMsg = "Không thể khởi tạo phiên trò chuyện AI.";
+      if (err.response?.status === 400) {
+         errorMsg = "Không thể mở trợ lý AI trong nội dung hiện tại.";
+      } else if (err.response?.status === 401) {
+         errorMsg = "Phiên đăng nhập đã hết hạn.";
+      } else if (err.response?.status === 403) {
+         errorMsg = "Bạn không có quyền sử dụng trợ lý AI tại đây.";
+      } else if (err.response?.status === 429) {
+         errorMsg = "Bạn đã sử dụng hết lượt AI hiện tại.";
+      } else if (err.response?.data?.message) {
+         errorMsg = err.response.data.message;
+      }
+      
+      setError(errorMsg);
     } finally {
       setIsLoading(false);
     }
   }, [lessonId]);
 
   const sendMessage = useCallback(async (text: string) => {
-    if (!session || !session._id) {
-      toast.error("Phiên trò chuyện chưa được khởi tạo!");
+    if (initStatus === "initializing") {
+      return;
+    }
+    
+    if (initStatus === "error") {
+      toast.error(error ?? "Không thể khởi tạo phiên trò chuyện.");
+      return;
+    }
+
+    if (!session?.id) {
+      toast.error("Phiên trò chuyện chưa sẵn sàng.");
       return;
     }
     
@@ -66,10 +102,9 @@ export function useAIChat(lessonId?: string) {
     setError(null);
 
     try {
-      const response = await aiApi.sendChatMessage(session._id, text);
+      console.log("[AI Chat] sending message for session:", session.id);
+      const response = await aiApi.sendChatMessage(session.id, text);
       setMessages((prev) => {
-        // Thay thế message cuối cùng (nếu cần sync _id) hoặc chỉ thêm response
-        // Ở đây đơn giản thêm response của AI vào cuối
         return [...prev, response];
       });
     } catch (err: any) {
@@ -90,7 +125,7 @@ export function useAIChat(lessonId?: string) {
     } finally {
       setIsTyping(false);
     }
-  }, [session]);
+  }, [session, initStatus, error]);
 
   return {
     session,
@@ -98,6 +133,7 @@ export function useAIChat(lessonId?: string) {
     isLoading,
     isTyping,
     error,
+    initStatus,
     initSession,
     sendMessage,
   };

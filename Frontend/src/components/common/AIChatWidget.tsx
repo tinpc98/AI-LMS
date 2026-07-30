@@ -16,13 +16,13 @@ export const AIChatWidget: React.FC = () => {
   // Disable in exam attempts to prevent cheating
   const isExamAttempt = location.pathname.includes("/student/exam-attempt/") || location.pathname.includes("/student/exam/");
   
-  const { session, messages, isLoading, isTyping, error, initSession, sendMessage } = useAIChat(lessonIdFromUrl);
+  const { session, messages, isLoading, isTyping, error, initStatus, initSession, sendMessage } = useAIChat(lessonIdFromUrl);
 
   useEffect(() => {
-    if (isOpen && !session && !isLoading) {
+    if (isOpen && initStatus === "idle") {
       initSession();
     }
-  }, [isOpen, session, isLoading, initSession]);
+  }, [isOpen, initStatus, initSession]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -43,7 +43,7 @@ export const AIChatWidget: React.FC = () => {
   if (isExamAttempt) return null;
 
   const handleSend = () => {
-    if (inputText.trim() && !isTyping && !isLoading) {
+    if (inputText.trim() && !isTyping && initStatus === "ready") {
       sendMessage(inputText);
       setInputText("");
     }
@@ -77,7 +77,23 @@ export const AIChatWidget: React.FC = () => {
 
           {/* Message List */}
           <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-4 bg-slate-50 custom-scrollbar">
-            {messages.length === 0 && !isLoading ? (
+            {initStatus === "error" ? (
+              <div className="flex flex-col items-center justify-center h-full text-gray-500">
+                <span className="material-symbols-outlined text-5xl mb-3 text-red-400">error</span>
+                <p className="text-sm font-medium text-center px-4 mb-4 text-red-500">{error || "Không thể khởi tạo trợ lý AI."}</p>
+                <button 
+                  onClick={initSession}
+                  className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors text-sm font-medium shadow-sm"
+                >
+                  Thử lại
+                </button>
+              </div>
+            ) : initStatus === "initializing" ? (
+              <div className="flex flex-col items-center justify-center h-full text-gray-400">
+                <span className="material-symbols-outlined text-5xl mb-3 opacity-60 animate-pulse" style={{ fontVariationSettings: "'FILL' 1" }}>robot_2</span>
+                <p className="text-sm font-medium text-center px-4 animate-pulse">Đang khởi tạo trợ lý AI...</p>
+              </div>
+            ) : messages.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full text-gray-400">
                 <span className="material-symbols-outlined text-5xl mb-3 opacity-60" style={{ fontVariationSettings: "'FILL' 1" }}>robot_2</span>
                 <p className="text-sm font-medium text-center px-4">AI Assistant đã sẵn sàng hỗ trợ bạn.</p>
@@ -93,7 +109,7 @@ export const AIChatWidget: React.FC = () => {
               </div>
             ) : (
               messages.map((msg, idx) => (
-                <div key={msg._id || idx} className={`flex flex-col max-w-[85%] ${msg.role === "user" ? "self-end items-end" : "self-start items-start"}`}>
+                <div key={msg.id || idx} className={`flex flex-col max-w-[85%] ${msg.role === "user" ? "self-end items-end" : "self-start items-start"}`}>
                   <div className={`px-4 py-2.5 rounded-2xl text-[14px] shadow-sm ${msg.role === "user" ? "bg-primary text-white rounded-br-sm" : "bg-white border border-outline-variant text-gray-800 rounded-bl-sm"}`}>
                     <ReactMarkdown className="prose prose-sm prose-p:leading-relaxed prose-pre:bg-gray-800 prose-pre:text-white prose-pre:p-2 prose-pre:rounded-md max-w-none">
                       {msg.content}
@@ -115,12 +131,6 @@ export const AIChatWidget: React.FC = () => {
               </div>
             )}
             
-            {error && (
-              <div className="self-center bg-red-50 text-red-600 px-4 py-2 rounded-lg text-xs border border-red-100 flex items-center gap-2">
-                <span className="material-symbols-outlined text-sm">error</span>
-                {error}
-              </div>
-            )}
             <div ref={messagesEndRef} />
           </div>
 
@@ -128,12 +138,12 @@ export const AIChatWidget: React.FC = () => {
           <div className="p-4 bg-white border-t border-outline-variant">
             <div className="relative flex items-center">
               <input
-                className="w-full pr-12 pl-4 py-3 bg-gray-100 border border-transparent rounded-xl text-sm focus:bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all outline-none"
+                className="w-full pr-12 pl-4 py-3 bg-gray-100 border border-transparent rounded-xl text-sm focus:bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all outline-none disabled:opacity-50 disabled:cursor-not-allowed"
                 placeholder="Nhập câu hỏi của bạn..."
                 value={inputText}
                 onChange={(e) => setInputText(e.target.value)}
                 onKeyDown={handleKeyDown}
-                disabled={isLoading || isTyping}
+                disabled={initStatus !== "ready" || isTyping}
               />
               <button
                 className="absolute right-2 p-2 text-primary hover:bg-primary/10 rounded-lg transition-colors disabled:opacity-50 flex items-center justify-center"
