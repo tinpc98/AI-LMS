@@ -14,11 +14,12 @@ import {
 } from "../controllers/auth.controllers.js";
 import { loginValidation } from "../utils/validators.js";
 import { verifyUser, isAdmin } from "../middlewares/auth.middlewares.js";
+import { loginRateLimit } from "../middlewares/loginRateLimit.middlewares.js";
 
 const route = Router();
 
 // Auth routes công khai & cá nhân
-route.post("/login", loginValidation, login);
+route.post("/login", loginRateLimit, loginValidation, login);
 route.get("/me", verifyUser, getMyProfile);
 route.put("/me", verifyUser, updateMyProfile);
 

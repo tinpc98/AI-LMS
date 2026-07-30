@@ -1,6 +1,7 @@
 import "dotenv/config";
 import dotenv from "dotenv";
 import express from "express";
+import helmet from "helmet";
 import cors from "cors"; // Thêm thư viện cấu hình cho phép Frontend gọi API
 import { connectDB } from "./src/config/database.js";
 import { validateEnv, getAllowedOrigins } from "./src/config/env.js";
@@ -65,6 +66,7 @@ const corsOptions = {
 };
 
 // Cấu hình Middleware
+app.use(helmet());
 app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));

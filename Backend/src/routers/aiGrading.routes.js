@@ -5,8 +5,17 @@ import {
 } from "../controllers/aiGrading.controller.js";
 import { verifyUser, isTeacher } from "../middlewares/auth.middlewares.js";
 import { checkAIQuota } from "../middlewares/aiQuota.middlewares.js";
+import { createRateLimiter } from "../middlewares/rateLimit.middlewares.js";
 
 const router = express.Router({ mergeParams: true });
+
+const aiGradingRateLimit = createRateLimiter({
+  windowMs: 60 * 1000,
+  max: 5,
+  keyGenerator: (req) => req.user.id || req.user._id,
+  code: "AI_RATE_LIMIT_EXCEEDED",
+  message: "Bạn đã gửi quá nhiều yêu cầu chấm điểm AI. Vui lòng thử lại sau.",
+});
 
 // AI sinh điểm đề xuất cho 1 câu tự luận
 // Cần check quota "grading"
@@ -14,6 +23,7 @@ router.post(
   "/:attemptId/questions/:questionId/grade-suggestion",
   verifyUser,
   isTeacher,
+  aiGradingRateLimit,
   checkAIQuota("grading"),
   generateGradeSuggestion
 );

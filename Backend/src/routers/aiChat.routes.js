@@ -3,7 +3,16 @@ import { createSession, sendMessage, getHistory } from "../controllers/aiChat.co
 import { verifyUser } from "../middlewares/auth.middlewares.js";
 import { checkAIChatLessonAccess } from "../middlewares/aiChatLessonAccess.middlewares.js";
 import { checkAIQuota } from "../middlewares/aiQuota.middlewares.js";
+import { createRateLimiter } from "../middlewares/rateLimit.middlewares.js";
 import mongoose from "mongoose";
+
+const aiChatRateLimit = createRateLimiter({
+  windowMs: 60 * 1000,
+  max: 5,
+  keyGenerator: (req) => req.user.id || req.user._id,
+  code: "AI_RATE_LIMIT_EXCEEDED",
+  message: "Bạn đã gửi quá nhiều tin nhắn. Vui lòng thử lại sau.",
+});
 import { AIError, AIErrorCode } from "../utils/aiError.js";
 
 // Router is mounted at /api/ai/chat
@@ -62,6 +71,7 @@ router.post(
   "/sessions/:sessionId/messages",
   verifyUser,
   validateMessageRequest,
+  aiChatRateLimit,
   checkAIQuota("chatbot"),
   sendMessage
 );

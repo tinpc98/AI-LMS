@@ -3,7 +3,16 @@ import aiQuestionGenerationController from "../controllers/aiQuestionGeneration.
 import { verifyUser, isTeacher } from "../middlewares/auth.middlewares.js";
 import { checkAILessonAccess } from "../middlewares/aiLessonAccess.middlewares.js";
 import { checkAIQuota } from "../middlewares/aiQuota.middlewares.js";
+import { createRateLimiter } from "../middlewares/rateLimit.middlewares.js";
 import { body, validationResult } from "express-validator";
+
+const aiQuestionRateLimit = createRateLimiter({
+  windowMs: 60 * 1000,
+  max: 5,
+  keyGenerator: (req) => req.user.id || req.user._id,
+  code: "AI_RATE_LIMIT_EXCEEDED",
+  message: "Bạn đã gửi quá nhiều yêu cầu sinh câu hỏi. Vui lòng thử lại sau.",
+});
 
 const router = express.Router({ mergeParams: true });
 
@@ -82,6 +91,7 @@ router.post(
   isTeacher,
   validateQuestionGenerationRequest,
   handleQuestionGenerationValidation,
+  aiQuestionRateLimit,
   checkAIQuota("question-gen"),
   aiQuestionGenerationController.generateQuestionSet
 );
