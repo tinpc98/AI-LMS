@@ -5,6 +5,8 @@ import {
   getAttendanceByClass,
   getAttendanceByStudent,
   getAttendanceStats,
+  getClassSessions,
+  getAttendanceMatrix,
 } from "../controllers/attendance.controller.js";
 import { verifyUser, isTeacher } from "../middlewares/auth.middlewares.js";
 
@@ -13,6 +15,12 @@ const router = Router();
 // Giáo viên / Admin thực hiện điểm danh
 router.post("/", verifyUser, isTeacher, markAttendance);
 router.put("/:id", verifyUser, isTeacher, updateAttendance);
+
+// Xem danh sách các buổi học ảo (Virtual Sessions)
+router.get("/class/:classId/sessions", verifyUser, getClassSessions);
+
+// Xem ma trận điểm danh của lớp
+router.get("/class/:classId/matrix", verifyUser, getAttendanceMatrix);
 
 // Xem danh sách điểm danh theo lớp
 router.get("/class/:classId", verifyUser, getAttendanceByClass);

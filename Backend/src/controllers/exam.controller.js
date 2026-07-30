@@ -273,6 +273,7 @@ export const getExamById = async (req, res) => {
           delete safeData.feedbackIncorrect;
           if (Array.isArray(safeData.options)) {
             safeData.options = safeData.options.map(opt => {
+              if (typeof opt === 'string') return opt;
               const safeOpt = { ...opt };
               delete safeOpt.isCorrect;
               return safeOpt;

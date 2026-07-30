@@ -9,6 +9,7 @@ export interface LiveSessionSocketEventData {
   title?: string;
   status?: string;
   timestamp?: string;
+  activeCount?: number;
 }
 
 export interface SocketAckResponse {
@@ -28,6 +29,7 @@ interface UseLiveSessionSocketProps {
   onSessionStarted?: (data: LiveSessionSocketEventData) => void;
   onSessionEnded?: (data: LiveSessionSocketEventData) => void;
   onNetworkChange?: (isOnline: boolean) => void;
+  onParticipantsUpdated?: (count: number) => void;
 }
 
 export function useLiveSessionSocket({
@@ -36,6 +38,7 @@ export function useLiveSessionSocket({
   onSessionStarted,
   onSessionEnded,
   onNetworkChange,
+  onParticipantsUpdated,
 }: UseLiveSessionSocketProps) {
   const [isOnline, setIsOnline] = useState<boolean>(navigator.onLine);
   const [isSocketConnected, setIsSocketConnected] = useState<boolean>(false);
@@ -43,12 +46,14 @@ export function useLiveSessionSocket({
   const onStartedRef = useRef(onSessionStarted);
   const onEndedRef = useRef(onSessionEnded);
   const onNetworkChangeRef = useRef(onNetworkChange);
+  const onParticipantsUpdatedRef = useRef(onParticipantsUpdated);
 
   useEffect(() => {
     onStartedRef.current = onSessionStarted;
     onEndedRef.current = onSessionEnded;
     onNetworkChangeRef.current = onNetworkChange;
-  }, [onSessionStarted, onSessionEnded, onNetworkChange]);
+    onParticipantsUpdatedRef.current = onParticipantsUpdated;
+  }, [onSessionStarted, onSessionEnded, onNetworkChange, onParticipantsUpdated]);
 
   // 1. Lắng nghe trạng thái mạng Online/Offline
   useEffect(() => {
@@ -133,9 +138,20 @@ export function useLiveSessionSocket({
 
     joinRoom();
 
-    // Đăng ký listeners
+    // Đăng ký listeners (Xóa cũ để tránh duplicate)
+    socket.off("LIVE_SESSION_STARTED", handleSessionStarted);
+    socket.off("LIVE_SESSION_ENDED", handleSessionEnded);
+    socket.off("LIVE_PARTICIPANTS_UPDATED");
+    socket.off("connect", updateConnectStatus);
+    socket.off("disconnect", updateConnectStatus);
+
     socket.on("LIVE_SESSION_STARTED", handleSessionStarted);
     socket.on("LIVE_SESSION_ENDED", handleSessionEnded);
+    socket.on("LIVE_PARTICIPANTS_UPDATED", (data: any) => {
+      if (data?.classId === classId && onParticipantsUpdatedRef.current) {
+        onParticipantsUpdatedRef.current(data.activeCount);
+      }
+    });
     socket.on("connect", updateConnectStatus);
     socket.on("disconnect", updateConnectStatus);
 
@@ -154,6 +170,7 @@ export function useLiveSessionSocket({
     return () => {
       socket.off("LIVE_SESSION_STARTED", handleSessionStarted);
       socket.off("LIVE_SESSION_ENDED", handleSessionEnded);
+      socket.off("LIVE_PARTICIPANTS_UPDATED");
       socket.off("connect", updateConnectStatus);
       socket.off("disconnect", updateConnectStatus);
       socket.off("connect", handleReconnect);

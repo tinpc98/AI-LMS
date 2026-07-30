@@ -67,7 +67,7 @@ const assignmentApi = {
   getSubmissionById: async (submissionId: string): Promise<ISubmission | null> => {
     try {
       const response = await axiosClient.get<{ submission: ISubmission }>(`/api/assignments/submissions/detail/${submissionId}`);
-      return response.data.submission ?? (response.data as any).data ?? null;
+      return (response.data as any).submission ?? (response.data as any).data ?? null;
     } catch {
       return null;
     }

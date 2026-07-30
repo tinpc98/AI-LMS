@@ -1,4 +1,5 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
+import { attendanceApi } from "../api/attendanceApi";
 import type { IAttendanceItem, AttendanceStatus } from "../interface/attendanceInterface";
 import type {
   IExtendedAttendanceRecord,
@@ -6,7 +7,9 @@ import type {
   StudentAttendanceStats,
 } from "../types/studentAttendance";
 
-export function useStudentAttendance(rawRecords: IAttendanceItem[] = []) {
+export function useStudentAttendance(classId?: string) {
+  const [rawRecords, setRawRecords] = useState<IAttendanceItem[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
   const [filters, setFilters] = useState<StudentAttendanceFilterOptions>({
     searchQuery: "",
     monthFilter: "all",
@@ -14,6 +17,18 @@ export function useStudentAttendance(rawRecords: IAttendanceItem[] = []) {
     viewMode: "table",
     sortBy: "newest",
   });
+
+  useEffect(() => {
+    if (classId) {
+      setLoading(true);
+      attendanceApi.getAttendanceByStudent("me", classId)
+        .then((res) => {
+          setRawRecords(res.data || []);
+        })
+        .catch((err) => console.error("Fetch student attendance error:", err))
+        .finally(() => setLoading(false));
+    }
+  }, [classId]);
 
   // Enrich records with formatted session title, time, teacher name
   const extendedRecords: IExtendedAttendanceRecord[] = useMemo(() => {
@@ -142,6 +157,7 @@ export function useStudentAttendance(rawRecords: IAttendanceItem[] = []) {
   }, []);
 
   return {
+    loading,
     filters,
     stats,
     monthOptions,

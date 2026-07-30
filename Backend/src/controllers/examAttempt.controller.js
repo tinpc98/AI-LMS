@@ -23,7 +23,8 @@ export const startExam = async (req, res) => {
       });
     }
 
-    if (req.user.role !== "student") {
+    const userRole = String(req.user?.role || "").toLowerCase();
+    if (userRole !== "student") {
       return res.status(403).json({
         success: false,
         message: "Chỉ học sinh mới được phép làm bài thi!",
@@ -192,8 +193,9 @@ export const getExamAttemptDetail = async (req, res) => {
 
       const safeOptions =
         details.options?.map((option) => {
+          if (typeof option === 'string') return option;
           const safeOption =
-            typeof option.toObject === "function"
+            typeof option?.toObject === "function"
               ? option.toObject()
               : { ...option };
 
@@ -220,6 +222,7 @@ export const getExamAttemptDetail = async (req, res) => {
           title: exam.title,
           duration: exam.duration,
           startTime: exam.startTime,
+          classId: exam.classId,
         },
         questions: formattedQuestions,
       },
@@ -465,19 +468,29 @@ export const getAttemptsByExam = async (req, res) => {
       });
     }
 
-    const attempts = await ExamAttempt.find({ examId })
-      .populate({
-        path: "studentId",
-        select: "fullName studentCode avatar",
-      })
-      .sort({ createdAt: -1 });
+    const page = Math.max(1, Number(req.query.page) || 1);
+    const limit = Math.max(1, Number(req.query.limit) || 100);
+    const skip = (page - 1) * limit;
+
+    const [attempts, allAttempts] = await Promise.all([
+      ExamAttempt.find({ examId })
+        .populate({
+          path: "studentId",
+          select: "fullName studentCode avatar",
+        })
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+      ExamAttempt.find({ examId }).select("status").lean()
+    ]);
 
     const stats = {
-      total: attempts.length,
-      graded: attempts.filter(
+      total: allAttempts.length,
+      graded: allAttempts.filter(
         (attempt) => attempt.status === "GRADED",
       ).length,
-      pending: attempts.filter(
+      pending: allAttempts.filter(
         (attempt) => attempt.status === "SUBMITTED",
       ).length,
     };
@@ -487,6 +500,12 @@ export const getAttemptsByExam = async (req, res) => {
       message: "Lấy danh sách bài thi thành công",
       data: attempts,
       stats,
+      pagination: {
+        total: allAttempts.length,
+        page,
+        limit,
+        totalPages: Math.ceil(allAttempts.length / limit)
+      }
     });
   } catch (error) {
     console.error("Lỗi khi lấy danh sách bài thi:", error);

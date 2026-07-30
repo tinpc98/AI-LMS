@@ -20,6 +20,15 @@ const liveSessionSchema = new mongoose.Schema(
       default: "Live",
     },
     recordingUrl: { type: String, trim: true, default: "" },
+    participants: [
+      {
+        studentId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+        joinTime: { type: Date, default: Date.now },
+        leaveTime: { type: Date, default: null },
+        durationSeconds: { type: Number, default: 0 },
+        status: { type: String, enum: ["Present", "Late", "Absent"], default: "Present" }
+      }
+    ]
   },
   { timestamps: true }
 );

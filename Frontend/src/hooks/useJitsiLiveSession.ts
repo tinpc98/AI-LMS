@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import useLiveSessionState from "./useLiveSessionState";
 import useJaasConference from "./useJaasConference";
 import useLiveSessionSocket, { type LiveSessionSocketEventData } from "./useLiveSessionSocket";
@@ -9,9 +9,10 @@ interface UseJitsiLiveSessionProps {
 }
 
 /**
- * Composite Hook kết hợp 3 hooks modular V2 cho Live Session (Sprint J6)
+ * Composite Hook kết hợp 3 hooks modular V2 cho Live Session (Sprint 5)
  */
 export function useJitsiLiveSession({ classId, isTeacher = false }: UseJitsiLiveSessionProps) {
+  const [activeParticipantCount, setActiveParticipantCount] = useState<number>(0);
   const {
     activeSession,
     isLoadingActive,
@@ -49,11 +50,16 @@ export function useJitsiLiveSession({ classId, isTeacher = false }: UseJitsiLive
     [conference?.sessionId, forceCloseConference, fetchActiveSession]
   );
 
+  const handleParticipantsUpdated = useCallback((count: number) => {
+    setActiveParticipantCount(count);
+  }, []);
+
   const { isOnline, isSocketConnected } = useLiveSessionSocket({
     classId,
     isTeacher,
     onSessionStarted: handleSessionStarted,
     onSessionEnded: handleSessionEnded,
+    onParticipantsUpdated: handleParticipantsUpdated,
   });
 
   const handleStartLiveSession = useCallback(async () => {
@@ -111,6 +117,7 @@ export function useJitsiLiveSession({ classId, isTeacher = false }: UseJitsiLive
     closeConference,
     setConferenceStatus,
     refreshActiveSession: fetchActiveSession,
+    activeParticipantCount,
   };
 }
 

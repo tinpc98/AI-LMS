@@ -56,6 +56,34 @@ export const getAttendanceByClass = async (req, res) => {
   }
 };
 
+export const getClassSessions = async (req, res) => {
+  try {
+    const { classId } = req.params;
+    if (!classId || !mongoose.Types.ObjectId.isValid(classId)) {
+      return sendError(res, "ID lớp học không hợp lệ!", 400);
+    }
+
+    const result = await attendanceService.getClassSessions(classId);
+    return sendSuccess(res, "Lấy danh sách buổi học thành công", result);
+  } catch (error) {
+    return sendError(res, error.message || "Lỗi khi lấy danh sách buổi học", 500);
+  }
+};
+
+export const getAttendanceMatrix = async (req, res) => {
+  try {
+    const { classId } = req.params;
+    if (!classId || !mongoose.Types.ObjectId.isValid(classId)) {
+      return sendError(res, "ID lớp học không hợp lệ!", 400);
+    }
+
+    const result = await attendanceService.getAttendanceMatrix(classId);
+    return sendSuccess(res, "Lấy ma trận điểm danh thành công", result);
+  } catch (error) {
+    return sendError(res, error.message || "Lỗi khi lấy ma trận điểm danh", 500);
+  }
+};
+
 export const getAttendanceByStudent = async (req, res) => {
   try {
     let { studentId } = req.params;

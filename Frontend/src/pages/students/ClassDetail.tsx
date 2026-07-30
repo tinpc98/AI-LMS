@@ -28,12 +28,10 @@ import ExamLobbyModals from "../../components/student/classDetail/exams/ExamLobb
 import type { ExamPopupState } from "../../components/student/classDetail/exams/ExamLobbyModals";
 import { useJitsiLiveSession } from "../../hooks/useJitsiLiveSession";
 import { useStudentLive } from "../../hooks/useStudentLive";
-
-const MOCK_RANKINGS = [
-  { rank: 1, name: "Trần Quốc Quân", short: "TQ", score: 9.8, bg: "bg-yellow-100 text-yellow-700 border-yellow-200", isUser: false },
-  { rank: 2, name: "Lê Anh", short: "LA", score: 9.5, bg: "bg-slate-100 text-slate-700 border-slate-200", isUser: false },
-  { rank: 12, name: "Bạn (Minh Quân)", short: "MQ", score: 8.5, bg: "bg-primary-container text-on-primary-container", isUser: true },
-];
+import { useLearningAnalytics } from "../../hooks/useLearningAnalytics";
+import { useAnalytics } from "../../hooks/useAnalytics";
+import { Tooltip, Avatar, List, Progress } from "antd";
+import { TrophyOutlined, StarOutlined, ClockCircleOutlined, ThunderboltOutlined } from "@ant-design/icons";
 
 export default function ClassDetail() {
   const { classId } = useParams<{ classId: string }>();
@@ -69,6 +67,36 @@ export default function ClassDetail() {
   useEffect(() => {
     refreshLiveSession();
   }, [jitsiActiveSession, refreshLiveSession]);
+
+  // Sprint 6: Learning Analytics (Ranking, Badges, Activities)
+  const {
+    progressData,
+    classRanking,
+    myRank,
+    badges,
+    fetchStudentProgress,
+    fetchClassRanking,
+    fetchMyRank,
+    fetchMyBadges
+  } = useLearningAnalytics(classId);
+
+  useEffect(() => {
+    if (classId) {
+      fetchStudentProgress();
+      fetchClassRanking({ limit: 5 }); // Top 5
+      fetchMyRank();
+      fetchMyBadges();
+    }
+  }, [classId, fetchStudentProgress, fetchClassRanking, fetchMyRank, fetchMyBadges]);
+
+  // Sprint 7: Real Analytics
+  const { studentDashboard, fetchStudentDashboard } = useAnalytics(classId);
+
+  useEffect(() => {
+    if (classId) {
+      fetchStudentDashboard();
+    }
+  }, [classId, fetchStudentDashboard]);
 
   // Exams & Lobby States
   const [exams, setExams] = useState<IExam[]>([]);
@@ -258,12 +286,16 @@ export default function ClassDetail() {
           {activeTab === "overview" && (
             <div>
               <StatisticSection
-                attendanceRate={95}
-                completedAssignments={submittedAssignmentIds.length}
+                attendanceRate={
+                  studentDashboard?.attendance?.total
+                    ? Math.round((studentDashboard.attendance.present / studentDashboard.attendance.total) * 100)
+                    : 0
+                }
+                completedAssignments={studentDashboard?.assignment?.completed || 0}
                 totalAssignments={assignments.length}
                 completedExams={exams.filter((e: any) => e.score !== null && e.score !== undefined).length}
                 totalExams={exams.length}
-                overallProgress={85}
+                overallProgress={studentDashboard?.progress?.averageProgress || 0}
               />
               <Row gutter={[24, 24]}>
                 <Col xs={24} lg={15} xl={16}>
@@ -279,12 +311,12 @@ export default function ClassDetail() {
                     googleCalendarEventId={(classInfo as any).googleCalendarEventId}
                   />
                   <LearningProgressCard
-                    progressPercent={85}
-                    completedAssignments={submittedAssignmentIds.length}
+                    progressPercent={studentDashboard?.progress?.averageProgress || 0}
+                    completedAssignments={studentDashboard?.assignment?.completed || 0}
                     totalAssignments={assignments.length}
                     completedExams={exams.filter((e: any) => e.score !== null && e.score !== undefined).length}
                     totalExams={exams.length}
-                    averageScore={8.5}
+                    averageScore={studentDashboard?.assignment?.averageScore || 0}
                   />
                 </Col>
                 <Col xs={24} lg={9} xl={8}>
@@ -385,18 +417,11 @@ export default function ClassDetail() {
 
           {/* TAB 5: BẢNG ĐIỂM */}
           {activeTab === "grades" && (
-            <GradesTab
-              classId={classId}
-              rawGrades={[]}
-              assignments={assignments}
-              submittedAssignmentIds={submittedAssignmentIds}
-              exams={exams}
-              loading={isLoading}
-            />
+            <GradesTab classId={classId} />
           )}
 
           {/* TAB 6: ĐIỂM DANH */}
-          {activeTab === "attendance" && <AttendanceTab rawRecords={[]} loading={isLoading} />}
+          {activeTab === "attendance" && <AttendanceTab classId={classId} />}
 
           {/* TAB 7: THÔNG BÁO LỚP HỌC */}
           {activeTab === "announcements" && (
@@ -412,47 +437,73 @@ export default function ClassDetail() {
           {activeTab === "chat" && <ClassDiscussionTab />}
         </div>
 
-        {/* 5. FOOTER INSIGHTS */}
+        {/* 5. FOOTER INSIGHTS & GAMIFICATION */}
         <section className="mt-8 grid grid-cols-12 gap-6 p-6 border-t border-gray-100">
           <div className="col-span-12 md:col-span-4 bg-white p-6 rounded-xl border border-outline-variant shadow-sm">
             <h4 className="font-semibold mb-4 flex items-center text-sm sm:text-base">
-              <span className="material-symbols-outlined mr-2 text-primary">analytics</span>
-              Xếp hạng lớp học
+              <TrophyOutlined className="mr-2 text-yellow-500" />
+              Bảng xếp hạng lớp học
             </h4>
-            <div className="space-y-3">
-              {MOCK_RANKINGS.map((user, idx) => (
-                <div
-                  key={idx}
-                  className={`flex items-center justify-between p-2 rounded-lg ${user.isUser ? "bg-primary-container/10 border border-primary/20" : ""}`}
-                >
-                  <div className="flex items-center space-x-3 min-w-0">
-                    <span className={`text-xs font-bold w-4 text-center ${user.isUser ? "text-primary" : "text-secondary"}`}>
-                      {user.rank}
-                    </span>
-                    <div className={`w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center font-bold text-xs border ${user.bg}`}>
-                      {user.short}
-                    </div>
-                    <span className={`text-xs sm:text-sm truncate ${user.isUser ? "font-bold" : "font-medium"}`}>
-                      {user.name}
-                    </span>
-                  </div>
-                  <span className="text-xs sm:text-sm font-bold text-primary ml-2">{user.score}</span>
+            <div className="space-y-4">
+              {classRanking && classRanking.items.length > 0 ? (
+                <List
+                  itemLayout="horizontal"
+                  dataSource={classRanking.items}
+                  renderItem={(item, index) => (
+                    <List.Item>
+                      <List.Item.Meta
+                        avatar={<Avatar src={item.avatar}>{item.fullName[0]}</Avatar>}
+                        title={<span className="font-semibold">{index + 1}. {item.fullName}</span>}
+                        description={<span className="text-xs text-gray-500">{item.totalXP} XP</span>}
+                      />
+                      {index === 0 && <StarOutlined className="text-yellow-500" />}
+                    </List.Item>
+                  )}
+                />
+              ) : (
+                <div className="text-center py-6 text-on-surface-variant">
+                  <span className="material-symbols-outlined text-4xl mb-2 opacity-50">leaderboard</span>
+                  <p className="text-sm font-medium">Chưa có dữ liệu xếp hạng.</p>
                 </div>
-              ))}
+              )}
             </div>
           </div>
 
-          <div className="col-span-12 md:col-span-8 bg-surface-container-low p-6 rounded-xl border border-outline-variant border-dashed flex items-center justify-center text-center">
-            <div className="space-y-3 max-w-xl">
-              <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center text-primary shadow-inner mx-auto">
-                <span className="material-symbols-outlined text-2xl">auto_awesome</span>
-              </div>
-              <div>
-                <h4 className="font-bold text-on-surface text-sm sm:text-base">AI Learning Insights</h4>
-                <p className="text-xs sm:text-sm text-secondary mt-1 px-4">
-                  "Hệ thống nhận thấy lớp học đang triển khai chương trình học mới. Bạn hãy hoàn thành việc xem các video bài giảng thực tế để nắm chắc kiến thức!"
-                </p>
-              </div>
+          <div className="col-span-12 md:col-span-8 bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-xl border border-blue-100 shadow-sm flex flex-col justify-center">
+            <div className="space-y-4 w-full">
+              <h4 className="font-bold text-blue-800 text-sm sm:text-base flex items-center">
+                <ThunderboltOutlined className="mr-2" />
+                Thành tích của tôi
+              </h4>
+              <Row gutter={16}>
+                <Col span={8}>
+                  <div className="bg-white p-4 rounded-lg shadow-sm text-center">
+                    <p className="text-xs text-gray-500 mb-1">Thứ hạng</p>
+                    <p className="text-2xl font-bold text-blue-600">#{myRank?.rank || "-"}</p>
+                  </div>
+                </Col>
+                <Col span={8}>
+                  <div className="bg-white p-4 rounded-lg shadow-sm text-center">
+                    <p className="text-xs text-gray-500 mb-1">Điểm XP</p>
+                    <p className="text-2xl font-bold text-green-600">{myRank?.totalXP || 0}</p>
+                  </div>
+                </Col>
+                <Col span={8}>
+                  <div className="bg-white p-4 rounded-lg shadow-sm text-center">
+                    <p className="text-xs text-gray-500 mb-1">Huy hiệu</p>
+                    <p className="text-2xl font-bold text-purple-600">{badges.length}</p>
+                  </div>
+                </Col>
+              </Row>
+              {badges.length > 0 && (
+                <div className="mt-4 flex gap-2 overflow-x-auto">
+                  {badges.map(b => (
+                    <Tooltip title={b.title} key={b._id}>
+                      <Avatar src={b.icon} size={40} className="border-2 border-yellow-400" />
+                    </Tooltip>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </section>

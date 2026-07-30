@@ -81,7 +81,7 @@ function App() {
               <Route path="studentassignment" element={<StudentAssignment />} />
               <Route path="classdetail/:classId" element={<ClassDetail />} />
               <Route path="studentassignment/:assignmentId" element={<StudentAssignment />} />
-              <Route path="lessonview" element={<LessonView />} />
+              <Route path="lessonview/:lessonId" element={<LessonView />} />
               <Route path="notifications" element={<NotificationCenterPage />} />
             </Route>
             

@@ -16,6 +16,30 @@ export interface IGrade {
   updatedAt?: string;
 }
 
+export interface IGradeItemDef {
+  _id: string;
+  title: string;
+  category: string;
+  maxScore: number;
+  weight: number;
+  type: string;
+  sourceId?: string;
+}
+
+export interface IStudentGradeData {
+  student: any;
+  grades: Record<string, { score: number; feedback: string; rawId?: string }>;
+  avgGPA: number | null;
+  totalWeight: number;
+  legacyGrades?: IGrade[];
+}
+
+export interface IGradeMatrixResponse {
+  gradeItems: IGradeItemDef[];
+  students: IStudentGradeData[];
+  weights?: any;
+}
+
 export interface StudentGPAResponse {
   classId: string;
   studentId: string;
@@ -45,10 +69,10 @@ export const mapGPAResponse = (data: any): StudentGPAResponse => {
 };
 
 export const gradeApi = {
-  // Lấy bảng điểm của toàn bộ lớp học
-  getGradesByClass: async (classId: string): Promise<IGrade[]> => {
-    const response = await axiosClient.get<{ success?: boolean; data: IGrade[] }>(`/api/grades/class/${classId}`);
-    return response.data.data ?? response.data ?? [];
+  // Lấy bảng điểm của toàn bộ lớp học (Dạng Matrix)
+  getGradesByClass: async (classId: string): Promise<IGradeMatrixResponse> => {
+    const response = await axiosClient.get<{ success?: boolean; data: IGradeMatrixResponse }>(`/api/grades/class/${classId}`);
+    return response.data.data ?? response.data;
   },
 
   // Tạo hoặc Cập nhật điểm cho 1 học sinh theo cột điểm
@@ -66,12 +90,12 @@ export const gradeApi = {
     return response.data.data ?? response.data;
   },
 
-  // Lấy bảng điểm cá nhân của học sinh
-  getGradesByStudent: async (studentId: string, classId?: string): Promise<IGrade[]> => {
-    const response = await axiosClient.get<{ success?: boolean; data: IGrade[] }>(
+  // Lấy bảng điểm cá nhân của học sinh (Dạng Matrix)
+  getGradesByStudent: async (studentId: string, classId?: string): Promise<IGradeMatrixResponse> => {
+    const response = await axiosClient.get<{ success?: boolean; data: IGradeMatrixResponse }>(
       `/api/grades/student/${studentId}${classId ? `?classId=${classId}` : ""}`
     );
-    return response.data.data ?? response.data ?? [];
+    return response.data.data ?? response.data;
   },
 
   // Lấy tổng kết GPA môn học của học sinh từ Backend API
