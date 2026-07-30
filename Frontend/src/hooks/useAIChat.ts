@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import aiApi from "../api/aiApi";
 import type { IChatMessage, IChatSession } from "../api/aiApi";
 import { toast } from "../utils/toast";
@@ -9,8 +9,27 @@ export function useAIChat(lessonId?: string) {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isTyping, setIsTyping] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  
+  const initRef = useRef<string | null>(null);
+
+  // Reset state when lessonId changes
+  useEffect(() => {
+    setSession(null);
+    setMessages([]);
+    setError(null);
+    setIsLoading(false);
+    initRef.current = null;
+  }, [lessonId]);
 
   const initSession = useCallback(async () => {
+    if (!lessonId) {
+      setError("AI Scholar hiện chỉ hỗ trợ trong ngữ cảnh bài học. Vui lòng vào một bài học cụ thể để bắt đầu.");
+      return;
+    }
+
+    if (initRef.current === lessonId) return;
+    initRef.current = lessonId;
+
     setIsLoading(true);
     setError(null);
     try {
@@ -25,6 +44,7 @@ export function useAIChat(lessonId?: string) {
       }
     } catch (err: any) {
       console.error("[useAIChat] Init session error:", err);
+      initRef.current = null; // reset so user can retry
       setError(err.response?.data?.message || "Không thể khởi tạo phiên trò chuyện AI.");
       toast.error(err.response?.data?.message || "Không thể khởi tạo phiên trò chuyện AI.");
     } finally {

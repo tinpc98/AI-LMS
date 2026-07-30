@@ -65,13 +65,21 @@ class AIChatService {
    * Khởi tạo phiên chat mới
    */
   async createSession(userId, lessonId, classId, title) {
-    const newSession = await AIChatSession.create({
+    let session = await AIChatSession.findOne({
       userId,
       lessonId,
-      classId,
-      title: title || "Hỏi đáp bài học",
+      status: "active"
     });
-    return newSession;
+
+    if (!session) {
+      session = await AIChatSession.create({
+        userId,
+        lessonId,
+        classId,
+        title: title || "Hỏi đáp bài học",
+      });
+    }
+    return session;
   }
 
   /**

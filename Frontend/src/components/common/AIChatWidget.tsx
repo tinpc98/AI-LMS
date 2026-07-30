@@ -9,10 +9,14 @@ export const AIChatWidget: React.FC = () => {
   const location = useLocation();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
+  // Extract lessonId from URL if we are in a lesson view
+  const match = location.pathname.match(/\/lessonview\/([a-f0-9]{24})/i);
+  const lessonIdFromUrl = match ? match[1] : undefined;
+  
   // Disable in exam attempts to prevent cheating
   const isExamAttempt = location.pathname.includes("/student/exam-attempt/") || location.pathname.includes("/student/exam/");
   
-  const { session, messages, isLoading, isTyping, error, initSession, sendMessage } = useAIChat();
+  const { session, messages, isLoading, isTyping, error, initSession, sendMessage } = useAIChat(lessonIdFromUrl);
 
   useEffect(() => {
     if (isOpen && !session && !isLoading) {
