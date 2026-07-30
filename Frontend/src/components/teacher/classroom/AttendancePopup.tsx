@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { Modal, Table, Avatar, Radio, Input, Button, Space, Typography, Progress, Alert } from "antd";
 import type { ColumnsType } from "antd/es/table";
-import { UserOutlined, SaveOutlined, CheckCircleOutlined, CloseCircleOutlined } from "@ant-design/icons";
+import { UserOutlined, SaveOutlined, CheckCircleOutlined, CloseCircleOutlined, ClockCircleOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
 import { attendanceApi } from "../../../api/attendanceApi";
 import { toast } from "../../../utils/toast";
@@ -23,11 +23,15 @@ export const AttendancePopup: React.FC<AttendancePopupProps> = ({ open, onClose,
   const [saving, setSaving] = useState<boolean>(false);
   const [currentTime, setCurrentTime] = useState<dayjs.Dayjs>(dayjs());
 
-  // Auto update current time
+  // Auto update current time every second for popup countdown
   useEffect(() => {
-    const timer = setInterval(() => setCurrentTime(dayjs()), 10000);
+    let timer: any;
+    if (open) {
+      setCurrentTime(dayjs());
+      timer = setInterval(() => setCurrentTime(dayjs()), 1000);
+    }
     return () => clearInterval(timer);
-  }, []);
+  }, [open]);
 
   const isClosed = useMemo(() => {
     if (!session) return true;
@@ -40,6 +44,18 @@ export const AttendancePopup: React.FC<AttendancePopupProps> = ({ open, onClose,
     const startTime = dayjs(`${session.date}T${session.startTime}:00`);
     return currentTime.isBefore(startTime);
   }, [session, currentTime]);
+
+  const activeCountdown = useMemo(() => {
+    if (!session || isClosed || isUpcoming) return null;
+    const end = dayjs(`${session.date}T${session.endTime}:00`);
+    const diffMs = end.diff(currentTime);
+    if (diffMs <= 0) return "00:00:00";
+    
+    const h = Math.floor(diffMs / (1000 * 60 * 60));
+    const m = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+    const s = Math.floor((diffMs % (1000 * 60)) / 1000);
+    return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+  }, [session, currentTime, isClosed, isUpcoming]);
 
   const fetchAttendance = useCallback(async () => {
     if (!session || !open) return;
@@ -180,10 +196,21 @@ export const AttendancePopup: React.FC<AttendancePopupProps> = ({ open, onClose,
   return (
     <Modal
       title={
-        <div>
-          <Text strong style={{ fontSize: 18 }}>Điểm danh buổi học: {session ? dayjs(session.date).format("DD/MM/YYYY") : ""}</Text>
-          <br/>
-          <Text type="secondary" style={{ fontSize: 13, fontWeight: "normal" }}>Thời gian: {session?.startTime} - {session?.endTime}</Text>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", paddingRight: 24 }}>
+          <div>
+            <Text strong style={{ fontSize: 18 }}>Điểm danh buổi học: {session ? dayjs(session.date).format("DD/MM/YYYY") : ""}</Text>
+            <br/>
+            <Text type="secondary" style={{ fontSize: 13, fontWeight: "normal" }}>Thời gian: {session?.startTime} - {session?.endTime}</Text>
+          </div>
+          {activeCountdown && (
+            <div style={{ textAlign: "right", background: "#fff1f0", padding: "4px 12px", borderRadius: 6, border: "1px solid #ffccc7" }}>
+              <Text type="danger" strong style={{ fontSize: 12, display: "block" }}>THỜI GIAN CÒN LẠI</Text>
+              <Space size={6}>
+                <ClockCircleOutlined style={{ color: "#ff4d4f" }} />
+                <Text type="danger" strong style={{ fontSize: 16, fontFamily: "monospace" }}>{activeCountdown}</Text>
+              </Space>
+            </div>
+          )}
         </div>
       }
       open={open}
@@ -199,7 +226,7 @@ export const AttendancePopup: React.FC<AttendancePopupProps> = ({ open, onClose,
       }
     >
       {isClosed && (
-        <Alert message="Thời gian điểm danh đã kết thúc." type="error" showIcon style={{ marginBottom: 16 }} />
+        <Alert message="Thời gian điểm danh đã kết thúc. Bạn không thể lưu điểm danh cho buổi học này nữa." type="error" showIcon style={{ marginBottom: 16 }} />
       )}
       {isUpcoming && (
         <Alert message="Buổi học chưa bắt đầu." type="warning" showIcon style={{ marginBottom: 16 }} />

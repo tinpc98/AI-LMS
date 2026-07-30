@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { Drawer, Table, Tag, Typography, Space, Spin, Empty, Avatar, Tooltip } from "antd";
 import type { ColumnsType } from "antd/es/table";
-import { CalendarOutlined, UserOutlined, CheckCircleOutlined, CloseCircleOutlined, ClockCircleOutlined, InfoCircleOutlined } from "@ant-design/icons";
+import { CalendarOutlined, UserOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
 import { attendanceApi } from "../../../api/attendanceApi";
 import type { IAttendanceMatrix, IVirtualSession } from "../../../interface/attendanceInterface";
 
-const { Text, Title } = Typography;
+const { Text } = Typography;
 
 interface TeacherAttendanceHistoryDrawerProps {
   open: boolean;
@@ -37,19 +37,19 @@ export const TeacherAttendanceHistoryDrawer: React.FC<TeacherAttendanceHistoryDr
     }, [open, classId]);
 
     const getStatusIcon = (status?: string, note?: string) => {
-      let icon = <span style={{ color: "#d9d9d9" }}>-</span>; // Chưa điểm danh
+      let icon = <Tag color="default" style={{ margin: 0, width: 36, textAlign: "center", cursor: "default" }}>CGN</Tag>;
       switch (status) {
         case "Present":
-          icon = <CheckCircleOutlined style={{ color: "#52c41a", fontSize: 16 }} />;
+          icon = <Tag color="success" style={{ margin: 0, width: 36, textAlign: "center", cursor: "default" }}>CM</Tag>;
           break;
         case "Late":
-          icon = <ClockCircleOutlined style={{ color: "#faad14", fontSize: 16 }} />;
+          icon = <Tag color="warning" style={{ margin: 0, width: 36, textAlign: "center", cursor: "default" }}>M</Tag>;
           break;
         case "Excused":
-          icon = <InfoCircleOutlined style={{ color: "#1890ff", fontSize: 16 }} />;
+          icon = <Tag color="processing" style={{ margin: 0, width: 36, textAlign: "center", cursor: "default" }}>CP</Tag>;
           break;
         case "Absent":
-          icon = <CloseCircleOutlined style={{ color: "#ff4d4f", fontSize: 16 }} />;
+          icon = <Tag color="error" style={{ margin: 0, width: 36, textAlign: "center", cursor: "default" }}>V</Tag>;
           break;
       }
       return note ? <Tooltip title={note}>{icon}</Tooltip> : icon;
@@ -80,13 +80,13 @@ export const TeacherAttendanceHistoryDrawer: React.FC<TeacherAttendanceHistoryDr
       sortedSessions.forEach((session) => {
         columns.push({
           title: (
-            <div style={{ textAlign: "center" }}>
+            <div style={{ textAlign: "center", minWidth: 48 }}>
               <div style={{ fontSize: 12 }}>{dayjs(session.date).format("DD/MM")}</div>
             </div>
           ),
           dataIndex: session.date,
           key: session.date,
-          width: 70,
+          width: 60,
           align: "center",
           render: (_, studentRecord) => {
             const attendRecord = matrix.records[studentRecord._id]?.[session.date];
@@ -100,6 +100,69 @@ export const TeacherAttendanceHistoryDrawer: React.FC<TeacherAttendanceHistoryDr
           },
         });
       });
+
+      // Add Summary Columns
+      columns.push({
+        title: "Tổng",
+        key: "summary_total",
+        fixed: "right",
+        width: 60,
+        align: "center",
+        render: (_, studentRecord) => {
+          let count = 0;
+          sortedSessions.forEach(s => {
+            if (s.status === "Closed" || matrix.records[studentRecord._id]?.[s.date]) count++;
+          });
+          return <Text strong>{count}</Text>;
+        }
+      });
+      columns.push({
+        title: "CM",
+        key: "summary_cm",
+        fixed: "right",
+        width: 50,
+        align: "center",
+        render: (_, studentRecord) => {
+          let count = 0;
+          sortedSessions.forEach(s => {
+            if (matrix.records[studentRecord._id]?.[s.date]?.status === "Present") count++;
+          });
+          return <Text type="success" strong>{count}</Text>;
+        }
+      });
+      columns.push({
+        title: "V/M",
+        key: "summary_vm",
+        fixed: "right",
+        width: 50,
+        align: "center",
+        render: (_, studentRecord) => {
+          let count = 0;
+          sortedSessions.forEach(s => {
+            const st = matrix.records[studentRecord._id]?.[s.date]?.status;
+            if (st === "Absent" || st === "Late") count++;
+          });
+          return <Text type="danger" strong>{count}</Text>;
+        }
+      });
+      columns.push({
+        title: "Tỷ lệ",
+        key: "summary_rate",
+        fixed: "right",
+        width: 70,
+        align: "center",
+        render: (_, studentRecord) => {
+          let total = 0;
+          let cm = 0;
+          sortedSessions.forEach(s => {
+            if (s.status === "Closed" || matrix.records[studentRecord._id]?.[s.date]) total++;
+            if (matrix.records[studentRecord._id]?.[s.date]?.status === "Present") cm++;
+          });
+          const rate = total > 0 ? Math.round((cm / total) * 100) : 0;
+          const color = rate >= 80 ? "success" : rate >= 50 ? "warning" : "danger";
+          return <Text type={color} strong>{rate}%</Text>;
+        }
+      });
     }
 
     return (
@@ -111,10 +174,22 @@ export const TeacherAttendanceHistoryDrawer: React.FC<TeacherAttendanceHistoryDr
           </Space>
         }
         placement="right"
-        width="90%"
+        width="95%"
         onClose={onClose}
         open={open}
       >
+        <div style={{ marginBottom: 16, display: "flex", flexWrap: "wrap", gap: 12, padding: "8px 12px", background: "#f5f5f5", borderRadius: 8 }}>
+          <Text strong style={{ marginRight: 8 }}>Chú thích:</Text>
+          <Space size={16}>
+            <span><Tag color="success">CM</Tag> Có mặt</span>
+            <span><Tag color="warning">M</Tag> Đi muộn</span>
+            <span><Tag color="processing">CP</Tag> Có phép</span>
+            <span><Tag color="error">V</Tag> Vắng</span>
+            <span><Tag color="default">CGN</Tag> Chưa ghi nhận</span>
+            <span><Text type="secondary" style={{ marginLeft: 8 }}>X: Buổi học đã đóng nhưng không điểm danh</Text></span>
+          </Space>
+        </div>
+
         {loading ? (
           <div style={{ textAlign: "center", padding: 40 }}>
             <Spin tip="Đang tải dữ liệu..." />
@@ -125,7 +200,7 @@ export const TeacherAttendanceHistoryDrawer: React.FC<TeacherAttendanceHistoryDr
             dataSource={matrix.students}
             rowKey="_id"
             pagination={false}
-            scroll={{ x: "max-content", y: "calc(100vh - 200px)" }}
+            scroll={{ x: "max-content", y: "calc(100vh - 250px)" }}
             size="small"
             bordered
           />
