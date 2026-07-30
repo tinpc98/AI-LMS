@@ -7,8 +7,7 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview",
-    "mock-api": "json-server --watch db.json --port 3000"
+    "preview": "vite preview"
   },
   "dependencies": {
     "@ant-design/icons": "^6.3.2",
@@ -18,10 +17,7 @@
     "antd": "^6.5.2",
     "axios": "^1.17.0",
     "date-fns": "^4.4.0",
-    "dotenv": "^17.4.2",
     "framer-motion": "^12.42.2",
-    "mongodb": "^7.3.0",
-    "mongoose": "^9.7.0",
     "react": "^19.2.6",
     "react-countup": "^6.5.3",
     "react-dom": "^19.2.6",
@@ -45,7 +41,6 @@
     "eslint-plugin-react-hooks": "^7.1.1",
     "eslint-plugin-react-refresh": "^0.5.2",
     "globals": "^17.6.0",
-    "json-server": "^1.0.0-beta.15",
     "postcss": "^8.5.15",
     "tailwindcss": "^4.3.1",
     "typescript": "~6.0.2",
