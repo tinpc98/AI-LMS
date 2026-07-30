@@ -417,14 +417,7 @@ export default function ClassDetail() {
 
           {/* TAB 5: BẢNG ĐIỂM */}
           {activeTab === "grades" && (
-            <GradesTab
-              classId={classId}
-              rawGrades={[]}
-              assignments={assignments}
-              submittedAssignmentIds={submittedAssignmentIds}
-              exams={exams}
-              loading={isLoading}
-            />
+            <GradesTab classId={classId} />
           )}
 
           {/* TAB 6: ĐIỂM DANH */}

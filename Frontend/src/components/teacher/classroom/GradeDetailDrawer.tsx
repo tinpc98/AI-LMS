@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { Drawer, Form, InputNumber, Input, Button, Typography, Space, Card, Tag, Avatar, Divider, Alert, Row, Col } from "antd";
-import { UserOutlined, EditOutlined, CheckCircleOutlined, TrophyOutlined } from "@ant-design/icons";
+import { Drawer, Form, InputNumber, Input, Button, Typography, Space, Card, Tag, Avatar, Divider, Alert, Row, Col, Tooltip } from "antd";
+import { UserOutlined, EditOutlined, CheckCircleOutlined, TrophyOutlined, InfoCircleOutlined } from "@ant-design/icons";
 import gradeApi from "../../../api/gradeApi";
-import type { IGrade } from "../../../api/gradeApi";
+import type { IGradeItemDef, IStudentGradeData } from "../../../api/gradeApi";
 import { toast } from "../../../utils/toast";
 
 const { Text, Title } = Typography;
@@ -12,12 +12,13 @@ interface GradeDetailDrawerProps {
   onClose: () => void;
   student: any | null;
   classId: string;
-  existingGrades: IGrade[];
+  gradeItems: IGradeItemDef[];
+  studentGradesData?: IStudentGradeData;
   onSaved?: () => void;
 }
 
 export const GradeDetailDrawer: React.FC<GradeDetailDrawerProps> = React.memo(
-  ({ open, onClose, student, classId, existingGrades, onSaved }) => {
+  ({ open, onClose, student, classId, gradeItems, studentGradesData, onSaved }) => {
     const [form] = Form.useForm();
     const [submitting, setSubmitting] = useState(false);
 
@@ -28,53 +29,46 @@ export const GradeDetailDrawer: React.FC<GradeDetailDrawerProps> = React.memo(
     const studentIdStr = (sObj?._id || student?._id || "").toString();
     const studentCode = studentIdStr ? `STU-${studentIdStr.slice(-6).toUpperCase()}` : "STU-N/A";
 
-    const categories = [
-      { key: "Attendance", label: "Chuyên cần / Điểm danh", weightPercent: 10 },
-      { key: "Assignment", label: "Bài tập", weightPercent: 20 },
-      { key: "Midterm", label: "Thi giữa kỳ", weightPercent: 30 },
-      { key: "Final", label: "Thi cuối kỳ", weightPercent: 40 },
-    ];
-
     useEffect(() => {
       if (open && student) {
-        const studentGrades = existingGrades.filter(
-          (g) => (typeof g.studentId === "object" ? g.studentId?._id : g.studentId)?.toString() === studentIdStr
-        );
-
         const initialValues: Record<string, any> = {};
-        categories.forEach((cat) => {
-          const match = studentGrades.find((g) => g.category === cat.key);
+        const sg = studentGradesData?.grades || {};
+        
+        gradeItems.forEach((item) => {
+          const match = sg[item._id];
           if (match) {
-            initialValues[`score_${cat.key}`] = match.score;
-            initialValues[`feedback_${cat.key}`] = match.feedback || "";
+            initialValues[`score_${item._id}`] = match.score;
+            initialValues[`feedback_${item._id}`] = match.feedback || "";
           } else {
-            initialValues[`score_${cat.key}`] = undefined;
-            initialValues[`feedback_${cat.key}`] = "";
+            initialValues[`score_${item._id}`] = undefined;
+            initialValues[`feedback_${item._id}`] = "";
           }
         });
 
         form.setFieldsValue(initialValues);
       }
-    }, [open, student, existingGrades, studentIdStr, form]);
+    }, [open, student, studentGradesData, gradeItems, form]);
 
     const handleSubmit = async (values: any) => {
       if (!studentIdStr || !classId) return;
       setSubmitting(true);
 
       try {
-        const promises = categories.map(async (cat) => {
-          const scoreVal = values[`score_${cat.key}`];
-          if (scoreVal !== undefined && scoreVal !== null && scoreVal !== "") {
-            await gradeApi.upsertGrade({
-              studentId: studentIdStr,
-              classId,
-              category: cat.key,
-              score: Number(scoreVal),
-              weight: cat.weightPercent / 100,
-              feedback: values[`feedback_${cat.key}`]?.trim() || "",
-            });
-          }
-        });
+        const promises = gradeItems
+          .filter(item => item.type === "Manual") // Only save manual items
+          .map(async (item) => {
+            const scoreVal = values[`score_${item._id}`];
+            if (scoreVal !== undefined && scoreVal !== null && scoreVal !== "") {
+              await gradeApi.upsertGrade({
+                studentId: studentIdStr,
+                classId,
+                category: item.category,
+                score: Number(scoreVal),
+                weight: item.weight,
+                feedback: values[`feedback_${item._id}`]?.trim() || "",
+              });
+            }
+          });
 
         await Promise.all(promises);
         toast.success(`Cập nhật bảng điểm cho ${studentName} thành công!`);
@@ -127,49 +121,60 @@ export const GradeDetailDrawer: React.FC<GradeDetailDrawerProps> = React.memo(
                 📝 Nhập & Chỉnh sửa điểm số môn học
               </Title>
 
-              {categories.map((cat) => (
-                <Card
-                  key={cat.key}
-                  size="small"
-                  style={{ marginBottom: 14, borderRadius: 8, border: "1px solid #e8e8e8" }}
-                  title={
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                      <Text strong style={{ fontSize: 13 }}>{cat.label}</Text>
-                      <Tag color="blue">Tỷ trọng: {cat.weightPercent}%</Tag>
-                    </div>
-                  }
-                >
-                  <Row gutter={12}>
-                    <Col span={10}>
-                      <Form.Item
-                        name={`score_${cat.key}`}
-                        label="Điểm số (0-10)"
-                        rules={[
-                          { type: "number", min: 0, max: 10, message: "Điểm số từ 0 đến 10" },
-                        ]}
-                        style={{ marginBottom: 0 }}
-                      >
-                        <InputNumber
-                          min={0}
-                          max={10}
-                          step={0.25}
-                          placeholder="Nhập điểm (VD: 8.5)"
-                          style={{ width: "100%" }}
-                        />
-                      </Form.Item>
-                    </Col>
-                    <Col span={14}>
-                      <Form.Item
-                        name={`feedback_${cat.key}`}
-                        label="Nhận xét / Feedback"
-                        style={{ marginBottom: 0 }}
-                      >
-                        <Input placeholder="Ghi chú / Nhận xét..." />
-                      </Form.Item>
-                    </Col>
-                  </Row>
-                </Card>
-              ))}
+              {gradeItems.map((item) => {
+                const isManual = item.type === "Manual";
+                return (
+                  <Card
+                    key={item._id}
+                    size="small"
+                    style={{ marginBottom: 14, borderRadius: 8, border: "1px solid #e8e8e8", opacity: isManual ? 1 : 0.7 }}
+                    title={
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <Space>
+                          <Text strong style={{ fontSize: 13 }}>{item.title}</Text>
+                          {!isManual && (
+                            <Tooltip title="Điểm này được lấy tự động từ hệ thống (Bài tập / Bài thi). Không thể sửa trực tiếp tại đây.">
+                              <Tag icon={<InfoCircleOutlined />} color="default">Tự động</Tag>
+                            </Tooltip>
+                          )}
+                        </Space>
+                        <Tag color="blue">Tỷ trọng: {item.weight}%</Tag>
+                      </div>
+                    }
+                  >
+                    <Row gutter={12}>
+                      <Col span={10}>
+                        <Form.Item
+                          name={`score_${item._id}`}
+                          label="Điểm số (0-10)"
+                          rules={[
+                            { type: "number", min: 0, max: 10, message: "Điểm số từ 0 đến 10" },
+                          ]}
+                          style={{ marginBottom: 0 }}
+                        >
+                          <InputNumber
+                            min={0}
+                            max={10}
+                            step={0.25}
+                            disabled={!isManual}
+                            placeholder="Nhập điểm (VD: 8.5)"
+                            style={{ width: "100%" }}
+                          />
+                        </Form.Item>
+                      </Col>
+                      <Col span={14}>
+                        <Form.Item
+                          name={`feedback_${item._id}`}
+                          label="Nhận xét / Feedback"
+                          style={{ marginBottom: 0 }}
+                        >
+                          <Input disabled={!isManual} placeholder="Ghi chú / Nhận xét..." />
+                        </Form.Item>
+                      </Col>
+                    </Row>
+                  </Card>
+                );
+              })}
 
               <div style={{ display: "flex", justifyContent: "flex-end", gap: 12, marginTop: 24 }}>
                 <Button onClick={onClose}>Hủy</Button>

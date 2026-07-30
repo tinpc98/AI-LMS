@@ -16,23 +16,11 @@ import gradeApi from "../../../../api/gradeApi";
 const { Title, Text } = Typography;
 
 interface GradesTabProps {
-  classId?: string;
-  rawGrades?: IGrade[];
-  assignments?: any[];
-  submittedAssignmentIds?: string[];
-  exams?: any[];
-  loading?: boolean;
+  classId: string;
 }
 
 export const GradesTab: React.FC<GradesTabProps> = React.memo(
-  ({
-    classId,
-    rawGrades = [],
-    assignments = [],
-    submittedAssignmentIds = [],
-    exams = [],
-    loading = false,
-  }) => {
+  ({ classId }) => {
     // Custom Hooks
     const {
       filters,
@@ -42,31 +30,8 @@ export const GradesTab: React.FC<GradesTabProps> = React.memo(
       handleCategoryFilterChange,
       handleStatusFilterChange,
       handleSortChange,
-    } = useStudentGrades(rawGrades, assignments, submittedAssignmentIds, exams);
-
-    const [serverGpa, setServerGpa] = React.useState<number | null>(null);
-
-    React.useEffect(() => {
-      if (classId) {
-        gradeApi
-          .getStudentGPA(classId, "me")
-          .then((res) => {
-            if (res.gpa !== null && res.gpa !== undefined) {
-              setServerGpa(res.gpa);
-            }
-          })
-          .catch((err) => {
-            console.error("[GradesTab] GPA fetch error:", err);
-          });
-      }
-    }, [classId]);
-
-    const displayStats = React.useMemo(() => {
-      if (serverGpa !== null) {
-        return { ...stats, gpa: serverGpa };
-      }
-      return stats;
-    }, [stats, serverGpa]);
+      loading,
+    } = useStudentGrades(classId);
 
     const { selectedGrade, isDetailOpen, openDetail, closeDetail } = useGradeDetail();
 
@@ -89,11 +54,11 @@ export const GradesTab: React.FC<GradesTabProps> = React.memo(
           </div>
 
           {/* 6 Statistic Cards */}
-          <GradeStatistic stats={displayStats} />
+          <GradeStatistic stats={stats} />
         </div>
 
         {/* 2. Progress Overview Dashboard */}
-        <GradeOverview stats={displayStats} />
+        <GradeOverview stats={stats} />
 
         {/* 3. Bar Distribution Chart */}
         <GradeChart items={filteredGradeItems} />
