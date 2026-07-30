@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 import examAttemptService from "../services/examAttempt.service.js";
 import ExamAttempt from "../models/examAttempt.model.js";
 import Exam from "../models/exam.model.js";
+import { checkClassTeacherOwnership } from "../middlewares/auth.middlewares.js";
 
 // =======================================================
 // 1. API CHO HỌC SINH: Bắt đầu làm bài thi
@@ -339,6 +340,16 @@ export const getAttemptForReview = async (req, res) => {
       });
     }
 
+    const userId = (req.user.id || req.user._id || "").toString();
+    const userRole = (req.user.role || "").toLowerCase();
+    const isAuthorized = await checkClassTeacherOwnership(exam.classId, userId, userRole);
+    if (!isAuthorized) {
+      return res.status(403).json({
+        success: false,
+        message: "Bạn không có quyền xem bài làm của lớp học này!",
+      });
+    }
+
     const { resolveExamQuestions } = await import(
       "../utils/examQuestionResolver.js"
     );
@@ -428,9 +439,14 @@ export const gradeEssaySubmit = async (req, res) => {
       });
     }
 
+    const userId = (req.user.id || req.user._id || "").toString();
+    const userRole = (req.user.role || "").toLowerCase();
+
     const updatedAttempt = await examAttemptService.gradeEssay(
       attemptId,
       essayGrades,
+      userId,
+      userRole,
     );
 
     return res.status(200).json({
@@ -441,7 +457,7 @@ export const gradeEssaySubmit = async (req, res) => {
   } catch (error) {
     console.error("Lỗi chấm điểm tự luận:", error);
 
-    return res.status(500).json({
+    return res.status(error.status || 500).json({
       success: false,
       message: error.message,
     });
@@ -466,6 +482,18 @@ export const getAttemptsByExam = async (req, res) => {
           pending: 0,
         },
       });
+    }
+
+    const exam = await Exam.findById(examId).select("classId").lean();
+    if (!exam) {
+      return res.status(404).json({ success: false, message: "Không tìm thấy đề thi!" });
+    }
+
+    const userId = (req.user.id || req.user._id || "").toString();
+    const userRole = (req.user.role || "").toLowerCase();
+    const isAuthorized = await checkClassTeacherOwnership(exam.classId, userId, userRole);
+    if (!isAuthorized) {
+      return res.status(403).json({ success: false, message: "Bạn không có quyền xem danh sách bài làm của lớp học này!" });
     }
 
     const page = Math.max(1, Number(req.query.page) || 1);

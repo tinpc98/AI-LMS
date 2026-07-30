@@ -3,6 +3,7 @@ import ExamAttempt from "../models/examAttempt.model.js";
 import Exam from "../models/exam.model.js";
 import Question from "../models/question.model.js";
 import { compareAnswers } from "../utils/answerScoring.js";
+import { checkClassTeacherOwnership } from "../middlewares/auth.middlewares.js";
 
 const gradeSubmission = async (attemptId, studentAnswers) => {
   const session = await mongoose.startSession();
@@ -98,7 +99,7 @@ const gradeSubmission = async (attemptId, studentAnswers) => {
 // ==========================================
 // HÀM CHẤM TỰ LUẬN ĐÃ ĐƯỢC VÁ LỖI AN TOÀN
 // ==========================================
-const gradeEssay = async (attemptId, essayGrades) => {
+const gradeEssay = async (attemptId, essayGrades, userId, userRole) => {
   const session = await mongoose.startSession();
   session.startTransaction();
   try {
@@ -107,6 +108,14 @@ const gradeEssay = async (attemptId, essayGrades) => {
 
     // Lấy danh sách phân bổ điểm tối đa từ đề thi để đối chiếu chống gian lận
     const exam = attempt.examId;
+
+    const isAuthorized = await checkClassTeacherOwnership(exam.classId, userId, userRole);
+    if (!isAuthorized) {
+      const error = new Error("Bạn không có quyền chấm điểm bài thi của lớp học này!");
+      error.status = 403;
+      throw error;
+    }
+
     const examPointsMap = new Map(
       exam.questions.map((q) => [q.questionId.toString(), q.points]),
     );

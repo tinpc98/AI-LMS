@@ -6,10 +6,11 @@ import Submission from "../models/submission.model.js";
 import Exam from "../models/exam.model.js";
 import ExamAttempt from "../models/examAttempt.model.js";
 import User from "../models/user.models.js";
+import { checkClassTeacherOwnership } from "../middlewares/auth.middlewares.js";
 
 class GradeService {
   // Tạo mới hoặc Cập nhật điểm số của học sinh theo cột điểm (Manual Grades)
-  async upsertGrade({ studentId, classId, courseId, category, score, weight, feedback, aiFeedback, gradedBy }) {
+  async upsertGrade({ studentId, classId, courseId, category, score, weight, feedback, aiFeedback, gradedBy, gradedByRole }) {
     if (!mongoose.Types.ObjectId.isValid(classId)) {
       throw new Error("ID lớp học không hợp lệ!");
     }
@@ -17,6 +18,13 @@ class GradeService {
     const classExists = await classModel.findById(classId);
     if (!classExists) {
       throw new Error("Lớp học không tồn tại!");
+    }
+
+    const isAuthorized = await checkClassTeacherOwnership(classId, gradedBy, gradedByRole);
+    if (!isAuthorized) {
+      const error = new Error("Bạn không có quyền nhập điểm cho lớp học này!");
+      error.status = 403;
+      throw error;
     }
 
     const filter = { studentId, classId, category };
@@ -219,10 +227,18 @@ class GradeService {
   }
 
   // Lấy bảng điểm của cả lớp
-  async getGradesByClass(classId) {
+  async getGradesByClass(classId, userId, userRole) {
     if (!mongoose.Types.ObjectId.isValid(classId)) {
       return { gradeItems: [], students: [] };
     }
+
+    const isAuthorized = await checkClassTeacherOwnership(classId, userId, userRole);
+    if (!isAuthorized) {
+      const error = new Error("Bạn không có quyền xem bảng điểm của lớp học này!");
+      error.status = 403;
+      throw error;
+    }
+
     return await this.aggregateGradesMatrix(classId);
   }
 

@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import gradeService from "../services/grade.service.js";
 import { sendSuccess, sendError } from "../utils/response.js";
+import { checkClassTeacherOwnership } from "../middlewares/auth.middlewares.js";
 
 export const upsertGrade = async (req, res) => {
   try {
@@ -14,6 +15,7 @@ export const upsertGrade = async (req, res) => {
     }
 
     const gradedBy = req.user.id || req.user._id;
+    const gradedByRole = req.user.role;
     const result = await gradeService.upsertGrade({
       studentId,
       classId,
@@ -24,11 +26,12 @@ export const upsertGrade = async (req, res) => {
       feedback,
       aiFeedback,
       gradedBy,
+      gradedByRole,
     });
 
     return sendSuccess(res, "Lưu điểm số thành công", result);
   } catch (error) {
-    return sendError(res, error.message || "Lỗi khi lưu điểm số", 500);
+    return sendError(res, error.message || "Lỗi khi lưu điểm số", error.status || 500);
   }
 };
 
@@ -39,10 +42,12 @@ export const getGradesByClass = async (req, res) => {
       return sendError(res, "ID lớp học không hợp lệ!", 400);
     }
 
-    const result = await gradeService.getGradesByClass(classId);
+    const userId = (req.user.id || req.user._id || "").toString();
+    const userRole = req.user.role;
+    const result = await gradeService.getGradesByClass(classId, userId, userRole);
     return sendSuccess(res, "Lấy bảng điểm của lớp thành công", result);
   } catch (error) {
-    return sendError(res, error.message || "Lỗi khi lấy bảng điểm lớp", 500);
+    return sendError(res, error.message || "Lỗi khi lấy bảng điểm lớp", error.status || 500);
   }
 };
 
@@ -67,10 +72,20 @@ export const getGradesByStudent = async (req, res) => {
       return sendError(res, "Bạn không có quyền xem bảng điểm của học sinh khác", 403);
     }
 
+    if (userRole === "teacher") {
+      if (!classId || !mongoose.Types.ObjectId.isValid(classId)) {
+        return sendError(res, "Giáo viên phải cung cấp classId để xem bảng điểm học sinh", 400);
+      }
+      const isAuthorized = await checkClassTeacherOwnership(classId, loggedUserId, userRole);
+      if (!isAuthorized) {
+        return sendError(res, "Bạn không có quyền xem bảng điểm của học sinh ở lớp này", 403);
+      }
+    }
+
     const result = await gradeService.getGradesByStudent(studentId, classId);
     return sendSuccess(res, "Lấy bảng điểm cá nhân thành công", result);
   } catch (error) {
-    return sendError(res, error.message || "Lỗi khi lấy bảng điểm cá nhân", 500);
+    return sendError(res, error.message || "Lỗi khi lấy bảng điểm cá nhân", error.status || 500);
   }
 };
 
@@ -93,9 +108,16 @@ export const getStudentGPA = async (req, res) => {
       return sendError(res, "Bạn không có quyền xem điểm tổng kết của học sinh khác", 403);
     }
 
+    if (userRole === "teacher") {
+      const isAuthorized = await checkClassTeacherOwnership(classId, loggedUserId, userRole);
+      if (!isAuthorized) {
+        return sendError(res, "Bạn không có quyền xem điểm tổng kết của học sinh ở lớp này", 403);
+      }
+    }
+
     const result = await gradeService.calculateStudentGPA(targetStudentId, classId);
     return sendSuccess(res, "Tính điểm tổng kết GPA thành công", result);
   } catch (error) {
-    return sendError(res, error.message || "Lỗi khi tính điểm tổng kết", 500);
+    return sendError(res, error.message || "Lỗi khi tính điểm tổng kết", error.status || 500);
   }
 };

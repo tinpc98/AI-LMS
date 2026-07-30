@@ -4,6 +4,37 @@ import aiExamGenerationService from "../ai/services/aiExamGeneration.service.js"
 import Exam from "../models/exam.model.js";
 import classModel from "../models/class.model.js";
 
+// S4-FIX-01 (mở rộng): che đáp án đúng trong snapshotData khi trả về cho học sinh.
+// snapshotData lưu trực tiếp toàn bộ nội dung câu hỏi (bao gồm đáp án) ngay trong
+// document Exam đối với đề AI-generated/từ ExamSet — không populate cũng lộ đáp án
+// nếu không redact ở đây.
+const redactExamAnswersForStudent = (exam) => {
+  if (!exam.questions || exam.questions.length === 0) return exam;
+  return {
+    ...exam,
+    questions: exam.questions.map((q) => {
+      if (!q.isSnapshot || !q.snapshotData) return q;
+      const safeData = { ...q.snapshotData };
+      delete safeData.correctAnswer;
+      delete safeData.acceptedAnswers;
+      delete safeData.suggestedAnswer;
+      delete safeData.rubric;
+      delete safeData.explanation;
+      delete safeData.feedbackCorrect;
+      delete safeData.feedbackIncorrect;
+      if (Array.isArray(safeData.options)) {
+        safeData.options = safeData.options.map((opt) => {
+          if (typeof opt === "string") return opt;
+          const safeOpt = { ...opt };
+          delete safeOpt.isCorrect;
+          return safeOpt;
+        });
+      }
+      return { ...q, snapshotData: safeData };
+    }),
+  };
+};
+
 // 1. Tạo đề thi tự động bằng AI / Ma trận câu hỏi
 export const autoGenerateExam = async (req, res) => {
   try {
@@ -184,21 +215,63 @@ export const getExamsByClass = async (req, res) => {
       return res.status(200).json({ success: true, data: [] });
     }
 
-    const exams = await Exam.find({ classId: classId }).sort({ createdAt: -1 }).lean();
+    const userId = (req.user._id || req.user.id || "").toString();
+    const userRole = (req.user.role || "").toLowerCase();
+    const targetClass = await classModel.findById(classId).lean();
+    if (!targetClass) {
+      return res.status(200).json({ success: true, data: [] });
+    }
+
+    // RBAC: học sinh chỉ xem lớp mình học, giáo viên chỉ xem lớp mình phụ trách (admin xem tất cả)
+    if (userRole === "student") {
+      const isStudentInClass = targetClass.students?.some((s) => s.studentId?.toString() === userId);
+      if (!isStudentInClass) {
+        return res.status(200).json({ success: true, data: [] });
+      }
+    } else if (userRole === "teacher") {
+      const classTeacherId = (targetClass.teacherId?._id || targetClass.teacherId || "").toString();
+      if (classTeacherId !== userId) {
+        return res.status(200).json({ success: true, data: [] });
+      }
+    }
+
+    let query = Exam.find({ classId });
+    if (userRole === "student") {
+      query = query.where("status").in(["PUBLISHED", "COMPLETED"]);
+    }
+    const exams = await query.sort({ createdAt: -1 }).lean();
+
+    const data = userRole === "student" ? exams.map(redactExamAnswersForStudent) : exams;
 
     return res.status(200).json({
       success: true,
-      data: exams,
+      data,
     });
   } catch (error) {
     return res.status(500).json({ message: error.message || "Lỗi hệ thống khi lấy danh sách đề thi." });
   }
 };
 
-// 6. Lấy tất cả đề thi
+// 6. Lấy tất cả đề thi (đã lọc theo phạm vi truy cập của user)
 export const getAllExams = async (req, res) => {
   try {
-    const exams = await Exam.find().sort({ createdAt: -1 });
+    const userId = (req.user._id || req.user.id || "").toString();
+    const userRole = (req.user.role || "").toLowerCase();
+
+    let examFilter = {};
+    if (userRole === "teacher") {
+      const teachingClasses = await classModel.find({ teacherId: userId }).select("_id").lean();
+      const classIds = teachingClasses.map((c) => c._id);
+      examFilter = { $or: [{ classId: { $in: classIds } }, { createdBy: userId }] };
+    } else if (userRole !== "admin") {
+      // student (hoặc role khác): chỉ xem đề đã công bố của các lớp mình học
+      const enrolledClasses = await classModel.find({ "students.studentId": userId }).select("_id").lean();
+      const classIds = enrolledClasses.map((c) => c._id);
+      examFilter = { classId: { $in: classIds }, status: { $in: ["PUBLISHED", "COMPLETED"] } };
+    }
+    // admin: examFilter = {} → xem tất cả
+
+    const exams = await Exam.find(examFilter).sort({ createdAt: -1 });
 
     const now = new Date().getTime();
     let updatedExams = [];
@@ -215,9 +288,13 @@ export const getAllExams = async (req, res) => {
       updatedExams.push(exam);
     }
 
+    const data = userRole === "admin" || userRole === "teacher"
+      ? updatedExams
+      : updatedExams.map((exam) => redactExamAnswersForStudent(exam.toObject()));
+
     return res.status(200).json({
       success: true,
-      data: updatedExams,
+      data,
     });
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message || "Lỗi hệ thống khi tải danh sách đề thi." });
