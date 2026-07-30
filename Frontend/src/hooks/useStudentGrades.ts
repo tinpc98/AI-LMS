@@ -1,5 +1,6 @@
-import { useState, useMemo, useCallback } from "react";
-import type { IGrade } from "../api/gradeApi";
+import { useState, useMemo, useCallback, useEffect } from "react";
+import gradeApi from "../api/gradeApi";
+import type { IGradeItemDef, IStudentGradeData } from "../api/gradeApi";
 import type {
   IGradeItem,
   StudentGradeFilterOptions,
@@ -8,12 +9,11 @@ import type {
   GradeStatus,
 } from "../types/studentGrade";
 
-export function useStudentGrades(
-  rawGrades: IGrade[] = [],
-  assignments: any[] = [],
-  submittedAssignmentIds: string[] = [],
-  exams: any[] = []
-) {
+export function useStudentGrades(classId?: string) {
+  const [loading, setLoading] = useState(false);
+  const [gradeItemsDef, setGradeItemsDef] = useState<IGradeItemDef[]>([]);
+  const [studentGradesData, setStudentGradesData] = useState<IStudentGradeData | null>(null);
+
   const [filters, setFilters] = useState<StudentGradeFilterOptions>({
     searchQuery: "",
     categoryFilter: "all",
@@ -21,94 +21,56 @@ export function useStudentGrades(
     sortBy: "highest",
   });
 
+  useEffect(() => {
+    if (classId) {
+      setLoading(true);
+      gradeApi.getGradesByStudent("me", classId)
+        .then((res) => {
+          setGradeItemsDef(res.gradeItems || []);
+          if (res.students && res.students.length > 0) {
+            setStudentGradesData(res.students[0]);
+          }
+        })
+        .catch((err) => {
+          console.error("Fetch student grades error:", err);
+        })
+        .finally(() => setLoading(false));
+    }
+  }, [classId]);
+
   // Combine grades into unified grade items list
   const gradeItems: IGradeItem[] = useMemo(() => {
+    if (!studentGradesData) return [];
     const list: IGradeItem[] = [];
+    const sg = studentGradesData.grades || {};
 
-    // 1. Process explicit IGrade objects from API
-    rawGrades.forEach((g) => {
+    gradeItemsDef.forEach((item) => {
       let category: GradeCategory = "Assignment";
-      const catLower = (g.category || "").toLowerCase();
+      const catLower = (item.category || "").toLowerCase();
       if (catLower.includes("quiz")) category = "Quiz";
       else if (catLower.includes("exam") || catLower.includes("midterm") || catLower.includes("final")) category = "Exam";
       else if (catLower.includes("attendance") || catLower.includes("chuyên cần")) category = "Attendance";
+      else if (catLower === "assignment") category = "Assignment";
+      else category = "Other";
 
+      const match = sg[item._id];
+      const score = match?.score !== undefined && match?.score !== null ? match.score : null;
+      
       list.push({
-        _id: g._id || `grade-${Math.random()}`,
-        title: `Đầu điểm ${g.category}`,
+        _id: item._id,
+        title: item.title,
         category,
-        score: g.score,
-        maxScore: 10,
-        weight: g.weight || 10,
-        status: "Graded",
-        gradedBy: typeof g.gradedBy === "object" ? (g.gradedBy as any)?.fullName : "Giảng viên",
-        gradedAt: g.gradedAt || g.createdAt,
-        feedback: g.feedback,
-        aiFeedback: g.aiFeedback,
-        rawGrade: g,
-      });
-    });
-
-    // 2. Process assignments if not already present
-    assignments.forEach((assign) => {
-      const isSubmitted = submittedAssignmentIds.includes(assign._id);
-      let status: GradeStatus = isSubmitted ? "Pending" : "Not Submitted";
-      let score: number | null = null;
-      let feedback: string | undefined = undefined;
-
-      if (assign.submission) {
-        if (assign.submission.grade !== null && assign.submission.grade !== undefined) {
-          status = "Graded";
-          score = assign.submission.grade;
-          feedback = assign.submission.feedback;
-        } else {
-          status = "Pending";
-        }
-      }
-
-      list.push({
-        _id: `assign-${assign._id}`,
-        title: assign.title,
-        category: "Assignment",
         score,
-        maxScore: 10,
-        weight: 15,
-        status,
-        submittedAt: assign.submission?.createdAt,
-        gradedAt: assign.submission?.updatedAt,
-        feedback,
-      });
-    });
-
-    // 3. Process exams if not already present
-    exams.forEach((exam) => {
-      let status: GradeStatus = "Not Submitted";
-      let score: number | null = null;
-
-      if (exam.attempt) {
-        if (exam.attempt.totalScore !== undefined && exam.attempt.totalScore !== null) {
-          status = "Graded";
-          score = exam.attempt.totalScore;
-        } else if (exam.attempt.status === "SUBMITTED") {
-          status = "Pending";
-        }
-      }
-
-      list.push({
-        _id: `exam-${exam._id}`,
-        title: exam.title,
-        category: "Exam",
-        score,
-        maxScore: exam.maxScore || 10,
-        weight: 25,
-        status,
-        submittedAt: exam.attempt?.createdAt,
-        gradedAt: exam.attempt?.createdAt,
+        maxScore: item.maxScore || 10,
+        weight: item.weight || 10,
+        status: score !== null ? "Graded" : "Not Submitted",
+        gradedBy: "Giảng viên",
+        feedback: match?.feedback,
       });
     });
 
     return list;
-  }, [rawGrades, assignments, submittedAssignmentIds, exams]);
+  }, [gradeItemsDef, studentGradesData]);
 
   // Compute Grade Stats
   const stats: StudentGradeStats = useMemo(() => {
@@ -146,7 +108,7 @@ export function useStudentGrades(
     );
 
     return {
-      gpa,
+      gpa: studentGradesData?.avgGPA || gpa,
       classAvgGpa: gpa ? Number((gpa * 0.95).toFixed(1)) : 8.2,
       gradedCount,
       assignmentAvg,
@@ -215,6 +177,7 @@ export function useStudentGrades(
   }, []);
 
   return {
+    loading,
     filters,
     stats,
     gradeItems,

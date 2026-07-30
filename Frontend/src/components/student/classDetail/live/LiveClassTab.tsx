@@ -1,132 +1,164 @@
-import React from "react";
-import { Typography, Row, Col, Divider } from "antd";
+import React, { useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { Typography, Alert, Button } from "antd";
+import { DisconnectOutlined, ReloadOutlined } from "@ant-design/icons";
 import LiveStatistic from "./LiveStatistic";
 import CurrentLiveCard from "./CurrentLiveCard";
-import UpcomingSessionCard from "./UpcomingSessionCard";
-import SessionHistory from "./SessionHistory";
-import ScheduleTimeline from "./ScheduleTimeline";
-import JoinClassModal from "./JoinClassModal";
-import SessionDetailDrawer from "./SessionDetailDrawer";
 import LiveEmptyState from "./LiveEmptyState";
 import LiveLoadingSkeleton from "./LiveLoadingSkeleton";
-import useStudentLive from "../../../../hooks/useStudentLive";
-import useLiveSession from "../../../../hooks/useLiveSession";
-import type { ILiveSession } from "../../../../interface/liveInterface";
+import useLiveSessionState from "../../../../hooks/useLiveSessionState";
+import useLiveSessionSocket from "../../../../hooks/useLiveSessionSocket";
+import LiveSessionErrorBoundary from "../../../features/LiveSessionErrorBoundary";
+import type { IExtendedLiveSession, StudentLiveStats } from "../../../../types/studentLive";
 
 const { Title, Text } = Typography;
 
-interface LiveClassTabProps {
+export interface LiveClassTabProps {
   classId?: string;
-  rawLiveSession?: ILiveSession | null;
   classInfo?: any;
+  rawLiveSession?: any;
   loading?: boolean;
-  onJoinLiveRoom?: (meetingRoomId: string) => void;
+  onJoinLiveRoom?: () => void;
 }
 
 export const LiveClassTab: React.FC<LiveClassTabProps> = React.memo(
-  ({ classId, rawLiveSession, classInfo, loading = false, onJoinLiveRoom }) => {
-    // Custom Hooks
-    const {
-      loading: liveLoading,
-      currentLiveItem,
-      upcomingSessions,
-      pastSessions,
-      stats,
-    } = useStudentLive(classId, rawLiveSession, classInfo);
+  ({ classId, classInfo, onJoinLiveRoom }) => {
+    const navigate = useNavigate();
+    const location = useLocation();
 
+    // 1. Modular Hooks V2
     const {
-      selectedSession,
-      isJoinModalOpen,
-      isDetailOpen,
-      openJoinModal,
-      closeJoinModal,
-      openDetail,
-      closeDetail,
-      handleConfirmJoin,
-    } = useLiveSession(onJoinLiveRoom);
+      activeSession,
+      isLoadingActive,
+      error: sessionStateError,
+      fetchActiveSession,
+    } = useLiveSessionState({ classId });
 
-    const isLoading = loading || liveLoading;
-    const hasAnyContent = currentLiveItem || upcomingSessions.length > 0 || pastSessions.length > 0;
+    const { isOnline } = useLiveSessionSocket({
+      classId,
+      isTeacher: false,
+      onSessionStarted: () => void fetchActiveSession(),
+      onSessionEnded: () => {
+        void fetchActiveSession();
+      },
+    });
+
+    useEffect(() => {
+      if (classId) {
+        void fetchActiveSession();
+      }
+    }, [classId, fetchActiveSession]);
+
+    const isSessionLive = activeSession?.status === "Live";
+
+    const currentLiveItem: IExtendedLiveSession | null =
+      isSessionLive && activeSession
+        ? {
+            _id: activeSession.id || (activeSession as any)._id || `live-${classId}`,
+            id: activeSession.id || (activeSession as any)._id || `live-${classId}`,
+            classId: activeSession.classId || classId || "",
+            roomName: activeSession.roomName || (activeSession as any).meetingRoomId || "",
+            meetingRoomId: activeSession.roomName || (activeSession as any).meetingRoomId || "",
+            sessionNumber: activeSession.sessionNumber || 1,
+            title: activeSession.title || `Buổi học trực tuyến lớp ${classInfo?.className || ""}`,
+            createdBy: typeof activeSession.createdBy === "object" ? activeSession.createdBy.name : "",
+            status: "Live",
+            isLiveNow: true,
+            platform: "8x8 JaaS",
+            teacherName:
+              typeof activeSession.createdBy === "object"
+                ? activeSession.createdBy.name
+                : classInfo?.teacher?.fullName || "Giảng viên",
+            createdAt: activeSession.createdAt || new Date().toISOString(),
+            updatedAt: activeSession.updatedAt || new Date().toISOString(),
+          }
+        : null;
+
+    const stats: StudentLiveStats = {
+      total: currentLiveItem ? 1 : 0,
+      attended: 0,
+      missed: 0,
+      upcoming: currentLiveItem ? 1 : 0,
+    };
+
+    const handleJoinSession = (session: IExtendedLiveSession) => {
+      if (onJoinLiveRoom) {
+        onJoinLiveRoom();
+      }
+      const sessionId = activeSession?.id || (activeSession as any)?._id || session._id || session.id;
+      if (sessionId) {
+        navigate(`/student/live/${sessionId}`, { state: { classId, returnUrl: location.pathname } });
+      }
+    };
 
     return (
-      <div style={{ padding: "8px 0" }}>
-        {/* 1. Header Banner & Stats Section */}
-        <div style={{ marginBottom: 24 }}>
-          <div style={{ marginBottom: 16 }}>
-            <Title level={4} style={{ margin: "0 0 4px 0", fontWeight: 700, color: "#1f2937" }}>
-              🎥 Học trực tuyến (Live Sessions)
-            </Title>
-            <Text type="secondary" style={{ fontSize: 13 }}>
-              Tham gia các buổi học trực tuyến qua video, xem lịch học cố định và xem lịch sử các buổi học đã diễn ra.
-            </Text>
+      <LiveSessionErrorBoundary onReset={fetchActiveSession}>
+        <div style={{ padding: "8px 0" }}>
+          {/* Network Offline Alert */}
+          {!isOnline && (
+            <Alert
+              type="warning"
+              showIcon
+              icon={<DisconnectOutlined />}
+              message="Mất kết nối mạng"
+              description="Buổi học trực tuyến có thể bị gián đoạn. Vui lòng kiểm tra lại kết nối Internet."
+              style={{ marginBottom: 16, borderRadius: 12 }}
+              role="alert"
+            />
+          )}
+
+          {/* Alert Hiển thị Lỗi nếu có */}
+          {sessionStateError && (
+            <Alert
+              type="error"
+              showIcon
+              message={sessionStateError.title || "Lỗi tham gia buổi học"}
+              description={sessionStateError.message}
+              style={{ marginBottom: 16, borderRadius: 12 }}
+              action={
+                <Button
+                  size="small"
+                  type="primary"
+                  danger
+                  icon={<ReloadOutlined />}
+                  onClick={() => void fetchActiveSession()}
+                >
+                  Thử lại
+                </Button>
+              }
+            />
+          )}
+
+          {/* 1. Header Banner & Stats Section */}
+          <div style={{ marginBottom: 24 }}>
+            <div style={{ marginBottom: 16 }}>
+              <Title level={4} style={{ margin: "0 0 4px 0", fontWeight: 700, color: "#1f2937" }}>
+                🎥 Học trực tuyến (Live Sessions)
+              </Title>
+              <Text type="secondary" style={{ fontSize: 13 }}>
+                Tham gia các buổi học trực tuyến qua video 8x8 JaaS bảo mật.
+              </Text>
+            </div>
+
+            <LiveStatistic stats={stats} />
           </div>
 
-          {/* 4 Statistic Cards */}
-          <LiveStatistic stats={stats} />
-        </div>
-
-        {/* 2. Loading Skeleton vs Content */}
-        {isLoading ? (
-          <LiveLoadingSkeleton count={4} />
-        ) : !hasAnyContent ? (
-          <LiveEmptyState />
-        ) : (
-          <div>
-            {/* 3. Hero Card for Currently Active Live Session */}
-            {currentLiveItem && (
+          {/* 2. Loading Skeleton vs Content */}
+          {isLoadingActive ? (
+            <LiveLoadingSkeleton count={2} />
+          ) : !currentLiveItem ? (
+            <LiveEmptyState />
+          ) : (
+            <div>
               <CurrentLiveCard
                 session={currentLiveItem}
-                onJoin={openJoinModal}
-                onDetail={openDetail}
+                onJoin={handleJoinSession}
+                onDetail={() => {}}
               />
-            )}
-
-            {/* 4. Upcoming Sessions & Weekly Schedule */}
-            <Row gutter={[24, 24]} style={{ marginBottom: 24 }}>
-              <Col xs={24} lg={14}>
-                <Title level={5} style={{ marginBottom: 16, color: "#1f2937" }}>
-                  📅 Các buổi học sắp diễn ra ({upcomingSessions.length})
-                </Title>
-                {upcomingSessions.length === 0 ? (
-                  <Text type="secondary" style={{ fontSize: 13, fontStyle: "italic" }}>
-                    Hiện không có lịch học sắp diễn ra nào khác.
-                  </Text>
-                ) : (
-                  upcomingSessions.map((session) => (
-                    <UpcomingSessionCard key={session._id} session={session} onDetail={openDetail} />
-                  ))
-                )}
-              </Col>
-
-              <Col xs={24} lg={10}>
-                {/* Schedule Timeline */}
-                <ScheduleTimeline schedule={classInfo?.schedule || []} />
-              </Col>
-            </Row>
-
-            <Divider style={{ margin: "24px 0" }} />
-
-            {/* 5. Past Sessions History */}
-            <SessionHistory sessions={pastSessions} onDetail={openDetail} />
-          </div>
-        )}
-
-        {/* 6. Join Class Confirmation Modal */}
-        <JoinClassModal
-          open={isJoinModalOpen}
-          session={selectedSession}
-          onClose={closeJoinModal}
-          onConfirm={handleConfirmJoin}
-        />
-
-        {/* 7. Session Detail Drawer */}
-        <SessionDetailDrawer
-          open={isDetailOpen}
-          session={selectedSession}
-          onClose={closeDetail}
-          onJoin={openJoinModal}
-        />
-      </div>
+            </div>
+          )}
+        </div>
+      </LiveSessionErrorBoundary>
     );
   }
 );

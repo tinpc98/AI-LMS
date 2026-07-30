@@ -13,6 +13,8 @@ import {
 import type { MenuProps } from "antd";
 import { StudentBreadcrumb } from "./StudentBreadcrumb";
 import { useAuth } from "../../../hooks/useAuth";
+import { useNotifications } from "../../../hooks/useNotifications";
+import { NotificationDropdown } from "./NotificationDropdown";
 
 const { Header } = Layout;
 const { Text } = Typography;
@@ -27,6 +29,7 @@ interface StudentHeaderProps {
 export const StudentHeader: React.FC<StudentHeaderProps> = React.memo(
   ({ collapsed, onToggleCollapse, onToggleMobileDrawer, isMobile }) => {
     const { user, logout } = useAuth();
+    const { notifications, unreadCount, loading, markAsRead, markAllAsRead } = useNotifications();
 
     const userMenuItems: MenuProps["items"] = [
       {
@@ -110,15 +113,13 @@ export const StudentHeader: React.FC<StudentHeaderProps> = React.memo(
 
         {/* Right Side: Notifications & User Dropdown */}
         <Space size={20} align="center">
-          <Tooltip title="Thông báo">
-            <Badge count={0} size="small">
-              <Button
-                type="text"
-                shape="circle"
-                icon={<BellOutlined style={{ fontSize: 18, color: "#595959" }} />}
-              />
-            </Badge>
-          </Tooltip>
+          <NotificationDropdown
+            notifications={notifications}
+            unreadCount={unreadCount}
+            loading={loading}
+            markAsRead={markAsRead}
+            markAllAsRead={markAllAsRead}
+          />
 
           <Dropdown menu={{ items: userMenuItems }} placement="bottomRight" arrow>
             <div

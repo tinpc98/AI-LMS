@@ -1,11 +1,12 @@
 import type { ILiveSession } from "../interface/liveInterface";
 
-export type LiveSessionStatus = "Upcoming" | "Live" | "Completed" | "Cancelled" | "Missed";
+export type StudentLiveSessionStatus = "Upcoming" | "Live" | "Completed" | "Cancelled" | "Missed";
 
-export interface IExtendedLiveSession extends ILiveSession {
-  status: LiveSessionStatus;
+export interface IExtendedLiveSession extends Omit<ILiveSession, "status"> {
+  _id?: string;
+  status: StudentLiveSessionStatus;
   isLiveNow?: boolean;
-  platform?: "Jitsi Meet" | "Google Meet" | "Zoom" | "Microsoft Teams";
+  platform?: string;
   meetingUrl?: string;
   teacherName?: string;
   teacherAvatar?: string;

@@ -1,3 +1,4 @@
+import "dotenv/config";
 import dotenv from "dotenv";
 import express from "express";
 import cors from "cors"; // Thêm thư viện cấu hình cho phép Frontend gọi API
@@ -22,13 +23,31 @@ import CourseRouter from "./src/routers/course.routes.js";
 import DashboardRouter from "./src/routers/dashboard.routes.js";
 import ReportRouter from "./src/routers/report.routes.js";
 import NotificationRouter from "./src/routers/notification.routes.js";
+
 import ProgressRouter from "./src/routers/progress.routes.js";
 
 // Import Cron Setup
+
+import LearningRouter from "./src/routers/learning.routes.js";
+import AnalyticsRouter from "./src/routers/analytics.routes.js";
+import ExamSetRouter from "./src/routers/examSet.routes.js";
+import AISummaryRouter from "./src/routers/aiSummary.routes.js";
+import AIQuestionRouter from "./src/routers/aiQuestion.routes.js";
+import AIGradingRouter from "./src/routers/aiGrading.routes.js";
+import AIKnowledgeRouter from "./src/routers/aiKnowledge.routes.js";
+import AIChatRouter from "./src/routers/aiChat.routes.js";
+
 import { initCronJobs } from "./src/cron/cron.setup.js";
+import aiUsageService from "./src/ai/services/aiUsage.service.js";
+import FolderRouter from "./src/routers/folder.routes.js";
+
+import { validateJaasConfig } from "./src/controllers/jaas.controller.js";
 
 // Kích hoạt cấu hình file .env – phải gọi TRƯỚC khi đọc bất kỳ biến môi trường nào
 dotenv.config();
+
+// Kiểm tra cấu hình 8x8 JaaS khi khởi động (Fail-fast config check)
+validateJaasConfig();
 
 const app = express();
 const port = process.env.PORT || 5000;
@@ -52,11 +71,9 @@ const allowedOrigins = (
 
 const corsOptions = {
   origin: (origin, cb) => {
-    // Cho phép các request không có Origin header (Postman, server-to-server, curl)
     if (!origin) return cb(null, true);
     if (allowedOrigins.includes(origin)) return cb(null, true);
-    // Từ chối origin không nằm trong whitelist
-    return cb(new Error(`CORS: Origin "${origin}" không được phép truy cập!`));
+    return cb(new Error("Origin không được phép bởi CORS"));
   },
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
   credentials: true,
@@ -81,6 +98,8 @@ app.set("io", io); // Lưu io instance để gọi từ các controllers
 // Kích hoạt luồng lắng nghe sự kiện Real-time
 socketHandler(io);
 liveSocketHandler(io);
+import notificationSocketHandler from "./src/sockets/notification.socket.js";
+notificationSocketHandler(io);
 
 // ==========================================
 // ĐĂNG KÝ CÁC API ROUTES
@@ -91,7 +110,8 @@ app.use("/api/classes", ClassRouter);
 app.use("/api/courses", CourseRouter);
 app.use("/api/dashboard", DashboardRouter);
 app.use("/api/reports", ReportRouter);
-app.use("/api/lesson", LessonRouter);
+app.use("/api/lessons", LessonRouter);
+app.use("/api/lesson", LessonRouter); // Deprecated alias for backward compatibility
 app.use("/api/assignments", assignmentRouter);
 app.use("/api/attendances", AttendanceRouter);
 app.use("/api/grades", GradeRouter);
@@ -103,7 +123,15 @@ app.use("/api/progress", ProgressRouter);
 app.use("/api/questions", QuestionRouter);
 app.use("/api/exams", ExamRouter);
 app.use("/api/exam-attempts", ExamAttemptRouter);
+app.use("/api/exam-sets", ExamSetRouter);
 app.use("/api/live", LiveRouter);
+
+// AI Module Routes
+app.use("/api/ai/lectures", AISummaryRouter);
+app.use("/api/ai/lectures/:lessonId/question-sets", AIQuestionRouter);
+app.use("/api/ai/exam-attempts", AIGradingRouter);
+app.use("/api/ai/lessons", AIKnowledgeRouter);
+app.use("/api/ai/chat", AIChatRouter);
 
 app.get("/", (req, res) => {
   res
@@ -140,10 +168,15 @@ connectDB()
       console.log(`🚀 Server HTTP & Socket đang chạy tại cổng: ${port}`);
       console.log(`🔗 Endpoint test: http://localhost:${port}`);
       console.log(`==================================================`);
-      
+
       // Khởi tạo các cron job nền của hệ thống
       // Đặt runImmediately=false (mặc định) để cron chỉ chạy theo lịch
       initCronJobs();
+
+      // Đảm bảo cấu hình AIConfig đã được lưu sẵn trong DB
+      aiUsageService.getOrCreateConfig()
+        .then(() => console.log("🤖 AI Core Foundation: Đã đồng bộ cấu hình AIConfig"))
+        .catch((err) => console.error("⚠️ AI Core Foundation Config Init Error:", err.message));
     });
   })
   .catch((error) => {

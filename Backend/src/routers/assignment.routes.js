@@ -1,6 +1,10 @@
 import express from "express";
 import assignmentController from "../controllers/assignment.controller.js";
+<<<<<<< HEAD
 import { verifyUser, isTeacher, isStudent } from "../middlewares/auth.middlewares.js";
+=======
+import { verifyUser, isTeacher, canViewSubmission } from "../middlewares/auth.middlewares.js";
+>>>>>>> dev
 import upload from "../middlewares/upload.middlewares.js";
 
 const router = express.Router();
@@ -52,6 +56,21 @@ router.get(
   verifyUser,
   isTeacher,
   assignmentController.getSubmissionsByAssignment
+);
+
+// Xem chi tiết 1 bài nộp cụ thể (Giáo viên hoặc Học sinh có quyền)
+router.get(
+  "/submissions/detail/:submissionId",
+  verifyUser,
+  canViewSubmission,
+  assignmentController.getSubmissionById
+);
+
+// Học sinh xem bài nộp cá nhân
+router.get(
+  "/:assignmentId/my-submission",
+  verifyUser,
+  assignmentController.getMySubmission
 );
 
 // Học sinh Nộp bài / Nộp lại bài (Đính kèm max 5 file bài làm)

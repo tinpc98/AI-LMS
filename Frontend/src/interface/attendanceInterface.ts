@@ -25,7 +25,7 @@ export interface IAttendanceStats {
   absent: number;
   late: number;
   excused: number;
-  presentRate: number | string;
+  presentRate?: number | string;
 }
 
 export interface IAttendanceItem {
@@ -42,4 +42,30 @@ export interface IAttendanceItem {
   status: AttendanceStatus;
   note?: string;
   createdAt?: string;
+}
+
+export type SessionStatus = "Upcoming" | "Open" | "Saved" | "Closed" | "Cancelled";
+
+export interface IVirtualSession {
+  id: string;
+  classId: string;
+  date: string; // YYYY-MM-DD
+  dayOfWeek: number;
+  startTime: string;
+  endTime: string;
+  status: SessionStatus;
+  hasRecords: boolean;
+  stats: IAttendanceStats;
+}
+
+export interface IAttendanceMatrix {
+  sessions: IVirtualSession[];
+  students: Array<{
+    _id: string;
+    fullName: string;
+    studentCode?: string;
+    email?: string;
+    avatar?: string;
+  }>;
+  records: Record<string, Record<string, IAttendanceItem>>;
 }

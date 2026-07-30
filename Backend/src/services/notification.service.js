@@ -229,6 +229,241 @@ class NotificationService {
       notificationsSent: insertResult.length,
     };
   }
+
+  // ──────────────────────────────────────────────
+  // 6. NOTIFY LIVE SESSION CREATED (REALTIME)
+  // ──────────────────────────────────────────────
+  
+  /**
+   * Tạo thông báo khi Teacher bắt đầu Live Session và emit qua Socket
+   * Hàm này sử dụng bulkWrite upsert để ngăn chặn việc tạo trùng lặp
+   */
+  async notifyLiveSessionCreated({ session, classInfo, teacherInfo, io }) {
+    if (!session || !classInfo) return;
+
+    try {
+      // 1. Chỉ lấy những Student đang thực sự enroll hợp lệ trong lớp
+      const activeStudents = (classInfo.students || []).filter(
+        (s) => s.status === "Enrolled" && s.studentId
+      );
+
+      if (activeStudents.length === 0) return;
+
+      const actorId = typeof teacherInfo === "object" ? teacherInfo._id : teacherInfo;
+
+      // 2. Chuẩn bị bulkWrite ops với upsert
+      const bulkOps = activeStudents.map((s) => {
+        const recipientId = typeof s.studentId === "object" ? s.studentId._id : s.studentId;
+        
+        return {
+          updateOne: {
+            // Điều kiện filter để upsert (phải khớp với unique compound index: recipientId, type, entityId)
+            filter: {
+              recipientId: new mongoose.Types.ObjectId(recipientId),
+              type: "LIVE_SESSION_CREATED",
+              entityId: new mongoose.Types.ObjectId(session._id),
+            },
+            update: {
+              $setOnInsert: {
+                recipientId: new mongoose.Types.ObjectId(recipientId),
+                actorId: actorId ? new mongoose.Types.ObjectId(actorId) : null,
+                senderId: actorId ? new mongoose.Types.ObjectId(actorId) : null, // legacy
+                title: "Buổi học trực tuyến mới",
+                message: `Giảng viên đã tạo buổi học trực tuyến cho lớp ${classInfo.className || "của bạn"}`,
+                content: `Giảng viên đã tạo buổi học trực tuyến cho lớp ${classInfo.className || "của bạn"}`, // legacy
+                type: "LIVE_SESSION_CREATED",
+                entityType: "LIVE_SESSION",
+                entityId: new mongoose.Types.ObjectId(session._id),
+                classId: new mongoose.Types.ObjectId(session.classId),
+                actionUrl: `/student/live/${session._id}`,
+                link: `/student/live/${session._id}`, // legacy
+                metadata: {
+                  className: classInfo.className,
+                  teacherName: teacherInfo?.fullName || "Giảng viên",
+                  sessionNumber: session.sessionNumber,
+                  roomName: session.roomName
+                },
+                isRead: false,
+                readAt: null
+              }
+            },
+            upsert: true
+          }
+        };
+      });
+
+      // 3. Thực thi bulkWrite
+      const result = await Notification.bulkWrite(bulkOps, { ordered: false });
+      
+      // Nếu upsertedCount > 0, tức là có thông báo mới được tạo (không bị duplicate)
+      // Ta cần fetch lại những notification vừa mới tạo để emit qua socket
+      if (result.upsertedCount > 0 && io) {
+        // Lấy danh sách ID của các docs vừa được insert
+        const upsertedIds = Object.values(result.upsertedIds);
+        
+        const newNotifications = await Notification.find({ _id: { $in: upsertedIds } })
+          .populate("actorId senderId", "fullName email avatar")
+          .lean();
+
+        // 4. Emit socket.io cho từng user
+        newNotifications.forEach((notif) => {
+          io.to(`user:${notif.recipientId}`).emit("notification:new", notif);
+        });
+        
+        console.log(`✅ [NotificationService] Đã tạo và emit ${result.upsertedCount} thông báo LiveSession.`);
+      }
+
+    } catch (error) {
+      console.error("❌ [NotificationService] notifyLiveSessionCreated Error:", error);
+    }
+  }
+
+  /**
+   * Tạo thông báo khi Teacher kết thúc Live Session và emit qua Socket
+   */
+  async notifyLiveSessionEnded({ session, classInfo, teacherInfo, io }) {
+    if (!session || !classInfo) return;
+
+    try {
+      const activeStudents = (classInfo.students || []).filter(
+        (s) => s.status === "Enrolled" && s.studentId
+      );
+
+      if (activeStudents.length === 0) return;
+
+      const actorId = typeof teacherInfo === "object" ? teacherInfo._id : teacherInfo;
+
+      const bulkOps = activeStudents.map((s) => {
+        const recipientId = typeof s.studentId === "object" ? s.studentId._id : s.studentId;
+        
+        return {
+          updateOne: {
+            filter: {
+              recipientId: new mongoose.Types.ObjectId(recipientId),
+              type: "LIVE_SESSION_ENDED",
+              entityId: new mongoose.Types.ObjectId(session._id),
+            },
+            update: {
+              $setOnInsert: {
+                recipientId: new mongoose.Types.ObjectId(recipientId),
+                actorId: actorId ? new mongoose.Types.ObjectId(actorId) : null,
+                senderId: actorId ? new mongoose.Types.ObjectId(actorId) : null,
+                title: "Buổi học trực tuyến kết thúc",
+                message: `Giảng viên đã kết thúc buổi học trực tuyến của lớp ${classInfo.className || "của bạn"}`,
+                content: `Giảng viên đã kết thúc buổi học trực tuyến của lớp ${classInfo.className || "của bạn"}`,
+                type: "LIVE_SESSION_ENDED",
+                entityType: "LIVE_SESSION",
+                entityId: new mongoose.Types.ObjectId(session._id),
+                classId: new mongoose.Types.ObjectId(session.classId),
+                actionUrl: `/student/classes/${session.classId}`,
+                link: `/student/classes/${session.classId}`,
+                metadata: {
+                  className: classInfo.className,
+                  sessionNumber: session.sessionNumber,
+                  duration: session.actualEnd ? Math.round((session.actualEnd.getTime() - session.actualStart.getTime())/60000) : 0
+                },
+                isRead: false,
+                readAt: null
+              }
+            },
+            upsert: true
+          }
+        };
+      });
+
+      const result = await Notification.bulkWrite(bulkOps, { ordered: false });
+      
+      if (result.upsertedCount > 0 && io) {
+        const upsertedIds = Object.values(result.upsertedIds);
+        
+        const newNotifications = await Notification.find({ _id: { $in: upsertedIds } })
+          .populate("actorId senderId", "fullName email avatar")
+          .lean();
+
+        newNotifications.forEach((notif) => {
+          io.to(`user:${notif.recipientId}`).emit("notification:new", notif);
+        });
+        
+        console.log(`✅ [NotificationService] Đã tạo và emit ${result.upsertedCount} thông báo LiveSession_ENDED.`);
+      }
+
+    } catch (error) {
+      console.error("❌ [NotificationService] notifyLiveSessionEnded Error:", error);
+    }
+  }
+
+  // Lấy danh sách thông báo inbox của người dùng hiện tại (có phân trang)
+  async getMyNotifications(userId, queryOptions = {}) {
+    if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
+      return { items: [], pagination: {} };
+    }
+
+    const page = Math.max(1, parseInt(queryOptions.page || 1, 10));
+    const limit = Math.min(50, Math.max(1, parseInt(queryOptions.limit || 20, 10)));
+    const skip = (page - 1) * limit;
+
+    const filter = { recipientId: userId };
+    if (queryOptions.isRead !== undefined) {
+      filter.isRead = queryOptions.isRead === "true" || queryOptions.isRead === true;
+    }
+    if (queryOptions.type) {
+      filter.type = queryOptions.type;
+    }
+
+    const [items, totalItems, unreadCount] = await Promise.all([
+      Notification.find(filter)
+        .populate("actorId senderId", "fullName email avatar")
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+      Notification.countDocuments(filter),
+      Notification.countDocuments({ recipientId: userId, isRead: false })
+    ]);
+
+    return {
+      items,
+      unreadCount,
+      pagination: {
+        page,
+        limit,
+        totalItems,
+        totalPages: Math.ceil(totalItems / limit),
+      }
+    };
+  }
+
+  // Đếm số thông báo chưa đọc
+  async getUnreadCount(userId) {
+    if (!userId || !mongoose.Types.ObjectId.isValid(userId)) return 0;
+    return await Notification.countDocuments({ recipientId: userId, isRead: false });
+  }
+
+  // Đánh dấu 1 thông báo là đã đọc
+  async markAsRead(notificationId, userId) {
+    if (!mongoose.Types.ObjectId.isValid(notificationId)) {
+      throw new Error("ID thông báo không hợp lệ!");
+    }
+    const notif = await Notification.findOneAndUpdate(
+      { _id: notificationId, recipientId: userId },
+      { $set: { isRead: true, readAt: new Date() } },
+      { new: true }
+    );
+    if (!notif) {
+      throw new Error("Thông báo không tồn tại hoặc không thuộc quyền sở hữu!");
+    }
+    return notif;
+  }
+
+  // Đánh dấu tất cả thông báo là đã đọc
+  async markAllAsRead(userId) {
+    if (!userId) return { modifiedCount: 0 };
+    return await Notification.updateMany(
+      { recipientId: userId, isRead: false },
+      { $set: { isRead: true, readAt: new Date() } }
+    );
+  }
 }
+
 
 export default new NotificationService();

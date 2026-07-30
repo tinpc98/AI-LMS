@@ -62,3 +62,44 @@ export const sendBulkNotification = async (req, res) => {
     );
   }
 };
+
+export const getMyNotifications = async (req, res) => {
+  try {
+    const userId = req.user.id || req.user._id;
+    const notifications = await notificationService.getMyNotifications(userId, req.query);
+    return sendSuccess(res, "Lấy danh sách thông báo thành công", notifications);
+  } catch (error) {
+    return sendError(res, error.message || "Lỗi khi lấy danh sách thông báo", 500);
+  }
+};
+
+export const getUnreadCount = async (req, res) => {
+  try {
+    const userId = req.user.id || req.user._id;
+    const unreadCount = await notificationService.getUnreadCount(userId);
+    return sendSuccess(res, "Lấy số lượng thông báo chưa đọc thành công", { unreadCount });
+  } catch (error) {
+    return sendError(res, error.message || "Lỗi khi lấy số lượng thông báo chưa đọc", 500);
+  }
+};
+
+export const markAsRead = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user.id || req.user._id;
+    const notification = await notificationService.markAsRead(id, userId);
+    return sendSuccess(res, "Đã đánh dấu thông báo là đã đọc", notification);
+  } catch (error) {
+    return sendError(res, error.message || "Lỗi khi đánh dấu đã đọc", error.message?.includes("không") ? 404 : 500);
+  }
+};
+
+export const markAllAsRead = async (req, res) => {
+  try {
+    const userId = req.user.id || req.user._id;
+    const result = await notificationService.markAllAsRead(userId);
+    return sendSuccess(res, "Đã đánh dấu tất cả thông báo là đã đọc", result);
+  } catch (error) {
+    return sendError(res, error.message || "Lỗi khi đánh dấu tất cả đã đọc", 500);
+  }
+};

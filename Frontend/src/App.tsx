@@ -1,11 +1,12 @@
 import React, { lazy, Suspense } from "react";
-import { Route, Routes } from "react-router-dom";
+import { Route, Routes, useParams, Navigate } from "react-router-dom";
 import { Spin } from "antd";
 import "./App.css";
 
 import ToastContainer from "./components/common/ToastContainer";
 import PublicRoute from "./components/common/PublicRoute";
 import ProtectedRoute from "./components/common/ProtectedRoute";
+import RoleRedirector from "./components/common/RoleRedirector";
 
 // Auth Components (Lazy Loaded)
 const LoginPage = lazy(() => import("./pages/auth/LoginPage"));
@@ -41,11 +42,20 @@ const ReportPage = lazy(() => import("./pages/Report/ReportPage"));
 const ProfilePage = lazy(() => import("./pages/admin/Profile/ProfilePage"));
 const AdminPage = lazy(() => import("./pages/admin/AdminPage"));
 
+const LiveSessionLayout = lazy(() => import("./components/layout/LiveSessionLayout"));
+const LiveSessionPage = lazy(() => import("./pages/live/LiveSessionPage"));
+
 const PageLoadingFallback = () => (
   <div style={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "100vh" }}>
     <Spin size="large" tip="Đang tải trang..." />
   </div>
 );
+
+// Legacy Redirect Handler cho tuyến đường /classdetail/:classId cũ
+const LegacyClassDetailRedirect = () => {
+  const { classId } = useParams<{ classId: string }>();
+  return <Navigate to={`/student/classdetail/${classId || ""}`} replace />;
+};
 
 function App() {
   return (
@@ -53,6 +63,9 @@ function App() {
       <ToastContainer />
       <Suspense fallback={<PageLoadingFallback />}>
         <Routes>
+          {/* Root Redirector */}
+          <Route path="/" element={<RoleRedirector />} />
+
           {/* ================= PUBLIC / AUTH ROUTES ================= */}
           <Route element={<PublicRoute />}>
             <Route path="/login" element={<LoginPage />} />
@@ -68,20 +81,17 @@ function App() {
               <Route path="studentassignment" element={<StudentAssignment />} />
               <Route path="classdetail/:classId" element={<ClassDetail />} />
               <Route path="studentassignment/:assignmentId" element={<StudentAssignment />} />
-              <Route path="lessonview" element={<LessonView />} />
+              <Route path="lessonview/:lessonId" element={<LessonView />} />
               <Route path="notifications" element={<NotificationCenterPage />} />
+            </Route>
+            
+            {/* Live Session Route cho Student (Full màn hình, không Header/Sidebar) */}
+            <Route path="/student/live" element={<LiveSessionLayout />}>
+              <Route path=":sessionId" element={<LiveSessionPage />} />
             </Route>
 
-            {/* Tuyến đường / giữ tương thích ngược */}
-            <Route path="/" element={<HomeLayoutStudent />}>
-              <Route index element={<HomePageStudent />} />
-              <Route path="myclasses" element={<MyClasses />} />
-              <Route path="studentassignment" element={<StudentAssignment />} />
-              <Route path="classdetail/:classId" element={<ClassDetail />} />
-              <Route path="studentassignment/:assignmentId" element={<StudentAssignment />} />
-              <Route path="lessonview" element={<LessonView />} />
-              <Route path="notifications" element={<NotificationCenterPage />} />
-            </Route>
+            {/* Legacy redirect tương thích ngược cho link cũ /classdetail/:classId */}
+            <Route path="/classdetail/:classId" element={<LegacyClassDetailRedirect />} />
 
             <Route path="/exam/:attemptId" element={<ExamPage />} />
           </Route>
@@ -95,6 +105,11 @@ function App() {
               <Route path="questionbank" element={<QuestionBank />} />
               <Route path="examresults/:examId" element={<ExamResults />} />
               <Route path="exam-review/:attemptId" element={<ExamAttemptDetail />} />
+            </Route>
+            
+            {/* Live Session Route cho Teacher (Full màn hình, không Header/Sidebar) */}
+            <Route path="/teacher/live" element={<LiveSessionLayout />}>
+              <Route path=":sessionId" element={<LiveSessionPage />} />
             </Route>
           </Route>
 

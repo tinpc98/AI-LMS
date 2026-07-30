@@ -27,22 +27,23 @@ const Login = () => {
         password: data.password,
       });
 
-      const result = res.data;
+      // Backend trả về: { message: "...", accessToken: "...", data: { id, fullName, email, role, avatar } }
+      const { accessToken, data: loggedInUser, message } = res.data;
 
-      // Lưu Token, Role & User Info khi đăng nhập thành công
-      localStorage.setItem("accessToken", result.accessToken);
+      if (!accessToken) {
+        throw new Error("Không nhận được token xác thực từ hệ thống!");
+      }
 
-      const loggedInUser = result.data;
       const normalizedRole = String(loggedInUser?.role || "").toLowerCase();
 
-      if (normalizedRole) {
-        localStorage.setItem("userRole", normalizedRole);
-      }
+      // Lưu Token, Role & User Info khi đăng nhập thành công
+      localStorage.setItem("accessToken", accessToken);
+      localStorage.setItem("userRole", normalizedRole);
       if (loggedInUser) {
         localStorage.setItem("user", JSON.stringify(loggedInUser));
       }
 
-      toast.success(result.message || "Đăng nhập thành công.");
+      toast.success(message || "Đăng nhập thành công.");
 
       // Phân quyền điều hướng bằng React Router (Single Page Application - 0 RELOAD)
       if (normalizedRole === "admin") {
@@ -100,7 +101,7 @@ const Login = () => {
           <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white font-bold text-sm shadow-md shadow-indigo-600/30">
             E
           </div>
-          <span className="text-sm font-bold text-white tracking-wider uppercase">Edusynth AI</span>
+          <span className="text-sm font-bold text-white tracking-wider">EduSpace</span>
         </div>
 
         {/* Form Card (Hiệu ứng kính mờ - Glassmorphism sang trọng) */}
@@ -126,7 +127,7 @@ const Login = () => {
                   className="w-full bg-slate-950/70 border border-white/10 rounded-xl py-2.5 px-4 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 transition-all"
                   id="email"
                   type="email"
-                  placeholder="example@edusynth.ai"
+                  placeholder="example@eduspace.ai"
                   {...register("email", {
                     required: "Bạn chưa nhập Email",
                     minLength: {
@@ -254,7 +255,7 @@ const Login = () => {
             Đang cập nhật phiên bản v2.0
           </div>
           <h2 className="text-4xl xl:text-5xl font-extrabold text-white leading-tight tracking-tight">
-            Hệ thống LMS thông minh tích hợp AI thế hệ mới
+            Hệ thống học tập thông minh <span className="text-[#F4AD24]">EduSpace</span> tích hợp AI thế hệ mới
           </h2>
           <p className="text-base text-slate-300 mt-4 leading-relaxed font-light">
             Hỗ trợ bài giảng sinh động, quản lý lớp học toàn diện và công cụ học tập tương tác cá nhân hóa.

@@ -1,18 +1,26 @@
 import { useState, type ChangeEvent } from "react";
-import { useNavigate, useParams } from "react-router-dom";
-import assignmentApi from "../../api/assignmentApi";
+import { useParams } from "react-router-dom";
+import { Spin, Alert, Button, Modal, Tag, Space } from "antd";
 import { toast } from "../../utils/toast";
+import { useStudentAssignment } from "../../hooks/useStudentAssignment";
+import { AITutorSidebar } from "../../components/student/assignment/AITutorSidebar";
 
 const StudentAssignmentContent = () => {
   const { assignmentId } = useParams<{ assignmentId: string }>();
-  const navigate = useNavigate();
+  const {
+    assignment,
+    mySubmission,
+    loading,
+    error,
+    isSubmitting,
+    fetchAssignmentDetail,
+    submitAssignment,
+    cancelSubmission
+  } = useStudentAssignment(assignmentId);
+
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [q1Answer, setQ1Answer] = useState("");
-  const [q2Answer, setQ2Answer] = useState("");
-  const [q3Algorithm, setQ3Algorithm] = useState("");
-  const [q3Optimize, setQ3Optimize] = useState("");
+  const [content, setContent] = useState("");
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     const filesArray = Array.from(event.target.files ?? []);
@@ -32,273 +40,257 @@ const StudentAssignmentContent = () => {
     setSelectedFiles((prev) => prev.filter((_, fileIndex) => fileIndex !== index));
   };
 
+  const handleCancelSubmission = () => {
+    Modal.confirm({
+      title: "Xác nhận hủy bài nộp?",
+      content: "Sau khi hủy, bài nộp hiện tại sẽ không còn được tính là đã nộp. Bạn cần nộp lại bài trước thời hạn quy định.",
+      okText: "Xác nhận hủy",
+      okType: "danger",
+      cancelText: "Quay lại",
+      onOk: cancelSubmission,
+    });
+  };
+
   const handleSubmitAssignment = async () => {
-    if (!assignmentId) {
-      toast.error("Không tìm thấy thông tin bài tập.");
-      return;
-    }
+    const formData = new FormData();
+    formData.append("content", content);
+    selectedFiles.forEach((file) => {
+      formData.append("files", file);
+    });
 
-    try {
-      setIsSubmitting(true);
-      const formData = new FormData();
-      const content = [
-        `[Câu 1 - Trắc nghiệm]: ${q1Answer || "Chưa trả lời"}`,
-        `[Câu 2 - Chia để trị]: ${q2Answer || "Chưa trả lời"}`,
-        `[Câu 3 - Giải thuật]: ${q3Algorithm || "Chưa trả lời"}`,
-        `[Câu 3 - Tối ưu]: ${q3Optimize || "Chưa trả lời"}`,
-      ].join("\n");
-
-      formData.append("content", content);
-      selectedFiles.forEach((file) => {
-        formData.append("files", file);
-      });
-
-      await assignmentApi.submitAssignment(assignmentId, formData);
-      toast.success("Nộp bài tập thành công!");
+    const success = await submitAssignment(formData);
+    if (success) {
       setIsModalOpen(false);
-      navigate(-1);
-    } catch (error) {
-      console.error("Lỗi khi nộp bài:", error);
-      toast.error("Nộp bài thất bại. Vui lòng thử lại sau.");
-    } finally {
-      setIsSubmitting(false);
+      setContent("");
+      setSelectedFiles([]);
     }
   };
 
+  if (loading) {
+    return (
+      <main className="ml-[280px] pt-16 h-screen flex items-center justify-center bg-surface">
+        <Spin size="large" tip="Đang tải thông tin bài tập..." />
+      </main>
+    );
+  }
+
+  if (error) {
+    return (
+      <main className="ml-[280px] pt-16 h-screen p-10 bg-surface flex items-center justify-center">
+        <Alert
+          message="Lỗi nạp bài tập"
+          description={error}
+          type="error"
+          showIcon
+          action={<Button type="primary" danger onClick={fetchAssignmentDetail}>Thử lại</Button>}
+        />
+      </main>
+    );
+  }
+
+  const deadlineFormatted = assignment?.deadline
+    ? new Date(assignment.deadline).toLocaleString("vi-VN")
+    : "Không có hạn nộp";
+
+  const isGraded = Boolean(
+    mySubmission && (mySubmission.grade !== null && mySubmission.grade !== undefined || mySubmission.status === "graded")
+  );
+  const isPassedDeadline = Boolean(
+    assignment?.deadline && new Date() > new Date(assignment.deadline)
+  );
+  const isActiveSubmitted = Boolean(
+    mySubmission && ["submitted", "late", "resubmitted"].includes(mySubmission.status)
+  );
+  const isWithdrawn = Boolean(mySubmission?.status === "withdrawn");
+
+  const canCancel = isActiveSubmitted && !isGraded && !isPassedDeadline;
+  const canSubmit = !isGraded && !isPassedDeadline;
+
   return (
     <main className="ml-[280px] pt-16 h-screen flex flex-col bg-surface relative">
-      {/* Content Area */}
       <div className="flex-1 pb-24 overflow-hidden flex">
-        {/* Questions Column */}
         <section className="flex-1 overflow-y-auto custom-scrollbar px-10 py-8">
           <div className="max-w-[800px] mx-auto">
-            {/* Assignment Info Header */}
-            <div className="bg-white rounded-xl border border-outline-variant p-8 mb-8">
+            {isGraded && (
+              <Alert
+                type="warning"
+                message="Bài nộp đã được Giáo viên chấm điểm"
+                description={`Điểm số: ${mySubmission?.grade}/100 điểm. ${
+                  mySubmission?.feedback ? `Lời phê: "${mySubmission.feedback}"` : ""
+                } Bạn không thể nộp lại hoặc hủy bài nộp.`}
+                showIcon
+                style={{ marginBottom: 24, borderRadius: 12 }}
+              />
+            )}
+            {!isGraded && isPassedDeadline && (
+              <Alert
+                type="error"
+                message="Bài tập đã quá hạn deadline"
+                description="Hạn nộp bài tập đã kết thúc. Bạn không thể thực hiện nộp bài hoặc hủy bài nộp nữa."
+                showIcon
+                style={{ marginBottom: 24, borderRadius: 12 }}
+              />
+            )}
+
+            <div className="bg-white rounded-xl border border-outline-variant p-8 mb-8 shadow-sm">
               <div className="flex items-center justify-between mb-4">
-                <span className="px-3 py-1 bg-primary/10 text-primary text-body-sm font-semibold rounded-full uppercase tracking-wider">
-                  Cấu trúc dữ liệu & Giải thuật
-                </span>
-                <span className="text-on-surface-variant text-body-sm">Hạn nộp: 23:59 - 15/10/2023</span>
+                <Space align="center">
+                  <span className="px-3 py-1 bg-primary/10 text-primary text-body-sm font-semibold rounded-full uppercase tracking-wider">
+                    {assignment?.title || "Bài tập lớp học"}
+                  </span>
+                  {isGraded ? (
+                    <Tag color="gold" style={{ borderRadius: 6, fontWeight: 700 }}>
+                      🏆 Đã chấm: {mySubmission?.grade}/100 điểm
+                    </Tag>
+                  ) : isActiveSubmitted ? (
+                    <Tag color="success" style={{ borderRadius: 6, fontWeight: 700 }}>
+                      🟢 Đã nộp bài {mySubmission?.status === "late" ? "(Muộn)" : mySubmission?.status === "resubmitted" ? "(Đã nộp lại)" : ""}
+                    </Tag>
+                  ) : isWithdrawn ? (
+                    <Tag color="warning" style={{ borderRadius: 6, fontWeight: 700 }}>
+                      🟡 Đã hủy bài nộp
+                    </Tag>
+                  ) : (
+                    <Tag color="default" style={{ borderRadius: 6 }}>
+                      ⚪ Chưa nộp bài
+                    </Tag>
+                  )}
+                </Space>
+                <span className="text-on-surface-variant text-body-sm">Hạn nộp: {deadlineFormatted}</span>
               </div>
-              <h3 className="font-headline-md text-headline-md text-on-surface mb-4">Hướng dẫn làm bài</h3>
-              <p className="text-on-surface-variant leading-relaxed mb-4">
-                Bài tập này gồm 3 phần: Trắc nghiệm lý thuyết, câu hỏi ngắn và phân tích mã nguồn. Vui lòng đọc kỹ yêu
-                cầu trước khi trả lời. Bạn có thể sử dụng AI Assistant để nhận gợi ý nếu gặp khó khăn, nhưng tuyệt đối
-                không sao chép lời giải.
+              <h3 className="font-headline-md text-headline-md text-on-surface mb-4">
+                {assignment?.title || "Hướng dẫn làm bài"}
+              </h3>
+              <p className="text-on-surface-variant leading-relaxed mb-4 whitespace-pre-wrap">
+                {assignment?.description || "Vui lòng đọc kỹ yêu cầu bài tập và hoàn thành bên dưới."}
               </p>
-              <div className="flex gap-4 p-4 bg-surface-container-low rounded-lg border border-primary/10">
-                <span className="material-symbols-outlined text-primary" data-icon="info">
-                  info
-                </span>
-                <span className="text-body-sm text-on-surface">
-                  Mỗi câu hỏi có số điểm khác nhau được ghi rõ ở góc phải. Tổng điểm: 10.0
-                </span>
-              </div>
+              {assignment?.attachments && assignment.attachments.length > 0 && (
+                <div className="mb-4 space-y-2">
+                  <h5 className="font-bold text-sm text-on-surface">Tài liệu đính kèm từ Giảng viên:</h5>
+                  {assignment.attachments.map((att: any, idx: number) => (
+                    <a
+                      key={att.publicId || idx}
+                      href={att.url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center gap-2 text-primary underline text-body-sm mr-4"
+                    >
+                      📎 {att.name || "File đính kèm"}
+                    </a>
+                  ))}
+                </div>
+              )}
+              {mySubmission && mySubmission.attachments && mySubmission.attachments.length > 0 && (
+                <div className="mt-4 p-4 bg-surface-container-low rounded-xl border border-outline-variant">
+                  <h5 className="font-bold text-sm text-on-surface mb-2">Tệp bài làm hiện tại của bạn:</h5>
+                  <div className="space-y-1">
+                    {mySubmission.attachments.map((att: any, idx: number) => (
+                      <a
+                        key={att.publicId || idx}
+                        href={att.url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center gap-2 text-primary underline text-body-sm mr-4"
+                      >
+                        📄 {att.name || "Tệp bài làm"}
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {mySubmission && mySubmission.content && (
+                <div className="mt-4 p-4 bg-surface-container-low rounded-xl border border-outline-variant">
+                  <h5 className="font-bold text-sm text-on-surface mb-2">Nội dung đã nộp:</h5>
+                  <p className="text-sm whitespace-pre-wrap">{mySubmission.content}</p>
+                </div>
+              )}
             </div>
 
-            {/* Question List */}
-            <div className="space-y-6">
-              {/* Question 1: Multiple Choice */}
-              <div className="bg-white rounded-xl border border-outline-variant p-8 transition-all hover:border-primary-container/30">
-                <div className="flex justify-between items-start mb-6">
-                  <span className="bg-primary text-white w-8 h-8 rounded-lg flex items-center justify-center font-bold">
-                    1
-                  </span>
-                  <span className="text-on-surface-variant font-semibold text-body-sm">2.0 Điểm</span>
-                </div>
-                <h4 className="text-body-lg font-semibold text-on-surface mb-6">
-                  Độ phức tạp thời gian trung bình của giải thuật Quicksort là gì?
-                </h4>
-                <div className="space-y-3">
-                  <label className="flex items-center gap-4 p-4 rounded-xl border border-outline-variant hover:bg-primary/5 cursor-pointer transition-all group">
-                    <input
-                      className="w-5 h-5 text-primary border-outline-variant focus:ring-primary"
-                      name="q1"
-                      type="radio"
-                      checked={q1Answer === "O(n)"}
-                      onChange={() => setQ1Answer("O(n)")}
-                    />
-                    <span className="text-on-surface group-hover:text-primary">O(n)</span>
-                  </label>
-                  <label className="flex items-center gap-4 p-4 rounded-xl border border-outline-variant hover:bg-primary/5 cursor-pointer transition-all group">
-                    <input
-                      className="w-5 h-5 text-primary border-outline-variant focus:ring-primary"
-                      name="q1"
-                      type="radio"
-                      checked={q1Answer === "O(n log n)"}
-                      onChange={() => setQ1Answer("O(n log n)")}
-                    />
-                    <span className="text-on-surface group-hover:text-primary">O(n log n)</span>
-                  </label>
-                  <label className="flex items-center gap-4 p-4 rounded-xl border border-outline-variant hover:bg-primary/5 cursor-pointer transition-all group">
-                    <input
-                      className="w-5 h-5 text-primary border-outline-variant focus:ring-primary"
-                      name="q1"
-                      type="radio"
-                      checked={q1Answer === "O(n²)"}
-                      onChange={() => setQ1Answer("O(n²)")}
-                    />
-                    <span className="text-on-surface group-hover:text-primary">O(n²)</span>
-                  </label>
-                </div>
-              </div>
-
-              {/* Question 2: Short Answer */}
-              <div className="bg-white rounded-xl border border-outline-variant p-8 transition-all hover:border-primary-container/30">
-                <div className="flex justify-between items-start mb-6">
-                  <span className="bg-primary text-white w-8 h-8 rounded-lg flex items-center justify-center font-bold">
-                    2
-                  </span>
-                  <span className="text-on-surface-variant font-semibold text-body-sm">3.0 Điểm</span>
-                </div>
-                <h4 className="text-body-lg font-semibold text-on-surface mb-6">
-                  Giải thích ngắn gọn cơ chế 'Chia để trị' (Divide and Conquer) trong giải thuật Merge Sort.
+            {canSubmit && (
+              <div className="bg-white rounded-xl border border-outline-variant p-8 shadow-sm">
+                <h4 className="text-body-lg font-semibold text-on-surface mb-4">
+                  Phần làm bài
                 </h4>
                 <textarea
-                  className="w-full h-32 rounded-xl border-outline-variant focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all p-4 text-body-md"
-                  placeholder="Nhập câu trả lời của bạn tại đây..."
-                  style={{ resize: "none" }}
-                  value={q2Answer}
-                  onChange={(event) => setQ2Answer(event.target.value)}
+                  className="w-full h-48 rounded-xl border-outline-variant focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all p-4 text-body-md mb-4"
+                  placeholder="Nhập nội dung bài làm của bạn tại đây (có thể kèm link)..."
+                  style={{ resize: "vertical" }}
+                  value={content}
+                  onChange={(event) => setContent(event.target.value)}
                 />
-              </div>
-
-              {/* Question 3: Code Analysis */}
-              <div className="bg-white rounded-xl border border-outline-variant p-8 transition-all hover:border-primary-container/30">
-                <div className="flex justify-between items-start mb-6">
-                  <span className="bg-primary text-white w-8 h-8 rounded-lg flex items-center justify-center font-bold">
-                    3
-                  </span>
-                  <span className="text-on-surface-variant font-semibold text-body-sm">5.0 Điểm</span>
-                </div>
-                <h4 className="text-body-lg font-semibold text-on-surface mb-6">
-                  Đoạn mã sau đây thực hiện giải thuật sắp xếp nào? Hãy tối ưu hóa vòng lặp bên trong.
-                </h4>
-                <div className="bg-slate-900 rounded-xl p-6 mb-6 font-code-sm text-white overflow-x-auto relative">
-                  <span className="absolute top-4 right-4 text-slate-500 text-[12px] uppercase tracking-widest">
-                    Python
-                  </span>
-                  <pre>
-                    <code>{`def sort_array(arr):
-    n = len(arr)
-    for i in range(n):
-        for j in range(0, n-i-1):
-            if arr[j] > arr[j+1]:
-                arr[j], arr[j+1] = arr[j+1], arr[j]
-    return arr`}</code>
-                  </pre>
-                </div>
-                <div className="space-y-4">
-                  <label className="block text-label-md text-on-surface-variant mb-2">Tên giải thuật:</label>
-                  <input
-                    className="w-full rounded-xl border-outline-variant focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all px-4 py-3 text-body-md"
-                    placeholder="Tên giải thuật..."
-                    type="text"
-                    value={q3Algorithm}
-                    onChange={(event) => setQ3Algorithm(event.target.value)}
-                  />
-                  <label className="block text-label-md text-on-surface-variant mb-2 mt-4">Đề xuất tối ưu hóa:</label>
-                  <textarea
-                    className="w-full h-40 rounded-xl border-outline-variant focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all p-4 font-code-sm"
-                    placeholder="Nhập đoạn mã đã tối ưu hoặc giải thích..."
-                    style={{ resize: "none" }}
-                    value={q3Optimize}
-                    onChange={(event) => setQ3Optimize(event.target.value)}
-                  />
+                <div className="rounded-xl border border-outline-variant bg-surface-container-low p-4">
+                  <div className="flex items-center justify-between">
+                    <label className="text-sm font-semibold text-on-surface">Đính kèm tệp bài làm</label>
+                    <span className="text-xs text-on-surface-variant">{selectedFiles.length}/5</span>
+                  </div>
+                  <label className="mt-3 flex cursor-pointer items-center gap-2 rounded-xl border border-dashed border-outline-variant px-4 py-3 text-sm text-primary transition-colors hover:bg-primary/5">
+                    <input type="file" multiple className="hidden" onChange={handleFileChange} />
+                    <span className="material-symbols-outlined text-[18px]">attach_file</span>
+                    <span>Chọn tệp</span>
+                  </label>
+                  {selectedFiles.length > 0 && (
+                    <div className="mt-3 space-y-2">
+                      {selectedFiles.map((file, index) => (
+                        <div
+                          key={`${file.name}-${index}`}
+                          className="flex items-center justify-between rounded-lg bg-white px-3 py-2 text-sm text-on-surface"
+                        >
+                          <span className="max-w-[85%] truncate">{file.name}</span>
+                          <button
+                            type="button"
+                            onClick={() => removeFile(index)}
+                            className="text-error hover:text-error-container"
+                          >
+                            <span className="material-symbols-outlined text-[18px]">delete</span>
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
-            </div>
+            )}
           </div>
         </section>
-
-        {/* AI Tutor Sidebar */}
-        <aside className="w-[320px] bg-white border-l border-outline-variant flex flex-col">
-          <div className="p-6 border-b border-outline-variant flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span
-                className="material-symbols-outlined text-primary"
-                data-icon="auto_awesome"
-                style={{ fontVariationSettings: "'FILL' 1" }}
-              >
-                auto_awesome
-              </span>
-              <h5 className="font-bold text-on-surface">AI Scholar Tutor</h5>
-            </div>
-            <button className="text-on-surface-variant hover:text-primary">
-              <span className="material-symbols-outlined" data-icon="settings">
-                settings
-              </span>
-            </button>
-          </div>
-          <div className="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-6">
-            {/* AI Suggestion Card */}
-            <div className="ai-gradient-border p-5 shadow-sm">
-              <p className="text-body-sm text-on-surface mb-3 leading-relaxed">
-                Chào bạn! Tôi thấy bạn đang xem câu 3 về thuật toán nổi bọt (Bubble Sort). Bạn có cần một gợi ý về cách
-                tối ưu hóa không?
-              </p>
-              <button className="text-primary font-bold text-body-sm flex items-center gap-2 hover:underline">
-                <span className="material-symbols-outlined text-[18px]" data-icon="lightbulb">
-                  lightbulb
-                </span>
-                Cho tôi gợi ý
-              </button>
-            </div>
-            {/* Chat History (Empty placeholder) */}
-            <div className="text-center py-10 opacity-30">
-              <span className="material-symbols-outlined text-[48px] mb-2" data-icon="chat_bubble">
-                chat_bubble
-              </span>
-              <p className="text-body-sm italic">Hỏi AI để nhận gợi ý học tập</p>
-            </div>
-          </div>
-          <div className="p-4 border-t border-outline-variant">
-            <div className="relative flex items-center">
-              <input
-                className="w-full pr-12 pl-4 py-3 bg-surface-container-low border-none rounded-xl focus:ring-2 focus:ring-primary text-body-md"
-                placeholder="Hỏi AI về bài tập..."
-                type="text"
-              />
-              <button className="absolute right-3 text-primary hover:scale-110 transition-transform">
-                <span className="material-symbols-outlined" data-icon="send">
-                  send
-                </span>
-              </button>
-            </div>
-            <p className="text-[10px] text-on-surface-variant mt-3 text-center px-4">
-              AI Scholar sẽ không trực tiếp đưa ra lời giải mà chỉ hướng dẫn bạn tư duy.
-            </p>
-          </div>
-        </aside>
+        
+        {/* Extracted AI Tutor Sidebar */}
+        <AITutorSidebar />
       </div>
 
-      {/* Submission Bar */}
       <footer className="fixed bottom-0 right-0 left-[280px] bg-white border-t border-outline-variant h-20 px-10 flex items-center justify-between z-40">
         <div className="flex items-center gap-8">
           <div className="flex flex-col">
             <span className="text-on-surface-variant text-[12px] uppercase font-bold tracking-widest">Tiến độ</span>
             <div className="flex items-center gap-3">
               <div className="w-48 h-2 bg-slate-100 rounded-full overflow-hidden">
-                <div className="w-2/3 h-full bg-primary rounded-full"></div>
+                <div className={`h-full ${canSubmit ? "w-1/3 bg-warning" : "w-full bg-success"} rounded-full`}></div>
               </div>
-              <span className="text-body-sm font-bold text-on-surface">2/3 Câu</span>
+              <span className="text-body-sm font-bold text-on-surface">
+                {canSubmit ? "Chưa hoàn thành" : "Đã hoàn thành"}
+              </span>
             </div>
           </div>
         </div>
         <div className="flex items-center gap-4">
-          <button className="px-6 py-2 border border-outline-variant text-on-surface font-bold rounded-xl hover:bg-slate-50 transition-colors">
-            Lưu nháp
-          </button>
+          {canCancel && (
+            <button
+              className="px-6 py-2 border border-red-300 text-red-600 font-bold rounded-xl hover:bg-red-50 transition-colors disabled:opacity-50"
+              onClick={handleCancelSubmission}
+              disabled={isSubmitting}
+            >
+              Hủy bài nộp
+            </button>
+          )}
           <button
-            className="px-8 py-2 bg-primary text-white font-bold rounded-xl hover:bg-primary-container transition-all active:scale-95 shadow-md shadow-primary/20"
+            className="px-8 py-2 bg-primary text-white font-bold rounded-xl hover:bg-primary-container transition-all active:scale-95 shadow-md shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed"
             onClick={() => setIsModalOpen(true)}
+            disabled={!canSubmit || isSubmitting || (!content.trim() && selectedFiles.length === 0)}
           >
-            Nộp bài
+            {isActiveSubmitted ? "Nộp lại bài tập" : "Nộp bài tập"}
           </button>
         </div>
       </footer>
 
-      {/* Confirmation Dialog */}
       <div
         className={`fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center ${isModalOpen ? "" : "hidden"}`}
         id="confirm-modal"
@@ -307,7 +299,6 @@ const StudentAssignmentContent = () => {
           <div className="w-16 h-16 bg-primary-fixed rounded-full flex items-center justify-center mb-6">
             <span
               className="material-symbols-outlined text-primary text-[32px]"
-              data-icon="cloud_upload"
               style={{ fontVariationSettings: "'FILL' 1" }}
             >
               cloud_upload
@@ -315,39 +306,9 @@ const StudentAssignmentContent = () => {
           </div>
           <h3 className="font-headline-md text-headline-md text-on-surface mb-2">Bạn có chắc muốn nộp bài?</h3>
           <p className="text-on-surface-variant mb-8 leading-relaxed text-body-md">
-            Bạn đã hoàn thành 2 trên 3 câu hỏi. Sau khi nộp, bạn sẽ không thể chỉnh sửa câu trả lời. Hệ thống sẽ chấm
-            điểm và gửi kết quả về dashboard.
+            Sau khi nộp, hệ thống sẽ ghi nhận thời gian nộp bài của bạn.
+            Nếu nộp muộn sau deadline, bài nộp sẽ bị đánh dấu "Nộp muộn".
           </p>
-          <div className="mb-6 rounded-xl border border-outline-variant bg-surface-container-low p-4">
-            <div className="flex items-center justify-between">
-              <label className="text-sm font-semibold text-on-surface">Đính kèm tệp bài làm</label>
-              <span className="text-xs text-on-surface-variant">{selectedFiles.length}/5</span>
-            </div>
-            <label className="mt-3 flex cursor-pointer items-center gap-2 rounded-xl border border-dashed border-outline-variant px-4 py-3 text-sm text-primary transition-colors hover:bg-primary/5">
-              <input type="file" multiple className="hidden" onChange={handleFileChange} />
-              <span className="material-symbols-outlined text-[18px]">attach_file</span>
-              <span>Chọn tệp</span>
-            </label>
-            {selectedFiles.length > 0 && (
-              <div className="mt-3 space-y-2">
-                {selectedFiles.map((file, index) => (
-                  <div
-                    key={`${file.name}-${index}`}
-                    className="flex items-center justify-between rounded-lg bg-white px-3 py-2 text-sm text-on-surface"
-                  >
-                    <span className="max-w-[85%] truncate">{file.name}</span>
-                    <button
-                      type="button"
-                      onClick={() => removeFile(index)}
-                      className="text-error hover:text-error-container"
-                    >
-                      <span className="material-symbols-outlined text-[18px]">delete</span>
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
           <div className="flex gap-4">
             <button
               className="flex-1 py-3 border border-outline-variant rounded-xl font-bold text-on-surface hover:bg-slate-50 transition-colors"

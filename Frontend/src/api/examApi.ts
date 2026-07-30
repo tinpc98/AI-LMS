@@ -39,7 +39,7 @@ export const examApi = {
   // Lấy chi tiết 1 bài kiểm tra
   getExamById: async (examId: string): Promise<IExam> => {
     const response = await axiosClient.get<{ data: IExam }>(`/api/exams/${examId}`);
-    return response.data.data;
+    return (response.data as any).data ?? response.data;
   },
 
   // Tạo bài kiểm tra thủ công

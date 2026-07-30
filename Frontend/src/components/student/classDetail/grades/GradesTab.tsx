@@ -11,25 +11,16 @@ import GradeDetailDrawer from "./GradeDetailDrawer";
 import useStudentGrades from "../../../../hooks/useStudentGrades";
 import useGradeDetail from "../../../../hooks/useGradeDetail";
 import type { IGrade } from "../../../../api/gradeApi";
+import gradeApi from "../../../../api/gradeApi";
 
 const { Title, Text } = Typography;
 
 interface GradesTabProps {
-  rawGrades?: IGrade[];
-  assignments?: any[];
-  submittedAssignmentIds?: string[];
-  exams?: any[];
-  loading?: boolean;
+  classId: string;
 }
 
 export const GradesTab: React.FC<GradesTabProps> = React.memo(
-  ({
-    rawGrades = [],
-    assignments = [],
-    submittedAssignmentIds = [],
-    exams = [],
-    loading = false,
-  }) => {
+  ({ classId }) => {
     // Custom Hooks
     const {
       filters,
@@ -39,7 +30,8 @@ export const GradesTab: React.FC<GradesTabProps> = React.memo(
       handleCategoryFilterChange,
       handleStatusFilterChange,
       handleSortChange,
-    } = useStudentGrades(rawGrades, assignments, submittedAssignmentIds, exams);
+      loading,
+    } = useStudentGrades(classId);
 
     const { selectedGrade, isDetailOpen, openDetail, closeDetail } = useGradeDetail();
 

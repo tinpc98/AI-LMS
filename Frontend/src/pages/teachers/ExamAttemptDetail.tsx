@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axiosClient from "../../api/axiosClient";
+import aiApi from "../../api/aiApi";
 import { toast } from "../../utils/toast";
 
 export default function ExamAttemptDetail() {
@@ -9,6 +10,8 @@ export default function ExamAttemptDetail() {
 
   const [reviewData, setReviewData] = useState<any>(null);
   const [essayGrades, setEssayGrades] = useState<Record<string, any>>({});
+  const [aiFeedbacks, setAIFeedbacks] = useState<Record<string, string>>({});
+  const [aiLoading, setAILoading] = useState<Record<string, boolean>>({});
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showApprovalPopup, setShowApprovalPopup] = useState(false);
@@ -59,6 +62,24 @@ export default function ExamAttemptDetail() {
     }
 
     setEssayGrades((prev) => ({ ...prev, [qId]: numValue }));
+  };
+
+  const handleAIGrade = async (qId: string, maxPoints: number) => {
+    if (!attemptId) return;
+    setAILoading(prev => ({ ...prev, [qId]: true }));
+    try {
+      const result = await aiApi.generateGradeSuggestion(attemptId, qId);
+      let score = result.suggestedScore;
+      if (score > maxPoints) score = maxPoints;
+      
+      setEssayGrades(prev => ({ ...prev, [qId]: score }));
+      setAIFeedbacks(prev => ({ ...prev, [qId]: result.feedback }));
+      toast.success("AI đã đưa ra đề xuất điểm!");
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || "Lỗi khi gọi AI chấm điểm");
+    } finally {
+      setAILoading(prev => ({ ...prev, [qId]: false }));
+    }
   };
 
   const handleApprove = async () => {
@@ -225,29 +246,43 @@ export default function ExamAttemptDetail() {
                   </h4>
 
                   {ans.type === "ESSAY" ? (
-                    <div className="flex items-center gap-2 bg-yellow-50 border border-yellow-200 px-3 py-1.5 rounded-lg">
-                      <span className="text-sm font-medium text-yellow-700">
-                        Chấm điểm (Tối đa: {ans.maxPoints || 5}đ):
-                      </span>
-                      <input
-                        type="number"
-                        min="0"
-                        max={ans.maxPoints ?? 1}
-                        step="0.25"
-                        className="w-16 border border-yellow-300 rounded-md p-1 text-center font-bold text-yellow-800 focus:outline-none focus:ring-2 focus:ring-yellow-400 bg-white"
-                        value={
-                          essayGrades[ans.questionId] !== undefined
-                            ? essayGrades[ans.questionId]
-                            : ""
-                        }
-                        onChange={(e) =>
-                          handleGradeChange(
-                            ans.questionId,
-                            e.target.value,
-                            ans.maxPoints || 5,
-                          )
-                        }
-                      />
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <div className="flex items-center gap-2 bg-yellow-50 border border-yellow-200 px-3 py-1.5 rounded-lg">
+                        <span className="text-sm font-medium text-yellow-700">
+                          Chấm điểm (Tối đa: {ans.maxPoints || 5}đ):
+                        </span>
+                        <input
+                          type="number"
+                          min="0"
+                          max={ans.maxPoints ?? 1}
+                          step="0.25"
+                          className="w-16 border border-yellow-300 rounded-md p-1 text-center font-bold text-yellow-800 focus:outline-none focus:ring-2 focus:ring-yellow-400 bg-white"
+                          value={
+                            essayGrades[ans.questionId] !== undefined
+                              ? essayGrades[ans.questionId]
+                              : ""
+                          }
+                          onChange={(e) =>
+                            handleGradeChange(
+                              ans.questionId,
+                              e.target.value,
+                              ans.maxPoints || 5,
+                            )
+                          }
+                        />
+                      </div>
+                      <button
+                        onClick={() => handleAIGrade(ans.questionId, ans.maxPoints || 5)}
+                        disabled={aiLoading[ans.questionId]}
+                        className="flex items-center gap-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 px-3 py-1.5 rounded-lg text-sm font-bold transition-colors disabled:opacity-50"
+                      >
+                        {aiLoading[ans.questionId] ? (
+                          <span className="material-symbols-outlined text-sm animate-spin">progress_activity</span>
+                        ) : (
+                          <span className="material-symbols-outlined text-sm">auto_awesome</span>
+                        )}
+                        Gợi ý AI
+                      </button>
                     </div>
                   ) : (
                     <span
@@ -329,18 +364,31 @@ export default function ExamAttemptDetail() {
                 )}
 
                 {ans.type === "ESSAY" && (
-                  <div className="bg-blue-50/50 border border-blue-100 p-5 rounded-xl mt-4">
-                    <p className="text-xs font-bold uppercase tracking-wider text-blue-500 mb-2">
-                      Bài làm của học sinh:
-                    </p>
-                    <p className="text-gray-800 whitespace-pre-wrap">
-                      {ans.studentAnswer || (
-                        <span className="text-gray-400 italic">
-                          Học sinh không nhập câu trả lời.
-                        </span>
-                      )}
-                    </p>
-                  </div>
+                  <>
+                    <div className="bg-blue-50/50 border border-blue-100 p-5 rounded-xl mt-4">
+                      <p className="text-xs font-bold uppercase tracking-wider text-blue-500 mb-2">
+                        Bài làm của học sinh:
+                      </p>
+                      <p className="text-gray-800 whitespace-pre-wrap">
+                        {ans.studentAnswer || (
+                          <span className="text-gray-400 italic">
+                            Học sinh không nhập câu trả lời.
+                          </span>
+                        )}
+                      </p>
+                    </div>
+                    {aiFeedbacks[ans.questionId] && (
+                      <div className="bg-indigo-50 border border-indigo-100 p-5 rounded-xl mt-4">
+                        <p className="text-xs font-bold uppercase tracking-wider text-indigo-500 mb-2 flex items-center gap-1">
+                          <span className="material-symbols-outlined text-[16px]">auto_awesome</span>
+                          Nhận xét từ AI Scholar:
+                        </p>
+                        <p className="text-gray-800 whitespace-pre-wrap text-sm">
+                          {aiFeedbacks[ans.questionId]}
+                        </p>
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
             ))}

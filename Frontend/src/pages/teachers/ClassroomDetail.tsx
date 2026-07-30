@@ -37,8 +37,8 @@ import type { IAssignment } from "../../interface/assignmentInterface";
 import type { ILesson } from "../../interface/lessonInterface";
 
 import CreateLessonModal from "../../components/features/CreateLessonModal";
-import LiveRoomModal from "../../components/features/LiveRoomModal";
 import { useJitsiLiveSession } from "../../hooks/useJitsiLiveSession";
+import { AIQuestionGeneratorModal } from "../../components/teacher/classroom/AIQuestionGeneratorModal";
 
 import { TeacherClassOverviewTab } from "../../components/teacher/classroom/TeacherClassOverviewTab";
 import { TeacherStudentTableTab } from "../../components/teacher/classroom/TeacherStudentTableTab";
@@ -49,6 +49,7 @@ import { TeacherExamsTab } from "../../components/teacher/classroom/TeacherExams
 import { TeacherAnnouncementsTab } from "../../components/teacher/classroom/TeacherAnnouncementsTab";
 import { TeacherLiveSessionTab } from "../../components/teacher/classroom/TeacherLiveSessionTab";
 import { TeacherGradebookTab } from "../../components/teacher/classroom/TeacherGradebookTab";
+import { TeacherAnalyticsTab } from "../../components/teacher/classroom/TeacherAnalyticsTab";
 import { toast } from "../../utils/toast";
 
 const { Title, Text, Paragraph } = Typography;
@@ -67,6 +68,7 @@ export default function ClassroomDetail() {
   const [errorMsg, setErrorMsg] = useState("");
 
   const [editingLesson, setEditingLesson] = useState<ILesson | null>(null);
+  const [selectedLessonForAI, setSelectedLessonForAI] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("overview");
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -325,6 +327,18 @@ export default function ClassroomDetail() {
       ),
     },
     {
+      key: "analytics",
+      label: (
+        <Space>
+          <TrophyOutlined />
+          <span>Thành tích</span>
+        </Space>
+      ),
+      children: (
+        <TeacherAnalyticsTab classId={classId!} />
+      ),
+    },
+    {
       key: "lessons",
       label: (
         <Space>
@@ -359,8 +373,16 @@ export default function ClassroomDetail() {
                   hoverable
                   style={{ borderRadius: 10, border: "1px solid #f0f0f0" }}
                   actions={[
-                    <EditOutlined key="edit" onClick={() => setEditingLesson(lesson)} />,
-                    <DeleteOutlined key="delete" onClick={() => handleDeleteLesson(lesson._id)} style={{ color: "#ff4d4f" }} />,
+                    <EditOutlined key="edit" title="Sửa" onClick={() => setEditingLesson(lesson)} />,
+                    <span 
+                      key="ai" 
+                      title="Sinh câu hỏi AI" 
+                      onClick={() => setSelectedLessonForAI(lesson._id)}
+                      className="text-indigo-600 hover:text-indigo-800 transition-colors cursor-pointer"
+                    >
+                      <span className="material-symbols-outlined text-[16px]">auto_awesome</span>
+                    </span>,
+                    <DeleteOutlined key="delete" title="Xóa" onClick={() => handleDeleteLesson(lesson._id)} style={{ color: "#ff4d4f" }} />,
                   ]}
                 >
                   <Title level={5} style={{ fontSize: 15, marginBottom: 8 }} ellipsis>
@@ -457,12 +479,14 @@ export default function ClassroomDetail() {
         onUpdated={handleLessonUpdated}
       />
 
-      <LiveRoomModal
-        isOpen={isLiveRoomOpen}
-        onClose={() => setIsLiveRoomOpen(false)}
-        meetingRoomId={meetingRoomId}
-        jwtToken={jwtToken}
-        appId={appId}
+      <AIQuestionGeneratorModal
+        isOpen={!!selectedLessonForAI}
+        onClose={() => setSelectedLessonForAI(null)}
+        lessonId={selectedLessonForAI || ""}
+        onSuccess={() => {
+          // Could refresh something if needed, but questions go to QuestionBank globally
+          console.log("Questions generated successfully");
+        }}
       />
     </div>
   );

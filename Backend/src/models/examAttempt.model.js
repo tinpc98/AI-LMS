@@ -21,9 +21,13 @@ const examAttemptSchema = new mongoose.Schema(
     answers: [
       {
         questionId: {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: "Question",
+          type: mongoose.Schema.Types.Mixed, // Hỗ trợ ObjectId (Legacy) hoặc String/UUID (Snapshot)
           required: true,
+        },
+        questionSource: {
+          type: String,
+          enum: ["legacy", "snapshot"],
+          default: "legacy",
         },
         selectedOption: { type: String },
         essayText: { type: String },

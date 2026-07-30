@@ -37,15 +37,9 @@ export const loginService = async (email, password) => {
   }
 
   // Bước 3: Tạo Access Token thời hạn 1 ngày
-  // JWT_SECRET là BẮT BUỘC – không dùng fallback để tránh rủi ro bảo mật nghiêm trọng
-  const jwtSecret = process.env.JWT_SECRET;
-  if (!jwtSecret) {
-    throw new Error("Cấu hình máy chủ lỗi: JWT_SECRET chưa được thiết lập trong biến môi trường!");
-  }
-
   const accessToken = jwt.sign(
     { id: user._id, email: user.email, role: user.role },
-    jwtSecret,
+    process.env.JWT_SECRET || "123456",
     { expiresIn: "1d" }
   );
 
@@ -60,4 +54,91 @@ export const loginService = async (email, password) => {
       avatar: user.avatar || "",
     },
   };
+};
+
+export const getUserTrashService = async (queryParams) => {
+  const { search, role, status, page = 1, limit = 10, sort = "deletedAt", order = "desc" } = queryParams;
+  const query = { isDeleted: true };
+
+  if (search) {
+    const safeSearch = search.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    query.$or = [
+      { fullName: { $regex: safeSearch, $options: "i" } },
+      { email: { $regex: safeSearch, $options: "i" } },
+    ];
+  }
+  if (role) query.role = role;
+  if (status) query.status = status;
+
+  const skip = (Number(page) - 1) * Number(limit);
+  const sortDirection = order === "asc" ? 1 : -1;
+  const sortQuery = { [sort]: sortDirection };
+
+  const [users, total] = await Promise.all([
+    User.find(query)
+      .select("-password")
+      .withDeleted()
+      .sort(sortQuery)
+      .skip(skip)
+      .limit(Number(limit)),
+    User.countDocuments(query).withDeleted(),
+  ]);
+
+  return {
+    users,
+    pagination: {
+      total,
+      page: Number(page),
+      limit: Number(limit),
+      totalPages: Math.ceil(total / Number(limit)) || 1,
+    },
+  };
+};
+
+export const restoreUserService = async (id) => {
+  const mongoose = (await import("mongoose")).default;
+  if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+    const error = new Error("ID người dùng không hợp lệ!");
+    error.status = 400;
+    throw error;
+  }
+
+  const user = await User.findOne({ _id: id }).withDeleted();
+  if (!user) {
+    const error = new Error("Người dùng không tồn tại");
+    error.status = 404;
+    throw error;
+  }
+
+  if (!user.isDeleted) {
+    const error = new Error("Người dùng chưa bị xóa, không thể khôi phục!");
+    error.status = 400;
+    throw error;
+  }
+
+  return await user.restore();
+};
+
+export const permanentDeleteUserService = async (id) => {
+  const mongoose = (await import("mongoose")).default;
+  if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+    const error = new Error("ID người dùng không hợp lệ!");
+    error.status = 400;
+    throw error;
+  }
+
+  const user = await User.findOne({ _id: id }).withDeleted();
+  if (!user) {
+    const error = new Error("Người dùng không tồn tại");
+    error.status = 404;
+    throw error;
+  }
+
+  if (!user.isDeleted) {
+    const error = new Error("Không thể xóa vĩnh viễn người dùng đang hoạt động!");
+    error.status = 400;
+    throw error;
+  }
+
+  return await User.findByIdAndDelete(id).withDeleted();
 };

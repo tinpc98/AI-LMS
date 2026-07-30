@@ -67,7 +67,7 @@ export const TodayClassesWidget: React.FC<TodayClassesWidgetProps> = React.memo(
                 </div>
               </Space>
 
-              <Link to={`/classdetail/${item.id}?tab=${item.status === "LIVE" ? "live" : "overview"}`}>
+              <Link to={`/student/classdetail/${item.id}?tab=${item.status === "LIVE" ? "live" : "overview"}`}>
                 <Button
                   type={item.status === "LIVE" ? "primary" : "default"}
                   danger={item.status === "LIVE"}

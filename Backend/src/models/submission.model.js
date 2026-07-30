@@ -33,8 +33,16 @@ const submissionSchema = new Schema(
     ],
     status: {
       type: String,
-      enum: ["submitted", "late", "graded"],
+      enum: ["submitted", "late", "graded", "withdrawn", "resubmitted"],
       default: "submitted",
+    },
+    withdrawnAt: {
+      type: Date,
+      default: null,
+    },
+    resubmittedAt: {
+      type: Date,
+      default: null,
     },
     // Điểm số giữ nguyên
     grade: {
@@ -72,6 +80,7 @@ const submissionSchema = new Schema(
 
 // Unique Index: Mỗi học sinh chỉ được nộp 1 bản Submission cho 1 Assignment
 submissionSchema.index({ assignmentId: 1, studentId: 1 }, { unique: true });
+submissionSchema.index({ assignmentId: 1, createdAt: -1 });
 submissionSchema.index({ classId: 1, studentId: 1 });
 submissionSchema.index({ gradedBy: 1 });
 

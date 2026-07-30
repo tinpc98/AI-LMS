@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import attendanceService from "../services/attendance.service.js";
 import { sendSuccess, sendError } from "../utils/response.js";
+import { checkClassTeacherOwnership } from "../middlewares/auth.middlewares.js";
 
 export const markAttendance = async (req, res) => {
   try {
@@ -10,10 +11,18 @@ export const markAttendance = async (req, res) => {
     }
 
     const teacherId = req.user.id || req.user._id;
+    const isAuthorized = await checkClassTeacherOwnership(classId, teacherId, req.user?.role);
+    if (!isAuthorized) {
+      return sendError(res, "Bạn không có quyền điểm danh cho lớp học này!", 403);
+    }
+
     const result = await attendanceService.markAttendance({ classId, date, records, teacherId });
     return sendSuccess(res, "Điểm danh thành công", result);
   } catch (error) {
-    return sendError(res, error.message || "Lỗi khi thực hiện điểm danh", 500);
+    if (error.code === 11000 || error.name === "MongoServerError") {
+      return sendError(res, "Học sinh đã được điểm danh trong ngày này.", 409);
+    }
+    return sendError(res, error.message || "Lỗi khi thực hiện điểm danh", error.status || 500);
   }
 };
 
@@ -44,6 +53,34 @@ export const getAttendanceByClass = async (req, res) => {
     return sendSuccess(res, "Lấy danh sách điểm danh thành công", result);
   } catch (error) {
     return sendError(res, error.message || "Lỗi khi lấy danh sách điểm danh", 500);
+  }
+};
+
+export const getClassSessions = async (req, res) => {
+  try {
+    const { classId } = req.params;
+    if (!classId || !mongoose.Types.ObjectId.isValid(classId)) {
+      return sendError(res, "ID lớp học không hợp lệ!", 400);
+    }
+
+    const result = await attendanceService.getClassSessions(classId);
+    return sendSuccess(res, "Lấy danh sách buổi học thành công", result);
+  } catch (error) {
+    return sendError(res, error.message || "Lỗi khi lấy danh sách buổi học", 500);
+  }
+};
+
+export const getAttendanceMatrix = async (req, res) => {
+  try {
+    const { classId } = req.params;
+    if (!classId || !mongoose.Types.ObjectId.isValid(classId)) {
+      return sendError(res, "ID lớp học không hợp lệ!", 400);
+    }
+
+    const result = await attendanceService.getAttendanceMatrix(classId);
+    return sendSuccess(res, "Lấy ma trận điểm danh thành công", result);
+  } catch (error) {
+    return sendError(res, error.message || "Lỗi khi lấy ma trận điểm danh", 500);
   }
 };
 

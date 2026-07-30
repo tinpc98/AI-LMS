@@ -16,12 +16,11 @@ import type { IAttendanceItem } from "../../../../interface/attendanceInterface"
 const { Title, Text } = Typography;
 
 interface AttendanceTabProps {
-  rawRecords?: IAttendanceItem[];
-  loading?: boolean;
+  classId: string;
 }
 
 export const AttendanceTab: React.FC<AttendanceTabProps> = React.memo(
-  ({ rawRecords = [], loading = false }) => {
+  ({ classId }) => {
     // Custom Hooks
     const {
       filters,
@@ -32,7 +31,8 @@ export const AttendanceTab: React.FC<AttendanceTabProps> = React.memo(
       handleMonthFilterChange,
       handleStatusFilterChange,
       handleViewModeChange,
-    } = useStudentAttendance(rawRecords);
+      loading,
+    } = useStudentAttendance(classId);
 
     const { selectedRecord, isDetailOpen, openDetail, closeDetail } = useAttendanceSummary();
 

@@ -15,12 +15,35 @@ export interface CourseRecord {
   status: CourseStatus;
   createdAt: string;
   updatedAt: string;
+  createdBy?: {
+    _id: string;
+    fullName: string;
+    email: string;
+  };
+}
+
+export interface Pagination {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+}
+
+export interface ApiResponse<T> {
+  success: boolean;
+  message: string;
+  data: T;
+  pagination?: Pagination;
 }
 
 export interface CourseFilters {
   search: string;
   subject: CourseSubject | "All";
   status: CourseStatus | "All";
+  page?: number;
+  limit?: number;
+  sort?: string;
+  order?: "asc" | "desc";
 }
 
 export interface CourseFormValues {

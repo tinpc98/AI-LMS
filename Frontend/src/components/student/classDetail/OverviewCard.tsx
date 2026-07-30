@@ -21,7 +21,6 @@ interface OverviewCardProps {
   maxStudents?: number;
   status?: StudentClassStatus;
   learningMode?: string;
-  googleMeetLink?: string;
   googleCalendarEventId?: string;
 }
 
@@ -35,7 +34,6 @@ export const OverviewCard: React.FC<OverviewCardProps> = React.memo(
     maxStudents = 40,
     status = "Active",
     learningMode = "Offline",
-    googleMeetLink,
     googleCalendarEventId,
   }) => {
     const formattedStartDate = startDate
@@ -115,36 +113,20 @@ export const OverviewCard: React.FC<OverviewCardProps> = React.memo(
           </Descriptions.Item>
         </Descriptions>
 
-        {/* Online Meetings & Calendar Integrations */}
-        {(googleMeetLink || googleCalendarEventId) && (
+        {/* Calendar Integration */}
+        {googleCalendarEventId && (
           <div style={{ marginTop: 20, paddingTop: 16, borderTop: "1px solid #f0f0f0" }}>
             <Text strong style={{ fontSize: 14, color: "#262626", display: "block", marginBottom: 12 }}>
-              Tích hợp lớp học trực tuyến:
+              Lịch & Đồng bộ:
             </Text>
             <Space size={12} wrap>
-              {googleMeetLink && (
-                <Button
-                  type="primary"
-                  danger
-                  icon={<VideoCameraOutlined />}
-                  href={googleMeetLink}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{ borderRadius: 8 }}
-                >
-                  Tham gia Google Meet
-                </Button>
-              )}
-
-              {googleCalendarEventId && (
-                <Button
-                  type="default"
-                  icon={<CalendarOutlined style={{ color: "#1890ff" }} />}
-                  style={{ borderRadius: 8 }}
-                >
-                  Đồng bộ Google Calendar
-                </Button>
-              )}
+              <Button
+                type="default"
+                icon={<CalendarOutlined style={{ color: "#1890ff" }} />}
+                style={{ borderRadius: 8 }}
+              >
+                Đồng bộ Google Calendar
+              </Button>
             </Space>
           </div>
         )}

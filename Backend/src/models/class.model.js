@@ -137,11 +137,11 @@ const classSchema = new Schema(
       type: [classStudentSchema],
       default: [],
     },
+    // Legacy Field (Deprecated): Mã phòng Jitsi dùng chung cũ
     meetingRoomId: {
       type: String,
-      required: true,
-      unique: true,
-      immutable: true,
+      required: false,
+      default: null,
       trim: true,
     },
     // Đường dẫn Google Meet phục vụ học trực tuyến
@@ -203,6 +203,12 @@ const classSchema = new Schema(
       default: 0,
       min: 0,
     },
+    nextLiveSessionNumber: {
+      type: Number,
+      // Default to 0 so when first incremented it becomes 1.
+      // But it's actually not strictly needed if we migrate.
+      default: 0,
+    },
     description: {
       type: String,
       trim: true,
@@ -239,8 +245,8 @@ const classSchema = new Schema(
 );
 
 // Indexes nâng cao hiệu năng truy vấn
-classSchema.index({ classCode: 1 }, { unique: true, sparse: true });
-classSchema.index({ meetingRoomId: 1 }, { unique: true });
+// classSchema.index({ classCode: 1 }, { unique: true, sparse: true });
+// classSchema.index({ meetingRoomId: 1 }, { unique: true });
 classSchema.index({ teacherId: 1 });
 classSchema.index({ courseId: 1 });
 classSchema.index({ "students.studentId": 1 });

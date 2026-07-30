@@ -58,6 +58,7 @@ export const StudentSidebar: React.FC<StudentSidebarProps> = React.memo(
     const selectedKeys = useMemo(() => {
       const path = location.pathname;
       if (path === "/student" || path === "/" || path === "") return ["/student"];
+      if (path.startsWith("/student/classdetail")) return ["/student/myclasses"];
       const matched = menuItems.find(
         (item) => item.key !== "/student" && path.startsWith(item.key)
       );

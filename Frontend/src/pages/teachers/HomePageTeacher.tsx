@@ -70,7 +70,7 @@ export default function HomePageTeacher() {
       try {
         if (classList.length > 0) {
           const livePromises = classList.slice(0, 5).map((cls: any) =>
-            axiosClient.get(`/api/live/active/${cls._id}`).catch(() => null)
+            axiosClient.get(`/api/live/classes/${cls._id}/active`).catch(() => null)
           );
           const liveResults = await Promise.all(livePromises);
           const activeSessions = liveResults

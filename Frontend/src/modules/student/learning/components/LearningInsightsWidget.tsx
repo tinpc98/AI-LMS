@@ -22,6 +22,10 @@ export const LearningInsightsWidget: React.FC<LearningInsightsWidgetProps> = Rea
     }
   };
 
+  const handleAskAI = (prompt: string) => {
+    window.dispatchEvent(new CustomEvent("open-ai-chat", { detail: { prompt } }));
+  };
+
   return (
     <Card
       title={
@@ -68,6 +72,16 @@ export const LearningInsightsWidget: React.FC<LearningInsightsWidgetProps> = Rea
             </Tag>
           ))}
         </Space>
+        
+        <div style={{ marginTop: 12 }}>
+          <button 
+            onClick={() => handleAskAI(`Giải thích vì sao tôi lại yếu môn ${insight.weakSubjects.join(", ")} và cách khắc phục?`)}
+            className="text-xs bg-purple-50 text-purple-600 border border-purple-200 px-3 py-1.5 rounded-lg hover:bg-purple-100 hover:border-purple-300 transition-colors font-medium flex items-center gap-1 cursor-pointer"
+          >
+            <span className="material-symbols-outlined text-[14px]">auto_awesome</span>
+            Hỏi AI cách cải thiện
+          </button>
+        </div>
       </div>
 
       {/* Recommended Actions */}
@@ -87,7 +101,16 @@ export const LearningInsightsWidget: React.FC<LearningInsightsWidgetProps> = Rea
             </ul>
           }
           type="info"
-          style={{ borderRadius: 12, backgroundColor: "#ffffff", border: "1px solid #e8d5f5" }}
+          style={{ borderRadius: 12, backgroundColor: "#ffffff", border: "1px solid #e8d5f5", paddingBottom: 8 }}
+          action={
+            <button 
+              onClick={() => handleAskAI("Tạo kế hoạch học tập chi tiết dựa trên gợi ý lộ trình này")}
+              className="text-xs bg-white text-purple-600 border border-purple-200 px-3 py-1.5 rounded-lg hover:bg-purple-50 transition-colors font-medium cursor-pointer flex items-center gap-1 mt-2"
+            >
+              <span className="material-symbols-outlined text-[14px]">edit_calendar</span>
+              Lập kế hoạch
+            </button>
+          }
         />
       )}
     </Card>
