@@ -5,6 +5,8 @@ import helmet from "helmet";
 import cors from "cors"; // Thêm thư viện cấu hình cho phép Frontend gọi API
 import { connectDB } from "./src/config/database.js";
 import { validateEnv, getAllowedOrigins } from "./src/config/env.js";
+import { requestId } from "./src/middlewares/requestId.middlewares.js";
+import { errorHandler, notFoundHandler } from "./src/middlewares/errorHandler.middlewares.js";
 import socketHandler from "./src/sockets/exam.socket.js"; // 3. Import bộ xử lý Real-time
 import liveSocketHandler from "./src/sockets/live.socket.js"; // Import xử lý Socket phòng học online
 import { createServer } from "http";
@@ -66,6 +68,7 @@ const corsOptions = {
 };
 
 // Cấu hình Middleware
+app.use(requestId);
 app.use(helmet());
 app.use(cors(corsOptions));
 app.use(express.json());
@@ -132,20 +135,10 @@ app.get("/", (req, res) => {
 // TRẠM XỬ LÝ LỖI TẬP TRUNG (ERROR HANDLING)
 // ==========================================
 // Xử lý lỗi 404 cho các đường dẫn không tồn tại
-app.use((req, res) => {
-  res
-    .status(404)
-    .json({ message: "Đường dẫn API này không tồn tại trên hệ thống!" });
-});
+app.use(notFoundHandler);
 
-// Global Error Handler: Trạm bắt lỗi 500 (Phải đặt ở cuối cùng)
-app.use((err, req, res, next) => {
-  console.error("🔥 Lỗi hệ thống:", err.stack);
-  res.status(500).json({
-    message: err.message || "Đã xảy ra lỗi nội bộ trên Server!",
-    error: process.env.NODE_ENV === "development" ? err.stack : {},
-  });
-});
+// Global Error Handler (Phải đặt ở cuối cùng)
+app.use(errorHandler);
 
 // ==========================================
 // KHỞI CHẠY SERVER
