@@ -9,6 +9,7 @@ import {
   deleteQuestion,
 } from "../controllers/question.controller.js";
 import { verifyUser, isTeacher } from "../middlewares/auth.middlewares.js";
+import { updateQuestionValidation } from "../validators/question.validator.js";
 
 const router = express.Router();
 
@@ -42,7 +43,7 @@ const upload = multer({
 router.post("/import-excel", verifyUser, isTeacher, upload.single("file"), uploadExcelQuestions);
 router.get("/", verifyUser, isTeacher, getQuestions);
 router.post("/", verifyUser, isTeacher, createQuestion);
-router.put("/:id", verifyUser, isTeacher, updateQuestion);
+router.put("/:id", verifyUser, isTeacher, updateQuestionValidation, updateQuestion);
 router.delete("/:id", verifyUser, isTeacher, deleteQuestion);
 
 export default router;

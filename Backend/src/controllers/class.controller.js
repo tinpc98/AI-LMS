@@ -1,5 +1,6 @@
 import crypto from "crypto";
 import mongoose from "mongoose";
+import { matchedData } from "express-validator";
 import classModel from "../models/class.model.js";
 import Course from "../models/course.model.js";
 import User from "../models/user.models.js";
@@ -174,7 +175,10 @@ export const UpdateClass = async (req, res) => {
   }
 
   try {
-    const updateData = req.body;
+    // matchedData() chỉ trả về các trường đã được khai báo & validate hợp lệ trong
+    // updateClassValidation — chặn mass-assignment vào các trường có luồng nghiệp vụ
+    // riêng (teacherId, students, isDeleted,...) mà route này không được phép ghi đè.
+    const updateData = matchedData(req, { onlyValidData: true });
     if (Object.keys(updateData).length === 0) {
       return res.status(400).json({ success: false, message: "Không có trường hợp lệ nào để cập nhật." });
     }

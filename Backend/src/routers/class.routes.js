@@ -17,6 +17,7 @@ import {
   PermanentDeleteClass,
 } from "../controllers/class.controller.js";
 import { verifyUser, isAdmin, isTeacher } from "../middlewares/auth.middlewares.js";
+import { updateClassValidation } from "../validators/class.validator.js";
 
 const route = Router();
 
@@ -33,7 +34,7 @@ route.delete("/:id/resources/:resourceId", verifyUser, isTeacher, RemoveResource
 
 // Nhóm API quản trị dành riêng cho Admin
 route.post("/", verifyUser, isAdmin, AddNewClass);
-route.put("/:id", verifyUser, isAdmin, UpdateClass);
+route.put("/:id", verifyUser, isAdmin, updateClassValidation, UpdateClass);
 route.patch("/:id/assign-teacher", verifyUser, isAdmin, AssignTeacher);   // PATCH: chỉ update 2-3 field
 route.patch("/:id/unassign-teacher", verifyUser, isAdmin, UnassignTeacher); // Gỡ giáo viên
 route.post("/:id/students", verifyUser, isAdmin, AssignStudent);

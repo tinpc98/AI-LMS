@@ -1,3 +1,4 @@
+import { matchedData } from "express-validator";
 import questionService from "../services/question.service.js";
 import Question from "../models/question.model.js";
 
@@ -88,7 +89,9 @@ export const createQuestion = async (req, res) => {
 export const updateQuestion = async (req, res) => {
   try {
     const { id } = req.params;
-    const updateData = req.body;
+    // matchedData() chỉ lấy các trường đã khai báo trong updateQuestionValidation,
+    // cố tình loại trừ createdBy để tránh giáo viên khác chiếm quyền tác giả câu hỏi.
+    const updateData = matchedData(req, { onlyValidData: true });
 
     // Nâng cao: Nếu sửa nội dung, lại phải check xem nội dung mới có trùng với câu khác không
     if (updateData.content) {
