@@ -11,6 +11,9 @@ import { mapNotificationItem } from "../api/notificationApi";
 
 const SOCKET_URL = import.meta.env.VITE_API_URL?.replace("/api", "") || "http://localhost:5000";
 
+let globalSocket: Socket | null = null;
+let globalSocketSubscribers = 0;
+
 export function useNotifications() {
   const [notifications, setNotifications] = useState<INotificationItem[]>([]);
   const [unreadCount, setUnreadCount] = useState<number>(0);
@@ -45,16 +48,21 @@ export function useNotifications() {
     const token = localStorage.getItem("token") || sessionStorage.getItem("token");
     if (!token) return;
 
-    socketRef.current = io(SOCKET_URL, {
-      transports: ["websocket", "polling"],
-      reconnection: true,
-    });
+    if (!globalSocket) {
+      globalSocket = io(SOCKET_URL, {
+        transports: ["websocket", "polling"],
+        reconnection: true,
+      });
 
-    socketRef.current.on("connect", () => {
-      socketRef.current?.emit("AUTHENTICATE_SOCKET", { token });
-    });
+      globalSocket.on("connect", () => {
+        globalSocket?.emit("AUTHENTICATE_SOCKET", { token });
+      });
+    }
 
-    socketRef.current.on("notification:new", (newNotifRaw: any) => {
+    globalSocketSubscribers++;
+    socketRef.current = globalSocket;
+
+    const handleNewNotification = (newNotifRaw: any) => {
       const newNotif = mapNotificationItem(newNotifRaw);
       setNotifications((prev) => {
         // Tránh trùng lặp
@@ -62,10 +70,19 @@ export function useNotifications() {
         return [newNotif, ...prev];
       });
       setUnreadCount((prev) => prev + 1);
-    });
+    };
+
+    globalSocket.on("notification:new", handleNewNotification);
 
     return () => {
-      socketRef.current?.disconnect();
+      if (globalSocket) {
+        globalSocket.off("notification:new", handleNewNotification);
+        globalSocketSubscribers--;
+        if (globalSocketSubscribers <= 0) {
+          globalSocket.disconnect();
+          globalSocket = null;
+        }
+      }
     };
   }, []);
 

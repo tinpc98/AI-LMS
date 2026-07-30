@@ -80,6 +80,7 @@ const submissionSchema = new Schema(
 
 // Unique Index: Mỗi học sinh chỉ được nộp 1 bản Submission cho 1 Assignment
 submissionSchema.index({ assignmentId: 1, studentId: 1 }, { unique: true });
+submissionSchema.index({ assignmentId: 1, createdAt: -1 });
 submissionSchema.index({ classId: 1, studentId: 1 });
 submissionSchema.index({ gradedBy: 1 });
 

@@ -3,6 +3,8 @@ import type {
   IAttendancePayload,
   IAttendanceItem,
   IAttendanceStats,
+  IVirtualSession,
+  IAttendanceMatrix,
 } from "../interface/attendanceInterface";
 
 export const attendanceApi = {
@@ -13,6 +15,14 @@ export const attendanceApi = {
   // Cập nhật 1 bản ghi điểm danh
   updateAttendance: (id: string, data: { status?: string; note?: string }) =>
     axiosClient.put<{ message: string; data: IAttendanceItem }>(`/api/attendances/${id}`, data),
+
+  // Lấy danh sách buổi học ảo
+  getClassSessions: (classId: string) =>
+    axiosClient.get<{ message: string; data: IVirtualSession[] }>(`/api/attendances/class/${classId}/sessions`),
+
+  // Lấy ma trận điểm danh của lớp
+  getAttendanceMatrix: (classId: string) =>
+    axiosClient.get<{ message: string; data: IAttendanceMatrix }>(`/api/attendances/class/${classId}/matrix`),
 
   // Lấy danh sách điểm danh theo lớp (và ngày nếu có)
   getAttendanceByClass: (classId: string, date?: string) => {

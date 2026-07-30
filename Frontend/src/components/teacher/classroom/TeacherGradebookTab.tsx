@@ -33,7 +33,7 @@ import {
 } from "@ant-design/icons";
 
 import gradeApi from "../../../api/gradeApi";
-import type { IGrade } from "../../../api/gradeApi";
+import type { IGradeItemDef, IStudentGradeData } from "../../../api/gradeApi";
 import { toast } from "../../../utils/toast";
 import { GradeDetailDrawer } from "./GradeDetailDrawer";
 
@@ -50,7 +50,8 @@ interface TeacherGradebookTabProps {
 
 export const TeacherGradebookTab: React.FC<TeacherGradebookTabProps> = React.memo(
   ({ classId, className = "Lớp học", teacherName = "Giảng viên", students = [] }) => {
-    const [grades, setGrades] = useState<IGrade[]>([]);
+    const [gradeItems, setGradeItems] = useState<IGradeItemDef[]>([]);
+    const [studentsGrades, setStudentsGrades] = useState<IStudentGradeData[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
 
@@ -69,8 +70,9 @@ export const TeacherGradebookTab: React.FC<TeacherGradebookTabProps> = React.mem
       setLoading(true);
       setError(null);
       try {
-        const list = await gradeApi.getGradesByClass(classId);
-        setGrades(list || []);
+        const response = await gradeApi.getGradesByClass(classId);
+        setGradeItems(response.gradeItems || []);
+        setStudentsGrades(response.students || []);
       } catch (err: any) {
         console.error("[TeacherGradebookTab] Fetch error:", err);
         setError(err.message || "Không thể tải bảng điểm của lớp!");
@@ -85,36 +87,15 @@ export const TeacherGradebookTab: React.FC<TeacherGradebookTabProps> = React.mem
 
     // Map grades by student ID for rendering
     const studentGradeRows = useMemo(() => {
-      return students.map((stu) => {
-        const sObj = typeof stu.studentId === "object" && stu.studentId !== null ? stu.studentId : stu;
-        const sId = (sObj._id || stu._id || "").toString();
-        const name = sObj.fullName || stu.fullName || "Học sinh";
-        const email = sObj.email || stu.email || "";
-        const avatar = sObj.avatar || stu.avatar;
+      return studentsGrades.map((sg) => {
+        const sObj = sg.student;
+        const sId = (sObj?._id || "").toString();
+        const name = sObj?.fullName || "Học sinh";
+        const email = sObj?.email || "";
+        const avatar = sObj?.avatar;
+        const studentCode = sObj?.studentCode || "";
 
-        const studentGrades = grades.filter(
-          (g) => (typeof g.studentId === "object" ? g.studentId?._id : g.studentId)?.toString() === sId
-        );
-
-        const getCategoryScore = (cat: string) => {
-          const found = studentGrades.find((g) => g.category === cat);
-          return found ? found.score : null;
-        };
-
-        const attendanceScore = getCategoryScore("Attendance");
-        const assignmentScore = getCategoryScore("Assignment");
-        const midtermScore = getCategoryScore("Midterm");
-        const finalScore = getCategoryScore("Final");
-
-        // Compute Weighted Average GPA (10% Attendance, 20% Assignment, 30% Midterm, 40% Final)
-        let totalScore = 0;
-        let totalWeight = 0;
-        if (attendanceScore !== null) { totalScore += attendanceScore * 0.1; totalWeight += 0.1; }
-        if (assignmentScore !== null) { totalScore += assignmentScore * 0.2; totalWeight += 0.2; }
-        if (midtermScore !== null) { totalScore += midtermScore * 0.3; totalWeight += 0.3; }
-        if (finalScore !== null) { totalScore += finalScore * 0.4; totalWeight += 0.4; }
-
-        const avgGPA = totalWeight > 0 ? parseFloat((totalScore / totalWeight).toFixed(2)) : null;
+        const avgGPA = sg.avgGPA;
 
         // Letter Grade conversion
         let letterGrade = "-";
@@ -131,37 +112,34 @@ export const TeacherGradebookTab: React.FC<TeacherGradebookTabProps> = React.mem
         }
 
         return {
-          student: stu,
-          studentObj: sObj,
+          student: sObj,
           name,
           email,
           avatar,
+          studentCode,
           studentIdStr: sId,
-          attendanceScore,
-          assignmentScore,
-          midtermScore,
-          finalScore,
+          grades: sg.grades,
           avgGPA,
           letterGrade,
           isPassed: avgGPA !== null ? avgGPA >= 5.0 : null,
         };
       });
-    }, [students, grades]);
+    }, [studentsGrades]);
 
     // Statistics calculation
     const stats = useMemo(() => {
       const gpas = studentGradeRows.map((r) => r.avgGPA).filter((g): g is number => g !== null);
-      const totalStudents = students.length;
       const passedCount = studentGradeRows.filter((r) => r.isPassed === true).length;
       const failedCount = studentGradeRows.filter((r) => r.isPassed === false).length;
 
       const maxScore = gpas.length > 0 ? Math.max(...gpas) : 0;
       const minScore = gpas.length > 0 ? Math.min(...gpas) : 0;
       const avgClassScore = gpas.length > 0 ? parseFloat((gpas.reduce((a, b) => a + b, 0) / gpas.length).toFixed(2)) : 0;
+      const totalStudents = studentsGrades.length;
       const passRate = totalStudents > 0 ? Math.round((passedCount / totalStudents) * 100) : 0;
 
       return { totalStudents, passedCount, failedCount, maxScore, minScore, avgClassScore, passRate };
-    }, [studentGradeRows, students.length]);
+    }, [studentGradeRows, studentsGrades.length]);
 
     // Filter & Sort table rows
     const filteredRows = useMemo(() => {
@@ -207,18 +185,55 @@ export const TeacherGradebookTab: React.FC<TeacherGradebookTabProps> = React.mem
       return <Tag color="error" style={{ fontWeight: 700, fontSize: 14 }}>🔴 {gpa} (Trung bình/Cần cố gắng)</Tag>;
     };
 
+    const dynamicColumns: ColumnsType<any> = useMemo(() => {
+      const grouped: Record<string, IGradeItemDef[]> = {};
+      gradeItems.forEach(item => {
+        if (!grouped[item.category]) grouped[item.category] = [];
+        grouped[item.category].push(item);
+      });
+
+      const cols: ColumnsType<any> = [];
+
+      Object.keys(grouped).forEach(cat => {
+        const children = grouped[cat].map(item => ({
+          title: (
+            <Tooltip title={`Tỷ trọng loại điểm: ${item.weight}%`}>
+              <Text strong style={{ fontSize: 13 }}>{item.title}</Text>
+            </Tooltip>
+          ),
+          dataIndex: ["grades", item._id, "score"],
+          key: item._id,
+          width: 110,
+          align: "center" as const,
+          render: (score: number | undefined) => (
+            score !== undefined && score !== null ? <Text strong>{score}</Text> : <Text type="secondary">-</Text>
+          ),
+        }));
+
+        cols.push({
+          title: <Text strong style={{ color: "#1890ff" }}>{cat}</Text>,
+          children,
+        });
+      });
+
+      return cols;
+    }, [gradeItems]);
+
     const columns: ColumnsType<any> = [
       {
         title: "#",
         key: "index",
         width: 50,
+        fixed: "left" as const,
         render: (_, __, index) => index + 1,
       },
       {
         title: "Học sinh",
         key: "studentInfo",
+        fixed: "left" as const,
+        width: 220,
         render: (_, record) => {
-          const code = record.studentIdStr ? record.studentIdStr.slice(-6).toUpperCase() : "N/A";
+          const code = record.studentCode || (record.studentIdStr ? `STU-${record.studentIdStr.slice(-6).toUpperCase()}` : "N/A");
           return (
             <Space size={12}>
               <Avatar
@@ -231,59 +246,35 @@ export const TeacherGradebookTab: React.FC<TeacherGradebookTabProps> = React.mem
                   {record.name}
                 </Text>
                 <Text style={{ fontSize: 12, fontFamily: "monospace", color: "#8c8c8c" }}>
-                  STU-{code}
+                  {code}
                 </Text>
               </div>
             </Space>
           );
         },
       },
+      ...dynamicColumns,
       {
-        title: "Điểm danh",
-        dataIndex: "attendanceScore",
-        key: "attendanceScore",
-        width: 110,
-        render: (score) => (score !== null ? <Text strong>{score}</Text> : <Text type="secondary">-</Text>),
-      },
-      {
-        title: "Bài tập",
-        dataIndex: "assignmentScore",
-        key: "assignmentScore",
-        width: 110,
-        render: (score) => (score !== null ? <Text strong>{score}</Text> : <Text type="secondary">-</Text>),
-      },
-      {
-        title: "Giữa kỳ",
-        dataIndex: "midtermScore",
-        key: "midtermScore",
-        width: 110,
-        render: (score) => (score !== null ? <Text strong>{score}</Text> : <Text type="secondary">-</Text>),
-      },
-      {
-        title: "Cuối kỳ",
-        dataIndex: "finalScore",
-        key: "finalScore",
-        width: 110,
-        render: (score) => (score !== null ? <Text strong>{score}</Text> : <Text type="secondary">-</Text>),
-      },
-      {
-        title: "Điểm TB Môn",
+        title: "Điểm TB",
         dataIndex: "avgGPA",
         key: "avgGPA",
-        width: 160,
+        width: 140,
+        fixed: "right" as const,
         render: (gpa) => getGPATag(gpa),
       },
       {
         title: "Điểm chữ",
         dataIndex: "letterGrade",
         key: "letterGrade",
-        width: 100,
+        width: 90,
+        fixed: "right" as const,
         render: (letter) => <Tag color="blue" style={{ fontWeight: 700 }}>{letter}</Tag>,
       },
       {
         title: "Trạng thái",
         key: "status",
-        width: 120,
+        width: 110,
+        fixed: "right" as const,
         render: (_, record) => {
           if (record.isPassed === null) return <Tag color="default">Chưa xếp loại</Tag>;
           return record.isPassed ? (
@@ -296,7 +287,8 @@ export const TeacherGradebookTab: React.FC<TeacherGradebookTabProps> = React.mem
       {
         title: "Thao tác",
         key: "action",
-        width: 130,
+        width: 100,
+        fixed: "right" as const,
         align: "right",
         render: (_, record) => (
           <Button
@@ -486,6 +478,7 @@ export const TeacherGradebookTab: React.FC<TeacherGradebookTabProps> = React.mem
               columns={columns}
               dataSource={filteredRows}
               rowKey={(record, index) => record.studentIdStr || `row-${index}`}
+              scroll={{ x: 'max-content' }}
               pagination={{ pageSize: 10 }}
             />
           ) : (
@@ -510,7 +503,8 @@ export const TeacherGradebookTab: React.FC<TeacherGradebookTabProps> = React.mem
           onClose={() => setIsDrawerOpen(false)}
           student={selectedStudent}
           classId={classId}
-          existingGrades={grades}
+          gradeItems={gradeItems}
+          studentGradesData={studentsGrades.find(sg => sg.student?._id === selectedStudent?._id)}
           onSaved={fetchGrades}
         />
       </div>

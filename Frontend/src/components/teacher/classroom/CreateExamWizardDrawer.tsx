@@ -290,7 +290,7 @@ export const CreateExamWizardDrawer: React.FC<CreateExamWizardDrawerProps> = Rea
         />
 
         {/* STEP 1: BASIC INFO & SETTINGS */}
-        {currentStep === 0 && (
+        <div style={{ display: currentStep === 0 ? "block" : "none" }}>
           <Form form={formStep1} layout="vertical">
             <Card title="📝 Thông tin cơ bản bài kiểm tra" style={{ marginBottom: 20, borderRadius: 12 }}>
               <Row gutter={16}>
@@ -403,7 +403,7 @@ export const CreateExamWizardDrawer: React.FC<CreateExamWizardDrawerProps> = Rea
               </Button>
             </div>
           </Form>
-        )}
+        </div>
 
         {/* STEP 2: QUESTION SELECTOR */}
         {currentStep === 1 && (

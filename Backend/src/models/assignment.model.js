@@ -62,6 +62,7 @@ const assignmentSchema = new Schema(
 );
 
 // Indexes tối ưu hiệu năng tìm kiếm
+assignmentSchema.index({ classId: 1, createdAt: -1 });
 assignmentSchema.index({ classId: 1 });
 assignmentSchema.index({ teacherId: 1 });
 assignmentSchema.index({ createdBy: 1 });

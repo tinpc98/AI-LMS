@@ -38,18 +38,29 @@ import { QuestionStatistic } from "../../components/teacher/questionbank/Questio
 import { QuestionFormDrawer } from "../../components/teacher/questionbank/QuestionFormDrawer";
 import { QuestionPreviewDrawer } from "../../components/teacher/questionbank/QuestionPreviewDrawer";
 
+import { useQuestionBank } from "../../hooks/useQuestionBank";
+
 const { Title, Text, Paragraph } = Typography;
 
 export default function QuestionBank() {
-  const [questions, setQuestions] = useState<any[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
-
-  // Toolbar states
-  const [searchQuery, setSearchQuery] = useState("");
-  const [typeFilter, setTypeFilter] = useState("all");
-  const [difficultyFilter, setDifficultyFilter] = useState("all");
-  const [sortBy, setSortBy] = useState("newest");
+  // Custom Hook
+  const {
+    loading,
+    error,
+    searchQuery,
+    setSearchQuery,
+    typeFilter,
+    setTypeFilter,
+    difficultyFilter,
+    setDifficultyFilter,
+    sortBy,
+    setSortBy,
+    filteredQuestions,
+    fetchQuestions,
+    handleDeleteQuestion,
+    handleCustomImport,
+    questions,
+  } = useQuestionBank();
 
   // Drawer states
   const [isFormDrawerOpen, setIsFormDrawerOpen] = useState(false);
@@ -57,114 +68,6 @@ export default function QuestionBank() {
 
   const [isPreviewDrawerOpen, setIsPreviewDrawerOpen] = useState(false);
   const [viewingQuestion, setViewingQuestion] = useState<any | null>(null);
-
-  // Fetch Questions from Backend
-  const fetchQuestions = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const response = await axiosClient.get("/api/questions");
-      setQuestions(response.data.data || []);
-    } catch (err: any) {
-      console.error("[QuestionBank] Fetch error:", err);
-      setError(err.message || "Không thể tải danh sách câu hỏi từ hệ thống!");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    let isMounted = true;
-    const loadData = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const response = await axiosClient.get("/api/questions");
-        if (isMounted) {
-          setQuestions(response.data.data || []);
-        }
-      } catch (err: any) {
-        if (isMounted) {
-          console.error("[QuestionBank] Fetch error:", err);
-          setError(err.message || "Không thể tải danh sách câu hỏi từ hệ thống!");
-        }
-      } finally {
-        if (isMounted) {
-          setLoading(false);
-        }
-      }
-    };
-    loadData();
-    return () => {
-      isMounted = false;
-    };
-  }, []);
-
-  // Filter & Sort questions
-  const filteredQuestions = useMemo(() => {
-    let result = [...questions];
-
-    // Search
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase().trim();
-      result = result.filter(
-        (item) =>
-          (item.content || "").toLowerCase().includes(q) ||
-          (item.topic || "").toLowerCase().includes(q)
-      );
-    }
-
-    // Type filter
-    if (typeFilter !== "all") {
-      result = result.filter((item) => item.type === typeFilter);
-    }
-
-    // Difficulty filter
-    if (difficultyFilter !== "all") {
-      result = result.filter((item) => item.difficulty === difficultyFilter);
-    }
-
-    // Sort
-    result.sort((a, b) => {
-      if (sortBy === "topic") return (a.topic || "").localeCompare(b.topic || "");
-      if (sortBy === "content") return (a.content || "").localeCompare(b.content || "");
-      // Default: newest
-      return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
-    });
-
-    return result;
-  }, [questions, searchQuery, typeFilter, difficultyFilter, sortBy]);
-
-  // Handle Delete Question
-  const handleDeleteQuestion = async (id: string) => {
-    if (!id) return;
-    try {
-      await axiosClient.delete(`/api/questions/${id}`);
-      toast.success("Xóa câu hỏi khỏi Ngân hàng thành công!");
-      fetchQuestions();
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || "Lỗi khi xóa câu hỏi!");
-    }
-  };
-
-  // Handle Import Excel
-  const handleCustomImport = async (options: any) => {
-    const { file, onSuccess, onError } = options;
-    const formData = new FormData();
-    formData.append("file", file);
-
-    try {
-      const res = await axiosClient.post("/api/questions/import-excel", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-      toast.success(res.data?.message || "Nhập bộ câu hỏi từ Excel thành công!");
-      onSuccess("OK");
-      fetchQuestions();
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || "Lỗi khi import file Excel!");
-      onError(err);
-    }
-  };
 
   const columns: ColumnsType<any> = [
     {
