@@ -3,6 +3,7 @@ import dotenv from "dotenv";
 import express from "express";
 import helmet from "helmet";
 import cors from "cors"; // Thêm thư viện cấu hình cho phép Frontend gọi API
+import mongoose from "mongoose";
 import { connectDB } from "./src/config/database.js";
 import { validateEnv, getAllowedOrigins } from "./src/config/env.js";
 import { requestId } from "./src/middlewares/requestId.middlewares.js";
@@ -131,6 +132,17 @@ app.get("/", (req, res) => {
     .json({ message: "Server EduSynth AI đang hoạt động ổn định!" });
 });
 
+// Health check cho load balancer / container orchestrator (Docker HEALTHCHECK, K8s probe...)
+// Trả 200 khi kết nối MongoDB đang "connected" (readyState === 1), 503 nếu chưa sẵn sàng.
+app.get("/health", (req, res) => {
+  const dbReady = mongoose.connection.readyState === 1;
+  res.status(dbReady ? 200 : 503).json({
+    status: dbReady ? "ok" : "unavailable",
+    db: mongoose.STATES[mongoose.connection.readyState],
+    uptime: process.uptime(),
+  });
+});
+
 // ==========================================
 // TRẠM XỬ LÝ LỖI TẬP TRUNG (ERROR HANDLING)
 // ==========================================
@@ -165,3 +177,45 @@ connectDB()
     console.error("❌ Kết nối Database thất bại! Chi tiết lỗi:", error.message);
     process.exit(1);
   });
+
+// ==========================================
+// GRACEFUL SHUTDOWN
+// ==========================================
+// Khi container/orchestrator gửi SIGTERM (hoặc Ctrl+C gửi SIGINT), dừng nhận request mới,
+// đóng Socket.io + kết nối MongoDB rồi mới thoát tiến trình — tránh cắt ngang request/transaction
+// đang xử lý dở. Nếu quá 10s không đóng xong (request treo), buộc thoát để tránh container "hang".
+let isShuttingDown = false;
+
+const shutdown = (signal) => {
+  if (isShuttingDown) return;
+  isShuttingDown = true;
+  console.log(`\n🛑 Nhận tín hiệu ${signal}, đang tắt server một cách an toàn...`);
+
+  const forceExitTimer = setTimeout(() => {
+    console.error("⚠️ Tắt server quá hạn 10s, buộc thoát tiến trình.");
+    process.exit(1);
+  }, 10_000);
+  forceExitTimer.unref();
+
+  io.close();
+
+  httpServer.close(async (err) => {
+    if (err) {
+      console.error("❌ Lỗi khi đóng HTTP server:", err.message);
+    }
+
+    try {
+      await mongoose.connection.close();
+      console.log("✅ Đã đóng kết nối MongoDB.");
+    } catch (dbCloseError) {
+      console.error("❌ Lỗi khi đóng kết nối MongoDB:", dbCloseError.message);
+    }
+
+    clearTimeout(forceExitTimer);
+    console.log("✅ Server đã tắt hoàn toàn.");
+    process.exit(0);
+  });
+};
+
+process.on("SIGTERM", () => shutdown("SIGTERM"));
+process.on("SIGINT", () => shutdown("SIGINT"));

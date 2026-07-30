@@ -59,7 +59,7 @@ const LiveSessionPage: React.FC = () => {
   }, [sessionId, status, openConference]);
 
   const token = conference?.token || "";
-  const rawAppId = conference?.appId || "vpaas-magic-cookie-fbd136285b3941a2a16d9e56702c3bd2";
+  const rawAppId = conference?.appId || "";
   const domain = conference?.domain || "8x8.vc";
   const rawRoomName = conference?.roomName || "";
   const fullRoomName = buildJaasRoomName(rawAppId, rawRoomName);

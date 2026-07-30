@@ -73,7 +73,7 @@ export function useJaasConference() {
         const conferenceData: JaasConferenceData = {
           sessionId: resData.sessionId || sessionId,
           roomName: resData.roomName || "",
-          appId: resData.appId || "vpaas-magic-cookie-fbd136285b3941a2a16d9e56702c3bd2",
+          appId: resData.appId || "",
           domain: envConfig.jaasDomain,
           token: resData.token,
           moderator: Boolean(resData.moderator),

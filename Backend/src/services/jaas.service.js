@@ -5,12 +5,10 @@ import LiveSession from "../models/liveSession.model.js";
 import classModel from "../models/class.model.js";
 import { LiveError, LIVE_ERROR_CODES } from "../validators/live.validator.js";
 
-const DEFAULT_APP_ID = "vpaas-magic-cookie-fbd136285b3941a2a16d9e56702c3bd2";
-const DEFAULT_API_KEY_ID = "vpaas-magic-cookie-fbd136285b3941a2a16d9e56702c3bd2/43bb4c";
 const DEFAULT_DOMAIN = "8x8.vc";
 
-export const getJaasAppId = () => process.env.JAAS_APP_ID || DEFAULT_APP_ID;
-export const getJaasApiKeyId = () => process.env.JAAS_API_KEY_ID || DEFAULT_API_KEY_ID;
+export const getJaasAppId = () => process.env.JAAS_APP_ID || null;
+export const getJaasApiKeyId = () => process.env.JAAS_API_KEY_ID || null;
 export const getJaasDomain = () => process.env.JAAS_DOMAIN || DEFAULT_DOMAIN;
 
 export const getPrivateKey = () => {
@@ -73,6 +71,14 @@ export const generateJaasTokenService = async ({ sessionId, user }) => {
   if (!privateKey) {
     throw new LiveError(
       "Dịch vụ 8x8 JaaS chưa được cấu hình Private Key hợp lệ trên Server!",
+      503,
+      LIVE_ERROR_CODES.JAAS_UNAVAILABLE
+    );
+  }
+
+  if (!getJaasAppId() || !getJaasApiKeyId()) {
+    throw new LiveError(
+      "Dịch vụ 8x8 JaaS chưa được cấu hình App ID / API Key ID hợp lệ trên Server!",
       503,
       LIVE_ERROR_CODES.JAAS_UNAVAILABLE
     );
