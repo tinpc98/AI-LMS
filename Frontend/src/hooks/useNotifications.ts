@@ -45,17 +45,14 @@ export function useNotifications() {
 
   // Socket Connection & Listeners
   useEffect(() => {
-    const token = localStorage.getItem("token") || sessionStorage.getItem("token");
+    const token = localStorage.getItem("accessToken");
     if (!token) return;
 
     if (!globalSocket) {
       globalSocket = io(SOCKET_URL, {
+        auth: { token: `Bearer ${token}` },
         transports: ["websocket", "polling"],
         reconnection: true,
-      });
-
-      globalSocket.on("connect", () => {
-        globalSocket?.emit("AUTHENTICATE_SOCKET", { token });
       });
     }
 

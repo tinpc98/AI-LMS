@@ -1,41 +1,24 @@
 // src/sockets/notification.socket.js
-import jwt from "jsonwebtoken";
-
+// Danh tính đã được xác thực JWT ở tầng handshake (socketAuthMiddleware, đăng ký toàn cục
+// ở main.js) TRƯỚC KHI event "connection" này chạy — không cần (và trước đây không nên) tự
+// xác thực lại qua một event riêng "AUTHENTICATE_SOCKET" sau khi đã kết nối.
+//
+// Trước đây, việc dùng "AUTHENTICATE_SOCKET" là dead code trên thực tế: middleware toàn cục
+// đã từ chối handshake thiếu token TRƯỚC KHI client kịp gửi event xác thực đó — nghĩa là bất
+// kỳ client nào kết nối không kèm token trong handshake (như hook useNotifications.ts trước
+// bản sửa này) sẽ bị NGẮT KẾT NỐI ngay tại bước handshake, không bao giờ có cơ hội emit
+// "AUTHENTICATE_SOCKET". Tính năng thông báo real-time vì vậy không hoạt động cho tới bản sửa
+// này (đồng bộ với useNotifications.ts gửi token qua handshake giống socketClient.ts).
 export default function notificationSocketHandler(io) {
   io.on("connection", (socket) => {
-    // Client gọi event này ngay sau khi connect và gửi kèm JWT token
-    socket.on("AUTHENTICATE_SOCKET", (data) => {
-      try {
-        const token = data?.token;
-        if (!token) {
-          return socket.emit("AUTHENTICATE_FAILED", { message: "No token provided" });
-        }
+    if (!socket.user?.id) return;
 
-        // Verify token
-        const secret = process.env.JWT_SECRET || "default_secret";
-        const decoded = jwt.verify(token, secret);
-
-        const userId = decoded.id || decoded._id;
-        if (!userId) {
-          return socket.emit("AUTHENTICATE_FAILED", { message: "Invalid token payload" });
-        }
-
-        const roomName = `user:${userId}`;
-        socket.join(roomName);
-        socket.userId = userId; // Gắn userId vào socket instance
-
-        console.log(`🔔 User ${userId} joined notification room: ${roomName}`);
-        socket.emit("AUTHENTICATE_SUCCESS", { message: "Joined user room successfully" });
-      } catch (error) {
-        console.error("❌ Notification Socket Auth Error:", error.message);
-        socket.emit("AUTHENTICATE_FAILED", { message: "Token verification failed" });
-      }
-    });
+    const roomName = `user:${socket.user.id}`;
+    socket.join(roomName);
+    console.log(`🔔 User ${socket.user.id} joined notification room: ${roomName}`);
 
     socket.on("disconnect", () => {
-      if (socket.userId) {
-        console.log(`🔔 User ${socket.userId} disconnected from notification socket`);
-      }
+      console.log(`🔔 User ${socket.user.id} disconnected from notification socket`);
     });
   });
 }

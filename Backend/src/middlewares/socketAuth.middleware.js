@@ -38,10 +38,9 @@ export const socketAuthMiddleware = async (socket, next) => {
       );
     }
 
-    const secret = process.env.JWT_SECRET || "ai_lms_secret_key_2026";
     let decoded;
     try {
-      decoded = jwt.verify(token, secret);
+      decoded = jwt.verify(token, process.env.JWT_SECRET);
     } catch (jwtErr) {
       return next(
         createSocketError("SOCKET_AUTH_INVALID_TOKEN", "Token xác thực không hợp lệ hoặc đã hết hạn.")

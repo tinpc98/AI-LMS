@@ -1,14 +1,12 @@
-import socketAuthMiddleware from "../middlewares/socketAuth.middleware.js";
 import { checkSocketLiveClassAccess } from "../services/socketLiveAccess.service.js";
 import LiveSession from "../models/liveSession.model.js";
 
 /**
  * Socket.IO Handler cho Module Học Trực Tuyến (Live Session)
+ * Lưu ý: middleware xác thực JWT handshake (socketAuthMiddleware) được đăng ký TOÀN CỤC
+ * một lần duy nhất ở main.js — áp dụng cho mọi socket, không chỉ riêng module Live Session.
  */
 export default function liveSocketHandler(io) {
-  // Gắn Middleware xác thực Socket Handshake JWT
-  io.use(socketAuthMiddleware);
-
   io.on("connection", (socket) => {
     const userLogName = socket.user ? `${socket.user.name} (${socket.user.role})` : socket.id;
 

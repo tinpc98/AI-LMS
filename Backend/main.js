@@ -10,6 +10,7 @@ import { requestId } from "./src/middlewares/requestId.middlewares.js";
 import { errorHandler, notFoundHandler } from "./src/middlewares/errorHandler.middlewares.js";
 import socketHandler from "./src/sockets/exam.socket.js"; // 3. Import bộ xử lý Real-time
 import liveSocketHandler from "./src/sockets/live.socket.js"; // Import xử lý Socket phòng học online
+import socketAuthMiddleware from "./src/middlewares/socketAuth.middleware.js";
 import { createServer } from "http";
 import { Server } from "socket.io";
 // Import Routers hiện có & mới
@@ -85,6 +86,11 @@ const io = new Server(httpServer, {
 });
 
 app.set("io", io); // Lưu io instance để gọi từ các controllers
+
+// Xác thực JWT handshake cho MỌI kết nối Socket.io (áp dụng toàn cục, trước khi vào bất kỳ
+// handler nào bên dưới) — đăng ký tường minh ở đây thay vì phụ thuộc ngầm vào thứ tự import
+// của từng module socket, để đảm bảo không handler nào có thể vô tình bỏ sót bước xác thực.
+io.use(socketAuthMiddleware);
 
 // Kích hoạt luồng lắng nghe sự kiện Real-time
 socketHandler(io);
