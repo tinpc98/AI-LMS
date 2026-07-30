@@ -416,12 +416,12 @@ export default function ClassDetail() {
           {activeTab === "exams" && <ExamsTab exams={exams as any} loading={isLoading} />}
 
           {/* TAB 5: BẢNG ĐIỂM */}
-          {activeTab === "grades" && (
+          {activeTab === "grades" && classId && (
             <GradesTab classId={classId} />
           )}
 
           {/* TAB 6: ĐIỂM DANH */}
-          {activeTab === "attendance" && <AttendanceTab classId={classId} />}
+          {activeTab === "attendance" && classId && <AttendanceTab classId={classId} />}
 
           {/* TAB 7: THÔNG BÁO LỚP HỌC */}
           {activeTab === "announcements" && (

@@ -7,6 +7,7 @@ import {
   ClockCircleOutlined,
   CloseCircleOutlined,
   HistoryOutlined,
+  InfoCircleOutlined,
   ReloadOutlined,
   EditOutlined,
   EyeOutlined,
@@ -78,7 +79,12 @@ export const TeacherAttendanceTab: React.FC<TeacherAttendanceTabProps> = React.m
     };
 
     // Derived states
-    const categorized = useMemo(() => {
+    const categorized = useMemo((): {
+      current: IVirtualSession | null;
+      next: IVirtualSession | null;
+      upcomingList: IVirtualSession[];
+      recentList: IVirtualSession[];
+    } => {
       const past: IVirtualSession[] = [];
       const upcoming: IVirtualSession[] = [];
       let current: IVirtualSession | null = null;

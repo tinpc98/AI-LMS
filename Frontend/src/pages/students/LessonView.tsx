@@ -186,7 +186,7 @@ const LessonPage = () => {
             ) : (
               messages.map((msg, idx) => (
                 <div
-                  key={msg._id || idx}
+                  key={msg.id || idx}
                   className={`flex flex-col max-w-[85%] ${
                     msg.role === "user" ? "self-end items-end" : "self-start items-start"
                   }`}

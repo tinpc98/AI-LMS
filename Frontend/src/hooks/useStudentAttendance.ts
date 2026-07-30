@@ -23,7 +23,7 @@ export function useStudentAttendance(classId?: string) {
       setLoading(true);
       attendanceApi.getAttendanceByStudent("me", classId)
         .then((res) => {
-          setRawRecords(res.data || []);
+          setRawRecords(res.data.data || []);
         })
         .catch((err) => console.error("Fetch student attendance error:", err))
         .finally(() => setLoading(false));

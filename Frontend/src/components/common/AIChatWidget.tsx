@@ -111,9 +111,9 @@ export const AIChatWidget: React.FC = () => {
               messages.map((msg, idx) => (
                 <div key={msg.id || idx} className={`flex flex-col max-w-[85%] ${msg.role === "user" ? "self-end items-end" : "self-start items-start"}`}>
                   <div className={`px-4 py-2.5 rounded-2xl text-[14px] shadow-sm ${msg.role === "user" ? "bg-primary text-white rounded-br-sm" : "bg-white border border-outline-variant text-gray-800 rounded-bl-sm"}`}>
-                    <ReactMarkdown className="prose prose-sm prose-p:leading-relaxed prose-pre:bg-gray-800 prose-pre:text-white prose-pre:p-2 prose-pre:rounded-md max-w-none">
-                      {msg.content}
-                    </ReactMarkdown>
+                    <div className="prose prose-sm prose-p:leading-relaxed prose-pre:bg-gray-800 prose-pre:text-white prose-pre:p-2 prose-pre:rounded-md max-w-none">
+                      <ReactMarkdown>{msg.content}</ReactMarkdown>
+                    </div>
                   </div>
                   <span className="text-[10px] text-gray-400 mt-1 px-1">{msg.role === "user" ? "Bạn" : "AI Assistant"}</span>
                 </div>
