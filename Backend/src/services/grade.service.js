@@ -5,7 +5,7 @@ import Assignment from "../models/assignment.model.js";
 import Submission from "../models/submission.model.js";
 import Exam from "../models/exam.model.js";
 import ExamAttempt from "../models/examAttempt.model.js";
-import User from "../models/user.model.js";
+import User from "../models/user.models.js";
 
 class GradeService {
   // Tạo mới hoặc Cập nhật điểm số của học sinh theo cột điểm (Manual Grades)

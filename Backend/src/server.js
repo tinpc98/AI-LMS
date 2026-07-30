@@ -2,7 +2,7 @@
 import express from "express";
 import { createServer } from "http"; // Module có sẵn của Node.js
 import { Server } from "socket.io";
-import socketHandler from "./socket/exam.socket.js"; // Tách riêng logic ra file khác cho sạch
+import socketHandler from "./sockets/exam.socket.js"; // Tách riêng logic ra file khác cho sạch
 
 const app = express();
 const httpServer = createServer(app);
