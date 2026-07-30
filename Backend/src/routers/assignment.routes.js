@@ -1,10 +1,7 @@
 import express from "express";
 import assignmentController from "../controllers/assignment.controller.js";
-<<<<<<< HEAD
-import { verifyUser, isTeacher, isStudent } from "../middlewares/auth.middlewares.js";
-=======
-import { verifyUser, isTeacher, canViewSubmission } from "../middlewares/auth.middlewares.js";
->>>>>>> dev
+
+import { verifyUser, isTeacher, isStudent, canViewSubmission } from "../middlewares/auth.middlewares.js";
 import upload from "../middlewares/upload.middlewares.js";
 
 const router = express.Router();

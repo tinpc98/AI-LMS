@@ -79,13 +79,15 @@ export const isAdmin = (req, res, next) => {
   next();
 };
 
-<<<<<<< HEAD
+
 export const isStudent = (req, res, next) => {
   if (req.user && req.user.role === 'student') {
     next();
   } else {
     return res.status(403).json({ success: false, message: "Forbidden: Student access required" });
-=======
+  }
+};
+
 // Helper kiem tra quyen so huong lop hoc cua Giao vien (hoac Admin)
 export const checkClassTeacherOwnership = async (classId, userId, userRole) => {
   if (!classId) return false;
@@ -108,7 +110,7 @@ export const canViewSubmission = async (req, res, next) => {
 
     const SubmissionModel = (await import("../models/submission.model.js")).default;
     const submission = await SubmissionModel.findById(submissionId).lean();
-    
+
     if (!submission) {
       return res.status(404).json({ message: "SUBMISSION_NOT_FOUND" });
     }
@@ -141,6 +143,5 @@ export const canViewSubmission = async (req, res, next) => {
     return res.status(403).json({ message: "SUBMISSION_ACCESS_DENIED" });
   } catch (error) {
     return res.status(500).json({ message: error.message || "Lỗi kiểm tra quyền truy cập bài nộp" });
->>>>>>> dev
   }
 };
