@@ -421,7 +421,7 @@ export default function ClassDetail() {
           )}
 
           {/* TAB 6: ĐIỂM DANH */}
-          {activeTab === "attendance" && <AttendanceTab rawRecords={[]} loading={isLoading} />}
+          {activeTab === "attendance" && <AttendanceTab classId={classId} />}
 
           {/* TAB 7: THÔNG BÁO LỚP HỌC */}
           {activeTab === "announcements" && (
