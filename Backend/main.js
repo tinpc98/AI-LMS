@@ -38,6 +38,7 @@ import AIKnowledgeRouter from "./src/routers/aiKnowledge.routes.js";
 import AIChatRouter from "./src/routers/aiChat.routes.js";
 import { initCronJobs } from "./src/cron/cron.setup.js";
 import aiUsageService from "./src/ai/services/aiUsage.service.js";
+import aiKnowledgeIndexingService from "./src/ai/services/aiKnowledgeIndexing.service.js";
 import FolderRouter from "./src/routers/folder.routes.js";
 
 import { validateJaasConfig } from "./src/controllers/jaas.controller.js";
@@ -171,6 +172,11 @@ connectDB()
       aiUsageService.getOrCreateConfig()
         .then(() => console.log("🤖 AI Core Foundation: Đã đồng bộ cấu hình AIConfig"))
         .catch((err) => console.error("⚠️ AI Core Foundation Config Init Error:", err.message));
+
+      // Cảnh báo (không chặn boot) nếu AI_EMBEDDING_DIMENSIONS lệch với dữ liệu RAG đã index
+      aiKnowledgeIndexingService.checkEmbeddingConfigConsistency().catch((err) =>
+        console.error("⚠️ RAG Config Check Error:", err.message)
+      );
     });
   })
   .catch((error) => {

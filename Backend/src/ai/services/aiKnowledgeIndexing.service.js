@@ -19,6 +19,36 @@ class AIKnowledgeIndexingService {
   }
 
   /**
+   * Cảnh báo (không chặn boot) nếu AI_EMBEDDING_DIMENSIONS hiện tại khác với dimensions
+   * của các chunk ĐÃ index trong DB. Đây là rủi ro âm thầm: nếu đổi biến môi trường này
+   * mà không re-index toàn bộ VÀ cập nhật lại Atlas Search Index (numDimensions), việc
+   * tìm kiếm vector sẽ không báo lỗi mà chỉ lặng lẽ không khớp/trả về ít kết quả hơn.
+   * Xem Backend/src/ai/RAG_SETUP.md.
+   */
+  async checkEmbeddingConfigConsistency() {
+    const currentDimensions = parseInt(process.env.AI_EMBEDDING_DIMENSIONS) || 768;
+    const existingChunk = await AIKnowledgeChunk.findOne({ status: "ready" })
+      .select("embeddingDimensions embeddingModel")
+      .lean();
+
+    if (!existingChunk) {
+      return { consistent: true, reason: "no_existing_chunks" };
+    }
+
+    if (existingChunk.embeddingDimensions !== currentDimensions) {
+      console.warn(
+        `⚠️ [RAG Config Warning] AI_EMBEDDING_DIMENSIONS hiện tại (${currentDimensions}) KHÁC với dimensions ` +
+          `của dữ liệu đã index trong DB (${existingChunk.embeddingDimensions}, model "${existingChunk.embeddingModel}"). ` +
+          `Vector Search có thể không báo lỗi nhưng trả về sai/thiếu kết quả. Cần re-index toàn bộ VÀ cập nhật ` +
+          `lại Atlas Search Index (numDimensions) — xem Backend/src/ai/RAG_SETUP.md.`
+      );
+      return { consistent: false, currentDimensions, existingDimensions: existingChunk.embeddingDimensions };
+    }
+
+    return { consistent: true, currentDimensions };
+  }
+
+  /**
    * Embed một mảng các chunk an toàn (có batch limit)
    */
   async embedChunksSafely(chunksText, provider, dimensions, BATCH_SIZE = 3) {
