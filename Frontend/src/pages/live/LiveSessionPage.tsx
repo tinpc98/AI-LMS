@@ -214,7 +214,6 @@ const LiveSessionPage: React.FC = () => {
             roomName={fullRoomName}
             jwt={token}
             configOverwrite={{
-              disableThirdPartyRequests: true,
               prejoinPageEnabled: false,
               startWithAudioMuted: false,
               startWithVideoMuted: false,
