@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { Drawer, List, Tag, Typography, Space, Spin, Empty, Button } from "antd";
-import { CalendarOutlined, ClockCircleOutlined, UserOutlined } from "@ant-design/icons";
+import { Drawer, Table, Tag, Typography, Space, Spin, Empty, Avatar, Tooltip } from "antd";
+import type { ColumnsType } from "antd/es/table";
+import { CalendarOutlined, UserOutlined, CheckCircleOutlined, CloseCircleOutlined, ClockCircleOutlined, InfoCircleOutlined } from "@ant-design/icons";
+import dayjs from "dayjs";
 import { attendanceApi } from "../../../api/attendanceApi";
-import type { IAttendanceItem } from "../../../interface/attendanceInterface";
+import type { IAttendanceMatrix, IVirtualSession } from "../../../interface/attendanceInterface";
 
 const { Text, Title } = Typography;
 
@@ -15,98 +17,120 @@ interface TeacherAttendanceHistoryDrawerProps {
 
 export const TeacherAttendanceHistoryDrawer: React.FC<TeacherAttendanceHistoryDrawerProps> = React.memo(
   ({ open, onClose, classId, className = "Lớp học" }) => {
-    const [historyList, setHistoryList] = useState<IAttendanceItem[]>([]);
+    const [matrix, setMatrix] = useState<IAttendanceMatrix | null>(null);
     const [loading, setLoading] = useState<boolean>(false);
 
     useEffect(() => {
       if (open && classId) {
         setLoading(true);
         attendanceApi
-          .getAttendanceByClass(classId)
+          .getAttendanceMatrix(classId)
           .then((res) => {
-            const raw = res.data?.data || res.data || [];
-            setHistoryList(Array.isArray(raw) ? raw : []);
+            setMatrix(res.data.data);
           })
           .catch((err) => {
             console.warn("[AttendanceHistory] Fetch warning:", err);
-            setHistoryList([]);
+            setMatrix(null);
           })
           .finally(() => setLoading(false));
       }
     }, [open, classId]);
 
-    const getStatusTag = (status?: string) => {
+    const getStatusIcon = (status?: string, note?: string) => {
+      let icon = <span style={{ color: "#d9d9d9" }}>-</span>; // Chưa điểm danh
       switch (status) {
         case "Present":
-          return <Tag color="success">🟢 Có mặt</Tag>;
+          icon = <CheckCircleOutlined style={{ color: "#52c41a", fontSize: 16 }} />;
+          break;
         case "Late":
-          return <Tag color="warning">🟡 Đi muộn</Tag>;
+          icon = <ClockCircleOutlined style={{ color: "#faad14", fontSize: 16 }} />;
+          break;
         case "Excused":
-          return <Tag color="processing">🔵 Có phép</Tag>;
+          icon = <InfoCircleOutlined style={{ color: "#1890ff", fontSize: 16 }} />;
+          break;
         case "Absent":
-          return <Tag color="error">🔴 Vắng</Tag>;
-        default:
-          return <Tag color="blue">{status || "Có mặt"}</Tag>;
+          icon = <CloseCircleOutlined style={{ color: "#ff4d4f", fontSize: 16 }} />;
+          break;
       }
+      return note ? <Tooltip title={note}>{icon}</Tooltip> : icon;
     };
+
+    const columns: ColumnsType<any> = [
+      {
+        title: "Học sinh",
+        key: "student",
+        width: 250,
+        fixed: "left",
+        render: (_, record) => (
+          <Space>
+            <Avatar src={record.avatar} icon={!record.avatar ? <UserOutlined /> : undefined} />
+            <div>
+              <Text strong style={{ display: "block", fontSize: 13 }}>{record.fullName}</Text>
+              <Text type="secondary" style={{ fontSize: 11 }}>{record.email}</Text>
+            </div>
+          </Space>
+        ),
+      },
+    ];
+
+    if (matrix && matrix.sessions) {
+      // Sort sessions ascending for history matrix timeline
+      const sortedSessions = [...matrix.sessions].sort((a, b) => dayjs(a.date).valueOf() - dayjs(b.date).valueOf());
+      
+      sortedSessions.forEach((session) => {
+        columns.push({
+          title: (
+            <div style={{ textAlign: "center" }}>
+              <div style={{ fontSize: 12 }}>{dayjs(session.date).format("DD/MM")}</div>
+            </div>
+          ),
+          dataIndex: session.date,
+          key: session.date,
+          width: 70,
+          align: "center",
+          render: (_, studentRecord) => {
+            const attendRecord = matrix.records[studentRecord._id]?.[session.date];
+            if (attendRecord) {
+              return getStatusIcon(attendRecord.status, attendRecord.note);
+            }
+            if (session.status === "Closed") {
+               return <Tooltip title="Không điểm danh"><span style={{ color: "#bfbfbf" }}>X</span></Tooltip>;
+            }
+            return <span style={{ color: "#f0f0f0" }}>-</span>;
+          },
+        });
+      });
+    }
 
     return (
       <Drawer
         title={
           <Space>
             <CalendarOutlined style={{ color: "#1890ff" }} />
-            <span>Lịch sử điểm danh: {className}</span>
+            <span>Ma trận điểm danh: {className}</span>
           </Space>
         }
         placement="right"
-        width={480}
+        width="90%"
         onClose={onClose}
         open={open}
       >
         {loading ? (
           <div style={{ textAlign: "center", padding: 40 }}>
-            <Spin tip="Đang nạp lịch sử điểm danh..." />
+            <Spin tip="Đang tải dữ liệu..." />
           </div>
-        ) : historyList.length > 0 ? (
-          <List
-            itemLayout="horizontal"
-            dataSource={historyList}
-            renderItem={(item) => {
-              const studentObj = typeof item.studentId === "object" ? item.studentId : null;
-              const name = studentObj?.fullName || "Học sinh";
-              const email = studentObj?.email || "";
-              const dateStr = item.date ? new Date(item.date).toLocaleDateString("vi-VN") : "";
-
-              return (
-                <List.Item>
-                  <List.Item.Meta
-                    title={
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                        <Text strong style={{ fontSize: 14 }}>
-                          {name}
-                        </Text>
-                        {getStatusTag(item.status)}
-                      </div>
-                    }
-                    description={
-                      <div>
-                        {email && <Text type="secondary" style={{ fontSize: 12, display: "block" }}>{email}</Text>}
-                        <Space size={12} style={{ fontSize: 12, color: "#8c8c8c", marginTop: 4 }}>
-                          <Space size={4}>
-                            <ClockCircleOutlined />
-                            <span>Ngày: {dateStr}</span>
-                          </Space>
-                          {item.note && <Text type="secondary">Ghi chú: {item.note}</Text>}
-                        </Space>
-                      </div>
-                    }
-                  />
-                </List.Item>
-              );
-            }}
+        ) : matrix && matrix.students && matrix.students.length > 0 ? (
+          <Table
+            columns={columns}
+            dataSource={matrix.students}
+            rowKey="_id"
+            pagination={false}
+            scroll={{ x: "max-content", y: "calc(100vh - 200px)" }}
+            size="small"
+            bordered
           />
         ) : (
-          <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="Chưa có lịch sử điểm danh nào cho lớp này." />
+          <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="Không có dữ liệu điểm danh." />
         )}
       </Drawer>
     );
