@@ -95,5 +95,11 @@ jobs:
         run: npm run lint
         continue-on-error: true
 
+      # Lưới an toàn cho việc di chuyển file ở Wave 5. tsc và vite build KHÔNG bắt được
+      # đường dẫn lazy trỏ nhầm sang module khác có tồn tại, cũng không bắt được thiếu
+      # Provider hay guard trả sai nhánh — những thứ hỏng lúc chạy chứ không lúc build.
+      - name: Frontend tests
+        run: npm test
+
       - name: Typecheck + build
         run: npm run build
