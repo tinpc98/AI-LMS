@@ -1,6 +1,6 @@
 import cron from "node-cron";
-import cronService from "../services/cron.service.js";
-import { runAIPendingRecovery } from "./jobs/aiPendingRecovery.job.js";
+import cronService from "./cron.service.js";
+import { runAIPendingRecovery } from "./aiPendingRecovery.job.js";
 
 /**
  * initCronJobs – Khởi tạo và đăng ký tất cả các cron job của hệ thống.

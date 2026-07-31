@@ -5,7 +5,10 @@
 //
 // Giữ nguyên toàn bộ assertion gốc, bổ sung các nhánh biên mà bản cũ chưa phủ.
 import { describe, it, expect } from "vitest";
-import { normalizeAnswer, compareAnswers } from "../../src/modules/exam-attempt/answerScoring.js";
+import {
+  normalizeAnswer,
+  compareAnswers,
+} from "../../../../src/modules/exam-attempt/answerScoring.js";
 
 describe("compareAnswers — các assertion từ script gốc", () => {
   it("trắc nghiệm một đáp án: khớp chính xác", () => {

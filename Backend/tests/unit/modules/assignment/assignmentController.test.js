@@ -3,10 +3,10 @@
 // Mock toàn bộ Mongoose model + Cloudinary + checkClassTeacherOwnership (qua classModel).
 import { describe, it, expect, afterEach, vi } from "vitest";
 import mongoose from "mongoose";
-import assignmentController from "../../src/modules/assignment/assignment.controller.js";
+import assignmentController from "../../../../src/modules/assignment/assignment.controller.js";
 import { Assignment } from "#modules/assignment";
 import { Submission } from "#modules/assignment";
-import cloudinary from "../../src/config/cloudinary.js";
+import cloudinary from "../../../../src/config/cloudinary.js";
 import { Class as classModel } from "#modules/class";
 
 const TEACHER_ID = "507f1f77bcf86cd799439011";

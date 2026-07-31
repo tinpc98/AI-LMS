@@ -15,7 +15,7 @@ import { validateEnv } from "./config/env.js";
 import { buildCorsOptions } from "./config/cors.js";
 import { validateJaasConfig } from "#modules/live-session";
 import { registerSocketHandlers } from "#infra/socket/registerHandlers.js";
-import { initCronJobs } from "./cron/cron.setup.js";
+import { initCronJobs } from "./jobs/index.js";
 import { aiUsageService, aiKnowledgeIndexingService } from "#modules/ai";
 
 const SHUTDOWN_TIMEOUT_MS = 10_000;

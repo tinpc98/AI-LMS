@@ -1,6 +1,6 @@
 // Test cho fix AUTHZ-03/05: chặn giáo viên nhập/xem điểm của lớp không phụ trách.
 import { describe, it, expect, afterEach, vi } from "vitest";
-import gradeService from "../../src/modules/grade/grade.service.js";
+import gradeService from "../../../../src/modules/grade/grade.service.js";
 import { Class as classModel } from "#modules/class";
 import { Grade } from "#modules/grade";
 

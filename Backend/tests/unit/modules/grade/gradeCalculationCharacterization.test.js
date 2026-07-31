@@ -4,7 +4,7 @@
 // fallback trọng số mặc định) để sau khi tách, chạy lại NGUYÊN VẸN các test này và
 // chứng minh không có thay đổi hành vi quan sát được.
 import { describe, it, expect, afterEach, vi } from "vitest";
-import gradeService from "../../src/modules/grade/grade.service.js";
+import gradeService from "../../../../src/modules/grade/grade.service.js";
 import { Class as classModel } from "#modules/class";
 import { User } from "#modules/auth";
 import { Assignment } from "#modules/assignment";

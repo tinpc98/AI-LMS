@@ -1,12 +1,24 @@
 /**
  * Rào chắn kiến trúc Backend — dependency-cruiser.
  *
- * Giai đoạn hiện tại (Wave 0): TOÀN BỘ rule để "warn" nhằm chụp lại baseline vi phạm
- * mà không chặn CI. Cấu trúc đích `src/modules/` chưa tồn tại nên các rule dưới đây
- * được viết theo cấu trúc HIỆN TẠI (controllers/ services/ repositories/ models/).
+ * Cập nhật ở Wave 3.6, sau khi toàn bộ 17 module nghiệp vụ đã chuyển vào src/modules/.
  *
- * Khi Wave 3 dựng xong `src/modules/`, thay path trong rule và nâng severity lên "error"
- * theo kế hoạch §5.2 + §Wave 2.6 / 3.6.
+ * Bố cục các tầng và chiều phụ thuộc được phép:
+ *
+ *     routes/index.js  +  infra/socket/registerHandlers.js     (composition root)
+ *            │  được phép trỏ thẳng vào *.routes.js / *.socket.js của module
+ *            ▼
+ *     reporting/  ──đọc──>  modules/  ──>  shared/  ──>  (npm)
+ *                              │             ▲
+ *                              └─────────────┘  chỉ một chiều
+ *
+ * Rule ở mức "error" CHẶN MERGE. Rule ở mức "warn" là nợ kỹ thuật đã biết, có kế hoạch
+ * xử lý ở Wave 4 — mỗi rule ghi rõ ngay tại chỗ.
+ *
+ * LƯU Ý khi thêm rule mới: phải kiểm tra rule có thật sự "nhìn thấy" vi phạm sau khi
+ * cấu trúc đổi hay không. Đã hai lần rule tự mù trong dự án này (tên file .controllers.js
+ * không khớp mẫu; và rule chỉ khai bố cục src/controllers cũ). Số cảnh báo giảm KHÔNG
+ * đồng nghĩa với đã sửa.
  */
 module.exports = {
   forbidden: [
@@ -68,9 +80,11 @@ module.exports = {
       // §5.2 — module chỉ được import PUBLIC API (index.js) của module khác, không thọc
       // vào file nội bộ. Để "warn" trong lúc migrate, nâng lên "error" ở Wave 3.6 khi
       // toàn bộ module đã chuyển xong.
+      // WAVE 3.6: nâng lên "error". Baseline sau khi migrate xong 17 module là 0 vi phạm,
+      // nên khoá lại để ranh giới module không bị xói mòn dần.
       name: "no-cross-module-internals",
       comment: "Module khác chỉ được import qua index.js của module, không vào file nội bộ.",
-      severity: "warn",
+      severity: "error",
       // Hai composition root được miễn trừ vì phải trỏ thẳng vào file nội bộ module:
       //   src/routes/index.js            -> *.routes.js
       //   src/infra/socket/registerHandlers.js -> *.socket.js
@@ -83,6 +97,25 @@ module.exports = {
         path: "^src/modules/([^/]+)/(?!index\\.js$).+",
         pathNot: "^src/modules/$1/",
       },
+    },
+    {
+      // WAVE 3.6 — chiều CẤM quan trọng nhất của tầng reporting. Nếu một module nghiệp vụ
+      // import từ reporting/, nghĩa là logic báo cáo đã rò ngược vào nghiệp vụ và ta mất
+      // khả năng tách module đó ra. Baseline 0 vi phạm nên khoá thẳng ở "error".
+      // Lý do đầy đủ: src/reporting/README.md.
+      name: "no-modules-to-reporting",
+      comment: "Module nghiệp vụ không được phụ thuộc vào tầng đọc tổng hợp reporting/.",
+      severity: "error",
+      from: { path: "^src/modules/" },
+      to: { path: "^src/reporting/" },
+    },
+    {
+      // shared/ là tầng thấp nhất — không được biết gì về reporting/ lẫn jobs/.
+      name: "no-shared-to-upper-tiers",
+      comment: "src/shared không được phụ thuộc vào reporting/ hay jobs/.",
+      severity: "error",
+      from: { path: "^src/shared/" },
+      to: { path: "^src/(reporting|jobs)/" },
     },
     {
       name: "no-orphans",

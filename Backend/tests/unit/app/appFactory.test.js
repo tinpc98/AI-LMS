@@ -8,7 +8,7 @@
 // nó sẽ treo hoặc ném lỗi ở đây thay vì lộ ra lúc chạy thật.
 import { describe, it, expect, beforeAll } from "vitest";
 import request from "supertest";
-import { createApp } from "../../src/app.js";
+import { createApp } from "../../../src/app.js";
 
 let app;
 

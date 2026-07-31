@@ -3,7 +3,7 @@ import {
   getStudentDashboard,
   getTeacherDashboard,
   exportClassReportCSV,
-} from "../controllers/analytics.controller.js";
+} from "./analytics.controller.js";
 import { verifyUser } from "#modules/auth";
 
 const router = Router();

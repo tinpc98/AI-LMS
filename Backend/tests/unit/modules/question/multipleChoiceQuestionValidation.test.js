@@ -2,13 +2,13 @@
 // các case và message đã có, chỉ đổi test runner sang Vitest).
 import { describe, it, expect } from "vitest";
 import { validationResult } from "express-validator";
-import { multipleChoiceQuestionValidation } from "../../src/modules/question/question.validator.js";
+import { multipleChoiceQuestionValidation } from "../../../../src/modules/question/question.validator.js";
 import {
   createRequest,
   createResponse,
   runMiddleware,
   extractErrorMessages,
-} from "../helpers/expressMock.js";
+} from "../../../helpers/expressMock.js";
 
 const cases = [
   {

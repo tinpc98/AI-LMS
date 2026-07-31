@@ -2,9 +2,9 @@
 // Trước PR-13, service này (fingerprint dedup, versioning, cleanup khi lỗi) hoàn toàn không có test.
 import { describe, it, expect, afterEach, vi } from "vitest";
 import mongoose from "mongoose";
-import aiKnowledgeIndexingService from "../../src/modules/ai/services/aiKnowledgeIndexing.service.js";
-import AIKnowledgeSource from "../../src/modules/ai/models/aiKnowledgeSource.model.js";
-import AIKnowledgeChunk from "../../src/modules/ai/models/aiKnowledgeChunk.model.js";
+import aiKnowledgeIndexingService from "../../../../src/modules/ai/services/aiKnowledgeIndexing.service.js";
+import AIKnowledgeSource from "../../../../src/modules/ai/models/aiKnowledgeSource.model.js";
+import AIKnowledgeChunk from "../../../../src/modules/ai/models/aiKnowledgeChunk.model.js";
 
 const LESSON_ID = new mongoose.Types.ObjectId().toString();
 const CLASS_ID = new mongoose.Types.ObjectId().toString();

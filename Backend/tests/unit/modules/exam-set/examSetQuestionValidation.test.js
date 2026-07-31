@@ -4,14 +4,14 @@ import { describe, it, expect } from "vitest";
 import {
   examSetQuestionCreateValidation,
   examSetQuestionUpdateValidation,
-} from "../../src/modules/exam-set/examSet.validator.js";
+} from "../../../../src/modules/exam-set/examSet.validator.js";
 import { isEditableExamSetStatus } from "#modules/exam-set/examSet.service.js";
 import {
   createRequest,
   createResponse,
   runMiddleware,
   extractErrorMessages,
-} from "../helpers/expressMock.js";
+} from "../../../helpers/expressMock.js";
 
 const cases = [
   {

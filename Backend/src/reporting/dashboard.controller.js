@@ -1,4 +1,4 @@
-import dashboardService from "../services/dashboard.service.js";
+import dashboardService from "./dashboard.service.js";
 import { sendSuccess, sendError } from "#shared/utils/response.js";
 
 /**

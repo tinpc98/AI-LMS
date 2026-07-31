@@ -13,3 +13,7 @@
 
 export { default as ExamSet } from "./examSet.model.js";
 export { default as ExamSetShare } from "./examSetShare.model.js";
+
+// recalculateExamSetMetrics được module ai gọi sau khi sinh câu hỏi bằng AI để cập nhật
+// lại tổng điểm/số câu của bộ đề. Phụ thuộc nghiệp vụ hợp lệ, đi qua public API.
+export { recalculateExamSetMetrics } from "./examSet.metrics.js";

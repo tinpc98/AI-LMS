@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { exportGrades, exportAttendance } from "../controllers/report.controller.js";
+import { exportGrades, exportAttendance } from "./report.controller.js";
 import { verifyUser } from "#modules/auth";
 import { isAdmin } from "#shared/middlewares/rbac.middleware.js";
 import { Class as classModel } from "#modules/class";

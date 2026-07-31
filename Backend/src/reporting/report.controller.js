@@ -1,9 +1,5 @@
 import mongoose from "mongoose";
-import {
-  buildGradesExcel,
-  buildAttendanceExcel,
-  sanitizeFilename,
-} from "../services/report.service.js";
+import { buildGradesExcel, buildAttendanceExcel, sanitizeFilename } from "./report.service.js";
 import { sendError } from "#shared/utils/response.js";
 
 // ─────────────────────────────────────────────

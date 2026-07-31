@@ -4,7 +4,7 @@ import { describe, it, expect } from "vitest";
 import {
   computeClassProgress,
   buildProgressMap,
-} from "../../src/modules/class/classProgressCalculator.js";
+} from "../../../../src/modules/class/classProgressCalculator.js";
 
 describe("computeClassProgress", () => {
   it("trả null khi lớp chưa có bài giảng lẫn bài tập — để UI hiển thị '—' thay vì khẳng định 0%", () => {
