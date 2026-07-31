@@ -11,7 +11,7 @@ import { Submission } from "#modules/assignment";
 import Question from "../models/question.model.js";
 import Exam from "../models/exam.model.js";
 import ExamAttempt from "../models/examAttempt.model.js";
-import Attendance from "../models/attendance.model.js";
+import { Attendance } from "#modules/attendance";
 import Grade from "../models/grade.model.js";
 import Announcement from "../models/announcement.model.js";
 import LiveSession from "../models/liveSession.model.js";

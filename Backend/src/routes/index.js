@@ -21,13 +21,14 @@ import userRoutes from "#modules/auth/user.routes.js";
 import classRoutes from "#modules/class/class.routes.js";
 import lessonRoutes from "#modules/lesson/lesson.routes.js";
 import assignmentRoutes from "#modules/assignment/assignment.routes.js";
+import attendanceRoutes from "#modules/attendance/attendance.routes.js";
 
 import QuestionRouter from "./question.routes.js";
 import ExamRouter from "./exam.routes.js";
 import ExamAttemptRouter from "./examAttempt.routes.js";
 import ExamSetRouter from "./examSet.routes.js";
 import LiveRouter from "./live.routes.js";
-import AttendanceRouter from "./attendance.routes.js";
+
 import GradeRouter from "./grade.routes.js";
 import AnnouncementRouter from "./announcement.routes.js";
 import CourseRouter from "./course.routes.js";
@@ -56,7 +57,7 @@ router.use("/classes", classRoutes);
 router.use("/courses", CourseRouter);
 router.use("/lessons", lessonRoutes);
 router.use("/assignments", assignmentRoutes);
-router.use("/attendances", AttendanceRouter);
+router.use("/attendances", attendanceRoutes);
 router.use("/grades", GradeRouter);
 router.use("/announcements", AnnouncementRouter);
 router.use("/notifications", NotificationRouter);

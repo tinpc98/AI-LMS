@@ -6,7 +6,7 @@ import { generateLiveSessionRoomName } from "../utils/liveSessionHelper.js";
 import { mapLiveSessionResponse } from "../utils/liveSession.mapper.js";
 import { LiveError, LIVE_ERROR_CODES } from "../validators/live.validator.js";
 import notificationService from "./notification.service.js";
-import attendanceService from "./attendance.service.js";
+import { attendanceService } from "#modules/attendance";
 
 /**
  * Service xử lý Business Logic của LiveSession

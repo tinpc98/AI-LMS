@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 import { Class } from "#modules/class";
 import { LessonProgress } from "#modules/lesson";
 import LearningActivity from "../models/learningActivity.model.js";
-import Attendance from "../models/attendance.model.js";
+import { Attendance } from "#modules/attendance";
 import Grade from "../models/grade.model.js";
 
 class LearningRankingService {

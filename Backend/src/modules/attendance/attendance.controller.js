@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import attendanceService from "../services/attendance.service.js";
+import attendanceService from "./attendance.service.js";
 import { sendSuccess, sendError } from "#shared/utils/response.js";
 import { checkClassTeacherOwnership } from "#modules/class";
 

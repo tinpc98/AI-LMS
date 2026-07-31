@@ -7,7 +7,7 @@ import {
   getAttendanceStats,
   getClassSessions,
   getAttendanceMatrix,
-} from "../controllers/attendance.controller.js";
+} from "./attendance.controller.js";
 import { verifyUser } from "#modules/auth";
 import { isTeacher } from "#shared/middlewares/rbac.middleware.js";
 

@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import Attendance from "../models/attendance.model.js";
+import Attendance from "./attendance.model.js";
 import { Class as classModel } from "#modules/class";
 
 const dayNamesMap = {
