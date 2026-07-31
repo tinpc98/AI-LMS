@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, useCallback } from "react";
 import liveApi from "../../../api/liveApi";
 import type { ILiveSession } from "../../../interface/liveInterface";
 import type { IExtendedLiveSession, StudentLiveStats } from "../../../types/studentLive";
+import { buildUpcomingFromSchedule } from "../upcomingSessions";
 
 export function useStudentLive(
   classId?: string,
@@ -68,43 +69,21 @@ export function useStudentLive(
     };
   }, [activeSession, classInfo, classId]);
 
-  // Upcoming Sessions list
-  const upcomingSessions: IExtendedLiveSession[] = useMemo(() => {
-    const list: IExtendedLiveSession[] = [];
-    const now = new Date().getTime();
-
-    if (classInfo?.schedule && Array.isArray(classInfo.schedule)) {
-      classInfo.schedule.forEach((sched: any, idx: number) => {
-        const startTime = new Date(now + (idx + 1) * 3 * 60 * 60 * 1000).toISOString();
-        const diffMs = new Date(startTime).getTime() - now;
-        const hours = Math.floor(diffMs / (1000 * 60 * 60));
-        const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
-        const isStartingSoon = diffMs <= 30 * 60 * 1000;
-
-        list.push({
-          _id: `upcoming-${idx}`,
-          id: `upcoming-${idx}`,
-          classId: classId || "",
-          roomName: `room-upcoming-${idx}`,
-          meetingRoomId: `room-upcoming-${idx}`,
-          sessionNumber: idx + 2,
-          title: `Buổi ${idx + 2}: ${sched.dayOfWeek || "Lịch học tiếp theo"} (${sched.time || "08:00 - 10:30"})`,
-          createdBy: "",
-          scheduledStart: startTime,
-          status: "Upcoming",
-          isLiveNow: false,
-          platform: "Jitsi Meet",
-          teacherName: classInfo?.teacher?.fullName || "Giảng viên",
-          countdownText: `Còn ${hours} giờ ${minutes} phút`,
-          isStartingSoon,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        });
-      });
-    }
-
-    return list;
-  }, [classInfo, classId]);
+  // Các buổi học sắp tới, suy từ LỊCH HỌC THẬT của lớp.
+  //
+  // Bản cũ kiểm tra Array.isArray(classInfo.schedule) trong khi backend khai báo schedule là
+  // object { days, startTime, endTime } — điều kiện đó luôn sai, nên danh sách này LUÔN RỖNG
+  // và trạng thái "Sắp diễn ra" chưa từng hiện ra với ai. Xem ghi chú đầy đủ trong
+  // upcomingSessions.ts, kèm phần bịa giờ bắt đầu mà bản cũ định làm.
+  const upcomingSessions: IExtendedLiveSession[] = useMemo(
+    () =>
+      buildUpcomingFromSchedule(
+        classInfo?.schedule,
+        classId,
+        classInfo?.teacher?.fullName || "Giảng viên"
+      ),
+    [classInfo, classId]
+  );
 
   // Lịch sử các buổi học đã diễn ra.
   //

@@ -55,12 +55,14 @@ export const LiveSessionCard: React.FC<LiveSessionCardProps> = React.memo(
     }
 
     const teacherName = displaySession.teacherName || "Giảng viên";
+    // Ưu tiên mốc thời gian thật do máy chủ trả về. Không có thì dùng lịch học của lớp
+    // ("Thứ Hai · 08:00 - 10:30") — đó là sự thật; một giờ bắt đầu suy đoán thì không.
     const startTimeStr = displaySession.scheduledStart
       ? new Date(displaySession.scheduledStart).toLocaleTimeString("vi-VN", {
           hour: "2-digit",
           minute: "2-digit",
         })
-      : "Đang diễn ra";
+      : (displaySession.scheduleText ?? "Đang diễn ra");
 
     const renderStateContent = () => {
       switch (cardState) {
@@ -153,7 +155,9 @@ export const LiveSessionCard: React.FC<LiveSessionCardProps> = React.memo(
               <Space size={8} style={{ marginTop: 4 }}>
                 <ClockCircleOutlined style={{ color: "#595959" }} />
                 <Text strong style={{ fontSize: 14, color: "#1f2937" }}>
-                  Dự kiến: {startTimeStr}
+                  {/* "Dự kiến" chỉ đúng khi có mốc thời gian thật. Với buổi suy từ lịch lớp
+                      thì nói thẳng đó là lịch học, không hứa một thời điểm cụ thể. */}
+                  {displaySession?.scheduledStart ? `Dự kiến: ${startTimeStr}` : startTimeStr}
                 </Text>
               </Space>
 
