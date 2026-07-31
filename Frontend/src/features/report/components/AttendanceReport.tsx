@@ -3,6 +3,7 @@ import { Row, Col, Card, Table, Tag, Progress, Statistic } from "antd";
 import { CheckCircleOutlined, CheckOutlined, VideoCameraOutlined } from "@ant-design/icons";
 import { mockLiveSessions } from "../../../features/class/liveSessions.mock";
 import { mockClasses } from "../../../features/class/class.mock";
+import { stableMetric } from "../demoMetrics";
 import {
   ResponsiveContainer,
   AreaChart,
@@ -29,8 +30,10 @@ export const AttendanceReport: React.FC = () => {
     className: c.className,
     classCode: c.classCode,
     totalStudents: c.currentStudents,
-    averageAttendanceRate: Math.floor(Math.random() * 10) + 90, // 90-99%
-    onTimeRate: Math.floor(Math.random() * 15) + 82, // 82-97%
+    // Số minh hoạ ổn định theo mã lớp thay cho Math.random(). Xem demoMetrics.ts: bản cũ đổi
+    // số mỗi lần render, nhìn hai lần ra hai kết quả khác nhau.
+    averageAttendanceRate: stableMetric(c.id, "attendance", 90, 99),
+    onTimeRate: stableMetric(c.id, "onTime", 82, 97),
     liveSessionCount: mockLiveSessions.filter((s) => s.classId === c.id).length || 4,
   }));
 

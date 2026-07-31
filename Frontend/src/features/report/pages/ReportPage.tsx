@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Tabs, Card, Typography, Breadcrumb, message } from "antd";
+import { Tabs, Card, Typography, Breadcrumb, message, Alert } from "antd";
 import {
   BarChartOutlined,
   UserOutlined,
@@ -145,6 +145,21 @@ export const ReportPage: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Cảnh báo dữ liệu minh hoạ.
+          docs/reviews/16-mock-data-inventory.md xếp module này mức RỦI RO CAO: 7 component
+          chạy 100% bằng dữ liệu mẫu nhưng route vẫn sống, không có dấu hiệu nào phân biệt với
+          báo cáo thật. Tài liệu đó khuyến nghị gắn banner như biện pháp tạm thời — đến giờ
+          chưa ai làm, nên làm luôn ở đây.
+          Thiệt hại thật không phải là mã xấu, mà là ai đó ra quyết định dựa trên số bịa. */}
+      <Alert
+        type="warning"
+        showIcon
+        banner
+        message="Dữ liệu minh hoạ — chưa nối hệ thống thật"
+        description="Toàn bộ số liệu trong các báo cáo dưới đây là dữ liệu mẫu dùng để trình bày giao diện. Không dùng để ra quyết định."
+        style={{ marginBottom: 16, borderRadius: 8 }}
+      />
 
       {/* Global Filter Bar */}
       <ReportFilter

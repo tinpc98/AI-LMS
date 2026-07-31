@@ -3,6 +3,7 @@ import { Row, Col, Card, Table, Tag, Progress, Avatar, Statistic } from "antd";
 import { UserOutlined, TrophyOutlined, CheckCircleOutlined } from "@ant-design/icons";
 import { mockUsers } from "../../../features/account/account.mock";
 import { mockClasses } from "../../../features/class/class.mock";
+import { stableMetric } from "../demoMetrics";
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from "recharts";
 
 export const StudentReport: React.FC = () => {
@@ -48,10 +49,16 @@ export const StudentReport: React.FC = () => {
     {
       title: "Tiến độ học tập",
       key: "progress",
-      render: () => {
-        const percent = Math.floor(Math.random() * 40) + 60;
-        return <Progress percent={percent} size="small" status="active" />;
-      },
+      // ESLint KHÔNG bắt được chỗ này vì Math.random() nằm trong callback render của antd chứ
+      // không nằm thẳng trong thân component — nhưng nó vẫn chạy mỗi lần vẽ lại ô, nên thanh
+      // tiến độ của mỗi học sinh nhảy số liên tục. Tìm ra khi đi soi các lỗi purity khác.
+      render: (_: unknown, record: { id: string }) => (
+        <Progress
+          percent={stableMetric(record.id, "progress", 60, 99)}
+          size="small"
+          status="active"
+        />
+      ),
     },
     {
       title: "Trạng thái tài khoản",
