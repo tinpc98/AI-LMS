@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "../../../shared/api/queryKeys";
 import { useParams } from "react-router-dom";
 import { Spin } from "antd";
 import aiApi from "../../../api/aiApi";
@@ -49,7 +50,7 @@ const LessonPage = () => {
   // về thời gian chờ — tải thì tức thì, tạo mới thì hàng chục giây — nên gộp cờ khiến nút
   // "Tạo tóm tắt" bị khoá ngay lúc mới vào trang dù chưa ai bấm gì.
   const queryClient = useQueryClient();
-  const summaryQueryKey = ["lesson-summary", lessonId];
+  const summaryQueryKey = queryKeys.lesson.summary(lessonId);
 
   const { data: summary = null, isLoading: isFetchingSummary } = useQuery({
     queryKey: summaryQueryKey,

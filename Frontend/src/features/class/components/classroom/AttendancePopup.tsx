@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "../../../../shared/api/queryKeys";
 import {
   Modal,
   Table,
@@ -87,7 +88,7 @@ export const AttendancePopup: React.FC<AttendancePopupProps> = ({
 
   // Dữ liệu điểm danh đã lưu của buổi này. React Query thay cho useState + useEffect.
   const { data: existingRecords = [], isLoading: loading } = useQuery({
-    queryKey: ["attendance-by-class", session?.classId, session?.date],
+    queryKey: queryKeys.class.attendanceByDate(session?.classId, session?.date),
     queryFn: async () => {
       const res = await attendanceApi.getAttendanceByClass(session!.classId, session!.date);
       return res.data.data || [];
@@ -157,7 +158,7 @@ export const AttendancePopup: React.FC<AttendancePopupProps> = ({
       await attendanceApi.markAttendance(payload);
       // Bỏ hiệu lực cache: lần mở popup sau phải đọc lại từ máy chủ, không dùng bản đã cũ.
       await queryClient.invalidateQueries({
-        queryKey: ["attendance-by-class", session.classId, session.date],
+        queryKey: queryKeys.class.attendanceByDate(session.classId, session.date),
       });
       toast.success("Lưu điểm danh thành công!");
       onSaved();

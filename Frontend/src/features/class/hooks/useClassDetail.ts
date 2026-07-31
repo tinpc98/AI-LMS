@@ -11,7 +11,7 @@
 // đồng bộ kế tiếp mà không báo gì. Muốn cập nhật thì gọi refetch.
 import { useQuery } from "@tanstack/react-query";
 import { fetchClassDetail } from "../classDetail.service";
-import { classQueryKeys } from "../class.queryKeys";
+import { queryKeys } from "../../../shared/api/queryKeys";
 import type { IClass } from "../../../interface/ClassInterface";
 import type { ILesson } from "../../../interface/lessonInterface";
 import type { IAssignment } from "../../../interface/assignmentInterface";
@@ -30,7 +30,7 @@ const FALLBACK_ERROR = "Không thể tải thông tin lớp học.";
 
 export const useClassDetail = (classId?: string): UseClassDetailReturn => {
   const { data, isLoading, error, refetch } = useQuery({
-    queryKey: classQueryKeys.detail(classId),
+    queryKey: queryKeys.class.detail(classId),
     queryFn: () => fetchClassDetail(classId!),
     // Không có classId thì không có gì để hỏi. Bản cũ dùng `if (!classId) return` giữa chừng
     // effect, để lại isLoading=true vĩnh viễn — trang quay vòng mãi không dừng.

@@ -9,6 +9,7 @@
 // đúng envelope ApiResponse<T[]> với cùng chữ ký (filters) => Promise. Nếu về sau một trang
 // lệch đi, hãy tách nó ra chứ đừng thêm cờ điều kiện vào đây.
 import { useQuery } from "@tanstack/react-query";
+import { queryKeys } from "../api/queryKeys";
 import { useEffect } from "react";
 import { message } from "antd";
 
@@ -51,7 +52,7 @@ export const useAdminListQuery = <TRecord, TFilters>({
   const { data, isLoading, isFetching, error, refetch } = useQuery({
     // filters nằm trong key: đổi trang hay đổi bộ lọc là một truy vấn khác, và React Query
     // tự nhớ kết quả cũ — quay lại trang trước không phải chờ mạng lần nữa.
-    queryKey: [resource, isTrash ? "trash" : "active", filters],
+    queryKey: queryKeys.adminList.list(resource, isTrash, filters),
     queryFn: async () => {
       const response = await (isTrash ? fetchTrash : fetchActive)(filters);
       // Bản cũ viết `if (response.success) { ...set state... }` và KHÔNG có nhánh else, nghĩa

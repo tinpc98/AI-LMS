@@ -8,7 +8,7 @@ import type {
 } from "./teacherAssignment.types";
 import { teacherAssignmentService } from "./teacherAssignmentService";
 import { calculateTeachingLoad } from "./teacherAssignmentUtils";
-import { teacherAssignmentQueryKeys } from "./teacherAssignment.queryKeys";
+import { queryKeys } from "../../shared/api/queryKeys";
 
 const initialFilters: TeacherAssignmentFilters = {
   search: "",
@@ -30,22 +30,22 @@ export const useTeacherAssignment = () => {
 
   // Fetch data
   const { data: classes = [], isLoading: classesLoading } = useQuery({
-    queryKey: teacherAssignmentQueryKeys.classes(filters),
+    queryKey: queryKeys.teacherAssignment.classes(filters),
     queryFn: () => teacherAssignmentService.getClasses(filters),
   });
 
   const { data: allClasses = [], isLoading: allClassesLoading } = useQuery({
-    queryKey: teacherAssignmentQueryKeys.allClasses,
+    queryKey: queryKeys.teacherAssignment.allClasses,
     queryFn: () => teacherAssignmentService.getAllClasses(),
   });
 
   const { data: teachers = [], isLoading: teachersLoading } = useQuery({
-    queryKey: teacherAssignmentQueryKeys.teachers,
+    queryKey: queryKeys.teacherAssignment.teachers,
     queryFn: () => teacherAssignmentService.getTeachers(),
   });
 
   const { data: courses = [], isLoading: coursesLoading } = useQuery({
-    queryKey: teacherAssignmentQueryKeys.courses,
+    queryKey: queryKeys.teacherAssignment.courses,
     queryFn: () => teacherAssignmentService.getCourses(),
   });
 
@@ -59,7 +59,7 @@ export const useTeacherAssignment = () => {
       message.success("Teacher assigned successfully!");
       setAssignModalOpen(false);
       setChangeModalOpen(false);
-      void queryClient.invalidateQueries({ queryKey: teacherAssignmentQueryKeys.all });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.teacherAssignment.all });
     },
     onError: (err: any) => {
       message.error(err?.response?.data?.message || "Failed to assign teacher.");
@@ -71,7 +71,7 @@ export const useTeacherAssignment = () => {
     onSuccess: () => {
       message.success("Teacher assignment removed successfully.");
       setRemoveModalOpen(false);
-      void queryClient.invalidateQueries({ queryKey: teacherAssignmentQueryKeys.all });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.teacherAssignment.all });
     },
     onError: (err: any) => {
       message.error(err?.response?.data?.message || "Failed to remove teacher assignment.");
@@ -137,7 +137,7 @@ export const useTeacherAssignment = () => {
 
   // Provide a stub loadData so components calling void loadData() don't break
   const loadData = () => {
-    void queryClient.invalidateQueries({ queryKey: teacherAssignmentQueryKeys.all });
+    void queryClient.invalidateQueries({ queryKey: queryKeys.teacherAssignment.all });
   };
 
   const selectedTeacher = useMemo(() => {

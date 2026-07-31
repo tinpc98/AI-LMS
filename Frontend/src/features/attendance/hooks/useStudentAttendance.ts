@@ -13,7 +13,7 @@
 import { useCallback, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { attendanceApi } from "../../../api/attendanceApi";
-import { classQueryKeys } from "../../class/class.queryKeys";
+import { queryKeys } from "../../../shared/api/queryKeys";
 import type { StudentAttendanceFilterOptions } from "../../../types/studentAttendance";
 import {
   DEFAULT_ATTENDANCE_FILTERS,
@@ -32,7 +32,7 @@ export function useStudentAttendance(classId?: string) {
     error,
     refetch,
   } = useQuery({
-    queryKey: classQueryKeys.attendance(classId),
+    queryKey: queryKeys.class.attendance(classId),
     queryFn: async () => {
       const res = await attendanceApi.getAttendanceByStudent("me", classId!);
       return res.data.data || [];

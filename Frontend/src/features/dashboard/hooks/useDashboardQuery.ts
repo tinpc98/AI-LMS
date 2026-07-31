@@ -1,11 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
 import { dashboardService } from "../dashboard.service";
-import { dashboardQueryKeys } from "../dashboard.queryKeys";
+import { queryKeys } from "../../../shared/api/queryKeys";
 import type { OverviewCardItem } from "../dashboard.types";
 
 export const useDashboardQuery = () => {
   const { data, isLoading, error, refetch } = useQuery({
-    queryKey: dashboardQueryKeys.overview,
+    queryKey: queryKeys.dashboard.admin,
     queryFn: dashboardService.getAdminDashboard,
   });
 

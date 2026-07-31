@@ -3,11 +3,11 @@
 // bằng React Query (Wave 1.2 — sửa lỗi cascading render BC13 #2).
 import { useQuery } from "@tanstack/react-query";
 import { fetchTeacherDashboard } from "../teacherDashboard.service";
-import { dashboardQueryKeys } from "../dashboard.queryKeys";
+import { queryKeys } from "../../../shared/api/queryKeys";
 
 export const useTeacherDashboardQuery = () => {
   const { data, isLoading, error, refetch } = useQuery({
-    queryKey: dashboardQueryKeys.teacher,
+    queryKey: queryKeys.dashboard.teacher,
     queryFn: fetchTeacherDashboard,
   });
 

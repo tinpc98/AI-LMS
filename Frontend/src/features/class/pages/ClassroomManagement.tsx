@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { queryKeys } from "../../../shared/api/queryKeys";
 import {
   Card,
   Input,
@@ -47,7 +48,7 @@ export default function ClassroomManagement() {
     error: queryError,
     refetch: fetchClasses,
   } = useQuery({
-    queryKey: ["teacher-classrooms"],
+    queryKey: queryKeys.class.myTeachingClasses,
     queryFn: async () => {
       const res = await classApi.getMyClasses();
       // API trả về ba hình dạng tuỳ đường đi — nợ của tầng API, giữ nguyên cách gỡ vỏ cũ.

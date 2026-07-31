@@ -14,6 +14,7 @@
 // không thể lệch.
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "../../../shared/api/queryKeys";
 import { io, Socket } from "socket.io-client";
 import notificationApi, { mapNotificationItem } from "../../../api/notificationApi";
 import { toast } from "../../../utils/toast";
@@ -36,7 +37,7 @@ const SOCKET_URL = import.meta.env.VITE_API_URL?.replace("/api", "") || "http://
 let globalSocket: Socket | null = null;
 let globalSocketSubscribers = 0;
 
-const notificationQueryKey = ["notifications"] as const;
+const notificationQueryKey = queryKeys.notification.list;
 
 export function useNotifications() {
   const queryClient = useQueryClient();

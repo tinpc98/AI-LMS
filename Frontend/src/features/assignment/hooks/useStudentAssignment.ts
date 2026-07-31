@@ -4,6 +4,7 @@
 // khi chưa nộp, đó là câu trả lời hợp lệ chứ không phải lỗi nên vẫn nuốt riêng nhánh đó.
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { queryKeys } from "../../../shared/api/queryKeys";
 import assignmentApi from "../../../api/assignmentApi";
 import { toast } from "../../../utils/toast";
 
@@ -18,7 +19,7 @@ export function useStudentAssignment(assignmentId: string | undefined) {
     error,
     refetch: fetchAssignmentDetail,
   } = useQuery({
-    queryKey: ["assignment-detail", assignmentId],
+    queryKey: queryKeys.assignment.detail(assignmentId),
     queryFn: async () => {
       const [assignment, mySubmission] = await Promise.all([
         assignmentApi.getAssignmentById(assignmentId!),

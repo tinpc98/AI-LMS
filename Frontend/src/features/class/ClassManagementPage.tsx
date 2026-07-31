@@ -1,6 +1,7 @@
 import { Card, message, Typography, Tabs } from "antd";
 import { useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { queryKeys } from "../../shared/api/queryKeys";
 import { useAdminListQuery } from "../../shared/hooks/useAdminListQuery";
 import type { ClassFormModalHandle } from "./ClassFormModal";
 import ClassDetailDrawer from "./ClassDetailDrawer";
@@ -62,11 +63,11 @@ const ClassManagementPage = () => {
   // — lại tải lại toàn bộ danh sách khoá học và giáo viên. Đây là dữ liệu tham chiếu, không
   // phụ thuộc bộ lọc. Query riêng, không có filters trong khoá, nên chỉ tải một lần.
   const { data: courseOptions = [] } = useQuery({
-    queryKey: ["class-course-options"],
+    queryKey: queryKeys.class.courseOptions,
     queryFn: classService.getCourseOptions,
   });
   const { data: teacherOptions = [] } = useQuery({
-    queryKey: ["class-teacher-options"],
+    queryKey: queryKeys.class.teacherOptions,
     queryFn: classService.getTeacherOptions,
   });
 

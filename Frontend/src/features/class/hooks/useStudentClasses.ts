@@ -19,7 +19,7 @@ import { useCallback, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import studentClassApi from "../../../api/studentClassApi";
 import type { StudentClassFilterOptions } from "../../../types/studentClass";
-import { classQueryKeys } from "../class.queryKeys";
+import { queryKeys } from "../../../shared/api/queryKeys";
 import {
   DEFAULT_FILTERS,
   collectDistinct,
@@ -42,7 +42,7 @@ export function useStudentClasses() {
     error,
     refetch,
   } = useQuery({
-    queryKey: classQueryKeys.myClasses,
+    queryKey: queryKeys.class.myClasses,
     queryFn: studentClassApi.fetchMyClasses,
   });
 

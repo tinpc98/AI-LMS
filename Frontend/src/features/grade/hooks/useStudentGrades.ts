@@ -17,7 +17,7 @@
 import { useCallback, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import gradeApi from "../../../api/gradeApi";
-import { classQueryKeys } from "../../class/class.queryKeys";
+import { queryKeys } from "../../../shared/api/queryKeys";
 import type { StudentGradeFilterOptions } from "../../../types/studentGrade";
 import {
   DEFAULT_GRADE_FILTERS,
@@ -30,7 +30,7 @@ const FALLBACK_ERROR = "Không thể tải bảng điểm.";
 
 export function useStudentGrades(classId?: string) {
   const { data, isLoading, error, refetch } = useQuery({
-    queryKey: classQueryKeys.grades(classId),
+    queryKey: queryKeys.class.grades(classId),
     queryFn: async () => {
       const res = await gradeApi.getGradesByStudent("me", classId!);
       return {
