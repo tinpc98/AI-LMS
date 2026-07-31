@@ -59,6 +59,12 @@ jobs:
       - name: Smoke boot (Node thật, không qua Vite)
         run: npm run smoke:boot
 
+      # Rào chắn kích thước file (§5.3 / Wave 4.7). Dùng cơ chế RATCHET thay vì ngưỡng
+      # cứng: 9 file đang vượt trần được ghi vào baseline và chỉ đỏ khi chúng phình thêm;
+      # file mới vượt trần thì đỏ ngay. Ngưỡng cứng sẽ làm CI đỏ từ ngày đầu và rồi bị tắt.
+      - name: Giới hạn kích thước file (ratchet)
+        run: npm run check:filesize
+
       - name: Run unit + integration tests
         run: npm run test:all
 
