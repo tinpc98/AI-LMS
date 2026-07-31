@@ -49,6 +49,33 @@ const makeRes = () => {
   return res;
 };
 
+/**
+ * Gọi controller rồi lấy ra lỗi mà nó chuyển sang next().
+ *
+ * SAU KHI ÁP asyncHandler, controller KHÔNG còn tự trả lỗi qua res nữa: nó gọi next(error), và
+ * errorHandler tập trung mới là nơi quyết định mã HTTP cùng thân phản hồi. Vì vậy các test
+ * nhánh lỗi phải kiểm mã trên CHÍNH ĐỐI TƯỢNG LỖI, chứ không kiểm res.status.
+ *
+ * Kiểm cả "next được gọi đúng một lần": nếu controller vừa gọi next vừa trả res, hoặc nuốt lỗi
+ * mà không gọi next (request treo vô hạn), test sẽ đỏ.
+ */
+const expectErrorStatus = async (handler, req, res, status) => {
+  const next = vi.fn();
+  await handler(req, res, next);
+
+  expect(next, "controller phải chuyển lỗi sang next()").toHaveBeenCalledTimes(1);
+  const error = next.mock.calls[0][0];
+  expect(error, "next() phải nhận một Error").toBeInstanceOf(Error);
+  expect(error.status ?? 500, `kỳ vọng ${status}, nhận ${error.status} — "${error.message}"`).toBe(
+    status
+  );
+  expect(
+    res.status,
+    "không được trả phản hồi khi đã chuyển lỗi sang next()"
+  ).not.toHaveBeenCalled();
+  return error;
+};
+
 const mockSession = () => ({
   startTransaction: vi.fn(),
   commitTransaction: vi.fn().mockResolvedValue(true),
@@ -71,8 +98,7 @@ describe("createAssignment", () => {
   it("Thiếu title/deadline/classId trả 400", async () => {
     const req = makeReq({ body: {} });
     const res = makeRes();
-    await assignmentController.createAssignment(req, res);
-    expect(res.status).toHaveBeenCalledWith(400);
+    await expectErrorStatus(assignmentController.createAssignment, req, res, 400);
   });
 
   it("classId sai định dạng ObjectId trả 400", async () => {
@@ -80,8 +106,7 @@ describe("createAssignment", () => {
       body: { title: "BT1", deadline: new Date(), classId: "not-a-valid-id" },
     });
     const res = makeRes();
-    await assignmentController.createAssignment(req, res);
-    expect(res.status).toHaveBeenCalledWith(400);
+    await expectErrorStatus(assignmentController.createAssignment, req, res, 400);
   });
 
   it("Giáo viên không phụ trách lớp bị chặn 403", async () => {
@@ -91,8 +116,7 @@ describe("createAssignment", () => {
     });
     const req = makeReq({ body: { title: "BT1", deadline: new Date(), classId: CLASS_ID } });
     const res = makeRes();
-    await assignmentController.createAssignment(req, res);
-    expect(res.status).toHaveBeenCalledWith(403);
+    await expectErrorStatus(assignmentController.createAssignment, req, res, 403);
   });
 
   it("Tạo bài tập thành công (không kèm file)", async () => {
@@ -133,8 +157,7 @@ describe("gradeSubmission", () => {
     vi.spyOn(mongoose, "startSession").mockResolvedValue(mockSession());
     const req = makeReq({ params: { submissionId: "invalid" } });
     const res = makeRes();
-    await assignmentController.gradeSubmission(req, res);
-    expect(res.status).toHaveBeenCalledWith(400);
+    await expectErrorStatus(assignmentController.gradeSubmission, req, res, 400);
   });
 
   it("Không tìm thấy submission trả 404", async () => {
@@ -142,8 +165,7 @@ describe("gradeSubmission", () => {
     vi.spyOn(Submission, "findById").mockReturnValue(mongooseQuery(null));
     const req = makeReq({ params: { submissionId: "607f1f77bcf86cd799439333" } });
     const res = makeRes();
-    await assignmentController.gradeSubmission(req, res);
-    expect(res.status).toHaveBeenCalledWith(404);
+    await expectErrorStatus(assignmentController.gradeSubmission, req, res, 404);
   });
 
   it("Giáo viên không phụ trách lớp bị chặn 403", async () => {
@@ -160,8 +182,7 @@ describe("gradeSubmission", () => {
       body: { grade: 8 },
     });
     const res = makeRes();
-    await assignmentController.gradeSubmission(req, res);
-    expect(res.status).toHaveBeenCalledWith(403);
+    await expectErrorStatus(assignmentController.gradeSubmission, req, res, 403);
   });
 
   it("Chấm điểm thành công", async () => {
@@ -189,16 +210,14 @@ describe("updateAssignment", () => {
   it("id sai định dạng trả 400", async () => {
     const req = makeReq({ params: { id: "invalid" } });
     const res = makeRes();
-    await assignmentController.updateAssignment(req, res);
-    expect(res.status).toHaveBeenCalledWith(400);
+    await expectErrorStatus(assignmentController.updateAssignment, req, res, 400);
   });
 
   it("Không tìm thấy bài tập trả 404", async () => {
     vi.spyOn(Assignment, "findById").mockResolvedValue(null);
     const req = makeReq({ params: { id: "607f1f77bcf86cd799439333" } });
     const res = makeRes();
-    await assignmentController.updateAssignment(req, res);
-    expect(res.status).toHaveBeenCalledWith(404);
+    await expectErrorStatus(assignmentController.updateAssignment, req, res, 404);
   });
 
   it("Giáo viên không phụ trách lớp bị chặn 403", async () => {
@@ -209,8 +228,7 @@ describe("updateAssignment", () => {
     });
     const req = makeReq({ params: { id: "607f1f77bcf86cd799439333" } });
     const res = makeRes();
-    await assignmentController.updateAssignment(req, res);
-    expect(res.status).toHaveBeenCalledWith(403);
+    await expectErrorStatus(assignmentController.updateAssignment, req, res, 403);
   });
 
   it("Cập nhật thành công, giữ nguyên attachments cũ nếu không upload file mới", async () => {
@@ -242,8 +260,7 @@ describe("deleteAssignment", () => {
     });
     const req = makeReq({ params: { id: "607f1f77bcf86cd799439333" } });
     const res = makeRes();
-    await assignmentController.deleteAssignment(req, res);
-    expect(res.status).toHaveBeenCalledWith(403);
+    await expectErrorStatus(assignmentController.deleteAssignment, req, res, 403);
   });
 
   it("Xóa thành công", async () => {
@@ -263,8 +280,7 @@ describe("getAssignmentById", () => {
     vi.spyOn(Assignment, "findById").mockReturnValue(mongooseQuery(null));
     const req = makeReq({ params: { id: "607f1f77bcf86cd799439333" } });
     const res = makeRes();
-    await assignmentController.getAssignmentById(req, res);
-    expect(res.status).toHaveBeenCalledWith(404);
+    await expectErrorStatus(assignmentController.getAssignmentById, req, res, 404);
   });
 
   it("Trả về đúng assignment khi tìm thấy", async () => {
@@ -308,8 +324,7 @@ describe("getSubmissionsByAssignment", () => {
     });
     const req = makeReq({ params: { assignmentId: "607f1f77bcf86cd799439333" } });
     const res = makeRes();
-    await assignmentController.getSubmissionsByAssignment(req, res);
-    expect(res.status).toHaveBeenCalledWith(403);
+    await expectErrorStatus(assignmentController.getSubmissionsByAssignment, req, res, 403);
   });
 
   it("Giáo viên phụ trách lớp xem được danh sách bài nộp", async () => {
@@ -337,8 +352,7 @@ describe("getMySubmission", () => {
   it("assignmentId sai định dạng trả 400", async () => {
     const req = makeReq({ params: { assignmentId: "invalid" } });
     const res = makeRes();
-    await assignmentController.getMySubmission(req, res);
-    expect(res.status).toHaveBeenCalledWith(400);
+    await expectErrorStatus(assignmentController.getMySubmission, req, res, 400);
   });
 
   it("Không tìm thấy bài nộp trả 404", async () => {
@@ -348,8 +362,7 @@ describe("getMySubmission", () => {
       user: { id: STUDENT_ID, role: "Student" },
     });
     const res = makeRes();
-    await assignmentController.getMySubmission(req, res);
-    expect(res.status).toHaveBeenCalledWith(404);
+    await expectErrorStatus(assignmentController.getMySubmission, req, res, 404);
   });
 
   it("Trả về bài nộp của chính học sinh", async () => {
@@ -375,8 +388,7 @@ describe("submitAssignment", () => {
       user: { id: STUDENT_ID, role: "Student" },
     });
     const res = makeRes();
-    await assignmentController.submitAssignment(req, res);
-    expect(res.status).toHaveBeenCalledWith(404);
+    await expectErrorStatus(assignmentController.submitAssignment, req, res, 404);
   });
 
   it("Đã được chấm điểm thì chặn nộp lại (409)", async () => {
@@ -395,8 +407,7 @@ describe("submitAssignment", () => {
       user: { id: STUDENT_ID, role: "Student" },
     });
     const res = makeRes();
-    await assignmentController.submitAssignment(req, res);
-    expect(res.status).toHaveBeenCalledWith(409);
+    await expectErrorStatus(assignmentController.submitAssignment, req, res, 409);
   });
 
   it("Quá hạn deadline khi đã từng nộp (không phải withdrawn) thì chặn (400)", async () => {
@@ -417,8 +428,7 @@ describe("submitAssignment", () => {
       user: { id: STUDENT_ID, role: "Student" },
     });
     const res = makeRes();
-    await assignmentController.submitAssignment(req, res);
-    expect(res.status).toHaveBeenCalledWith(400);
+    await expectErrorStatus(assignmentController.submitAssignment, req, res, 400);
   });
 
   it("Nộp bài lần đầu thành công (status 201)", async () => {
@@ -487,8 +497,7 @@ describe("cancelSubmission", () => {
       user: { id: STUDENT_ID, role: "Student" },
     });
     const res = makeRes();
-    await assignmentController.cancelSubmission(req, res);
-    expect(res.status).toHaveBeenCalledWith(400);
+    await expectErrorStatus(assignmentController.cancelSubmission, req, res, 400);
   });
 
   it("Đã chấm điểm thì chặn hủy nộp (409)", async () => {
@@ -502,8 +511,7 @@ describe("cancelSubmission", () => {
       user: { id: STUDENT_ID, role: "Student" },
     });
     const res = makeRes();
-    await assignmentController.cancelSubmission(req, res);
-    expect(res.status).toHaveBeenCalledWith(409);
+    await expectErrorStatus(assignmentController.cancelSubmission, req, res, 409);
   });
 
   it("Hủy nộp thành công", async () => {
@@ -528,5 +536,68 @@ describe("cancelSubmission", () => {
 
     expect(res.status).toHaveBeenCalledWith(200);
     expect(submission.status).toBe("withdrawn");
+  });
+});
+
+// ============================================================================
+// Hành vi MỚI có được nhờ áp asyncHandler (§7).
+//
+// Các test phía trên chốt rằng hành vi cũ không đổi. Phần này chốt thứ trước đây KHÔNG có:
+// controller chuyển lỗi nguyên vẹn sang errorHandler thay vì tự ép về 500.
+// ============================================================================
+describe("assignment.controller — chuyển lỗi sang errorHandler", () => {
+  it("ValidationError của Mongoose tới next NGUYÊN VẸN để được quy đổi thành 400", async () => {
+    // Đây là điểm được lớn nhất của thay đổi. Bản cũ bắt lỗi rồi trả `error.status || 500`;
+    // ValidationError không có .status nên client nhận 500 — báo "lỗi máy chủ" cho một lỗi
+    // hoàn toàn do dữ liệu gửi lên. Nay lỗi đi tới errorHandler, nơi đã có sẵn tầng quy đổi.
+    const validationError = new Error("Assignment validation failed");
+    validationError.name = "ValidationError";
+    validationError.errors = { title: { path: "title", message: "Tiêu đề là bắt buộc" } };
+
+    vi.spyOn(classModel, "findById").mockResolvedValue({ _id: CLASS_ID, teacherId: TEACHER_ID });
+    vi.spyOn(Assignment.prototype, "save").mockRejectedValue(validationError);
+
+    const req = makeReq({ body: { title: "BT1", deadline: new Date(), classId: CLASS_ID } });
+    const res = makeRes();
+    const next = vi.fn();
+
+    await assignmentController.createAssignment(req, res, next);
+
+    expect(next).toHaveBeenCalledTimes(1);
+    const forwarded = next.mock.calls[0][0];
+    expect(forwarded.name).toBe("ValidationError");
+    expect(forwarded.errors).toBeDefined(); // errorHandler cần trường này để dựng details
+    expect(res.status).not.toHaveBeenCalled();
+  });
+
+  it("lỗi không lường trước cũng tới next, không bị nuốt thành 500 tại chỗ", async () => {
+    vi.spyOn(classModel, "findById").mockRejectedValue(new Error("mất kết nối DB"));
+
+    const req = makeReq({ body: { title: "BT1", deadline: new Date(), classId: CLASS_ID } });
+    const res = makeRes();
+    const next = vi.fn();
+
+    await assignmentController.createAssignment(req, res, next);
+
+    expect(next).toHaveBeenCalledTimes(1);
+    expect(next.mock.calls[0][0].message).toBe("mất kết nối DB");
+    // Quan trọng: KHÔNG tự trả phản hồi. Ở production errorHandler sẽ che message nội bộ này;
+    // bản cũ gửi thẳng "mất kết nối DB" ra cho client.
+    expect(res.status).not.toHaveBeenCalled();
+  });
+
+  it("nhánh THÀNH CÔNG không gọi next", async () => {
+    // Gọi next sau khi đã trả phản hồi sẽ khiến errorHandler chạy trên một response đã gửi.
+    vi.spyOn(classModel, "findById").mockResolvedValue({ _id: CLASS_ID, teacherId: TEACHER_ID });
+    vi.spyOn(Assignment.prototype, "save").mockResolvedValue(true);
+
+    const req = makeReq({ body: { title: "BT1", deadline: new Date(), classId: CLASS_ID } });
+    const res = makeRes();
+    const next = vi.fn();
+
+    await assignmentController.createAssignment(req, res, next);
+
+    expect(res.status).toHaveBeenCalledWith(201);
+    expect(next).not.toHaveBeenCalled();
   });
 });
