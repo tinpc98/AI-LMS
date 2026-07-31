@@ -2,6 +2,7 @@ import cron from "node-cron";
 import cronService from "./cron.service.js";
 import { runAIPendingRecovery } from "./aiPendingRecovery.job.js";
 import { runExamAutoClose } from "./examLifecycle.job.js";
+import { runExamAttemptAutoSubmit } from "./examAttemptAutoSubmit.job.js";
 
 /**
  * initCronJobs – Khởi tạo và đăng ký tất cả các cron job của hệ thống.
@@ -134,4 +135,42 @@ export const initCronJobs = (runImmediately = false) => {
     { scheduled: true, timezone: "Asia/Ho_Chi_Minh" }
   );
   console.log("[CRON] 📅 Đã đăng ký job: Exam Auto-Close (lịch: */10 * * * *)");
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // JOB 4: Tự động nộp bài cho phiên thi đã hết giờ (chính sách 1A)
+  //
+  // Lịch: MỖI PHÚT. Dày hơn hẳn các job khác, và có lý do: đây là thứ duy nhất chốt lại thời
+  // gian làm bài. Để phiên treo lâu là một trạng thái mập mờ — bài chưa nộp, điểm chưa có, và
+  // học sinh không xuất hiện ở bất kỳ danh sách nào của giáo viên.
+  //
+  // An toàn khi chạy dày: truy vấn lọc theo status trước, và số phiên quá hạn ở mỗi lần chạy
+  // vốn nhỏ vì lần trước đã dọn.
+  //
+  // ĐIỀU KIỆN TIÊN QUYẾT: job chấm theo bài làm ĐÃ LƯU LÊN MÁY CHỦ. Nó chỉ công bằng vì
+  // PATCH /:id/answers và phần tự đẩy bài ở Frontend đã có trước — không có chúng thì mọi
+  // phiên bị đóng đều bị chấm rỗng.
+  // ──────────────────────────────────────────────────────────────────────────
+  cron.schedule(
+    "* * * * *",
+    async () => {
+      try {
+        const { submitted, failed } = await runExamAttemptAutoSubmit();
+
+        if (submitted > 0) {
+          console.log("[CRON] ⏱️ Auto-Submit: đã nộp tự động " + submitted + " phiên thi hết giờ.");
+        }
+        if (failed > 0) {
+          console.warn(
+            "[CRON] ⚠️ Auto-Submit: " +
+              failed +
+              " phiên KHÔNG nộp được — xem log lỗi phía trên để truy id."
+          );
+        }
+      } catch (error) {
+        console.error("[CRON ERROR] ❌ Exam Attempt Auto-Submit Failed:", error);
+      }
+    },
+    { scheduled: true, timezone: "Asia/Ho_Chi_Minh" }
+  );
+  console.log("[CRON] 📅 Đã đăng ký job: Exam Attempt Auto-Submit (lịch: mỗi phút)");
 };

@@ -1,8 +1,9 @@
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import useExamTimer from "../hooks/useExamTimer";
 import axiosClient from "../../../api/axiosClient";
 import useAntiCheat from "../hooks/useAntiCheat";
+import useAnswerAutosave, { type DraftAnswer } from "../hooks/useAnswerAutosave";
 import ExamErrorBoundary from "../components/ExamErrorBoundary";
 import { getApiErrorMessage } from "../../../shared/utils/apiError";
 
@@ -52,23 +53,29 @@ const ExamPageContent = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [currentIndex, setCurrentIndex] = useState(0);
 
+  // BUG ĐÃ SỬA: khoá localStorage trước đây KHÔNG gắn với lượt thi ("exam_draft_answers" dùng
+  // chung cho mọi đề). Học sinh làm dở đề A rồi mở đề B sẽ thấy bài của đề A — và vì câu hỏi
+  // lấy từ ngân hàng dùng chung, một câu trùng giữa hai đề sẽ được điền sẵn đáp án cũ.
+  const draftKey = `exam_draft_answers_${attemptId}`;
+  const flaggedKey = `exam_draft_flagged_${attemptId}`;
+
   const [answers, setAnswers] = useState<Record<string, any>>(() => {
-    const savedAnswers = localStorage.getItem("exam_draft_answers");
+    const savedAnswers = localStorage.getItem(draftKey);
     return savedAnswers ? JSON.parse(savedAnswers) : {};
   });
 
   const [flagged, setFlagged] = useState<Set<string>>(() => {
-    const savedFlagged = localStorage.getItem("exam_draft_flagged");
+    const savedFlagged = localStorage.getItem(flaggedKey);
     return savedFlagged ? new Set(JSON.parse(savedFlagged)) : new Set();
   });
 
   useEffect(() => {
-    localStorage.setItem("exam_draft_answers", JSON.stringify(answers));
-  }, [answers]);
+    localStorage.setItem(draftKey, JSON.stringify(answers));
+  }, [answers, draftKey]);
 
   useEffect(() => {
-    localStorage.setItem("exam_draft_flagged", JSON.stringify([...flagged]));
-  }, [flagged]);
+    localStorage.setItem(flaggedKey, JSON.stringify([...flagged]));
+  }, [flagged, flaggedKey]);
 
   // ==========================================
   // 2. STATE CẢNH BÁO GIAN LẬN
@@ -145,8 +152,8 @@ const ExamPageContent = () => {
         isForcedSubmit: isForced,
       });
 
-      localStorage.removeItem("exam_draft_answers");
-      localStorage.removeItem("exam_draft_flagged");
+      localStorage.removeItem(draftKey);
+      localStorage.removeItem(flaggedKey);
 
       setWarningMessage("Nộp bài thành công! Đang chuyển về trang kết quả...");
 
@@ -233,9 +240,25 @@ const ExamPageContent = () => {
   // ==========================================
   const currentQ = questions[currentIndex] as any;
 
+  // Đẩy bài làm lên máy chủ. Điều kiện để cron tự động nộp bài khi hết giờ là CÔNG BẰNG —
+  // không có bước này, phiên bị đóng sẽ được chấm với bài rỗng. Xem useAnswerAutosave.ts.
+  const buildDraftAnswers = useCallback((): DraftAnswer[] => {
+    return Object.keys(answers).map((qId) => {
+      const question = questions.find((q) => q._id === qId);
+      return {
+        questionId: qId,
+        selectedOption: question?.type === "MCQ" ? answers[qId] : undefined,
+        essayText: question?.type === "ESSAY" ? answers[qId] : undefined,
+      };
+    });
+  }, [answers, questions]);
+
+  const { luuTam } = useAnswerAutosave(attemptId, buildDraftAnswers);
+
   const handleAnswerChange = (value: any) => {
     if (!currentQ) return;
     setAnswers((prev) => ({ ...prev, [currentQ._id]: value }));
+    luuTam();
   };
 
   const toggleFlag = () => {
