@@ -52,6 +52,13 @@ jobs:
       - name: Architecture guardrail (dependency-cruiser)
         run: npm run depcruise
 
+      # Vitest chạy qua Vite nên resolve module KHÁC Node thật (vd Vite tự tìm index.js
+      # cho import thư mục, Node thì không). Vì vậy test xanh KHÔNG đảm bảo `node main.js`
+      # chạy được — đã xảy ra thật ở Wave 3.2 và lọt qua 6 commit. Bước này boot bằng Node
+      # thật và khẳng định tiến trình dừng đúng ở nhánh fail-fast database.
+      - name: Smoke boot (Node thật, không qua Vite)
+        run: npm run smoke:boot
+
       - name: Run unit + integration tests
         run: npm run test:all
 

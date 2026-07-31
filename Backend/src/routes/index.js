@@ -31,12 +31,14 @@ import courseRoutes from "#modules/course/course.routes.js";
 import folderRoutes from "#modules/folder/folder.routes.js";
 import notificationRoutes from "#modules/notification/notification.routes.js";
 import liveRoutes from "#modules/live-session/live.routes.js";
+import lessonProgressRoutes from "#modules/lesson/lessonProgress.routes.js";
+import badgeRoutes from "#modules/badge/badge.routes.js";
 
 import ExamSetRouter from "./examSet.routes.js";
 
 import DashboardRouter from "./dashboard.routes.js";
 import ReportRouter from "./report.routes.js";
-import LearningRouter from "./learning.routes.js";
+
 import AnalyticsRouter from "./analytics.routes.js";
 import AISummaryRouter from "./aiSummary.routes.js";
 import AIquestionRoutes from "./aiQuestion.routes.js";
@@ -66,7 +68,11 @@ router.use("/folders", folderRoutes);
 // ── Thống kê & báo cáo ───────────────────────────────────────────────────────
 router.use("/dashboard", DashboardRouter);
 router.use("/reports", ReportRouter);
-router.use("/learning", LearningRouter);
+// /api/learning phục vụ hai module: tiến độ bài giảng (lesson) và xếp hạng/huy hiệu
+// (badge). Trước Wave 3.2 chúng nằm chung một router. Mount cả hai ở CÙNG tiền tố nên
+// URL bên ngoài không đổi — Express khớp lần lượt cho tới khi gặp route trùng.
+router.use("/learning", lessonProgressRoutes);
+router.use("/learning", badgeRoutes);
 router.use("/analytics", AnalyticsRouter);
 
 // ── Thi trực tuyến & lớp học trực tuyến ─────────────────────────────────────

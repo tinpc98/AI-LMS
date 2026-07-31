@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import StudentBadge from "../models/studentBadge.model.js";
+import StudentBadge from "./studentBadge.model.js";
 
 class GamificationService {
   async awardBadge(studentId, badgeCode, badgeType, title, description, icon) {

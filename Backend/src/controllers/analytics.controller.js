@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import { sendSuccess, sendError } from "#shared/utils/response.js";
 import analyticsService from "../services/analytics.service.js";
-import learningRankingService from "../services/learningRanking.service.js";
+import { learningRankingService } from "#modules/badge";
 
 export const getStudentDashboard = async (req, res) => {
   try {

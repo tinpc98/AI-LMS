@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import { Class } from "#modules/class";
 import { LessonProgress } from "#modules/lesson";
-import LearningActivity from "../models/learningActivity.model.js";
+import LearningActivity from "./learningActivity.model.js";
 import { Attendance } from "#modules/attendance";
 import { Grade } from "#modules/grade";
 
