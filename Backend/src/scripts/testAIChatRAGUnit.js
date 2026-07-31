@@ -1,11 +1,15 @@
 import assert from "assert";
 import mongoose from "mongoose";
-import { AIErrorCode } from "../utils/aiError.js";
-import chatOutputValidator from "../ai/validators/chatOutput.validator.js";
-import { MockAIProvider } from "../ai/providers/mock.provider.js";
-import { createSession, sendMessage, getHistory } from "../controllers/aiChat.controller.js";
-import { checkAIChatLessonAccess } from "../middlewares/aiChatLessonAccess.middleware.js";
-import aiChatService from "../ai/services/aiChat.service.js";
+import { AIErrorCode } from "#modules/ai";
+import chatOutputValidator from "#modules/ai/validators/chatOutput.validator.js";
+import { MockAIProvider } from "#modules/ai/providers/mock.provider.js";
+import {
+  createSession,
+  sendMessage,
+  getHistory,
+} from "#modules/ai/controllers/aiChat.controller.js";
+import { checkAIChatLessonAccess } from "#modules/ai/middlewares/aiChatLessonAccess.middleware.js";
+import aiChatService from "#modules/ai/services/aiChat.service.js";
 
 let passed = 0;
 let failed = 0;

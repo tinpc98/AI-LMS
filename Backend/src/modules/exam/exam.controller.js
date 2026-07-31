@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 import examService from "./exam.service.js";
-import aiExamGenerationService from "../../ai/services/aiExamGeneration.service.js";
+import { aiExamGenerationService } from "#modules/ai";
 import Exam from "./exam.model.js";
 import { Class as classModel } from "#modules/class";
 

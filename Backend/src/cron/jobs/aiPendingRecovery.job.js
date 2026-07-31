@@ -1,5 +1,5 @@
-import AIUsage from "../../models/aiUsage.model.js";
-import AIDailyQuota from "../../models/aiDailyQuota.model.js";
+import AIUsage from "#modules/ai/models/aiUsage.model.js";
+import AIDailyQuota from "#modules/ai/models/aiDailyQuota.model.js";
 
 /**
  * Cleanup stuck "pending" AI Usage records.

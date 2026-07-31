@@ -5,9 +5,9 @@ import { connectDB } from "../config/database.js";
 import { Class } from "#modules/class";
 import { Lesson } from "#modules/lesson";
 import { User } from "#modules/auth";
-import AISummary from "../models/aiSummary.model.js";
-import AIUsage from "../models/aiUsage.model.js";
-import { checkAILessonAccess } from "../middlewares/aiLessonAccess.middleware.js";
+import AISummary from "#modules/ai/models/aiSummary.model.js";
+import AIUsage from "#modules/ai/models/aiUsage.model.js";
+import { checkAILessonAccess } from "#modules/ai/middlewares/aiLessonAccess.middleware.js";
 
 dotenv.config();
 

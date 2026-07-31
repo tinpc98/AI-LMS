@@ -1,10 +1,10 @@
 import mongoose from "mongoose";
 import dotenv from "dotenv";
-import aiUsageService from "../ai/services/aiUsage.service.js";
-import aiCoreService from "../ai/services/aiCore.service.js";
-import AIConfig from "../models/aiConfig.model.js";
-import AIUsage from "../models/aiUsage.model.js";
-import AIDailyQuota from "../models/aiDailyQuota.model.js";
+import aiUsageService from "#modules/ai/services/aiUsage.service.js";
+import aiCoreService from "#modules/ai/services/aiCore.service.js";
+import AIConfig from "#modules/ai/models/aiConfig.model.js";
+import AIUsage from "#modules/ai/models/aiUsage.model.js";
+import AIDailyQuota from "#modules/ai/models/aiDailyQuota.model.js";
 import { runAIPendingRecovery } from "../cron/jobs/aiPendingRecovery.job.js";
 
 dotenv.config();

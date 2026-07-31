@@ -16,8 +16,7 @@ import { buildCorsOptions } from "./config/cors.js";
 import { validateJaasConfig } from "#modules/live-session";
 import { registerSocketHandlers } from "#infra/socket/registerHandlers.js";
 import { initCronJobs } from "./cron/cron.setup.js";
-import aiUsageService from "./ai/services/aiUsage.service.js";
-import aiKnowledgeIndexingService from "./ai/services/aiKnowledgeIndexing.service.js";
+import { aiUsageService, aiKnowledgeIndexingService } from "#modules/ai";
 
 const SHUTDOWN_TIMEOUT_MS = 10_000;
 

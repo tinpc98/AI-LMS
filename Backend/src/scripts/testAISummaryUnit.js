@@ -1,7 +1,7 @@
 import assert from "assert";
-import { summaryOutputValidator } from "../ai/validators/summaryOutput.validator.js";
-import lessonContentExtractor from "../ai/services/lessonContentExtractor.service.js";
-import { AIError, AIErrorCode } from "../utils/aiError.js";
+import { summaryOutputValidator } from "#modules/ai/validators/summaryOutput.validator.js";
+import lessonContentExtractor from "#modules/ai/services/lessonContentExtractor.service.js";
+import { AIError, AIErrorCode } from "#modules/ai";
 
 async function runUnitTests() {
   console.log("🚀 Bắt đầu chạy Test Unit cho AI Summary...");
@@ -132,14 +132,15 @@ async function runUnitTests() {
 
   // 3. Router Tests
   await runTest("Router: Load thành công không lỗi (không dùng cookie-express)", async () => {
-    const routerModule = await import("../routes/aiSummary.routes.js");
+    const routerModule = await import("#modules/ai/routes/aiSummary.routes.js");
     assert.ok(routerModule.default, "Router loaded");
   });
 
   // 4. Controller & IDOR Tests (Mocking)
   await runTest("Controller: Truyền lessonId và IDOR bắt được", async () => {
-    const aiSummaryController = (await import("../controllers/aiSummary.controller.js")).default;
-    const aiSummaryService = (await import("../ai/services/aiSummary.service.js")).default;
+    const aiSummaryController = (await import("#modules/ai/controllers/aiSummary.controller.js"))
+      .default;
+    const aiSummaryService = (await import("#modules/ai/services/aiSummary.service.js")).default;
 
     let findOneParams = null;
 
@@ -169,9 +170,9 @@ async function runUnitTests() {
   });
 
   await runTest("IDOR: approveSummary chặn truy cập chéo bài học (Cross-Lesson IDOR)", async () => {
-    const aiSummaryService = (await import("../ai/services/aiSummary.service.js")).default;
+    const aiSummaryService = (await import("#modules/ai/services/aiSummary.service.js")).default;
     const mongoose = (await import("mongoose")).default;
-    const AISummary = (await import("../models/aiSummary.model.js")).default;
+    const AISummary = (await import("#modules/ai/models/aiSummary.model.js")).default;
     const Lesson = (await import("#modules/lesson")).Lesson;
 
     // Mock mongoose startSession
@@ -224,9 +225,9 @@ async function runUnitTests() {
   });
 
   await runTest("IDOR: rejectSummary chặn truy cập chéo bài học (Cross-Lesson IDOR)", async () => {
-    const aiSummaryService = (await import("../ai/services/aiSummary.service.js")).default;
+    const aiSummaryService = (await import("#modules/ai/services/aiSummary.service.js")).default;
     const mongoose = (await import("mongoose")).default;
-    const AISummary = (await import("../models/aiSummary.model.js")).default;
+    const AISummary = (await import("#modules/ai/models/aiSummary.model.js")).default;
     const Lesson = (await import("#modules/lesson")).Lesson;
 
     // Mock mongoose startSession

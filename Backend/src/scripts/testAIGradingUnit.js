@@ -1,9 +1,9 @@
 import mongoose from "mongoose";
 import { ExamAttempt } from "#modules/exam-attempt";
-import AIGradingSuggestion from "../models/aiGradingSuggestion.model.js";
-import aiGradingService from "../ai/services/aiGrading.service.js";
-import aiCoreService from "../ai/services/aiCore.service.js";
-import { validateGradingOutput } from "../ai/validators/gradingOutput.validator.js";
+import AIGradingSuggestion from "#modules/ai/models/aiGradingSuggestion.model.js";
+import aiGradingService from "#modules/ai/services/aiGrading.service.js";
+import aiCoreService from "#modules/ai/services/aiCore.service.js";
+import { validateGradingOutput } from "#modules/ai/validators/gradingOutput.validator.js";
 import crypto from "crypto";
 
 const runTests = async () => {

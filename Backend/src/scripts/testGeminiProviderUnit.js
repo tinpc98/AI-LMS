@@ -1,7 +1,7 @@
 import "dotenv/config";
 import fs from "fs";
-import { GeminiAIProvider } from "../ai/providers/gemini.provider.js";
-import { AIErrorCode } from "../utils/aiError.js";
+import { GeminiAIProvider } from "#modules/ai/providers/gemini.provider.js";
+import { AIErrorCode } from "#modules/ai";
 
 async function runUnitTests() {
   console.log("==================================================");

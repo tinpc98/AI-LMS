@@ -5,7 +5,7 @@ import ExamSetShare from "../models/examSetShare.model.js";
 import { Exam } from "#modules/exam";
 import { User } from "#modules/auth";
 import { Class as classModel } from "#modules/class";
-import aiExamGenerationService from "../ai/services/aiExamGeneration.service.js";
+import aiExamGenerationService from "#modules/ai/services/aiExamGeneration.service.js";
 import { generateFromExamSet, getExamById, getAllExams } from "../modules/exam/exam.controller.js";
 
 const fakeUserId = new mongoose.Types.ObjectId().toString();

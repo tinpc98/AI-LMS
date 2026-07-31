@@ -1,17 +1,17 @@
 import mongoose from "mongoose";
 import dotenv from "dotenv";
-import { AIError, AIErrorCode } from "../utils/aiError.js";
-import { MockAIProvider } from "../ai/providers/mock.provider.js";
-import promptManager from "../ai/prompts/promptManager.js";
+import { AIError, AIErrorCode } from "#modules/ai";
+import { MockAIProvider } from "#modules/ai/providers/mock.provider.js";
+import promptManager from "#modules/ai/prompts/promptManager.js";
 import {
   cleanJsonString,
   safeParseJSON,
   validateSummaryOutput,
   validateExamOutput,
   validateGradingOutput,
-} from "../ai/parsers/outputParser.js";
-import aiCoreService from "../ai/services/aiCore.service.js";
-import aiUsageService from "../ai/services/aiUsage.service.js";
+} from "#modules/ai/parsers/outputParser.js";
+import aiCoreService from "#modules/ai/services/aiCore.service.js";
+import aiUsageService from "#modules/ai/services/aiUsage.service.js";
 
 dotenv.config();
 

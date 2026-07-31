@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 import dotenv from "dotenv";
-import AIUsage from "../models/aiUsage.model.js";
+import AIUsage from "#modules/ai/models/aiUsage.model.js";
 
 dotenv.config();
 

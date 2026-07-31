@@ -1,6 +1,6 @@
 import assert from "assert";
-import { GeminiAIProvider } from "../ai/providers/gemini.provider.js";
-import { AIError, AIErrorCode } from "../utils/aiError.js";
+import { GeminiAIProvider } from "#modules/ai/providers/gemini.provider.js";
+import { AIError, AIErrorCode } from "#modules/ai";
 
 let pass = 0;
 let fail = 0;

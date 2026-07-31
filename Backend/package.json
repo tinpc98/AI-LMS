@@ -53,6 +53,11 @@
     "vitest": "^4.1.10"
   },
   "imports": {
+    "#config/*": "./src/config/*",
+    "#infra/*": "./src/infra/*",
+    "#jobs/*": "./src/jobs/*",
+    "#modules/ai": "./src/modules/ai/index.js",
+    "#modules/ai/*": "./src/modules/ai/*",
     "#modules/announcement": "./src/modules/announcement/index.js",
     "#modules/announcement/*": "./src/modules/announcement/*",
     "#modules/assignment": "./src/modules/assignment/index.js",
@@ -68,9 +73,9 @@
     "#modules/course": "./src/modules/course/index.js",
     "#modules/course/*": "./src/modules/course/*",
     "#modules/exam": "./src/modules/exam/index.js",
-    "#modules/exam/*": "./src/modules/exam/*",
     "#modules/exam-attempt": "./src/modules/exam-attempt/index.js",
     "#modules/exam-attempt/*": "./src/modules/exam-attempt/*",
+    "#modules/exam/*": "./src/modules/exam/*",
     "#modules/folder": "./src/modules/folder/index.js",
     "#modules/folder/*": "./src/modules/folder/*",
     "#modules/grade": "./src/modules/grade/index.js",
@@ -83,9 +88,6 @@
     "#modules/notification/*": "./src/modules/notification/*",
     "#modules/question": "./src/modules/question/index.js",
     "#modules/question/*": "./src/modules/question/*",
-    "#shared/*": "./src/shared/*",
-    "#config/*": "./src/config/*",
-    "#infra/*": "./src/infra/*",
-    "#jobs/*": "./src/jobs/*"
+    "#shared/*": "./src/shared/*"
   }
 }

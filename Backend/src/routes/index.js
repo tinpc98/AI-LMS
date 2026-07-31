@@ -33,6 +33,7 @@ import notificationRoutes from "#modules/notification/notification.routes.js";
 import liveRoutes from "#modules/live-session/live.routes.js";
 import lessonProgressRoutes from "#modules/lesson/lessonProgress.routes.js";
 import badgeRoutes from "#modules/badge/badge.routes.js";
+import aiRoutes from "#modules/ai/ai.routes.js";
 
 import ExamSetRouter from "./examSet.routes.js";
 
@@ -40,11 +41,6 @@ import DashboardRouter from "./dashboard.routes.js";
 import ReportRouter from "./report.routes.js";
 
 import AnalyticsRouter from "./analytics.routes.js";
-import AISummaryRouter from "./aiSummary.routes.js";
-import AIquestionRoutes from "./aiQuestion.routes.js";
-import AIGradingRouter from "./aiGrading.routes.js";
-import AIKnowledgeRouter from "./aiKnowledge.routes.js";
-import AIChatRouter from "./aiChat.routes.js";
 
 const router = express.Router();
 
@@ -83,10 +79,6 @@ router.use("/exam-sets", ExamSetRouter);
 router.use("/live", liveRoutes);
 
 // ── AI ───────────────────────────────────────────────────────────────────────
-router.use("/ai/lectures", AISummaryRouter);
-router.use("/ai/lectures/:lessonId/question-sets", AIquestionRoutes);
-router.use("/ai/exam-attempts", AIGradingRouter);
-router.use("/ai/lessons", AIKnowledgeRouter);
-router.use("/ai/chat", AIChatRouter);
+router.use("/ai", aiRoutes);
 
 export default router;

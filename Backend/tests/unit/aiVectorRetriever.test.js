@@ -2,9 +2,9 @@
 // Trước PR-13, service này không có test nào dù là điểm truy vấn duy nhất của toàn bộ tính năng AI Chat/RAG.
 import { describe, it, expect, afterEach, vi } from "vitest";
 import mongoose from "mongoose";
-import aiVectorRetrieverService from "../../src/ai/services/aiVectorRetriever.service.js";
-import AIKnowledgeChunk from "../../src/models/aiKnowledgeChunk.model.js";
-import { AIErrorCode } from "../../src/utils/aiError.js";
+import aiVectorRetrieverService from "../../src/modules/ai/services/aiVectorRetriever.service.js";
+import AIKnowledgeChunk from "../../src/modules/ai/models/aiKnowledgeChunk.model.js";
+import { AIErrorCode } from "../../src/modules/ai/aiError.js";
 
 const CLASS_ID = new mongoose.Types.ObjectId().toString();
 const LESSON_ID = new mongoose.Types.ObjectId().toString();

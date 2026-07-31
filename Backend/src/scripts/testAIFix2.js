@@ -1,5 +1,5 @@
 import assert from "assert";
-import lessonContentExtractorService from "../ai/services/lessonContentExtractor.service.js";
+import lessonContentExtractorService from "#modules/ai/services/lessonContentExtractor.service.js";
 
 let pass = 0;
 let fail = 0;

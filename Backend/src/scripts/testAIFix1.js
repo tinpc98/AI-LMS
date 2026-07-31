@@ -1,5 +1,5 @@
-import { AIInputBudget } from "../ai/utils/aiInputBudget.js";
-import { AIError, AIErrorCode } from "../utils/aiError.js";
+import { AIInputBudget } from "#modules/ai/utils/aiInputBudget.js";
+import { AIError, AIErrorCode } from "#modules/ai";
 import assert from "assert";
 
 let pass = 0;

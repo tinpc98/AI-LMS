@@ -1,18 +1,18 @@
 import assert from "assert";
 import crypto from "crypto";
 import mongoose from "mongoose";
-import { validateQuestionGenerationOutput } from "../ai/validators/questionGenerationOutput.validator.js";
-import aiQuestionGenerationService from "../ai/services/aiQuestionGeneration.service.js";
-import aiCoreService from "../ai/services/aiCore.service.js";
+import { validateQuestionGenerationOutput } from "#modules/ai/validators/questionGenerationOutput.validator.js";
+import aiQuestionGenerationService from "#modules/ai/services/aiQuestionGeneration.service.js";
+import aiCoreService from "#modules/ai/services/aiCore.service.js";
 import { Folder } from "#modules/folder";
 import ExamSet from "../models/examSet.model.js";
-import AISummary from "../models/aiSummary.model.js";
-import lessonContentExtractor from "../ai/services/lessonContentExtractor.service.js";
-import { AIError, AIErrorCode } from "../utils/aiError.js";
+import AISummary from "#modules/ai/models/aiSummary.model.js";
+import lessonContentExtractor from "#modules/ai/services/lessonContentExtractor.service.js";
+import { AIError, AIErrorCode } from "#modules/ai";
 import {
   validateQuestionGenerationRequest,
   handleQuestionGenerationValidation,
-} from "../routes/aiQuestion.routes.js";
+} from "#modules/ai/routes/aiQuestion.routes.js";
 import { validationResult } from "express-validator";
 import fs from "fs";
 
