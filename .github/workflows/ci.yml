@@ -45,6 +45,13 @@ jobs:
           done
           echo "MongoDB không sẵn sàng sau 30s" && exit 1
 
+      # Rào chắn kiến trúc (kế hoạch refactor §5.2). Hiện chỉ rule `no-circular` để severity
+      # "error" nên bước này CHẶN merge khi có phụ thuộc vòng mới; baseline 2026-07-31 = 0 vòng.
+      # Các rule còn lại (controller→model, model→service, orphan) ở mức "warn" — hiện 16 vi phạm
+      # tồn đọng, sẽ được dọn ở Wave 3/4 rồi mới nâng lên "error".
+      - name: Architecture guardrail (dependency-cruiser)
+        run: npm run depcruise
+
       - name: Run unit + integration tests
         run: npm run test:all
 

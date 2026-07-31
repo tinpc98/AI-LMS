@@ -1,0 +1,18 @@
+{
+  "name": "ai-lms-workspace",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Gốc repo AI-LMS. KHÔNG chứa mã ứng dụng — chỉ giữ tooling dùng chung cho cả Backend/ và Frontend/ (git hooks, format). Mã nguồn nằm ở Backend/ và Frontend/ với package.json riêng.",
+  "scripts": {
+    "prepare": "husky",
+    "format:check": "npm --prefix Backend run format:check && npm --prefix Frontend run format:check"
+  },
+  "devDependencies": {
+    "husky": "^9.1.7",
+    "lint-staged": "^15.5.2",
+    "prettier": "^3.9.6"
+  },
+  "lint-staged": {
+    "*.{js,cjs,ts,tsx,css,json,yml,yaml}": "prettier --write"
+  }
+}

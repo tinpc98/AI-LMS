@@ -2,9 +2,9 @@
 node_modules/
 
 # Bỏ qua file chứa mật khẩu kết nối database, bảo mật
+# LƯU Ý: .env.example KHÔNG được ignore - đây là template public, phải commit
 .env
 .env.local
-.env.example    
 
 # Bỏ qua các file log hệ thống khi chạy lỗi
 *.log
@@ -19,4 +19,6 @@ keys/
 
 docs/
 
-.env.example/
+# Build & test output
+dist/
+coverage/
