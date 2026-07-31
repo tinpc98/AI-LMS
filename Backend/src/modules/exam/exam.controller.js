@@ -256,20 +256,34 @@ export const getAllExams = asyncHandler(async (req, res) => {
 
   const exams = await Exam.find(examFilter).sort({ createdAt: -1 });
 
-  const now = new Date().getTime();
-  let updatedExams = [];
+  // Đánh dấu các kỳ thi đã quá giờ là COMPLETED.
+  //
+  // SỬA N+1 (Wave 4.6 / BC 09): trước đây mỗi kỳ thi hết hạn gọi một exam.save() riêng và
+  // chờ tuần tự ngay trong request GET — 50 kỳ thi hết hạn nghĩa là 50 lượt ghi nối đuôi
+  // nhau, người dùng phải chờ hết mới thấy danh sách. Nay gom thành MỘT updateMany.
+  //
+  // NỢ CÒN LẠI (§6.7): bản chất đây vẫn là một endpoint GET đang GHI dữ liệu. Việc tự động
+  // đóng kỳ thi hết giờ nên là cron job chứ không phải tác dụng phụ của thao tác đọc — hai
+  // người cùng mở danh sách sẽ cùng kích hoạt cập nhật, và nếu không ai mở danh sách thì
+  // kỳ thi không bao giờ được đóng. Kế hoạch §6.7 đã dành riêng một job cho việc này.
+  const now = Date.now();
+  const expiredExamIds = [];
 
-  for (let exam of exams) {
-    const startTime = new Date(exam.startTime).getTime();
-    const endTime = startTime + exam.duration * 60000;
+  for (const exam of exams) {
+    const endTime = new Date(exam.startTime).getTime() + exam.duration * 60000;
 
     if (now > endTime && exam.status === "PUBLISHED") {
+      // Cập nhật in-memory để response phản ánh đúng trạng thái mới ngay lần đọc này.
       exam.status = "COMPLETED";
-      await exam.save();
+      expiredExamIds.push(exam._id);
     }
-
-    updatedExams.push(exam);
   }
+
+  if (expiredExamIds.length > 0) {
+    await Exam.updateMany({ _id: { $in: expiredExamIds } }, { $set: { status: "COMPLETED" } });
+  }
+
+  const updatedExams = exams;
 
   const data =
     userRole === "admin" || userRole === "teacher"
