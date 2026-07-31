@@ -1,11 +1,25 @@
 // Frontend/src/components/features/CreateLessonModal.tsx
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import axios from "axios";
 import { lessonApi } from "../../../api/lessonApi";
 import type { ILesson } from "../../../interface/lessonInterface";
 
+/**
+ * Modal tạo/sửa bài giảng.
+ *
+ * CHỈ ĐƯỢC GẮN KẾT KHI THẬT SỰ MỞ. Component cha chịu trách nhiệm render có điều kiện và
+ * truyền `key` theo bài giảng đang sửa.
+ *
+ * Bản cũ luôn nằm trong cây React, tự trả về null khi đóng, nên state của form sống sót
+ * qua các lần đóng/mở và phải có một useEffect nạp lại 7 ô state mỗi lần isOpen bật. Hệ
+ * quả: lần render đầu sau khi mở luôn hiển thị nội dung của LẦN TRƯỚC rồi mới bị ghi đè —
+ * người dùng bấm "Sửa" bài B có thể kịp thấy tiêu đề bài A trong ô nhập.
+ *
+ * Modal này thuần Tailwind, không có hiệu ứng đóng, nên gắn kết có điều kiện cho ra giao
+ * diện y hệt mà bỏ được toàn bộ effect: state khởi tạo thẳng từ props, đúng ngay lần render
+ * đầu tiên.
+ */
 interface Props {
-  isOpen: boolean;
   onClose: () => void;
   classId: string;
   lessonData?: ILesson | null;
@@ -14,7 +28,6 @@ interface Props {
 }
 
 export default function CreateLessonModal({
-  isOpen,
   onClose,
   classId,
   lessonData,
@@ -23,29 +36,14 @@ export default function CreateLessonModal({
 }: Props) {
   const isEditMode = !!lessonData;
 
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [videoUrl, setVideoUrl] = useState("");
-  const [duration, setDuration] = useState<number>(0);
-  const [isPublished, setIsPublished] = useState(true);
+  const [title, setTitle] = useState(lessonData?.title ?? "");
+  const [description, setDescription] = useState(lessonData?.description ?? "");
+  const [videoUrl, setVideoUrl] = useState(lessonData?.videoUrl ?? "");
+  const [duration, setDuration] = useState<number>(lessonData?.duration ?? 0);
+  const [isPublished, setIsPublished] = useState(lessonData?.isPublished ?? true);
   const [files, setFiles] = useState<File[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
-
-  // Đồng bộ form mỗi khi mở modal / đổi bài giảng đang sửa
-  useEffect(() => {
-    if (isOpen) {
-      setTitle(lessonData?.title ?? "");
-      setDescription(lessonData?.description ?? "");
-      setVideoUrl(lessonData?.videoUrl ?? "");
-      setDuration(lessonData?.duration ?? 0);
-      setIsPublished(lessonData?.isPublished ?? true);
-      setFiles([]);
-      setErrorMsg("");
-    }
-  }, [isOpen, lessonData]);
-
-  if (!isOpen) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -154,7 +152,11 @@ export default function CreateLessonModal({
             />
           </div>
 
-          {isEditMode && lessonData!.attachments.length > 0 && (
+          {/* `?.` chứ không phải `!`: kiểu dữ liệu khai báo attachments là bắt buộc và Mongoose
+              luôn trả về mảng rỗng, nên thực tế không bao giờ thiếu — nhưng khẳng định
+              non-null ở đây đổi lại bằng một màn hình trắng nếu API có ngày trả thiếu trường.
+              Giá của phòng hờ là hai ký tự. */}
+          {isEditMode && (lessonData?.attachments?.length ?? 0) > 0 && (
             <div className="flex flex-col gap-1">
               <label className="text-sm font-semibold text-gray-700">Tệp đính kèm hiện có</label>
               <ul className="text-xs text-gray-500 list-disc pl-4">

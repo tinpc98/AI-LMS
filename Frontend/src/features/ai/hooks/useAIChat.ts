@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useRef } from "react";
 import aiApi from "../../../api/aiApi";
 import type { IChatMessage, AIChatSession } from "../../../api/aiApi";
 import { toast } from "../../../utils/toast";
@@ -15,15 +15,27 @@ export function useAIChat(lessonId?: string) {
 
   const initRef = useRef<string | null>(null);
 
-  // Reset state when lessonId changes
-  useEffect(() => {
+  // Dọn sạch phiên trò chuyện khi chuyển sang bài học khác.
+  //
+  // Bản cũ làm việc này trong useEffect, nên khi người dùng chuyển từ bài A sang bài B có
+  // một nhịp render hiển thị NGUYÊN đoạn hội thoại của bài A dưới tiêu đề bài B. Với khung
+  // chat thì đây là lỗi nhìn thấy rõ, không phải chuyện hiệu năng.
+  //
+  // Đặt state ngay trong thân component ("adjust state during render") thì React chạy lại
+  // lượt render trước khi ghi ra DOM, nên tin nhắn cũ không kịp xuất hiện.
+  const [prevLessonId, setPrevLessonId] = useState(lessonId);
+  if (prevLessonId !== lessonId) {
+    setPrevLessonId(lessonId);
     setSession(null);
     setMessages([]);
     setError(null);
     setIsLoading(false);
     setInitStatus("idle");
-    initRef.current = null;
-  }, [lessonId]);
+    // KHÔNG đặt lại initRef ở đây: ghi vào ref trong thân render là tác dụng phụ. Và nó
+    // thừa — khoá chống khởi tạo trùng là `lessonId:${lessonId}`, nên khi lessonId đổi thì
+    // khoá đã tự khác, initSession luôn chạy lại. Kể cả đường đi A -> B -> A cũng vậy:
+    // lúc quay về A, ref đang giữ "lessonId:B" nên vẫn không khớp.
+  }
 
   const initSession = useCallback(async () => {
     if (!lessonId) {

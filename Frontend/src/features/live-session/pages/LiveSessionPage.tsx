@@ -36,6 +36,7 @@ const LiveSessionPage: React.FC = () => {
   const [isSdkReady, setIsSdkReady] = useState<boolean>(false);
   const [loadTimeout, setLoadTimeout] = useState<boolean>(false);
   const [mediaError, setMediaError] = useState<{ code: string; message: string } | null>(null);
+  const [insecureDismissed, setInsecureDismissed] = useState<boolean>(false);
 
   const jitsiApiRef = useRef<JitsiApiLike | null>(null);
   const timeoutTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -53,14 +54,28 @@ const LiveSessionPage: React.FC = () => {
   const rawRoomName = conference?.roomName || "";
   const fullRoomName = buildJaasRoomName(rawAppId, rawRoomName);
 
-  // 2. Check Secure Context (HTTPS)
-  useEffect(() => {
-    if (isOpen && typeof window !== "undefined" && window.isSecureContext === false) {
-      setMediaError(mapMediaError(new Error("INSECURE_CONTEXT")));
-    } else {
-      setMediaError(null);
-    }
-  }, [isOpen]);
+  // 2. Kiểm tra Secure Context (HTTPS)
+  //
+  // BẢN CŨ CÓ LỖI: effect này ghi vào cùng ô state mediaError mà handleCameraError dùng để
+  // báo lỗi thiết bị. Nhánh `else setMediaError(null)` vì thế XOÁ MẤT lỗi camera mỗi khi
+  // isOpen đổi — người dùng bị từ chối quyền micro sẽ thấy cảnh báo biến mất, không hiểu
+  // vì sao không nói được.
+  //
+  // Đây không phải state: nó suy được hoàn toàn từ isOpen và window.isSecureContext. Tính
+  // thẳng lúc render, và tách khỏi ô state của lỗi thiết bị.
+  const insecureContext =
+    isOpen && typeof window !== "undefined" && window.isSecureContext === false;
+  const displayedError =
+    insecureContext && !insecureDismissed
+      ? mapMediaError(new Error("INSECURE_CONTEXT"))
+      : mediaError;
+
+  // Nút "Đã hiểu" phải tắt được cả hai loại cảnh báo. Vì lỗi HTTPS giờ là giá trị suy ra
+  // chứ không còn là state, nó cần một cờ đã-tắt riêng.
+  const dismissError = () => {
+    if (insecureContext && !insecureDismissed) setInsecureDismissed(true);
+    else setMediaError(null);
+  };
 
   // 3. Setup 25-second Load Timeout
   useEffect(() => {
@@ -130,16 +145,16 @@ const LiveSessionPage: React.FC = () => {
   return (
     <div className="relative w-full h-full bg-black flex flex-col items-center justify-center">
       {/* Media / HTTPS Error Alert Header */}
-      {mediaError && (
+      {displayedError && (
         <div className="absolute top-0 left-0 right-0 z-50 p-3 bg-amber-500/90 text-white flex items-center justify-between gap-3 shadow-md">
           <div className="flex items-center gap-2 text-sm font-medium pl-4">
             <LockOutlined className="text-lg" />
-            <span>{mediaError.message}</span>
+            <span>{displayedError.message}</span>
           </div>
           <Button
             size="small"
             type="default"
-            onClick={() => setMediaError(null)}
+            onClick={dismissError}
             style={{ borderRadius: 6, fontSize: 12, marginRight: 16 }}
           >
             Đã hiểu

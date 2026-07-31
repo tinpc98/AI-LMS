@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Avatar, Descriptions, Modal, Select, Tag, Typography } from "antd";
 import { UserOutlined } from "@ant-design/icons";
 import type { AccountRecord, ClassRecord, CourseRecord } from "./teacherAssignment.types";
@@ -33,11 +33,20 @@ const AssignTeacherModal = ({
   const [selectedTeacherId, setSelectedTeacherId] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
-  useEffect(() => {
-    if (open) {
-      setSelectedTeacherId(null);
-    }
-  }, [open]);
+  // Xoá lựa chọn cũ mỗi lần modal được mở lại.
+  //
+  // Trước đây việc này nằm trong useEffect, nên khi mở lại modal có một nhịp render hiển
+  // thị giáo viên đã chọn ở lần trước rồi mới xoá. Modal vẫn nằm trong cây React kể cả lúc
+  // đóng (antd cần vậy để chạy hiệu ứng), nên state không tự mất đi.
+  //
+  // Cách này là mẫu "adjust state during render" của React: đặt state ngay trong thân
+  // component khi phát hiện prop đổi. React huỷ lượt render đang chạy và chạy lại ngay,
+  // TRƯỚC khi ghi ra DOM — nên không có nhịp nào hiển thị dữ liệu cũ.
+  const [prevOpen, setPrevOpen] = useState(open);
+  if (prevOpen !== open) {
+    setPrevOpen(open);
+    if (open) setSelectedTeacherId(null);
+  }
 
   const courseName = useMemo(() => {
     if (!classRecord) return "—";

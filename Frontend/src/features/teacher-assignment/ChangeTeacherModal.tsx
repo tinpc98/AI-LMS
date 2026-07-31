@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Avatar, Card, Descriptions, Modal, Select, Tag, Typography } from "antd";
 import { UserOutlined, SwapOutlined } from "@ant-design/icons";
 import type { AccountRecord, ClassRecord, CourseRecord } from "./teacherAssignment.types";
@@ -33,11 +33,17 @@ const ChangeTeacherModal = ({
   const [newTeacherId, setNewTeacherId] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
-  useEffect(() => {
-    if (open && classRecord) {
-      setNewTeacherId(null);
-    }
-  }, [open, classRecord]);
+  // Xem ghi chú ở AssignTeacherModal — cùng một mẫu, cùng một lý do.
+  //
+  // Bản cũ còn phụ thuộc thêm vào classRecord. Ở đây không sao vì classRecord là state của
+  // useTeacherAssignment và chỉ đổi lúc mở modal, nhưng phụ thuộc vào một prop kiểu object
+  // là chỗ dễ vỡ: chỉ cần một ngày nào đó nó được tính lại mỗi lần render, effect sẽ xoá
+  // lựa chọn của người dùng ngay giữa lúc họ đang thao tác. Bỏ luôn phụ thuộc đó.
+  const [prevOpen, setPrevOpen] = useState(open);
+  if (prevOpen !== open) {
+    setPrevOpen(open);
+    if (open) setNewTeacherId(null);
+  }
 
   const currentTeacher = useMemo(() => {
     if (!classRecord?.teacherId) return null;

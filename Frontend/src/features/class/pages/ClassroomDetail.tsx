@@ -518,17 +518,21 @@ export default function ClassroomDetail() {
       />
 
       {/* MODALS */}
-      <CreateLessonModal
-        isOpen={isModalOpen || !!editingLesson}
-        onClose={() => {
-          setIsModalOpen(false);
-          setEditingLesson(null);
-        }}
-        classId={classId!}
-        lessonData={editingLesson}
-        onCreated={handleLessonCreated}
-        onUpdated={handleLessonUpdated}
-      />
+      {/* Gắn kết có điều kiện + key: form khởi tạo lại sạch sẽ cho mỗi bài giảng, không cần
+          effect đồng bộ. key xử lý trường hợp bấm "Sửa" bài khác trong khi modal đang mở. */}
+      {(isModalOpen || !!editingLesson) && (
+        <CreateLessonModal
+          key={editingLesson?._id ?? "new-lesson"}
+          onClose={() => {
+            setIsModalOpen(false);
+            setEditingLesson(null);
+          }}
+          classId={classId!}
+          lessonData={editingLesson}
+          onCreated={handleLessonCreated}
+          onUpdated={handleLessonUpdated}
+        />
+      )}
 
       <AIQuestionGeneratorModal
         isOpen={!!selectedLessonForAI}
