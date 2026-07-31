@@ -6,8 +6,8 @@ import {
   CheckOutlined,
   VideoCameraOutlined,
 } from "@ant-design/icons";
-import { mockLiveSessions } from "../../../features/classManagement/liveSessions.mock";
-import { mockClasses } from "../../../features/classManagement/class.mock";
+import { mockLiveSessions } from "../../../features/class/liveSessions.mock";
+import { mockClasses } from "../../../features/class/class.mock";
 import {
   ResponsiveContainer,
   AreaChart,

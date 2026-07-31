@@ -9,12 +9,12 @@ import type {
   AIUsageItem,
   TodayClassRecord,
 } from "./dashboard.types";
-import { mockUsers } from "../accountManagement/account.mock";
-import { mockCourses } from "../courseManagement/course.mock";
-import { mockClasses } from "../classManagement/class.mock";
-import { mockAILogs } from "../aiManagement/mock/aiLogs.mock";
-import { mockLiveSessions } from "../classManagement/liveSessions.mock";
-import { mockNotifications } from "../notifications/notifications.mock";
+import { mockUsers } from "../account/account.mock";
+import { mockCourses } from "../course/course.mock";
+import { mockClasses } from "../class/class.mock";
+import { mockAILogs } from "../ai/mock/aiLogs.mock";
+import { mockLiveSessions } from "../class/liveSessions.mock";
+import { mockNotifications } from "../notification/notifications.mock";
 
 const delay = (ms: number) => new Promise((resolve) => window.setTimeout(resolve, ms));
 

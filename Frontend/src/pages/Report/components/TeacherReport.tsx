@@ -1,9 +1,9 @@
 import React from "react";
 import { Row, Col, Card, Table, Tag, Avatar, Statistic, Rate, Progress } from "antd";
 import { TeamOutlined, StarOutlined, CheckCircleOutlined } from "@ant-design/icons";
-import { mockUsers } from "../../../features/accountManagement/account.mock";
-import { mockClasses } from "../../../features/classManagement/class.mock";
-import { mockLiveSessions } from "../../../features/classManagement/liveSessions.mock";
+import { mockUsers } from "../../../features/account/account.mock";
+import { mockClasses } from "../../../features/class/class.mock";
+import { mockLiveSessions } from "../../../features/class/liveSessions.mock";
 
 export const TeacherReport: React.FC = () => {
   const teachers = mockUsers.filter((u) => u.role === "Teacher");

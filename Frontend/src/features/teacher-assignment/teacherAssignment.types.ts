@@ -1,6 +1,6 @@
-import type { ClassRecord } from "../classManagement/class.types";
-import type { AccountRecord } from "../accountManagement/account.types";
-import type { CourseRecord } from "../courseManagement/course.types";
+import type { ClassRecord } from "../class/class.types";
+import type { AccountRecord } from "../account/account.types";
+import type { CourseRecord } from "../course/course.types";
 
 export type AssignmentStatusFilter = "All" | "Assigned" | "Unassigned";
 

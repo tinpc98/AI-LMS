@@ -33,15 +33,13 @@ const ExamAttemptDetail = lazy(() => import("./pages/teachers/ExamAttemptDetail"
 // Admin Components (Lazy Loaded)
 const AdminLayout = lazy(() => import("./components/layout/AdminLayout"));
 const DashboardPage = lazy(() => import("./features/dashboard/DashboardPage"));
-const AccountManagementPage = lazy(
-  () => import("./features/accountManagement/AccountManagementPage")
-);
-const CourseManagementPage = lazy(() => import("./features/courseManagement/CourseManagementPage"));
-const ClassManagementPage = lazy(() => import("./features/classManagement/ClassManagementPage"));
+const AccountManagementPage = lazy(() => import("./features/account/AccountManagementPage"));
+const CourseManagementPage = lazy(() => import("./features/course/CourseManagementPage"));
+const ClassManagementPage = lazy(() => import("./features/class/ClassManagementPage"));
 const TeacherAssignmentPage = lazy(
-  () => import("./features/teacherAssignment/TeacherAssignmentPage")
+  () => import("./features/teacher-assignment/TeacherAssignmentPage")
 );
-const AIManagementPage = lazy(() => import("./features/aiManagement/AIManagementPage"));
+const AIManagementPage = lazy(() => import("./features/ai/AIManagementPage"));
 const ReportPage = lazy(() => import("./pages/Report/ReportPage"));
 const ProfilePage = lazy(() => import("./pages/admin/Profile/ProfilePage"));
 const AdminPage = lazy(() => import("./pages/admin/AdminPage"));

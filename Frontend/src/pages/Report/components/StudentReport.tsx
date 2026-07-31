@@ -1,8 +1,8 @@
 import React from "react";
 import { Row, Col, Card, Table, Tag, Progress, Avatar, Statistic } from "antd";
 import { UserOutlined, TrophyOutlined, CheckCircleOutlined } from "@ant-design/icons";
-import { mockUsers } from "../../../features/accountManagement/account.mock";
-import { mockClasses } from "../../../features/classManagement/class.mock";
+import { mockUsers } from "../../../features/account/account.mock";
+import { mockClasses } from "../../../features/class/class.mock";
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from "recharts";
 
 export const StudentReport: React.FC = () => {

@@ -28,8 +28,8 @@ import {
   GlobalOutlined,
   DesktopOutlined,
 } from "@ant-design/icons";
-import { mockAccounts } from "../../../features/accountManagement/mockAccounts";
-import type { AccountRecord } from "../../../features/accountManagement/account.types";
+import { mockAccounts } from "../../../features/account/mockAccounts";
+import type { AccountRecord } from "../../../features/account/account.types";
 import { ChangePasswordModal } from "./ChangePasswordModal";
 
 const { Title, Text, Paragraph } = Typography;

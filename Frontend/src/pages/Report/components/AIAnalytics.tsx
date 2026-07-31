@@ -7,9 +7,9 @@ import {
   ClockCircleOutlined,
   CloudServerOutlined,
 } from "@ant-design/icons";
-import { mockAILogs } from "../../../features/aiManagement/mock/aiLogs.mock";
-import { mockAIModels } from "../../../features/aiManagement/mock/models.mock";
-import { mockAIFeatures } from "../../../features/aiManagement/mock/features.mock";
+import { mockAILogs } from "../../../features/ai/mock/aiLogs.mock";
+import { mockAIModels } from "../../../features/ai/mock/models.mock";
+import { mockAIFeatures } from "../../../features/ai/mock/features.mock";
 import {
   ResponsiveContainer,
   AreaChart,

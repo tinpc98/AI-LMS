@@ -24,11 +24,11 @@ import {
   Cell,
   Legend,
 } from "recharts";
-import { mockUsers } from "../../../features/accountManagement/account.mock";
-import { mockCourses } from "../../../features/courseManagement/course.mock";
-import { mockClasses } from "../../../features/classManagement/class.mock";
-import { mockAILogs } from "../../../features/aiManagement/mock/aiLogs.mock";
-import { mockLiveSessions } from "../../../features/classManagement/liveSessions.mock";
+import { mockUsers } from "../../../features/account/account.mock";
+import { mockCourses } from "../../../features/course/course.mock";
+import { mockClasses } from "../../../features/class/class.mock";
+import { mockAILogs } from "../../../features/ai/mock/aiLogs.mock";
+import { mockLiveSessions } from "../../../features/class/liveSessions.mock";
 
 const COLORS = ["#1677ff", "#52c41a", "#faad14", "#ff4d4f", "#722ed1", "#13c2c2"];
 

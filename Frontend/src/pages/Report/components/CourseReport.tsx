@@ -1,8 +1,8 @@
 import React from "react";
 import { Row, Col, Card, Table, Tag, Statistic } from "antd";
 import { BookOutlined, DollarOutlined, AppstoreOutlined } from "@ant-design/icons";
-import { mockCourses } from "../../../features/courseManagement/course.mock";
-import { mockClasses } from "../../../features/classManagement/class.mock";
+import { mockCourses } from "../../../features/course/course.mock";
+import { mockClasses } from "../../../features/class/class.mock";
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from "recharts";
 
 export const CourseReport: React.FC = () => {

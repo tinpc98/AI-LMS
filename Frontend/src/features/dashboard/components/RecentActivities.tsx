@@ -10,7 +10,7 @@ import {
 } from "@ant-design/icons";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import type { NotificationRecord } from "../../notifications/notifications.mock";
+import type { NotificationRecord } from "../../notification/notifications.mock";
 
 const { Title, Text } = Typography;
 

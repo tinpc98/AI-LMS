@@ -6,7 +6,7 @@ import {
   ClockCircleOutlined,
   TeamOutlined,
 } from "@ant-design/icons";
-import { mockClasses } from "../../../features/classManagement/class.mock";
+import { mockClasses } from "../../../features/class/class.mock";
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from "recharts";
 
 export const ClassReport: React.FC = () => {

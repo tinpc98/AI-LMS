@@ -9,7 +9,7 @@ const breadcrumbNameMap: Record<string, string> = {
   "/student/classdetail": "Chi tiết lớp học",
   "/student/studentassignment": "Bài tập sinh viên",
   "/student/lessonview": "Nội dung bài học",
-  "/student/notifications": "Thông báo",
+  "/student/notification": "Thông báo",
   "/student/profile": "Hồ sơ cá nhân",
 };
 

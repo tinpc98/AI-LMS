@@ -164,7 +164,7 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
           zIndex: 2,
         }}
       >
-        <Button type="link" onClick={() => navigate("/student/notifications")}>
+        <Button type="link" onClick={() => navigate("/student/notification")}>
           Xem tất cả thông báo
         </Button>
       </div>

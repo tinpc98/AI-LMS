@@ -30,7 +30,7 @@ export const notificationApi = {
   // Lấy danh sách tất cả thông báo hệ thống cá nhân
   getNotifications: async (): Promise<INotificationItem[]> => {
     const response = await axiosClient.get<{ success?: boolean; data?: any[] }>(
-      "/api/notifications"
+      "/api/notification"
     );
     const rawList = Array.isArray(response.data) ? response.data : response.data?.data || [];
 
@@ -39,17 +39,17 @@ export const notificationApi = {
 
   // Đánh dấu 1 thông báo là đã đọc
   markAsRead: async (id: string): Promise<void> => {
-    await axiosClient.put(`/api/notifications/${id}/read`);
+    await axiosClient.put(`/api/notification/${id}/read`);
   },
 
   // Đánh dấu tất cả thông báo là đã đọc
   markAllAsRead: async (): Promise<void> => {
-    await axiosClient.put("/api/notifications/read-all");
+    await axiosClient.put("/api/notification/read-all");
   },
 
   // Lấy số lượng thông báo chưa đọc
   getUnreadCount: async (): Promise<{ unreadCount: number }> => {
-    const response = await axiosClient.get("/api/notifications/unread-count");
+    const response = await axiosClient.get("/api/notification/unread-count");
     return response.data?.data || { unreadCount: 0 };
   },
 };
