@@ -3,9 +3,9 @@ import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { JitsiMeeting } from "@jitsi/react-sdk";
 import { Spin, Button, Typography, Space } from "antd";
 import { WarningOutlined, LockOutlined, ArrowLeftOutlined } from "@ant-design/icons";
-import useJaasConference from "../../hooks/useJaasConference";
-import { mapMediaError } from "../../utils/liveSessionError";
-import type { JitsiApiLike } from "../../types/liveSession";
+import useJaasConference from "../../../hooks/useJaasConference";
+import { mapMediaError } from "../../../utils/liveSessionError";
+import type { JitsiApiLike } from "../../../types/liveSession";
 
 const { Title, Paragraph, Text } = Typography;
 

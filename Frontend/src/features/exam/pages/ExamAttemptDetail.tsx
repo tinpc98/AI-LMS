@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import axiosClient from "../../api/axiosClient";
-import aiApi from "../../api/aiApi";
-import { toast } from "../../utils/toast";
+import axiosClient from "../../../api/axiosClient";
+import aiApi from "../../../api/aiApi";
+import { toast } from "../../../utils/toast";
 
 export default function ExamAttemptDetail() {
   const { attemptId } = useParams();

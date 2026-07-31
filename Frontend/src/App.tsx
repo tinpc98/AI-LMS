@@ -9,26 +9,28 @@ import ProtectedRoute from "./components/common/ProtectedRoute";
 import RoleRedirector from "./components/common/RoleRedirector";
 
 // Auth Components (Lazy Loaded)
-const LoginPage = lazy(() => import("./pages/auth/LoginPage"));
+const LoginPage = lazy(() => import("./features/auth/pages/LoginPage"));
 
 // Student Components (Lazy Loaded)
 const HomeLayoutStudent = lazy(() => import("./components/layout/HomeLayoutStudent"));
-const HomePageStudent = lazy(() => import("./pages/students/HomePageStudent"));
-const MyClasses = lazy(() => import("./pages/students/MyClasses"));
-const StudentAssignment = lazy(() => import("./pages/students/StudentAssignment"));
-const ClassDetail = lazy(() => import("./pages/students/ClassDetail"));
-const LessonView = lazy(() => import("./pages/students/LessonView"));
-const NotificationCenterPage = lazy(() => import("./pages/students/NotificationCenterPage"));
-const ExamPage = lazy(() => import("./pages/students/ExamPage"));
+const HomePageStudent = lazy(() => import("./features/learning/pages/HomePageStudent"));
+const MyClasses = lazy(() => import("./features/class/pages/MyClasses"));
+const StudentAssignment = lazy(() => import("./features/assignment/pages/StudentAssignment"));
+const ClassDetail = lazy(() => import("./features/class/pages/ClassDetail"));
+const LessonView = lazy(() => import("./features/lesson/pages/LessonView"));
+const NotificationCenterPage = lazy(
+  () => import("./features/notification/pages/NotificationCenterPage")
+);
+const ExamPage = lazy(() => import("./features/exam/pages/ExamPage"));
 
 // Teacher Components (Lazy Loaded)
 const HomeLayoutTeacher = lazy(() => import("./components/layout/HomeLayoutTeacher"));
-const HomePageTeacher = lazy(() => import("./pages/teachers/HomePageTeacher"));
-const ClassManagement = lazy(() => import("./pages/teachers/ClassroomManagement"));
-const ClassroomDetail = lazy(() => import("./pages/teachers/ClassroomDetail"));
-const QuestionBank = lazy(() => import("./pages/teachers/QuestionBank"));
-const ExamResults = lazy(() => import("./pages/teachers/ExamResults"));
-const ExamAttemptDetail = lazy(() => import("./pages/teachers/ExamAttemptDetail"));
+const HomePageTeacher = lazy(() => import("./features/dashboard/pages/HomePageTeacher"));
+const ClassManagement = lazy(() => import("./features/class/pages/ClassroomManagement"));
+const ClassroomDetail = lazy(() => import("./features/class/pages/ClassroomDetail"));
+const QuestionBank = lazy(() => import("./features/exam-set/pages/QuestionBank"));
+const ExamResults = lazy(() => import("./features/exam/pages/ExamResults"));
+const ExamAttemptDetail = lazy(() => import("./features/exam/pages/ExamAttemptDetail"));
 
 // Admin Components (Lazy Loaded)
 const AdminLayout = lazy(() => import("./components/layout/AdminLayout"));
@@ -40,12 +42,12 @@ const TeacherAssignmentPage = lazy(
   () => import("./features/teacher-assignment/TeacherAssignmentPage")
 );
 const AIManagementPage = lazy(() => import("./features/ai/AIManagementPage"));
-const ReportPage = lazy(() => import("./pages/Report/ReportPage"));
-const ProfilePage = lazy(() => import("./pages/admin/Profile/ProfilePage"));
-const AdminPage = lazy(() => import("./pages/admin/AdminPage"));
+const ReportPage = lazy(() => import("./features/report/pages/ReportPage"));
+const ProfilePage = lazy(() => import("./features/profile/pages/ProfilePage"));
+const AdminPage = lazy(() => import("./shared/components/PlaceholderPage"));
 
 const LiveSessionLayout = lazy(() => import("./components/layout/LiveSessionLayout"));
-const LiveSessionPage = lazy(() => import("./pages/live/LiveSessionPage"));
+const LiveSessionPage = lazy(() => import("./features/live-session/pages/LiveSessionPage"));
 
 const PageLoadingFallback = () => (
   <div

@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef } from "react";
 import { useParams } from "react-router-dom";
 import { Spin } from "antd";
-import aiApi from "../../api/aiApi";
-import { useAIChat } from "../../hooks/useAIChat";
-import { toast } from "../../utils/toast";
+import aiApi from "../../../api/aiApi";
+import { useAIChat } from "../../../hooks/useAIChat";
+import { toast } from "../../../utils/toast";
 
 const LessonPage = () => {
   const { lessonId } = useParams<{ lessonId: string }>();

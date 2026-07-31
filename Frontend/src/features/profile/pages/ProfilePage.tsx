@@ -30,7 +30,7 @@ import {
 } from "@ant-design/icons";
 import { mockAccounts } from "../../../features/account/mockAccounts";
 import type { AccountRecord } from "../../../features/account/account.types";
-import { ChangePasswordModal } from "./ChangePasswordModal";
+import { ChangePasswordModal } from "../components/ChangePasswordModal";
 
 const { Title, Text, Paragraph } = Typography;
 

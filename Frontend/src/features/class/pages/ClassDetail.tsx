@@ -1,34 +1,34 @@
 import { useEffect, useState, useCallback } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import axiosClient from "../../api/axiosClient";
-import type { IExam } from "../../interface/examInterface";
-import { toast } from "../../utils/toast";
-import { useClassDetail } from "../../hooks/useClassDetail";
+import axiosClient from "../../../api/axiosClient";
+import type { IExam } from "../../../interface/examInterface";
+import { toast } from "../../../utils/toast";
+import { useClassDetail } from "../../../hooks/useClassDetail";
 
 // Ant Design 5 & Common Components
 import { Row, Col, Alert, Skeleton } from "antd";
-import PageContainer from "../../components/common/PageContainer";
-import StudentClassHeader from "../../components/student/classDetail/StudentClassHeader";
-import StatisticSection from "../../components/student/classDetail/StatisticSection";
-import OverviewCard from "../../components/student/classDetail/OverviewCard";
-import LiveSessionCard from "../../components/student/classDetail/LiveSessionCard";
-import TeacherInformationCard from "../../components/student/classDetail/TeacherInformationCard";
-import NextSessionCard from "../../components/student/classDetail/NextSessionCard";
-import LearningProgressCard from "../../components/student/classDetail/LearningProgressCard";
-import LearningMaterialsTab from "../../components/student/classDetail/materials/LearningMaterialsTab";
-import AssignmentsTab from "../../components/student/classDetail/assignments/AssignmentsTab";
-import ExamsTab from "../../components/student/classDetail/exams/ExamsTab";
-import GradesTab from "../../components/student/classDetail/grades/GradesTab";
-import AttendanceTab from "../../components/student/classDetail/attendance/AttendanceTab";
-import AnnouncementsTab from "../../components/student/classDetail/announcements/AnnouncementsTab";
+import PageContainer from "../../../components/common/PageContainer";
+import StudentClassHeader from "../../../components/student/classDetail/StudentClassHeader";
+import StatisticSection from "../../../components/student/classDetail/StatisticSection";
+import OverviewCard from "../../../components/student/classDetail/OverviewCard";
+import LiveSessionCard from "../../../components/student/classDetail/LiveSessionCard";
+import TeacherInformationCard from "../../../components/student/classDetail/TeacherInformationCard";
+import NextSessionCard from "../../../components/student/classDetail/NextSessionCard";
+import LearningProgressCard from "../../../components/student/classDetail/LearningProgressCard";
+import LearningMaterialsTab from "../../../components/student/classDetail/materials/LearningMaterialsTab";
+import AssignmentsTab from "../../../components/student/classDetail/assignments/AssignmentsTab";
+import ExamsTab from "../../../components/student/classDetail/exams/ExamsTab";
+import GradesTab from "../../../components/student/classDetail/grades/GradesTab";
+import AttendanceTab from "../../../components/student/classDetail/attendance/AttendanceTab";
+import AnnouncementsTab from "../../../components/student/classDetail/announcements/AnnouncementsTab";
 
-import ClassDiscussionTab from "../../components/student/classDetail/chat/ClassDiscussionTab";
-import ExamLobbyModals from "../../components/student/classDetail/exams/ExamLobbyModals";
-import type { ExamPopupState } from "../../components/student/classDetail/exams/ExamLobbyModals";
-import { useJitsiLiveSession } from "../../hooks/useJitsiLiveSession";
-import { useStudentLive } from "../../hooks/useStudentLive";
-import { useLearningAnalytics } from "../../hooks/useLearningAnalytics";
-import { useAnalytics } from "../../hooks/useAnalytics";
+import ClassDiscussionTab from "../../../components/student/classDetail/chat/ClassDiscussionTab";
+import ExamLobbyModals from "../../../components/student/classDetail/exams/ExamLobbyModals";
+import type { ExamPopupState } from "../../../components/student/classDetail/exams/ExamLobbyModals";
+import { useJitsiLiveSession } from "../../../hooks/useJitsiLiveSession";
+import { useStudentLive } from "../../../hooks/useStudentLive";
+import { useLearningAnalytics } from "../../../hooks/useLearningAnalytics";
+import { useAnalytics } from "../../../hooks/useAnalytics";
 import { Tooltip, Avatar, List, Progress } from "antd";
 import {
   TrophyOutlined,

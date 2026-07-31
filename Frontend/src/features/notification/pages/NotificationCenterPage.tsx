@@ -1,14 +1,14 @@
 import React from "react";
-import PageContainer from "../../components/common/PageContainer";
-import NotificationHeader from "../../components/student/notifications/NotificationHeader";
-import NotificationSummary from "../../components/student/notifications/NotificationSummary";
-import NotificationToolbar from "../../components/student/notifications/NotificationToolbar";
-import NotificationFeed from "../../components/student/notifications/NotificationFeed";
-import NotificationEmptyState from "../../components/student/notifications/NotificationEmptyState";
-import NotificationLoadingSkeleton from "../../components/student/notifications/NotificationLoadingSkeleton";
-import NotificationDetailDrawer from "../../components/student/notifications/NotificationDetailDrawer";
-import useNotifications from "../../hooks/useNotifications";
-import useNotificationDetail from "../../hooks/useNotificationDetail";
+import PageContainer from "../../../components/common/PageContainer";
+import NotificationHeader from "../../../components/student/notifications/NotificationHeader";
+import NotificationSummary from "../../../components/student/notifications/NotificationSummary";
+import NotificationToolbar from "../../../components/student/notifications/NotificationToolbar";
+import NotificationFeed from "../../../components/student/notifications/NotificationFeed";
+import NotificationEmptyState from "../../../components/student/notifications/NotificationEmptyState";
+import NotificationLoadingSkeleton from "../../../components/student/notifications/NotificationLoadingSkeleton";
+import NotificationDetailDrawer from "../../../components/student/notifications/NotificationDetailDrawer";
+import useNotifications from "../../../hooks/useNotifications";
+import useNotificationDetail from "../../../hooks/useNotificationDetail";
 
 export const NotificationCenterPage: React.FC = () => {
   const {

@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
-import type User from "../../interface/userInterface";
+import type User from "../../../interface/userInterface";
 // FIX LỖI: Import authApi để dùng tầng gọi API tập trung
-import { authApi } from "../../api/authApi.ts";
+import { authApi } from "../../../api/authApi";
 import axios from "axios";
-import { toast } from "../../utils/toast.ts";
+import { toast } from "../../../utils/toast";
 
 const Login = () => {
   const navigate = useNavigate();

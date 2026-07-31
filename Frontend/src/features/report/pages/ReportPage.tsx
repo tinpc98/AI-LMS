@@ -11,16 +11,16 @@ import {
   RobotOutlined,
   HomeOutlined,
 } from "@ant-design/icons";
-import { ReportFilter } from "./components/ReportFilter";
-import type { FilterValues } from "./components/ReportFilter";
-import { ReportOverview } from "./components/ReportOverview";
-import { StudentReport } from "./components/StudentReport";
-import { CourseReport } from "./components/CourseReport";
-import { TeacherReport } from "./components/TeacherReport";
-import { ClassReport } from "./components/ClassReport";
-import { AttendanceReport } from "./components/AttendanceReport";
-import { ExamReport } from "./components/ExamReport";
-import { AIAnalytics } from "./components/AIAnalytics";
+import { ReportFilter } from "../components/ReportFilter";
+import type { FilterValues } from "../components/ReportFilter";
+import { ReportOverview } from "../components/ReportOverview";
+import { StudentReport } from "../components/StudentReport";
+import { CourseReport } from "../components/CourseReport";
+import { TeacherReport } from "../components/TeacherReport";
+import { ClassReport } from "../components/ClassReport";
+import { AttendanceReport } from "../components/AttendanceReport";
+import { ExamReport } from "../components/ExamReport";
+import { AIAnalytics } from "../components/AIAnalytics";
 
 const { Title, Paragraph } = Typography;
 

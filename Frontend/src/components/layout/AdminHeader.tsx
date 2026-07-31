@@ -12,7 +12,7 @@ import type { MenuProps } from "antd";
 import { useNavigate } from "react-router-dom";
 import Breadcrumbs from "./Breadcrumbs";
 import styles from "./adminLayout.module.css";
-import ChangePasswordModal from "../../pages/admin/Profile/ChangePasswordModal";
+import ChangePasswordModal from "../../features/profile/components/ChangePasswordModal";
 
 interface AdminHeaderProps {
   collapsed: boolean;

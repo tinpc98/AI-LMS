@@ -19,10 +19,10 @@ import {
   ReloadOutlined,
   FilterOutlined,
 } from "@ant-design/icons";
-import { classApi } from "../../api/classApi";
-import { TeacherClassHeader } from "../../components/teacher/classroom/TeacherClassHeader";
-import { TeacherClassGrid } from "../../components/teacher/classroom/TeacherClassGrid";
-import { TeacherClassListTable } from "../../components/teacher/classroom/TeacherClassListTable";
+import { classApi } from "../../../api/classApi";
+import { TeacherClassHeader } from "../../../components/teacher/classroom/TeacherClassHeader";
+import { TeacherClassGrid } from "../../../components/teacher/classroom/TeacherClassGrid";
+import { TeacherClassListTable } from "../../../components/teacher/classroom/TeacherClassListTable";
 
 const { Text } = Typography;
 

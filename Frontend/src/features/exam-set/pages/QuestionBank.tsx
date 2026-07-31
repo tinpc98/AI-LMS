@@ -32,13 +32,13 @@ import {
   MoreOutlined,
 } from "@ant-design/icons";
 
-import axiosClient from "../../api/axiosClient";
-import { toast } from "../../utils/toast";
-import { QuestionStatistic } from "../../components/teacher/questionbank/QuestionStatistic";
-import { QuestionFormDrawer } from "../../components/teacher/questionbank/QuestionFormDrawer";
-import { QuestionPreviewDrawer } from "../../components/teacher/questionbank/QuestionPreviewDrawer";
+import axiosClient from "../../../api/axiosClient";
+import { toast } from "../../../utils/toast";
+import { QuestionStatistic } from "../../../components/teacher/questionbank/QuestionStatistic";
+import { QuestionFormDrawer } from "../../../components/teacher/questionbank/QuestionFormDrawer";
+import { QuestionPreviewDrawer } from "../../../components/teacher/questionbank/QuestionPreviewDrawer";
 
-import { useQuestionBank } from "../../hooks/useQuestionBank";
+import { useQuestionBank } from "../../../hooks/useQuestionBank";
 
 const { Title, Text, Paragraph } = Typography;
 

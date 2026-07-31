@@ -1,16 +1,16 @@
 import { Row, Col, Alert, Button } from "antd";
 import { ReloadOutlined } from "@ant-design/icons";
-import { useAuth } from "../../hooks/useAuth";
-import { useTeacherDashboardQuery } from "../../features/dashboard/hooks/useTeacherDashboardQuery";
+import { useAuth } from "../../../hooks/useAuth";
+import { useTeacherDashboardQuery } from "../hooks/useTeacherDashboardQuery";
 
-import { TeacherWelcomeHeader } from "../../components/teacher/TeacherWelcomeHeader";
-import { TeacherQuickStats } from "../../components/teacher/TeacherQuickStats";
-import { TeacherQuickActions } from "../../components/teacher/TeacherQuickActions";
-import { TeacherScheduleWidget } from "../../components/teacher/TeacherScheduleWidget";
-import { TeacherClassroomsGrid } from "../../components/teacher/TeacherClassroomsGrid";
-import { TeacherAnnouncementsWidget } from "../../components/teacher/TeacherAnnouncementsWidget";
-import { TeacherAssignmentsWidget } from "../../components/teacher/TeacherAssignmentsWidget";
-import { TeacherLiveSessionWidget } from "../../components/teacher/TeacherLiveSessionWidget";
+import { TeacherWelcomeHeader } from "../../../components/teacher/TeacherWelcomeHeader";
+import { TeacherQuickStats } from "../../../components/teacher/TeacherQuickStats";
+import { TeacherQuickActions } from "../../../components/teacher/TeacherQuickActions";
+import { TeacherScheduleWidget } from "../../../components/teacher/TeacherScheduleWidget";
+import { TeacherClassroomsGrid } from "../../../components/teacher/TeacherClassroomsGrid";
+import { TeacherAnnouncementsWidget } from "../../../components/teacher/TeacherAnnouncementsWidget";
+import { TeacherAssignmentsWidget } from "../../../components/teacher/TeacherAssignmentsWidget";
+import { TeacherLiveSessionWidget } from "../../../components/teacher/TeacherLiveSessionWidget";
 
 export default function HomePageTeacher() {
   const { user } = useAuth();
