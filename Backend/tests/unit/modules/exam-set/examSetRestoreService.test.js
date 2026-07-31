@@ -2,7 +2,7 @@
 import { describe, it, expect, afterEach, vi } from "vitest";
 import ExamSet from "#modules/exam-set/examSet.model.js";
 import { Folder } from "#modules/folder";
-import { restoreExamSetVersionService } from "#modules/exam-set/examSet.service.js";
+import { restoreExamSetVersionService } from "#modules/exam-set/examSetVersion.service.js";
 
 const createExamSet = (props = {}) => {
   const base = {

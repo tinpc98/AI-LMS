@@ -1,7 +1,7 @@
 // Port từ src/scripts/runExamSetVersionsServiceTests.js (characterization test).
 import { describe, it, expect, afterEach, vi } from "vitest";
 import ExamSet from "#modules/exam-set/examSet.model.js";
-import { getExamSetVersionsService } from "#modules/exam-set/examSet.service.js";
+import { getExamSetVersionsService } from "#modules/exam-set/examSetVersion.service.js";
 
 const createExamSet = (props = {}) => ({
   _id: "607f1f77bcf86cd799439111",
