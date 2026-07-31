@@ -39,7 +39,7 @@ const REPORT = path.join(FE, ".eslint-budget-report.json");
 // GIẢM ĐƯỢC THÌ CẬP NHẬT XUỐNG. KHÔNG BAO GIỜ tăng lên để cho qua CI — đó là bỏ rào chắn.
 const BUDGET = {
   // Khoản nợ lớn nhất, có việc riêng (§5.7). Khoá lại để nó không phình thêm.
-  "@typescript-eslint/no-explicit-any": 310,
+  "@typescript-eslint/no-explicit-any": 269,
 
   // Phần lớn là biến/tham số cục bộ, xoá có thể đổi hành vi nên phải xem tay từng cái.
   "@typescript-eslint/no-unused-vars": 41,

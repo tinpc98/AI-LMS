@@ -40,7 +40,13 @@ export function useLearningAnalytics(classId?: string) {
           progress,
           durationSeconds,
         });
-        // Update local state
+        // Máy chủ không trả bản ghi thì không có gì để cập nhật.
+        //
+        // Trước đây kiểu trả về của updateLessonProgress là `any` nên `data` có thể là null mà
+        // vẫn được đẩy thẳng vào mảng tiến độ — mọi chỗ đọc p.lessonId sau đó sẽ nổ. Siết kiểu
+        // ở tầng api mới làm lộ ra nhánh này.
+        if (!data) return;
+
         setProgressData((prev) => {
           const idx = prev.findIndex((p) => p.lessonId === lessonId);
           if (idx >= 0) {

@@ -58,7 +58,9 @@ const LessonPage = () => {
     queryFn: async () => {
       try {
         const data = await aiApi.getLessonSummary(lessonId!);
-        return data.content || data.summary || null;
+        // getLessonSummary trả null khi bài học chưa có tóm tắt. Trước đây kiểu trả về là
+        // `any` nên nhánh này vô hình — đọc data.content trên null sẽ nổ ngay tại đây.
+        return data?.content || data?.summary || null;
       } catch (err: unknown) {
         // 404 nghĩa là bài học chưa có tóm tắt — đó là câu trả lời hợp lệ, không phải lỗi.
         if (getApiErrorStatus(err) === 404) return null;

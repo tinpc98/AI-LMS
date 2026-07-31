@@ -4,7 +4,7 @@ export interface IAnnouncement {
   _id: string;
   title: string;
   content: string;
-  createdBy?: any;
+  createdBy?: string | { _id: string; fullName?: string; email?: string; avatar?: string };
   scope: "System" | "Course" | "Class" | string;
   classId?: string;
   courseId?: string;

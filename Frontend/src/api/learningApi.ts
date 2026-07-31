@@ -1,4 +1,5 @@
 import axiosClient from "./axiosClient";
+import { unwrap, unwrapOrNull, type ApiEnvelope } from "./unwrap";
 
 export interface ILessonProgress {
   _id: string;
@@ -12,13 +13,29 @@ export interface ILessonProgress {
   totalLearningTime: number;
 }
 
+/** Khớp enum trong Backend/src/modules/badge/learningActivity.model.js. */
+export type LearningActivityType =
+  | "Lesson Viewed"
+  | "Lesson Completed"
+  | "Assignment Submitted"
+  | "Exam Finished"
+  | "Attendance"
+  | "AI Interaction";
+
 export interface ILearningActivity {
   _id: string;
   studentId: string;
   classId: string;
   lessonId: string | null;
-  activityType: string;
-  metadata: any;
+  activityType: LearningActivityType;
+  /**
+   * Dữ liệu kèm theo, khác nhau tuỳ loại hoạt động.
+   *
+   * Backend khai báo Schema.Types.Mixed nên không có hình dạng cố định. Dùng `unknown` chứ
+   * KHÔNG dùng `any`: nơi đọc buộc phải kiểm tra trước khi dùng, thay vì gõ `.abc` bừa và
+   * nhận undefined lúc chạy.
+   */
+  metadata: Record<string, unknown>;
   createdAt: string;
 }
 
@@ -58,11 +75,11 @@ export interface IRankingResponse {
 
 const learningApi = {
   // Progress
-  getStudentProgress: async (classId: string) => {
-    const response = await axiosClient.get<ILessonProgress[]>(
+  getStudentProgress: async (classId: string): Promise<ILessonProgress[]> => {
+    const response = await axiosClient.get<ApiEnvelope<ILessonProgress[]>>(
       `/api/learning/progress/class/${classId}`
     );
-    return (response.data as any).data ?? response.data ?? [];
+    return unwrap(response.data, []);
   },
   updateLessonProgress: async (payload: {
     lessonId: string;
@@ -70,36 +87,43 @@ const learningApi = {
     progress: number;
     durationSeconds?: number;
   }) => {
-    const response = await axiosClient.post<ILessonProgress>(`/api/learning/progress`, payload);
-    return (response.data as any).data ?? response.data;
+    const response = await axiosClient.post<ApiEnvelope<ILessonProgress>>(
+      `/api/learning/progress`,
+      payload
+    );
+    return unwrapOrNull(response.data);
   },
 
   // Ranking
-  getClassRanking: async (classId: string, params?: any) => {
-    const response = await axiosClient.get<IRankingResponse>(
+  getClassRanking: async (
+    classId: string,
+    params?: { page?: number; limit?: number }
+  ): Promise<IRankingResponse | null> => {
+    const response = await axiosClient.get<ApiEnvelope<IRankingResponse>>(
       `/api/learning/ranking/class/${classId}`,
       { params }
     );
-    return (response.data as any).data ?? response.data;
+    return unwrapOrNull(response.data);
   },
   getStudentRanking: async (classId: string, studentId: string = "me") => {
-    const response = await axiosClient.get<IStudentRank>(
+    const response = await axiosClient.get<ApiEnvelope<IStudentRank>>(
       `/api/learning/ranking/student/${studentId}`,
       { params: { classId } }
     );
-    return (response.data as any).data ?? response.data;
+    return unwrapOrNull(response.data);
   },
 
   // Gamification
   getMyBadges: async () => {
-    const response = await axiosClient.get<IStudentBadge[]>(`/api/learning/badges`);
-    return (response.data as any).data ?? response.data ?? [];
+    const response = await axiosClient.get<ApiEnvelope<IStudentBadge[]>>(`/api/learning/badges`);
+    return unwrap(response.data, []);
   },
   getMyActivities: async (params?: { classId?: string }) => {
-    const response = await axiosClient.get<ILearningActivity[]>(`/api/learning/activities`, {
-      params,
-    });
-    return (response.data as any).data ?? response.data ?? [];
+    const response = await axiosClient.get<ApiEnvelope<ILearningActivity[]>>(
+      `/api/learning/activities`,
+      { params }
+    );
+    return unwrap(response.data, []);
   },
 };
 
