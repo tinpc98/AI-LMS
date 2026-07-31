@@ -5,7 +5,7 @@ import {
   examSetQuestionCreateValidation,
   examSetQuestionUpdateValidation,
 } from "../../../../src/modules/exam-set/examSet.validator.js";
-import { isEditableExamSetStatus } from "#modules/exam-set/examSet.service.js";
+import { isEditableExamSetStatus } from "#modules/exam-set/examSetStatus.js";
 import {
   createRequest,
   createResponse,

@@ -4,10 +4,6 @@ import {
   updateExamSetService,
   deleteExamSetService,
   restoreExamSetService,
-  addQuestionToExamSetService,
-  updateQuestionInExamSetService,
-  deleteQuestionFromExamSetService,
-  reorderQuestionsInExamSetService,
   getExamSetDetailService,
   saveDraftExamSetService,
   duplicateExamSetService,
@@ -27,6 +23,13 @@ import {
   getExamSetVersionsService,
   restoreExamSetVersionService,
 } from "./examSetVersion.service.js";
+// Nghiệp vụ câu hỏi trong bộ đề đã tách sang service riêng ở Wave 4.1.
+import {
+  addQuestionToExamSetService,
+  updateQuestionInExamSetService,
+  deleteQuestionFromExamSetService,
+  reorderQuestionsInExamSetService,
+} from "./examSetQuestion.service.js";
 import { importExcelToExamSet } from "./examSetImport.service.js";
 import { Types } from "mongoose";
 
