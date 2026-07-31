@@ -1,5 +1,7 @@
 import { Card, message, Typography, Tabs } from "antd";
 import { useEffect, useRef, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useAdminListQuery } from "../../shared/hooks/useAdminListQuery";
 import type { ClassFormModalHandle } from "./ClassFormModal";
 import ClassDetailDrawer from "./ClassDetailDrawer";
 import ClassFormModal from "./ClassFormModal";
@@ -7,13 +9,7 @@ import ClassTable from "./ClassTable";
 import ClassToolbar from "./ClassToolbar";
 import DeleteConfirmModal from "./DeleteConfirmModal";
 import { classService } from "./classService";
-import type {
-  ClassFilters,
-  ClassFormValues,
-  ClassRecord,
-  ClassStatus,
-  Pagination,
-} from "./class.types";
+import type { ClassFilters, ClassFormValues, ClassRecord, ClassStatus } from "./class.types";
 
 const initialFilters: ClassFilters = {
   search: "",
@@ -26,18 +22,13 @@ const initialFilters: ClassFilters = {
 
 const ClassManagementPage = () => {
   const [activeTab, setActiveTab] = useState("active");
-  const [classes, setClasses] = useState<ClassRecord[]>([]);
-  const [pagination, setPagination] = useState<Pagination | undefined>();
   const [filters, setFilters] = useState<ClassFilters>(initialFilters);
-  const [loading, setLoading] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [detailOpen, setDetailOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteMode, setDeleteMode] = useState<"soft" | "force">("soft");
   const [selectedClass, setSelectedClass] = useState<ClassRecord | undefined>();
   const [mode, setMode] = useState<"create" | "edit">("create");
-  const [courseOptions, setCourseOptions] = useState<Array<{ id: string; label: string }>>([]);
-  const [teacherOptions, setTeacherOptions] = useState<Array<{ id: string; label: string }>>([]);
   const formRef = useRef<ClassFormModalHandle | null>(null);
 
   // Debounce search filter
@@ -49,29 +40,39 @@ const ClassManagementPage = () => {
     return () => clearTimeout(handler);
   }, [filters]);
 
-  const loadClasses = async () => {
-    setLoading(true);
-    try {
-      const isTrash = activeTab === "trash";
-      const [classResponse, courseResponse, teacherResponse] = await Promise.all([
-        classService.getClasses(debouncedFilters, isTrash),
-        classService.getCourseOptions(),
-        classService.getTeacherOptions(),
-      ]);
-      setClasses(classResponse.data);
-      setPagination(classResponse.pagination);
-      setCourseOptions(courseResponse);
-      setTeacherOptions(teacherResponse);
-    } catch {
-      message.error("Failed to load classes");
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Xem ghi chú ở AccountManagementPage. Trang này khác hai trang kia ở chữ ký service:
+  // getClasses nhận thêm cờ thùng rác làm tham số thứ hai, nên bọc lại cho khớp hook.
+  const {
+    records: classes,
+    pagination,
+    loading,
+    refetch: refetchClasses,
+  } = useAdminListQuery<ClassRecord, ClassFilters>({
+    resource: "classes",
+    filters: debouncedFilters,
+    isTrash: activeTab === "trash",
+    fetchActive: (f) => classService.getClasses(f, false),
+    fetchTrash: (f) => classService.getClasses(f, true),
+    errorMessage: "Failed to load classes",
+  });
 
-  useEffect(() => {
-    void loadClasses();
-  }, [debouncedFilters, activeTab]);
+  // TÁCH RIÊNG danh sách khoá học và giáo viên.
+  //
+  // Bản cũ gộp cả ba lời gọi vào một Promise.all, nên MỖI lần đổi bộ lọc — kể cả gõ tìm kiếm
+  // — lại tải lại toàn bộ danh sách khoá học và giáo viên. Đây là dữ liệu tham chiếu, không
+  // phụ thuộc bộ lọc. Query riêng, không có filters trong khoá, nên chỉ tải một lần.
+  const { data: courseOptions = [] } = useQuery({
+    queryKey: ["class-course-options"],
+    queryFn: classService.getCourseOptions,
+  });
+  const { data: teacherOptions = [] } = useQuery({
+    queryKey: ["class-teacher-options"],
+    queryFn: classService.getTeacherOptions,
+  });
+
+  // Các nơi gọi sau thao tác thêm/sửa/xoá chỉ cần nạp lại danh sách lớp; khoá học và giáo
+  // viên không đổi vì những thao tác đó.
+  const loadClasses = refetchClasses;
 
   const handleTabChange = (key: string) => {
     setActiveTab(key);

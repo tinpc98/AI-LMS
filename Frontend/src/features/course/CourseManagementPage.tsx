@@ -1,5 +1,6 @@
 import { Card, message, Typography, Tabs } from "antd";
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useRef, useState } from "react";
+import { useAdminListQuery } from "../../shared/hooks/useAdminListQuery";
 import type { CourseFormModalHandle } from "./CourseFormModal";
 import CourseDetailDrawer from "./CourseDetailDrawer";
 import CourseFormModal from "./CourseFormModal";
@@ -7,13 +8,7 @@ import CourseTable from "./CourseTable";
 import CourseToolbar from "./CourseToolbar";
 import DeleteConfirmModal from "./DeleteConfirmModal";
 import { courseService } from "./courseService";
-import type {
-  CourseFilters,
-  CourseFormValues,
-  CourseRecord,
-  CourseStatus,
-  Pagination,
-} from "./course.types";
+import type { CourseFilters, CourseFormValues, CourseRecord, CourseStatus } from "./course.types";
 
 const initialFilters: CourseFilters = {
   search: "",
@@ -25,15 +20,7 @@ const initialFilters: CourseFilters = {
 
 const CourseManagementPage = () => {
   const [activeTab, setActiveTab] = useState("active");
-  const [courses, setCourses] = useState<CourseRecord[]>([]);
-  const [pagination, setPagination] = useState<Pagination>({
-    page: 1,
-    limit: 10,
-    total: 0,
-    totalPages: 0,
-  });
   const [filters, setFilters] = useState<CourseFilters>(initialFilters);
-  const [loading, setLoading] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [detailOpen, setDetailOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -44,31 +31,20 @@ const CourseManagementPage = () => {
 
   const searchTimeoutRef = useRef<number | null>(null);
 
-  const loadCourses = useCallback(
-    async (currentFilters = filters) => {
-      setLoading(true);
-      try {
-        const fetchFn =
-          activeTab === "trash" ? courseService.getTrashCourses : courseService.getCourses;
-        const response = await fetchFn(currentFilters);
-        if (response.success) {
-          setCourses(response.data);
-          if (response.pagination) {
-            setPagination(response.pagination);
-          }
-        }
-      } catch {
-        message.error("Failed to load courses");
-      } finally {
-        setLoading(false);
-      }
-    },
-    [activeTab, filters]
-  );
-
-  useEffect(() => {
-    void loadCourses();
-  }, [loadCourses]);
+  // Xem ghi chú ở AccountManagementPage — cùng một hook, cùng lý do.
+  const {
+    records: courses,
+    pagination,
+    loading,
+    refetch: loadCourses,
+  } = useAdminListQuery<CourseRecord, CourseFilters>({
+    resource: "courses",
+    filters,
+    isTrash: activeTab === "trash",
+    fetchActive: courseService.getCourses,
+    fetchTrash: courseService.getTrashCourses,
+    errorMessage: "Failed to load courses",
+  });
 
   const handleFilterChange = (newFilters: CourseFilters) => {
     if (newFilters.search !== filters.search) {

@@ -1,5 +1,6 @@
 import { Card, message, Typography, Tabs } from "antd";
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useRef, useState } from "react";
+import { useAdminListQuery } from "../../shared/hooks/useAdminListQuery";
 import type { AccountFormModalHandle } from "./AccountFormModal";
 import AccountDetailDrawer from "./AccountDetailDrawer";
 import AccountFormModal from "./AccountFormModal";
@@ -12,7 +13,6 @@ import type {
   AccountFormValues,
   AccountRecord,
   AccountStatus,
-  Pagination,
 } from "./account.types";
 
 const initialFilters: AccountFilters = {
@@ -25,15 +25,7 @@ const initialFilters: AccountFilters = {
 
 const AccountManagementPage = () => {
   const [activeTab, setActiveTab] = useState("active");
-  const [accounts, setAccounts] = useState<AccountRecord[]>([]);
-  const [pagination, setPagination] = useState<Pagination>({
-    page: 1,
-    limit: 10,
-    total: 0,
-    totalPages: 0,
-  });
   const [filters, setFilters] = useState<AccountFilters>(initialFilters);
-  const [loading, setLoading] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [detailOpen, setDetailOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -44,31 +36,21 @@ const AccountManagementPage = () => {
 
   const searchTimeoutRef = useRef<number | null>(null);
 
-  const loadAccounts = useCallback(
-    async (currentFilters = filters) => {
-      setLoading(true);
-      try {
-        const fetchFn =
-          activeTab === "trash" ? accountService.getTrashUsers : accountService.getAccounts;
-        const response = await fetchFn(currentFilters);
-        if (response.success) {
-          setAccounts(response.data);
-          if (response.pagination) {
-            setPagination(response.pagination);
-          }
-        }
-      } catch {
-        message.error("Failed to load accounts");
-      } finally {
-        setLoading(false);
-      }
-    },
-    [activeTab, filters]
-  );
-
-  useEffect(() => {
-    void loadAccounts();
-  }, [loadAccounts]);
+  // React Query thay cho cụm useState + useEffect cũ. Giữ tên loadAccounts để 7 nơi gọi sau
+  // mỗi thao tác thêm/sửa/xoá không phải sửa gì.
+  const {
+    records: accounts,
+    pagination,
+    loading,
+    refetch: loadAccounts,
+  } = useAdminListQuery<AccountRecord, AccountFilters>({
+    resource: "accounts",
+    filters,
+    isTrash: activeTab === "trash",
+    fetchActive: accountService.getAccounts,
+    fetchTrash: accountService.getTrashUsers,
+    errorMessage: "Failed to load accounts",
+  });
 
   const handleFilterChange = (newFilters: AccountFilters) => {
     // If search text changed, use debounce and reset page to 1
