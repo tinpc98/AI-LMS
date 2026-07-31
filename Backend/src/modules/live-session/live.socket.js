@@ -1,4 +1,5 @@
 import { checkSocketLiveClassAccess } from "./socketLiveAccess.service.js";
+import { logger } from "#shared/utils/logger.js";
 import LiveSession from "./liveSession.model.js";
 
 /**
@@ -83,7 +84,7 @@ export default function liveSocketHandler(io) {
           }
         }
 
-        console.log(`📡 [SOCKET_JOINED] Client ${userLogName} đã join room: ${roomName}`);
+        logger.debug(`📡 [SOCKET_JOINED] Client ${userLogName} đã join room: ${roomName}`);
 
         if (typeof ack === "function") {
           ack({
@@ -114,7 +115,7 @@ export default function liveSocketHandler(io) {
         if (classId) {
           const roomName = `room_class_${classId}`;
           await socket.leave(roomName);
-          console.log(`🚪 [SOCKET_LEFT] Client ${userLogName} đã rời room: ${roomName}`);
+          logger.debug(`🚪 [SOCKET_LEFT] Client ${userLogName} đã rời room: ${roomName}`);
         }
 
         // Bổ sung Track Participant Leave

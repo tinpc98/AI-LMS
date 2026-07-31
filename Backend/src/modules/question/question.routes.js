@@ -1,4 +1,5 @@
 import express from "express";
+import { logger } from "#shared/utils/logger.js";
 import multer from "multer";
 import path from "path";
 import {
@@ -17,7 +18,7 @@ const router = express.Router();
 const upload = multer({
   storage: multer.memoryStorage(),
   fileFilter: (req, file, cb) => {
-    console.log("👉 File đang upload:", file.originalname, "| Mimetype:", file.mimetype);
+    logger.debug("👉 File đang upload:", file.originalname, "| Mimetype:", file.mimetype);
 
     const ext = path.extname(file.originalname).toLowerCase();
 

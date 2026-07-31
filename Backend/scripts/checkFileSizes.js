@@ -38,8 +38,8 @@ const BASELINE = {
 
   // Controller còn to vì chưa rút hết logic xuống service (§4.3 mới làm cho class).
   "modules/class/class.controller.js": 462,
-  "modules/exam-attempt/examAttempt.controller.js": 415,
-  "modules/exam/exam.controller.js": 370,
+  "modules/exam-attempt/examAttempt.controller.js": 411,
+  "modules/exam/exam.controller.js": 363,
   "modules/auth/auth.controller.js": 290,
 
   // Validate câu hỏi trắc nghiệm: 12 helper theo 4 loại câu hỏi, vốn nằm trong god file

@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { logger } from "#shared/utils/logger.js";
 import examAttemptService from "./examAttempt.service.js";
 import ExamAttempt from "./examAttempt.model.js";
 import { Exam } from "#modules/exam";
@@ -78,7 +79,7 @@ export const startExam = asyncHandler(async (req, res) => {
   });
 
   if (existingAttempt) {
-    console.log(
+    logger.debug(
       `🔎 Đã có bài làm với trạng thái: ${existingAttempt.status}. Exam: ${examId}, Student: ${studentId}`
     );
 
@@ -497,18 +498,12 @@ export const recordCheatWarning = asyncHandler(async (req, res) => {
 
   attempt.cheatWarnings = (attempt.cheatWarnings || 0) + 1;
 
-  if (!Array.isArray(attempt.cheatLogs)) {
-    attempt.cheatLogs = [];
-  }
-
-  attempt.cheatLogs.push({
-    timestamp: new Date(),
-    cheatType: normalizedCheatType,
-  });
+  if (!Array.isArray(attempt.cheatLogs)) attempt.cheatLogs = [];
+  attempt.cheatLogs.push({ timestamp: new Date(), cheatType: normalizedCheatType });
 
   await attempt.save();
 
-  console.log(
+  logger.warn(
     `🚨 Đã ghi nhận gian lận (${normalizedCheatType}) cho attempt ${attemptId}. Tổng số lần: ${attempt.cheatWarnings}`
   );
 

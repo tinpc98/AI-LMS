@@ -65,6 +65,12 @@ jobs:
       - name: Giới hạn kích thước file (ratchet)
         run: npm run check:filesize
 
+      # Rào chắn log (Wave 6). Cùng cơ chế ratchet: 128 lời gọi console còn tồn đọng được
+      # khoá lại, mã mới phải dùng #shared/utils/logger.js. Miễn trừ src/scripts, seed.js và
+      # migrations — ở đó console CHÍNH LÀ giao diện với người chạy lệnh.
+      - name: Rào chắn log (ratchet)
+        run: npm run check:console
+
       - name: Run unit + integration tests
         run: npm run test:all
 

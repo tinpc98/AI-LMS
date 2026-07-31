@@ -9,16 +9,18 @@
 // bản sửa này) sẽ bị NGẮT KẾT NỐI ngay tại bước handshake, không bao giờ có cơ hội emit
 // "AUTHENTICATE_SOCKET". Tính năng thông báo real-time vì vậy không hoạt động cho tới bản sửa
 // này (đồng bộ với useNotifications.ts gửi token qua handshake giống socketClient.ts).
+import { logger } from "#shared/utils/logger.js";
+
 export default function notificationSocketHandler(io) {
   io.on("connection", (socket) => {
     if (!socket.user?.id) return;
 
     const roomName = `user:${socket.user.id}`;
     socket.join(roomName);
-    console.log(`🔔 User ${socket.user.id} joined notification room: ${roomName}`);
+    logger.debug(`🔔 User ${socket.user.id} joined notification room: ${roomName}`);
 
     socket.on("disconnect", () => {
-      console.log(`🔔 User ${socket.user.id} disconnected from notification socket`);
+      logger.debug(`🔔 User ${socket.user.id} disconnected from notification socket`);
     });
   });
 }

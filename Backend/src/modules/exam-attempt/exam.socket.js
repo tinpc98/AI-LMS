@@ -1,5 +1,6 @@
 // src/sockets/exam.socket.js
 import ExamAttempt from "./examAttempt.model.js";
+import { logger } from "#shared/utils/logger.js";
 import { checkSocketExamAccess } from "./socketExamAccess.service.js";
 
 // Whitelist các loại hành vi gian lận hợp lệ — chặn client gửi giá trị tùy ý vào DB.
@@ -17,7 +18,7 @@ const ALLOWED_CHEAT_TYPES = [
 
 export default function socketHandler(io) {
   io.on("connection", (socket) => {
-    console.log(`🟢 Client kết nối thành công: ${socket.id}`);
+    logger.debug(`🟢 Client kết nối thành công: ${socket.id}`);
 
     // ==========================================
     // 1. NGHIỆP VỤ VÀO PHÒNG THI (JOIN ROOM)
@@ -48,7 +49,7 @@ export default function socketHandler(io) {
         socket.fullName = socket.user.name;
         socket.examRoom = roomName;
 
-        console.log(`👤 ${socket.fullName} (${socket.role}) đã tham gia phòng: ${roomName}`);
+        logger.debug(`👤 ${socket.fullName} (${socket.role}) đã tham gia phòng: ${roomName}`);
 
         if (typeof ack === "function") {
           ack({ success: true, data: { room: roomName, accessType: accessCheck.accessType } });
@@ -76,7 +77,7 @@ export default function socketHandler(io) {
         message: "Kỳ thi chính thức bắt đầu!",
         timestamp: new Date(),
       });
-      console.log(`📢 Giáo viên ${socket.fullName} đã phát lệnh BẮT ĐẦU THI.`);
+      logger.info(`📢 Giáo viên ${socket.fullName} đã phát lệnh BẮT ĐẦU THI.`);
     });
 
     // ==========================================
@@ -116,7 +117,7 @@ export default function socketHandler(io) {
           time: new Date(),
         });
 
-        console.log(`🚨 Đã ghi log gian lận vào DB: ${socket.fullName} - Lỗi: ${cheatType}`);
+        logger.warn(`🚨 Đã ghi log gian lận vào DB: ${socket.fullName} - Lỗi: ${cheatType}`);
       } catch (error) {
         console.error("❌ Lỗi khi ghi log gian lận vào DB:", error);
       }
@@ -126,7 +127,7 @@ export default function socketHandler(io) {
     // 4. XỬ LÝ NGẮT KẾT NỐI (RỚT MẠNG)
     // ==========================================
     socket.on("disconnect", () => {
-      console.log(`🔴 Client ngắt kết nối: ${socket.id} (${socket.fullName || "Unknown"})`);
+      logger.debug(`🔴 Client ngắt kết nối: ${socket.id} (${socket.fullName || "Unknown"})`);
       // Tùy chọn: Báo cho GV biết có HS vừa rớt mạng
       if (socket.role === "student" && socket.examRoom) {
         io.to(socket.examRoom).emit("STUDENT_DISCONNECTED", {

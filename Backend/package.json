@@ -12,6 +12,7 @@
     "test:all": "npm run test:unit && npm run test:integration",
     "smoke:boot": "node scripts/smokeBoot.js",
     "check:filesize": "node scripts/checkFileSizes.js",
+    "check:console": "node scripts/checkConsoleUsage.cjs",
     "format": "prettier --write \"{src,tests}/**/*.js\" main.js",
     "format:check": "prettier --check \"{src,tests}/**/*.js\" main.js",
     "depcruise": "depcruise src main.js --config .dependency-cruiser.cjs --output-type err-long",
