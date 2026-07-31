@@ -1,6 +1,6 @@
 import React from "react";
 import { Row, Col, Alert } from "antd";
-import PageContainer from "../../../components/common/PageContainer";
+import PageContainer from "../../components/common/PageContainer";
 import {
   LearningDashboardProvider,
   useLearningDashboardContext,
@@ -16,8 +16,8 @@ import UpcomingExamsWidget from "./components/UpcomingExamsWidget";
 import AnnouncementsTimelineWidget from "./components/AnnouncementsTimelineWidget";
 import ClassProgressWidget from "./components/ClassProgressWidget";
 import LearningInsightsWidget from "./components/LearningInsightsWidget";
-import StudentWelcomeBanner from "../../../components/student/dashboard/StudentWelcomeBanner";
-import StudentQuickActions from "../../../components/student/dashboard/StudentQuickActions";
+import StudentWelcomeBanner from "../../components/student/dashboard/StudentWelcomeBanner";
+import StudentQuickActions from "../../components/student/dashboard/StudentQuickActions";
 
 const DashboardContent: React.FC = React.memo(() => {
   const {

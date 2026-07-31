@@ -1,9 +1,9 @@
-import { classApi } from "../../../../api/classApi";
-import assignmentApi from "../../../../api/assignmentApi";
-import examApi from "../../../../api/examApi";
-import announcementApi from "../../../../api/announcementApi";
-import { attendanceApi } from "../../../../api/attendanceApi";
-import gradeApi from "../../../../api/gradeApi";
+import { classApi } from "../../../api/classApi";
+import assignmentApi from "../../../api/assignmentApi";
+import examApi from "../../../api/examApi";
+import announcementApi from "../../../api/announcementApi";
+import { attendanceApi } from "../../../api/attendanceApi";
+import gradeApi from "../../../api/gradeApi";
 import {
   mapClassResponse,
   mapAssignmentResponse,

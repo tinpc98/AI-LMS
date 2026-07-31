@@ -12,7 +12,7 @@ import {
   mapExamResponse,
   mapAnnouncementResponse,
   mapAttendanceResponse,
-} from "../src/modules/student/learning/mappers/learningDashboard.mapper";
+} from "../src/features/learning/mappers/learningDashboard.mapper";
 
 const DAY = 24 * 60 * 60 * 1000;
 
