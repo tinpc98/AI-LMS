@@ -1,5 +1,5 @@
 import React from "react";
-import { Typography } from "antd";
+import { Alert, Button, Typography } from "antd";
 import GradeStatistic from "./GradeStatistic";
 import GradeOverview from "./GradeOverview";
 import GradeChart from "./GradeChart";
@@ -30,6 +30,8 @@ export const GradesTab: React.FC<GradesTabProps> = React.memo(({ classId }) => {
     handleStatusFilterChange,
     handleSortChange,
     loading,
+    error,
+    refetch,
   } = useStudentGrades(classId);
 
   const { selectedGrade, isDetailOpen, openDetail, closeDetail } = useGradeDetail();
@@ -51,6 +53,24 @@ export const GradesTab: React.FC<GradesTabProps> = React.memo(({ classId }) => {
             Theo dõi toàn bộ điểm số các bài tập, kỳ thi và đánh giá chuyên cần trong lớp học.
           </Text>
         </div>
+
+        {/* Báo lỗi tải dữ liệu — xem ghi chú cùng loại ở AttendanceTab. Trước Wave 5 hook
+            nuốt lỗi, nên API hỏng thì học sinh thấy bảng điểm trống, không phân biệt được
+            với "giáo viên chưa chấm bài nào". */}
+        {error && (
+          <Alert
+            type="error"
+            showIcon
+            message="Không tải được bảng điểm"
+            description={error}
+            action={
+              <Button size="small" onClick={() => refetch()}>
+                Thử lại
+              </Button>
+            }
+            style={{ marginBottom: 16 }}
+          />
+        )}
 
         {/* 6 Statistic Cards */}
         <GradeStatistic stats={stats} />

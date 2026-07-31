@@ -1,5 +1,5 @@
 import React from "react";
-import { Typography } from "antd";
+import { Alert, Button, Typography } from "antd";
 import AttendanceStatistic from "./AttendanceStatistic";
 import AttendanceRateCard from "./AttendanceRateCard";
 import AttendanceChart from "./AttendanceChart";
@@ -31,6 +31,8 @@ export const AttendanceTab: React.FC<AttendanceTabProps> = React.memo(({ classId
     handleStatusFilterChange,
     handleViewModeChange,
     loading,
+    error,
+    refetch,
   } = useStudentAttendance(classId);
 
   const { selectedRecord, isDetailOpen, openDetail, closeDetail } = useAttendanceSummary();
@@ -53,6 +55,25 @@ export const AttendanceTab: React.FC<AttendanceTabProps> = React.memo(({ classId
             viên.
           </Text>
         </div>
+
+        {/* Báo lỗi tải dữ liệu.
+            Trước Wave 5 hook nuốt trọn lỗi, nên gọi API hỏng thì học sinh thấy bảng trống
+            KÈM tỉ lệ chuyên cần 100% — công thức coi "chưa có buổi nào" là 100%. Tức là lỗi
+            mạng được trình bày như một tin tốt. Phải hiện lỗi TRƯỚC các con số thống kê. */}
+        {error && (
+          <Alert
+            type="error"
+            showIcon
+            message="Không tải được dữ liệu điểm danh"
+            description={error}
+            action={
+              <Button size="small" onClick={() => refetch()}>
+                Thử lại
+              </Button>
+            }
+            style={{ marginBottom: 16 }}
+          />
+        )}
 
         {/* 5 Statistic Cards */}
         <AttendanceStatistic stats={stats} />

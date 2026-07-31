@@ -1,172 +1,99 @@
-import { useState, useMemo, useCallback, useEffect } from "react";
+// Bảng điểm danh của học sinh trong một lớp.
+//
+// CHUYỂN SANG REACT QUERY (Wave 5, nhóm A). Quy tắc nghiệp vụ đã tách sang
+// studentAttendance.logic.ts; ở đây chỉ còn phần React.
+//
+// SỬA MỘT BUG THẬT: bản cũ nuốt trọn lỗi bằng `.catch((err) => console.error(...))`. Gọi API
+// hỏng thì học sinh thấy bảng điểm danh TRỐNG RỖNG và không có lời giải thích nào — trông y
+// hệt như "lớp chưa có buổi nào". Tệ hơn nữa là bảng thống kê vẫn hiện, với tỉ lệ chuyên cần
+// 100% (vì công thức coi "chưa có buổi nào" là 100%). Tức là lỗi mạng được trình bày cho học
+// sinh như một tin tốt.
+//
+// Giờ lỗi được trả ra ngoài để màn hình tự quyết định cách báo.
+import { useCallback, useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { attendanceApi } from "../../../api/attendanceApi";
-import type { IAttendanceItem } from "../../../interface/attendanceInterface";
-import type {
-  IExtendedAttendanceRecord,
-  StudentAttendanceFilterOptions,
-  StudentAttendanceStats,
-} from "../../../types/studentAttendance";
+import { classQueryKeys } from "../../class/class.queryKeys";
+import type { StudentAttendanceFilterOptions } from "../../../types/studentAttendance";
+import {
+  DEFAULT_ATTENDANCE_FILTERS,
+  collectMonthOptions,
+  computeAttendanceStats,
+  extendRecords,
+  filterAndSortAttendance,
+} from "../studentAttendance.logic";
+
+const FALLBACK_ERROR = "Không thể tải dữ liệu điểm danh.";
 
 export function useStudentAttendance(classId?: string) {
-  const [rawRecords, setRawRecords] = useState<IAttendanceItem[]>([]);
-  const [loading, setLoading] = useState<boolean>(false);
-  const [filters, setFilters] = useState<StudentAttendanceFilterOptions>({
-    searchQuery: "",
-    monthFilter: "all",
-    statusFilter: "all",
-    viewMode: "table",
-    sortBy: "newest",
+  const {
+    data: rawRecords = [],
+    isLoading,
+    error,
+    refetch,
+  } = useQuery({
+    queryKey: classQueryKeys.attendance(classId),
+    queryFn: async () => {
+      const res = await attendanceApi.getAttendanceByStudent("me", classId!);
+      return res.data.data || [];
+    },
+    enabled: !!classId,
   });
 
-  useEffect(() => {
-    if (classId) {
-      setLoading(true);
-      attendanceApi
-        .getAttendanceByStudent("me", classId)
-        .then((res) => {
-          setRawRecords(res.data.data || []);
-        })
-        .catch((err) => console.error("Fetch student attendance error:", err))
-        .finally(() => setLoading(false));
-    }
-  }, [classId]);
+  const [filters, setFilters] = useState<StudentAttendanceFilterOptions>(
+    DEFAULT_ATTENDANCE_FILTERS
+  );
 
-  // Enrich records with formatted session title, time, teacher name
-  const extendedRecords: IExtendedAttendanceRecord[] = useMemo(() => {
-    return rawRecords.map((rec, idx) => {
-      const dateObj = rec.date ? new Date(rec.date) : new Date();
-      const dateStr = dateObj.toLocaleDateString("vi-VN", {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric",
-      });
+  const extendedRecords = useMemo(() => extendRecords(rawRecords), [rawRecords]);
+  const stats = useMemo(() => computeAttendanceStats(extendedRecords), [extendedRecords]);
+  const monthOptions = useMemo(() => collectMonthOptions(extendedRecords), [extendedRecords]);
+  const filteredRecords = useMemo(
+    () => filterAndSortAttendance(extendedRecords, filters),
+    [extendedRecords, filters]
+  );
 
-      const monthKey = `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, "0")}`;
-      const teacherName =
-        typeof rec.teacherId === "object" && (rec.teacherId as any)?.fullName
-          ? (rec.teacherId as any).fullName
-          : "Giảng viên";
-
-      return {
-        ...rec,
-        sessionTitle: `Buổi học ngày ${dateStr}`,
-        sessionTime: "08:00 - 10:30",
-        teacherName,
-        monthKey,
-      };
-    });
-  }, [rawRecords]);
-
-  // Compute Stats & Warnings
-  const stats: StudentAttendanceStats = useMemo(() => {
-    const total = extendedRecords.length;
-    let present = 0;
-    let late = 0;
-    let absent = 0;
-    let excused = 0;
-
-    extendedRecords.forEach((item) => {
-      if (item.status === "Present") present++;
-      else if (item.status === "Late") late++;
-      else if (item.status === "Absent") absent++;
-      else if (item.status === "Excused") excused++;
-    });
-
-    const attendedWeighted = present + late * 0.7 + excused * 0.9;
-    const presentRate = total > 0 ? Math.round((attendedWeighted / total) * 100) : 100;
-
-    let warningLevel: StudentAttendanceStats["warningLevel"] = "none";
-    if (presentRate < 50) warningLevel = "critical";
-    else if (presentRate < 80) warningLevel = "low";
-
-    return {
-      total,
-      present,
-      late,
-      absent,
-      excused,
-      presentRate,
-      warningLevel,
-    };
-  }, [extendedRecords]);
-
-  // Extract unique month options for filter dropdown
-  const monthOptions = useMemo(() => {
-    const monthsSet = new Set<string>();
-    extendedRecords.forEach((rec) => {
-      if (rec.monthKey) monthsSet.add(rec.monthKey);
-    });
-    return Array.from(monthsSet).sort().reverse();
-  }, [extendedRecords]);
-
-  // Filter & Sort records
-  const filteredRecords = useMemo(() => {
-    let result = [...extendedRecords];
-
-    // Search filter
-    if (filters.searchQuery.trim()) {
-      const q = filters.searchQuery.toLowerCase().trim();
-      result = result.filter(
-        (rec) =>
-          (rec.sessionTitle || "").toLowerCase().includes(q) ||
-          (rec.note || "").toLowerCase().includes(q) ||
-          (rec.date || "").includes(q)
-      );
-    }
-
-    // Month filter
-    if (filters.monthFilter !== "all") {
-      result = result.filter((rec) => rec.monthKey === filters.monthFilter);
-    }
-
-    // Status filter
-    if (filters.statusFilter !== "all") {
-      result = result.filter((rec) => rec.status === filters.statusFilter);
-    }
-
-    // Sorting
-    result.sort((a, b) => {
-      const timeA = new Date(a.date).getTime();
-      const timeB = new Date(b.date).getTime();
-
-      if (filters.sortBy === "newest") return timeB - timeA;
-      if (filters.sortBy === "oldest") return timeA - timeB;
-      return 0;
-    });
-
-    return result;
-  }, [extendedRecords, filters]);
-
-  const handleSearchChange = useCallback((value: string) => {
-    setFilters((prev) => ({ ...prev, searchQuery: value }));
-  }, []);
-
-  const handleMonthFilterChange = useCallback((value: string) => {
-    setFilters((prev) => ({ ...prev, monthFilter: value }));
-  }, []);
-
-  const handleStatusFilterChange = useCallback(
-    (value: StudentAttendanceFilterOptions["statusFilter"]) => {
-      setFilters((prev) => ({ ...prev, statusFilter: value }));
-    },
+  const updateFilter = useCallback(
+    <K extends keyof StudentAttendanceFilterOptions>(
+      key: K,
+      value: StudentAttendanceFilterOptions[K]
+    ) => setFilters((prev) => ({ ...prev, [key]: value })),
     []
   );
 
-  const handleViewModeChange = useCallback((value: StudentAttendanceFilterOptions["viewMode"]) => {
-    setFilters((prev) => ({ ...prev, viewMode: value }));
-  }, []);
+  const handleSearchChange = useCallback(
+    (value: string) => updateFilter("searchQuery", value),
+    [updateFilter]
+  );
+  const handleMonthFilterChange = useCallback(
+    (value: string) => updateFilter("monthFilter", value),
+    [updateFilter]
+  );
+  const handleStatusFilterChange = useCallback(
+    (value: StudentAttendanceFilterOptions["statusFilter"]) => updateFilter("statusFilter", value),
+    [updateFilter]
+  );
+  const handleViewModeChange = useCallback(
+    (value: StudentAttendanceFilterOptions["viewMode"]) => updateFilter("viewMode", value),
+    [updateFilter]
+  );
+  const handleSortChange = useCallback(
+    (value: StudentAttendanceFilterOptions["sortBy"]) => updateFilter("sortBy", value),
+    [updateFilter]
+  );
 
-  const handleSortChange = useCallback((value: StudentAttendanceFilterOptions["sortBy"]) => {
-    setFilters((prev) => ({ ...prev, sortBy: value }));
-  }, []);
+  const serverMessage = (error as { response?: { data?: { message?: string } } })?.response?.data
+    ?.message;
 
   return {
-    loading,
+    loading: isLoading,
+    // Mới: trước đây lỗi bị nuốt nên màn hình không có cách nào biết mà báo.
+    error: error ? serverMessage || FALLBACK_ERROR : null,
     filters,
     stats,
     monthOptions,
     extendedRecords,
     filteredRecords,
+    refetch,
     handleSearchChange,
     handleMonthFilterChange,
     handleStatusFilterChange,

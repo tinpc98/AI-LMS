@@ -1,205 +1,102 @@
-import { useState, useMemo, useCallback, useEffect } from "react";
+// Bảng điểm của học sinh trong một lớp.
+//
+// CHUYỂN SANG REACT QUERY (Wave 5, nhóm A). Quy tắc nghiệp vụ đã tách sang
+// studentGrade.logic.ts; ở đây chỉ còn phần React.
+//
+// SỬA HAI BUG:
+//
+// 1. Nuốt lỗi. Bản cũ dùng `.catch((err) => console.error(...))`, nên API hỏng thì học sinh
+//    thấy bảng điểm TRỐNG và không có lời giải thích — trông y hệt "giáo viên chưa chấm".
+//    Lỗi giờ được trả ra ngoài để màn hình tự quyết định cách báo.
+//
+// 2. Phụ thuộc useMemo thiếu. Bản cũ tính stats với deps [gradeItems] nhưng bên trong lại
+//    đọc studentGradesData?.avgGPA. Khi máy chủ trả GPA mới mà danh sách đầu điểm không đổi,
+//    useMemo giữ nguyên kết quả cũ — học sinh nhìn thấy ĐIỂM TRUNG BÌNH CŨ. Sai kiểu này
+//    không bao giờ lộ ra khi bấm thử, chỉ lộ khi dữ liệu thay đổi đúng cách. Nay studentData
+//    là tham số tường minh của computeGradeStats nên deps phải liệt kê nó.
+import { useCallback, useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import gradeApi from "../../../api/gradeApi";
-import type { IGradeItemDef, IStudentGradeData } from "../../../api/gradeApi";
-import type {
-  IGradeItem,
-  StudentGradeFilterOptions,
-  StudentGradeStats,
-  GradeCategory,
-} from "../../../types/studentGrade";
+import { classQueryKeys } from "../../class/class.queryKeys";
+import type { StudentGradeFilterOptions } from "../../../types/studentGrade";
+import {
+  DEFAULT_GRADE_FILTERS,
+  buildGradeItems,
+  computeGradeStats,
+  filterAndSortGrades,
+} from "../studentGrade.logic";
+
+const FALLBACK_ERROR = "Không thể tải bảng điểm.";
 
 export function useStudentGrades(classId?: string) {
-  const [loading, setLoading] = useState(false);
-  const [gradeItemsDef, setGradeItemsDef] = useState<IGradeItemDef[]>([]);
-  const [studentGradesData, setStudentGradesData] = useState<IStudentGradeData | null>(null);
-
-  const [filters, setFilters] = useState<StudentGradeFilterOptions>({
-    searchQuery: "",
-    categoryFilter: "all",
-    statusFilter: "all",
-    sortBy: "highest",
+  const { data, isLoading, error, refetch } = useQuery({
+    queryKey: classQueryKeys.grades(classId),
+    queryFn: async () => {
+      const res = await gradeApi.getGradesByStudent("me", classId!);
+      return {
+        definitions: res.gradeItems || [],
+        // API trả về mảng học sinh; gọi với "me" thì chỉ có một phần tử là chính mình.
+        studentData: res.students?.[0] ?? null,
+      };
+    },
+    enabled: !!classId,
   });
 
-  useEffect(() => {
-    if (classId) {
-      setLoading(true);
-      gradeApi
-        .getGradesByStudent("me", classId)
-        .then((res) => {
-          setGradeItemsDef(res.gradeItems || []);
-          if (res.students && res.students.length > 0) {
-            setStudentGradesData(res.students[0]);
-          }
-        })
-        .catch((err) => {
-          console.error("Fetch student grades error:", err);
-        })
-        .finally(() => setLoading(false));
-    }
-  }, [classId]);
+  const [filters, setFilters] = useState<StudentGradeFilterOptions>(DEFAULT_GRADE_FILTERS);
 
-  // Combine grades into unified grade items list
-  const gradeItems: IGradeItem[] = useMemo(() => {
-    if (!studentGradesData) return [];
-    const list: IGradeItem[] = [];
-    const sg = studentGradesData.grades || {};
+  // Phụ thuộc thẳng vào `data` chứ KHÔNG tách ra hai biến trung gian kiểu
+  // `data?.definitions ?? []`: khi chưa có dữ liệu, mỗi lần render sẽ sinh một mảng rỗng MỚI,
+  // useMemo thấy phụ thuộc đổi và tính lại vô ích — đúng cái bẫy vừa sửa ở trên, chỉ đổi
+  // hình dạng.
+  const studentData = data?.studentData ?? null;
 
-    gradeItemsDef.forEach((item) => {
-      let category: GradeCategory = "Assignment";
-      const catLower = (item.category || "").toLowerCase();
-      if (catLower.includes("quiz")) category = "Quiz";
-      else if (
-        catLower.includes("exam") ||
-        catLower.includes("midterm") ||
-        catLower.includes("final")
-      )
-        category = "Exam";
-      else if (catLower.includes("attendance") || catLower.includes("chuyên cần"))
-        category = "Attendance";
-      else if (catLower === "assignment") category = "Assignment";
-      else category = "Other";
+  const gradeItems = useMemo(
+    () => buildGradeItems(data?.definitions ?? [], studentData),
+    [data?.definitions, studentData]
+  );
+  const stats = useMemo(
+    () => computeGradeStats(gradeItems, studentData),
+    [gradeItems, studentData]
+  );
+  const filteredGradeItems = useMemo(
+    () => filterAndSortGrades(gradeItems, filters),
+    [gradeItems, filters]
+  );
 
-      const match = sg[item._id];
-      const score = match?.score !== undefined && match?.score !== null ? match.score : null;
+  const updateFilter = useCallback(
+    <K extends keyof StudentGradeFilterOptions>(key: K, value: StudentGradeFilterOptions[K]) =>
+      setFilters((prev) => ({ ...prev, [key]: value })),
+    []
+  );
 
-      list.push({
-        _id: item._id,
-        title: item.title,
-        category,
-        score,
-        maxScore: item.maxScore || 10,
-        weight: item.weight || 10,
-        status: score !== null ? "Graded" : "Not Submitted",
-        gradedBy: "Giảng viên",
-        feedback: match?.feedback,
-      });
-    });
-
-    return list;
-  }, [gradeItemsDef, studentGradesData]);
-
-  // Compute Grade Stats
-  const stats: StudentGradeStats = useMemo(() => {
-    let totalScoreWeighted = 0;
-    let totalWeightScored = 0;
-    let gradedCount = 0;
-
-    let assignSum = 0,
-      assignCount = 0;
-    let examSum = 0,
-      examCount = 0;
-
-    gradeItems.forEach((item) => {
-      if (item.status === "Graded" && item.score !== null) {
-        gradedCount++;
-        totalScoreWeighted += item.score * item.weight;
-        totalWeightScored += item.weight;
-
-        if (item.category === "Assignment") {
-          assignSum += item.score;
-          assignCount++;
-        } else if (item.category === "Exam" || item.category === "Quiz") {
-          examSum += item.score;
-          examCount++;
-        }
-      }
-    });
-
-    const gpa =
-      totalWeightScored > 0 ? Number((totalScoreWeighted / totalWeightScored).toFixed(1)) : null;
-    const assignmentAvg = assignCount > 0 ? Number((assignSum / assignCount).toFixed(1)) : null;
-    const examAvg = examCount > 0 ? Number((examSum / examCount).toFixed(1)) : null;
-    const attendanceRate = 95; // Default standard attendance rate
-
-    const overallProgress = Math.min(
-      100,
-      Math.round(
-        ((gradedCount + (gradeItems.length - gradedCount) * 0.3) / Math.max(1, gradeItems.length)) *
-          100
-      )
-    );
-
-    return {
-      gpa: studentGradesData?.avgGPA || gpa,
-      classAvgGpa: gpa ? Number((gpa * 0.95).toFixed(1)) : 8.2,
-      gradedCount,
-      assignmentAvg,
-      examAvg,
-      attendanceRate,
-      overallProgress,
-    };
-  }, [gradeItems]);
-
-  // Filter & Sort Grade Items
-  const filteredGradeItems = useMemo(() => {
-    let result = [...gradeItems];
-
-    // Search
-    if (filters.searchQuery.trim()) {
-      const q = filters.searchQuery.toLowerCase().trim();
-      result = result.filter((g) => g.title.toLowerCase().includes(q));
-    }
-
-    // Category filter
-    if (filters.categoryFilter !== "all") {
-      result = result.filter((g) => g.category === filters.categoryFilter);
-    }
-
-    // Status filter
-    if (filters.statusFilter !== "all") {
-      result = result.filter((g) => g.status === filters.statusFilter);
-    }
-
-    // Sort
-    result.sort((a, b) => {
-      if (filters.sortBy === "highest") {
-        return (b.score || 0) - (a.score || 0);
-      }
-      if (filters.sortBy === "lowest") {
-        return (a.score || 0) - (b.score || 0);
-      }
-      if (filters.sortBy === "gradedAt") {
-        const timeA = a.gradedAt ? new Date(a.gradedAt).getTime() : 0;
-        const timeB = b.gradedAt ? new Date(b.gradedAt).getTime() : 0;
-        return timeB - timeA;
-      }
-      if (filters.sortBy === "name_asc") {
-        return a.title.localeCompare(b.title, "vi");
-      }
-      return 0;
-    });
-
-    return result;
-  }, [gradeItems, filters]);
-
-  const handleSearchChange = useCallback((value: string) => {
-    setFilters((prev) => ({ ...prev, searchQuery: value }));
-  }, []);
-
+  const handleSearchChange = useCallback(
+    (value: string) => updateFilter("searchQuery", value),
+    [updateFilter]
+  );
   const handleCategoryFilterChange = useCallback(
-    (value: StudentGradeFilterOptions["categoryFilter"]) => {
-      setFilters((prev) => ({ ...prev, categoryFilter: value }));
-    },
-    []
+    (value: StudentGradeFilterOptions["categoryFilter"]) => updateFilter("categoryFilter", value),
+    [updateFilter]
   );
-
   const handleStatusFilterChange = useCallback(
-    (value: StudentGradeFilterOptions["statusFilter"]) => {
-      setFilters((prev) => ({ ...prev, statusFilter: value }));
-    },
-    []
+    (value: StudentGradeFilterOptions["statusFilter"]) => updateFilter("statusFilter", value),
+    [updateFilter]
+  );
+  const handleSortChange = useCallback(
+    (value: StudentGradeFilterOptions["sortBy"]) => updateFilter("sortBy", value),
+    [updateFilter]
   );
 
-  const handleSortChange = useCallback((value: StudentGradeFilterOptions["sortBy"]) => {
-    setFilters((prev) => ({ ...prev, sortBy: value }));
-  }, []);
+  const serverMessage = (error as { response?: { data?: { message?: string } } })?.response?.data
+    ?.message;
 
   return {
-    loading,
+    loading: isLoading,
+    error: error ? serverMessage || FALLBACK_ERROR : null,
     filters,
     stats,
     gradeItems,
     filteredGradeItems,
+    refetch,
     handleSearchChange,
     handleCategoryFilterChange,
     handleStatusFilterChange,
