@@ -36,25 +36,40 @@ const useExamTimer = (
       endTime = parseInt(endTimeStr, 10);
     }
 
-    const updateTimer = () => {
-      const currentTime = Date.now();
-      const remainingSeconds = Math.round((endTime - currentTime) / 1000);
+    /**
+     * Cập nhật thời gian còn lại. Trả về false khi đã hết giờ.
+     *
+     * BUG ĐÃ SỬA (Wave 7): bản cũ gọi clearInterval(interval) ngay trong thân hàm này, trong
+     * khi `interval` được khai báo bằng const Ở DƯỚI. Lần gọi đầu tiên — chạy TRƯỚC setInterval
+     * — vì thế rơi vào vùng chết tạm thời và ném ReferenceError.
+     *
+     * Nghĩa là: học sinh mở trang thi sau khi đã hết giờ thì hook SẬP, và thay vì thấy "hết
+     * giờ" họ thấy màn hình lỗi của ExamErrorBoundary. Nhánh này chỉ chạy khi thời gian đã
+     * hết ngay lúc vào trang nên không lộ ra khi bấm thử bình thường.
+     *
+     * Cách sửa cũng gỡ luôn một vấn đề thứ hai: bản cũ vẫn khởi động setInterval kể cả khi đã
+     * hết giờ, để lại một bộ đếm chạy vô ích mỗi giây.
+     */
+    const updateTimer = (): boolean => {
+      const remainingSeconds = Math.round((endTime - Date.now()) / 1000);
 
-      if (remainingSeconds <= 0) {
-        clearInterval(interval);
-        setTimeLeft(0);
-        localStorage.removeItem(storageKey);
-
-        if (onTimeUpRef.current) {
-          onTimeUpRef.current();
-        }
-      } else {
+      if (remainingSeconds > 0) {
         setTimeLeft(remainingSeconds);
+        return true;
       }
+
+      setTimeLeft(0);
+      localStorage.removeItem(storageKey);
+      onTimeUpRef.current?.();
+      return false;
     };
 
-    updateTimer();
-    const interval = setInterval(updateTimer, 1000);
+    // Hết giờ ngay từ lúc vào trang thì không cần bộ đếm nào cả.
+    if (!updateTimer()) return;
+
+    const interval = setInterval(() => {
+      if (!updateTimer()) clearInterval(interval);
+    }, 1000);
 
     return () => clearInterval(interval);
   }, [durationInSeconds, examId, storageKey]);
