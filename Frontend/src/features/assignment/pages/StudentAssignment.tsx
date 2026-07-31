@@ -84,7 +84,9 @@ const StudentAssignmentContent = () => {
           type="error"
           showIcon
           action={
-            <Button type="primary" danger onClick={fetchAssignmentDetail}>
+            // Bọc trong arrow: refetch của React Query nhận một object tuỳ chọn, truyền
+            // thẳng vào onClick sẽ đẩy MouseEvent vào chỗ đó.
+            <Button type="primary" danger onClick={() => fetchAssignmentDetail()}>
               Thử lại
             </Button>
           }

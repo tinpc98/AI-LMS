@@ -43,7 +43,7 @@ export const DashboardPage: React.FC = () => {
       )}
 
       {/* 1. Welcome Header */}
-      <DashboardHeader onRefresh={refetch} loading={loading} />
+      <DashboardHeader onRefresh={() => refetch()} loading={loading} />
 
       {/* 2. Overview Statistic 8 Cards */}
       <StatisticCards cards={overviewCards} loading={loading} />

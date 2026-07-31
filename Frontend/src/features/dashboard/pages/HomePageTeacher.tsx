@@ -43,7 +43,7 @@ export default function HomePageTeacher() {
         email={user?.email}
         avatar={(user as any)?.avatar}
         loading={loading}
-        onRefresh={refetch}
+        onRefresh={() => refetch()}
       />
 
       {/* Error Alert State */}

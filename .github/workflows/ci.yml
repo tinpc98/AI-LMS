@@ -88,12 +88,17 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      # continue-on-error: repo hiện có ~616 lỗi lint tồn đọng từ trước (chủ yếu no-explicit-any),
-      # chưa nằm trong phạm vi PR-12. Vẫn chạy để lộ diện số liệu, nhưng không chặn merge cho tới khi
-      # có một PR dọn dẹp lint riêng đưa baseline về 0.
-      - name: Lint (không chặn merge — xem ghi chú)
-        run: npm run lint
-        continue-on-error: true
+      # Rào chắn lint theo cơ chế RATCHET (§5.9). Trước đây bước này để continue-on-error,
+      # tức là chạy rồi bỏ qua kết quả — vô dụng, vì không ai đọc log của một bước luôn xanh.
+      #
+      # Không bật thẳng ngưỡng 0 được: còn 428 lỗi tồn đọng, 361 trong đó là no-explicit-any,
+      # một khoản nợ riêng không dọn xong trong một PR. CI đỏ từ ngày đầu thì sẽ bị tắt.
+      #
+      # Thay vào đó khoá từng rule ở mức hiện tại: tăng là đỏ, rule đang sạch mà có lỗi mới
+      # cũng đỏ. Cụ thể react-hooks/purity vừa về 0 ở Wave 5 — từ giờ tái phạm là CI chặn.
+      # Cùng chiến lược với check:filesize và depcruise bên Backend.
+      - name: Rào chắn lint (ratchet — CHẶN merge khi có hồi quy)
+        run: npm run lint:budget
 
       # Lưới an toàn cho việc di chuyển file ở Wave 5. tsc và vite build KHÔNG bắt được
       # đường dẫn lazy trỏ nhầm sang module khác có tồn tại, cũng không bắt được thiếu

@@ -84,7 +84,11 @@ export const computeAttendanceStats = (
 
 /** Các tháng có dữ liệu, mới nhất trước — để đổ vào ô chọn lọc theo tháng. */
 export const collectMonthOptions = (records: IExtendedAttendanceRecord[]): string[] =>
-  Array.from(new Set(records.map((r) => r.monthKey).filter(Boolean)))
+  Array.from(
+    // `.filter(Boolean)` KHÔNG thu hẹp kiểu trong TypeScript — kết quả vẫn là
+    // (string | undefined)[]. Phải dùng type predicate thì trình biên dịch mới biết.
+    new Set(records.map((r) => r.monthKey).filter((key): key is string => Boolean(key)))
+  )
     .sort()
     .reverse();
 
