@@ -1,6 +1,7 @@
 import cron from "node-cron";
 import cronService from "./cron.service.js";
 import { runAIPendingRecovery } from "./aiPendingRecovery.job.js";
+import { runExamAutoClose } from "./examLifecycle.job.js";
 
 /**
  * initCronJobs – Khởi tạo và đăng ký tất cả các cron job của hệ thống.
@@ -93,4 +94,44 @@ export const initCronJobs = (runImmediately = false) => {
     { scheduled: true }
   );
   console.log("[CRON] 📅 Đã đăng ký job: AI Pending Recovery (lịch: */5 * * * *)");
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // JOB 3: Tự động đóng kỳ thi đã hết giờ làm bài (§6.7)
+  //
+  // Lịch: mỗi 10 phút.
+  //
+  // Vì sao 10 phút chứ không phải mỗi ngày như job lớp học: kỳ thi kết thúc theo GIỜ
+  // (startTime + duration phút), không theo ngày. Đóng muộn nửa ngày nghĩa là nửa ngày đó
+  // học sinh vẫn thấy kỳ thi ở trạng thái "đang diễn ra".
+  //
+  // Vì sao không phải mỗi phút: endpoint danh sách đã tự tính trạng thái hiển thị đúng ngay
+  // lập tức (resolveDisplayStatus), nên độ trễ của job chỉ ảnh hưởng tới dữ liệu lưu trữ,
+  // không ảnh hưởng tới thứ người dùng nhìn thấy. Chạy dày hơn chỉ tốn truy vấn.
+  // ──────────────────────────────────────────────────────────────────────────
+  cron.schedule(
+    "*/10 * * * *",
+    async () => {
+      try {
+        const { closed, dangling } = await runExamAutoClose();
+
+        if (closed > 0) {
+          console.log(`[CRON] 🔒 Exam Auto-Close: đã đóng ${closed} kỳ thi hết giờ.`);
+        }
+
+        // Cảnh báo, không phải thông tin: mỗi phiên kẹt là một học sinh đã vào thi mà không
+        // có kết quả ở bất kỳ màn hình nào. Xem ghi chú trong examLifecycle.job.js về lý do
+        // job chỉ đếm chứ không tự xử lý.
+        if (dangling > 0) {
+          console.warn(
+            `[CRON] ⚠️ Exam Auto-Close: ${dangling} phiên làm bài còn kẹt IN_PROGRESS ở các kỳ` +
+              ` thi đã đóng. Những bài này KHÔNG xuất hiện trong hàng chờ chấm của giáo viên.`
+          );
+        }
+      } catch (error) {
+        console.error("[CRON ERROR] ❌ Exam Auto-Close Failed:", error);
+      }
+    },
+    { scheduled: true, timezone: "Asia/Ho_Chi_Minh" }
+  );
+  console.log("[CRON] 📅 Đã đăng ký job: Exam Auto-Close (lịch: */10 * * * *)");
 };

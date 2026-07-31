@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 import examService from "./exam.service.js";
 import { aiExamGenerationService } from "#modules/ai";
 import Exam from "./exam.model.js";
+import { resolveDisplayStatus } from "./examLifecycle.service.js";
 import { Class as classModel } from "#modules/class";
 import { asyncHandler } from "#shared/utils/asyncHandler.js";
 
@@ -256,31 +257,22 @@ export const getAllExams = asyncHandler(async (req, res) => {
 
   const exams = await Exam.find(examFilter).sort({ createdAt: -1 });
 
-  // Đánh dấu các kỳ thi đã quá giờ là COMPLETED.
+  // Trạng thái hiển thị của kỳ thi đã quá giờ.
   //
-  // SỬA N+1 (Wave 4.6 / BC 09): trước đây mỗi kỳ thi hết hạn gọi một exam.save() riêng và
-  // chờ tuần tự ngay trong request GET — 50 kỳ thi hết hạn nghĩa là 50 lượt ghi nối đuôi
-  // nhau, người dùng phải chờ hết mới thấy danh sách. Nay gom thành MỘT updateMany.
+  // ĐÃ HẾT NỢ §6.7 — ENDPOINT NÀY KHÔNG CÒN GHI DỮ LIỆU.
   //
-  // NỢ CÒN LẠI (§6.7): bản chất đây vẫn là một endpoint GET đang GHI dữ liệu. Việc tự động
-  // đóng kỳ thi hết giờ nên là cron job chứ không phải tác dụng phụ của thao tác đọc — hai
-  // người cùng mở danh sách sẽ cùng kích hoạt cập nhật, và nếu không ai mở danh sách thì
-  // kỳ thi không bao giờ được đóng. Kế hoạch §6.7 đã dành riêng một job cho việc này.
+  // Lịch sử: bản đầu gọi exam.save() cho từng kỳ hết hạn (N+1 ghi ngay trong request GET),
+  // Wave 4.6 gom lại thành một updateMany, nhưng vẫn là một thao tác ĐỌC đang GHI. Hệ quả
+  // thật: hai người cùng mở danh sách là hai lượt ghi chồng nhau, và nếu KHÔNG AI mở danh
+  // sách thì kỳ thi không bao giờ được đóng — trạng thái dữ liệu phụ thuộc vào việc có ai
+  // vào xem hay không.
+  //
+  // Nay việc ghi thuộc về cron job examLifecycle (chạy mỗi 10 phút). Ở đây chỉ TÍNH trạng
+  // thái để hiển thị, dùng CHUNG hàm resolveDisplayStatus với job — nên người dùng vẫn thấy
+  // "COMPLETED" ngay lập tức, không phải chờ tới lượt cron.
   const now = Date.now();
-  const expiredExamIds = [];
-
   for (const exam of exams) {
-    const endTime = new Date(exam.startTime).getTime() + exam.duration * 60000;
-
-    if (now > endTime && exam.status === "PUBLISHED") {
-      // Cập nhật in-memory để response phản ánh đúng trạng thái mới ngay lần đọc này.
-      exam.status = "COMPLETED";
-      expiredExamIds.push(exam._id);
-    }
-  }
-
-  if (expiredExamIds.length > 0) {
-    await Exam.updateMany({ _id: { $in: expiredExamIds } }, { $set: { status: "COMPLETED" } });
+    exam.status = resolveDisplayStatus(exam, now);
   }
 
   const updatedExams = exams;
