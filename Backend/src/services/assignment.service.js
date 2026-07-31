@@ -3,7 +3,7 @@
 // Không phụ thuộc req/res; nhận tham số nguyên thủy, trả data hoặc throw Error có .status.
 import mongoose from "mongoose";
 import cloudinary from "../config/cloudinary.js";
-import { checkClassTeacherOwnership } from "#shared/middlewares/ownership.middleware.js";
+import { checkClassTeacherOwnership } from "#modules/class";
 import * as assignmentRepo from "../repositories/assignment.repository.js";
 
 const throwError = (message, status) => {

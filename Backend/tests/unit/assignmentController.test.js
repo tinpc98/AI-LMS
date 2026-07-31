@@ -7,7 +7,7 @@ import assignmentController from "../../src/controllers/assignment.controller.js
 import Assignment from "../../src/models/assignment.model.js";
 import Submission from "../../src/models/submission.model.js";
 import cloudinary from "../../src/config/cloudinary.js";
-import classModel from "../../src/models/class.model.js";
+import { Class as classModel } from "#modules/class";
 
 const TEACHER_ID = "507f1f77bcf86cd799439011";
 const OTHER_TEACHER_ID = "507f1f77bcf86cd799439099";

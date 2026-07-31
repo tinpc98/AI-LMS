@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 import Announcement from "../models/announcement.model.js";
-import classModel from "../models/class.model.js";
+import { Class as classModel } from "#modules/class";
 
 class AnnouncementService {
   async createAnnouncement({

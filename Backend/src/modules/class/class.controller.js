@@ -1,11 +1,11 @@
 import crypto from "crypto";
 import mongoose from "mongoose";
 import { matchedData } from "express-validator";
-import classModel from "../models/class.model.js";
-import Course from "../models/course.model.js";
+import classModel from "./class.model.js";
+import Course from "../../models/course.model.js";
 import { User } from "#modules/auth";
-import classService from "../services/class.service.js";
-import { attachStudentProgress } from "../services/classProgress.service.js";
+import classService from "./class.service.js";
+import { attachStudentProgress } from "./classProgress.service.js";
 
 // Lấy danh sách lớp học (Hỗ trợ phân trang, tìm kiếm và lọc theo vai trò)
 export const ClassList = async (req, res) => {

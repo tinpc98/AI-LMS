@@ -5,7 +5,7 @@
 // chứng minh không có thay đổi hành vi quan sát được.
 import { describe, it, expect, afterEach, vi } from "vitest";
 import gradeService from "../../src/services/grade.service.js";
-import classModel from "../../src/models/class.model.js";
+import { Class as classModel } from "#modules/class";
 import { User } from "#modules/auth";
 import Assignment from "../../src/models/assignment.model.js";
 import Exam from "../../src/models/exam.model.js";

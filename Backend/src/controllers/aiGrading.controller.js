@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 import ExamAttempt from "../models/examAttempt.model.js";
 import aiGradingService from "../ai/services/aiGrading.service.js";
 import { AIError } from "../utils/aiError.js";
-import { verifyClassTeacherAccess } from "../utils/classAuth.helper.js";
+import { verifyClassTeacherAccess } from "#modules/class";
 
 /**
  * Endpoint yêu cầu AI chấm điểm đề xuất cho 1 câu tự luận

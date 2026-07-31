@@ -2,7 +2,7 @@ import jwt from "jsonwebtoken";
 import fs from "fs";
 import path from "path";
 import LiveSession from "../models/liveSession.model.js";
-import classModel from "../models/class.model.js";
+import { Class as classModel } from "#modules/class";
 import { LiveError, LIVE_ERROR_CODES } from "../validators/live.validator.js";
 
 const DEFAULT_DOMAIN = "8x8.vc";

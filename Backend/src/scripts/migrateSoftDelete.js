@@ -4,7 +4,7 @@ dotenv.config();
 
 import { User } from "#modules/auth";
 import Course from "../models/course.model.js";
-import classModel from "../models/class.model.js";
+import { Class as classModel } from "#modules/class";
 import Lesson from "../models/lesson.model.js";
 import Assignment from "../models/assignment.model.js";
 import Submission from "../models/submission.model.js";

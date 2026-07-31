@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 import assert from "assert";
 import dotenv from "dotenv";
 import { connectDB } from "../config/database.js";
-import Class from "../models/class.model.js";
+import { Class } from "#modules/class";
 import Lesson from "../models/lesson.model.js";
 import { User } from "#modules/auth";
 import AISummary from "../models/aiSummary.model.js";

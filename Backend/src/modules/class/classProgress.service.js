@@ -1,7 +1,7 @@
 // File: src/services/classProgress.service.js
 // Ghép tầng truy vấn (classProgress.repository.js) với công thức thuần
 // (classProgressCalculator.js). Tầng controller chỉ gọi hàm này, không tự truy vấn.
-import { collectProgressTotals } from "../repositories/classProgress.repository.js";
+import { collectProgressTotals } from "./classProgress.repository.js";
 import { buildProgressMap } from "./classProgressCalculator.js";
 
 /**

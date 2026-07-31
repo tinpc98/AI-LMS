@@ -1,5 +1,5 @@
-import Class from "../models/class.model.js";
-import { AIError, AIErrorCode } from "./aiError.js";
+import Class from "./class.model.js";
+import { AIError, AIErrorCode } from "../../utils/aiError.js";
 
 /**
  * Kiểm tra xem người dùng có quyền quản lý lớp học hay không

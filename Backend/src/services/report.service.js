@@ -1,6 +1,6 @@
 import ExcelJS from "exceljs";
 import mongoose from "mongoose";
-import classModel from "../models/class.model.js";
+import { Class as classModel } from "#modules/class";
 import Grade from "../models/grade.model.js";
 import Attendance from "../models/attendance.model.js";
 

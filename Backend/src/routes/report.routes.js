@@ -2,7 +2,7 @@ import { Router } from "express";
 import { exportGrades, exportAttendance } from "../controllers/report.controller.js";
 import { verifyUser } from "#modules/auth";
 import { isAdmin } from "#shared/middlewares/rbac.middleware.js";
-import classModel from "../models/class.model.js";
+import { Class as classModel } from "#modules/class";
 import mongoose from "mongoose";
 
 const router = Router();

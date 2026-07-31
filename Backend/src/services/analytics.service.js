@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import Class from "../models/class.model.js";
+import { Class } from "#modules/class";
 import LessonProgress from "../models/lessonProgress.model.js";
 import LearningActivity from "../models/learningActivity.model.js";
 import Attendance from "../models/attendance.model.js";

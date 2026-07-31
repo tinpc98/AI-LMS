@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 import Attendance from "../models/attendance.model.js";
-import classModel from "../models/class.model.js";
+import { Class as classModel } from "#modules/class";
 
 const dayNamesMap = {
   Sunday: 0,

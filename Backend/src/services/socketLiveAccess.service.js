@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import Class from "../models/class.model.js";
+import { Class } from "#modules/class";
 
 /**
  * Service kiểm tra quyền truy cập Socket Room Lớp Học Trực Tuyến

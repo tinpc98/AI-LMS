@@ -6,10 +6,10 @@
 // find/findOne/countDocuments/count — KHÔNG áp dụng cho aggregate. Mọi $match dưới đây
 // phải tự khai báo điều kiện soft-delete.
 import mongoose from "mongoose";
-import Lesson from "../models/lesson.model.js";
-import LessonProgress from "../models/lessonProgress.model.js";
-import Assignment from "../models/assignment.model.js";
-import Submission from "../models/submission.model.js";
+import Lesson from "../../models/lesson.model.js";
+import LessonProgress from "../../models/lessonProgress.model.js";
+import Assignment from "../../models/assignment.model.js";
+import Submission from "../../models/submission.model.js";
 
 // Bài đã rút lại (withdrawn) không được tính là đã nộp.
 const SUBMITTED_STATUSES = ["submitted", "late", "graded", "resubmitted"];

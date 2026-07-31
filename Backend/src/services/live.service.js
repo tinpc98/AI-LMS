@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import { User } from "#modules/auth";
 import LiveSession from "../models/liveSession.model.js";
-import classModel from "../models/class.model.js";
+import { Class as classModel } from "#modules/class";
 import { generateLiveSessionRoomName } from "../utils/liveSessionHelper.js";
 import { mapLiveSessionResponse } from "../utils/liveSession.mapper.js";
 import { LiveError, LIVE_ERROR_CODES } from "../validators/live.validator.js";

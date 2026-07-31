@@ -2,7 +2,7 @@ import express from "express";
 import assignmentController from "../controllers/assignment.controller.js";
 import { verifyUser } from "#modules/auth";
 import { isTeacher } from "#shared/middlewares/rbac.middleware.js";
-import { canViewSubmission } from "#shared/middlewares/ownership.middleware.js";
+import { canViewSubmission } from "../middlewares/submissionAccess.middleware.js";
 import upload from "#shared/middlewares/upload.middleware.js";
 
 const router = express.Router();

@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 import { User } from "#modules/auth";
-import classModel from "../models/class.model.js";
+import { Class as classModel } from "#modules/class";
 import Notification from "../models/notification.model.js";
 
 // ─────────────────────────────────────────────────────────────────────────────

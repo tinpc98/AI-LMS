@@ -7,7 +7,8 @@ import express from "express";
 // Module đã migrate sang src/modules/ được import qua PUBLIC API (index.js), không thọc
 // vào file nội bộ. Các router còn lại vẫn nằm ở src/routes/ cho tới lượt migrate của chúng.
 import { authRoutes, userRoutes } from "#modules/auth";
-import ClassRouter from "./class.routes.js";
+import { classRoutes } from "#modules/class";
+
 import LessonRouter from "./lesson.routes.js";
 import AssignmentRouter from "./assignment.routes.js";
 import QuestionRouter from "./question.routes.js";
@@ -40,7 +41,7 @@ router.use("/auth", authRoutes);
 router.use("/users", userRoutes);
 
 // ── Lớp học & nội dung giảng dạy ────────────────────────────────────────────
-router.use("/classes", ClassRouter);
+router.use("/classes", classRoutes);
 router.use("/courses", CourseRouter);
 router.use("/lessons", LessonRouter);
 router.use("/assignments", AssignmentRouter);

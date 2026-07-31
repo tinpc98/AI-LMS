@@ -3,7 +3,7 @@ import { describe, it, expect, afterEach, vi } from "vitest";
 import mongoose from "mongoose";
 import examAttemptService from "../../src/services/examAttempt.service.js";
 import ExamAttempt from "../../src/models/examAttempt.model.js";
-import classModel from "../../src/models/class.model.js";
+import { Class as classModel } from "#modules/class";
 
 const OWNER_TEACHER_ID = "507f1f77bcf86cd799439011";
 const OTHER_TEACHER_ID = "507f1f77bcf86cd799439099";

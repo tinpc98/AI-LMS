@@ -1,6 +1,6 @@
 // File: src/validators/class.validator.js
 import { body } from "express-validator";
-import { handleValidationErrors } from "../utils/validators.js";
+import { handleValidationErrors } from "../../utils/validators.js";
 
 // Chỉ khai báo (whitelist) các trường Admin được phép sửa qua route PUT /:id chung.
 // Cố tình KHÔNG khai báo: teacherId, assignedBy, assignedAt, students, currentStudents,

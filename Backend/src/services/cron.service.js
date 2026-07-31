@@ -1,4 +1,4 @@
-import classModel from "../models/class.model.js";
+import { Class as classModel } from "#modules/class";
 
 /**
  * CronService – Chứa toàn bộ business logic được gọi bởi các cron job.

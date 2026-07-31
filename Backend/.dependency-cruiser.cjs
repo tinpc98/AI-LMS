@@ -31,6 +31,11 @@ module.exports = {
       // đúng kiểu lỗi mà tên file .controllers.js đã gây ra ở Wave 2.
       from: { path: "\\.controller\\.js$" },
       to: { path: "\\.model\\.js$" },
+      // HẠN CHẾ ĐÃ BIẾT: rule không xuyên qua re-export của index.js. Khi controller lấy
+      // model của module KHÁC qua public API (vd class.controller import { User } từ
+      // #modules/auth), depcruise thấy đích là index.js chứ không phải *.model.js nên
+      // không báo. Số vi phạm vì thế sẽ giảm dần theo tiến độ migrate mà không phải do
+      // đã sửa. Đừng dùng con số này làm thước đo khối lượng Wave 4.3.
     },
     {
       name: "no-model-to-upper-layer",

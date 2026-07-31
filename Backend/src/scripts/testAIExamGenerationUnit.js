@@ -4,7 +4,7 @@ import ExamSet from "../models/examSet.model.js";
 import ExamSetShare from "../models/examSetShare.model.js";
 import Exam from "../models/exam.model.js";
 import { User } from "#modules/auth";
-import classModel from "../models/class.model.js";
+import { Class as classModel } from "#modules/class";
 import aiExamGenerationService from "../ai/services/aiExamGeneration.service.js";
 import { generateFromExamSet, getExamById, getAllExams } from "../controllers/exam.controller.js";
 

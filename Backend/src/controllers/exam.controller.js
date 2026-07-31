@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 import examService from "../services/exam.service.js";
 import aiExamGenerationService from "../ai/services/aiExamGeneration.service.js";
 import Exam from "../models/exam.model.js";
-import classModel from "../models/class.model.js";
+import { Class as classModel } from "#modules/class";
 
 // S4-FIX-01 (mở rộng): che đáp án đúng trong snapshotData khi trả về cho học sinh.
 // snapshotData lưu trực tiếp toàn bộ nội dung câu hỏi (bao gồm đáp án) ngay trong
