@@ -15,9 +15,10 @@
     "depcruise": "depcruise src main.js --config .dependency-cruiser.cjs --output-type err-long",
     "depcruise:summary": "depcruise src main.js --config .dependency-cruiser.cjs --output-type err",
     "depcruise:graph": "depcruise src main.js --config .dependency-cruiser.cjs --output-type dot",
-    "migrate:live-session:dry": "node ./src/scripts/migrateLiveSessionV2.js --dry-run",
-    "migrate:live-session:apply": "node ./src/scripts/migrateLiveSessionV2.js --apply",
-    "smoke:boot": "node scripts/smokeBoot.js"
+    "migrate:live-session:dry": "node ./src/infra/db/migrations/migrateLiveSessionV2.js --dry-run",
+    "migrate:live-session:apply": "node ./src/infra/db/migrations/migrateLiveSessionV2.js --apply",
+    "smoke:boot": "node scripts/smokeBoot.js",
+    "seed": "node ./src/seed.js"
   },
   "author": "",
   "license": "ISC",

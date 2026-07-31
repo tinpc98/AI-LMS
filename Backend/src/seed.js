@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { pathToFileURL } from "node:url";
 import { fakerVI as faker } from "@faker-js/faker";
 import bcrypt from "bcryptjs";
 import dotenv from "dotenv";
@@ -21,6 +22,54 @@ if (!MONGO_URI) {
   console.error("❌ FATAL: Thiếu biến môi trường MONGO_URI, không thể chạy seed script.");
   process.exit(1);
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// RÀO CHẮN AN TOÀN
+//
+// Script này XOÁ TRẮNG 9 collection trước khi tạo lại dữ liệu. Ngày 2026-07-31 nó đã
+// bị kích hoạt NGOÀI Ý MUỐN và xoá sạch database dev: một vòng lặp kiểm tra "các script
+// còn import được không" gọi import() lên mọi file trong src/ — mà import() một script
+// top-level là THỰC THI nó. Trước đó file kết thúc bằng lời gọi trần `seedDatabase()`.
+//
+// Ba lớp chặn dưới đây, theo thứ tự quan trọng:
+//   1. Chỉ chạy khi được gọi TRỰC TIẾP (node src/seed.js), không chạy khi bị import.
+//      Đây là lớp đã thiếu và là nguyên nhân trực tiếp của sự cố.
+//   2. Bắt buộc cờ --confirm tường minh.
+//   3. Từ chối tuyệt đối khi NODE_ENV=production.
+// ─────────────────────────────────────────────────────────────────────────────
+
+const COLLECTIONS_WIPED = [
+  "users",
+  "courses",
+  "classes",
+  "lessons",
+  "assignments",
+  "submissions",
+  "questions",
+  "exams",
+  "examattempts",
+];
+
+const assertSafeToSeed = () => {
+  if (process.env.NODE_ENV === "production") {
+    console.error("❌ TỪ CHỐI: NODE_ENV=production. Script này xoá dữ liệu, không chạy trên prod.");
+    process.exit(1);
+  }
+
+  if (!process.argv.includes("--confirm")) {
+    const dbName = MONGO_URI.split("/").pop().split("?")[0];
+    console.error("");
+    console.error("⚠️  CẢNH BÁO: seed script sẽ XOÁ TRẮNG các collection sau:");
+    console.error("   " + COLLECTIONS_WIPED.join(", "));
+    console.error("");
+    console.error(`   Database đích: ${dbName}`);
+    console.error("");
+    console.error("   Thao tác này KHÔNG THỂ hoàn tác. Nếu chắc chắn, chạy lại kèm cờ:");
+    console.error("       node src/seed.js --confirm");
+    console.error("");
+    process.exit(1);
+  }
+};
 
 // Tạo Model Course tạm thời (do class.model.js dùng ref: "Course")
 const courseSchema = new mongoose.Schema({ title: String, code: String });
@@ -173,7 +222,7 @@ async function seedDatabase() {
         maxStudents: 30,
         description: `Lớp học chuyên sâu môn ${randomCourse.title}`,
         isEnrollmentOpen: true,
-        status: "Active",
+        status: "Ongoing", // enum hợp lệ của class.model: Draft/Ready/Ongoing/Completed/Cancelled/Archived
       });
     }
     const createdClasses = await Class.insertMany(classesData);
@@ -395,4 +444,11 @@ async function seedDatabase() {
   }
 }
 
-seedDatabase();
+// LỚP CHẶN QUAN TRỌNG NHẤT: chỉ thực thi khi file được gọi trực tiếp bằng `node src/seed.js`.
+// Khi file bị import (dù vô tình), khối này không chạy và không có dữ liệu nào bị xoá.
+const isDirectRun = process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href;
+
+if (isDirectRun) {
+  assertSafeToSeed();
+  seedDatabase();
+}
