@@ -7,7 +7,7 @@
 // Test này chốt lại điều quan trọng nhất: null KHÁC 0. null nghĩa là "chưa xác định
 // được", 0 nghĩa là "chưa học gì". Gộp hai cái làm một là báo sai cho học sinh.
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { studentClassApi } from "../src/services/studentClassApi";
+import { studentClassApi } from "../src/api/studentClassApi";
 import { classApi } from "../src/api/classApi";
 
 const mockClasses = (items: unknown[]) =>

@@ -1,4 +1,4 @@
-import { classApi } from "../api/classApi";
+import { classApi } from "./classApi";
 import type { IStudentClass, StudentClassStatus } from "../types/studentClass";
 
 export const studentClassApi = {

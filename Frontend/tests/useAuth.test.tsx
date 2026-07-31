@@ -12,7 +12,7 @@ import { MemoryRouter } from "react-router-dom";
 import type { ReactNode } from "react";
 import { useAuth } from "../src/hooks/useAuth";
 
-vi.mock("../src/services/socketClient", () => ({ disconnectSocket: vi.fn() }));
+vi.mock("../src/shared/lib/socketClient", () => ({ disconnectSocket: vi.fn() }));
 
 const wrapper = ({ children }: { children: ReactNode }) => <MemoryRouter>{children}</MemoryRouter>;
 

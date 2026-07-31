@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
-import studentClassApi from "../services/studentClassApi";
+import studentClassApi from "../api/studentClassApi";
 import type { IStudentClass, StudentClassFilterOptions } from "../types/studentClass";
 
 export function useStudentClasses() {

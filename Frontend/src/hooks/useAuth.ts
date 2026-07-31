@@ -2,7 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { useCallback, useEffect, useState } from "react";
 import type User from "../interface/userInterface";
 
-import { disconnectSocket } from "../services/socketClient";
+import { disconnectSocket } from "../shared/lib/socketClient";
 
 export const useAuth = () => {
   const navigate = useNavigate();

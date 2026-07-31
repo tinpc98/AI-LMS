@@ -1,5 +1,5 @@
 import { useEffect, useCallback, useRef, useState } from "react";
-import { connectSocket, getSocket } from "../services/socketClient";
+import { connectSocket, getSocket } from "../shared/lib/socketClient";
 import { toast } from "../utils/toast";
 
 export interface LiveSessionSocketEventData {
