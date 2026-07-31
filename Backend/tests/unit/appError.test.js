@@ -7,7 +7,7 @@ import {
   NotFoundError,
   ConflictError,
   BusinessRuleError,
-} from "../../src/utils/appError.js";
+} from "#shared/utils/appError.js";
 
 describe("AppError hierarchy", () => {
   it("AppError mặc định có status 500 và code INTERNAL_ERROR", () => {

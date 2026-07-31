@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import { sendSuccess, sendError } from "../utils/response.js";
+import { sendSuccess, sendError } from "#shared/utils/response.js";
 import analyticsService from "../services/analytics.service.js";
 import learningRankingService from "../services/learningRanking.service.js";
 

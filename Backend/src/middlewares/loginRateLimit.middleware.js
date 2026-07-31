@@ -1,4 +1,4 @@
-import { createRateLimiter } from "./rateLimit.middleware.js";
+import { createRateLimiter } from "#shared/middlewares/rateLimit.middleware.js";
 
 /**
  * Middleware chống dò mật khẩu (brute-force) trên endpoint đăng nhập.

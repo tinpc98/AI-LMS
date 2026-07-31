@@ -10,8 +10,8 @@ import cors from "cors";
 import mongoose from "mongoose";
 
 import { buildCorsOptions } from "./config/cors.js";
-import { requestId } from "./middlewares/requestId.middleware.js";
-import { errorHandler, notFoundHandler } from "./middlewares/errorHandler.middleware.js";
+import { requestId } from "#shared/middlewares/requestId.middleware.js";
+import { errorHandler, notFoundHandler } from "#shared/middlewares/errorHandler.middleware.js";
 import apiRouter from "./routes/index.js";
 
 export const createApp = () => {

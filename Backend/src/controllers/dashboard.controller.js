@@ -1,5 +1,5 @@
 import dashboardService from "../services/dashboard.service.js";
-import { sendSuccess, sendError } from "../utils/response.js";
+import { sendSuccess, sendError } from "#shared/utils/response.js";
 
 /**
  * GET /api/dashboard/admin

@@ -1,6 +1,6 @@
 // File: src/middlewares/auth.middleware.js
 import jwt from "jsonwebtoken";
-import User from "../models/user.model.js";
+import User from "../../models/user.model.js";
 
 // Kiểm tra xem người dùng đã đăng nhập hay chưa
 export const verifyUser = async (req, res, next) => {
@@ -89,7 +89,7 @@ export const checkClassTeacherOwnership = async (classId, userId, userRole) => {
   if (role === "admin") return true;
   if (role !== "teacher") return false;
 
-  const ClassModel = (await import("../models/class.model.js")).default;
+  const ClassModel = (await import("../../models/class.model.js")).default;
   const targetClass = await ClassModel.findById(classId);
   if (!targetClass) return false;
 
@@ -102,7 +102,7 @@ export const canViewSubmission = async (req, res, next) => {
     const { submissionId } = req.params;
     if (!submissionId) return res.status(400).json({ message: "INVALID_ID" });
 
-    const SubmissionModel = (await import("../models/submission.model.js")).default;
+    const SubmissionModel = (await import("../../models/submission.model.js")).default;
     const submission = await SubmissionModel.findById(submissionId).lean();
 
     if (!submission) {

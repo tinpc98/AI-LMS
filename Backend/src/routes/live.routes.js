@@ -7,7 +7,7 @@ import {
   endLiveSession,
 } from "../controllers/live.controller.js";
 import { generateJaasTokenForSession } from "../controllers/jaas.controller.js";
-import { verifyUser, isTeacher } from "../middlewares/auth.middleware.js";
+import { verifyUser, isTeacher } from "#shared/middlewares/auth.middleware.js";
 import {
   checkClassTeacherOwnership,
   checkClassEnrollment,

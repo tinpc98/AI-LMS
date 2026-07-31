@@ -1,6 +1,6 @@
 import { Router } from "express";
 import aiSummaryController from "../controllers/aiSummary.controller.js";
-import { verifyUser as requireAuth } from "../middlewares/auth.middleware.js";
+import { verifyUser as requireAuth } from "#shared/middlewares/auth.middleware.js";
 import { checkAILessonAccess } from "../middlewares/aiLessonAccess.middleware.js";
 import { checkAIQuota } from "../middlewares/aiQuota.middleware.js";
 import { aiSummaryRateLimit } from "../middlewares/aiSummaryRateLimit.middleware.js";

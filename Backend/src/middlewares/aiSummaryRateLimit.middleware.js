@@ -1,5 +1,5 @@
 import { AIErrorCode } from "../utils/aiError.js";
-import { createRateLimiter } from "./rateLimit.middleware.js";
+import { createRateLimiter } from "#shared/middlewares/rateLimit.middleware.js";
 
 /**
  * Middleware giới hạn số lượng request generate summary (5 request/phút/user).

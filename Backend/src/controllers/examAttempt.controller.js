@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 import examAttemptService from "../services/examAttempt.service.js";
 import ExamAttempt from "../models/examAttempt.model.js";
 import Exam from "../models/exam.model.js";
-import { checkClassTeacherOwnership } from "../middlewares/auth.middleware.js";
+import { checkClassTeacherOwnership } from "#shared/middlewares/auth.middleware.js";
 
 // =======================================================
 // 1. API CHO HỌC SINH: Bắt đầu làm bài thi
@@ -463,12 +463,10 @@ export const getAttemptsByExam = async (req, res) => {
     const userRole = (req.user.role || "").toLowerCase();
     const isAuthorized = await checkClassTeacherOwnership(exam.classId, userId, userRole);
     if (!isAuthorized) {
-      return res
-        .status(403)
-        .json({
-          success: false,
-          message: "Bạn không có quyền xem danh sách bài làm của lớp học này!",
-        });
+      return res.status(403).json({
+        success: false,
+        message: "Bạn không có quyền xem danh sách bài làm của lớp học này!",
+      });
     }
 
     const page = Math.max(1, Number(req.query.page) || 1);

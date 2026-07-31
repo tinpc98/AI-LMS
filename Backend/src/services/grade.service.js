@@ -6,7 +6,7 @@ import Submission from "../models/submission.model.js";
 import Exam from "../models/exam.model.js";
 import ExamAttempt from "../models/examAttempt.model.js";
 import User from "../models/user.model.js";
-import { checkClassTeacherOwnership } from "../middlewares/auth.middleware.js";
+import { checkClassTeacherOwnership } from "#shared/middlewares/auth.middleware.js";
 import { calculateGradeMatrix } from "./gradeCalculator.js";
 
 class GradeService {

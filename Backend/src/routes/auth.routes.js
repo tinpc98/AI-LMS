@@ -6,7 +6,7 @@
 import { Router } from "express";
 import { getMyProfile, login, updateMyProfile } from "../controllers/auth.controller.js";
 import { loginValidation } from "../utils/validators.js";
-import { verifyUser } from "../middlewares/auth.middleware.js";
+import { verifyUser } from "#shared/middlewares/auth.middleware.js";
 import { loginRateLimit } from "../middlewares/loginRateLimit.middleware.js";
 
 const route = Router();

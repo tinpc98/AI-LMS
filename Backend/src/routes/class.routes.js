@@ -16,7 +16,7 @@ import {
   RestoreClass,
   PermanentDeleteClass,
 } from "../controllers/class.controller.js";
-import { verifyUser, isAdmin, isTeacher } from "../middlewares/auth.middleware.js";
+import { verifyUser, isAdmin, isTeacher } from "#shared/middlewares/auth.middleware.js";
 import { updateClassValidation } from "../validators/class.validator.js";
 
 const route = Router();

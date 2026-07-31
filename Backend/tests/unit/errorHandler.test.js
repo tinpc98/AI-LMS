@@ -1,6 +1,6 @@
 import { describe, it, expect, afterEach, vi } from "vitest";
-import { errorHandler, notFoundHandler } from "../../src/middlewares/errorHandler.middleware.js";
-import { NotFoundError } from "../../src/utils/appError.js";
+import { errorHandler, notFoundHandler } from "#shared/middlewares/errorHandler.middleware.js";
+import { NotFoundError } from "#shared/utils/appError.js";
 
 const makeReq = (overrides = {}) => ({
   requestId: "test-request-id",

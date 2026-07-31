@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 import announcementService from "../services/announcement.service.js";
-import { sendSuccess, sendError } from "../utils/response.js";
+import { sendSuccess, sendError } from "#shared/utils/response.js";
 
 export const createAnnouncement = async (req, res) => {
   try {

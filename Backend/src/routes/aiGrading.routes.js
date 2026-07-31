@@ -3,9 +3,9 @@ import {
   generateGradeSuggestion,
   confirmGradeSuggestion,
 } from "../controllers/aiGrading.controller.js";
-import { verifyUser, isTeacher } from "../middlewares/auth.middleware.js";
+import { verifyUser, isTeacher } from "#shared/middlewares/auth.middleware.js";
 import { checkAIQuota } from "../middlewares/aiQuota.middleware.js";
-import { createRateLimiter } from "../middlewares/rateLimit.middleware.js";
+import { createRateLimiter } from "#shared/middlewares/rateLimit.middleware.js";
 
 const router = express.Router({ mergeParams: true });
 

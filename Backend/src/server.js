@@ -14,7 +14,7 @@ import { connectDB } from "./config/database.js";
 import { validateEnv } from "./config/env.js";
 import { buildCorsOptions } from "./config/cors.js";
 import { validateJaasConfig } from "./controllers/jaas.controller.js";
-import socketAuthMiddleware from "./middlewares/socketAuth.middleware.js";
+import socketAuthMiddleware from "#infra/socket/socketAuth.middleware.js";
 import examSocketHandler from "./sockets/exam.socket.js";
 import liveSocketHandler from "./sockets/live.socket.js";
 import notificationSocketHandler from "./sockets/notification.socket.js";

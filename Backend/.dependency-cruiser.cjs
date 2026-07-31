@@ -30,8 +30,7 @@ module.exports = {
     },
     {
       name: "no-model-to-upper-layer",
-      comment:
-        "Model là tầng thấp nhất, không được biết gì về service/controller/router.",
+      comment: "Model là tầng thấp nhất, không được biết gì về service/controller/router.",
       severity: "warn",
       from: { path: "^src/models/" },
       to: { path: "^src/(controllers|services|routers)/" },
@@ -45,17 +44,24 @@ module.exports = {
       to: { path: "^src/(controllers|services|repositories|routers)/" },
     },
     {
+      // Wave 3: src/shared là tầng dùng chung, không được biết gì về nghiệp vụ cụ thể.
+      // Hiện chưa có vi phạm vì src/modules/ còn rỗng, NHƯNG sẽ có ngay khi user.model.js
+      // chuyển vào modules/auth/ — shared/middlewares/auth.middleware.js đang import nó.
+      // Đó là nợ kiến trúc cần giải quyết khi migrate module auth (tách phần đọc User ra
+      // khỏi middleware, hoặc đưa auth.middleware về chính module auth).
+      name: "no-shared-to-modules",
+      comment: "src/shared không được phụ thuộc vào module nghiệp vụ.",
+      severity: "warn",
+      from: { path: "^src/shared/" },
+      to: { path: "^src/modules/" },
+    },
+    {
       name: "no-orphans",
       comment: "File không được ai import — thường là code chết còn sót lại.",
       severity: "warn",
       from: {
         orphan: true,
-        pathNot: [
-          "\\.(json|md)$",
-          "^src/scripts/",
-          "^src/seed\\.js$",
-          "^(\\.[^/]+)$",
-        ],
+        pathNot: ["\\.(json|md)$", "^src/scripts/", "^src/seed\\.js$", "^(\\.[^/]+)$"],
       },
       to: {},
     },

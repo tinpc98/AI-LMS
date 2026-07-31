@@ -6,7 +6,7 @@ import {
   updateAnnouncement,
   deleteAnnouncement,
 } from "../controllers/announcement.controller.js";
-import { verifyUser, isTeacher } from "../middlewares/auth.middleware.js";
+import { verifyUser, isTeacher } from "#shared/middlewares/auth.middleware.js";
 
 const router = Router();
 

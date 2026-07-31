@@ -4,7 +4,7 @@ import {
   buildAttendanceExcel,
   sanitizeFilename,
 } from "../services/report.service.js";
-import { sendError } from "../utils/response.js";
+import { sendError } from "#shared/utils/response.js";
 
 // ─────────────────────────────────────────────
 // HELPER – Validate classId và ghi headers file

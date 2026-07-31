@@ -1,6 +1,6 @@
 import bcrypt from "bcryptjs";
 import { Schema, model } from "mongoose";
-import softDeletePlugin from "../plugins/softDelete.plugin.js";
+import softDeletePlugin from "#shared/plugins/softDelete.plugin.js";
 
 // Schema khung giờ làm việc theo ngày cho Giáo viên
 const dayAvailabilitySchema = new Schema(

@@ -1,5 +1,5 @@
 import notificationService from "../services/notification.service.js";
-import { sendSuccess, sendError } from "../utils/response.js";
+import { sendSuccess, sendError } from "#shared/utils/response.js";
 
 /**
  * POST /api/notifications/send-bulk

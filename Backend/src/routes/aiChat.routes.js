@@ -1,9 +1,9 @@
 import express from "express";
 import { createSession, sendMessage, getHistory } from "../controllers/aiChat.controller.js";
-import { verifyUser } from "../middlewares/auth.middleware.js";
+import { verifyUser } from "#shared/middlewares/auth.middleware.js";
 import { checkAIChatLessonAccess } from "../middlewares/aiChatLessonAccess.middleware.js";
 import { checkAIQuota } from "../middlewares/aiQuota.middleware.js";
-import { createRateLimiter } from "../middlewares/rateLimit.middleware.js";
+import { createRateLimiter } from "#shared/middlewares/rateLimit.middleware.js";
 import mongoose from "mongoose";
 
 const aiChatRateLimit = createRateLimiter({

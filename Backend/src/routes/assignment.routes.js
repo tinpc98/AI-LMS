@@ -1,7 +1,7 @@
 import express from "express";
 import assignmentController from "../controllers/assignment.controller.js";
-import { verifyUser, isTeacher, canViewSubmission } from "../middlewares/auth.middleware.js";
-import upload from "../middlewares/upload.middleware.js";
+import { verifyUser, isTeacher, canViewSubmission } from "#shared/middlewares/auth.middleware.js";
+import upload from "#shared/middlewares/upload.middleware.js";
 
 const router = express.Router();
 

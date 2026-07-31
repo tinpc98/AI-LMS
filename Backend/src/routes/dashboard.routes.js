@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { getAdminDashboard } from "../controllers/dashboard.controller.js";
-import { verifyUser, isAdmin } from "../middlewares/auth.middleware.js";
+import { verifyUser, isAdmin } from "#shared/middlewares/auth.middleware.js";
 
 const router = Router();
 

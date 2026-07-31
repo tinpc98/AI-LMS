@@ -1,7 +1,7 @@
 import express from "express";
 import lessonController from "../controllers/lesson.controller.js";
-import { verifyUser, isTeacher } from "../middlewares/auth.middleware.js"; // Nhớ thêm đuôi .js tùy theo file của bạn
-import upload from "../middlewares/upload.middleware.js";
+import { verifyUser, isTeacher } from "#shared/middlewares/auth.middleware.js"; // Nhớ thêm đuôi .js tùy theo file của bạn
+import upload from "#shared/middlewares/upload.middleware.js";
 
 const router = express.Router();
 

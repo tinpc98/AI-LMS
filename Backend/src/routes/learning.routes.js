@@ -7,7 +7,7 @@ import {
   getMyBadges,
   getMyActivities,
 } from "../controllers/learning.controller.js";
-import { verifyUser } from "../middlewares/auth.middleware.js";
+import { verifyUser } from "#shared/middlewares/auth.middleware.js";
 
 const router = Router();
 

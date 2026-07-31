@@ -1,5 +1,5 @@
 import mongoose, { Schema, model } from "mongoose";
-import softDeletePlugin from "../plugins/softDelete.plugin.js";
+import softDeletePlugin from "#shared/plugins/softDelete.plugin.js";
 
 const attendanceSchema = new Schema(
   {

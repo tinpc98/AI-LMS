@@ -2,9 +2,9 @@ import mongoose from "mongoose";
 import dotenv from "dotenv";
 import fs from "fs";
 import path from "path";
-import classModel from "../models/class.model.js";
-import LiveSession from "../models/liveSession.model.js";
-import { generateLiveSessionRoomName } from "../utils/liveSessionHelper.js";
+import classModel from "../../../models/class.model.js";
+import LiveSession from "../../../models/liveSession.model.js";
+import { generateLiveSessionRoomName } from "../../../utils/liveSessionHelper.js";
 
 dotenv.config();
 

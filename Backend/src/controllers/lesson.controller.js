@@ -1,6 +1,6 @@
 import Lesson from "../models/lesson.model.js";
 import cloudinary from "../config/cloudinary.js";
-import { checkClassTeacherOwnership } from "../middlewares/auth.middleware.js";
+import { checkClassTeacherOwnership } from "#shared/middlewares/auth.middleware.js";
 
 // Helper function: Đẩy Buffer từ RAM lên Cloudinary bằng Stream
 const uploadToCloudinary = (fileBuffer, originalName) => {

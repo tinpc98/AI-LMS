@@ -8,7 +8,7 @@ import {
   updateQuestion,
   deleteQuestion,
 } from "../controllers/question.controller.js";
-import { verifyUser, isTeacher } from "../middlewares/auth.middleware.js";
+import { verifyUser, isTeacher } from "#shared/middlewares/auth.middleware.js";
 import { updateQuestionValidation } from "../validators/question.validator.js";
 
 const router = express.Router();

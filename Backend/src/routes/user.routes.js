@@ -12,7 +12,7 @@ import {
   restoreUser,
   permanentDeleteUser,
 } from "../controllers/auth.controller.js";
-import { verifyUser, isAdmin } from "../middlewares/auth.middleware.js";
+import { verifyUser, isAdmin } from "#shared/middlewares/auth.middleware.js";
 
 const route = Router();
 

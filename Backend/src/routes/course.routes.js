@@ -9,7 +9,7 @@ import {
   restoreCourse,
   permanentDeleteCourse,
 } from "../controllers/course.controller.js";
-import { verifyUser, isAdmin } from "../middlewares/auth.middleware.js";
+import { verifyUser, isAdmin } from "#shared/middlewares/auth.middleware.js";
 
 const router = Router();
 

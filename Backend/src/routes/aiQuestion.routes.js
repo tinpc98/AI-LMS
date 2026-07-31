@@ -1,9 +1,9 @@
 import express from "express";
 import aiQuestionGenerationController from "../controllers/aiQuestionGeneration.controller.js";
-import { verifyUser, isTeacher } from "../middlewares/auth.middleware.js";
+import { verifyUser, isTeacher } from "#shared/middlewares/auth.middleware.js";
 import { checkAILessonAccess } from "../middlewares/aiLessonAccess.middleware.js";
 import { checkAIQuota } from "../middlewares/aiQuota.middleware.js";
-import { createRateLimiter } from "../middlewares/rateLimit.middleware.js";
+import { createRateLimiter } from "#shared/middlewares/rateLimit.middleware.js";
 import { body, validationResult } from "express-validator";
 
 const aiQuestionRateLimit = createRateLimiter({
