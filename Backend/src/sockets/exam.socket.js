@@ -1,5 +1,5 @@
 // src/sockets/exam.socket.js
-import ExamAttempt from "../models/examAttempt.model.js";
+import { ExamAttempt } from "#modules/exam-attempt";
 import { checkSocketExamAccess } from "../services/socketExamAccess.service.js";
 
 // Whitelist các loại hành vi gian lận hợp lệ — chặn client gửi giá trị tùy ý vào DB.

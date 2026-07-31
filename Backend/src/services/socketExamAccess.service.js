@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
-import Exam from "../models/exam.model.js";
-import ExamAttempt from "../models/examAttempt.model.js";
+import { Exam } from "#modules/exam";
+import { ExamAttempt } from "#modules/exam-attempt";
 import { checkClassTeacherOwnership } from "#modules/class";
 
 /**

@@ -4,7 +4,7 @@ import {
   getGradesByClass,
   getGradesByStudent,
   getStudentGPA,
-} from "../controllers/grade.controller.js";
+} from "./grade.controller.js";
 import { verifyUser } from "#modules/auth";
 import { isTeacher } from "#shared/middlewares/rbac.middleware.js";
 

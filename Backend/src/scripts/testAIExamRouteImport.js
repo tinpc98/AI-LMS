@@ -1,5 +1,5 @@
 import express from "express";
-import ExamRouter from "../routes/exam.routes.js";
+import ExamRouter from "../modules/exam/exam.routes.js";
 
 let found = false;
 ExamRouter.stack.forEach((handler) => {

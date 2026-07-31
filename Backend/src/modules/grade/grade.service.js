@@ -1,10 +1,10 @@
 import mongoose from "mongoose";
-import Grade from "../models/grade.model.js";
+import Grade from "./grade.model.js";
 import { Class as classModel } from "#modules/class";
 import { Assignment } from "#modules/assignment";
 import { Submission } from "#modules/assignment";
-import Exam from "../models/exam.model.js";
-import ExamAttempt from "../models/examAttempt.model.js";
+import { Exam } from "#modules/exam";
+import { ExamAttempt } from "#modules/exam-attempt";
 import { User } from "#modules/auth";
 import { checkClassTeacherOwnership } from "#modules/class";
 import { calculateGradeMatrix } from "./gradeCalculator.js";

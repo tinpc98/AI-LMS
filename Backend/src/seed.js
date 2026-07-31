@@ -10,8 +10,8 @@ import { Lesson } from "#modules/lesson";
 import { Assignment } from "#modules/assignment";
 import { Submission } from "#modules/assignment";
 import Question from "./models/question.model.js";
-import Exam from "./models/exam.model.js";
-import ExamAttempt from "./models/examAttempt.model.js";
+import { Exam } from "#modules/exam";
+import { ExamAttempt } from "#modules/exam-attempt";
 
 dotenv.config();
 

@@ -1,8 +1,8 @@
 // Test cho fix AUTHZ-02: chặn giáo viên chấm bài thi của lớp không phụ trách.
 import { describe, it, expect, afterEach, vi } from "vitest";
 import mongoose from "mongoose";
-import examAttemptService from "../../src/services/examAttempt.service.js";
-import ExamAttempt from "../../src/models/examAttempt.model.js";
+import examAttemptService from "../../src/modules/exam-attempt/examAttempt.service.js";
+import { ExamAttempt } from "#modules/exam-attempt";
 import { Class as classModel } from "#modules/class";
 
 const OWNER_TEACHER_ID = "507f1f77bcf86cd799439011";

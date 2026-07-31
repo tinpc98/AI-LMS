@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import ExamAttempt from "../models/examAttempt.model.js";
+import { ExamAttempt } from "#modules/exam-attempt";
 import aiGradingService from "../ai/services/aiGrading.service.js";
 import { AIError } from "../utils/aiError.js";
 import { verifyClassTeacherAccess } from "#modules/class";

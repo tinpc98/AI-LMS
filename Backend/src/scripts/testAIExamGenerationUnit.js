@@ -2,11 +2,11 @@ import assert from "assert";
 import mongoose from "mongoose";
 import ExamSet from "../models/examSet.model.js";
 import ExamSetShare from "../models/examSetShare.model.js";
-import Exam from "../models/exam.model.js";
+import { Exam } from "#modules/exam";
 import { User } from "#modules/auth";
 import { Class as classModel } from "#modules/class";
 import aiExamGenerationService from "../ai/services/aiExamGeneration.service.js";
-import { generateFromExamSet, getExamById, getAllExams } from "../controllers/exam.controller.js";
+import { generateFromExamSet, getExamById, getAllExams } from "../modules/exam/exam.controller.js";
 
 const fakeUserId = new mongoose.Types.ObjectId().toString();
 const fakeTeacherId = fakeUserId;
@@ -135,7 +135,7 @@ async function runUnitTests() {
 
   // 1. Router import
   await runTest("Router: Load router thành công", async () => {
-    const routerModule = await import("../routes/exam.routes.js");
+    const routerModule = await import("../modules/exam/exam.routes.js");
     assert.ok(routerModule.default, "Router loaded");
   });
 

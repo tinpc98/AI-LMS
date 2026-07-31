@@ -8,7 +8,7 @@ import {
   getAllExams,
   getExamById,
   generateFromExamSet,
-} from "../controllers/exam.controller.js";
+} from "./exam.controller.js";
 import { verifyUser } from "#modules/auth";
 import { isTeacher } from "#shared/middlewares/rbac.middleware.js";
 

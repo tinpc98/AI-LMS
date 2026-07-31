@@ -1,8 +1,8 @@
 import mongoose from "mongoose";
-import ExamAttempt from "../models/examAttempt.model.js";
-import Exam from "../models/exam.model.js";
-import Question from "../models/question.model.js";
-import { compareAnswers } from "../utils/answerScoring.js";
+import ExamAttempt from "./examAttempt.model.js";
+import { Exam } from "#modules/exam";
+import Question from "../../models/question.model.js";
+import { compareAnswers } from "./answerScoring.js";
 import { checkClassTeacherOwnership } from "#modules/class";
 
 const gradeSubmission = async (attemptId, studentAnswers) => {

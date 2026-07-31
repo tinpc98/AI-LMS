@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import gradeService from "../services/grade.service.js";
+import gradeService from "./grade.service.js";
 import { sendSuccess, sendError } from "#shared/utils/response.js";
 import { checkClassTeacherOwnership } from "#modules/class";
 

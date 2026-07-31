@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
-import examAttemptService from "../services/examAttempt.service.js";
-import ExamAttempt from "../models/examAttempt.model.js";
-import Exam from "../models/exam.model.js";
+import examAttemptService from "./examAttempt.service.js";
+import ExamAttempt from "./examAttempt.model.js";
+import { Exam } from "#modules/exam";
 import { checkClassTeacherOwnership } from "#modules/class";
 
 // =======================================================
@@ -165,7 +165,7 @@ export const getExamAttemptDetail = async (req, res) => {
       });
     }
 
-    const { resolveExamQuestions } = await import("../utils/examQuestionResolver.js");
+    const { resolveExamQuestions } = await import("./examQuestionResolver.js");
 
     const questionMap = await resolveExamQuestions(exam);
     const formattedQuestions = [];
@@ -331,7 +331,7 @@ export const getAttemptForReview = async (req, res) => {
       });
     }
 
-    const { resolveExamQuestions } = await import("../utils/examQuestionResolver.js");
+    const { resolveExamQuestions } = await import("./examQuestionResolver.js");
 
     const questionMap = await resolveExamQuestions(exam);
 

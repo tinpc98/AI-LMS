@@ -7,7 +7,7 @@ import {
   getExamAttemptDetail,
   getAttemptsByExam,
   recordCheatWarning,
-} from "../controllers/examAttempt.controller.js";
+} from "./examAttempt.controller.js";
 import { verifyUser } from "#modules/auth";
 import { isTeacher } from "#shared/middlewares/rbac.middleware.js";
 

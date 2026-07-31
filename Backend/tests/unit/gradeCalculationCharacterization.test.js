@@ -4,14 +4,14 @@
 // fallback trọng số mặc định) để sau khi tách, chạy lại NGUYÊN VẸN các test này và
 // chứng minh không có thay đổi hành vi quan sát được.
 import { describe, it, expect, afterEach, vi } from "vitest";
-import gradeService from "../../src/services/grade.service.js";
+import gradeService from "../../src/modules/grade/grade.service.js";
 import { Class as classModel } from "#modules/class";
 import { User } from "#modules/auth";
 import { Assignment } from "#modules/assignment";
-import Exam from "../../src/models/exam.model.js";
-import Grade from "../../src/models/grade.model.js";
+import { Exam } from "#modules/exam";
+import { Grade } from "#modules/grade";
 import { Submission } from "#modules/assignment";
-import ExamAttempt from "../../src/models/examAttempt.model.js";
+import { ExamAttempt } from "#modules/exam-attempt";
 
 const CLASS_ID = "607f1f77bcf86cd799439111";
 const STUDENT_1 = "607f1f77bcf86cd799439222";

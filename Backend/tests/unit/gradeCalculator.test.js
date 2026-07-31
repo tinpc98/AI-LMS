@@ -6,7 +6,7 @@ import {
   computeWeightedGPA,
   computeStudentGrade,
   calculateGradeMatrix,
-} from "../../src/services/gradeCalculator.js";
+} from "../../src/modules/grade/gradeCalculator.js";
 
 describe("buildGradeItems", () => {
   it("luôn có 3 cột manual mặc định (Attendance/Midterm/Final) kể cả khi chưa có điểm nào", () => {

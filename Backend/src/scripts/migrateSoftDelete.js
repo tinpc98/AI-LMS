@@ -9,10 +9,10 @@ import { Lesson } from "#modules/lesson";
 import { Assignment } from "#modules/assignment";
 import { Submission } from "#modules/assignment";
 import Question from "../models/question.model.js";
-import Exam from "../models/exam.model.js";
-import ExamAttempt from "../models/examAttempt.model.js";
+import { Exam } from "#modules/exam";
+import { ExamAttempt } from "#modules/exam-attempt";
 import { Attendance } from "#modules/attendance";
-import Grade from "../models/grade.model.js";
+import { Grade } from "#modules/grade";
 import Announcement from "../models/announcement.model.js";
 import LiveSession from "../models/liveSession.model.js";
 

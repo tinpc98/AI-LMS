@@ -1,9 +1,9 @@
 import crypto from "crypto";
 import AIGradingSuggestion from "../../models/aiGradingSuggestion.model.js";
-import ExamAttempt from "../../models/examAttempt.model.js";
+import { ExamAttempt } from "#modules/exam-attempt";
 import aiCoreService from "./aiCore.service.js";
 import aiUsageService from "./aiUsage.service.js";
-import { resolveExamQuestions } from "../../utils/examQuestionResolver.js";
+import { resolveExamQuestions } from "#modules/exam-attempt";
 import { gradingPromptTemplate } from "../prompts/grading.prompt.js";
 import { validateGradingOutput } from "../validators/gradingOutput.validator.js";
 import { AIError, AIErrorCode } from "../../utils/aiError.js";

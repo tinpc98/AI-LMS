@@ -22,14 +22,15 @@ import classRoutes from "#modules/class/class.routes.js";
 import lessonRoutes from "#modules/lesson/lesson.routes.js";
 import assignmentRoutes from "#modules/assignment/assignment.routes.js";
 import attendanceRoutes from "#modules/attendance/attendance.routes.js";
+import gradeRoutes from "#modules/grade/grade.routes.js";
+import examRoutes from "#modules/exam/exam.routes.js";
+import examAttemptRoutes from "#modules/exam-attempt/examAttempt.routes.js";
 
 import QuestionRouter from "./question.routes.js";
-import ExamRouter from "./exam.routes.js";
-import ExamAttemptRouter from "./examAttempt.routes.js";
+
 import ExamSetRouter from "./examSet.routes.js";
 import LiveRouter from "./live.routes.js";
 
-import GradeRouter from "./grade.routes.js";
 import AnnouncementRouter from "./announcement.routes.js";
 import CourseRouter from "./course.routes.js";
 import DashboardRouter from "./dashboard.routes.js";
@@ -58,7 +59,7 @@ router.use("/courses", CourseRouter);
 router.use("/lessons", lessonRoutes);
 router.use("/assignments", assignmentRoutes);
 router.use("/attendances", attendanceRoutes);
-router.use("/grades", GradeRouter);
+router.use("/grades", gradeRoutes);
 router.use("/announcements", AnnouncementRouter);
 router.use("/notifications", NotificationRouter);
 router.use("/folders", FolderRouter);
@@ -71,8 +72,8 @@ router.use("/analytics", AnalyticsRouter);
 
 // ── Thi trực tuyến & lớp học trực tuyến ─────────────────────────────────────
 router.use("/questions", QuestionRouter);
-router.use("/exams", ExamRouter);
-router.use("/exam-attempts", ExamAttemptRouter);
+router.use("/exams", examRoutes);
+router.use("/exam-attempts", examAttemptRoutes);
 router.use("/exam-sets", ExamSetRouter);
 router.use("/live", LiveRouter);
 

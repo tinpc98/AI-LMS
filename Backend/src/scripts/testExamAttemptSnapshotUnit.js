@@ -1,8 +1,8 @@
 import mongoose from "mongoose";
-import ExamAttempt from "../models/examAttempt.model.js";
-import Exam from "../models/exam.model.js";
+import { ExamAttempt } from "#modules/exam-attempt";
+import { Exam } from "#modules/exam";
 import Question from "../models/question.model.js";
-import examAttemptService from "../services/examAttempt.service.js";
+import examAttemptService from "../modules/exam-attempt/examAttempt.service.js";
 
 const runTests = async () => {
   console.log("==========================================");

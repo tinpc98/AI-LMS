@@ -4,8 +4,8 @@
 import { describe, it, expect, afterEach, vi } from "vitest";
 import mongoose from "mongoose";
 import { checkSocketExamAccess } from "../../src/services/socketExamAccess.service.js";
-import Exam from "../../src/models/exam.model.js";
-import ExamAttempt from "../../src/models/examAttempt.model.js";
+import { Exam } from "#modules/exam";
+import { ExamAttempt } from "#modules/exam-attempt";
 import { Class as classModel } from "#modules/class";
 
 const EXAM_ID = new mongoose.Types.ObjectId().toString();
