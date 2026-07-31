@@ -17,6 +17,7 @@ import ExamSet from "./examSet.model.js";
 import { Folder } from "#modules/folder";
 import { recalculateExamSetMetrics } from "./examSet.metrics.js";
 import { isEditableExamSetStatus } from "./examSetStatus.js";
+import * as examSetRepo from "./examSet.repository.js";
 
 const normalizeExamSetTags = (tags) => {
   if (!Array.isArray(tags)) {
@@ -176,9 +177,7 @@ export const getExamSetDetailService = async (examSetId, user) => {
     query.ownerId = user.id;
   }
 
-  const examSet = await ExamSet.findOne(query)
-    .populate("ownerId", "fullName avatar")
-    .populate("folderId", "name");
+  const examSet = await examSetRepo.findActiveExamSetWithRelations(query);
 
   if (!examSet) {
     const error = new Error("Bộ đề thi không tồn tại hoặc bạn không có quyền xem");
@@ -226,11 +225,7 @@ export const saveDraftExamSetService = async (examSet, draftData = {}) => {
   }
 
   if (updateFields.folderId) {
-    const folder = await Folder.findOne({
-      _id: updateFields.folderId,
-      ownerId: examSet.ownerId,
-      isDeleted: false,
-    });
+    const folder = await examSetRepo.findOwnedFolder(updateFields.folderId, examSet.ownerId);
 
     if (!folder) {
       const error = new Error("Folder không tồn tại hoặc bạn không có quyền truy cập");
@@ -294,12 +289,10 @@ export const duplicateExamSetService = async (examSetId, currentUserId, currentU
     throw error;
   }
 
-  const sourceExamSet = await ExamSet.findOne({
+  const sourceExamSet = await examSetRepo.findActiveExamSetWithRelations({
     _id: examSetId,
     isDeleted: false,
-  })
-    .populate("ownerId", "fullName avatar")
-    .populate("folderId", "name");
+  });
 
   if (!sourceExamSet) {
     const error = new Error("Bộ đề thi không tồn tại hoặc đã bị xóa");
@@ -343,11 +336,7 @@ export const duplicateExamSetService = async (examSetId, currentUserId, currentU
 
   const nextFolderId = isOwner ? sourceFolderId : null;
   if (nextFolderId) {
-    const folder = await Folder.findOne({
-      _id: nextFolderId,
-      ownerId: currentUserId,
-      isDeleted: false,
-    });
+    const folder = await examSetRepo.findOwnedFolder(nextFolderId, currentUserId);
 
     if (!folder) {
       if (isOwner) {
@@ -396,11 +385,7 @@ export const createExamSetService = async (ownerId, examData) => {
   }
 
   // Verify folder exists and belongs to the owner
-  const folder = await Folder.findOne({
-    _id: examData.folderId,
-    ownerId: ownerId,
-    isDeleted: false,
-  });
+  const folder = await examSetRepo.findOwnedFolder(examData.folderId, ownerId);
 
   if (!folder) {
     const error = new Error("Folder không tồn tại hoặc bạn không có quyền truy cập");
@@ -491,11 +476,7 @@ export const getExamSetsService = async (ownerId, filters = {}) => {
  */
 export const updateExamSetService = async (examSetId, ownerId, updateData) => {
   // Find exam set and verify ownership
-  const examSet = await ExamSet.findOne({
-    _id: examSetId,
-    ownerId: ownerId,
-    isDeleted: false,
-  });
+  const examSet = await examSetRepo.findOwnedExamSet(examSetId, ownerId);
 
   if (!examSet) {
     const error = new Error("Bộ đề thi không tồn tại hoặc bạn không có quyền sửa");
@@ -522,11 +503,7 @@ export const updateExamSetService = async (examSetId, ownerId, updateData) => {
 
   // If updating folderId, verify new folder exists and belongs to owner
   if (updateFields.folderId) {
-    const newFolder = await Folder.findOne({
-      _id: updateFields.folderId,
-      ownerId: ownerId,
-      isDeleted: false,
-    });
+    const newFolder = await examSetRepo.findOwnedFolder(updateFields.folderId, ownerId);
 
     if (!newFolder) {
       const error = new Error("Folder không tồn tại hoặc bạn không có quyền truy cập");
@@ -567,11 +544,7 @@ export const updateExamSetService = async (examSetId, ownerId, updateData) => {
  */
 export const deleteExamSetService = async (examSetId, ownerId) => {
   // Find exam set and verify ownership
-  const examSet = await ExamSet.findOne({
-    _id: examSetId,
-    ownerId: ownerId,
-    isDeleted: false,
-  });
+  const examSet = await examSetRepo.findOwnedExamSet(examSetId, ownerId);
 
   if (!examSet) {
     const error = new Error("Bộ đề thi không tồn tại hoặc bạn không có quyền xóa");
@@ -594,11 +567,7 @@ export const deleteExamSetService = async (examSetId, ownerId) => {
  */
 export const restoreExamSetService = async (examSetId, ownerId) => {
   // Find deleted exam set and verify ownership
-  const examSet = await ExamSet.findOne({
-    _id: examSetId,
-    ownerId: ownerId,
-    isDeleted: true,
-  }).withDeleted(); // Include soft deleted docs
+  const examSet = await examSetRepo.findDeletedOwnedExamSet(examSetId, ownerId); // Include soft deleted docs
 
   if (!examSet) {
     const error = new Error("Bộ đề thi không tồn tại hoặc bạn không có quyền khôi phục");

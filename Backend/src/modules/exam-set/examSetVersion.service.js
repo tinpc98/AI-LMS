@@ -15,8 +15,8 @@
 // Nội dung giữ NGUYÊN VĂN, chỉ thay danh sách import.
 import { Types } from "mongoose";
 import ExamSet from "./examSet.model.js";
-import { Folder } from "#modules/folder";
 import { recalculateExamSetMetrics } from "./examSet.metrics.js";
+import * as examSetRepo from "./examSet.repository.js";
 
 /**
  * Get version history for an exam set lineage
@@ -37,7 +37,7 @@ export const getExamSetVersionsService = async (
     throw error;
   }
 
-  const source = await ExamSet.findOne({ _id: examSetId, isDeleted: false }).lean();
+  const source = await examSetRepo.findActiveExamSet(examSetId).lean();
   if (!source) {
     const error = new Error("Bộ đề thi không tồn tại hoặc đã bị xóa");
     error.status = 404;
@@ -134,10 +134,7 @@ export const createNewExamSetVersionService = async (examSetId, currentUserId, c
     throw error;
   }
 
-  const sourceExamSet = await ExamSet.findOne({
-    _id: examSetId,
-    isDeleted: false,
-  });
+  const sourceExamSet = await examSetRepo.findActiveExamSet(examSetId);
 
   if (!sourceExamSet) {
     const error = new Error("Bộ đề thi không tồn tại hoặc đã bị xóa");
@@ -204,11 +201,7 @@ export const createNewExamSetVersionService = async (examSetId, currentUserId, c
 
   let folderId = null;
   if (sourceExamSet.folderId) {
-    const folder = await Folder.findOne({
-      _id: sourceExamSet.folderId,
-      ownerId: sourceOwnerId,
-      isDeleted: false,
-    });
+    const folder = await examSetRepo.findOwnedFolder(sourceExamSet.folderId, sourceOwnerId);
     if (folder) {
       folderId = sourceExamSet.folderId;
     }
@@ -335,7 +328,7 @@ export const restoreExamSetVersionService = async (
     throw error;
   }
 
-  const source = await ExamSet.findOne({ _id: sourceExamSetId, isDeleted: false });
+  const source = await examSetRepo.findActiveExamSet(sourceExamSetId);
   if (!source) {
     const error = new Error("Bộ đề thi không tồn tại hoặc đã bị xóa");
     error.status = 404;
@@ -376,11 +369,7 @@ export const restoreExamSetVersionService = async (
   // Prepare folder preservation if exists and belongs to owner
   let folderId = null;
   if (source.folderId) {
-    const folder = await Folder.findOne({
-      _id: source.folderId,
-      ownerId: sourceOwnerId,
-      isDeleted: false,
-    });
+    const folder = await examSetRepo.findOwnedFolder(source.folderId, sourceOwnerId);
     if (folder) folderId = source.folderId;
   }
 

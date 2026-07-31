@@ -143,6 +143,7 @@ const normalizeContentKey = (value) =>
   String(value).trim().toLowerCase().replace(/\s+/g, " ").normalize("NFC");
 
 import mongoose from "mongoose";
+import * as examSetRepo from "./examSet.repository.js";
 
 export const importExcelToExamSet = async ({
   fileBuffer,
@@ -193,7 +194,7 @@ export const importExcelToExamSet = async ({
   }
 
   // Query folder
-  const folder = await Folder.findOne({ _id: normalizedFolderId, isDeleted: false });
+  const folder = await examSetRepo.findActiveFolder(normalizedFolderId);
   if (!folder) {
     const folderErr = new Error("Folder không tồn tại");
     folderErr.statusCode = 404;

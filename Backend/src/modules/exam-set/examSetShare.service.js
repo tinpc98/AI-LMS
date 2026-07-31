@@ -13,6 +13,8 @@ import { Types } from "mongoose";
 import ExamSet from "./examSet.model.js";
 import ExamSetShare, { EXAM_SET_SHARE_STATUS } from "./examSetShare.model.js";
 import { User } from "#modules/auth";
+import * as examSetRepo from "./examSet.repository.js";
+import * as shareRepo from "./examSetShare.repository.js";
 
 /**
  * Create or reactivate an ExamSetShare
@@ -35,7 +37,7 @@ export const createExamSetShareService = async (
     throw error;
   }
 
-  const examSet = await ExamSet.findOne({ _id: examSetId, isDeleted: false });
+  const examSet = await examSetRepo.findActiveExamSet(examSetId);
   if (!examSet) {
     const error = new Error("Bộ đề thi không tồn tại");
     error.status = 404;
@@ -59,7 +61,7 @@ export const createExamSetShareService = async (
   }
 
   // recipient must exist and be active
-  const recipient = await User.findOne({ _id: sharedWithUserId });
+  const recipient = await shareRepo.findUserById(sharedWithUserId);
   if (!recipient) {
     const error = new Error("Người nhận không tồn tại");
     error.status = 404;
@@ -109,7 +111,7 @@ export const createExamSetShareService = async (
   }
 
   // Check existing share record
-  const existing = await ExamSetShare.findOne({ examSetId, sharedWithUserId });
+  const existing = await shareRepo.findShareByExamSetAndUser(examSetId, sharedWithUserId);
 
   if (!existing) {
     const newShare = new ExamSetShare({
@@ -165,14 +167,14 @@ export const revokeExamSetShareService = async (
     throw error;
   }
 
-  const examSet = await ExamSet.findOne({ _id: examSetId, isDeleted: false });
+  const examSet = await examSetRepo.findActiveExamSet(examSetId);
   if (!examSet) {
     const error = new Error("Bộ đề thi không tồn tại");
     error.status = 404;
     throw error;
   }
 
-  const share = await ExamSetShare.findOne({ _id: shareId });
+  const share = await shareRepo.findShareById(shareId);
   if (!share) {
     const error = new Error("Share không tồn tại");
     error.status = 404;
@@ -261,7 +263,7 @@ export const updateExamSetShareMetadataService = async (
   }
 
   // ── Step 2: Find Exam Set (check soft delete) ─────────────────────────────
-  const examSet = await ExamSet.findOne({ _id: examSetId, isDeleted: false });
+  const examSet = await examSetRepo.findActiveExamSet(examSetId);
   if (!examSet) {
     const error = new Error("Bộ đề thi không tồn tại");
     error.status = 404;
@@ -280,10 +282,7 @@ export const updateExamSetShareMetadataService = async (
   }
 
   // ── Step 4: Find Share – must belong to this Exam Set ────────────────────
-  const share = await ExamSetShare.findOne({
-    _id: shareId,
-    examSetId: examSet._id,
-  });
+  const share = await shareRepo.findShareByIdInExamSet(shareId, examSet._id);
 
   if (!share) {
     const error = new Error("Share không tồn tại hoặc không thuộc bộ đề thi này");
@@ -384,7 +383,7 @@ export const listExamSetSharesService = async (
     throw error;
   }
 
-  const examSet = await ExamSet.findOne({ _id: examSetId, isDeleted: false });
+  const examSet = await examSetRepo.findActiveExamSet(examSetId);
   if (!examSet) {
     const error = new Error("Bộ đề thi không tồn tại");
     error.status = 404;

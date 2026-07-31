@@ -10,9 +10,9 @@
 //
 // Nội dung giữ NGUYÊN VĂN, chỉ thay danh sách import.
 import { Types } from "mongoose";
-import ExamSet from "./examSet.model.js";
 import { recalculateExamSetMetrics } from "./examSet.metrics.js";
 import { isEditableExamSetStatus } from "./examSetStatus.js";
+import * as examSetRepo from "./examSet.repository.js";
 
 const VALID_QUESTION_TYPES = ["multiple_choice", "true_false", "short_answer", "essay"];
 
@@ -284,11 +284,7 @@ export const addQuestionToExamSetService = async (examSetId, ownerId, questionDa
   }
 
   // Find exam set and verify ownership
-  const examSet = await ExamSet.findOne({
-    _id: examSetId,
-    ownerId: ownerId,
-    isDeleted: false,
-  });
+  const examSet = await examSetRepo.findOwnedExamSet(examSetId, ownerId);
 
   if (!examSet) {
     const error = new Error("Bộ đề thi không tồn tại hoặc bạn không có quyền truy cập");
@@ -381,11 +377,7 @@ export const updateQuestionInExamSetService = async (
   updateData
 ) => {
   // Find exam set and verify ownership
-  const examSet = await ExamSet.findOne({
-    _id: examSetId,
-    ownerId: ownerId,
-    isDeleted: false,
-  });
+  const examSet = await examSetRepo.findOwnedExamSet(examSetId, ownerId);
 
   if (!examSet) {
     const error = new Error("Bộ đề thi không tồn tại hoặc bạn không có quyền truy cập");
@@ -622,10 +614,7 @@ export const reorderQuestionsInExamSetService = async (
     return { questionId: trimmedId, order };
   });
 
-  const examSet = await ExamSet.findOne({
-    _id: examSetId,
-    isDeleted: false,
-  });
+  const examSet = await examSetRepo.findActiveExamSet(examSetId);
 
   if (!examSet) {
     const error = new Error("Bộ đề thi không tồn tại hoặc bạn không có quyền truy cập");
@@ -715,10 +704,7 @@ export const deleteQuestionFromExamSetService = async (
 
   const normalizedQuestionId = questionId.trim();
 
-  const examSet = await ExamSet.findOne({
-    _id: examSetId,
-    isDeleted: false,
-  });
+  const examSet = await examSetRepo.findActiveExamSet(examSetId);
 
   if (!examSet) {
     const error = new Error("Bộ đề thi không tồn tại");
