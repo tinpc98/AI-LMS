@@ -177,7 +177,10 @@ describe("indexSource", () => {
     vi.spyOn(AIKnowledgeSource, "create").mockResolvedValue(newSourceDoc);
     vi.spyOn(AIKnowledgeChunk, "insertMany").mockResolvedValue([]);
     vi.spyOn(AIKnowledgeSource, "updateMany").mockResolvedValue({});
-    vi.spyOn(AIKnowledgeSource, "find").mockReturnValue({ select: () => Promise.resolve([]) });
+    // Mock phải khớp CHUỖI THẬT của Mongoose: .find().select().lean()
+    vi.spyOn(AIKnowledgeSource, "find").mockReturnValue({
+      select: () => ({ lean: () => Promise.resolve([]) }),
+    });
 
     const result = await aiKnowledgeIndexingService.indexSource(
       { sourceType: "lesson_text", sourceId: "s1", sourceName: "Test", content },
@@ -208,7 +211,7 @@ describe("indexSource", () => {
     const insertSpy = vi.spyOn(AIKnowledgeChunk, "insertMany").mockResolvedValue([]);
     const updateManySpy = vi.spyOn(AIKnowledgeSource, "updateMany").mockResolvedValue({});
     vi.spyOn(AIKnowledgeSource, "find").mockReturnValue({
-      select: () => Promise.resolve([{ _id: "src-old" }]),
+      select: () => ({ lean: () => Promise.resolve([{ _id: "src-old" }]) }),
     });
     const chunkUpdateManySpy = vi.spyOn(AIKnowledgeChunk, "updateMany").mockResolvedValue({});
 

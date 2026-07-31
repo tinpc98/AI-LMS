@@ -42,7 +42,7 @@ export const getQuestions = asyncHandler(async (req, res) => {
   if (difficulty) queryFilter.difficulty = difficulty;
 
   // Sắp xếp câu mới tạo lên đầu (createdAt: -1)
-  const questions = await Question.find(queryFilter).sort({ createdAt: -1 });
+  const questions = await Question.find(queryFilter).sort({ createdAt: -1 }).lean();
 
   res.status(200).json({
     total: questions.length,

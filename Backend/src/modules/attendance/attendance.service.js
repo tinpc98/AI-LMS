@@ -298,7 +298,7 @@ class AttendanceService {
       return { total: 0, present: 0, absent: 0, late: 0, excused: 0, presentRate: 0 };
     }
 
-    const records = await Attendance.find({ classId });
+    const records = await Attendance.find({ classId }).lean();
     const total = records.length;
 
     const stats = {

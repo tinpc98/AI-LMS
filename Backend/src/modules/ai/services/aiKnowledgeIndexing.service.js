@@ -217,7 +217,9 @@ class AIKnowledgeIndexingService {
         sourceId,
         sourceType,
         status: "superseded",
-      }).select("_id");
+      })
+        .select("_id")
+        .lean();
 
       const supersededSourceIds = supersededSources.map((s) => s._id);
       if (supersededSourceIds.length > 0) {

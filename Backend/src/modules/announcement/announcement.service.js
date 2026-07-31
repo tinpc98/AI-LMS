@@ -74,11 +74,14 @@ class AnnouncementService {
     }
 
     if (normalizedRole === "student" && !classId) {
-      const myClasses = await classModel.find({ "students.studentId": userId }).select("_id");
+      const myClasses = await classModel
+        .find({ "students.studentId": userId })
+        .select("_id")
+        .lean();
       const classIds = myClasses.map((c) => c._id);
       query.$or = [{ scope: "System" }, { scope: "Class", classId: { $in: classIds } }];
     } else if (normalizedRole === "teacher" && !classId && !scope) {
-      const myClasses = await classModel.find({ teacherId: userId }).select("_id");
+      const myClasses = await classModel.find({ teacherId: userId }).select("_id").lean();
       const classIds = myClasses.map((c) => c._id);
       query.$or = [
         { scope: "System" },

@@ -89,7 +89,7 @@ const lessonController = {
     }
 
     // Cập nhật sắp xếp: Ưu tiên xếp theo trường order trước, trùng order thì xếp theo ngày tạo
-    const lessons = await Lesson.find(query).sort({ order: 1, createdAt: 1 });
+    const lessons = await Lesson.find(query).sort({ order: 1, createdAt: 1 }).lean();
 
     return res.status(200).json({ lessons });
   }),

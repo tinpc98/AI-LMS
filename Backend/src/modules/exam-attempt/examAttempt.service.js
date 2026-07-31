@@ -36,7 +36,9 @@ const gradeSubmission = async (attemptId, studentAnswers) => {
 
     // 4. Lấy danh sách chi tiết các Câu hỏi từ DB
     const questionIds = exam.questions.map((q) => q.questionId);
-    const dbQuestions = await Question.find({ _id: { $in: questionIds } }).session(session);
+    const dbQuestions = await Question.find({ _id: { $in: questionIds } })
+      .session(session)
+      .lean();
     const dbQuestionsMap = new Map(dbQuestions.map((q) => [q._id.toString(), q]));
 
     let totalScore = 0;
