@@ -59,3 +59,35 @@ describe("createApp", () => {
     expect(res.headers["x-request-id"]).toBeTruthy();
   });
 });
+
+// Chốt sơ đồ URL sau khi gỡ alias trùng (Wave 2.5). Dùng 404 vs 401 để phân biệt
+// "route không tồn tại" với "route tồn tại nhưng bị chặn bởi xác thực".
+describe("sơ đồ mount API sau khi gỡ alias trùng", () => {
+  it("/api/auth/login vẫn tồn tại (Frontend đang dùng)", async () => {
+    const res = await request(app).post("/api/auth/login").send({});
+    expect(res.status).not.toBe(404);
+  });
+
+  it("/api/users vẫn tồn tại và yêu cầu đăng nhập (Frontend đang dùng)", async () => {
+    const res = await request(app).get("/api/users");
+    expect(res.status).toBe(401);
+  });
+
+  it("/api/lessons còn, /api/lesson số ít đã gỡ", async () => {
+    // lesson.routes.js không có route gốc "/", nên phải dùng một đường dẫn có thật
+    // (/class/:classId) để phân biệt "router đã mount" với "đã gỡ hẳn".
+    expect((await request(app).get("/api/lessons/class/abc")).status).toBe(401);
+    expect((await request(app).get("/api/lesson/class/abc")).status).toBe(404);
+  });
+
+  it("endpoint quản trị người dùng KHÔNG còn truy cập được qua /api/auth", async () => {
+    // Trước Wave 2.5 cùng một router mount ở cả hai prefix, nên GET /api/auth
+    // liệt kê được toàn bộ user. Nay chỉ /api/users mới làm được việc đó.
+    expect((await request(app).get("/api/auth")).status).toBe(404);
+    expect((await request(app).get("/api/auth/trash")).status).toBe(404);
+  });
+
+  it("đăng nhập KHÔNG còn truy cập được qua /api/users/login", async () => {
+    expect((await request(app).post("/api/users/login").send({})).status).toBe(404);
+  });
+});

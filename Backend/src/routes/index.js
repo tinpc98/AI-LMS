@@ -4,6 +4,7 @@
 // khiến không nhìn được toàn cảnh URL của hệ thống ở một chỗ.
 import express from "express";
 
+import AuthRouter from "./auth.routes.js";
 import UserRouter from "./user.routes.js";
 import ClassRouter from "./class.routes.js";
 import LessonRouter from "./lesson.routes.js";
@@ -32,10 +33,9 @@ import AIChatRouter from "./aiChat.routes.js";
 const router = express.Router();
 
 // ── Người dùng & xác thực ────────────────────────────────────────────────────
-// LƯU Ý: /api/auth và /api/users đang trỏ vào CÙNG một router. Việc tách đôi
-// (đăng nhập/đăng ký vs quản trị người dùng) thuộc Wave 2.5, cần đổi cả Frontend
-// nên không gộp vào commit tách file này.
-router.use("/auth", UserRouter);
+// /auth  = đăng nhập + hồ sơ của chính mình (login, me)
+// /users = quản trị người dùng, toàn bộ yêu cầu quyền Admin
+router.use("/auth", AuthRouter);
 router.use("/users", UserRouter);
 
 // ── Lớp học & nội dung giảng dạy ────────────────────────────────────────────
@@ -68,10 +68,5 @@ router.use("/ai/lectures/:lessonId/question-sets", AIQuestionRouter);
 router.use("/ai/exam-attempts", AIGradingRouter);
 router.use("/ai/lessons", AIKnowledgeRouter);
 router.use("/ai/chat", AIChatRouter);
-
-// ── Alias cũ cần loại bỏ ─────────────────────────────────────────────────────
-// /api/lesson (số ít) là alias tương thích ngược của /api/lessons. Giữ lại tạm để
-// không phá client cũ; gỡ ở Wave 2.5 sau khi rà xong Frontend.
-router.use("/lesson", LessonRouter);
 
 export default router;

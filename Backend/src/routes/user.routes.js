@@ -1,8 +1,8 @@
+// File: src/routes/user.routes.js
+// Quản trị người dùng — toàn bộ endpoint ở đây đều yêu cầu quyền Admin.
+// Phần đăng nhập & hồ sơ cá nhân đã tách sang auth.routes.js (Wave 2.5).
 import { Router } from "express";
 import {
-  getMyProfile,
-  login,
-  updateMyProfile,
   getAllUsers,
   getUserById,
   createUser,
@@ -11,20 +11,14 @@ import {
   getUserTrash,
   restoreUser,
   permanentDeleteUser,
-} from "../controllers/auth.controllers.js";
-import { loginValidation } from "../utils/validators.js";
+} from "../controllers/auth.controller.js";
 import { verifyUser, isAdmin } from "../middlewares/auth.middleware.js";
-import { loginRateLimit } from "../middlewares/loginRateLimit.middleware.js";
 
 const route = Router();
 
-// Auth routes công khai & cá nhân
-route.post("/login", loginRateLimit, loginValidation, login);
-route.get("/me", verifyUser, getMyProfile);
-route.put("/me", verifyUser, updateMyProfile);
-
-// Admin User Management routes
+// "/trash" phải khai báo TRƯỚC "/:id", nếu không Express khớp "trash" thành tham số id.
 route.get("/trash", verifyUser, isAdmin, getUserTrash);
+
 route.get("/", verifyUser, isAdmin, getAllUsers);
 route.post("/", verifyUser, isAdmin, createUser);
 route.get("/:id", verifyUser, isAdmin, getUserById);
