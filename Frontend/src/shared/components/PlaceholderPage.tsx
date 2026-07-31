@@ -1,5 +1,5 @@
 import { Card, Typography } from "antd";
-import styles from "../../components/layout/adminLayout.module.css";
+import styles from "./layout/adminLayout.module.css";
 
 interface AdminPageProps {
   title: string;

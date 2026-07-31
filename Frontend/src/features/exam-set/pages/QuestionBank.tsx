@@ -34,9 +34,9 @@ import {
 
 import axiosClient from "../../../api/axiosClient";
 import { toast } from "../../../utils/toast";
-import { QuestionStatistic } from "../../../components/teacher/questionbank/QuestionStatistic";
-import { QuestionFormDrawer } from "../../../components/teacher/questionbank/QuestionFormDrawer";
-import { QuestionPreviewDrawer } from "../../../components/teacher/questionbank/QuestionPreviewDrawer";
+import { QuestionStatistic } from "../components/QuestionStatistic";
+import { QuestionFormDrawer } from "../components/QuestionFormDrawer";
+import { QuestionPreviewDrawer } from "../components/QuestionPreviewDrawer";
 
 import { useQuestionBank } from "../../../hooks/useQuestionBank";
 

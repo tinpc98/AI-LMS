@@ -4,7 +4,7 @@ import { BrowserRouter } from "react-router-dom";
 import "./index.css";
 import App from "./App.tsx";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import RootErrorBoundary from "./components/common/RootErrorBoundary.tsx";
+import RootErrorBoundary from "./shared/components/RootErrorBoundary.tsx";
 const queryClient = new QueryClient();
 
 createRoot(document.getElementById("root")!).render(

@@ -26,20 +26,20 @@ import type { IClass } from "../../../interface/ClassInterface";
 import type { IAssignment } from "../../../interface/assignmentInterface";
 import type { ILesson } from "../../../interface/lessonInterface";
 
-import CreateLessonModal from "../../../components/features/CreateLessonModal";
+import CreateLessonModal from "../../lesson/components/CreateLessonModal";
 import { useJitsiLiveSession } from "../../../hooks/useJitsiLiveSession";
-import { AIQuestionGeneratorModal } from "../../../components/teacher/classroom/AIQuestionGeneratorModal";
+import { AIQuestionGeneratorModal } from "../components/classroom/AIQuestionGeneratorModal";
 
-import { TeacherClassOverviewTab } from "../../../components/teacher/classroom/TeacherClassOverviewTab";
-import { TeacherStudentTableTab } from "../../../components/teacher/classroom/TeacherStudentTableTab";
-import { TeacherAttendanceTab } from "../../../components/teacher/classroom/TeacherAttendanceTab";
-import { TeacherMaterialsTab } from "../../../components/teacher/classroom/TeacherMaterialsTab";
-import { TeacherAssignmentsTab } from "../../../components/teacher/classroom/TeacherAssignmentsTab";
-import { TeacherExamsTab } from "../../../components/teacher/classroom/TeacherExamsTab";
-import { TeacherAnnouncementsTab } from "../../../components/teacher/classroom/TeacherAnnouncementsTab";
-import { TeacherLiveSessionTab } from "../../../components/teacher/classroom/TeacherLiveSessionTab";
-import { TeacherGradebookTab } from "../../../components/teacher/classroom/TeacherGradebookTab";
-import { TeacherAnalyticsTab } from "../../../components/teacher/classroom/TeacherAnalyticsTab";
+import { TeacherClassOverviewTab } from "../components/classroom/TeacherClassOverviewTab";
+import { TeacherStudentTableTab } from "../components/classroom/TeacherStudentTableTab";
+import { TeacherAttendanceTab } from "../components/classroom/TeacherAttendanceTab";
+import { TeacherMaterialsTab } from "../components/classroom/TeacherMaterialsTab";
+import { TeacherAssignmentsTab } from "../components/classroom/TeacherAssignmentsTab";
+import { TeacherExamsTab } from "../components/classroom/TeacherExamsTab";
+import { TeacherAnnouncementsTab } from "../components/classroom/TeacherAnnouncementsTab";
+import { TeacherLiveSessionTab } from "../components/classroom/TeacherLiveSessionTab";
+import { TeacherGradebookTab } from "../components/classroom/TeacherGradebookTab";
+import { TeacherAnalyticsTab } from "../components/classroom/TeacherAnalyticsTab";
 import { toast } from "../../../utils/toast";
 
 const { Title, Text, Paragraph } = Typography;

@@ -1,13 +1,13 @@
 import React, { useMemo } from "react";
 import { Row, Col, Card, Skeleton, Alert } from "antd";
-import PageContainer from "../../../components/common/PageContainer";
+import PageContainer from "../../../shared/components/PageContainer";
 import useStudentClasses from "../../../hooks/useStudentClasses";
 
 // Sub-components
-import MyClassesHeader from "../../../components/student/classes/MyClassesHeader";
-import SearchToolbar from "../../../components/student/classes/SearchToolbar";
-import ClassCard from "../../../components/student/classes/ClassCard";
-import EmptyClassState from "../../../components/student/classes/EmptyClassState";
+import MyClassesHeader from "../components/classes/MyClassesHeader";
+import SearchToolbar from "../components/classes/SearchToolbar";
+import ClassCard from "../components/classes/ClassCard";
+import EmptyClassState from "../components/classes/EmptyClassState";
 
 export const StudentMyClassesPage: React.FC = () => {
   const {

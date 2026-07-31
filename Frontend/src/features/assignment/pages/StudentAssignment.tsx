@@ -3,7 +3,7 @@ import { useParams } from "react-router-dom";
 import { Spin, Alert, Button, Modal, Tag, Space } from "antd";
 import { toast } from "../../../utils/toast";
 import { useStudentAssignment } from "../../../hooks/useStudentAssignment";
-import { AITutorSidebar } from "../../../components/student/assignment/AITutorSidebar";
+import { AITutorSidebar } from "../components/assignment/AITutorSidebar";
 
 const StudentAssignmentContent = () => {
   const { assignmentId } = useParams<{ assignmentId: string }>();

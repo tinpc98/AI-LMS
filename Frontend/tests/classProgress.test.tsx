@@ -7,7 +7,7 @@
 // API trở nên vô nghĩa: học sinh vẫn thấy một con số sai, chỉ khác là sai theo kiểu khác.
 import { describe, it, expect } from "vitest";
 import { render, screen } from "@testing-library/react";
-import { ClassProgress } from "../src/components/student/classes/ClassProgress";
+import { ClassProgress } from "../src/features/class/components/classes/ClassProgress";
 
 describe("ClassProgress", () => {
   it("hiển thị đúng phần trăm khi có số", () => {

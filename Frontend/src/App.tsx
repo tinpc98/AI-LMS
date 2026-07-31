@@ -3,16 +3,16 @@ import { Route, Routes, useParams, Navigate } from "react-router-dom";
 import { Spin } from "antd";
 import "./App.css";
 
-import ToastContainer from "./components/common/ToastContainer";
-import PublicRoute from "./components/common/PublicRoute";
-import ProtectedRoute from "./components/common/ProtectedRoute";
-import RoleRedirector from "./components/common/RoleRedirector";
+import ToastContainer from "./shared/components/ToastContainer";
+import PublicRoute from "./shared/components/routing/PublicRoute";
+import ProtectedRoute from "./shared/components/routing/ProtectedRoute";
+import RoleRedirector from "./shared/components/routing/RoleRedirector";
 
 // Auth Components (Lazy Loaded)
 const LoginPage = lazy(() => import("./features/auth/pages/LoginPage"));
 
 // Student Components (Lazy Loaded)
-const HomeLayoutStudent = lazy(() => import("./components/layout/HomeLayoutStudent"));
+const HomeLayoutStudent = lazy(() => import("./shared/components/layout/HomeLayoutStudent"));
 const HomePageStudent = lazy(() => import("./features/learning/pages/HomePageStudent"));
 const MyClasses = lazy(() => import("./features/class/pages/MyClasses"));
 const StudentAssignment = lazy(() => import("./features/assignment/pages/StudentAssignment"));
@@ -24,7 +24,7 @@ const NotificationCenterPage = lazy(
 const ExamPage = lazy(() => import("./features/exam/pages/ExamPage"));
 
 // Teacher Components (Lazy Loaded)
-const HomeLayoutTeacher = lazy(() => import("./components/layout/HomeLayoutTeacher"));
+const HomeLayoutTeacher = lazy(() => import("./shared/components/layout/HomeLayoutTeacher"));
 const HomePageTeacher = lazy(() => import("./features/dashboard/pages/HomePageTeacher"));
 const ClassManagement = lazy(() => import("./features/class/pages/ClassroomManagement"));
 const ClassroomDetail = lazy(() => import("./features/class/pages/ClassroomDetail"));
@@ -33,7 +33,7 @@ const ExamResults = lazy(() => import("./features/exam/pages/ExamResults"));
 const ExamAttemptDetail = lazy(() => import("./features/exam/pages/ExamAttemptDetail"));
 
 // Admin Components (Lazy Loaded)
-const AdminLayout = lazy(() => import("./components/layout/AdminLayout"));
+const AdminLayout = lazy(() => import("./shared/components/layout/AdminLayout"));
 const DashboardPage = lazy(() => import("./features/dashboard/DashboardPage"));
 const AccountManagementPage = lazy(() => import("./features/account/AccountManagementPage"));
 const CourseManagementPage = lazy(() => import("./features/course/CourseManagementPage"));
@@ -46,7 +46,7 @@ const ReportPage = lazy(() => import("./features/report/pages/ReportPage"));
 const ProfilePage = lazy(() => import("./features/profile/pages/ProfilePage"));
 const AdminPage = lazy(() => import("./shared/components/PlaceholderPage"));
 
-const LiveSessionLayout = lazy(() => import("./components/layout/LiveSessionLayout"));
+const LiveSessionLayout = lazy(() => import("./shared/components/layout/LiveSessionLayout"));
 const LiveSessionPage = lazy(() => import("./features/live-session/pages/LiveSessionPage"));
 
 const PageLoadingFallback = () => (
