@@ -1,7 +1,7 @@
 import assert from "assert";
 import mongoose from "mongoose";
-import ExamSet from "../models/examSet.model.js";
-import ExamSetShare from "../models/examSetShare.model.js";
+import ExamSet from "#modules/exam-set/examSet.model.js";
+import ExamSetShare from "#modules/exam-set/examSetShare.model.js";
 import { Exam } from "#modules/exam";
 import { User } from "#modules/auth";
 import { Class as classModel } from "#modules/class";

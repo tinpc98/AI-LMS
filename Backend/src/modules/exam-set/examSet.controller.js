@@ -20,8 +20,8 @@ import {
   listExamSetSharesService,
   listSharedExamSetsService,
   updateExamSetShareMetadataService,
-} from "../services/examSet.service.js";
-import { importExcelToExamSet } from "../services/examSetImport.service.js";
+} from "./examSet.service.js";
+import { importExcelToExamSet } from "./examSetImport.service.js";
 import { Types } from "mongoose";
 
 /**
@@ -223,13 +223,11 @@ export const getExamSetVersions = async (req, res) => {
       sort,
     });
 
-    return res
-      .status(200)
-      .json({
-        success: true,
-        message: "Exam set version history retrieved successfully",
-        data: result,
-      });
+    return res.status(200).json({
+      success: true,
+      message: "Exam set version history retrieved successfully",
+      data: result,
+    });
   } catch (error) {
     console.error("[ExamSet] Get versions error:", error.message);
     const status = error.status || 500;
@@ -398,12 +396,10 @@ export const listSharedExamSets = async (req, res) => {
   } catch (error) {
     console.error("[ExamSet] List shared-with-me error:", error.message);
     const status = error.status || 500;
-    return res
-      .status(status)
-      .json({
-        success: false,
-        message: error.message || "Lỗi lấy danh sách bộ đề thi được chia sẻ",
-      });
+    return res.status(status).json({
+      success: false,
+      message: error.message || "Lỗi lấy danh sách bộ đề thi được chia sẻ",
+    });
   }
 };
 

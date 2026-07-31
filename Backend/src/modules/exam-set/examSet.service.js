@@ -1,7 +1,7 @@
 // File: src/services/examSet.service.js
 import { Types } from "mongoose";
-import ExamSet from "../models/examSet.model.js";
-import ExamSetShare, { EXAM_SET_SHARE_STATUS } from "../models/examSetShare.model.js";
+import ExamSet from "./examSet.model.js";
+import ExamSetShare, { EXAM_SET_SHARE_STATUS } from "./examSetShare.model.js";
 import { User } from "#modules/auth";
 import { Folder } from "#modules/folder";
 import { recalculateExamSetMetrics } from "./examSet.metrics.js";

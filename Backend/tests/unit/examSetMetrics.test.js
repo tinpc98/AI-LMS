@@ -1,6 +1,6 @@
 // Port từ src/scripts/runExamSetMetricsTests.js (characterization test).
 import { describe, it, expect } from "vitest";
-import { recalculateExamSetMetrics } from "../../src/services/examSet.metrics.js";
+import { recalculateExamSetMetrics } from "#modules/exam-set/examSet.metrics.js";
 
 const cases = [
   {

@@ -75,6 +75,8 @@
     "#modules/exam": "./src/modules/exam/index.js",
     "#modules/exam-attempt": "./src/modules/exam-attempt/index.js",
     "#modules/exam-attempt/*": "./src/modules/exam-attempt/*",
+    "#modules/exam-set": "./src/modules/exam-set/index.js",
+    "#modules/exam-set/*": "./src/modules/exam-set/*",
     "#modules/exam/*": "./src/modules/exam/*",
     "#modules/folder": "./src/modules/folder/index.js",
     "#modules/folder/*": "./src/modules/folder/*",

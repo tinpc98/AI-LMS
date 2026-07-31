@@ -1,9 +1,9 @@
 import assert from "assert";
 import * as xlsx from "xlsx";
-import { importExcelToExamSet } from "../services/examSetImport.service.js";
-import { createImportExcelExamSetHandler } from "../controllers/examSet.controller.js";
+import { importExcelToExamSet } from "#modules/exam-set/examSetImport.service.js";
+import { createImportExcelExamSetHandler } from "#modules/exam-set/examSet.controller.js";
 import { Folder } from "#modules/folder";
-import ExamSet from "../models/examSet.model.js";
+import ExamSet from "#modules/exam-set/examSet.model.js";
 import mongoose from "mongoose";
 
 // Helper to create an excel buffer
@@ -720,7 +720,8 @@ async function runUnitTests() {
   });
 
   console.log("\n--- BẮT ĐẦU TEST MULTER (FIX-04) ---");
-  const { excelFileFilter, mapExcelUploadError } = await import("../routes/examSet.routes.js");
+  const { excelFileFilter, mapExcelUploadError } =
+    await import("#modules/exam-set/examSet.routes.js");
   const multer = (await import("multer")).default;
 
   await runTest("Multer: File .xlsx với MIME chuẩn được chấp nhận", () => {

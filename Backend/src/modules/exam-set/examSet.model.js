@@ -1,6 +1,6 @@
 import { Schema, model } from "mongoose";
 import softDeletePlugin from "#shared/plugins/softDelete.plugin.js";
-import { recalculateExamSetMetrics } from "../services/examSet.metrics.js";
+import { recalculateExamSetMetrics } from "./examSet.metrics.js";
 
 /**
  * Question Subdocument Schema

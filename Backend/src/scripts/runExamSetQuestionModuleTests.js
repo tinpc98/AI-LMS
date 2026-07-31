@@ -1,13 +1,13 @@
 import jwt from "jsonwebtoken";
-import ExamSet from "../models/examSet.model.js";
+import ExamSet from "#modules/exam-set/examSet.model.js";
 import {
   addQuestionToExamSetService,
   updateQuestionInExamSetService,
   deleteQuestionFromExamSetService,
   reorderQuestionsInExamSetService,
-} from "../services/examSet.service.js";
+} from "#modules/exam-set/examSet.service.js";
 import { verifyUser } from "#modules/auth";
-import { requireExamSetEditAccess } from "../middlewares/examSetAccess.middleware.js";
+import { requireExamSetEditAccess } from "#modules/exam-set/examSetAccess.middleware.js";
 import {
   examSetQuestionCreateValidation,
   examSetQuestionUpdateValidation,

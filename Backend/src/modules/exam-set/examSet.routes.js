@@ -23,14 +23,14 @@ import {
   listSharedExamSets,
   updateExamSetShareMetadata,
   importExcelExamSet,
-} from "../controllers/examSet.controller.js";
+} from "./examSet.controller.js";
 import { verifyUser } from "#modules/auth";
 import { isTeacher } from "#shared/middlewares/rbac.middleware.js";
 import {
   requireExamSetDraftAccess,
   requireExamSetEditAccess,
   requireExamSetAccess,
-} from "../middlewares/examSetAccess.middleware.js";
+} from "./examSetAccess.middleware.js";
 import {
   examSetQuestionCreateValidation,
   examSetQuestionUpdateValidation,
@@ -41,8 +41,8 @@ import {
   examSetShareListValidation,
   examSetSharedWithMeValidation,
   examSetShareUpdateMetadataValidation,
-} from "../utils/validators.js";
-import { examSetVersionsValidation } from "../utils/validators.js";
+} from "../../utils/validators.js";
+import { examSetVersionsValidation } from "../../utils/validators.js";
 import multer from "multer";
 
 const router = express.Router();

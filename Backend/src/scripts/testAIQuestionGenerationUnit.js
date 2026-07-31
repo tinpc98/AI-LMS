@@ -5,7 +5,7 @@ import { validateQuestionGenerationOutput } from "#modules/ai/validators/questio
 import aiQuestionGenerationService from "#modules/ai/services/aiQuestionGeneration.service.js";
 import aiCoreService from "#modules/ai/services/aiCore.service.js";
 import { Folder } from "#modules/folder";
-import ExamSet from "../models/examSet.model.js";
+import ExamSet from "#modules/exam-set/examSet.model.js";
 import AISummary from "#modules/ai/models/aiSummary.model.js";
 import lessonContentExtractor from "#modules/ai/services/lessonContentExtractor.service.js";
 import { AIError, AIErrorCode } from "#modules/ai";

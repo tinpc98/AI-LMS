@@ -6,7 +6,7 @@ import mongoose from "mongoose";
 import ExamSetShare, {
   EXAM_SET_SHARE_PERMISSION,
   EXAM_SET_SHARE_STATUS,
-} from "../../src/models/examSetShare.model.js";
+} from "#modules/exam-set/examSetShare.model.js";
 
 const TEST_URI = process.env.MONGO_TEST_URI || "mongodb://127.0.0.1:27017/ai_lms_test";
 

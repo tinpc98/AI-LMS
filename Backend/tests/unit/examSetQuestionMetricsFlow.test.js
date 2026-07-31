@@ -1,11 +1,11 @@
 // Port từ src/scripts/runExamSetQuestionMetricsFlowTests.js (characterization test).
 import { describe, it, expect, afterEach, vi } from "vitest";
-import ExamSet from "../../src/models/examSet.model.js";
+import ExamSet from "#modules/exam-set/examSet.model.js";
 import {
   addQuestionToExamSetService,
   updateQuestionInExamSetService,
   deleteQuestionFromExamSetService,
-} from "../../src/services/examSet.service.js";
+} from "#modules/exam-set/examSet.service.js";
 
 const createQuestion = (data) => ({
   ...data,

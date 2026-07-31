@@ -34,8 +34,7 @@ import liveRoutes from "#modules/live-session/live.routes.js";
 import lessonProgressRoutes from "#modules/lesson/lessonProgress.routes.js";
 import badgeRoutes from "#modules/badge/badge.routes.js";
 import aiRoutes from "#modules/ai/ai.routes.js";
-
-import ExamSetRouter from "./examSet.routes.js";
+import examSetRoutes from "#modules/exam-set/examSet.routes.js";
 
 import DashboardRouter from "./dashboard.routes.js";
 import ReportRouter from "./report.routes.js";
@@ -75,7 +74,7 @@ router.use("/analytics", AnalyticsRouter);
 router.use("/questions", questionRoutes);
 router.use("/exams", examRoutes);
 router.use("/exam-attempts", examAttemptRoutes);
-router.use("/exam-sets", ExamSetRouter);
+router.use("/exam-sets", examSetRoutes);
 router.use("/live", liveRoutes);
 
 // ── AI ───────────────────────────────────────────────────────────────────────

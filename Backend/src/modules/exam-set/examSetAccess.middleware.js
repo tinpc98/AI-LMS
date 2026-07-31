@@ -1,7 +1,7 @@
 // File: src/middlewares/examSetAccess.middleware.js
 import { Types } from "mongoose";
-import ExamSet from "../models/examSet.model.js";
-import ExamSetShare, { EXAM_SET_SHARE_STATUS } from "../models/examSetShare.model.js";
+import ExamSet from "./examSet.model.js";
+import ExamSetShare, { EXAM_SET_SHARE_STATUS } from "./examSetShare.model.js";
 
 /**
  * Permission level map – dùng để so sánh hierarchy.

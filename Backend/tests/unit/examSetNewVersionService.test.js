@@ -1,8 +1,8 @@
 // Port từ src/scripts/runExamSetNewVersionServiceTests.js (characterization test).
 import { describe, it, expect, afterEach, vi } from "vitest";
-import ExamSet from "../../src/models/examSet.model.js";
+import ExamSet from "#modules/exam-set/examSet.model.js";
 import { Folder } from "#modules/folder";
-import { createNewExamSetVersionService } from "../../src/services/examSet.service.js";
+import { createNewExamSetVersionService } from "#modules/exam-set/examSet.service.js";
 
 const createQueryMock = (result) => ({
   sort() {

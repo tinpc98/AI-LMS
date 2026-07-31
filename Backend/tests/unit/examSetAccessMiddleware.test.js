@@ -4,9 +4,9 @@ import { describe, it, expect, afterEach, vi } from "vitest";
 import {
   requireExamSetAccess,
   requireExamSetEditAccess,
-} from "../../src/middlewares/examSetAccess.middleware.js";
-import ExamSet from "../../src/models/examSet.model.js";
-import ExamSetShare from "../../src/models/examSetShare.model.js";
+} from "#modules/exam-set/examSetAccess.middleware.js";
+import ExamSet from "#modules/exam-set/examSet.model.js";
+import ExamSetShare from "#modules/exam-set/examSetShare.model.js";
 
 const VALID_EXAM_SET_ID = "607f1f77bcf86cd799439111";
 const OWNER_ID = "507f1f77bcf86cd799439011";

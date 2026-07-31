@@ -6,9 +6,9 @@ import dotenv from "dotenv";
 
 import { User } from "#modules/auth";
 import { Folder } from "#modules/folder";
-import ExamSet from "../models/examSet.model.js";
+import ExamSet from "#modules/exam-set/examSet.model.js";
 import { Question } from "#modules/question";
-import { importExcelToExamSet } from "../services/examSetImport.service.js";
+import { importExcelToExamSet } from "#modules/exam-set/examSetImport.service.js";
 
 dotenv.config();
 

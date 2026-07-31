@@ -1,12 +1,12 @@
 import crypto from "crypto";
 import mongoose from "mongoose";
-import ExamSet from "../../../models/examSet.model.js";
+import ExamSet from "#modules/exam-set/examSet.model.js";
 import AISummary from "../models/aiSummary.model.js";
 import { Folder } from "#modules/folder";
 import lessonContentExtractor from "./lessonContentExtractor.service.js";
 import aiCoreService from "./aiCore.service.js";
 import { validateQuestionGenerationOutput } from "../validators/questionGenerationOutput.validator.js";
-import { recalculateExamSetMetrics } from "../../../services/examSet.metrics.js";
+import { recalculateExamSetMetrics } from "#modules/exam-set/examSet.metrics.js";
 import { AIError, AIErrorCode } from "../aiError.js";
 
 const QUESTION_GEN_PROMPT_VERSION = "v1.0"; // Increment if prompt changes significantly

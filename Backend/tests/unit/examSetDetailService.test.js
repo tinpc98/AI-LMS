@@ -1,7 +1,7 @@
 // Port từ src/scripts/runExamSetDetailServiceTests.js (characterization test).
 import { describe, it, expect, afterEach, vi } from "vitest";
-import ExamSet from "../../src/models/examSet.model.js";
-import { getExamSetDetailService } from "../../src/services/examSet.service.js";
+import ExamSet from "#modules/exam-set/examSet.model.js";
+import { getExamSetDetailService } from "#modules/exam-set/examSet.service.js";
 
 const createExamSet = (props = {}) => ({
   ...props,

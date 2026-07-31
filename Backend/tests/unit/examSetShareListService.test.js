@@ -1,8 +1,8 @@
 // Port từ src/scripts/runExamSetShareListServiceTests.js (characterization test).
 import { describe, it, expect, afterEach, vi } from "vitest";
-import { listExamSetSharesService } from "../../src/services/examSet.service.js";
-import ExamSet from "../../src/models/examSet.model.js";
-import ExamSetShare from "../../src/models/examSetShare.model.js";
+import { listExamSetSharesService } from "#modules/exam-set/examSet.service.js";
+import ExamSet from "#modules/exam-set/examSet.model.js";
+import ExamSetShare from "#modules/exam-set/examSetShare.model.js";
 import { User } from "#modules/auth";
 
 const createExamSet = (props = {}) => ({
