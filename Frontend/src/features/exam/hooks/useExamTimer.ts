@@ -1,12 +1,32 @@
 import { useState, useEffect, useRef } from "react";
 
+/**
+ * Đồng hồ đếm ngược phòng thi.
+ *
+ * MỐC KẾT THÚC LẤY TỪ MÁY CHỦ KHI CÓ (Wave 7+).
+ *
+ * Trước đây tham số examEndTime tồn tại nhưng KHÔNG được dùng — và backend cũng chưa từng gửi
+ * trường đó. Mã chết ở cả hai phía. Hệ quả: hạn nộp chỉ tồn tại trong localStorage của học
+ * sinh, xoá đi là có đồng hồ mới trọn thời gian.
+ *
+ * Nay endpoint chi tiết lượt thi trả về endTime tuyệt đối (tính từ lúc học sinh bấm bắt đầu),
+ * và hook ưu tiên giá trị đó. localStorage tụt xuống vai trò dự phòng cho trường hợp máy chủ
+ * chưa kịp trả — không còn là nguồn sự thật.
+ */
 const useExamTimer = (
   durationInSeconds: number | null,
   examId?: string,
   onTimeUp?: () => void,
-  _examEndTime?: string | null
+  examEndTime?: string | null
 ) => {
   const storageKey = `exam_endTime_${examId || "default"}`;
+
+  /** Mốc kết thúc do máy chủ cấp, tính bằng mili-giây. null nếu chưa có hoặc không hợp lệ. */
+  const serverEndTime = (() => {
+    if (!examEndTime) return null;
+    const parsed = new Date(examEndTime).getTime();
+    return Number.isFinite(parsed) ? parsed : null;
+  })();
 
   const onTimeUpRef = useRef(onTimeUp);
   useEffect(() => {
@@ -14,26 +34,28 @@ const useExamTimer = (
   }, [onTimeUp]);
 
   const [timeLeft, setTimeLeft] = useState<number | null>(() => {
-    if (!examId) return durationInSeconds;
-    const endTime = localStorage.getItem(storageKey);
-    if (endTime) {
-      const remaining = Math.round((parseInt(endTime, 10) - Date.now()) / 1000);
-      return remaining > 0 ? remaining : 0;
-    }
-    return durationInSeconds;
+    // Máy chủ là nguồn sự thật; localStorage chỉ dùng khi chưa có.
+    const known =
+      serverEndTime ?? (examId ? Number(localStorage.getItem(storageKey)) || null : null);
+    if (!known) return durationInSeconds;
+    return Math.max(0, Math.round((known - Date.now()) / 1000));
   });
 
   useEffect(() => {
     if (!durationInSeconds || durationInSeconds <= 0) return;
 
-    let endTimeStr = localStorage.getItem(storageKey);
+    // Thứ tự ưu tiên: mốc của máy chủ > mốc đã lưu > tự tính từ thời lượng.
+    // Mốc của máy chủ luôn GHI ĐÈ localStorage — nếu học sinh sửa giá trị đã lưu, lần đồng bộ
+    // kế tiếp sẽ đưa nó về đúng.
     let endTime: number;
 
-    if (!endTimeStr) {
-      endTime = Date.now() + durationInSeconds * 1000;
-      localStorage.setItem(storageKey, endTime.toString());
+    if (serverEndTime) {
+      endTime = serverEndTime;
+      localStorage.setItem(storageKey, String(endTime));
     } else {
-      endTime = parseInt(endTimeStr, 10);
+      const saved = Number(localStorage.getItem(storageKey));
+      endTime = saved || Date.now() + durationInSeconds * 1000;
+      localStorage.setItem(storageKey, String(endTime));
     }
 
     /**
@@ -72,7 +94,7 @@ const useExamTimer = (
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [durationInSeconds, examId, storageKey]);
+  }, [durationInSeconds, examId, storageKey, serverEndTime]);
 
   const formattedTime = (): string => {
     if (timeLeft === null || timeLeft === undefined) return "00:00";

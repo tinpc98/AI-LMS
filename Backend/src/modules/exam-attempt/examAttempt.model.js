@@ -57,6 +57,25 @@ const examAttemptSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+
+    // ── Ghi nhận nộp muộn (Wave 7+) ──────────────────────────────────────────
+    //
+    // Trước đây bài nộp quá hạn được chấp nhận ÂM THẦM: gradeSubmission kẹp lại endTime cho
+    // gọn rồi chấm bình thường, không để lại dấu vết. Giáo viên không có cách nào biết một
+    // học sinh đã làm quá giờ.
+    //
+    // Hai trường này KHÔNG chặn bài nộp — chúng chỉ ghi lại sự việc. Có từ chối bài muộn hay
+    // không là quyết định về chính sách thi cử, và giờ đây người có thẩm quyền đã có dữ kiện
+    // để quyết, thay vì phải tin rằng chuyện đó không xảy ra.
+    isLate: {
+      type: Boolean,
+      default: false,
+    },
+    /** Số giây vượt quá hạn, ĐÃ trừ ân hạn 2 phút cho độ trễ mạng. */
+    lateBySeconds: {
+      type: Number,
+      default: 0,
+    },
   },
   { timestamps: true }
 );

@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { evaluateLateness } from "./attemptDeadline.js";
 import ExamAttempt from "./examAttempt.model.js";
 import { Exam } from "#modules/exam";
 import { Question } from "#modules/question";
@@ -20,16 +21,20 @@ const gradeSubmission = async (attemptId, studentAnswers) => {
 
     const exam = attempt.examId;
 
-    // 2. Kiểm tra thời gian (Senior Tip: Chống gian lận kéo dài thời gian)
+    // 2. Kiểm tra thời gian làm bài.
+    //
+    // Bản cũ chỉ kẹp lại endTime khi vượt hạn rồi chấm bình thường — bài nộp muộn đi qua hệ
+    // thống không để lại dấu vết nào. Nay vẫn CHẤP NHẬN bài nộp (từ chối là quyết định về
+    // chính sách thi cử, không phải quyết định của mã), nhưng GHI LẠI sự việc để giáo viên
+    // nhìn thấy và tự xử lý.
     const now = new Date();
-    const timeElapsed = (now - new Date(attempt.startTime)) / 1000 / 60; // Đổi ra phút
-    const gracePeriod = 2; // Cho phép 2 phút bù giờ do độ trễ mạng
+    const lateness = evaluateLateness(attempt.startTime, exam.duration, now);
 
-    if (timeElapsed > exam.duration + gracePeriod) {
-      attempt.endTime = new Date(attempt.startTime.getTime() + exam.duration * 60000);
-    } else {
-      attempt.endTime = now;
-    }
+    attempt.isLate = lateness.isLate;
+    attempt.lateBySeconds = lateness.lateBySeconds;
+    // Quá hạn thì ghi nhận mốc kết thúc là hạn nộp, không phải lúc bấm nộp — để thời gian làm
+    // bài trong báo cáo phản ánh khoảng được phép, còn phần vượt nằm ở lateBySeconds.
+    attempt.endTime = lateness.isLate ? lateness.deadline : now;
 
     // 3. Tạo một Map để tra cứu nhanh số điểm phân bổ cho từng câu hỏi trong Đề thi này
     const examPointsMap = new Map(exam.questions.map((q) => [q.questionId.toString(), q.points]));

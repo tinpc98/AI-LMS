@@ -1,4 +1,6 @@
 import mongoose from "mongoose";
+import { resolveAttemptDeadline } from "./attemptDeadline.js";
+import { buildAttemptStats } from "./attemptStats.js";
 import { logger } from "#shared/utils/logger.js";
 import examAttemptService from "./examAttempt.service.js";
 import ExamAttempt from "./examAttempt.model.js";
@@ -205,6 +207,12 @@ export const getExamAttemptDetail = asyncHandler(async (req, res) => {
         startTime: exam.startTime,
         classId: exam.classId,
       },
+      // Hạn nộp TUYỆT ĐỐI của chính lượt thi này (Wave 7+).
+      //
+      // Trước đây trường này không được trả về, nên đồng hồ đếm ngược ở Frontend tự tính hạn
+      // rồi lưu vào localStorage — xoá localStorage là có đồng hồ mới, trọn thời gian.
+      // useExamTimer vốn đã có sẵn tham số nhận mốc này, chỉ là chưa ai gửi.
+      endTime: resolveAttemptDeadline(attempt.startTime, exam.duration),
       questions: formattedQuestions,
     },
   });
@@ -323,6 +331,9 @@ export const getAttemptForReview = asyncHandler(async (req, res) => {
     totalScore: attempt.totalScore,
     submittedAt: attempt.endTime,
     cheatWarnings: attempt.cheatWarnings || 0,
+    // Nộp muộn: giáo viên cần thấy điều này TRƯỚC khi chấm, không phải sau.
+    isLate: attempt.isLate || false,
+    lateBySeconds: attempt.lateBySeconds || 0,
 
     answersDetail: validAnswers.map((answer) => {
       const questionId = answer.questionId.toString();
@@ -427,26 +438,18 @@ export const getAttemptsByExam = asyncHandler(async (req, res) => {
 
   const page = Math.max(1, Number(req.query.page) || 1);
   const limit = Math.max(1, Number(req.query.limit) || 100);
-  const skip = (page - 1) * limit;
 
   const [attempts, allAttempts] = await Promise.all([
     ExamAttempt.find({ examId })
-      .populate({
-        path: "studentId",
-        select: "fullName studentCode avatar",
-      })
+      .populate({ path: "studentId", select: "fullName studentCode avatar" })
       .sort({ createdAt: -1 })
-      .skip(skip)
+      .skip((page - 1) * limit)
       .limit(limit)
       .lean(),
-    ExamAttempt.find({ examId }).select("status").lean(),
+    ExamAttempt.find({ examId }).select("status isLate").lean(),
   ]);
 
-  const stats = {
-    total: allAttempts.length,
-    graded: allAttempts.filter((attempt) => attempt.status === "GRADED").length,
-    pending: allAttempts.filter((attempt) => attempt.status === "SUBMITTED").length,
-  };
+  const stats = buildAttemptStats(allAttempts);
 
   return res.status(200).json({
     success: true,

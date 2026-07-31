@@ -162,32 +162,51 @@ describe("useExamTimer — định dạng hiển thị", () => {
   });
 });
 
-describe("useExamTimer — GIỚI HẠN ĐÃ BIẾT: mốc kết thúc chỉ nằm ở phía máy khách", () => {
-  it("xoá localStorage thì đồng hồ được cấp lại trọn thời gian", () => {
-    // Test này KHÔNG chốt một hành vi mong muốn — nó ghi lại một lỗ hổng có thật để không ai
-    // tưởng hook đã chống được việc gian lận thời gian.
-    //
-    // Hook nhận tham số thứ tư `_examEndTime` (mốc kết thúc tuyệt đối do máy chủ cấp) nhưng
-    // KHÔNG dùng tới. Kiểm phía backend cho thấy endpoint chi tiết lượt thi chỉ trả
-    // examInfo.duration và startTime, KHÔNG trả endTime — nên tham số đó chưa từng có giá trị
-    // để dùng. Đó là mã chết ở cả hai phía.
-    //
-    // Hệ quả: mốc kết thúc chỉ tồn tại trong localStorage của học sinh. Xoá đi là có đồng hồ mới.
-    //
-    // Máy chủ CÓ một lớp chặn cuối: gradeSubmission kẹp lại endTime khi thời gian làm bài vượt
-    // duration + 2 phút. Nhưng nó vẫn CHẤP NHẬN bài nộp — chỉ ghi nhận mốc kết thúc bị kẹp,
-    // không từ chối và cũng không đánh dấu gì.
-    //
-    // Sửa triệt để cần backend trả mốc kết thúc tuyệt đối và từ chối bài nộp quá hạn — đó là
-    // quyết định về chính sách thi cử, không phải quyết định kỹ thuật.
-    const { unmount } = renderHook(() => useExamTimer(600, EXAM_ID));
+describe("useExamTimer — mốc kết thúc do MÁY CHỦ cấp", () => {
+  const serverEnd = () => new Date(Date.now() + 100 * 1000).toISOString();
+
+  it("ưu tiên mốc của máy chủ, bỏ qua thời lượng truyền vào", () => {
+    const { result } = renderHook(() => useExamTimer(600, EXAM_ID, undefined, serverEnd()));
+
+    expect(result.current.timeLeft).toBe(100); // theo máy chủ, không phải 600
+  });
+
+  it("mốc của máy chủ GHI ĐÈ giá trị đã lưu trong localStorage", () => {
+    // Đây là phần bịt lỗ hổng: học sinh sửa localStorage để kéo dài giờ, nhưng lần đồng bộ kế
+    // tiếp với máy chủ đưa nó về đúng.
+    localStorage.setItem(KEY, String(Date.now() + 9999 * 1000));
+
+    const { result } = renderHook(() => useExamTimer(600, EXAM_ID, undefined, serverEnd()));
+
+    expect(result.current.timeLeft).toBe(100);
+    expect(Number(localStorage.getItem(KEY))).toBe(Date.now() + 100 * 1000);
+  });
+
+  it("XOÁ localStorage KHÔNG còn cấp lại thời gian khi có mốc máy chủ", () => {
+    // Trước Wave 7+ đây là một lỗ hổng thật: xoá localStorage là có đồng hồ mới trọn thời gian.
+    const endTime = serverEnd();
+    const { unmount } = renderHook(() => useExamTimer(600, EXAM_ID, undefined, endTime));
     unmount();
 
-    vi.setSystemTime(Date.now() + 500 * 1000);
+    vi.setSystemTime(Date.now() + 50 * 1000);
     localStorage.clear();
 
-    const { result } = renderHook(() => useExamTimer(600, EXAM_ID));
+    const { result } = renderHook(() => useExamTimer(600, EXAM_ID, undefined, endTime));
 
-    expect(result.current.timeLeft).toBe(600); // trọn 10 phút, không phải 100 giây còn lại
+    expect(result.current.timeLeft).toBe(50); // còn đúng 50 giây, không phải 600
+  });
+
+  it("mốc máy chủ sai định dạng thì quay về cách tính cũ, không sập", () => {
+    const { result } = renderHook(() => useExamTimer(600, EXAM_ID, undefined, "không-phải-ngày"));
+
+    expect(result.current.timeLeft).toBe(600);
+  });
+
+  it("chưa có mốc máy chủ (null) thì dùng localStorage như trước", () => {
+    // Trong thực tế xảy ra ở khoảnh khắc trang vừa mở, trước khi tải xong dữ liệu lượt thi.
+    const { result } = renderHook(() => useExamTimer(600, EXAM_ID, undefined, null));
+
+    expect(result.current.timeLeft).toBe(600);
+    expect(localStorage.getItem(KEY)).not.toBeNull();
   });
 });

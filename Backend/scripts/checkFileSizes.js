@@ -38,7 +38,7 @@ const BASELINE = {
 
   // Controller còn to vì chưa rút hết logic xuống service (§4.3 mới làm cho class).
   "modules/class/class.controller.js": 462,
-  "modules/exam-attempt/examAttempt.controller.js": 411,
+  "modules/exam-attempt/examAttempt.controller.js": 408,
   "modules/exam/exam.controller.js": 363,
   "modules/auth/auth.controller.js": 290,
 
