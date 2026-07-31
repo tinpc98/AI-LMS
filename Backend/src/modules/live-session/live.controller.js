@@ -4,8 +4,8 @@ import {
   getSessionDetailService,
   getSessionHistoryService,
   endSessionService,
-} from "../services/live.service.js";
-import { LiveError, sendLiveError } from "../validators/live.validator.js";
+} from "./live.service.js";
+import { LiveError, sendLiveError } from "./live.validator.js";
 
 // --- API V2 CONTROLLERS & LEGACY ADAPTERS ---
 
@@ -54,12 +54,10 @@ export const getActiveLiveSession = async (req, res) => {
       return sendLiveError(res, error.statusCode, error.code, error.message, error.details);
     }
     console.error("[LiveController] getActiveLiveSession Error:", error);
-    return res
-      .status(500)
-      .json({
-        success: false,
-        message: error.message || "Lỗi server khi lấy buổi học đang diễn ra",
-      });
+    return res.status(500).json({
+      success: false,
+      message: error.message || "Lỗi server khi lấy buổi học đang diễn ra",
+    });
   }
 };
 

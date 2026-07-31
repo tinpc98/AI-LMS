@@ -1,6 +1,6 @@
 // src/sockets/exam.socket.js
-import { ExamAttempt } from "#modules/exam-attempt";
-import { checkSocketExamAccess } from "../services/socketExamAccess.service.js";
+import ExamAttempt from "./examAttempt.model.js";
+import { checkSocketExamAccess } from "./socketExamAccess.service.js";
 
 // Whitelist các loại hành vi gian lận hợp lệ — chặn client gửi giá trị tùy ý vào DB.
 const ALLOWED_CHEAT_TYPES = [

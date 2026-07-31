@@ -30,9 +30,9 @@ import announcementRoutes from "#modules/announcement/announcement.routes.js";
 import courseRoutes from "#modules/course/course.routes.js";
 import folderRoutes from "#modules/folder/folder.routes.js";
 import notificationRoutes from "#modules/notification/notification.routes.js";
+import liveRoutes from "#modules/live-session/live.routes.js";
 
 import ExamSetRouter from "./examSet.routes.js";
-import LiveRouter from "./live.routes.js";
 
 import DashboardRouter from "./dashboard.routes.js";
 import ReportRouter from "./report.routes.js";
@@ -74,7 +74,7 @@ router.use("/questions", questionRoutes);
 router.use("/exams", examRoutes);
 router.use("/exam-attempts", examAttemptRoutes);
 router.use("/exam-sets", ExamSetRouter);
-router.use("/live", LiveRouter);
+router.use("/live", liveRoutes);
 
 // ── AI ───────────────────────────────────────────────────────────────────────
 router.use("/ai/lectures", AISummaryRouter);

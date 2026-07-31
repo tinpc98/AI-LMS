@@ -1,5 +1,5 @@
-import { checkSocketLiveClassAccess } from "../services/socketLiveAccess.service.js";
-import LiveSession from "../models/liveSession.model.js";
+import { checkSocketLiveClassAccess } from "./socketLiveAccess.service.js";
+import LiveSession from "./liveSession.model.js";
 
 /**
  * Socket.IO Handler cho Module Học Trực Tuyến (Live Session)

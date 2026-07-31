@@ -71,9 +71,14 @@ module.exports = {
       name: "no-cross-module-internals",
       comment: "Module khác chỉ được import qua index.js của module, không vào file nội bộ.",
       severity: "warn",
-      // src/routes/index.js là composition root, được miễn trừ: nó phải trỏ thẳng vào
-      // *.routes.js của từng module. Lý do đầy đủ ghi trong chính file đó.
-      from: { path: "^src/modules/([^/]+)/", pathNot: "^src/routes/index\\.js$" },
+      // Hai composition root được miễn trừ vì phải trỏ thẳng vào file nội bộ module:
+      //   src/routes/index.js            -> *.routes.js
+      //   src/infra/socket/registerHandlers.js -> *.socket.js
+      // Lý do đầy đủ ghi trong chính hai file đó.
+      from: {
+        path: "^src/modules/([^/]+)/",
+        pathNot: "^src/(routes/index|infra/socket/registerHandlers)\\.js$",
+      },
       to: {
         path: "^src/modules/([^/]+)/(?!index\\.js$).+",
         pathNot: "^src/modules/$1/",

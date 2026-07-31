@@ -6,3 +6,5 @@
 
 export { default as Notification } from "./notification.model.js";
 export { default as notificationService } from "./notification.service.js";
+
+// Socket handler nam canh nghiep vu (§3.4).

@@ -3,8 +3,8 @@ import dotenv from "dotenv";
 import fs from "fs";
 import path from "path";
 import { Class as classModel } from "#modules/class";
-import LiveSession from "../../../models/liveSession.model.js";
-import { generateLiveSessionRoomName } from "../../../utils/liveSessionHelper.js";
+import { LiveSession } from "#modules/live-session";
+import { generateLiveSessionRoomName } from "#modules/live-session/liveSessionHelper.js";
 
 dotenv.config();
 

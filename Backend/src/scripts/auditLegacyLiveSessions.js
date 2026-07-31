@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import dotenv from "dotenv";
 import { Class as classModel } from "#modules/class";
-import LiveSession from "../models/liveSession.model.js";
+import { LiveSession } from "#modules/live-session";
 
 dotenv.config();
 

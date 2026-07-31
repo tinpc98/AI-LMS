@@ -9,3 +9,5 @@
 
 export { default as ExamAttempt } from "./examAttempt.model.js";
 export * from "./examQuestionResolver.js";
+
+// Socket handler nam canh nghiep vu (§3.4); infra/socket/registerHandlers.js lo dang ky.

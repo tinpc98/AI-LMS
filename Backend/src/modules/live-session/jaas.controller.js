@@ -5,8 +5,8 @@ import {
   getJaasApiKeyId,
   getJaasDomain,
   getPrivateKey,
-} from "../services/jaas.service.js";
-import { LiveError, sendLiveError } from "../validators/live.validator.js";
+} from "./jaas.service.js";
+import { LiveError, sendLiveError } from "./live.validator.js";
 
 export { validateJaasConfig, getJaasAppId, getJaasApiKeyId, getJaasDomain, getPrivateKey };
 

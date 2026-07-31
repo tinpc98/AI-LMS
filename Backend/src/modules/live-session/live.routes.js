@@ -5,8 +5,8 @@ import {
   getLiveSessionDetail,
   getLiveSessionHistory,
   endLiveSession,
-} from "../controllers/live.controller.js";
-import { generateJaasTokenForSession } from "../controllers/jaas.controller.js";
+} from "./live.controller.js";
+import { generateJaasTokenForSession } from "./jaas.controller.js";
 import { verifyUser } from "#modules/auth";
 import { isTeacher } from "#shared/middlewares/rbac.middleware.js";
 import {
@@ -15,7 +15,7 @@ import {
   resolveClassIdFromBody,
   resolveClassIdFromParams,
   resolveLiveSession,
-} from "../middlewares/liveAuth.middleware.js";
+} from "./liveAuth.middleware.js";
 
 const router = express.Router();
 

@@ -13,27 +13,13 @@ import { createApp } from "./app.js";
 import { connectDB } from "./config/database.js";
 import { validateEnv } from "./config/env.js";
 import { buildCorsOptions } from "./config/cors.js";
-import { validateJaasConfig } from "./controllers/jaas.controller.js";
-import socketAuthMiddleware from "#infra/socket/socketAuth.middleware.js";
-import examSocketHandler from "./sockets/exam.socket.js";
-import liveSocketHandler from "./sockets/live.socket.js";
-import notificationSocketHandler from "./sockets/notification.socket.js";
+import { validateJaasConfig } from "#modules/live-session";
+import { registerSocketHandlers } from "#infra/socket/registerHandlers.js";
 import { initCronJobs } from "./cron/cron.setup.js";
 import aiUsageService from "./ai/services/aiUsage.service.js";
 import aiKnowledgeIndexingService from "./ai/services/aiKnowledgeIndexing.service.js";
 
 const SHUTDOWN_TIMEOUT_MS = 10_000;
-
-const registerSocketHandlers = (io) => {
-  // Xác thực JWT handshake cho MỌI kết nối Socket.io, đăng ký tường minh ở đây thay vì
-  // phụ thuộc ngầm vào thứ tự import của từng module socket — đảm bảo không handler nào
-  // có thể vô tình bỏ sót bước xác thực.
-  io.use(socketAuthMiddleware);
-
-  examSocketHandler(io);
-  liveSocketHandler(io);
-  notificationSocketHandler(io);
-};
 
 // Các tác vụ nền chạy sau khi server đã lắng nghe. Lỗi ở đây chỉ cảnh báo, không chặn boot.
 const runPostBootChecks = () => {

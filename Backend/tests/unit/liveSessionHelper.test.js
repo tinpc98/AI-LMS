@@ -4,7 +4,7 @@
 // Giữ nguyên toàn bộ assertion gốc, bổ sung nhánh biên còn thiếu.
 import { describe, it, expect } from "vitest";
 import mongoose from "mongoose";
-import { generateLiveSessionRoomName } from "../../src/utils/liveSessionHelper.js";
+import { generateLiveSessionRoomName } from "../../src/modules/live-session/liveSessionHelper.js";
 
 const CLASS_ID = "6794d21e87d15a9907f10001";
 const SESSION_ID = "6794e80f98e26b1108a20045";

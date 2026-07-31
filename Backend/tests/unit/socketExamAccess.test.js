@@ -3,7 +3,7 @@
 // service kiểm tra quyền nào tồn tại để test.
 import { describe, it, expect, afterEach, vi } from "vitest";
 import mongoose from "mongoose";
-import { checkSocketExamAccess } from "../../src/services/socketExamAccess.service.js";
+import { checkSocketExamAccess } from "../../src/modules/exam-attempt/socketExamAccess.service.js";
 import { Exam } from "#modules/exam";
 import { ExamAttempt } from "#modules/exam-attempt";
 import { Class as classModel } from "#modules/class";

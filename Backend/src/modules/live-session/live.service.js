@@ -1,10 +1,10 @@
 import mongoose from "mongoose";
 import { User } from "#modules/auth";
-import LiveSession from "../models/liveSession.model.js";
+import LiveSession from "./liveSession.model.js";
 import { Class as classModel } from "#modules/class";
-import { generateLiveSessionRoomName } from "../utils/liveSessionHelper.js";
-import { mapLiveSessionResponse } from "../utils/liveSession.mapper.js";
-import { LiveError, LIVE_ERROR_CODES } from "../validators/live.validator.js";
+import { generateLiveSessionRoomName } from "./liveSessionHelper.js";
+import { mapLiveSessionResponse } from "./liveSession.mapper.js";
+import { LiveError, LIVE_ERROR_CODES } from "./live.validator.js";
 import { notificationService } from "#modules/notification";
 import { attendanceService } from "#modules/attendance";
 

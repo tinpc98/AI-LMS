@@ -14,7 +14,7 @@ import { ExamAttempt } from "#modules/exam-attempt";
 import { Attendance } from "#modules/attendance";
 import { Grade } from "#modules/grade";
 import { Announcement } from "#modules/announcement";
-import LiveSession from "../models/liveSession.model.js";
+import { LiveSession } from "#modules/live-session";
 
 const MONGO_URI = process.env.MONGO_URI || "mongodb://127.0.0.1:27017/tinpc98_AI-LMS";
 
