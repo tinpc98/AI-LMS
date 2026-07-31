@@ -8,7 +8,7 @@ import {
 } from "@ant-design/icons";
 import type { LearningInsight } from "../types/learningDashboard.types";
 
-const { Text, Paragraph } = Typography;
+const { Text } = Typography;
 
 interface LearningInsightsWidgetProps {
   insight: LearningInsight;

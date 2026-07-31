@@ -1,6 +1,6 @@
 import { useState, useMemo, useCallback, useEffect } from "react";
 import { attendanceApi } from "../../../api/attendanceApi";
-import type { IAttendanceItem, AttendanceStatus } from "../../../interface/attendanceInterface";
+import type { IAttendanceItem } from "../../../interface/attendanceInterface";
 import type {
   IExtendedAttendanceRecord,
   StudentAttendanceFilterOptions,

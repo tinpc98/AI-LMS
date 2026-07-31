@@ -10,16 +10,9 @@ import {
   Empty,
   Typography,
   Space,
-  Tooltip,
   Pagination,
 } from "antd";
-import {
-  BookOutlined,
-  TeamOutlined,
-  SearchOutlined,
-  ArrowRightOutlined,
-  CheckCircleOutlined,
-} from "@ant-design/icons";
+import { BookOutlined, TeamOutlined, SearchOutlined, ArrowRightOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 
 const { Title, Text } = Typography;

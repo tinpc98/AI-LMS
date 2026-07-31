@@ -1,5 +1,5 @@
 import React from "react";
-import { Card, Typography, Progress, Space } from "antd";
+import { Card, Typography, Progress } from "antd";
 import { BookOutlined } from "@ant-design/icons";
 import type { ClassProgressItem } from "../types/learningDashboard.types";
 

@@ -10,15 +10,12 @@ import {
   Card,
   Tag,
   Avatar,
-  Divider,
-  Alert,
   Row,
   Col,
   Tooltip,
 } from "antd";
 import {
   UserOutlined,
-  EditOutlined,
   CheckCircleOutlined,
   TrophyOutlined,
   InfoCircleOutlined,

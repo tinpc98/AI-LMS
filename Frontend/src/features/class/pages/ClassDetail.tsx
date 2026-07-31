@@ -29,13 +29,8 @@ import { useJitsiLiveSession } from "../../live-session/hooks/useJitsiLiveSessio
 import { useStudentLive } from "../../live-session/hooks/useStudentLive";
 import { useLearningAnalytics } from "../../report/hooks/useLearningAnalytics";
 import { useAnalytics } from "../../report/hooks/useAnalytics";
-import { Tooltip, Avatar, List, Progress } from "antd";
-import {
-  TrophyOutlined,
-  StarOutlined,
-  ClockCircleOutlined,
-  ThunderboltOutlined,
-} from "@ant-design/icons";
+import { Tooltip, Avatar, List } from "antd";
+import { TrophyOutlined, StarOutlined, ThunderboltOutlined } from "@ant-design/icons";
 
 export default function ClassDetail() {
   const { classId } = useParams<{ classId: string }>();

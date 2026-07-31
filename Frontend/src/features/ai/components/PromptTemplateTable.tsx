@@ -19,12 +19,7 @@ import {
   PlusOutlined,
   ReloadOutlined,
 } from "@ant-design/icons";
-import type {
-  AIModel,
-  PromptCategory,
-  PromptStatus,
-  PromptTemplate,
-} from "../types/aiManagement.types";
+import type { AIModel, PromptCategory, PromptTemplate } from "../types/aiManagement.types";
 
 interface PromptTemplateTableProps {
   data: PromptTemplate[];

@@ -1,7 +1,6 @@
 import React from "react";
-import { Card, Tag, Avatar, Typography, Space, Tooltip, Button, Progress } from "antd";
+import { Card, Tag, Avatar, Typography, Space, Tooltip, Button } from "antd";
 import {
-  FileTextOutlined,
   ClockCircleOutlined,
   UploadOutlined,
   InfoCircleOutlined,

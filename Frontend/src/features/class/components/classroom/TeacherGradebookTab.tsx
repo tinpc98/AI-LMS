@@ -37,7 +37,7 @@ import type { IGradeItemDef, IStudentGradeData } from "../../../../api/gradeApi"
 import { toast } from "../../../../utils/toast";
 import { GradeDetailDrawer } from "./GradeDetailDrawer";
 
-const { Title, Text, Paragraph } = Typography;
+const { Title, Text } = Typography;
 
 interface TeacherGradebookTabProps {
   classId: string;

@@ -1,5 +1,5 @@
 import React from "react";
-import { Card, Typography, Tag, Space } from "antd";
+import { Card, Typography, Tag } from "antd";
 import { FormOutlined, ClockCircleOutlined } from "@ant-design/icons";
 import type { ExamSummaryItem } from "../types/learningDashboard.types";
 

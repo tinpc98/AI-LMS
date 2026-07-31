@@ -1,6 +1,6 @@
 import { Form, Input, InputNumber, Modal, Select } from "antd";
 import { useEffect, forwardRef, useImperativeHandle } from "react";
-import type { CourseFormValues, CourseRecord, CourseStatus, CourseSubject } from "./course.types";
+import type { CourseFormValues, CourseRecord } from "./course.types";
 
 interface CourseFormModalProps {
   open: boolean;

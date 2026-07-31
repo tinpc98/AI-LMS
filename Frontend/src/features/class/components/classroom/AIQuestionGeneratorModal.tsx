@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Modal, Form, Input, InputNumber, Button, Select } from "antd";
+import { Modal, Form, Input, InputNumber, Button } from "antd";
 import aiApi from "../../../../api/aiApi";
 import { toast } from "../../../../utils/toast";
 

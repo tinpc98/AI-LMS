@@ -4,7 +4,7 @@ import type { ColumnsType } from "antd/es/table";
 import { CalendarOutlined, UserOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
 import { attendanceApi } from "../../../api/attendanceApi";
-import type { IAttendanceMatrix, IVirtualSession } from "../../../interface/attendanceInterface";
+import type { IAttendanceMatrix } from "../../../interface/attendanceInterface";
 
 const { Text } = Typography;
 

@@ -6,7 +6,6 @@ import type {
   StudentGradeFilterOptions,
   StudentGradeStats,
   GradeCategory,
-  GradeStatus,
 } from "../../../types/studentGrade";
 
 export function useStudentGrades(classId?: string) {

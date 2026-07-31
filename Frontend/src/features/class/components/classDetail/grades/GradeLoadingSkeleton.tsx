@@ -1,5 +1,5 @@
 import React from "react";
-import { Row, Col, Card, Skeleton } from "antd";
+import { Card, Skeleton } from "antd";
 
 interface GradeLoadingSkeletonProps {
   count?: number;

@@ -1,14 +1,6 @@
 import React from "react";
 import { Card, Descriptions, Tag, Typography, Space, Row, Col, List, Empty } from "antd";
-import {
-  BookOutlined,
-  UserOutlined,
-  CalendarOutlined,
-  ClockCircleOutlined,
-  FileTextOutlined,
-  LinkOutlined,
-  PercentageOutlined,
-} from "@ant-design/icons";
+import { UserOutlined, CalendarOutlined, FileTextOutlined, LinkOutlined } from "@ant-design/icons";
 
 const { Title, Text, Paragraph } = Typography;
 

@@ -1,5 +1,5 @@
 import React from "react";
-import { Card, Typography, Timeline, Space } from "antd";
+import { Card, Typography, Timeline } from "antd";
 import { NotificationOutlined } from "@ant-design/icons";
 import type { AnnouncementSummaryItem } from "../types/learningDashboard.types";
 

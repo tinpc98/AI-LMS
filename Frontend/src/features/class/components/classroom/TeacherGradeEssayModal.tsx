@@ -11,15 +11,8 @@ import {
   Spin,
   Card,
   Alert,
-  Divider,
 } from "antd";
-import {
-  CheckCircleOutlined,
-  UserOutlined,
-  EditOutlined,
-  AlertOutlined,
-  ReloadOutlined,
-} from "@ant-design/icons";
+import { CheckCircleOutlined, UserOutlined, EditOutlined, AlertOutlined } from "@ant-design/icons";
 import examApi from "../../../../api/examApi";
 import { toast } from "../../../../utils/toast";
 

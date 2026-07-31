@@ -1,5 +1,5 @@
 import { Card, message, Typography, Tabs } from "antd";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { ClassFormModalHandle } from "./ClassFormModal";
 import ClassDetailDrawer from "./ClassDetailDrawer";
 import ClassFormModal from "./ClassFormModal";

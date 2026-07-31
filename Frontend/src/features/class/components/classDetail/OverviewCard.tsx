@@ -2,7 +2,6 @@ import React from "react";
 import { Card, Descriptions, Tag, Button, Typography, Space } from "antd";
 import {
   InfoCircleOutlined,
-  VideoCameraOutlined,
   CalendarOutlined,
   TeamOutlined,
   ClockCircleOutlined,

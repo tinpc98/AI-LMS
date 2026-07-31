@@ -1,8 +1,8 @@
 import React from "react";
-import { Drawer, Descriptions, Tag, Typography, Space, Card, Divider } from "antd";
-import { DatabaseOutlined, CheckCircleOutlined, ClockCircleOutlined } from "@ant-design/icons";
+import { Drawer, Descriptions, Tag, Typography, Space, Card } from "antd";
+import { DatabaseOutlined, CheckCircleOutlined } from "@ant-design/icons";
 
-const { Text, Title, Paragraph } = Typography;
+const { Text, Paragraph } = Typography;
 
 interface QuestionPreviewDrawerProps {
   open: boolean;

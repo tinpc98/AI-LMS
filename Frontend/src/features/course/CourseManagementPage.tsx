@@ -1,5 +1,5 @@
 import { Card, message, Typography, Tabs } from "antd";
-import { useEffect, useMemo, useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import type { CourseFormModalHandle } from "./CourseFormModal";
 import CourseDetailDrawer from "./CourseDetailDrawer";
 import CourseFormModal from "./CourseFormModal";

@@ -4,7 +4,7 @@ import { ClockCircleOutlined } from "@ant-design/icons";
 import AnnouncementCard from "./AnnouncementCard";
 import type { IExtendedAnnouncement } from "../../../../../types/studentAnnouncement";
 
-const { Title, Text } = Typography;
+const { Text } = Typography;
 
 interface AnnouncementFeedGroup {
   groupTitle: string;

@@ -7,7 +7,6 @@ import {
   InfoCircleOutlined,
   TrophyOutlined,
   LockOutlined,
-  FormOutlined,
   QuestionCircleOutlined,
 } from "@ant-design/icons";
 import ExamStatusTag from "./ExamStatusTag";

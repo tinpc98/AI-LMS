@@ -1,12 +1,11 @@
 import React from "react";
-import { Typography, Row, Col, Card, Statistic, Tag, Space } from "antd";
+import { Typography, Row, Col, Card, Statistic } from "antd";
 import {
   FolderOpenOutlined,
   FilePdfOutlined,
   VideoCameraOutlined,
   LinkOutlined,
   FilePptOutlined,
-  FileTextOutlined,
 } from "@ant-design/icons";
 import MaterialToolbar from "./MaterialToolbar";
 import MaterialList from "./MaterialList";

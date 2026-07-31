@@ -1,11 +1,6 @@
 import React from "react";
 import { Row, Col, Card, Table, Tag, Progress, Statistic } from "antd";
-import {
-  CheckCircleOutlined,
-  CloseCircleOutlined,
-  CheckOutlined,
-  VideoCameraOutlined,
-} from "@ant-design/icons";
+import { CheckCircleOutlined, CheckOutlined, VideoCameraOutlined } from "@ant-design/icons";
 import { mockLiveSessions } from "../../../features/class/liveSessions.mock";
 import { mockClasses } from "../../../features/class/class.mock";
 import {

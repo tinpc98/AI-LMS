@@ -4,9 +4,7 @@ import { Link, useLocation } from "react-router-dom";
 import {
   DashboardOutlined,
   BookOutlined,
-  FileTextOutlined,
   DatabaseOutlined,
-  FileDoneOutlined,
   LogoutOutlined,
   UserOutlined,
 } from "@ant-design/icons";

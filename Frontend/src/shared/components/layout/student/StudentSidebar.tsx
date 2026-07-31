@@ -4,7 +4,6 @@ import { Link, useLocation } from "react-router-dom";
 import {
   DashboardOutlined,
   BookOutlined,
-  CalendarOutlined,
   BellOutlined,
   UserOutlined,
   LogoutOutlined,

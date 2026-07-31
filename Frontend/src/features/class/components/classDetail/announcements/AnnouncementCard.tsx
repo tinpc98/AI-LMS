@@ -1,9 +1,8 @@
 import React from "react";
-import { Card, Avatar, Typography, Space, Badge, Tooltip, Alert, Button } from "antd";
+import { Card, Avatar, Typography, Space, Badge, Alert, Button } from "antd";
 import {
   UserOutlined,
   ClockCircleOutlined,
-  PaperClipOutlined,
   ArrowRightOutlined,
   PushpinOutlined,
 } from "@ant-design/icons";

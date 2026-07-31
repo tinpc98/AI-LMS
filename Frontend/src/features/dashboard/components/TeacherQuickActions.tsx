@@ -1,14 +1,7 @@
 import React from "react";
-import { Card, Row, Col, Button, Typography, Space } from "antd";
+import { Card, Row, Col, Typography } from "antd";
 import { useNavigate } from "react-router-dom";
-import {
-  CheckSquareOutlined,
-  BookOutlined,
-  FormOutlined,
-  DatabaseOutlined,
-  FileDoneOutlined,
-  VideoCameraOutlined,
-} from "@ant-design/icons";
+import { BookOutlined, DatabaseOutlined } from "@ant-design/icons";
 
 const { Title, Text } = Typography;
 

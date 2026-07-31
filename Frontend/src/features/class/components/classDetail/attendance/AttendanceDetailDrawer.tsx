@@ -1,5 +1,5 @@
 import React from "react";
-import { Drawer, Button, Typography, Space, Descriptions, Divider } from "antd";
+import { Drawer, Button, Typography, Space, Descriptions } from "antd";
 import {
   CalendarOutlined,
   ClockCircleOutlined,

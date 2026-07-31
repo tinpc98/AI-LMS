@@ -16,8 +16,6 @@ import {
   Tag,
   Space,
   Typography,
-  Divider,
-  Statistic,
   Badge,
   Alert,
   Spin,
@@ -27,15 +25,11 @@ import {
 import type { ColumnsType } from "antd/es/table";
 import {
   FileDoneOutlined,
-  CheckCircleOutlined,
   ArrowLeftOutlined,
   ArrowRightOutlined,
   SearchOutlined,
-  FilterOutlined,
-  QuestionCircleOutlined,
   RocketOutlined,
   SaveOutlined,
-  SettingOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
 
@@ -43,7 +37,7 @@ import examApi from "../../../../api/examApi";
 import type { IExam } from "../../../../api/examApi";
 import { toast } from "../../../../utils/toast";
 
-const { Title, Text, Paragraph } = Typography;
+const { Text, Paragraph } = Typography;
 
 interface CreateExamWizardDrawerProps {
   open: boolean;

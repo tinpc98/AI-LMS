@@ -1,5 +1,5 @@
 import React from "react";
-import { Card, Typography, Tag, Button, Progress, Space } from "antd";
+import { Card, Typography, Tag, Button } from "antd";
 import { FileTextOutlined, ClockCircleOutlined, CheckCircleOutlined } from "@ant-design/icons";
 import { Link } from "react-router-dom";
 import type { AssignmentSummaryItem } from "../types/learningDashboard.types";

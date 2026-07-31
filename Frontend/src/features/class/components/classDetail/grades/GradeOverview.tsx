@@ -9,7 +9,7 @@ import {
 } from "@ant-design/icons";
 import type { StudentGradeStats } from "../../../../../types/studentGrade";
 
-const { Text, Title } = Typography;
+const { Text } = Typography;
 
 interface GradeOverviewProps {
   stats: StudentGradeStats;

@@ -1,6 +1,6 @@
 import React from "react";
 import { Typography, Button, Space, Badge } from "antd";
-import { BellOutlined, CheckOutlined, ReloadOutlined } from "@ant-design/icons";
+import { CheckOutlined, ReloadOutlined } from "@ant-design/icons";
 
 const { Title, Text } = Typography;
 

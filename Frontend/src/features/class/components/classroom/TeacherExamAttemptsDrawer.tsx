@@ -22,8 +22,6 @@ import {
   UserOutlined,
   EditOutlined,
   AlertOutlined,
-  CheckCircleOutlined,
-  ClockCircleOutlined,
   ReloadOutlined,
   SearchOutlined,
   FilterOutlined,
@@ -32,7 +30,7 @@ import examApi from "../../../../api/examApi";
 import type { IExam, IExamAttempt } from "../../../../api/examApi";
 import { TeacherGradeEssayModal } from "./TeacherGradeEssayModal";
 
-const { Text, Title, Paragraph } = Typography;
+const { Text } = Typography;
 
 interface TeacherExamAttemptsDrawerProps {
   open: boolean;

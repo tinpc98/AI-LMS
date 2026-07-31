@@ -13,7 +13,6 @@ import {
   Row,
   Col,
   Statistic,
-  Progress,
   Input,
   Select,
 } from "antd";
@@ -23,18 +22,15 @@ import {
   UserOutlined,
   EditOutlined,
   PaperClipOutlined,
-  CheckCircleOutlined,
-  ClockCircleOutlined,
   ReloadOutlined,
   SearchOutlined,
   FilterOutlined,
-  TrophyOutlined,
 } from "@ant-design/icons";
 import assignmentApi from "../../../../api/assignmentApi";
 import type { IAssignment, ISubmission } from "../../../../interface/assignmentInterface";
 import { GradeSubmissionModal } from "./GradeSubmissionModal";
 
-const { Text, Title, Paragraph } = Typography;
+const { Text, Paragraph } = Typography;
 
 interface TeacherSubmissionsDrawerProps {
   open: boolean;

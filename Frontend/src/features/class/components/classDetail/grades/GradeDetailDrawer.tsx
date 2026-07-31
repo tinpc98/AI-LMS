@@ -1,10 +1,9 @@
 import React from "react";
-import { Drawer, Button, Typography, Space, Descriptions, Tag, Divider, Alert } from "antd";
+import { Drawer, Button, Typography, Space, Descriptions, Tag, Alert } from "antd";
 import {
   TrophyOutlined,
   CommentOutlined,
   RobotOutlined,
-  CalendarOutlined,
   UserOutlined,
   PercentageOutlined,
 } from "@ant-design/icons";

@@ -6,14 +6,7 @@ import type {
   AttendanceSummary,
 } from "../types/learningDashboard.types";
 
-import {
-  calculateAverageGrade,
-  calculateCompletionRate,
-  calculateExamPerformanceRate,
-  calculateLearningScore,
-  calculateLearningInsights,
-  formatSchedule,
-} from "../utils/learningDashboard.utils";
+import { formatSchedule } from "../utils/learningDashboard.utils";
 import type { LearningDashboardState } from "../types/learningDashboard.types";
 
 export const mapClassResponse = (rawClasses: any[]): TodayClassItem[] => {

@@ -1,7 +1,6 @@
 import React from "react";
-import { Drawer, Button, Typography, Space, Descriptions, Tag, Divider, Avatar } from "antd";
+import { Drawer, Button, Typography, Space, Descriptions, Tag, Avatar } from "antd";
 import {
-  BellOutlined,
   ClockCircleOutlined,
   UserOutlined,
   BookOutlined,

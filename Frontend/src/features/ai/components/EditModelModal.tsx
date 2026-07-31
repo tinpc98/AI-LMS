@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { Form, Input, InputNumber, Modal, Select, Switch } from "antd";
-import type { AIModel, ModelProvider, ModelStatus } from "../types/aiManagement.types";
+import type { AIModel, ModelStatus } from "../types/aiManagement.types";
 
 interface EditModelModalProps {
   open: boolean;

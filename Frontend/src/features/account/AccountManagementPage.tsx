@@ -1,5 +1,5 @@
 import { Card, message, Typography, Tabs } from "antd";
-import { useEffect, useMemo, useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import type { AccountFormModalHandle } from "./AccountFormModal";
 import AccountDetailDrawer from "./AccountDetailDrawer";
 import AccountFormModal from "./AccountFormModal";
@@ -11,7 +11,6 @@ import type {
   AccountFilters,
   AccountFormValues,
   AccountRecord,
-  AccountRole,
   AccountStatus,
   Pagination,
 } from "./account.types";

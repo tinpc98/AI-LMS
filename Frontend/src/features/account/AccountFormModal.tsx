@@ -1,7 +1,7 @@
 import { Form, Input, Modal, Select } from "antd";
 import type { FormInstance } from "antd";
 import { useEffect, useImperativeHandle, forwardRef } from "react";
-import type { AccountFormValues, AccountRecord, AccountRole, AccountStatus } from "./account.types";
+import type { AccountFormValues, AccountRecord } from "./account.types";
 
 interface AccountFormModalProps {
   open: boolean;

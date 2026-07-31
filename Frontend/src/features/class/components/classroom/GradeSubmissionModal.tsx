@@ -22,7 +22,7 @@ import assignmentApi from "../../../../api/assignmentApi";
 import { toast } from "../../../../utils/toast";
 import type { ISubmission } from "../../../../interface/assignmentInterface";
 
-const { Text, Title, Paragraph } = Typography;
+const { Text, Paragraph } = Typography;
 
 interface GradeSubmissionModalProps {
   open: boolean;

@@ -1,5 +1,5 @@
 import React from "react";
-import { Card, Typography, Space, Tag, Divider } from "antd";
+import { Card, Typography, Space, Divider } from "antd";
 import { TrophyOutlined, CommentOutlined, RobotOutlined } from "@ant-design/icons";
 import type { ISubmission } from "../../../../../interface/assignmentInterface";
 

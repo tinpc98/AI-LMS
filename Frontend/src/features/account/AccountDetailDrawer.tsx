@@ -1,4 +1,4 @@
-import { Drawer, Descriptions, Tag } from "antd";
+import { Drawer, Descriptions } from "antd";
 import type { AccountRecord } from "./account.types";
 import AccountStatusTag from "./AccountStatusTag";
 import RoleTag from "./RoleTag";

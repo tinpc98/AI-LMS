@@ -1,11 +1,6 @@
 import React, { useMemo } from "react";
 import { Card, Row, Col, Statistic, Typography, Progress } from "antd";
-import {
-  DatabaseOutlined,
-  CheckCircleOutlined,
-  FormOutlined,
-  FireOutlined,
-} from "@ant-design/icons";
+import { DatabaseOutlined } from "@ant-design/icons";
 
 const { Text } = Typography;
 

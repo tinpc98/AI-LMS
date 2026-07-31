@@ -1,6 +1,6 @@
 import React from "react";
-import { Card, Alert, Button, Badge, Typography, Space } from "antd";
-import { VideoCameraOutlined, ArrowRightOutlined } from "@ant-design/icons";
+import { Card, Button, Badge, Typography, Space } from "antd";
+import { VideoCameraOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 
 const { Title, Text } = Typography;

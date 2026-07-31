@@ -1,7 +1,6 @@
 import React from "react";
 import { Card, Button, Typography, Space, Avatar, Tag, Row, Col } from "antd";
 import {
-  VideoCameraOutlined,
   UserOutlined,
   PlayCircleOutlined,
   GlobalOutlined,

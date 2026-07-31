@@ -7,7 +7,6 @@ import {
   Form,
   Input,
   Button,
-  Tabs,
   Tag,
   Table,
   Row,

@@ -8,7 +8,7 @@ import {
 } from "@ant-design/icons";
 import type { IExamAttempt } from "../../../../../api/examApi";
 
-const { Text, Title } = Typography;
+const { Text } = Typography;
 
 interface ExamResultCardProps {
   attempt?: IExamAttempt | null;

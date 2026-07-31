@@ -9,7 +9,7 @@ import {
 import ExamResultCard from "./ExamResultCard";
 import type { IExtendedExam } from "../../../../../types/studentExam";
 
-const { Text, Paragraph, Title } = Typography;
+const { Text, Title } = Typography;
 
 interface ExamReviewDrawerProps {
   open: boolean;

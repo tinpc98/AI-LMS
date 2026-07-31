@@ -1,5 +1,5 @@
 import React from "react";
-import { Timeline, Card, Typography, Space, Button } from "antd";
+import { Timeline, Card, Typography, Space } from "antd";
 import {
   CheckCircleOutlined,
   ClockCircleOutlined,
@@ -9,7 +9,7 @@ import {
 import AttendanceStatusTag from "./AttendanceStatusTag";
 import type { IExtendedAttendanceRecord } from "../../../../../types/studentAttendance";
 
-const { Text, Title, Paragraph } = Typography;
+const { Text, Paragraph } = Typography;
 
 interface AttendanceTimelineProps {
   records: IExtendedAttendanceRecord[];
