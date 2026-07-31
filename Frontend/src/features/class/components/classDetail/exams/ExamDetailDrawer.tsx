@@ -35,7 +35,7 @@ export const ExamDetailDrawer: React.FC<ExamDetailDrawerProps> = React.memo(
 
     const questionCount = item.questions ? item.questions.length : item.totalQuestions || 20;
     const maxScore = item.maxScore || 10;
-    const isAvailable = item.status === "Available" || item.status === "In Progress";
+    const isAvailable = item.displayStatus === "Available" || item.displayStatus === "In Progress";
 
     return (
       <Drawer
@@ -49,7 +49,7 @@ export const ExamDetailDrawer: React.FC<ExamDetailDrawerProps> = React.memo(
                 {item.title}
               </Title>
               <Space size={6} style={{ marginTop: 2 }}>
-                <ExamStatusTag status={item.status} />
+                <ExamStatusTag status={item.displayStatus} />
               </Space>
             </div>
           </Space>
@@ -69,7 +69,7 @@ export const ExamDetailDrawer: React.FC<ExamDetailDrawerProps> = React.memo(
                 }}
                 style={{ borderRadius: 8, backgroundColor: "#52c41a" }}
               >
-                {item.status === "In Progress" ? "Tiếp tục bài thi" : "Bắt đầu làm bài"}
+                {item.displayStatus === "In Progress" ? "Tiếp tục bài thi" : "Bắt đầu làm bài"}
               </Button>
             )}
           </Space>
@@ -93,7 +93,7 @@ export const ExamDetailDrawer: React.FC<ExamDetailDrawerProps> = React.memo(
             </Descriptions.Item>
 
             <Descriptions.Item label="Trạng thái">
-              <ExamStatusTag status={item.status} />
+              <ExamStatusTag status={item.displayStatus} />
             </Descriptions.Item>
 
             <Descriptions.Item label="Thời gian làm bài">

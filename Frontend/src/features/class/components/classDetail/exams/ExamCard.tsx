@@ -36,7 +36,7 @@ export const ExamCard: React.FC<ExamCardProps> = React.memo(
     const questionCount = item.questions ? item.questions.length : item.totalQuestions || 20;
     const maxScore = item.maxScore || 10;
     const isCompleted =
-      item.status === "Completed" &&
+      item.displayStatus === "Completed" &&
       item.attempt?.totalScore !== undefined &&
       item.attempt?.totalScore !== null;
 
@@ -71,7 +71,7 @@ export const ExamCard: React.FC<ExamCardProps> = React.memo(
             marginBottom: 12,
           }}
         >
-          <ExamStatusTag status={item.status} />
+          <ExamStatusTag status={item.displayStatus} />
           <Tag color="blue" style={{ borderRadius: 6, margin: 0, fontWeight: 600 }}>
             <ClockCircleOutlined style={{ marginRight: 4 }} /> {item.duration || 45} phút
           </Tag>
@@ -194,7 +194,7 @@ export const ExamCard: React.FC<ExamCardProps> = React.memo(
               Quy chế
             </Button>
 
-            {item.status === "Available" && (
+            {item.displayStatus === "Available" && (
               <Button
                 type="primary"
                 size="small"
@@ -206,7 +206,7 @@ export const ExamCard: React.FC<ExamCardProps> = React.memo(
               </Button>
             )}
 
-            {item.status === "In Progress" && (
+            {item.displayStatus === "In Progress" && (
               <Button
                 type="primary"
                 size="small"
@@ -218,7 +218,7 @@ export const ExamCard: React.FC<ExamCardProps> = React.memo(
               </Button>
             )}
 
-            {item.status === "Completed" && (
+            {item.displayStatus === "Completed" && (
               <Button
                 type="primary"
                 size="small"
@@ -230,7 +230,7 @@ export const ExamCard: React.FC<ExamCardProps> = React.memo(
               </Button>
             )}
 
-            {item.status === "Upcoming" && (
+            {item.displayStatus === "Upcoming" && (
               <Button
                 type="default"
                 disabled
@@ -242,7 +242,7 @@ export const ExamCard: React.FC<ExamCardProps> = React.memo(
               </Button>
             )}
 
-            {item.status === "Expired" && (
+            {item.displayStatus === "Expired" && (
               <Button
                 type="default"
                 disabled

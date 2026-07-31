@@ -23,7 +23,7 @@ export const ExamStartModal: React.FC<ExamStartModalProps> = React.memo(
         open={open}
         onCancel={onClose}
         onOk={() => onConfirm(item._id, item.attempt?._id)}
-        okText={item.status === "In Progress" ? "Tiếp tục làm bài" : "Bắt đầu thi ngay"}
+        okText={item.displayStatus === "In Progress" ? "Tiếp tục làm bài" : "Bắt đầu thi ngay"}
         cancelText="Hủy bỏ"
         okButtonProps={{ style: { borderRadius: 8, backgroundColor: "#52c41a" } }}
         cancelButtonProps={{ style: { borderRadius: 8 } }}

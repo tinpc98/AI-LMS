@@ -53,7 +53,7 @@ export function useStudentExams(
       return {
         ...exam,
         attempt,
-        status,
+        displayStatus: status,
         isAvailableNow,
         minutesRemaining,
       };
@@ -70,9 +70,9 @@ export function useStudentExams(
     let scoredCount = 0;
 
     extendedExams.forEach((item) => {
-      if (item.status === "Available") available++;
-      else if (item.status === "In Progress") inProgress++;
-      else if (item.status === "Completed") {
+      if (item.displayStatus === "Available") available++;
+      else if (item.displayStatus === "In Progress") inProgress++;
+      else if (item.displayStatus === "Completed") {
         completed++;
         if (item.attempt?.totalScore !== undefined && item.attempt?.totalScore !== null) {
           totalScore += item.attempt.totalScore;
