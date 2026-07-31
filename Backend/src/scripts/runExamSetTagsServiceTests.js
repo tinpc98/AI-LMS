@@ -1,5 +1,5 @@
 import assert from "assert";
-import { updateExamSetTagsService } from "../services/examSet.services.js";
+import { updateExamSetTagsService } from "../services/examSet.service.js";
 
 const runTest = async (name, callback) => {
   try {

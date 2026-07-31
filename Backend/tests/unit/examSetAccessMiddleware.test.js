@@ -1,7 +1,7 @@
 // Port từ src/scripts/runExamSetAccessMiddlewareTests.js (characterization test).
 // Nhóm: A. VIEW access (10) | B. EDIT access (5) | C. Integrity (8) | D. Request context (6) | E. Route integration (9)
 import { describe, it, expect, afterEach, vi } from "vitest";
-import { requireExamSetAccess, requireExamSetEditAccess } from "../../src/middlewares/examSetAccess.middlewares.js";
+import { requireExamSetAccess, requireExamSetEditAccess } from "../../src/middlewares/examSetAccess.middleware.js";
 import ExamSet from "../../src/models/examSet.model.js";
 import ExamSetShare from "../../src/models/examSetShare.model.js";
 

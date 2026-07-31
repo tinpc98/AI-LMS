@@ -9,7 +9,7 @@ import ExamSet from "../models/examSet.model.js";
 import AISummary from "../models/aiSummary.model.js";
 import lessonContentExtractor from "../ai/services/lessonContentExtractor.service.js";
 import { AIError, AIErrorCode } from "../utils/aiError.js";
-import { validateQuestionGenerationRequest, handleQuestionGenerationValidation } from "../routers/aiQuestion.routes.js";
+import { validateQuestionGenerationRequest, handleQuestionGenerationValidation } from "../routes/aiQuestion.routes.js";
 import { validationResult } from "express-validator";
 import fs from "fs";
 
@@ -123,17 +123,17 @@ async function runUnitTests() {
   console.log("\n--- TEST ROUTER & VALIDATION ---");
   
   await runTest("Router có mergeParams", () => {
-    const routerSource = fs.readFileSync("src/routers/aiQuestion.routes.js", "utf8");
+    const routerSource = fs.readFileSync("src/routes/aiQuestion.routes.js", "utf8");
     assert.ok(routerSource.includes("mergeParams: true"), "Thiếu mergeParams: true");
   });
 
   await runTest("Student bị chặn trước quota", () => {
-    const routerSource = fs.readFileSync("src/routers/aiQuestion.routes.js", "utf8");
+    const routerSource = fs.readFileSync("src/routes/aiQuestion.routes.js", "utf8");
     assert.ok(routerSource.indexOf("isTeacher") < routerSource.indexOf("checkAIQuota"), "isTeacher phải chạy trước checkAIQuota");
   });
 
   await runTest("Thiếu token trả 401 (via verifyUser)", () => {
-    const routerSource = fs.readFileSync("src/routers/aiQuestion.routes.js", "utf8");
+    const routerSource = fs.readFileSync("src/routes/aiQuestion.routes.js", "utf8");
     assert.ok(routerSource.includes("verifyUser"), "Thiếu verifyUser");
   });
 

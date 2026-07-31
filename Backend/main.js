@@ -6,41 +6,41 @@ import cors from "cors"; // Thêm thư viện cấu hình cho phép Frontend g�
 import mongoose from "mongoose";
 import { connectDB } from "./src/config/database.js";
 import { validateEnv, getAllowedOrigins } from "./src/config/env.js";
-import { requestId } from "./src/middlewares/requestId.middlewares.js";
-import { errorHandler, notFoundHandler } from "./src/middlewares/errorHandler.middlewares.js";
+import { requestId } from "./src/middlewares/requestId.middleware.js";
+import { errorHandler, notFoundHandler } from "./src/middlewares/errorHandler.middleware.js";
 import socketHandler from "./src/sockets/exam.socket.js"; // 3. Import bộ xử lý Real-time
 import liveSocketHandler from "./src/sockets/live.socket.js"; // Import xử lý Socket phòng học online
 import socketAuthMiddleware from "./src/middlewares/socketAuth.middleware.js";
 import { createServer } from "http";
 import { Server } from "socket.io";
 // Import Routers hiện có & mới
-import UserRouter from "./src/routers/user.routes.js";
-import ClassRouter from "./src/routers/class.routes.js";
-import LessonRouter from "./src/routers/lesson.routes.js";
-import assignmentRouter from "./src/routers/assignment.routes.js";
-import QuestionRouter from "./src/routers/question.routes.js";
-import ExamRouter from "./src/routers/exam.routes.js";
-import ExamAttemptRouter from "./src/routers/examAttempt.routes.js";
-import LiveRouter from "./src/routers/live.routes.js";
-import AttendanceRouter from "./src/routers/attendance.routes.js";
-import GradeRouter from "./src/routers/grade.routes.js";
-import AnnouncementRouter from "./src/routers/announcement.routes.js";
-import CourseRouter from "./src/routers/course.routes.js";
-import DashboardRouter from "./src/routers/dashboard.routes.js";
-import ReportRouter from "./src/routers/report.routes.js";
-import NotificationRouter from "./src/routers/notification.routes.js";
-import LearningRouter from "./src/routers/learning.routes.js";
-import AnalyticsRouter from "./src/routers/analytics.routes.js";
-import ExamSetRouter from "./src/routers/examSet.routes.js";
-import AISummaryRouter from "./src/routers/aiSummary.routes.js";
-import AIQuestionRouter from "./src/routers/aiQuestion.routes.js";
-import AIGradingRouter from "./src/routers/aiGrading.routes.js";
-import AIKnowledgeRouter from "./src/routers/aiKnowledge.routes.js";
-import AIChatRouter from "./src/routers/aiChat.routes.js";
+import UserRouter from "./src/routes/user.routes.js";
+import ClassRouter from "./src/routes/class.routes.js";
+import LessonRouter from "./src/routes/lesson.routes.js";
+import assignmentRouter from "./src/routes/assignment.routes.js";
+import QuestionRouter from "./src/routes/question.routes.js";
+import ExamRouter from "./src/routes/exam.routes.js";
+import ExamAttemptRouter from "./src/routes/examAttempt.routes.js";
+import LiveRouter from "./src/routes/live.routes.js";
+import AttendanceRouter from "./src/routes/attendance.routes.js";
+import GradeRouter from "./src/routes/grade.routes.js";
+import AnnouncementRouter from "./src/routes/announcement.routes.js";
+import CourseRouter from "./src/routes/course.routes.js";
+import DashboardRouter from "./src/routes/dashboard.routes.js";
+import ReportRouter from "./src/routes/report.routes.js";
+import NotificationRouter from "./src/routes/notification.routes.js";
+import LearningRouter from "./src/routes/learning.routes.js";
+import AnalyticsRouter from "./src/routes/analytics.routes.js";
+import ExamSetRouter from "./src/routes/examSet.routes.js";
+import AISummaryRouter from "./src/routes/aiSummary.routes.js";
+import AIQuestionRouter from "./src/routes/aiQuestion.routes.js";
+import AIGradingRouter from "./src/routes/aiGrading.routes.js";
+import AIKnowledgeRouter from "./src/routes/aiKnowledge.routes.js";
+import AIChatRouter from "./src/routes/aiChat.routes.js";
 import { initCronJobs } from "./src/cron/cron.setup.js";
 import aiUsageService from "./src/ai/services/aiUsage.service.js";
 import aiKnowledgeIndexingService from "./src/ai/services/aiKnowledgeIndexing.service.js";
-import FolderRouter from "./src/routers/folder.routes.js";
+import FolderRouter from "./src/routes/folder.routes.js";
 
 import { validateJaasConfig } from "./src/controllers/jaas.controller.js";
 

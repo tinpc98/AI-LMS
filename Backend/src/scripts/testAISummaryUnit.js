@@ -125,7 +125,7 @@ async function runUnitTests() {
 
   // 3. Router Tests
   await runTest("Router: Load thành công không lỗi (không dùng cookie-express)", async () => {
-    const routerModule = await import("../routers/aiSummary.routes.js");
+    const routerModule = await import("../routes/aiSummary.routes.js");
     assert.ok(routerModule.default, "Router loaded");
   });
 

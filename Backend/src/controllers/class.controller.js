@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 import { matchedData } from "express-validator";
 import classModel from "../models/class.model.js";
 import Course from "../models/course.model.js";
-import User from "../models/user.models.js";
+import User from "../models/user.model.js";
 import classService from "../services/class.service.js";
 import { attachStudentProgress } from "../services/classProgress.service.js";
 

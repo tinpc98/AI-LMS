@@ -515,7 +515,7 @@ async function runUnitTests() {
   });
 
   console.log("\n--- BẮT ĐẦU TEST MULTER (FIX-04) ---");
-  const { excelFileFilter, mapExcelUploadError } = await import("../routers/examSet.routes.js");
+  const { excelFileFilter, mapExcelUploadError } = await import("../routes/examSet.routes.js");
   const multer = (await import("multer")).default;
   
   await runTest("Multer: File .xlsx với MIME chuẩn được chấp nhận", () => {

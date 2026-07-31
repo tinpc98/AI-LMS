@@ -5,7 +5,7 @@ import {
   addQuestionToExamSetService,
   updateQuestionInExamSetService,
   deleteQuestionFromExamSetService,
-} from "../../src/services/examSet.services.js";
+} from "../../src/services/examSet.service.js";
 
 const createQuestion = (data) => ({
   ...data,

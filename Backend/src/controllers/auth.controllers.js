@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
-import { loginService, getUserTrashService, restoreUserService, permanentDeleteUserService } from "../services/auth.services.js";
-import User from "../models/user.models.js";
+import { loginService, getUserTrashService, restoreUserService, permanentDeleteUserService } from "../services/auth.service.js";
+import User from "../models/user.model.js";
 
 export const login = async (req, res) => {
   try {

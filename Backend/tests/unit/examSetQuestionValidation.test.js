@@ -2,7 +2,7 @@
 // các case và message đã có, chỉ đổi test runner sang Vitest).
 import { describe, it, expect } from "vitest";
 import { examSetQuestionCreateValidation, examSetQuestionUpdateValidation } from "../../src/utils/validators.js";
-import { isEditableExamSetStatus } from "../../src/services/examSet.services.js";
+import { isEditableExamSetStatus } from "../../src/services/examSet.service.js";
 import { createRequest, createResponse, runMiddleware, extractErrorMessages } from "../helpers/expressMock.js";
 
 const cases = [

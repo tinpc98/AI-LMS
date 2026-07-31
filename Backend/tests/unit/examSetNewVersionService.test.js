@@ -2,7 +2,7 @@
 import { describe, it, expect, afterEach, vi } from "vitest";
 import ExamSet from "../../src/models/examSet.model.js";
 import Folder from "../../src/models/folder.model.js";
-import { createNewExamSetVersionService } from "../../src/services/examSet.services.js";
+import { createNewExamSetVersionService } from "../../src/services/examSet.service.js";
 
 const createQueryMock = (result) => ({
   sort() {

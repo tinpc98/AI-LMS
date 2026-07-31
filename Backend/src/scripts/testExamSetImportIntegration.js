@@ -4,7 +4,7 @@ import * as xlsx from "xlsx";
 import crypto from "crypto";
 import dotenv from "dotenv";
 
-import User from "../models/user.models.js";
+import User from "../models/user.model.js";
 import Folder from "../models/folder.model.js";
 import ExamSet from "../models/examSet.model.js";
 import Question from "../models/question.model.js";

@@ -3,7 +3,7 @@ import ExamAttempt from "../models/examAttempt.model.js";
 import Exam from "../models/exam.model.js";
 import Question from "../models/question.model.js";
 import { compareAnswers } from "../utils/answerScoring.js";
-import { checkClassTeacherOwnership } from "../middlewares/auth.middlewares.js";
+import { checkClassTeacherOwnership } from "../middlewares/auth.middleware.js";
 
 const gradeSubmission = async (attemptId, studentAnswers) => {
   const session = await mongoose.startSession();

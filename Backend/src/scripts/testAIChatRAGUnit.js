@@ -4,7 +4,7 @@ import { AIErrorCode } from "../utils/aiError.js";
 import chatOutputValidator from "../ai/validators/chatOutput.validator.js";
 import { MockAIProvider } from "../ai/providers/mock.provider.js";
 import { createSession, sendMessage, getHistory } from "../controllers/aiChat.controller.js";
-import { checkAIChatLessonAccess } from "../middlewares/aiChatLessonAccess.middlewares.js";
+import { checkAIChatLessonAccess } from "../middlewares/aiChatLessonAccess.middleware.js";
 import aiChatService from "../ai/services/aiChat.service.js";
 
 let passed = 0;

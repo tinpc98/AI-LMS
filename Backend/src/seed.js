@@ -4,7 +4,7 @@ import bcrypt from "bcryptjs";
 import dotenv from "dotenv";
 
 // Import các Models
-import User from "./models/user.models.js";
+import User from "./models/user.model.js";
 import Class from "./models/class.model.js";
 import Lesson from "./models/lesson.model.js";
 import Assignment from "./models/assignment.model.js";

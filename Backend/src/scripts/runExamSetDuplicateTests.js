@@ -1,7 +1,7 @@
 import assert from "assert";
 import ExamSet from "../models/examSet.model.js";
 import Folder from "../models/folder.model.js";
-import { duplicateExamSetService } from "../services/examSet.services.js";
+import { duplicateExamSetService } from "../services/examSet.service.js";
 
 const originalFindOne = ExamSet.findOne;
 const originalFolderFindOne = Folder.findOne;

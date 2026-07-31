@@ -1,8 +1,8 @@
 // Port từ src/scripts/runExamSetDraftWorkflowTests.js (characterization test).
 import { describe, it, expect, afterEach, vi } from "vitest";
 import ExamSet from "../../src/models/examSet.model.js";
-import { requireExamSetDraftAccess } from "../../src/middlewares/examSetAccess.middlewares.js";
-import { saveDraftExamSetService } from "../../src/services/examSet.services.js";
+import { requireExamSetDraftAccess } from "../../src/middlewares/examSetAccess.middleware.js";
+import { saveDraftExamSetService } from "../../src/services/examSet.service.js";
 
 const createReq = (overrides = {}) => ({ headers: {}, params: {}, body: {}, user: null, ...overrides });
 

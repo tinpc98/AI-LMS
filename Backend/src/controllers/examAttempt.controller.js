@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 import examAttemptService from "../services/examAttempt.service.js";
 import ExamAttempt from "../models/examAttempt.model.js";
 import Exam from "../models/exam.model.js";
-import { checkClassTeacherOwnership } from "../middlewares/auth.middlewares.js";
+import { checkClassTeacherOwnership } from "../middlewares/auth.middleware.js";
 
 // =======================================================
 // 1. API CHO HỌC SINH: Bắt đầu làm bài thi

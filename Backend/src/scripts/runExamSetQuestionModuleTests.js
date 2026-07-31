@@ -5,9 +5,9 @@ import {
   updateQuestionInExamSetService,
   deleteQuestionFromExamSetService,
   reorderQuestionsInExamSetService,
-} from "../services/examSet.services.js";
-import { verifyUser } from "../middlewares/auth.middlewares.js";
-import { requireExamSetEditAccess } from "../middlewares/examSetAccess.middlewares.js";
+} from "../services/examSet.service.js";
+import { verifyUser } from "../middlewares/auth.middleware.js";
+import { requireExamSetEditAccess } from "../middlewares/examSetAccess.middleware.js";
 import {
   examSetQuestionCreateValidation,
   examSetQuestionUpdateValidation,

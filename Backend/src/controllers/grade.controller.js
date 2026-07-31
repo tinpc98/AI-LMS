@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import gradeService from "../services/grade.service.js";
 import { sendSuccess, sendError } from "../utils/response.js";
-import { checkClassTeacherOwnership } from "../middlewares/auth.middlewares.js";
+import { checkClassTeacherOwnership } from "../middlewares/auth.middleware.js";
 
 export const upsertGrade = async (req, res) => {
   try {

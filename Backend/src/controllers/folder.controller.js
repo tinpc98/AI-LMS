@@ -6,7 +6,7 @@ import {
   updateFolderService,
   deleteFolderService,
   getFolderTreeService,
-} from "../services/folder.services.js";
+} from "../services/folder.service.js";
 
 /**
  * Create new folder

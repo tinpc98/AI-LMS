@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import attendanceService from "../services/attendance.service.js";
 import { sendSuccess, sendError } from "../utils/response.js";
-import { checkClassTeacherOwnership } from "../middlewares/auth.middlewares.js";
+import { checkClassTeacherOwnership } from "../middlewares/auth.middleware.js";
 
 export const markAttendance = async (req, res) => {
   try {
