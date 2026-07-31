@@ -23,8 +23,8 @@ import {
 } from "@ant-design/icons";
 import type { MenuProps } from "antd";
 import { StudentBreadcrumb } from "./StudentBreadcrumb";
-import { useAuth } from "../../../../hooks/useAuth";
-import { useNotifications } from "../../../../hooks/useNotifications";
+import { useAuth } from "../../../hooks/useAuth";
+import { useNotifications } from "../../../../features/notification/hooks/useNotifications";
 import { NotificationDropdown } from "./NotificationDropdown";
 
 const { Header } = Layout;

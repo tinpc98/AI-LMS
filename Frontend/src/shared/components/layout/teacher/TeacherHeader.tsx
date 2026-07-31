@@ -11,7 +11,7 @@ import {
 } from "@ant-design/icons";
 import type { MenuProps } from "antd";
 import { TeacherBreadcrumb } from "./TeacherBreadcrumb";
-import { useAuth } from "../../../../hooks/useAuth";
+import { useAuth } from "../../../hooks/useAuth";
 
 const { Header } = Layout;
 const { Text } = Typography;

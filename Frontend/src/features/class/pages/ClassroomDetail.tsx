@@ -27,7 +27,7 @@ import type { IAssignment } from "../../../interface/assignmentInterface";
 import type { ILesson } from "../../../interface/lessonInterface";
 
 import CreateLessonModal from "../../lesson/components/CreateLessonModal";
-import { useJitsiLiveSession } from "../../../hooks/useJitsiLiveSession";
+import { useJitsiLiveSession } from "../../live-session/hooks/useJitsiLiveSession";
 import { AIQuestionGeneratorModal } from "../components/classroom/AIQuestionGeneratorModal";
 
 import { TeacherClassOverviewTab } from "../components/classroom/TeacherClassOverviewTab";

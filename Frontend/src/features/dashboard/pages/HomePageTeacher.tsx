@@ -1,6 +1,6 @@
 import { Row, Col, Alert, Button } from "antd";
 import { ReloadOutlined } from "@ant-design/icons";
-import { useAuth } from "../../../hooks/useAuth";
+import { useAuth } from "../../../shared/hooks/useAuth";
 import { useTeacherDashboardQuery } from "../hooks/useTeacherDashboardQuery";
 
 import { TeacherWelcomeHeader } from "../components/TeacherWelcomeHeader";

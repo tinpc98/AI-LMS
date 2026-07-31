@@ -7,8 +7,8 @@ import NotificationFeed from "../components/NotificationFeed";
 import NotificationEmptyState from "../components/NotificationEmptyState";
 import NotificationLoadingSkeleton from "../components/NotificationLoadingSkeleton";
 import NotificationDetailDrawer from "../components/NotificationDetailDrawer";
-import useNotifications from "../../../hooks/useNotifications";
-import useNotificationDetail from "../../../hooks/useNotificationDetail";
+import useNotifications from "../hooks/useNotifications";
+import useNotificationDetail from "../hooks/useNotificationDetail";
 
 export const NotificationCenterPage: React.FC = () => {
   const {

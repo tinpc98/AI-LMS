@@ -1,7 +1,7 @@
 import React, { useMemo } from "react";
 import { Row, Col, Card, Skeleton, Alert } from "antd";
 import PageContainer from "../../../shared/components/PageContainer";
-import useStudentClasses from "../../../hooks/useStudentClasses";
+import useStudentClasses from "../hooks/useStudentClasses";
 
 // Sub-components
 import MyClassesHeader from "../components/classes/MyClassesHeader";

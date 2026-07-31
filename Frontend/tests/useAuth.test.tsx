@@ -10,7 +10,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook, act } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import type { ReactNode } from "react";
-import { useAuth } from "../src/hooks/useAuth";
+import { useAuth } from "../src/shared/hooks/useAuth";
 
 vi.mock("../src/shared/lib/socketClient", () => ({ disconnectSocket: vi.fn() }));
 

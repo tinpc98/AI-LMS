@@ -6,8 +6,8 @@ import LiveStatistic from "./LiveStatistic";
 import CurrentLiveCard from "./CurrentLiveCard";
 import LiveEmptyState from "./LiveEmptyState";
 import LiveLoadingSkeleton from "./LiveLoadingSkeleton";
-import useLiveSessionState from "../../../../../hooks/useLiveSessionState";
-import useLiveSessionSocket from "../../../../../hooks/useLiveSessionSocket";
+import useLiveSessionState from "../../../../live-session/hooks/useLiveSessionState";
+import useLiveSessionSocket from "../../../../live-session/hooks/useLiveSessionSocket";
 import LiveSessionErrorBoundary from "../../../../live-session/components/LiveSessionErrorBoundary";
 import type { IExtendedLiveSession, StudentLiveStats } from "../../../../../types/studentLive";
 

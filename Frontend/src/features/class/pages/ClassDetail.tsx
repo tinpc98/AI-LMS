@@ -3,7 +3,7 @@ import { useParams, Link, useNavigate } from "react-router-dom";
 import axiosClient from "../../../api/axiosClient";
 import type { IExam } from "../../../interface/examInterface";
 import { toast } from "../../../utils/toast";
-import { useClassDetail } from "../../../hooks/useClassDetail";
+import { useClassDetail } from "../hooks/useClassDetail";
 
 // Ant Design 5 & Common Components
 import { Row, Col, Alert, Skeleton } from "antd";
@@ -25,10 +25,10 @@ import AnnouncementsTab from "../components/classDetail/announcements/Announceme
 import ClassDiscussionTab from "../components/classDetail/chat/ClassDiscussionTab";
 import ExamLobbyModals from "../components/classDetail/exams/ExamLobbyModals";
 import type { ExamPopupState } from "../components/classDetail/exams/ExamLobbyModals";
-import { useJitsiLiveSession } from "../../../hooks/useJitsiLiveSession";
-import { useStudentLive } from "../../../hooks/useStudentLive";
-import { useLearningAnalytics } from "../../../hooks/useLearningAnalytics";
-import { useAnalytics } from "../../../hooks/useAnalytics";
+import { useJitsiLiveSession } from "../../live-session/hooks/useJitsiLiveSession";
+import { useStudentLive } from "../../live-session/hooks/useStudentLive";
+import { useLearningAnalytics } from "../../report/hooks/useLearningAnalytics";
+import { useAnalytics } from "../../report/hooks/useAnalytics";
 import { Tooltip, Avatar, List, Progress } from "antd";
 import {
   TrophyOutlined,

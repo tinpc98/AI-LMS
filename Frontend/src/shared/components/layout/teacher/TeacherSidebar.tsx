@@ -10,7 +10,7 @@ import {
   LogoutOutlined,
   UserOutlined,
 } from "@ant-design/icons";
-import { useAuth } from "../../../../hooks/useAuth";
+import { useAuth } from "../../../hooks/useAuth";
 
 const { Sider } = Layout;
 const { Text, Title } = Typography;

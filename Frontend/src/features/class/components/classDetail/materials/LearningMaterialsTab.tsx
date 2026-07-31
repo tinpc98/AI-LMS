@@ -14,7 +14,7 @@ import MaterialEmptyState from "./MaterialEmptyState";
 import MaterialLoadingSkeleton from "./MaterialLoadingSkeleton";
 import MaterialPreviewDrawer from "./MaterialPreviewDrawer";
 import MaterialDetailModal from "./MaterialDetailModal";
-import useLearningMaterials from "../../../../../hooks/useLearningMaterials";
+import useLearningMaterials from "../../../../lesson/hooks/useLearningMaterials";
 import type { ILearningMaterial } from "../../../../../types/learningMaterial";
 
 const { Title, Text } = Typography;

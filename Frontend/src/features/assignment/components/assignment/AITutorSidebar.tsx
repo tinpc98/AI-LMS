@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from "react";
 import { Spin } from "antd";
-import { useAIChat } from "../../../../hooks/useAIChat";
+import { useAIChat } from "../../../ai/hooks/useAIChat";
 
 interface AITutorSidebarProps {
   lessonId?: string; // Tùy chọn, nếu chat gắn liền với bài học cụ thể

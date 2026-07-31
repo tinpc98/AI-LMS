@@ -7,9 +7,9 @@ import AssignmentEmptyState from "./AssignmentEmptyState";
 import AssignmentLoadingSkeleton from "./AssignmentLoadingSkeleton";
 import AssignmentDetailDrawer from "./AssignmentDetailDrawer";
 import SubmitAssignmentModal from "../../../../assignment/components/SubmitAssignmentModal";
-import useAssignments from "../../../../../hooks/useAssignments";
-import useAssignmentDetail from "../../../../../hooks/useAssignmentDetail";
-import useSubmission from "../../../../../hooks/useSubmission";
+import useAssignments from "../../../../assignment/hooks/useAssignments";
+import useAssignmentDetail from "../../../../assignment/hooks/useAssignmentDetail";
+import useSubmission from "../../../../assignment/hooks/useSubmission";
 import type { IAssignment, ISubmission } from "../../../../../interface/assignmentInterface";
 
 const { Title, Text } = Typography;

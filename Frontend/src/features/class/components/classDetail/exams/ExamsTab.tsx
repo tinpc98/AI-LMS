@@ -8,9 +8,9 @@ import ExamLoadingSkeleton from "./ExamLoadingSkeleton";
 import ExamDetailDrawer from "./ExamDetailDrawer";
 import ExamStartModal from "./ExamStartModal";
 import ExamReviewDrawer from "./ExamReviewDrawer";
-import useStudentExams from "../../../../../hooks/useStudentExams";
-import useExamDetail from "../../../../../hooks/useExamDetail";
-import useExamResult from "../../../../../hooks/useExamResult";
+import useStudentExams from "../../../../exam/hooks/useStudentExams";
+import useExamDetail from "../../../../exam/hooks/useExamDetail";
+import useExamResult from "../../../../exam/hooks/useExamResult";
 import type { IExam, IExamAttempt } from "../../../../../api/examApi";
 
 const { Title, Text } = Typography;

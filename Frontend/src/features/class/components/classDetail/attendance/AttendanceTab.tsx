@@ -9,8 +9,8 @@ import AttendanceTimeline from "./AttendanceTimeline";
 import AttendanceEmptyState from "./AttendanceEmptyState";
 import AttendanceLoadingSkeleton from "./AttendanceLoadingSkeleton";
 import AttendanceDetailDrawer from "./AttendanceDetailDrawer";
-import useStudentAttendance from "../../../../../hooks/useStudentAttendance";
-import useAttendanceSummary from "../../../../../hooks/useAttendanceSummary";
+import useStudentAttendance from "../../../../attendance/hooks/useStudentAttendance";
+import useAttendanceSummary from "../../../../attendance/hooks/useAttendanceSummary";
 import type { IAttendanceItem } from "../../../../../interface/attendanceInterface";
 
 const { Title, Text } = Typography;

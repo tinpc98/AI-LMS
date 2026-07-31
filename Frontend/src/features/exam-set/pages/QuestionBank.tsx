@@ -38,7 +38,7 @@ import { QuestionStatistic } from "../components/QuestionStatistic";
 import { QuestionFormDrawer } from "../components/QuestionFormDrawer";
 import { QuestionPreviewDrawer } from "../components/QuestionPreviewDrawer";
 
-import { useQuestionBank } from "../../../hooks/useQuestionBank";
+import { useQuestionBank } from "../hooks/useQuestionBank";
 
 const { Title, Text, Paragraph } = Typography;
 

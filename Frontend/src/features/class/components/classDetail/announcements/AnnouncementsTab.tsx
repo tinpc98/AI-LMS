@@ -6,8 +6,8 @@ import AnnouncementFeed from "./AnnouncementFeed";
 import AnnouncementEmptyState from "./AnnouncementEmptyState";
 import AnnouncementLoadingSkeleton from "./AnnouncementLoadingSkeleton";
 import AnnouncementDetailDrawer from "./AnnouncementDetailDrawer";
-import useStudentAnnouncements from "../../../../../hooks/useStudentAnnouncements";
-import useAnnouncementDetail from "../../../../../hooks/useAnnouncementDetail";
+import useStudentAnnouncements from "../../../../announcement/hooks/useStudentAnnouncements";
+import useAnnouncementDetail from "../../../../announcement/hooks/useAnnouncementDetail";
 import type { IAnnouncement } from "../../../../../api/announcementApi";
 
 const { Title, Text } = Typography;

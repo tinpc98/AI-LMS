@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useLocation } from "react-router-dom";
-import { useAIChat } from "../../../hooks/useAIChat";
+import { useAIChat } from "../hooks/useAIChat";
 import ReactMarkdown from "react-markdown";
 
 export const AIChatWidget: React.FC = () => {

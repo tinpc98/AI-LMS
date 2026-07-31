@@ -1,8 +1,8 @@
 import React, { useEffect } from "react";
 import { Table, Avatar, Tag, Spin, Alert, Row, Col, Statistic, Button } from "antd";
 import { TrophyOutlined, StarOutlined, DownloadOutlined, RiseOutlined } from "@ant-design/icons";
-import { useLearningAnalytics } from "../../../../hooks/useLearningAnalytics";
-import { useAnalytics } from "../../../../hooks/useAnalytics";
+import { useLearningAnalytics } from "../../../report/hooks/useLearningAnalytics";
+import { useAnalytics } from "../../../report/hooks/useAnalytics";
 
 interface TeacherAnalyticsTabProps {
   classId: string;

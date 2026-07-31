@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { useAuth } from "../../../hooks/useAuth";
+import { useAuth } from "../../../shared/hooks/useAuth";
 import learningDashboardService from "../services/learningDashboard.service";
 import type { LearningDashboardState } from "../types/learningDashboard.types";
 

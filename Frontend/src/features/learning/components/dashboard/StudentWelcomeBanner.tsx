@@ -7,7 +7,7 @@ import {
   BellOutlined,
   UserOutlined,
 } from "@ant-design/icons";
-import { useAuth } from "../../../../hooks/useAuth";
+import { useAuth } from "../../../../shared/hooks/useAuth";
 
 const { Title, Text } = Typography;
 

@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import useExamTimer from "../../../hooks/useExamTimer";
+import useExamTimer from "../hooks/useExamTimer";
 import axiosClient from "../../../api/axiosClient";
-import useAntiCheat from "../../../hooks/useAntiCheat";
+import useAntiCheat from "../hooks/useAntiCheat";
 import ExamErrorBoundary from "../components/ExamErrorBoundary";
 
 const ExamPageContent = () => {

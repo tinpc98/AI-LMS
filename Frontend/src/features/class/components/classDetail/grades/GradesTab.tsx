@@ -8,8 +8,8 @@ import GradeTable from "./GradeTable";
 import GradeEmptyState from "./GradeEmptyState";
 import GradeLoadingSkeleton from "./GradeLoadingSkeleton";
 import GradeDetailDrawer from "./GradeDetailDrawer";
-import useStudentGrades from "../../../../../hooks/useStudentGrades";
-import useGradeDetail from "../../../../../hooks/useGradeDetail";
+import useStudentGrades from "../../../../grade/hooks/useStudentGrades";
+import useGradeDetail from "../../../../grade/hooks/useGradeDetail";
 import type { IGrade } from "../../../../../api/gradeApi";
 import gradeApi from "../../../../../api/gradeApi";
 
