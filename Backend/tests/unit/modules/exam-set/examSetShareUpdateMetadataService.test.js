@@ -1,7 +1,7 @@
 // Port từ src/scripts/runExamSetShareUpdateMetadataServiceTests.js (characterization test).
 // Nhóm: A. Success (12) | B. Field Integrity (8) | C. Validation (10) | D. Authorization (5) | E. State (9)
 import { describe, it, expect, afterEach, vi } from "vitest";
-import { updateExamSetShareMetadataService } from "#modules/exam-set/examSet.service.js";
+import { updateExamSetShareMetadataService } from "#modules/exam-set/examSetShare.service.js";
 import ExamSet from "#modules/exam-set/examSet.model.js";
 import ExamSetShare from "#modules/exam-set/examSetShare.model.js";
 

@@ -1,6 +1,6 @@
 // Port từ src/scripts/runExamSetSharedWithMeServiceTests.js (characterization test).
 import { describe, it, expect, afterEach, vi } from "vitest";
-import { listSharedExamSetsService } from "#modules/exam-set/examSet.service.js";
+import { listSharedExamSetsService } from "#modules/exam-set/examSetShare.service.js";
 import ExamSetShare from "#modules/exam-set/examSetShare.model.js";
 
 afterEach(() => {

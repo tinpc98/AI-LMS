@@ -15,12 +15,15 @@ import {
   createNewExamSetVersionService,
   getExamSetVersionsService,
   restoreExamSetVersionService,
+} from "./examSet.service.js";
+// Nghiệp vụ chia sẻ đã tách sang service riêng ở Wave 4.1.
+import {
   createExamSetShareService,
   revokeExamSetShareService,
   listExamSetSharesService,
   listSharedExamSetsService,
   updateExamSetShareMetadataService,
-} from "./examSet.service.js";
+} from "./examSetShare.service.js";
 import { importExcelToExamSet } from "./examSetImport.service.js";
 import { Types } from "mongoose";
 
