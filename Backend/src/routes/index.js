@@ -4,8 +4,9 @@
 // khiến không nhìn được toàn cảnh URL của hệ thống ở một chỗ.
 import express from "express";
 
-import AuthRouter from "./auth.routes.js";
-import UserRouter from "./user.routes.js";
+// Module đã migrate sang src/modules/ được import qua PUBLIC API (index.js), không thọc
+// vào file nội bộ. Các router còn lại vẫn nằm ở src/routes/ cho tới lượt migrate của chúng.
+import { authRoutes, userRoutes } from "#modules/auth";
 import ClassRouter from "./class.routes.js";
 import LessonRouter from "./lesson.routes.js";
 import AssignmentRouter from "./assignment.routes.js";
@@ -35,8 +36,8 @@ const router = express.Router();
 // ── Người dùng & xác thực ────────────────────────────────────────────────────
 // /auth  = đăng nhập + hồ sơ của chính mình (login, me)
 // /users = quản trị người dùng, toàn bộ yêu cầu quyền Admin
-router.use("/auth", AuthRouter);
-router.use("/users", UserRouter);
+router.use("/auth", authRoutes);
+router.use("/users", userRoutes);
 
 // ── Lớp học & nội dung giảng dạy ────────────────────────────────────────────
 router.use("/classes", ClassRouter);

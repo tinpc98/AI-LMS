@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import ExamSet from "../../models/examSet.model.js";
 import ExamSetShare from "../../models/examSetShare.model.js";
-import User from "../../models/user.model.js";
+import { User } from "#modules/auth";
 import Exam from "../../models/exam.model.js";
 import crypto from "crypto";
 

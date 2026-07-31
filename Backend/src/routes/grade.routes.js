@@ -5,7 +5,8 @@ import {
   getGradesByStudent,
   getStudentGPA,
 } from "../controllers/grade.controller.js";
-import { verifyUser, isTeacher } from "#shared/middlewares/auth.middleware.js";
+import { verifyUser } from "#modules/auth";
+import { isTeacher } from "#shared/middlewares/rbac.middleware.js";
 
 const router = Router();
 

@@ -4,10 +4,10 @@
 // /api/auth lẫn /api/users, khiến mọi endpoint quản trị người dùng cũng truy cập được
 // qua /api/auth và ngược lại — sơ đồ URL nhân đôi, không phản ánh đúng phân quyền.
 import { Router } from "express";
-import { getMyProfile, login, updateMyProfile } from "../controllers/auth.controller.js";
-import { loginValidation } from "../utils/validators.js";
-import { verifyUser } from "#shared/middlewares/auth.middleware.js";
-import { loginRateLimit } from "../middlewares/loginRateLimit.middleware.js";
+import { getMyProfile, login, updateMyProfile } from "./auth.controller.js";
+import { loginValidation } from "../../utils/validators.js";
+import { verifyUser } from "./auth.middleware.js";
+import { loginRateLimit } from "./loginRateLimit.middleware.js";
 
 const route = Router();
 

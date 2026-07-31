@@ -4,7 +4,7 @@ import dotenv from "dotenv";
 import { connectDB } from "../config/database.js";
 import Class from "../models/class.model.js";
 import Lesson from "../models/lesson.model.js";
-import User from "../models/user.model.js";
+import { User } from "#modules/auth";
 import AISummary from "../models/aiSummary.model.js";
 import AIUsage from "../models/aiUsage.model.js";
 import { checkAILessonAccess } from "../middlewares/aiLessonAccess.middleware.js";

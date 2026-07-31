@@ -1,7 +1,8 @@
 import express from "express";
 import { indexLessonKnowledge, getIndexStatus } from "../controllers/aiKnowledge.controller.js";
 import { checkAILessonAccess } from "../middlewares/aiLessonAccess.middleware.js";
-import { verifyUser, isTeacher } from "#shared/middlewares/auth.middleware.js";
+import { verifyUser } from "#modules/auth";
+import { isTeacher } from "#shared/middlewares/rbac.middleware.js";
 
 // Router is mounted at /api/ai/lessons
 const router = express.Router({ mergeParams: true });

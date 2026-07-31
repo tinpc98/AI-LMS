@@ -4,7 +4,7 @@ import {
   getTeacherDashboard,
   exportClassReportCSV,
 } from "../controllers/analytics.controller.js";
-import { verifyUser } from "#shared/middlewares/auth.middleware.js";
+import { verifyUser } from "#modules/auth";
 
 const router = Router();
 

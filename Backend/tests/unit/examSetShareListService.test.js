@@ -3,7 +3,7 @@ import { describe, it, expect, afterEach, vi } from "vitest";
 import { listExamSetSharesService } from "../../src/services/examSet.service.js";
 import ExamSet from "../../src/models/examSet.model.js";
 import ExamSetShare from "../../src/models/examSetShare.model.js";
-import User from "../../src/models/user.model.js";
+import { User } from "#modules/auth";
 
 const createExamSet = (props = {}) => ({
   _id: props._id || "607f1f77bcf86cd799439111",

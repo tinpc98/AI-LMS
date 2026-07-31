@@ -4,8 +4,8 @@ import {
   getUserTrashService,
   restoreUserService,
   permanentDeleteUserService,
-} from "../services/auth.service.js";
-import User from "../models/user.model.js";
+} from "./auth.service.js";
+import User from "./user.model.js";
 
 export const login = async (req, res) => {
   try {

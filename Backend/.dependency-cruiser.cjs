@@ -25,8 +25,12 @@ module.exports = {
       comment:
         "Controller chỉ được nói chuyện với Service. Truy cập thẳng Model là vi phạm Dependency Rule (§0.3).",
       severity: "warn",
-      from: { path: "^src/controllers/.+\\.controller\\.js$" },
-      to: { path: "^src/models/" },
+      // Phải phủ CẢ hai bố cục trong lúc migrate: cấu trúc cũ (src/controllers ->
+      // src/models) và cấu trúc module mới (modules/X/*.controller.js -> *.model.js).
+      // Nếu chỉ khai báo bố cục cũ, rule sẽ âm thầm mù với mọi module đã chuyển —
+      // đúng kiểu lỗi mà tên file .controllers.js đã gây ra ở Wave 2.
+      from: { path: "\\.controller\\.js$" },
+      to: { path: "\\.model\\.js$" },
     },
     {
       name: "no-model-to-upper-layer",
@@ -54,6 +58,19 @@ module.exports = {
       severity: "warn",
       from: { path: "^src/shared/" },
       to: { path: "^src/modules/" },
+    },
+    {
+      // §5.2 — module chỉ được import PUBLIC API (index.js) của module khác, không thọc
+      // vào file nội bộ. Để "warn" trong lúc migrate, nâng lên "error" ở Wave 3.6 khi
+      // toàn bộ module đã chuyển xong.
+      name: "no-cross-module-internals",
+      comment: "Module khác chỉ được import qua index.js của module, không vào file nội bộ.",
+      severity: "warn",
+      from: { path: "^src/modules/([^/]+)/" },
+      to: {
+        path: "^src/modules/([^/]+)/(?!index\\.js$).+",
+        pathNot: "^src/modules/$1/",
+      },
     },
     {
       name: "no-orphans",

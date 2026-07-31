@@ -8,7 +8,7 @@ import {
   deleteFolder,
   getFolderTree,
 } from "../controllers/folder.controller.js";
-import { verifyUser } from "#shared/middlewares/auth.middleware.js";
+import { verifyUser } from "#modules/auth";
 
 const router = express.Router();
 

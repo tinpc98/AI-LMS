@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { exportGrades, exportAttendance } from "../controllers/report.controller.js";
-import { verifyUser, isAdmin } from "#shared/middlewares/auth.middleware.js";
+import { verifyUser } from "#modules/auth";
+import { isAdmin } from "#shared/middlewares/rbac.middleware.js";
 import classModel from "../models/class.model.js";
 import mongoose from "mongoose";
 

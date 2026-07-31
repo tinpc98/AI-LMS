@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 import { matchedData } from "express-validator";
 import classModel from "../models/class.model.js";
 import Course from "../models/course.model.js";
-import User from "../models/user.model.js";
+import { User } from "#modules/auth";
 import classService from "../services/class.service.js";
 import { attachStudentProgress } from "../services/classProgress.service.js";
 
@@ -53,12 +53,10 @@ export const ClassList = async (req, res) => {
     });
   } catch (error) {
     console.error("[ClassController] ClassList Error:", error);
-    return res
-      .status(500)
-      .json({
-        success: false,
-        message: error.message || "Lỗi nội bộ trên Server khi lấy danh sách lớp học",
-      });
+    return res.status(500).json({
+      success: false,
+      message: error.message || "Lỗi nội bộ trên Server khi lấy danh sách lớp học",
+    });
   }
 };
 
@@ -354,12 +352,10 @@ export const AssignStudent = async (req, res) => {
         return res
           .status(400)
           .json({ success: false, message: "Student is already enrolled in this class." });
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: "Class has reached its maximum capacity or enrollment is closed.",
-        });
+      return res.status(400).json({
+        success: false,
+        message: "Class has reached its maximum capacity or enrollment is closed.",
+      });
     }
 
     return res
@@ -368,12 +364,10 @@ export const AssignStudent = async (req, res) => {
   } catch (error) {
     console.error("[ClassController] AssignStudent Error:", error);
     const isValidationError = error.name === "ValidationError";
-    return res
-      .status(isValidationError ? 400 : 500)
-      .json({
-        success: false,
-        message: error.message || "An error occurred while adding student to class.",
-      });
+    return res.status(isValidationError ? 400 : 500).json({
+      success: false,
+      message: error.message || "An error occurred while adding student to class.",
+    });
   }
 };
 
@@ -738,12 +732,10 @@ export const UpdateStudentStatus = async (req, res) => {
 
   const VALID_STATUSES = ["Enrolled", "Reserved", "Transferred", "Dropped"];
   if (!status || !VALID_STATUSES.includes(status)) {
-    return res
-      .status(400)
-      .json({
-        success: false,
-        message: `Trạng thái không hợp lệ. Giá trị cho phép: ${VALID_STATUSES.join(", ")}.`,
-      });
+    return res.status(400).json({
+      success: false,
+      message: `Trạng thái không hợp lệ. Giá trị cho phép: ${VALID_STATUSES.join(", ")}.`,
+    });
   }
 
   try {
@@ -754,24 +746,20 @@ export const UpdateStudentStatus = async (req, res) => {
     );
 
     if (!updatedClass) {
-      return res
-        .status(404)
-        .json({
-          success: false,
-          message: "Lớp học không tồn tại hoặc học sinh không có trong lớp này",
-        });
+      return res.status(404).json({
+        success: false,
+        message: "Lớp học không tồn tại hoặc học sinh không có trong lớp này",
+      });
     }
 
     const updatedStudent = updatedClass.students.find(
       (s) => s.studentId && s.studentId.toString() === studentId
     );
-    return res
-      .status(200)
-      .json({
-        success: true,
-        message: `Cập nhật trạng thái học sinh thành "${status}" thành công`,
-        data: updatedStudent,
-      });
+    return res.status(200).json({
+      success: true,
+      message: `Cập nhật trạng thái học sinh thành "${status}" thành công`,
+      data: updatedStudent,
+    });
   } catch (error) {
     console.error("[ClassController] UpdateStudentStatus Error:", error);
     const isValidationError = error.name === "ValidationError";

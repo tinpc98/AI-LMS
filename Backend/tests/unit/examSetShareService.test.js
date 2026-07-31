@@ -2,7 +2,7 @@
 import { describe, it, expect, afterEach, vi } from "vitest";
 import { createExamSetShareService } from "../../src/services/examSet.service.js";
 import ExamSet from "../../src/models/examSet.model.js";
-import User from "../../src/models/user.model.js";
+import { User } from "#modules/auth";
 import ExamSetShare from "../../src/models/examSetShare.model.js";
 
 const createExamSet = (props = {}) => ({

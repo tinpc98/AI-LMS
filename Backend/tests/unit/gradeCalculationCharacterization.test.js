@@ -6,7 +6,7 @@
 import { describe, it, expect, afterEach, vi } from "vitest";
 import gradeService from "../../src/services/grade.service.js";
 import classModel from "../../src/models/class.model.js";
-import User from "../../src/models/user.model.js";
+import { User } from "#modules/auth";
 import Assignment from "../../src/models/assignment.model.js";
 import Exam from "../../src/models/exam.model.js";
 import Grade from "../../src/models/grade.model.js";

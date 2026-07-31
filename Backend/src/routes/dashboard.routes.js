@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { getAdminDashboard } from "../controllers/dashboard.controller.js";
-import { verifyUser, isAdmin } from "#shared/middlewares/auth.middleware.js";
+import { verifyUser } from "#modules/auth";
+import { isAdmin } from "#shared/middlewares/rbac.middleware.js";
 
 const router = Router();
 

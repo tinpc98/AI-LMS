@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import Exam from "../models/exam.model.js";
 import ExamAttempt from "../models/examAttempt.model.js";
-import { checkClassTeacherOwnership } from "#shared/middlewares/auth.middleware.js";
+import { checkClassTeacherOwnership } from "#shared/middlewares/ownership.middleware.js";
 
 /**
  * Service kiểm tra quyền truy cập Socket Room Phòng Thi.

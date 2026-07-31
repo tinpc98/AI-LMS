@@ -1,6 +1,6 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import User from "../models/user.model.js";
+import User from "./user.model.js";
 
 export const loginService = async (email, password) => {
   // Chuẩn hóa email đầu vào để tìm kiếm chính xác tuyệt đối

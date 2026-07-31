@@ -1,6 +1,7 @@
 import express from "express";
 import aiQuestionGenerationController from "../controllers/aiQuestionGeneration.controller.js";
-import { verifyUser, isTeacher } from "#shared/middlewares/auth.middleware.js";
+import { verifyUser } from "#modules/auth";
+import { isTeacher } from "#shared/middlewares/rbac.middleware.js";
 import { checkAILessonAccess } from "../middlewares/aiLessonAccess.middleware.js";
 import { checkAIQuota } from "../middlewares/aiQuota.middleware.js";
 import { createRateLimiter } from "#shared/middlewares/rateLimit.middleware.js";

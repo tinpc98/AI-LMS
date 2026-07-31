@@ -11,8 +11,9 @@ import {
   getUserTrash,
   restoreUser,
   permanentDeleteUser,
-} from "../controllers/auth.controller.js";
-import { verifyUser, isAdmin } from "#shared/middlewares/auth.middleware.js";
+} from "./auth.controller.js";
+import { verifyUser } from "./auth.middleware.js";
+import { isAdmin } from "#shared/middlewares/rbac.middleware.js";
 
 const route = Router();
 
