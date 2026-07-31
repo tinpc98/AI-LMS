@@ -1,49 +1,69 @@
-import { useState, useEffect, useMemo, useCallback, useRef } from "react";
-import notificationApi from "../../../api/notificationApi";
+// Thông báo của người dùng đang đăng nhập.
+//
+// CHUYỂN SANG REACT QUERY (Wave 5, nhóm A) — chỗ tinh vi nhất trong nhóm vì trộn ba nguồn ghi
+// vào cùng một danh sách: tải lần đầu từ API, socket đẩy thông báo mới về, và người dùng đánh
+// dấu đã đọc.
+//
+// Cách làm: cache của React Query là NGUỒN SỰ THẬT DUY NHẤT. Socket và các thao tác đánh dấu
+// ghi thẳng vào cache bằng setQueryData thay vì giữ bản sao riêng trong useState.
+//
+// BỎ HẲN state unreadCount. Bản cũ duy trì nó bằng tay ở ba nơi: lúc tải thì đếm lại, socket
+// về thì +1, đánh dấu đã đọc thì -1. Ba nguồn sửa một con số là công thức để nó lệch khỏi
+// danh sách — và lệch rồi thì không có gì kéo nó về. Nó vốn được tính từ chính danh sách đó
+// (data.filter(n => !n.isRead).length), nên suy ra lúc render là tương đương tuyệt đối, mà
+// không thể lệch.
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { io, Socket } from "socket.io-client";
+import notificationApi, { mapNotificationItem } from "../../../api/notificationApi";
 import { toast } from "../../../utils/toast";
 import type {
   INotificationItem,
   NotificationFilterOptions,
-  NotificationStats,
 } from "../../../types/studentNotification";
-import { io, Socket } from "socket.io-client";
-import { mapNotificationItem } from "../../../api/notificationApi";
+import {
+  DEFAULT_NOTIFICATION_FILTERS,
+  computeNotificationStats,
+  enrichNotifications,
+  filterAndSortNotifications,
+  groupByDate,
+} from "../notification.logic";
 
 const SOCKET_URL = import.meta.env.VITE_API_URL?.replace("/api", "") || "http://localhost:5000";
 
+// Socket dùng chung cho mọi nơi gọi hook: mở một kết nối, đếm số người đăng ký, người cuối
+// cùng rời đi thì đóng.
 let globalSocket: Socket | null = null;
 let globalSocketSubscribers = 0;
 
+const notificationQueryKey = ["notifications"] as const;
+
 export function useNotifications() {
-  const [notifications, setNotifications] = useState<INotificationItem[]>([]);
-  const [unreadCount, setUnreadCount] = useState<number>(0);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [filters, setFilters] = useState<NotificationFilterOptions>({
-    searchQuery: "",
-    category: "all",
-    sortBy: "newest",
-  });
+  const queryClient = useQueryClient();
   const socketRef = useRef<Socket | null>(null);
 
-  const fetchNotifications = useCallback(async () => {
-    setLoading(true);
-    try {
-      const data = await notificationApi.getNotifications();
-      setNotifications(data);
-      const unread = data.filter((n) => !n.isRead).length;
-      setUnreadCount(unread);
-    } catch (err) {
-      console.warn("Không thể tải thông báo từ API:", err);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const {
+    data: notifications = [],
+    isLoading,
+    refetch,
+  } = useQuery({
+    queryKey: notificationQueryKey,
+    queryFn: notificationApi.getNotifications,
+  });
 
-  useEffect(() => {
-    fetchNotifications();
-  }, [fetchNotifications]);
+  const [filters, setFilters] = useState<NotificationFilterOptions>(DEFAULT_NOTIFICATION_FILTERS);
 
-  // Socket Connection & Listeners
+  /** Sửa danh sách trong cache. Mọi cập nhật cục bộ đều đi qua đây. */
+  const updateCache = useCallback(
+    (updater: (prev: INotificationItem[]) => INotificationItem[]) => {
+      queryClient.setQueryData<INotificationItem[]>(notificationQueryKey, (prev) =>
+        updater(prev ?? [])
+      );
+    },
+    [queryClient]
+  );
+
+  // Kết nối socket và lắng nghe thông báo mới.
   useEffect(() => {
     const token = localStorage.getItem("accessToken");
     if (!token) return;
@@ -56,200 +76,104 @@ export function useNotifications() {
       });
     }
 
-    globalSocketSubscribers++;
+    globalSocketSubscribers += 1;
     socketRef.current = globalSocket;
 
-    const handleNewNotification = (newNotifRaw: any) => {
-      const newNotif = mapNotificationItem(newNotifRaw);
-      setNotifications((prev) => {
-        // Tránh trùng lặp
-        if (prev.some((n) => n._id === newNotif._id)) return prev;
-        return [newNotif, ...prev];
-      });
-      setUnreadCount((prev) => prev + 1);
+    const handleNewNotification = (raw: unknown) => {
+      const item = mapNotificationItem(raw);
+      updateCache((prev) =>
+        // Máy chủ có thể gửi lại cùng một thông báo khi kết nối lại — bỏ qua bản trùng.
+        prev.some((n) => n._id === item._id) ? prev : [item, ...prev]
+      );
     };
 
     globalSocket.on("notification:new", handleNewNotification);
 
     return () => {
-      if (globalSocket) {
-        globalSocket.off("notification:new", handleNewNotification);
-        globalSocketSubscribers--;
-        if (globalSocketSubscribers <= 0) {
-          globalSocket.disconnect();
-          globalSocket = null;
-        }
+      if (!globalSocket) return;
+      globalSocket.off("notification:new", handleNewNotification);
+      globalSocketSubscribers -= 1;
+      if (globalSocketSubscribers <= 0) {
+        globalSocket.disconnect();
+        globalSocket = null;
       }
     };
-  }, []);
+  }, [updateCache]);
 
-  // Enrich notifications with Date Group
-  const enrichedNotifications: INotificationItem[] = useMemo(() => {
-    const now = Date.now();
+  const enriched = useMemo(() => enrichNotifications(notifications), [notifications]);
+  const stats = useMemo(() => computeNotificationStats(enriched), [enriched]);
+  const filteredNotifications = useMemo(
+    () => filterAndSortNotifications(enriched, filters),
+    [enriched, filters]
+  );
+  const groupedNotifications = useMemo(
+    () => groupByDate(filteredNotifications),
+    [filteredNotifications]
+  );
 
-    return notifications.map((item) => {
-      const createdTime = item.createdAt ? new Date(item.createdAt).getTime() : now;
-      const diffDays = Math.floor((now - createdTime) / (1000 * 60 * 60 * 24));
-
-      let dateGroup: INotificationItem["dateGroup"] = "Cũ hơn";
-      if (diffDays === 0) dateGroup = "Hôm nay";
-      else if (diffDays === 1) dateGroup = "Hôm qua";
-      else if (diffDays <= 7) dateGroup = "7 ngày trước";
-      else if (diffDays <= 30) dateGroup = "Tháng này";
-
-      return {
-        ...item,
-        dateGroup,
-      };
-    });
-  }, [notifications]);
-
-  // Calculate 5 Statistic Metrics
-  const stats: NotificationStats = useMemo(() => {
-    const total = enrichedNotifications.length;
-    let unread = 0;
-    let read = 0;
-    let todayCount = 0;
-    let thisWeekCount = 0;
-
-    enrichedNotifications.forEach((item) => {
-      if (item.isRead) read++;
-      else unread++;
-
-      if (item.dateGroup === "Hôm nay") todayCount++;
-      if (
-        item.dateGroup === "Hôm nay" ||
-        item.dateGroup === "Hôm qua" ||
-        item.dateGroup === "7 ngày trước"
-      ) {
-        thisWeekCount++;
-      }
-    });
-
-    return { total, unread, read, todayCount, thisWeekCount };
-  }, [enrichedNotifications]);
-
-  // Filter & Sort
-  const filteredNotifications = useMemo(() => {
-    let result = [...enrichedNotifications];
-
-    // Search query filter
-    if (filters.searchQuery.trim()) {
-      const q = filters.searchQuery.toLowerCase().trim();
-      result = result.filter(
-        (item) =>
-          item.title.toLowerCase().includes(q) ||
-          item.description.toLowerCase().includes(q) ||
-          (item.className && item.className.toLowerCase().includes(q))
-      );
-    }
-
-    // Category filter
-    if (filters.category === "unread") {
-      result = result.filter((item) => !item.isRead);
-    } else if (filters.category === "read") {
-      result = result.filter((item) => item.isRead);
-    } else if (filters.category !== "all") {
-      result = result.filter((item) => item.category === filters.category);
-    }
-
-    // Sort
-    result.sort((a, b) => {
-      // High priority items first if sorting by important
-      if (filters.sortBy === "important") {
-        if (a.priority === "high" && b.priority !== "high") return -1;
-        if (a.priority !== "high" && b.priority === "high") return 1;
-      }
-
-      const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
-      const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-
-      if (filters.sortBy === "oldest") return timeA - timeB;
-      return timeB - timeA; // newest default
-    });
-
-    return result;
-  }, [enrichedNotifications, filters]);
-
-  // Group notifications by Date Group for Activity Feed
-  const groupedNotifications = useMemo(() => {
-    const map = new Map<string, INotificationItem[]>();
-    const groupsOrder = ["Hôm nay", "Hôm qua", "7 ngày trước", "Tháng này", "Cũ hơn"];
-
-    groupsOrder.forEach((g) => map.set(g, []));
-
-    filteredNotifications.forEach((item) => {
-      const g = item.dateGroup || "Cũ hơn";
-      if (!map.has(g)) map.set(g, []);
-      map.get(g)!.push(item);
-    });
-
-    // Remove empty groups
-    const result: { groupTitle: string; items: INotificationItem[] }[] = [];
-    map.forEach((items, groupTitle) => {
-      if (items.length > 0) {
-        result.push({ groupTitle, items });
-      }
-    });
-
-    return result;
-  }, [filteredNotifications]);
-
-  // Handlers
   const markAsRead = useCallback(
     async (id: string) => {
-      const targetItem = notifications.find((n) => n._id === id);
-      if (!targetItem || targetItem.isRead) return; // Không gọi lại API nếu thông báo đã đọc
+      const target = notifications.find((n) => n._id === id);
+      if (!target || target.isRead) return; // đã đọc rồi thì khỏi gọi API
 
       try {
         await notificationApi.markAsRead(id);
-        setNotifications((prev) =>
-          prev.map((item) => (item._id === id ? { ...item, isRead: true } : item))
-        );
-        setUnreadCount((prev) => Math.max(0, prev - 1));
-      } catch (err: any) {
+        updateCache((prev) => prev.map((n) => (n._id === id ? { ...n, isRead: true } : n)));
+      } catch (err: unknown) {
         console.error("[useNotifications] markAsRead error:", err);
-        toast.error(err.response?.data?.message || "Không thể cập nhật trạng thái thông báo.");
+        toast.error(
+          (err as { response?: { data?: { message?: string } } })?.response?.data?.message ||
+            "Không thể cập nhật trạng thái thông báo."
+        );
       }
     },
-    [notifications]
+    [notifications, updateCache]
   );
 
   const markAllAsRead = useCallback(async () => {
-    const hasUnread = notifications.some((n) => !n.isRead);
-    if (!hasUnread) return;
+    if (!notifications.some((n) => !n.isRead)) return;
 
     try {
       await notificationApi.markAllAsRead();
-      setNotifications((prev) => prev.map((item) => ({ ...item, isRead: true })));
-      setUnreadCount(0);
-    } catch (err: any) {
+      updateCache((prev) => prev.map((n) => ({ ...n, isRead: true })));
+    } catch (err: unknown) {
       console.error("[useNotifications] markAllAsRead error:", err);
-      toast.error(err.response?.data?.message || "Không thể đánh dấu tất cả thông báo.");
+      toast.error(
+        (err as { response?: { data?: { message?: string } } })?.response?.data?.message ||
+          "Không thể đánh dấu tất cả thông báo."
+      );
     }
-  }, [notifications]);
+  }, [notifications, updateCache]);
 
-  const handleSearchChange = useCallback((value: string) => {
-    setFilters((prev) => ({ ...prev, searchQuery: value }));
-  }, []);
+  const updateFilter = useCallback(
+    <K extends keyof NotificationFilterOptions>(key: K, value: NotificationFilterOptions[K]) =>
+      setFilters((prev) => ({ ...prev, [key]: value })),
+    []
+  );
 
-  const handleCategoryChange = useCallback((value: NotificationFilterOptions["category"]) => {
-    setFilters((prev) => ({ ...prev, category: value }));
-  }, []);
-
-  const handleSortChange = useCallback((value: NotificationFilterOptions["sortBy"]) => {
-    setFilters((prev) => ({ ...prev, sortBy: value }));
-  }, []);
+  const handleSearchChange = useCallback(
+    (value: string) => updateFilter("searchQuery", value),
+    [updateFilter]
+  );
+  const handleCategoryChange = useCallback(
+    (value: NotificationFilterOptions["category"]) => updateFilter("category", value),
+    [updateFilter]
+  );
+  const handleSortChange = useCallback(
+    (value: NotificationFilterOptions["sortBy"]) => updateFilter("sortBy", value),
+    [updateFilter]
+  );
 
   return {
     notifications,
-    unreadCount,
-    loading,
+    // Suy từ danh sách, không còn là state riêng — xem ghi chú đầu file.
+    unreadCount: stats.unread,
+    loading: isLoading,
     filters,
     stats,
     filteredNotifications,
     groupedNotifications,
-    fetchNotifications,
+    fetchNotifications: refetch,
     markAsRead,
     markAllAsRead,
     handleSearchChange,

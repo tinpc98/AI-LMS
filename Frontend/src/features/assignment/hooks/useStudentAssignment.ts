@@ -1,41 +1,40 @@
-import { useState, useEffect, useCallback } from "react";
+// Chi tiết một bài tập + bài nộp của chính học sinh.
+//
+// CHUYỂN SANG REACT QUERY (Wave 5, nhóm A). Gọi hai API song song; getMySubmission trả 404
+// khi chưa nộp, đó là câu trả lời hợp lệ chứ không phải lỗi nên vẫn nuốt riêng nhánh đó.
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import assignmentApi from "../../../api/assignmentApi";
-import type { IAssignment, ISubmission } from "../../../interface/assignmentInterface";
 import { toast } from "../../../utils/toast";
 
+const FALLBACK_ERROR = "Không thể tải thông tin bài tập!";
+
 export function useStudentAssignment(assignmentId: string | undefined) {
-  const [assignment, setAssignment] = useState<IAssignment | null>(null);
-  const [mySubmission, setMySubmission] = useState<ISubmission | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
-  const fetchAssignmentDetail = useCallback(async () => {
-    if (!assignmentId) return;
-    setLoading(true);
-    setError(null);
-    try {
-      const [assignmentData, submissionData] = await Promise.all([
-        assignmentApi.getAssignmentById(assignmentId),
-        assignmentApi.getMySubmission(assignmentId).catch(() => null),
+  const {
+    data,
+    isLoading,
+    error,
+    refetch: fetchAssignmentDetail,
+  } = useQuery({
+    queryKey: ["assignment-detail", assignmentId],
+    queryFn: async () => {
+      const [assignment, mySubmission] = await Promise.all([
+        assignmentApi.getAssignmentById(assignmentId!),
+        assignmentApi.getMySubmission(assignmentId!).catch(() => null),
       ]);
-      setAssignment(assignmentData);
-      setMySubmission(submissionData);
-    } catch (err: any) {
-      console.error("[useStudentAssignment] Fetch error:", err);
-      setError(err.response?.data?.message || "Không thể tải thông tin bài tập!");
-    } finally {
-      setLoading(false);
-    }
-  }, [assignmentId]);
+      return { assignment, mySubmission };
+    },
+    // Bản cũ dùng `if (!assignmentId) return` giữa chừng effect nên phải thêm nhánh else chỉ
+    // để tắt cờ loading. enabled diễn đạt thẳng ý đó.
+    enabled: !!assignmentId,
+  });
 
-  useEffect(() => {
-    if (assignmentId) {
-      fetchAssignmentDetail();
-    } else {
-      setLoading(false);
-    }
-  }, [assignmentId, fetchAssignmentDetail]);
+  const assignment = data?.assignment ?? null;
+  const mySubmission = data?.mySubmission ?? null;
+  const serverMessage = (error as { response?: { data?: { message?: string } } })?.response?.data
+    ?.message;
 
   const submitAssignment = async (formData: FormData) => {
     if (!assignmentId) {
@@ -77,8 +76,8 @@ export function useStudentAssignment(assignmentId: string | undefined) {
   return {
     assignment,
     mySubmission,
-    loading,
-    error,
+    loading: isLoading,
+    error: error ? serverMessage || FALLBACK_ERROR : null,
     isSubmitting,
     fetchAssignmentDetail,
     submitAssignment,

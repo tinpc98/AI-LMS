@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useMemo } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Modal,
   Table,
@@ -21,6 +22,7 @@ import {
 } from "@ant-design/icons";
 import dayjs from "dayjs";
 import { attendanceApi } from "../../../../api/attendanceApi";
+import { buildAttendanceRoster } from "../../../attendance/attendanceRoster";
 import { toast } from "../../../../utils/toast";
 import type {
   AttendanceStatus,
@@ -45,18 +47,17 @@ export const AttendancePopup: React.FC<AttendancePopupProps> = ({
   students,
   onSaved,
 }) => {
-  const [records, setRecords] = useState<IStudentAttendanceRecord[]>([]);
-  const [loading, setLoading] = useState<boolean>(false);
+  const queryClient = useQueryClient();
   const [saving, setSaving] = useState<boolean>(false);
-  const [currentTime, setCurrentTime] = useState<dayjs.Dayjs>(dayjs());
+  const [currentTime, setCurrentTime] = useState<dayjs.Dayjs>(() => dayjs());
 
-  // Auto update current time every second for popup countdown
+  // Đồng hồ cho phần đếm ngược. Effect ở đây ĐÚNG mục đích — nó đăng ký với một hệ thống bên
+  // ngoài — nhưng bản cũ còn gọi thêm setCurrentTime(dayjs()) ngay trong thân effect để làm
+  // mới giờ lúc mở lại. Việc đó tách ra dưới đây theo mẫu "adjust state during render", nên
+  // effect chỉ còn làm mỗi việc bật/tắt bộ đếm.
   useEffect(() => {
-    let timer: any;
-    if (open) {
-      setCurrentTime(dayjs());
-      timer = setInterval(() => setCurrentTime(dayjs()), 1000);
-    }
+    if (!open) return;
+    const timer = setInterval(() => setCurrentTime(dayjs()), 1000);
     return () => clearInterval(timer);
   }, [open]);
 
@@ -84,58 +85,59 @@ export const AttendancePopup: React.FC<AttendancePopupProps> = ({
     return `${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
   }, [session, currentTime, isClosed, isUpcoming]);
 
-  const fetchAttendance = useCallback(async () => {
-    if (!session || !open) return;
-    setLoading(true);
-    try {
-      const attendRes = await attendanceApi.getAttendanceByClass(session.classId, session.date);
-      const existingRecords = attendRes.data.data || [];
+  // Dữ liệu điểm danh đã lưu của buổi này. React Query thay cho useState + useEffect.
+  const { data: existingRecords = [], isLoading: loading } = useQuery({
+    queryKey: ["attendance-by-class", session?.classId, session?.date],
+    queryFn: async () => {
+      const res = await attendanceApi.getAttendanceByClass(session!.classId, session!.date);
+      return res.data.data || [];
+    },
+    enabled: open && !!session,
+  });
 
-      const merged: IStudentAttendanceRecord[] = students.map((st: any) => {
-        const studentObj = typeof st.studentId === "object" ? st.studentId : null;
-        const sId = (studentObj?._id || st._id || st.studentId).toString();
+  // TÁCH "DỮ LIỆU MÁY CHỦ" KHỎI "SỬA ĐỔI CHƯA LƯU CỦA GIÁO VIÊN".
+  //
+  // Bản cũ nhét cả hai vào một ô state records: nạp xong thì ghi đè, giáo viên sửa thì ghi
+  // tiếp lên đó. Hệ quả là mọi lần nạp lại đều XOÁ SẠCH những gì giáo viên vừa nhập mà không
+  // báo gì. Giờ danh sách gốc suy từ cache, còn sửa đổi nằm riêng và phủ lên trên.
+  const roster = useMemo(
+    () => buildAttendanceRoster(students, existingRecords),
+    [students, existingRecords]
+  );
+  const [edits, setEdits] = useState<Record<string, Partial<IStudentAttendanceRecord>>>({});
 
-        const foundRecord = existingRecords.find((rec: any) => {
-          const recStudentId = (
-            typeof rec.studentId === "object" ? rec.studentId?._id : rec.studentId || ""
-          ).toString();
-          return recStudentId === sId;
-        });
+  // Mở lại popup thì bỏ các sửa đổi dở dang của lần trước.
+  const [prevOpen, setPrevOpen] = useState(open);
+  if (prevOpen !== open) {
+    setPrevOpen(open);
+    if (open) setEdits({});
+  }
 
-        return {
-          studentId: sId,
-          fullName: studentObj?.fullName || st.fullName || "Học sinh",
-          email: studentObj?.email || st.email || "",
-          avatar: studentObj?.avatar || st.avatar,
-          status: (foundRecord?.status as AttendanceStatus) || "Present", // Default "Present" for new
-          note: foundRecord?.note || "",
-        };
-      });
-      setRecords(merged);
-    } catch (error) {
-      toast.error("Không thể lấy dữ liệu điểm danh!");
-    } finally {
-      setLoading(false);
-    }
-  }, [session, students, open]);
+  const records = useMemo(
+    () => roster.map((r) => ({ ...r, ...edits[r.studentId] })),
+    [roster, edits]
+  );
 
-  useEffect(() => {
-    if (open) fetchAttendance();
-  }, [open, fetchAttendance]);
+  const applyEdit = (studentId: string, patch: Partial<IStudentAttendanceRecord>) =>
+    setEdits((prev) => ({ ...prev, [studentId]: { ...prev[studentId], ...patch } }));
 
   const handleChangeStatus = (studentId: string, status: AttendanceStatus) => {
     if (isClosed || isUpcoming) return;
-    setRecords((prev) => prev.map((r) => (r.studentId === studentId ? { ...r, status } : r)));
+    applyEdit(studentId, { status });
   };
 
   const handleChangeNote = (studentId: string, note: string) => {
     if (isClosed || isUpcoming) return;
-    setRecords((prev) => prev.map((r) => (r.studentId === studentId ? { ...r, note } : r)));
+    applyEdit(studentId, { note });
   };
 
   const handleMarkAll = (status: AttendanceStatus) => {
     if (isClosed || isUpcoming) return;
-    setRecords((prev) => prev.map((r) => ({ ...r, status })));
+    setEdits((prev) => {
+      const next = { ...prev };
+      for (const r of roster) next[r.studentId] = { ...next[r.studentId], status };
+      return next;
+    });
   };
 
   const handleSave = async () => {
@@ -153,6 +155,10 @@ export const AttendancePopup: React.FC<AttendancePopupProps> = ({
       };
 
       await attendanceApi.markAttendance(payload);
+      // Bỏ hiệu lực cache: lần mở popup sau phải đọc lại từ máy chủ, không dùng bản đã cũ.
+      await queryClient.invalidateQueries({
+        queryKey: ["attendance-by-class", session.classId, session.date],
+      });
       toast.success("Lưu điểm danh thành công!");
       onSaved();
       onClose();

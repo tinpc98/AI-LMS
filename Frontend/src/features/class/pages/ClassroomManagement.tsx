@@ -1,4 +1,5 @@
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
 import {
   Card,
   Input,
@@ -27,10 +28,6 @@ import { TeacherClassListTable } from "../components/classroom/TeacherClassListT
 const { Text } = Typography;
 
 export default function ClassroomManagement() {
-  const [classes, setClasses] = useState<any[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
-
   // View Mode: 'grid' | 'table'
   const [viewMode, setViewMode] = useState<"grid" | "table">("grid");
 
@@ -43,24 +40,25 @@ export default function ClassroomManagement() {
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 6;
 
-  const fetchClasses = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
+  // React Query thay cho cụm useState + useEffect (Wave 5, nhóm A).
+  const {
+    data: classes = [],
+    isLoading: loading,
+    error: queryError,
+    refetch: fetchClasses,
+  } = useQuery({
+    queryKey: ["teacher-classrooms"],
+    queryFn: async () => {
       const res = await classApi.getMyClasses();
+      // API trả về ba hình dạng tuỳ đường đi — nợ của tầng API, giữ nguyên cách gỡ vỏ cũ.
       const raw = res.data?.data || res.data?.classList || res.data || [];
-      setClasses(Array.isArray(raw) ? raw : []);
-    } catch (err: any) {
-      console.error("[ClassroomManagement] Fetch error:", err);
-      setError(err.message || "Không thể tải danh sách lớp học. Vui lòng thử lại!");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+      return Array.isArray(raw) ? raw : [];
+    },
+  });
 
-  useEffect(() => {
-    fetchClasses();
-  }, [fetchClasses]);
+  const error = queryError
+    ? (queryError as Error).message || "Không thể tải danh sách lớp học. Vui lòng thử lại!"
+    : null;
 
   // Aggregate Stats
   const stats = useMemo(() => {
@@ -146,7 +144,9 @@ export default function ClassroomManagement() {
               type="primary"
               danger
               icon={<ReloadOutlined />}
-              onClick={fetchClasses}
+              // Bọc trong arrow: refetch của React Query nhận một object tuỳ chọn, truyền
+              // thẳng vào onClick sẽ đẩy MouseEvent vào chỗ đó.
+              onClick={() => fetchClasses()}
             >
               Thử lại
             </Button>

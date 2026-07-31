@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useParams } from "react-router-dom";
 import { Spin } from "antd";
 import aiApi from "../../../api/aiApi";
@@ -8,8 +9,6 @@ import { toast } from "../../../utils/toast";
 const LessonPage = () => {
   const { lessonId } = useParams<{ lessonId: string }>();
   const [isToastVisible, setIsToastVisible] = useState(false);
-  const [summary, setSummary] = useState<string | null>(null);
-  const [isLoadingSummary, setIsLoadingSummary] = useState(false);
   const [inputText, setInputText] = useState("");
 
   const {
@@ -43,39 +42,46 @@ const LessonPage = () => {
     return () => clearTimeout(timer);
   }, []);
 
-  const handleGenerateSummary = async () => {
-    if (!lessonId) return;
-    setIsLoadingSummary(true);
-    try {
-      const data = await aiApi.generateLessonSummary(lessonId);
-      setSummary(data.content || data.summary || "Đã tạo tóm tắt nhưng không có nội dung.");
-      toast.success("Đã tạo tóm tắt bài học bằng AI!");
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || "Không thể tạo tóm tắt bài học");
-    } finally {
-      setIsLoadingSummary(false);
-    }
-  };
+  // Tóm tắt bài học do AI sinh ra (Wave 5, nhóm A).
+  //
+  // Bản cũ gọi API trong useEffect và dùng CHUNG một cờ isLoadingSummary cho cả hai việc
+  // "đang tải tóm tắt có sẵn" và "đang nhờ AI tạo tóm tắt mới". Hai việc này khác hẳn nhau
+  // về thời gian chờ — tải thì tức thì, tạo mới thì hàng chục giây — nên gộp cờ khiến nút
+  // "Tạo tóm tắt" bị khoá ngay lúc mới vào trang dù chưa ai bấm gì.
+  const queryClient = useQueryClient();
+  const summaryQueryKey = ["lesson-summary", lessonId];
 
-  const handleFetchSummary = async () => {
-    if (!lessonId) return;
-    setIsLoadingSummary(true);
-    try {
-      const data = await aiApi.getLessonSummary(lessonId);
-      setSummary(data.content || data.summary || null);
-    } catch (err: any) {
-      // 404 is fine, means no summary exists yet
-      if (err.response?.status !== 404) {
-        console.error("Lỗi khi tải tóm tắt:", err);
+  const { data: summary = null, isLoading: isFetchingSummary } = useQuery({
+    queryKey: summaryQueryKey,
+    queryFn: async () => {
+      try {
+        const data = await aiApi.getLessonSummary(lessonId!);
+        return data.content || data.summary || null;
+      } catch (err: any) {
+        // 404 nghĩa là bài học chưa có tóm tắt — đó là câu trả lời hợp lệ, không phải lỗi.
+        if (err.response?.status === 404) return null;
+        throw err;
       }
-    } finally {
-      setIsLoadingSummary(false);
-    }
-  };
+    },
+    enabled: !!lessonId,
+  });
 
-  useEffect(() => {
-    handleFetchSummary();
-  }, [lessonId]);
+  const generateSummary = useMutation({
+    mutationFn: () => aiApi.generateLessonSummary(lessonId!),
+    onSuccess: (data) => {
+      queryClient.setQueryData(
+        summaryQueryKey,
+        data.content || data.summary || "Đã tạo tóm tắt nhưng không có nội dung."
+      );
+      toast.success("Đã tạo tóm tắt bài học bằng AI!");
+    },
+    onError: (err: any) => {
+      toast.error(err.response?.data?.message || "Không thể tạo tóm tắt bài học");
+    },
+  });
+
+  const handleGenerateSummary = () => generateSummary.mutate();
+  const isLoadingSummary = isFetchingSummary || generateSummary.isPending;
 
   const handleSendChat = () => {
     if (inputText.trim()) {
