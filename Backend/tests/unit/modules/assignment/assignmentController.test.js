@@ -601,3 +601,60 @@ describe("assignment.controller — chuyển lỗi sang errorHandler", () => {
     expect(next).not.toHaveBeenCalled();
   });
 });
+
+// ============================================================================
+// Chính sách 2A: CHẶN CỨNG bài nộp quá hạn.
+//
+// Bản cũ chỉ chặn NỘP LẠI sau hạn — nộp lần đầu sau hạn vẫn được nhận và đánh dấu "late".
+// Nghĩa là hạn nộp không có hiệu lực với ai chưa từng nộp. Các test dưới đây chốt hành vi mới,
+// và nhóm test cũ ở trên vẫn xanh vì luật mới CHẶT HƠN luật cũ chứ không mâu thuẫn.
+// ============================================================================
+describe("submitAssignment — chặn cứng quá hạn (chính sách 2A)", () => {
+  const baiTap = (deadline) => mongooseQuery({ isDeleted: false, deadline, classId: CLASS_ID });
+
+  const reqNop = () =>
+    makeReq({
+      params: { assignmentId: "607f1f77bcf86cd799439333" },
+      user: { id: STUDENT_ID, role: "Student" },
+      body: { content: "bài làm" },
+    });
+
+  it("NỘP LẦN ĐẦU sau hạn bị TỪ CHỐI", async () => {
+    // Đây là hành vi MỚI. Trước đây trường hợp này được nhận và ghi status "late".
+    vi.spyOn(mongoose, "startSession").mockResolvedValue(mockSession());
+    vi.spyOn(Assignment, "findById").mockReturnValue(baiTap(new Date(Date.now() - 100000)));
+    vi.spyOn(Submission, "findOne").mockReturnValue(mongooseQuery(null)); // chưa từng nộp
+
+    await expectErrorStatus(assignmentController.submitAssignment, reqNop(), makeRes(), 400);
+  });
+
+  it("thông báo nói rõ lý do là quá hạn, không phải lỗi chung chung", async () => {
+    // Học sinh cần hiểu vì sao bị từ chối để không thử lại vô ích.
+    vi.spyOn(mongoose, "startSession").mockResolvedValue(mockSession());
+    vi.spyOn(Assignment, "findById").mockReturnValue(baiTap(new Date(Date.now() - 100000)));
+    vi.spyOn(Submission, "findOne").mockReturnValue(mongooseQuery(null));
+
+    const error = await expectErrorStatus(
+      assignmentController.submitAssignment,
+      reqNop(),
+      makeRes(),
+      400
+    );
+    expect(error.message).toMatch(/quá hạn/i);
+  });
+
+  it("nộp TRƯỚC hạn vẫn bình thường", async () => {
+    // Chốt rằng luật mới không chặn nhầm bài nộp đúng hạn.
+    vi.spyOn(mongoose, "startSession").mockResolvedValue(mockSession());
+    vi.spyOn(Assignment, "findById").mockReturnValue(baiTap(new Date(Date.now() + 100000)));
+    vi.spyOn(Submission, "findOne").mockReturnValue(mongooseQuery(null));
+    vi.spyOn(Submission.prototype, "save").mockResolvedValue(true);
+
+    const res = makeRes();
+    const next = vi.fn();
+    await assignmentController.submitAssignment(reqNop(), res, next);
+
+    expect(next).not.toHaveBeenCalled();
+    expect(res.status).toHaveBeenCalledWith(201);
+  });
+});

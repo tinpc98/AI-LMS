@@ -295,13 +295,32 @@ export const submitAssignmentService = async ({ assignmentId, content, files, st
       throwError("Bài nộp đã được Giáo viên chấm điểm. Bạn không thể nộp lại bài nữa!", 409);
     }
 
-    if (submission && submission.status !== "withdrawn" && isLate) {
-      throwError("Bài tập đã quá hạn deadline. Bạn không thể chỉnh sửa hoặc nộp lại bài!", 400);
+    // CHẶN CỨNG BÀI NỘP QUÁ HẠN (chính sách 2A).
+    //
+    // Bản cũ chỉ chặn NỘP LẠI sau hạn; nộp LẦN ĐẦU sau hạn vẫn được chấp nhận và đánh dấu
+    // status "late". Nghĩa là hạn nộp trên thực tế không có hiệu lực với ai chưa từng nộp —
+    // càng nộp muộn càng không bị gì.
+    //
+    // Nay quá hạn là từ chối, không tạo được bài nộp. Đơn giản và rõ ràng, đổi lại là giáo
+    // viên không châm chước được từng trường hợp — đó là đánh đổi đã cân nhắc khi chọn 2A.
+    //
+    // KHÔNG có ân hạn, khác với phòng thi (nơi có 2 phút bù độ trễ mạng). Hạn nộp bài tập
+    // thường tính theo ngày nên vài giây lệch đồng hồ ít khi thành vấn đề — nhưng học sinh
+    // bấm nộp sát giây cuối với tệp lớn thì VẪN có thể bị từ chối. Nếu thực tế phát sinh
+    // khiếu nại, chỗ cần sửa là đây.
+    if (isLate) {
+      throwError(
+        "Bài tập đã quá hạn nộp. Hệ thống không nhận bài sau thời hạn giáo viên đặt ra.",
+        400
+      );
     }
 
     newAttachments = await uploadFiles(files);
 
-    const status = isLate ? "late" : submission ? "resubmitted" : "submitted";
+    // "late" không còn được tạo mới nữa, nhưng GIỮ trong enum của model: các bài nộp muộn từ
+    // trước vẫn mang giá trị này, và classProgress.repository đang đếm chúng là bài đã nộp.
+    // Xoá khỏi enum sẽ làm hỏng những bản ghi cũ.
+    const status = submission ? "resubmitted" : "submitted";
 
     if (submission) {
       const oldAttachments = submission.attachments;

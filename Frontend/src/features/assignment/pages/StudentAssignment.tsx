@@ -334,9 +334,12 @@ const StudentAssignmentContent = () => {
           <h3 className="font-headline-md text-headline-md text-on-surface mb-2">
             Bạn có chắc muốn nộp bài?
           </h3>
+          {/* Dòng chữ cũ hứa rằng nộp muộn "sẽ bị đánh dấu Nộp muộn" — điều đó KHÔNG còn đúng
+              từ khi áp chính sách chặn cứng: quá hạn là hệ thống từ chối, không tạo bài nộp.
+              Hứa sai với học sinh về một quy định chấm điểm là điều không được để lại. */}
           <p className="text-on-surface-variant mb-8 leading-relaxed text-body-md">
-            Sau khi nộp, hệ thống sẽ ghi nhận thời gian nộp bài của bạn. Nếu nộp muộn sau deadline,
-            bài nộp sẽ bị đánh dấu "Nộp muộn".
+            Sau khi nộp, hệ thống sẽ ghi nhận thời gian nộp bài của bạn. Lưu ý: hệ thống KHÔNG nhận
+            bài sau hạn nộp, nên hãy nộp trước thời hạn.
           </p>
           <div className="flex gap-4">
             <button
