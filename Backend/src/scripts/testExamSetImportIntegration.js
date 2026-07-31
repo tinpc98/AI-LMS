@@ -5,9 +5,9 @@ import crypto from "crypto";
 import dotenv from "dotenv";
 
 import { User } from "#modules/auth";
-import Folder from "../models/folder.model.js";
+import { Folder } from "#modules/folder";
 import ExamSet from "../models/examSet.model.js";
-import Question from "../models/question.model.js";
+import { Question } from "#modules/question";
 import { importExcelToExamSet } from "../services/examSetImport.service.js";
 
 dotenv.config();

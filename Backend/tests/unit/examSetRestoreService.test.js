@@ -1,7 +1,7 @@
 // Port từ src/scripts/runExamSetRestoreServiceTests.js (characterization test).
 import { describe, it, expect, afterEach, vi } from "vitest";
 import ExamSet from "../../src/models/examSet.model.js";
-import Folder from "../../src/models/folder.model.js";
+import { Folder } from "#modules/folder";
 import { restoreExamSetVersionService } from "../../src/services/examSet.service.js";
 
 const createExamSet = (props = {}) => {

@@ -1,4 +1,4 @@
-import Question from "../../models/question.model.js";
+import { Question } from "#modules/question";
 import Exam from "./exam.model.js";
 
 // Hàm helper ẩn (Private function) để chia điểm an toàn

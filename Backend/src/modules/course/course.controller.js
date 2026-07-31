@@ -1,4 +1,4 @@
-import courseService from "../services/course.service.js";
+import courseService from "./course.service.js";
 import { sendSuccess, sendError } from "#shared/utils/response.js";
 
 export const createCourse = async (req, res) => {

@@ -1,6 +1,6 @@
 // File: src/validators/question.validator.js
 import { body } from "express-validator";
-import { handleValidationErrors } from "../utils/validators.js";
+import { handleValidationErrors } from "../../utils/validators.js";
 
 // Whitelist các trường được phép sửa qua PUT /questions/:id.
 // Cố tình KHÔNG khai báo createdBy — tránh giáo viên khác chiếm quyền tác giả câu hỏi.

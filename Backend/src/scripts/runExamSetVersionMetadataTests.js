@@ -1,6 +1,6 @@
 import assert from "assert";
 import ExamSet from "../models/examSet.model.js";
-import Folder from "../models/folder.model.js";
+import { Folder } from "#modules/folder";
 import { createExamSetService, duplicateExamSetService } from "../services/examSet.service.js";
 
 const createExamSetDoc = (props = {}) => {

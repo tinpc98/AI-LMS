@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import { User } from "#modules/auth";
 import { Class as classModel } from "#modules/class";
-import Notification from "../models/notification.model.js";
+import Notification from "./notification.model.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // CONSTANTS

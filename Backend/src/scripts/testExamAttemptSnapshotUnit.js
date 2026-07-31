@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import { ExamAttempt } from "#modules/exam-attempt";
 import { Exam } from "#modules/exam";
-import Question from "../models/question.model.js";
+import { Question } from "#modules/question";
 import examAttemptService from "../modules/exam-attempt/examAttempt.service.js";
 
 const runTests = async () => {

@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import { User } from "#modules/auth";
 import { Class as classModel } from "#modules/class";
-import Course from "../models/course.model.js";
+import { Course } from "#modules/course";
 
 /**
  * Chuyển đổi readyState của Mongoose sang chuỗi có ý nghĩa.

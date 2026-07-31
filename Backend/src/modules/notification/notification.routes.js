@@ -5,7 +5,7 @@ import {
   getUnreadCount,
   markAsRead,
   markAllAsRead,
-} from "../controllers/notification.controller.js";
+} from "./notification.controller.js";
 import { verifyUser } from "#modules/auth";
 import { isAdmin } from "#shared/middlewares/rbac.middleware.js";
 

@@ -2,7 +2,7 @@ import crypto from "crypto";
 import mongoose from "mongoose";
 import { matchedData } from "express-validator";
 import classModel from "./class.model.js";
-import Course from "../../models/course.model.js";
+import { Course } from "#modules/course";
 import { User } from "#modules/auth";
 import classService from "./class.service.js";
 import { attachStudentProgress } from "./classProgress.service.js";

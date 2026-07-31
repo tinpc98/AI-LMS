@@ -1,6 +1,6 @@
 import { matchedData } from "express-validator";
-import questionService from "../services/question.service.js";
-import Question from "../models/question.model.js";
+import questionService from "./question.service.js";
+import Question from "./question.model.js";
 
 // upload file excel bộ câu hỏi lên db
 export const uploadExcelQuestions = async (req, res) => {

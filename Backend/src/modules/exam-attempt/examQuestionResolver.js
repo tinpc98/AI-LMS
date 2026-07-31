@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import Question from "../../models/question.model.js";
+import { Question } from "#modules/question";
 
 /**
  * Lấy danh sách câu hỏi đã được chuẩn hóa (kết hợp cả legacy db và snapshot uuid).

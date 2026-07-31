@@ -8,7 +8,7 @@ import {
   getCourseTrash,
   restoreCourse,
   permanentDeleteCourse,
-} from "../controllers/course.controller.js";
+} from "./course.controller.js";
 import { verifyUser } from "#modules/auth";
 import { isAdmin } from "#shared/middlewares/rbac.middleware.js";
 

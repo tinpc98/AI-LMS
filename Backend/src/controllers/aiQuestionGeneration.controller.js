@@ -1,5 +1,5 @@
 import aiQuestionGenerationService from "../ai/services/aiQuestionGeneration.service.js";
-import Folder from "../models/folder.model.js";
+import { Folder } from "#modules/folder";
 import { AIError, AIErrorCode } from "../utils/aiError.js";
 import { validationResult } from "express-validator";
 import { AIInputBudget } from "../ai/utils/aiInputBudget.js";

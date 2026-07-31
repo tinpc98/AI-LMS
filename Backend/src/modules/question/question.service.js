@@ -1,5 +1,5 @@
 import xlsx from "xlsx";
-import Question from "../models/question.model.js";
+import Question from "./question.model.js";
 
 const importQuestionsFromExcel = async (fileBuffer) => {
   // 1. Đọc dữ liệu từ buffer

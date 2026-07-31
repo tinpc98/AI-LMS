@@ -5,7 +5,7 @@ import {
   getAnnouncementById,
   updateAnnouncement,
   deleteAnnouncement,
-} from "../controllers/announcement.controller.js";
+} from "./announcement.controller.js";
 import { verifyUser } from "#modules/auth";
 import { isTeacher } from "#shared/middlewares/rbac.middleware.js";
 

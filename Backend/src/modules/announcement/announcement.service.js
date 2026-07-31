@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import Announcement from "../models/announcement.model.js";
+import Announcement from "./announcement.model.js";
 import { Class as classModel } from "#modules/class";
 
 class AnnouncementService {

@@ -1,5 +1,5 @@
 // File: src/services/folder.service.js
-import Folder from "../models/folder.model.js";
+import Folder from "./folder.model.js";
 
 /**
  * Create new folder

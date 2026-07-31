@@ -7,7 +7,7 @@ import {
   updateFolder,
   deleteFolder,
   getFolderTree,
-} from "../controllers/folder.controller.js";
+} from "./folder.controller.js";
 import { verifyUser } from "#modules/auth";
 
 const router = express.Router();

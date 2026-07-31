@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import ExamAttempt from "./examAttempt.model.js";
 import { Exam } from "#modules/exam";
-import Question from "../../models/question.model.js";
+import { Question } from "#modules/question";
 import { compareAnswers } from "./answerScoring.js";
 import { checkClassTeacherOwnership } from "#modules/class";
 

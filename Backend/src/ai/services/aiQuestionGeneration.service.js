@@ -2,7 +2,7 @@ import crypto from "crypto";
 import mongoose from "mongoose";
 import ExamSet from "../../models/examSet.model.js";
 import AISummary from "../../models/aiSummary.model.js";
-import Folder from "../../models/folder.model.js";
+import { Folder } from "#modules/folder";
 import lessonContentExtractor from "./lessonContentExtractor.service.js";
 import aiCoreService from "./aiCore.service.js";
 import { validateQuestionGenerationOutput } from "../validators/questionGenerationOutput.validator.js";

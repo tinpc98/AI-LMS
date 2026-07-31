@@ -4,7 +4,7 @@ import mongoose from "mongoose";
 import { validateQuestionGenerationOutput } from "../ai/validators/questionGenerationOutput.validator.js";
 import aiQuestionGenerationService from "../ai/services/aiQuestionGeneration.service.js";
 import aiCoreService from "../ai/services/aiCore.service.js";
-import Folder from "../models/folder.model.js";
+import { Folder } from "#modules/folder";
 import ExamSet from "../models/examSet.model.js";
 import AISummary from "../models/aiSummary.model.js";
 import lessonContentExtractor from "../ai/services/lessonContentExtractor.service.js";

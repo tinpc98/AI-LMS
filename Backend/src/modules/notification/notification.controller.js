@@ -1,4 +1,4 @@
-import notificationService from "../services/notification.service.js";
+import notificationService from "./notification.service.js";
 import { sendSuccess, sendError } from "#shared/utils/response.js";
 
 /**

@@ -7,10 +7,10 @@ import {
   createQuestion,
   updateQuestion,
   deleteQuestion,
-} from "../controllers/question.controller.js";
+} from "./question.controller.js";
 import { verifyUser } from "#modules/auth";
 import { isTeacher } from "#shared/middlewares/rbac.middleware.js";
-import { updateQuestionValidation } from "../validators/question.validator.js";
+import { updateQuestionValidation } from "./question.validator.js";
 
 const router = express.Router();
 

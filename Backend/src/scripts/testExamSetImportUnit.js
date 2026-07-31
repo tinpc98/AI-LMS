@@ -2,7 +2,7 @@ import assert from "assert";
 import * as xlsx from "xlsx";
 import { importExcelToExamSet } from "../services/examSetImport.service.js";
 import { createImportExcelExamSetHandler } from "../controllers/examSet.controller.js";
-import Folder from "../models/folder.model.js";
+import { Folder } from "#modules/folder";
 import ExamSet from "../models/examSet.model.js";
 import mongoose from "mongoose";
 

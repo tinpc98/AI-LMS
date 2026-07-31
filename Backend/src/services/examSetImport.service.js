@@ -1,6 +1,6 @@
 import crypto from "crypto";
 import * as xlsx from "xlsx";
-import Folder from "../models/folder.model.js";
+import { Folder } from "#modules/folder";
 import ExamSet from "../models/examSet.model.js";
 import { recalculateExamSetMetrics } from "./examSet.metrics.js";
 

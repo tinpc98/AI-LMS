@@ -9,7 +9,7 @@ import { Class } from "#modules/class";
 import { Lesson } from "#modules/lesson";
 import { Assignment } from "#modules/assignment";
 import { Submission } from "#modules/assignment";
-import Question from "./models/question.model.js";
+import { Question } from "#modules/question";
 import { Exam } from "#modules/exam";
 import { ExamAttempt } from "#modules/exam-attempt";
 

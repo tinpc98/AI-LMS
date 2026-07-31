@@ -25,22 +25,21 @@ import attendanceRoutes from "#modules/attendance/attendance.routes.js";
 import gradeRoutes from "#modules/grade/grade.routes.js";
 import examRoutes from "#modules/exam/exam.routes.js";
 import examAttemptRoutes from "#modules/exam-attempt/examAttempt.routes.js";
-
-import QuestionRouter from "./question.routes.js";
+import questionRoutes from "#modules/question/question.routes.js";
+import announcementRoutes from "#modules/announcement/announcement.routes.js";
+import courseRoutes from "#modules/course/course.routes.js";
+import folderRoutes from "#modules/folder/folder.routes.js";
+import notificationRoutes from "#modules/notification/notification.routes.js";
 
 import ExamSetRouter from "./examSet.routes.js";
 import LiveRouter from "./live.routes.js";
 
-import AnnouncementRouter from "./announcement.routes.js";
-import CourseRouter from "./course.routes.js";
 import DashboardRouter from "./dashboard.routes.js";
 import ReportRouter from "./report.routes.js";
-import NotificationRouter from "./notification.routes.js";
 import LearningRouter from "./learning.routes.js";
 import AnalyticsRouter from "./analytics.routes.js";
-import FolderRouter from "./folder.routes.js";
 import AISummaryRouter from "./aiSummary.routes.js";
-import AIQuestionRouter from "./aiQuestion.routes.js";
+import AIquestionRoutes from "./aiQuestion.routes.js";
 import AIGradingRouter from "./aiGrading.routes.js";
 import AIKnowledgeRouter from "./aiKnowledge.routes.js";
 import AIChatRouter from "./aiChat.routes.js";
@@ -55,14 +54,14 @@ router.use("/users", userRoutes);
 
 // ── Lớp học & nội dung giảng dạy ────────────────────────────────────────────
 router.use("/classes", classRoutes);
-router.use("/courses", CourseRouter);
+router.use("/courses", courseRoutes);
 router.use("/lessons", lessonRoutes);
 router.use("/assignments", assignmentRoutes);
 router.use("/attendances", attendanceRoutes);
 router.use("/grades", gradeRoutes);
-router.use("/announcements", AnnouncementRouter);
-router.use("/notifications", NotificationRouter);
-router.use("/folders", FolderRouter);
+router.use("/announcements", announcementRoutes);
+router.use("/notifications", notificationRoutes);
+router.use("/folders", folderRoutes);
 
 // ── Thống kê & báo cáo ───────────────────────────────────────────────────────
 router.use("/dashboard", DashboardRouter);
@@ -71,7 +70,7 @@ router.use("/learning", LearningRouter);
 router.use("/analytics", AnalyticsRouter);
 
 // ── Thi trực tuyến & lớp học trực tuyến ─────────────────────────────────────
-router.use("/questions", QuestionRouter);
+router.use("/questions", questionRoutes);
 router.use("/exams", examRoutes);
 router.use("/exam-attempts", examAttemptRoutes);
 router.use("/exam-sets", ExamSetRouter);
@@ -79,7 +78,7 @@ router.use("/live", LiveRouter);
 
 // ── AI ───────────────────────────────────────────────────────────────────────
 router.use("/ai/lectures", AISummaryRouter);
-router.use("/ai/lectures/:lessonId/question-sets", AIQuestionRouter);
+router.use("/ai/lectures/:lessonId/question-sets", AIquestionRoutes);
 router.use("/ai/exam-attempts", AIGradingRouter);
 router.use("/ai/lessons", AIKnowledgeRouter);
 router.use("/ai/chat", AIChatRouter);
