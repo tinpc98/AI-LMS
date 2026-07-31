@@ -9,5 +9,3 @@
 
 export { default as User } from "./user.model.js";
 export { verifyUser } from "./auth.middleware.js";
-export { default as authRoutes } from "./auth.routes.js";
-export { default as userRoutes } from "./user.routes.js";

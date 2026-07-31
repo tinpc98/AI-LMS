@@ -172,7 +172,7 @@ async function runUnitTests() {
     const aiSummaryService = (await import("../ai/services/aiSummary.service.js")).default;
     const mongoose = (await import("mongoose")).default;
     const AISummary = (await import("../models/aiSummary.model.js")).default;
-    const Lesson = (await import("../models/lesson.model.js")).default;
+    const Lesson = (await import("#modules/lesson")).Lesson;
 
     // Mock mongoose startSession
     const originalStartSession = mongoose.startSession;
@@ -227,7 +227,7 @@ async function runUnitTests() {
     const aiSummaryService = (await import("../ai/services/aiSummary.service.js")).default;
     const mongoose = (await import("mongoose")).default;
     const AISummary = (await import("../models/aiSummary.model.js")).default;
-    const Lesson = (await import("../models/lesson.model.js")).default;
+    const Lesson = (await import("#modules/lesson")).Lesson;
 
     // Mock mongoose startSession
     const originalStartSession = mongoose.startSession;

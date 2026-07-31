@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import Lesson from "../../models/lesson.model.js";
+import { Lesson } from "#modules/lesson";
 import AIKnowledgeSource from "../../models/aiKnowledgeSource.model.js";
 import AIKnowledgeChunk from "../../models/aiKnowledgeChunk.model.js";
 import AISummary from "../../models/aiSummary.model.js";

@@ -1,7 +1,7 @@
 import crypto from "crypto";
 import AIChatSession from "../../models/aiChatSession.model.js";
 import AIChatMessage from "../../models/aiChatMessage.model.js";
-import Lesson from "../../models/lesson.model.js";
+import { Lesson } from "#modules/lesson";
 import { Class } from "#modules/class";
 import { AIError, AIErrorCode } from "../../utils/aiError.js";
 import aiCoreService from "./aiCore.service.js";

@@ -6,7 +6,7 @@ import dotenv from "dotenv";
 // Import các Models
 import { User } from "#modules/auth";
 import { Class } from "#modules/class";
-import Lesson from "./models/lesson.model.js";
+import { Lesson } from "#modules/lesson";
 import Assignment from "./models/assignment.model.js";
 import Submission from "./models/submission.model.js";
 import Question from "./models/question.model.js";

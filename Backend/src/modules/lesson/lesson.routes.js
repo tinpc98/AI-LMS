@@ -1,5 +1,5 @@
 import express from "express";
-import lessonController from "../controllers/lesson.controller.js";
+import lessonController from "./lesson.controller.js";
 import { verifyUser } from "#modules/auth";
 import { isTeacher } from "#shared/middlewares/rbac.middleware.js"; // Nhớ thêm đuôi .js tùy theo file của bạn
 import upload from "#shared/middlewares/upload.middleware.js";

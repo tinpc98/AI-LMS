@@ -6,8 +6,8 @@
 // find/findOne/countDocuments/count — KHÔNG áp dụng cho aggregate. Mọi $match dưới đây
 // phải tự khai báo điều kiện soft-delete.
 import mongoose from "mongoose";
-import Lesson from "../../models/lesson.model.js";
-import LessonProgress from "../../models/lessonProgress.model.js";
+import { Lesson } from "#modules/lesson";
+import { LessonProgress } from "#modules/lesson";
 import Assignment from "../../models/assignment.model.js";
 import Submission from "../../models/submission.model.js";
 

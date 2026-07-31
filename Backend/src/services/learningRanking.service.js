@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 import { Class } from "#modules/class";
-import LessonProgress from "../models/lessonProgress.model.js";
+import { LessonProgress } from "#modules/lesson";
 import LearningActivity from "../models/learningActivity.model.js";
 import Attendance from "../models/attendance.model.js";
 import Grade from "../models/grade.model.js";

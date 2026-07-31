@@ -1,4 +1,4 @@
-import Lesson from "../models/lesson.model.js";
+import { Lesson } from "#modules/lesson";
 import { Class } from "#modules/class";
 import { AIError, AIErrorCode } from "../utils/aiError.js";
 

@@ -5,7 +5,6 @@
 // classProgress* — đó là nội bộ module.
 
 export { default as Class } from "./class.model.js";
-export { default as classRoutes } from "./class.routes.js";
 export { checkClassTeacherOwnership } from "./class.ownership.js";
 
 // LƯU Ý NỢ KỸ THUẬT: verifyClassTeacherAccess (classAuth.helper.js) và

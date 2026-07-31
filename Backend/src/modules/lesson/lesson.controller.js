@@ -1,5 +1,5 @@
-import Lesson from "../models/lesson.model.js";
-import cloudinary from "../config/cloudinary.js";
+import Lesson from "./lesson.model.js";
+import cloudinary from "../../config/cloudinary.js";
 import { checkClassTeacherOwnership } from "#modules/class";
 
 // Helper function: Đẩy Buffer từ RAM lên Cloudinary bằng Stream

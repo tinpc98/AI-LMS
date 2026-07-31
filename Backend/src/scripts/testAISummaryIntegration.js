@@ -3,7 +3,7 @@ import assert from "assert";
 import dotenv from "dotenv";
 import { connectDB } from "../config/database.js";
 import { Class } from "#modules/class";
-import Lesson from "../models/lesson.model.js";
+import { Lesson } from "#modules/lesson";
 import { User } from "#modules/auth";
 import AISummary from "../models/aiSummary.model.js";
 import AIUsage from "../models/aiUsage.model.js";
