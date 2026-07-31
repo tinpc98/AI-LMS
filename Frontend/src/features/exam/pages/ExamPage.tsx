@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import useExamTimer from "../hooks/useExamTimer";
 import axiosClient from "../../../api/axiosClient";
@@ -185,36 +185,46 @@ const ExamPageContent = () => {
     examEndTime // Truyền thêm thời điểm kết thúc tuyệt đối (nếu có)
   );
 
-  const handleCheatAlert = useCallback(
-    async (reason: string, currentViolations: number) => {
-      if (isSubmittingRef.current) return;
-      console.log(`🚨 Lỗi: ${reason}. Số lần: ${currentViolations}`);
+  // KHÔNG bọc useCallback ở đây nữa — xem ghi chú trong useAntiCheat.
+  //
+  // BUG ĐÃ SỬA: bản cũ là useCallback(..., [attemptId, MAX_WARNINGS]). Cả hai phụ thuộc đều
+  // không bao giờ đổi (attemptId lấy từ useParams, MAX_WARNINGS là hằng số 5), nên hàm này
+  // được tạo ĐÚNG MỘT LẦN ở lần render đầu và đóng băng luôn handleAutoSubmit của lần render
+  // đó — kéo theo `answers` và `questions` tại thời điểm mount.
+  //
+  // Hậu quả: học sinh vi phạm đủ 5 lần thì bị nộp bài cưỡng bức với `questions` = [] (lúc đó
+  // đề thi còn chưa tải xong) — mọi câu trả lời gửi lên đều thiếu cả selectedOption lẫn
+  // essayText. Toàn bộ bài làm bị mất.
+  //
+  // Đường nộp bài do hết giờ KHÔNG dính lỗi này: useExamTimer đã giữ callback trong ref từ
+  // trước. Chỉ nhánh chống gian lận bị.
+  const handleCheatAlert = async (reason: string, currentViolations: number) => {
+    if (isSubmittingRef.current) return;
+    console.log(`🚨 Lỗi: ${reason}. Số lần: ${currentViolations}`);
 
-      // 1. GỌI API ĐẨY CẢNH BÁO LÊN BACKEND NGAY LẬP TỨC
-      try {
-        await axiosClient.post(`/api/exam-attempts/${attemptId}/warning`, {
-          reason: "Rời khỏi tab hoặc mất focus trình duyệt",
-        });
-        console.log("Frontend attemptId:", attemptId);
-      } catch (err) {
-        console.error("Không thể đồng bộ lỗi gian lận lên server:", err);
-      }
+    // 1. GỌI API ĐẨY CẢNH BÁO LÊN BACKEND NGAY LẬP TỨC
+    try {
+      await axiosClient.post(`/api/exam-attempts/${attemptId}/warning`, {
+        reason: "Rời khỏi tab hoặc mất focus trình duyệt",
+      });
+      console.log("Frontend attemptId:", attemptId);
+    } catch (err) {
+      console.error("Không thể đồng bộ lỗi gian lận lên server:", err);
+    }
 
-      // 2. HIỂN THỊ MODAL CẢNH BÁO CHO HỌC SINH
-      setModalType("warning");
-      if (currentViolations >= MAX_WARNINGS) {
-        setWarningMessage(
-          `Đình chỉ thi! Bạn đã vi phạm ${MAX_WARNINGS} lần. Đang tự động nộp bài...`
-        );
-        setIsWarningVisible(true);
-        handleAutoSubmit(true);
-      } else {
-        setWarningMessage(`Lỗi: ${reason} (Vi phạm lần ${currentViolations}/${MAX_WARNINGS})`);
-        setIsWarningVisible(true);
-      }
-    },
-    [attemptId, MAX_WARNINGS]
-  );
+    // 2. HIỂN THỊ MODAL CẢNH BÁO CHO HỌC SINH
+    setModalType("warning");
+    if (currentViolations >= MAX_WARNINGS) {
+      setWarningMessage(
+        `Đình chỉ thi! Bạn đã vi phạm ${MAX_WARNINGS} lần. Đang tự động nộp bài...`
+      );
+      setIsWarningVisible(true);
+      handleAutoSubmit(true);
+    } else {
+      setWarningMessage(`Lỗi: ${reason} (Vi phạm lần ${currentViolations}/${MAX_WARNINGS})`);
+      setIsWarningVisible(true);
+    }
+  };
   useAntiCheat(handleCheatAlert);
 
   // ==========================================
