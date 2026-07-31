@@ -28,7 +28,10 @@ export const createRateLimiter = ({
     }
   }, windowMs).unref();
 
-  const middleware = (req, res, next) => {
+  // Tên hàm đặt tường minh (`rateLimiter`) để kiểm chứng được bằng máy: Express giữ nguyên
+  // hàm này trong router.stack, nên test có thể khẳng định một route CÓ gắn rate limit.
+  // Hàm ẩn danh thì `.name` là chuỗi rỗng và không phân biệt được với middleware khác.
+  const rateLimiter = (req, res, next) => {
     const key = keyGenerator(req);
     const now = Date.now();
 
@@ -50,6 +53,6 @@ export const createRateLimiter = ({
     next();
   };
 
-  middleware._sweeper = sweeper; // Tham chiếu phục vụ dọn dẹp trong test, không dùng ở runtime.
-  return middleware;
+  rateLimiter._sweeper = sweeper; // Tham chiếu phục vụ dọn dẹp trong test, không dùng ở runtime.
+  return rateLimiter;
 };

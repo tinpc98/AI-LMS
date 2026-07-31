@@ -6,7 +6,9 @@ import { AIError } from "../aiError.js";
  * @param {string} feature - "summary" | "question-gen" | "exam-gen" | "grading" | "chatbot"
  */
 export const checkAIQuota = (feature = "summary") => {
-  return async (req, res, next) => {
+  // Tên tường minh để test kiểm chứng được route có gắn tầng hạn mức hay không — xem
+  // tests/unit/modules/ai/aiRouteProtection.test.js.
+  const aiQuotaGuard = async (req, res, next) => {
     try {
       if (!req.user) {
         return res.status(401).json({
@@ -38,4 +40,6 @@ export const checkAIQuota = (feature = "summary") => {
       });
     }
   };
+
+  return aiQuotaGuard;
 };

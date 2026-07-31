@@ -25,6 +25,9 @@ const aiConfigSchema = new mongoose.Schema(
       examGen: { type: Boolean, default: true },
       grading: { type: Boolean, default: true },
       chatbot: { type: Boolean, default: true },
+      // Lập chỉ mục kiến thức bài học cho RAG. Tốn kém nhất trong các tính năng AI: một
+      // request sinh embedding cho TOÀN BỘ nội dung bài học, chia lô 3 chunk một lần gọi.
+      knowledgeIndex: { type: Boolean, default: true },
     },
     roleQuotas: {
       teacherDailyQuota: { type: Number, default: 100 }, // Max AI calls / day

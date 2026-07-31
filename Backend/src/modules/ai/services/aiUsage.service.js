@@ -4,6 +4,21 @@ import AIConfig from "../models/aiConfig.model.js";
 import AIDailyQuota from "../models/aiDailyQuota.model.js";
 import { AIError, AIErrorCode } from "../aiError.js";
 
+/**
+ * Ánh xạ tên feature dùng ở tầng route sang tên cờ tính năng trong AIConfig.
+ *
+ * Đặt ở cấp module (không nằm trong thân hàm) để nơi khác kiểm chứng được danh sách hợp lệ,
+ * và để test khẳng định mọi cờ trong model đều có đường vào.
+ */
+export const FEATURE_FLAG_MAP = {
+  summary: "summary",
+  "question-gen": "questionGen",
+  "exam-gen": "examGen",
+  grading: "grading",
+  chatbot: "chatbot",
+  "knowledge-index": "knowledgeIndex",
+};
+
 class AIUsageService {
   /**
    * Fetch or create default system AIConfig
@@ -58,15 +73,26 @@ class AIUsageService {
       );
     }
 
-    const FEATURE_FLAG_MAP = {
-      summary: "summary",
-      "question-gen": "questionGen",
-      "exam-gen": "examGen",
-      grading: "grading",
-      chatbot: "chatbot",
-    };
+    const mappedFeature = FEATURE_FLAG_MAP[feature];
 
-    const mappedFeature = FEATURE_FLAG_MAP[feature] || feature;
+    // Tên feature lạ phải NỔ, không được lặng lẽ cho qua.
+    //
+    // Bản cũ viết `FEATURE_FLAG_MAP[feature] || feature`, rồi kiểm
+    // `config.featureFlags[mappedFeature] === false`. Với một tên sai chính tả, biểu thức tra
+    // cứu trả undefined, và `undefined === false` là false — nên hàm ĐI TIẾP như thể tính năng
+    // đang được bật. Nói cách khác: gõ nhầm tên feature làm mất luôn tầng kiểm cờ tính năng,
+    // và không có dấu hiệu nào cho biết. Quản trị viên tắt tính năng đó trong bảng điều khiển
+    // cũng sẽ không có tác dụng.
+    //
+    // Đây là kiểu hỏng tệ nhất của một tầng bảo vệ: nó vẫn chạy, vẫn trả về "cho phép", chỉ là
+    // không còn bảo vệ gì.
+    if (!mappedFeature) {
+      throw new AIError(
+        `Tính năng AI không hợp lệ: "${feature}". Các giá trị hợp lệ: ${Object.keys(FEATURE_FLAG_MAP).join(", ")}.`,
+        AIErrorCode.AI_INVALID_INPUT,
+        500
+      );
+    }
 
     if (config.featureFlags && config.featureFlags[mappedFeature] === false) {
       throw new AIError(
