@@ -32,7 +32,7 @@ const BASELINE = {
   // CRUD câu hỏi cộng 12 helper kiểm tra payload theo từng loại câu hỏi; chẻ tiếp nên tách
   // phần validate ra khỏi phần thao tác dữ liệu.
   "modules/exam-set/examSetQuestion.service.js": 588,
-  "modules/exam-set/examSet.controller.js": 571,
+  "modules/exam-set/examSet.controller.js": 388,
   "modules/exam-set/examSetShare.service.js": 532,
   "modules/exam-set/examSet.service.js": 425,
 

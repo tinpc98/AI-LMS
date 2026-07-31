@@ -32,539 +32,382 @@ import {
 } from "./examSetQuestion.service.js";
 import { importExcelToExamSet } from "./examSetImport.service.js";
 import { Types } from "mongoose";
+import { asyncHandler } from "#shared/utils/asyncHandler.js";
 
 /**
  * Create new exam set
  * POST /api/exam-sets
  * Body: { folderId, title, description?, tags? }
  */
-export const createExamSet = async (req, res) => {
-  try {
-    const { folderId, title, description, tags } = req.body;
-    const ownerId = req.user.id; // From verifyUser middleware (JWT)
+export const createExamSet = asyncHandler(async (req, res) => {
+  const { folderId, title, description, tags } = req.body;
+  const ownerId = req.user.id; // From verifyUser middleware (JWT)
 
-    // Validate input
-    if (!folderId) {
-      return res.status(400).json({
-        success: false,
-        message: "folderId là bắt buộc",
-      });
-    }
-
-    if (!title) {
-      return res.status(400).json({
-        success: false,
-        message: "Tiêu đề là bắt buộc",
-      });
-    }
-
-    // Prepare exam data
-    const examData = {
-      folderId,
-      title,
-      description,
-      tags,
-    };
-
-    // Create exam set
-    const examSet = await createExamSetService(ownerId, examData);
-
-    return res.status(201).json({
-      success: true,
-      message: "Tạo bộ đề thi thành công",
-      data: examSet,
-    });
-  } catch (error) {
-    console.error("[ExamSet] Create error:", error.message);
-
-    const status = error.status || 500;
-    return res.status(status).json({
+  // Validate input
+  if (!folderId) {
+    return res.status(400).json({
       success: false,
-      message: error.message || "Lỗi tạo bộ đề thi",
+      message: "folderId là bắt buộc",
     });
   }
-};
+
+  if (!title) {
+    return res.status(400).json({
+      success: false,
+      message: "Tiêu đề là bắt buộc",
+    });
+  }
+
+  // Prepare exam data
+  const examData = {
+    folderId,
+    title,
+    description,
+    tags,
+  };
+
+  // Create exam set
+  const examSet = await createExamSetService(ownerId, examData);
+
+  return res.status(201).json({
+    success: true,
+    message: "Tạo bộ đề thi thành công",
+    data: examSet,
+  });
+});
 
 /**
  * Get exam sets with filters
  * GET /api/exam-sets
  * Query: folderId?, status?, page?, limit?
  */
-export const getExamSets = async (req, res) => {
-  try {
-    const userId = req.user.id; // From verifyUser middleware (JWT)
-    const { folderId, status, page = 1, limit = 10 } = req.query;
+export const getExamSets = asyncHandler(async (req, res) => {
+  const userId = req.user.id; // From verifyUser middleware (JWT)
+  const { folderId, status, page = 1, limit = 10 } = req.query;
 
-    // Prepare filters
-    const filters = {
-      folderId,
-      status,
-      page,
-      limit,
-    };
+  // Prepare filters
+  const filters = {
+    folderId,
+    status,
+    page,
+    limit,
+  };
 
-    // Get exam sets
-    const result = await getExamSetsService(userId, filters);
+  // Get exam sets
+  const result = await getExamSetsService(userId, filters);
 
-    return res.status(200).json({
-      success: true,
-      message: "Lấy danh sách bộ đề thi thành công",
-      data: result.examSets,
-      pagination: result.pagination,
-    });
-  } catch (error) {
-    console.error("[ExamSet] Get error:", error.message);
+  return res.status(200).json({
+    success: true,
+    message: "Lấy danh sách bộ đề thi thành công",
+    data: result.examSets,
+    pagination: result.pagination,
+  });
+});
 
-    const status = error.status || 500;
-    return res.status(status).json({
+export const saveDraftExamSet = asyncHandler(async (req, res) => {
+  const examSetId = req.params.examSetId || req.params.id;
+
+  if (!examSetId || !Types.ObjectId.isValid(examSetId)) {
+    return res.status(400).json({
       success: false,
-      message: error.message || "Lỗi lấy danh sách bộ đề thi",
+      message: "examSetId không hợp lệ",
     });
   }
-};
 
-export const saveDraftExamSet = async (req, res) => {
-  try {
-    const examSetId = req.params.examSetId || req.params.id;
+  const examSet = await saveDraftExamSetService(req.examSet, req.body);
 
-    if (!examSetId || !Types.ObjectId.isValid(examSetId)) {
-      return res.status(400).json({
-        success: false,
-        message: "examSetId không hợp lệ",
-      });
-    }
+  return res.status(200).json({
+    success: true,
+    message: "Lưu bản nháp thành công",
+    data: examSet,
+  });
+});
 
-    const examSet = await saveDraftExamSetService(req.examSet, req.body);
+export const duplicateExamSet = asyncHandler(async (req, res) => {
+  const { examSetId } = req.params;
 
-    return res.status(200).json({
-      success: true,
-      message: "Lưu bản nháp thành công",
-      data: examSet,
-    });
-  } catch (error) {
-    console.error("[ExamSet] Save draft error:", error.message);
-
-    const status = error.status || 500;
-    return res.status(status).json({
+  if (!examSetId || !Types.ObjectId.isValid(examSetId)) {
+    return res.status(400).json({
       success: false,
-      message: error.message || "Lỗi lưu bản nháp",
+      message: "examSetId không hợp lệ",
     });
   }
-};
 
-export const duplicateExamSet = async (req, res) => {
-  try {
-    const { examSetId } = req.params;
+  const duplicatedExamSet = await duplicateExamSetService(examSetId, req.user.id, req.user.role);
 
-    if (!examSetId || !Types.ObjectId.isValid(examSetId)) {
-      return res.status(400).json({
-        success: false,
-        message: "examSetId không hợp lệ",
-      });
-    }
+  return res.status(201).json({
+    success: true,
+    message: "Exam set duplicated successfully",
+    data: duplicatedExamSet,
+  });
+});
 
-    const duplicatedExamSet = await duplicateExamSetService(examSetId, req.user.id, req.user.role);
+export const createNewExamSetVersion = asyncHandler(async (req, res) => {
+  const { examSetId } = req.params;
 
-    return res.status(201).json({
-      success: true,
-      message: "Exam set duplicated successfully",
-      data: duplicatedExamSet,
-    });
-  } catch (error) {
-    console.error("[ExamSet] Duplicate error:", error.message);
-
-    const status = error.status || 500;
-    return res.status(status).json({
+  if (!examSetId || !Types.ObjectId.isValid(examSetId)) {
+    return res.status(400).json({
       success: false,
-      message: error.message || "Lỗi duplicate bộ đề thi",
+      message: "examSetId không hợp lệ",
     });
   }
-};
 
-export const createNewExamSetVersion = async (req, res) => {
-  try {
-    const { examSetId } = req.params;
+  const newVersionExamSet = await createNewExamSetVersionService(
+    examSetId,
+    req.user.id,
+    req.user.role
+  );
 
-    if (!examSetId || !Types.ObjectId.isValid(examSetId)) {
-      return res.status(400).json({
-        success: false,
-        message: "examSetId không hợp lệ",
-      });
-    }
+  return res.status(201).json({
+    success: true,
+    message: "New exam set version created successfully",
+    data: newVersionExamSet,
+  });
+});
 
-    const newVersionExamSet = await createNewExamSetVersionService(
-      examSetId,
-      req.user.id,
-      req.user.role
-    );
+export const getExamSetVersions = asyncHandler(async (req, res) => {
+  const { examSetId } = req.params;
 
-    return res.status(201).json({
-      success: true,
-      message: "New exam set version created successfully",
-      data: newVersionExamSet,
-    });
-  } catch (error) {
-    console.error("[ExamSet] Create version error:", error.message);
+  if (!examSetId || !Types.ObjectId.isValid(examSetId)) {
+    return res.status(400).json({ success: false, message: "examSetId không hợp lệ" });
+  }
 
-    const status = error.status || 500;
-    return res.status(status).json({
+  const page = req.query.page ? Number(req.query.page) : undefined;
+  const limit = req.query.limit ? Number(req.query.limit) : undefined;
+  const sort = req.query.sort ? String(req.query.sort) : undefined;
+
+  const result = await getExamSetVersionsService(examSetId, req.user.id, req.user.role, {
+    page,
+    limit,
+    sort,
+  });
+
+  return res.status(200).json({
+    success: true,
+    message: "Exam set version history retrieved successfully",
+    data: result,
+  });
+});
+
+export const getExamSetById = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const user = req.user;
+
+  if (!id || !Types.ObjectId.isValid(id)) {
+    return res.status(400).json({
       success: false,
-      message: error.message || "Lỗi tạo phiên bản mới của bộ đề thi",
+      message: "examSetId không hợp lệ",
     });
   }
-};
 
-export const getExamSetVersions = async (req, res) => {
-  try {
-    const { examSetId } = req.params;
+  const examSet = await getExamSetDetailService(id, user);
 
-    if (!examSetId || !Types.ObjectId.isValid(examSetId)) {
-      return res.status(400).json({ success: false, message: "examSetId không hợp lệ" });
-    }
+  return res.status(200).json({
+    success: true,
+    message: "Lấy chi tiết bộ đề thi thành công",
+    data: examSet,
+  });
+});
 
-    const page = req.query.page ? Number(req.query.page) : undefined;
-    const limit = req.query.limit ? Number(req.query.limit) : undefined;
-    const sort = req.query.sort ? String(req.query.sort) : undefined;
+export const restoreExamSetVersion = asyncHandler(async (req, res) => {
+  const { examSetId } = req.params;
 
-    const result = await getExamSetVersionsService(examSetId, req.user.id, req.user.role, {
-      page,
-      limit,
-      sort,
-    });
-
-    return res.status(200).json({
-      success: true,
-      message: "Exam set version history retrieved successfully",
-      data: result,
-    });
-  } catch (error) {
-    console.error("[ExamSet] Get versions error:", error.message);
-    const status = error.status || 500;
-    return res
-      .status(status)
-      .json({ success: false, message: error.message || "Lỗi lấy lịch sử phiên bản bộ đề thi" });
+  if (!examSetId || !Types.ObjectId.isValid(examSetId)) {
+    return res.status(400).json({ success: false, message: "examSetId không hợp lệ" });
   }
-};
 
-export const getExamSetById = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const user = req.user;
+  const newVersion = await restoreExamSetVersionService(examSetId, req.user.id, req.user.role);
 
-    if (!id || !Types.ObjectId.isValid(id)) {
-      return res.status(400).json({
-        success: false,
-        message: "examSetId không hợp lệ",
-      });
-    }
+  return res
+    .status(201)
+    .json({ success: true, message: "Exam set restored as new version", data: newVersion });
+});
 
-    const examSet = await getExamSetDetailService(id, user);
+export const createExamSetShare = asyncHandler(async (req, res) => {
+  const { examSetId } = req.params;
 
-    return res.status(200).json({
-      success: true,
-      message: "Lấy chi tiết bộ đề thi thành công",
-      data: examSet,
-    });
-  } catch (error) {
-    console.error("[ExamSet] Get detail error:", error.message);
-
-    const status = error.status || 500;
-    return res.status(status).json({
-      success: false,
-      message: error.message || "Lỗi lấy chi tiết bộ đề thi",
-    });
+  if (!examSetId || !Types.ObjectId.isValid(examSetId)) {
+    return res.status(400).json({ success: false, message: "examSetId không hợp lệ" });
   }
-};
 
-export const restoreExamSetVersion = async (req, res) => {
-  try {
-    const { examSetId } = req.params;
+  const payload = {
+    sharedWithUserId: req.body.sharedWithUserId,
+    permission: req.body.permission,
+    expiresAt: req.body.expiresAt ?? null,
+    note: req.body.note ?? "",
+  };
 
-    if (!examSetId || !Types.ObjectId.isValid(examSetId)) {
-      return res.status(400).json({ success: false, message: "examSetId không hợp lệ" });
-    }
+  const result = await createExamSetShareService(examSetId, req.user.id, req.user.role, payload);
 
-    const newVersion = await restoreExamSetVersionService(examSetId, req.user.id, req.user.role);
+  return res
+    .status(result.statusCode)
+    .json({ success: true, message: result.message, data: result.data });
+});
 
-    return res
-      .status(201)
-      .json({ success: true, message: "Exam set restored as new version", data: newVersion });
-  } catch (error) {
-    console.error("[ExamSet] Restore-version error:", error.message);
-    const status = error.status || 500;
-    return res
-      .status(status)
-      .json({ success: false, message: error.message || "Lỗi khôi phục phiên bản bộ đề thi" });
+export const revokeExamSetShare = asyncHandler(async (req, res) => {
+  const { examSetId, shareId } = req.params;
+
+  if (!examSetId || !Types.ObjectId.isValid(examSetId)) {
+    return res.status(400).json({ success: false, message: "examSetId không hợp lệ" });
   }
-};
 
-export const createExamSetShare = async (req, res) => {
-  try {
-    const { examSetId } = req.params;
-
-    if (!examSetId || !Types.ObjectId.isValid(examSetId)) {
-      return res.status(400).json({ success: false, message: "examSetId không hợp lệ" });
-    }
-
-    const payload = {
-      sharedWithUserId: req.body.sharedWithUserId,
-      permission: req.body.permission,
-      expiresAt: req.body.expiresAt ?? null,
-      note: req.body.note ?? "",
-    };
-
-    const result = await createExamSetShareService(examSetId, req.user.id, req.user.role, payload);
-
-    return res
-      .status(result.statusCode)
-      .json({ success: true, message: result.message, data: result.data });
-  } catch (error) {
-    console.error("[ExamSet] Create share error:", error.message);
-    const status = error.status || 500;
-    return res
-      .status(status)
-      .json({ success: false, message: error.message || "Lỗi tạo chia sẻ bộ đề thi" });
+  if (!shareId || !Types.ObjectId.isValid(shareId)) {
+    return res.status(400).json({ success: false, message: "shareId không hợp lệ" });
   }
-};
 
-export const revokeExamSetShare = async (req, res) => {
-  try {
-    const { examSetId, shareId } = req.params;
+  const result = await revokeExamSetShareService(examSetId, shareId, req.user.id, req.user.role);
 
-    if (!examSetId || !Types.ObjectId.isValid(examSetId)) {
-      return res.status(400).json({ success: false, message: "examSetId không hợp lệ" });
-    }
+  return res
+    .status(result.statusCode)
+    .json({ success: true, message: result.message, data: result.data });
+});
 
-    if (!shareId || !Types.ObjectId.isValid(shareId)) {
-      return res.status(400).json({ success: false, message: "shareId không hợp lệ" });
-    }
+export const listExamSetShares = asyncHandler(async (req, res) => {
+  const { examSetId } = req.params;
 
-    const result = await revokeExamSetShareService(examSetId, shareId, req.user.id, req.user.role);
-
-    return res
-      .status(result.statusCode)
-      .json({ success: true, message: result.message, data: result.data });
-  } catch (error) {
-    console.error("[ExamSet] Revoke share error:", error.message);
-    const status = error.status || 500;
-    return res
-      .status(status)
-      .json({ success: false, message: error.message || "Lỗi thu hồi chia sẻ bộ đề thi" });
+  if (!examSetId || !Types.ObjectId.isValid(examSetId)) {
+    return res.status(400).json({ success: false, message: "examSetId không hợp lệ" });
   }
-};
 
-export const listExamSetShares = async (req, res) => {
-  try {
-    const { examSetId } = req.params;
+  const { page, limit, status, permission, search, sortBy, sortOrder } = req.query;
 
-    if (!examSetId || !Types.ObjectId.isValid(examSetId)) {
-      return res.status(400).json({ success: false, message: "examSetId không hợp lệ" });
-    }
+  const result = await listExamSetSharesService(examSetId, req.user.id, req.user.role, {
+    page,
+    limit,
+    status,
+    permission,
+    search,
+    sortBy,
+    sortOrder,
+  });
 
-    const { page, limit, status, permission, search, sortBy, sortOrder } = req.query;
+  return res
+    .status(200)
+    .json({ success: true, message: "Exam Set shares retrieved successfully", data: result });
+});
 
-    const result = await listExamSetSharesService(examSetId, req.user.id, req.user.role, {
-      page,
-      limit,
-      status,
-      permission,
-      search,
-      sortBy,
-      sortOrder,
-    });
+export const listSharedExamSets = asyncHandler(async (req, res) => {
+  const { page, limit, permission, search, ownerId, sortBy, sortOrder } = req.query;
 
-    return res
-      .status(200)
-      .json({ success: true, message: "Exam Set shares retrieved successfully", data: result });
-  } catch (error) {
-    console.error("[ExamSet] List share error:", error.message);
-    const status = error.status || 500;
-    return res
-      .status(status)
-      .json({ success: false, message: error.message || "Lỗi lấy danh sách chia sẻ bộ đề thi" });
-  }
-};
+  const result = await listSharedExamSetsService(req.user.id, req.user.role, {
+    page,
+    limit,
+    permission,
+    search,
+    ownerId,
+    sortBy,
+    sortOrder,
+  });
 
-export const listSharedExamSets = async (req, res) => {
-  try {
-    const { page, limit, permission, search, ownerId, sortBy, sortOrder } = req.query;
-
-    const result = await listSharedExamSetsService(req.user.id, req.user.role, {
-      page,
-      limit,
-      permission,
-      search,
-      ownerId,
-      sortBy,
-      sortOrder,
-    });
-
-    return res
-      .status(200)
-      .json({ success: true, message: "Shared Exam Sets retrieved successfully", data: result });
-  } catch (error) {
-    console.error("[ExamSet] List shared-with-me error:", error.message);
-    const status = error.status || 500;
-    return res.status(status).json({
-      success: false,
-      message: error.message || "Lỗi lấy danh sách bộ đề thi được chia sẻ",
-    });
-  }
-};
+  return res
+    .status(200)
+    .json({ success: true, message: "Shared Exam Sets retrieved successfully", data: result });
+});
 
 /**
  * Update share metadata (expiresAt and/or note)
  * PATCH /api/exam-sets/:examSetId/shares/:shareId
  * Authorization: Owner or Admin only
  */
-export const updateExamSetShareMetadata = async (req, res) => {
-  try {
-    const { examSetId, shareId } = req.params;
+export const updateExamSetShareMetadata = asyncHandler(async (req, res) => {
+  const { examSetId, shareId } = req.params;
 
-    // Build payload from whitelist only – do NOT pass req.body directly
-    const payload = {};
-    if ("expiresAt" in req.body) payload.expiresAt = req.body.expiresAt;
-    if ("note" in req.body) payload.note = req.body.note;
+  // Build payload from whitelist only – do NOT pass req.body directly
+  const payload = {};
+  if ("expiresAt" in req.body) payload.expiresAt = req.body.expiresAt;
+  if ("note" in req.body) payload.note = req.body.note;
 
-    const result = await updateExamSetShareMetadataService(
-      examSetId,
-      shareId,
-      req.user.id,
-      req.user.role,
-      payload
-    );
+  const result = await updateExamSetShareMetadataService(
+    examSetId,
+    shareId,
+    req.user.id,
+    req.user.role,
+    payload
+  );
 
-    return res.status(result.statusCode).json({
-      success: true,
-      message: result.message,
-      data: result.data,
-    });
-  } catch (error) {
-    console.error("[ExamSet] Update share metadata error:", error.message);
-    const status = error.status || 500;
-    return res.status(status).json({
-      success: false,
-      message: error.message || "Lỗi cập nhật metadata chia sẻ bộ đề thi",
-    });
-  }
-};
+  return res.status(result.statusCode).json({
+    success: true,
+    message: result.message,
+    data: result.data,
+  });
+});
 
 /**
  * Update exam set (only owner, not published)
  * PATCH /api/exam-sets/:id
  * Body: { title?, description?, tags?, folderId? }
  */
-export const updateExamSet = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const updateData = req.body;
+export const updateExamSet = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const updateData = req.body;
 
-    // Validate input
-    if (!updateData || Object.keys(updateData).length === 0) {
-      return res.status(400).json({
-        success: false,
-        message: "Cần cung cấp ít nhất một trường để cập nhật",
-      });
-    }
-
-    // Update exam set
-    const examSet = await updateExamSetService(id, req.user.id, updateData);
-
-    return res.status(200).json({
-      success: true,
-      message: "Cập nhật bộ đề thi thành công",
-      data: examSet,
-    });
-  } catch (error) {
-    console.error("[ExamSet] Update error:", error.message);
-
-    const status = error.status || 500;
-    return res.status(status).json({
+  // Validate input
+  if (!updateData || Object.keys(updateData).length === 0) {
+    return res.status(400).json({
       success: false,
-      message: error.message || "Lỗi cập nhật bộ đề thi",
+      message: "Cần cung cấp ít nhất một trường để cập nhật",
     });
   }
-};
+
+  // Update exam set
+  const examSet = await updateExamSetService(id, req.user.id, updateData);
+
+  return res.status(200).json({
+    success: true,
+    message: "Cập nhật bộ đề thi thành công",
+    data: examSet,
+  });
+});
 
 /**
  * Update exam set tags
  * PATCH /api/exam-sets/:examSetId/tags
  * Body: { tags }
  */
-export const updateExamSetTags = async (req, res) => {
-  try {
-    const tags = req.body.tags;
-    const examSet = await updateExamSetTagsService(req.examSet, tags);
+export const updateExamSetTags = asyncHandler(async (req, res) => {
+  const tags = req.body.tags;
+  const examSet = await updateExamSetTagsService(req.examSet, tags);
 
-    return res.status(200).json({
-      success: true,
-      message: "Cập nhật tags bộ đề thi thành công",
-      data: examSet,
-    });
-  } catch (error) {
-    console.error("[ExamSet] Update tags error:", error.message);
-
-    const status = error.status || 500;
-    return res.status(status).json({
-      success: false,
-      message: error.message || "Lỗi cập nhật tags bộ đề thi",
-    });
-  }
-};
+  return res.status(200).json({
+    success: true,
+    message: "Cập nhật tags bộ đề thi thành công",
+    data: examSet,
+  });
+});
 
 /**
  * Delete exam set (soft delete)
  * DELETE /api/exam-sets/:id
  */
-export const deleteExamSet = async (req, res) => {
-  try {
-    const { id } = req.params;
+export const deleteExamSet = asyncHandler(async (req, res) => {
+  const { id } = req.params;
 
-    // Delete exam set
-    const examSet = await deleteExamSetService(id, req.user.id);
+  // Delete exam set
+  const examSet = await deleteExamSetService(id, req.user.id);
 
-    return res.status(200).json({
-      success: true,
-      message: "Xóa bộ đề thi thành công",
-      data: examSet,
-    });
-  } catch (error) {
-    console.error("[ExamSet] Delete error:", error.message);
-
-    const status = error.status || 500;
-    return res.status(status).json({
-      success: false,
-      message: error.message || "Lỗi xóa bộ đề thi",
-    });
-  }
-};
+  return res.status(200).json({
+    success: true,
+    message: "Xóa bộ đề thi thành công",
+    data: examSet,
+  });
+});
 
 /**
  * Restore exam set (undo soft delete)
  * PATCH /api/exam-sets/:id/restore
  */
-export const restoreExamSet = async (req, res) => {
-  try {
-    const { id } = req.params;
+export const restoreExamSet = asyncHandler(async (req, res) => {
+  const { id } = req.params;
 
-    // Restore exam set
-    const examSet = await restoreExamSetService(id, req.user.id);
+  // Restore exam set
+  const examSet = await restoreExamSetService(id, req.user.id);
 
-    return res.status(200).json({
-      success: true,
-      message: "Khôi phục bộ đề thi thành công",
-      data: examSet,
-    });
-  } catch (error) {
-    console.error("[ExamSet] Restore error:", error.message);
-
-    const status = error.status || 500;
-    return res.status(status).json({
-      success: false,
-      message: error.message || "Lỗi khôi phục bộ đề thi",
-    });
-  }
-};
+  return res.status(200).json({
+    success: true,
+    message: "Khôi phục bộ đề thi thành công",
+    data: examSet,
+  });
+});
 
 /**
  * Add question to exam set
@@ -576,28 +419,18 @@ export const restoreExamSet = async (req, res) => {
  *   category?, tags?, isActive?, timeLimit?, imageUrl?, hint?, order?
  * }
  */
-export const addQuestionToExamSet = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const questionData = req.body;
+export const addQuestionToExamSet = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const questionData = req.body;
 
-    const examSet = await addQuestionToExamSetService(id, req.user.id, questionData);
+  const examSet = await addQuestionToExamSetService(id, req.user.id, questionData);
 
-    return res.status(201).json({
-      success: true,
-      message: "Thêm câu hỏi thành công",
-      data: examSet,
-    });
-  } catch (error) {
-    console.error("[ExamSet] Add question error:", error.message);
-
-    const status = error.status || 500;
-    return res.status(status).json({
-      success: false,
-      message: error.message || "Lỗi thêm câu hỏi",
-    });
-  }
-};
+  return res.status(201).json({
+    success: true,
+    message: "Thêm câu hỏi thành công",
+    data: examSet,
+  });
+});
 
 /**
  * Update question in exam set
@@ -609,100 +442,70 @@ export const addQuestionToExamSet = async (req, res) => {
  *   category?, tags?, isActive?, timeLimit?, imageUrl?, hint?, order?
  * }
  */
-export const updateQuestionInExamSet = async (req, res) => {
-  try {
-    const { id, questionId } = req.params;
-    const updateData = req.body;
+export const updateQuestionInExamSet = asyncHandler(async (req, res) => {
+  const { id, questionId } = req.params;
+  const updateData = req.body;
 
-    // Validate that update data is not empty
-    if (!updateData || Object.keys(updateData).length === 0) {
-      return res.status(400).json({
-        success: false,
-        message: "Dữ liệu cập nhật là bắt buộc",
-      });
-    }
-
-    // Update question in exam set
-    const examSet = await updateQuestionInExamSetService(id, req.user.id, questionId, updateData);
-
-    return res.status(200).json({
-      success: true,
-      message: "Cập nhật câu hỏi thành công",
-      data: examSet,
-    });
-  } catch (error) {
-    console.error("[ExamSet] Update question error:", error.message);
-
-    const status = error.status || 500;
-    return res.status(status).json({
+  // Validate that update data is not empty
+  if (!updateData || Object.keys(updateData).length === 0) {
+    return res.status(400).json({
       success: false,
-      message: error.message || "Lỗi cập nhật câu hỏi",
+      message: "Dữ liệu cập nhật là bắt buộc",
     });
   }
-};
+
+  // Update question in exam set
+  const examSet = await updateQuestionInExamSetService(id, req.user.id, questionId, updateData);
+
+  return res.status(200).json({
+    success: true,
+    message: "Cập nhật câu hỏi thành công",
+    data: examSet,
+  });
+});
 
 /**
  * Delete question in exam set
  * DELETE /api/exam-sets/:id/questions/:questionId
  */
-export const deleteQuestionInExamSet = async (req, res) => {
-  try {
-    const { id, questionId } = req.params;
+export const deleteQuestionInExamSet = asyncHandler(async (req, res) => {
+  const { id, questionId } = req.params;
 
-    const examSet = await deleteQuestionFromExamSetService(
-      id,
-      req.user.id,
-      req.user.role,
-      questionId
-    );
+  const examSet = await deleteQuestionFromExamSetService(
+    id,
+    req.user.id,
+    req.user.role,
+    questionId
+  );
 
-    return res.status(200).json({
-      success: true,
-      message: "Xóa câu hỏi thành công",
-      data: examSet,
-    });
-  } catch (error) {
-    console.error("[ExamSet] Delete question error:", error.message);
-
-    const status = error.status || 500;
-    return res.status(status).json({
-      success: false,
-      message: error.message || "Lỗi xóa câu hỏi",
-    });
-  }
-};
+  return res.status(200).json({
+    success: true,
+    message: "Xóa câu hỏi thành công",
+    data: examSet,
+  });
+});
 
 /**
  * Reorder questions within exam set
  * PATCH /api/exam-sets/:id/questions/reorder
  */
-export const reorderQuestionsInExamSet = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const reorderItems = req.body.questions;
+export const reorderQuestionsInExamSet = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const reorderItems = req.body.questions;
 
-    const examSet = await reorderQuestionsInExamSetService(
-      id,
-      req.user.id,
-      req.user.role,
-      reorderItems
-    );
+  const examSet = await reorderQuestionsInExamSetService(
+    id,
+    req.user.id,
+    req.user.role,
+    reorderItems
+  );
 
-    return res.status(200).json({
-      success: true,
-      message: "Sắp xếp lại câu hỏi thành công",
-      data: examSet,
-    });
-  } catch (error) {
-    console.error("[ExamSet] Reorder questions error:", error.message);
-
-    const status = error.status || 500;
-    return res.status(status).json({
-      success: false,
-      message: error.message || "Lỗi sắp xếp lại câu hỏi",
-    });
-  }
-};
+  return res.status(200).json({
+    success: true,
+    message: "Sắp xếp lại câu hỏi thành công",
+    data: examSet,
+  });
+});
 
 /**
  * POST /api/exam-sets/import-excel
