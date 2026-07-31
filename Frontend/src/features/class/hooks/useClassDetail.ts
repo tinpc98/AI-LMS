@@ -1,7 +1,17 @@
-import { useState, useEffect, useCallback } from "react";
-import { classApi } from "../../../api/classApi";
-import { lessonApi } from "../../../api/lessonApi";
-import assignmentApi from "../../../api/assignmentApi";
+// Chi tiết lớp học (góc nhìn học sinh).
+//
+// CHUYỂN SANG REACT QUERY (Wave 5, nhóm A của react-hooks/set-state-in-effect).
+//
+// Bản cũ cầm 6 ô state và gọi 4 nhóm API trong một useEffect. Phần ghép dữ liệu đã tách sang
+// classDetail.service.ts; ở đây chỉ còn phần React.
+//
+// ĐÃ BỎ setSubmittedAssignmentIds khỏi giá trị trả về. Nó phơi setState của một ô state ra
+// ngoài cho nơi gọi tự sửa — nhưng grep toàn bộ src cho thấy KHÔNG AI dùng. Với React Query
+// thì việc này còn sai về nguyên tắc: đó là dữ liệu máy chủ, sửa cục bộ sẽ bị ghi đè ngay lần
+// đồng bộ kế tiếp mà không báo gì. Muốn cập nhật thì gọi refetch.
+import { useQuery } from "@tanstack/react-query";
+import { fetchClassDetail } from "../classDetail.service";
+import { classQueryKeys } from "../class.queryKeys";
 import type { IClass } from "../../../interface/ClassInterface";
 import type { ILesson } from "../../../interface/lessonInterface";
 import type { IAssignment } from "../../../interface/assignmentInterface";
@@ -13,104 +23,33 @@ interface UseClassDetailReturn {
   submittedAssignmentIds: string[];
   isLoading: boolean;
   errorMsg: string;
-  refetch: () => Promise<void>;
-  setSubmittedAssignmentIds: React.Dispatch<React.SetStateAction<string[]>>;
+  refetch: () => void;
 }
 
+const FALLBACK_ERROR = "Không thể tải thông tin lớp học.";
+
 export const useClassDetail = (classId?: string): UseClassDetailReturn => {
-  const [classInfo, setClassInfo] = useState<IClass | null>(null);
-  const [lessons, setLessons] = useState<ILesson[]>([]);
-  const [assignments, setAssignments] = useState<IAssignment[]>([]);
-  const [submittedAssignmentIds, setSubmittedAssignmentIds] = useState<string[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [errorMsg, setErrorMsg] = useState<string>("");
+  const { data, isLoading, error, refetch } = useQuery({
+    queryKey: classQueryKeys.detail(classId),
+    queryFn: () => fetchClassDetail(classId!),
+    // Không có classId thì không có gì để hỏi. Bản cũ dùng `if (!classId) return` giữa chừng
+    // effect, để lại isLoading=true vĩnh viễn — trang quay vòng mãi không dừng.
+    enabled: !!classId,
+  });
 
-  const getStudentIdFromToken = (): string | null => {
-    const token = localStorage.getItem("accessToken");
-    if (!token) return null;
-    try {
-      const base64Url = token.split(".")[1];
-      const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
-      const jsonPayload = decodeURIComponent(
-        window
-          .atob(base64)
-          .split("")
-          .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
-          .join("")
-      );
-      const decoded = JSON.parse(jsonPayload);
-      return decoded._id || decoded.id || decoded.userId || null;
-    } catch {
-      return null;
-    }
-  };
-
-  const fetchData = useCallback(async () => {
-    if (!classId) return;
-    try {
-      setIsLoading(true);
-      setErrorMsg("");
-
-      const [classRes, lessonRes, assignmentRes] = await Promise.all([
-        classApi.getClassById(classId),
-        lessonApi.getLessonsByClass(classId).catch(() => ({ data: { lessons: [] } })),
-        assignmentApi.getAssignmentsByClass(classId).catch(() => []),
-      ]);
-
-      const fetchedClass = classRes.data?.data || classRes.data;
-      setClassInfo(fetchedClass);
-
-      const rawLessons = (lessonRes as any).data?.lessons || (lessonRes as any).lessons || [];
-      const publishedLessons = (rawLessons as ILesson[])
-        .filter((l) => l.isPublished)
-        .sort((a, b) => (a.order || 0) - (b.order || 0));
-      setLessons(publishedLessons);
-
-      const fetchedAssignments = Array.isArray(assignmentRes)
-        ? assignmentRes
-        : (assignmentRes as any)?.data || [];
-      setAssignments(fetchedAssignments);
-
-      // Check student submissions
-      const studentId = getStudentIdFromToken();
-      if (studentId && fetchedAssignments.length > 0) {
-        const submittedIds: string[] = [];
-        await Promise.all(
-          fetchedAssignments.map(async (item: IAssignment) => {
-            try {
-              const submission = await assignmentApi.getMySubmission(item._id);
-              // Consider submitted if a submission exists and it's not withdrawn
-              if (submission && submission.status !== "withdrawn") {
-                submittedIds.push(item._id);
-              }
-            } catch {
-              // Ignore individual submission fetch errors
-            }
-          })
-        );
-        setSubmittedAssignmentIds(submittedIds);
-      }
-    } catch (err: any) {
-      console.error("Lỗi tải thông tin lớp học:", err);
-      setErrorMsg(err.response?.data?.message || "Không thể tải thông tin lớp học.");
-    } finally {
-      setIsLoading(false);
-    }
-  }, [classId]);
-
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+  const serverMessage = (error as { response?: { data?: { message?: string } } })?.response?.data
+    ?.message;
 
   return {
-    classInfo,
-    lessons,
-    assignments,
-    submittedAssignmentIds,
+    classInfo: data?.classInfo ?? null,
+    lessons: data?.lessons ?? [],
+    assignments: data?.assignments ?? [],
+    submittedAssignmentIds: data?.submittedAssignmentIds ?? [],
+    // `isLoading` của React Query là false khi query bị tắt (enabled: false) — đúng với ý
+    // "không có gì đang chạy", và cũng là chỗ sửa được bệnh quay vòng vĩnh viễn nói trên.
     isLoading,
-    errorMsg,
-    refetch: fetchData,
-    setSubmittedAssignmentIds,
+    errorMsg: error ? serverMessage || FALLBACK_ERROR : "",
+    refetch,
   };
 };
 

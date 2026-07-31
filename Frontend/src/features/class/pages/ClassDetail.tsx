@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
+import { getCurrentUserId } from "../../../shared/utils/authToken";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import axiosClient from "../../../api/axiosClient";
 import type { IExam } from "../../../interface/examInterface";
@@ -141,28 +142,8 @@ export default function ClassDetail() {
     return h > 0 ? `${h}:${m}:${s}` : `${m}:${s}`;
   }, []);
 
-  const getStudentId = useCallback((): string | null => {
-    const token = localStorage.getItem("accessToken");
-    if (!token) return null;
-    try {
-      const base64Url = token.split(".")[1];
-      const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
-      const jsonPayload = decodeURIComponent(
-        window
-          .atob(base64)
-          .split("")
-          .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
-          .join("")
-      );
-      const decodedToken = JSON.parse(jsonPayload);
-      return decodedToken._id || decodedToken.id || decodedToken.userId;
-    } catch {
-      return null;
-    }
-  }, []);
-
   const handleStartAttemptDirectly = async (exam: IExam) => {
-    const studentId = getStudentId();
+    const studentId = getCurrentUserId();
     if (!studentId) {
       toast.error("Không tìm thấy thông tin đăng nhập. Vui lòng đăng nhập lại!", "Lỗi xác thực");
       return;
