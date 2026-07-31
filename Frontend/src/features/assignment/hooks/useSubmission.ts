@@ -2,6 +2,7 @@ import { useState, useCallback } from "react";
 import assignmentApi from "../../../api/assignmentApi";
 import { toast } from "../../../utils/toast";
 import type { IExtendedAssignment } from "../../../types/studentAssignment";
+import { getApiErrorMessage } from "../../../shared/utils/apiError";
 
 export function useSubmission(onSubmissionUpdated?: () => void) {
   // Submission modal state
@@ -40,9 +41,9 @@ export function useSubmission(onSubmissionUpdated?: () => void) {
         await assignmentApi.cancelSubmission(assignmentId);
         toast.success("Hủy nộp bài tập thành công!", "Hủy nộp bài");
         if (onSubmissionUpdated) onSubmissionUpdated();
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error("Lỗi khi hủy nộp bài:", error);
-        const msg = error.response?.data?.message || "Không thể hủy nộp bài. Vui lòng thử lại.";
+        const msg = getApiErrorMessage(error, "Không thể hủy nộp bài. Vui lòng thử lại.");
         toast.error(msg, "Lỗi hủy nộp bài");
       }
     },

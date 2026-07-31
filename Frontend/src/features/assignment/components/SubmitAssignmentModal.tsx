@@ -1,6 +1,7 @@
 import React, { useState, type ChangeEvent } from "react";
 import assignmentApi from "../../../api/assignmentApi";
 import type { IAssignment } from "../../../interface/assignmentInterface";
+import { getApiErrorMessage } from "../../../shared/utils/apiError";
 
 interface SubmitAssignmentModalProps {
   isOpen: boolean;
@@ -66,9 +67,9 @@ export default function SubmitAssignmentModal({
       setSelectedFiles([]);
       onSuccess(assignment._id);
       onClose();
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Lỗi khi nộp bài:", err);
-      const msg = err.response?.data?.message || "Không thể nộp bài tập. Vui lòng thử lại!";
+      const msg = getApiErrorMessage(err, "Không thể nộp bài tập. Vui lòng thử lại!");
       setErrorMsg(msg);
     } finally {
       setIsSubmitting(false);

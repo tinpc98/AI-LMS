@@ -43,6 +43,7 @@ import type { IExam } from "../../../../api/examApi";
 import { toast } from "../../../../utils/toast";
 import { TeacherExamAttemptsDrawer } from "./TeacherExamAttemptsDrawer";
 import { CreateExamWizardDrawer } from "./CreateExamWizardDrawer";
+import { getApiErrorMessage } from "../../../../shared/utils/apiError";
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -77,9 +78,9 @@ export const TeacherExamsTab: React.FC<TeacherExamsTabProps> = React.memo(
       try {
         const list = await examApi.getExamsByClass(classId);
         setExams(list || []);
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error("[TeacherExamsTab] Fetch error:", err);
-        setError(err.message || "Không thể tải danh sách bài kiểm tra của lớp!");
+        setError(getApiErrorMessage(err, "Không thể tải danh sách bài kiểm tra của lớp!"));
       } finally {
         setLoading(false);
       }
@@ -140,8 +141,8 @@ export const TeacherExamsTab: React.FC<TeacherExamsTabProps> = React.memo(
         await examApi.deleteExam(id);
         toast.success("Xóa bài kiểm tra thành công!");
         fetchExams();
-      } catch (err: any) {
-        toast.error(err.response?.data?.message || "Lỗi khi xóa bài kiểm tra!");
+      } catch (err: unknown) {
+        toast.error(getApiErrorMessage(err, "Lỗi khi xóa bài kiểm tra!"));
       }
     };
 
@@ -152,8 +153,8 @@ export const TeacherExamsTab: React.FC<TeacherExamsTabProps> = React.memo(
         await examSetApi.duplicateExamSet(examId);
         toast.success("Nhân bản bộ đề thi thành công!");
         fetchExams();
-      } catch (err: any) {
-        toast.error(err.response?.data?.message || "Lỗi khi nhân bản bộ đề thi!");
+      } catch (err: unknown) {
+        toast.error(getApiErrorMessage(err, "Lỗi khi nhân bản bộ đề thi!"));
       }
     };
 
@@ -166,8 +167,8 @@ export const TeacherExamsTab: React.FC<TeacherExamsTabProps> = React.memo(
           `Đã chuyển trạng thái bài thi thành ${newStatus === "PUBLISHED" ? "Đang diễn ra" : "Bản nháp"}`
         );
         fetchExams();
-      } catch (err: any) {
-        toast.error(err.response?.data?.message || "Lỗi cập nhật trạng thái bài thi!");
+      } catch (err: unknown) {
+        toast.error(getApiErrorMessage(err, "Lỗi cập nhật trạng thái bài thi!"));
       }
     };
 

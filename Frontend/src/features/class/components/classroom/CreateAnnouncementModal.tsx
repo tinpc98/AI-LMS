@@ -3,6 +3,7 @@ import { Modal, Form, Input, Button, Space } from "antd";
 import { NotificationOutlined, CheckCircleOutlined } from "@ant-design/icons";
 import announcementApi from "../../../../api/announcementApi";
 import { toast } from "../../../../utils/toast";
+import { getApiErrorMessage } from "../../../../shared/utils/apiError";
 
 interface CreateAnnouncementModalProps {
   open: boolean;
@@ -45,8 +46,8 @@ export const CreateAnnouncementModal: React.FC<CreateAnnouncementModalProps> = R
 
         onClose();
         if (onSaved) onSaved();
-      } catch (err: any) {
-        toast.error(err.response?.data?.message || "Lỗi khi đăng thông báo!");
+      } catch (err: unknown) {
+        toast.error(getApiErrorMessage(err, "Lỗi khi đăng thông báo!"));
       } finally {
         setSubmitting(false);
       }

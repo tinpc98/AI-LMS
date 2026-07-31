@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import axiosClient from "../../../api/axiosClient";
 import { toast } from "../../../utils/toast";
+import { getApiErrorMessage } from "../../../shared/utils/apiError";
 
 export function useQuestionBank() {
   const [questions, setQuestions] = useState<any[]>([]);
@@ -19,9 +20,9 @@ export function useQuestionBank() {
     try {
       const response = await axiosClient.get("/api/questions");
       setQuestions(response.data.data || []);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("[useQuestionBank] Fetch error:", err);
-      setError(err.message || "Không thể tải danh sách câu hỏi từ hệ thống!");
+      setError(getApiErrorMessage(err, "Không thể tải danh sách câu hỏi từ hệ thống!"));
     } finally {
       setLoading(false);
     }
@@ -37,9 +38,9 @@ export function useQuestionBank() {
         if (isMounted) {
           setQuestions(response.data.data || []);
         }
-      } catch (err: any) {
+      } catch (err: unknown) {
         if (isMounted) {
-          setError(err.message || "Không thể tải danh sách câu hỏi từ hệ thống!");
+          setError(getApiErrorMessage(err, "Không thể tải danh sách câu hỏi từ hệ thống!"));
         }
       } finally {
         if (isMounted) {
@@ -88,8 +89,8 @@ export function useQuestionBank() {
       await axiosClient.delete(`/api/questions/${id}`);
       toast.success("Xóa câu hỏi khỏi Ngân hàng thành công!");
       fetchQuestions();
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || "Lỗi khi xóa câu hỏi!");
+    } catch (err: unknown) {
+      toast.error(getApiErrorMessage(err, "Lỗi khi xóa câu hỏi!"));
     }
   };
 
@@ -105,8 +106,8 @@ export function useQuestionBank() {
       toast.success(res.data?.message || "Nhập bộ câu hỏi từ Excel thành công!");
       onSuccess("OK");
       fetchQuestions();
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || "Lỗi khi import file Excel!");
+    } catch (err: unknown) {
+      toast.error(getApiErrorMessage(err, "Lỗi khi import file Excel!"));
       onError(err);
     }
   };

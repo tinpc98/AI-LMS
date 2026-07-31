@@ -1,5 +1,6 @@
 import type { IAssignment, ISubmission } from "../interface/assignmentInterface";
 import axiosClient from "./axiosClient";
+import { getApiErrorStatus } from "../shared/utils/apiError";
 
 interface IAssignmentListResponse {
   assignments: IAssignment[];
@@ -97,8 +98,8 @@ const assignmentApi = {
         `/api/assignments/${assignmentId}/my-submission`
       );
       return (response.data as any).submission ?? (response.data as any).data ?? null;
-    } catch (err: any) {
-      if (err.response?.status === 404) return null; // No submission found
+    } catch (err: unknown) {
+      if (getApiErrorStatus(err) === 404) return null; // No submission found
       return null;
     }
   },

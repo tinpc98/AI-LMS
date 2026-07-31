@@ -59,7 +59,7 @@ export const TeacherAttendanceTab: React.FC<TeacherAttendanceTabProps> = React.m
       try {
         const res = await attendanceApi.getClassSessions(classId);
         setSessions(res.data.data || []);
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error("[TeacherAttendanceTab] Fetch error:", err);
         setError("Không thể tải danh sách buổi học.");
       } finally {

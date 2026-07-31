@@ -6,6 +6,7 @@ import { Spin } from "antd";
 import aiApi from "../../../api/aiApi";
 import { useAIChat } from "../../ai/hooks/useAIChat";
 import { toast } from "../../../utils/toast";
+import { getApiErrorMessage, getApiErrorStatus } from "../../../shared/utils/apiError";
 
 const LessonPage = () => {
   const { lessonId } = useParams<{ lessonId: string }>();
@@ -58,9 +59,9 @@ const LessonPage = () => {
       try {
         const data = await aiApi.getLessonSummary(lessonId!);
         return data.content || data.summary || null;
-      } catch (err: any) {
+      } catch (err: unknown) {
         // 404 nghĩa là bài học chưa có tóm tắt — đó là câu trả lời hợp lệ, không phải lỗi.
-        if (err.response?.status === 404) return null;
+        if (getApiErrorStatus(err) === 404) return null;
         throw err;
       }
     },
@@ -77,7 +78,7 @@ const LessonPage = () => {
       toast.success("Đã tạo tóm tắt bài học bằng AI!");
     },
     onError: (err: any) => {
-      toast.error(err.response?.data?.message || "Không thể tạo tóm tắt bài học");
+      toast.error(getApiErrorMessage(err, "Không thể tạo tóm tắt bài học"));
     },
   });
 

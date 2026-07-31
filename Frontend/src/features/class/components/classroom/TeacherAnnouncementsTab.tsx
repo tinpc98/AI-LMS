@@ -37,6 +37,7 @@ import type { IAnnouncement } from "../../../../api/announcementApi";
 import { toast } from "../../../../utils/toast";
 import { TeacherAnnouncementDetailDrawer } from "./TeacherAnnouncementDetailDrawer";
 import { CreateAnnouncementModal } from "./CreateAnnouncementModal";
+import { getApiErrorMessage } from "../../../../shared/utils/apiError";
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -71,9 +72,9 @@ export const TeacherAnnouncementsTab: React.FC<TeacherAnnouncementsTabProps> = R
       try {
         const list = await announcementApi.getAnnouncementsByClass(classId, searchQuery);
         setAnnouncements(list || []);
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error("[TeacherAnnouncementsTab] Fetch error:", err);
-        setError(err.message || "Không thể tải danh sách thông báo của lớp!");
+        setError(getApiErrorMessage(err, "Không thể tải danh sách thông báo của lớp!"));
       } finally {
         setLoading(false);
       }
@@ -134,8 +135,8 @@ export const TeacherAnnouncementsTab: React.FC<TeacherAnnouncementsTabProps> = R
         await announcementApi.deleteAnnouncement(id);
         toast.success("Xóa thông báo thành công!");
         fetchAnnouncements();
-      } catch (err: any) {
-        toast.error(err.response?.data?.message || "Lỗi khi xóa thông báo!");
+      } catch (err: unknown) {
+        toast.error(getApiErrorMessage(err, "Lỗi khi xóa thông báo!"));
       }
     };
 

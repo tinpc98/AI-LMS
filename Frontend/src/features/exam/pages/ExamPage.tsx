@@ -4,6 +4,7 @@ import useExamTimer from "../hooks/useExamTimer";
 import axiosClient from "../../../api/axiosClient";
 import useAntiCheat from "../hooks/useAntiCheat";
 import ExamErrorBoundary from "../components/ExamErrorBoundary";
+import { getApiErrorMessage } from "../../../shared/utils/apiError";
 
 const ExamPageContent = () => {
   const { attemptId } = useParams();
@@ -110,7 +111,7 @@ const ExamPageContent = () => {
 
           setIsLoading(false);
         }
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error("Lỗi khi tải đề thi:", error);
         setWarningMessage("Không thể tải dữ liệu đề thi. Đang quay lại...");
         setIsWarningVisible(true);
@@ -159,11 +160,11 @@ const ExamPageContent = () => {
           navigate("/student/myclasses");
         }
       }, 2000);
-    } catch (error: any) {
+    } catch (error: unknown) {
       isSubmittingRef.current = false;
       console.error("Lỗi nộp bài:", error);
       setModalType("warning");
-      setWarningMessage(error.response?.data?.message || "Có lỗi xảy ra khi nộp bài!");
+      setWarningMessage(getApiErrorMessage(error, "Có lỗi xảy ra khi nộp bài!"));
     }
   };
 

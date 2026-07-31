@@ -23,6 +23,7 @@ import {
 import gradeApi from "../../../../api/gradeApi";
 import type { IGradeItemDef, IStudentGradeData } from "../../../../api/gradeApi";
 import { toast } from "../../../../utils/toast";
+import { getApiErrorMessage } from "../../../../shared/utils/apiError";
 
 const { Text, Title } = Typography;
 
@@ -96,8 +97,8 @@ export const GradeDetailDrawer: React.FC<GradeDetailDrawerProps> = React.memo(
         toast.success(`Cập nhật bảng điểm cho ${studentName} thành công!`);
         onClose();
         if (onSaved) onSaved();
-      } catch (err: any) {
-        toast.error(err.response?.data?.message || "Lỗi khi lưu bảng điểm!");
+      } catch (err: unknown) {
+        toast.error(getApiErrorMessage(err, "Lỗi khi lưu bảng điểm!"));
       } finally {
         setSubmitting(false);
       }

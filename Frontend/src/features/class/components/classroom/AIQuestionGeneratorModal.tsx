@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Modal, Form, Input, InputNumber, Button } from "antd";
 import aiApi from "../../../../api/aiApi";
 import { toast } from "../../../../utils/toast";
+import { getApiErrorMessage } from "../../../../shared/utils/apiError";
 
 interface AIQuestionGeneratorModalProps {
   isOpen: boolean;
@@ -78,9 +79,9 @@ export function AIQuestionGeneratorModal({
       toast.success("AI đã sinh câu hỏi thành công và lưu vào Ngân hàng!");
       onSuccess();
       onClose();
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
-      toast.error(err.response?.data?.message || "Lỗi khi sinh câu hỏi bằng AI");
+      toast.error(getApiErrorMessage(err, "Lỗi khi sinh câu hỏi bằng AI"));
     } finally {
       setIsGenerating(false);
     }

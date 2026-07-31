@@ -7,6 +7,7 @@ import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "../../../shared/api/queryKeys";
 import assignmentApi from "../../../api/assignmentApi";
 import { toast } from "../../../utils/toast";
+import { getApiErrorMessage } from "../../../shared/utils/apiError";
 
 const FALLBACK_ERROR = "Không thể tải thông tin bài tập!";
 
@@ -48,9 +49,9 @@ export function useStudentAssignment(assignmentId: string | undefined) {
       toast.success(mySubmission ? "Nộp lại bài tập thành công!" : "Nộp bài tập thành công!");
       await fetchAssignmentDetail();
       return true;
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Lỗi khi nộp bài:", err);
-      toast.error(err.response?.data?.message || "Nộp bài thất bại. Vui lòng thử lại sau.");
+      toast.error(getApiErrorMessage(err, "Nộp bài thất bại. Vui lòng thử lại sau."));
       return false;
     } finally {
       setIsSubmitting(false);
@@ -65,9 +66,9 @@ export function useStudentAssignment(assignmentId: string | undefined) {
       toast.success("Đã hủy bài nộp thành công!");
       await fetchAssignmentDetail();
       return true;
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Lỗi khi hủy bài nộp:", err);
-      toast.error(err.response?.data?.message || "Hủy bài nộp thất bại. Vui lòng thử lại!");
+      toast.error(getApiErrorMessage(err, "Hủy bài nộp thất bại. Vui lòng thử lại!"));
       return false;
     } finally {
       setIsSubmitting(false);

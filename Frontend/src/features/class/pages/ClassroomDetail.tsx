@@ -41,6 +41,7 @@ import { TeacherLiveSessionTab } from "../components/classroom/TeacherLiveSessio
 import { TeacherGradebookTab } from "../components/classroom/TeacherGradebookTab";
 import { TeacherAnalyticsTab } from "../components/classroom/TeacherAnalyticsTab";
 import { toast } from "../../../utils/toast";
+import { getApiErrorMessage } from "../../../shared/utils/apiError";
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -88,9 +89,9 @@ export default function ClassroomDetail() {
         setClassInfo(classRes.data?.data || classRes.data);
         setLessons(lessonRes.data?.lessons || []);
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       if (isMounted.current) {
-        setErrorMsg(error.response?.data?.message || "Không thể tải dữ liệu lớp học.");
+        setErrorMsg(getApiErrorMessage(error, "Không thể tải dữ liệu lớp học."));
       }
     } finally {
       if (isMounted.current) {
@@ -106,7 +107,7 @@ export default function ClassroomDetail() {
       if (isMounted.current) {
         setAssignments(data || []);
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.warn("Không thể tải danh sách bài tập:", error);
     }
   }, [classId]);
@@ -138,8 +139,8 @@ export default function ClassroomDetail() {
       await lessonApi.deleteLesson(id);
       setLessons((prev) => prev.filter((l) => l._id !== id));
       toast.success("Xóa bài giảng thành công.");
-    } catch (error: any) {
-      toast.error(error.response?.data?.message || "Xóa bài giảng thất bại.");
+    } catch (error: unknown) {
+      toast.error(getApiErrorMessage(error, "Xóa bài giảng thất bại."));
     }
   };
 

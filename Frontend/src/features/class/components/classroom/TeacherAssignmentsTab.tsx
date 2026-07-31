@@ -37,6 +37,7 @@ import { toast } from "../../../../utils/toast";
 import type { IAssignment } from "../../../../interface/assignmentInterface";
 import { TeacherSubmissionsDrawer } from "./TeacherSubmissionsDrawer";
 import CreateAssignmentModal from "../../../assignment/components/CreateAssignmentModal";
+import { getApiErrorMessage } from "../../../../shared/utils/apiError";
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -116,8 +117,8 @@ export const TeacherAssignmentsTab: React.FC<TeacherAssignmentsTabProps> = React
         await assignmentApi.deleteAssignment(id);
         toast.success("Xóa bài tập thành công!");
         if (onRefresh) onRefresh();
-      } catch (err: any) {
-        toast.error(err.response?.data?.message || "Lỗi khi xóa bài tập!");
+      } catch (err: unknown) {
+        toast.error(getApiErrorMessage(err, "Lỗi khi xóa bài tập!"));
       }
     };
 

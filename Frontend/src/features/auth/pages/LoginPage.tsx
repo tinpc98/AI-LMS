@@ -6,6 +6,7 @@ import type User from "../../../interface/userInterface";
 import { authApi } from "../../../api/authApi";
 import axios from "axios";
 import { toast } from "../../../utils/toast";
+import { getApiErrorMessage } from "../../../shared/utils/apiError";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -57,8 +58,7 @@ const Login = () => {
       }
     } catch (error: unknown) {
       if (axios.isAxiosError(error)) {
-        const serverMessage =
-          error.response?.data?.message || "Tài khoản hoặc mật khẩu không chính xác!";
+        const serverMessage = getApiErrorMessage(error, "Tài khoản hoặc mật khẩu không chính xác!");
         toast.error(serverMessage);
       } else {
         toast.error("Đã xảy ra lỗi hệ thống không xác định.");

@@ -15,6 +15,7 @@ import {
 import { CheckCircleOutlined, UserOutlined, EditOutlined, AlertOutlined } from "@ant-design/icons";
 import examApi from "../../../../api/examApi";
 import { toast } from "../../../../utils/toast";
+import { getApiErrorMessage } from "../../../../shared/utils/apiError";
 
 const { Text, Title, Paragraph } = Typography;
 
@@ -49,8 +50,8 @@ export const TeacherGradeEssayModal: React.FC<TeacherGradeEssayModalProps> = Rea
           });
           form.setFieldsValue(initialValues);
         }
-      } catch (err: any) {
-        toast.error(err.response?.data?.message || "Không thể nạp dữ liệu chi tiết bài làm!");
+      } catch (err: unknown) {
+        toast.error(getApiErrorMessage(err, "Không thể nạp dữ liệu chi tiết bài làm!"));
         setReviewData(null);
       } finally {
         setLoading(false);
@@ -79,8 +80,8 @@ export const TeacherGradeEssayModal: React.FC<TeacherGradeEssayModalProps> = Rea
         toast.success("Chấm điểm bài thi tự luận thành công!");
         onClose();
         if (onGraded) onGraded();
-      } catch (err: any) {
-        toast.error(err.response?.data?.message || "Lỗi khi lưu kết quả chấm điểm!");
+      } catch (err: unknown) {
+        toast.error(getApiErrorMessage(err, "Lỗi khi lưu kết quả chấm điểm!"));
       } finally {
         setSubmitting(false);
       }

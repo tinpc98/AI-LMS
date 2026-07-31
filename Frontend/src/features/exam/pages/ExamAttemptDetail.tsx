@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import axiosClient from "../../../api/axiosClient";
 import aiApi from "../../../api/aiApi";
 import { toast } from "../../../utils/toast";
+import { getApiErrorMessage } from "../../../shared/utils/apiError";
 
 export default function ExamAttemptDetail() {
   const { attemptId } = useParams();
@@ -73,8 +74,8 @@ export default function ExamAttemptDetail() {
       setEssayGrades((prev) => ({ ...prev, [qId]: score }));
       setAIFeedbacks((prev) => ({ ...prev, [qId]: result.feedback }));
       toast.success("AI đã đưa ra đề xuất điểm!");
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || "Lỗi khi gọi AI chấm điểm");
+    } catch (err: unknown) {
+      toast.error(getApiErrorMessage(err, "Lỗi khi gọi AI chấm điểm"));
     } finally {
       setAILoading((prev) => ({ ...prev, [qId]: false }));
     }
@@ -100,9 +101,7 @@ export default function ExamAttemptDetail() {
       navigate(-1); // Quay lại trang trước
     } catch (error: any) {
       console.error("🔥 LỖI TỪ BACKEND:", error.response?.data || error);
-      toast.error(
-        error.response?.data?.message || "Phê duyệt điểm thất bại. Vui lòng thử lại sau."
-      );
+      toast.error(getApiErrorMessage(error, "Phê duyệt điểm thất bại. Vui lòng thử lại sau."));
     } finally {
       setIsSubmitting(false);
     }

@@ -30,6 +30,7 @@ import type {
   IStudentAttendanceRecord,
   IVirtualSession,
 } from "../../../../interface/attendanceInterface";
+import { getApiErrorMessage } from "../../../../shared/utils/apiError";
 
 const { Text } = Typography;
 
@@ -163,8 +164,8 @@ export const AttendancePopup: React.FC<AttendancePopupProps> = ({
       toast.success("Lưu điểm danh thành công!");
       onSaved();
       onClose();
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || "Lỗi khi lưu điểm danh!");
+    } catch (err: unknown) {
+      toast.error(getApiErrorMessage(err, "Lỗi khi lưu điểm danh!"));
     } finally {
       setSaving(false);
     }

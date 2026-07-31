@@ -39,10 +39,10 @@ const REPORT = path.join(FE, ".eslint-budget-report.json");
 // GIẢM ĐƯỢC THÌ CẬP NHẬT XUỐNG. KHÔNG BAO GIỜ tăng lên để cho qua CI — đó là bỏ rào chắn.
 const BUDGET = {
   // Khoản nợ lớn nhất, có việc riêng (§5.7). Khoá lại để nó không phình thêm.
-  "@typescript-eslint/no-explicit-any": 361,
+  "@typescript-eslint/no-explicit-any": 324,
 
   // Phần lớn là biến/tham số cục bộ, xoá có thể đổi hành vi nên phải xem tay từng cái.
-  "@typescript-eslint/no-unused-vars": 42,
+  "@typescript-eslint/no-unused-vars": 41,
 
   // Cụm live-session: 6 refs + 3 exhaustive-deps + 2 set-state-in-effect + 1 memo đều nằm
   // trong nhóm hook quấn với socket và Jitsi. Hoãn có chủ đích — xem commit 625d71e.
@@ -54,7 +54,7 @@ const BUDGET = {
 
   "no-useless-assignment": 5,
   "react-refresh/only-export-components": 4,
-  "prefer-const": 2,
+  "prefer-const": 1,
   "@typescript-eslint/no-empty-object-type": 1,
 };
 

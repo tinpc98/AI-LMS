@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "../../../shared/hooks/useAuth";
 import learningDashboardService from "../services/learningDashboard.service";
 import type { LearningDashboardState } from "../types/learningDashboard.types";
+import { getApiErrorMessage } from "../../../shared/utils/apiError";
 
 const defaultState: LearningDashboardState = {
   overview: {
@@ -71,12 +72,12 @@ export function useLearningDashboard() {
         loading: false,
         error: null,
       });
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("🚨 [useLearningDashboard] Error fetching dashboard data:", err);
       setState((prev) => ({
         ...prev,
         loading: false,
-        error: err?.response?.data?.message || "Không thể tải dữ liệu Learning Progress Dashboard.",
+        error: getApiErrorMessage(err, "Không thể tải dữ liệu Learning Progress Dashboard."),
       }));
     }
   }, [userId]);

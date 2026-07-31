@@ -21,6 +21,7 @@ import {
 import assignmentApi from "../../../../api/assignmentApi";
 import { toast } from "../../../../utils/toast";
 import type { ISubmission } from "../../../../interface/assignmentInterface";
+import { getApiErrorMessage } from "../../../../shared/utils/apiError";
 
 const { Text, Paragraph } = Typography;
 
@@ -71,8 +72,8 @@ export const GradeSubmissionModal: React.FC<GradeSubmissionModalProps> = React.m
         toast.success(`Đã lưu kết quả chấm điểm cho ${studentName} thành công!`);
         onClose();
         if (onGraded) onGraded();
-      } catch (err: any) {
-        toast.error(err.response?.data?.message || "Lỗi khi chấm bài!");
+      } catch (err: unknown) {
+        toast.error(getApiErrorMessage(err, "Lỗi khi chấm bài!"));
       } finally {
         setSubmitting(false);
       }

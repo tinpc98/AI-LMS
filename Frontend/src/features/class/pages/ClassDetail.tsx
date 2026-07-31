@@ -32,6 +32,7 @@ import { useLearningAnalytics } from "../../report/hooks/useLearningAnalytics";
 import { useAnalytics } from "../../report/hooks/useAnalytics";
 import { Tooltip, Avatar, List } from "antd";
 import { TrophyOutlined, StarOutlined, ThunderboltOutlined } from "@ant-design/icons";
+import { getApiErrorMessage } from "../../../shared/utils/apiError";
 
 export default function ClassDetail() {
   const { classId } = useParams<{ classId: string }>();
@@ -159,10 +160,10 @@ export default function ClassDetail() {
       );
       const attemptId = response.data.data._id;
       navigate(`/exam/${attemptId}`);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Lỗi khi tạo phiên làm bài:", error);
       setExamPopupState("NONE");
-      toast.error(error.response?.data?.message || "Không thể bắt đầu bài thi.", "Lỗi bài thi");
+      toast.error(getApiErrorMessage(error, "Không thể bắt đầu bài thi."), "Lỗi bài thi");
     }
   };
 

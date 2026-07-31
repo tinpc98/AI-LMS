@@ -2,6 +2,7 @@ import { useState, useCallback, useRef } from "react";
 import aiApi from "../../../api/aiApi";
 import type { IChatMessage, AIChatSession } from "../../../api/aiApi";
 import { toast } from "../../../utils/toast";
+import { getApiErrorStatus } from "../../../shared/utils/apiError";
 
 export type AIChatInitStatus = "idle" | "initializing" | "ready" | "error";
 
@@ -66,7 +67,7 @@ export function useAIChat(lessonId?: string) {
       setInitStatus("ready");
     } catch (err: any) {
       console.error("[AI Chat] init failed", {
-        status: err.response?.status,
+        status: getApiErrorStatus(err),
         data: err.response?.data,
         url: err.config?.url,
         method: err.config?.method,
@@ -75,13 +76,13 @@ export function useAIChat(lessonId?: string) {
       setInitStatus("error");
 
       let errorMsg = "Không thể khởi tạo phiên trò chuyện AI.";
-      if (err.response?.status === 400) {
+      if (getApiErrorStatus(err) === 400) {
         errorMsg = "Không thể mở trợ lý AI trong nội dung hiện tại.";
-      } else if (err.response?.status === 401) {
+      } else if (getApiErrorStatus(err) === 401) {
         errorMsg = "Phiên đăng nhập đã hết hạn.";
-      } else if (err.response?.status === 403) {
+      } else if (getApiErrorStatus(err) === 403) {
         errorMsg = "Bạn không có quyền sử dụng trợ lý AI tại đây.";
-      } else if (err.response?.status === 429) {
+      } else if (getApiErrorStatus(err) === 429) {
         errorMsg = "Bạn đã sử dụng hết lượt AI hiện tại.";
       } else if (err.response?.data?.message) {
         errorMsg = err.response.data.message;
@@ -126,7 +127,7 @@ export function useAIChat(lessonId?: string) {
         console.error("[useAIChat] Send message error:", err);
 
         let errorMsg = "Lỗi khi gửi tin nhắn tới AI.";
-        if (err.response?.status === 429) {
+        if (getApiErrorStatus(err) === 429) {
           errorMsg = "Bạn đã sử dụng hết lượt AI hiện tại (Quota exceeded). Vui lòng thử lại sau.";
         } else if (err.response?.data?.message) {
           errorMsg = err.response.data.message;

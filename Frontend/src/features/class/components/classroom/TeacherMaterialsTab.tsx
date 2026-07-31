@@ -36,6 +36,7 @@ import {
 
 import { classApi } from "../../../../api/classApi";
 import { toast } from "../../../../utils/toast";
+import { getApiErrorMessage } from "../../../../shared/utils/apiError";
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -143,8 +144,8 @@ export const TeacherMaterialsTab: React.FC<TeacherMaterialsTabProps> = React.mem
         setIsAddModalOpen(false);
         form.resetFields();
         if (onRefresh) onRefresh();
-      } catch (err: any) {
-        toast.error(err.response?.data?.message || "Lỗi khi thêm tài liệu!");
+      } catch (err: unknown) {
+        toast.error(getApiErrorMessage(err, "Lỗi khi thêm tài liệu!"));
       } finally {
         setSubmitting(false);
       }
@@ -157,8 +158,8 @@ export const TeacherMaterialsTab: React.FC<TeacherMaterialsTabProps> = React.mem
         await classApi.removeResource(classId, resourceId);
         toast.success("Đã xóa tài liệu khỏi lớp học!");
         if (onRefresh) onRefresh();
-      } catch (err: any) {
-        toast.error(err.response?.data?.message || "Lỗi khi xóa tài liệu!");
+      } catch (err: unknown) {
+        toast.error(getApiErrorMessage(err, "Lỗi khi xóa tài liệu!"));
       }
     };
 

@@ -36,6 +36,7 @@ import gradeApi from "../../../../api/gradeApi";
 import type { IGradeItemDef, IStudentGradeData } from "../../../../api/gradeApi";
 import { toast } from "../../../../utils/toast";
 import { GradeDetailDrawer } from "./GradeDetailDrawer";
+import { getApiErrorMessage } from "../../../../shared/utils/apiError";
 
 const { Title, Text } = Typography;
 
@@ -73,9 +74,9 @@ export const TeacherGradebookTab: React.FC<TeacherGradebookTabProps> = React.mem
         const response = await gradeApi.getGradesByClass(classId);
         setGradeItems(response.gradeItems || []);
         setStudentsGrades(response.students || []);
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error("[TeacherGradebookTab] Fetch error:", err);
-        setError(err.message || "Không thể tải bảng điểm của lớp!");
+        setError(getApiErrorMessage(err, "Không thể tải bảng điểm của lớp!"));
       } finally {
         setLoading(false);
       }

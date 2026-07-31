@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import type { IExtendedExam } from "../../../types/studentExam";
 import axiosClient from "../../../api/axiosClient";
 import { toast } from "../../../utils/toast";
+import { getApiErrorMessage } from "../../../shared/utils/apiError";
 
 export function useExamDetail() {
   const navigate = useNavigate();
@@ -55,9 +56,9 @@ export function useExamDetail() {
           );
           const newAttemptId = response.data.data._id;
           navigate(`/exam/${newAttemptId}`);
-        } catch (error: any) {
+        } catch (error: unknown) {
           console.error("Lỗi khi tạo phiên làm bài:", error);
-          toast.error(error.response?.data?.message || "Không thể bắt đầu bài thi.", "Lỗi bài thi");
+          toast.error(getApiErrorMessage(error, "Không thể bắt đầu bài thi."), "Lỗi bài thi");
         }
       }
     },
