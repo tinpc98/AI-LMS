@@ -2,9 +2,9 @@
 // Business logic cho Assignment/Submission — tách ra từ assignment.controller.js (PR-08).
 // Không phụ thuộc req/res; nhận tham số nguyên thủy, trả data hoặc throw Error có .status.
 import mongoose from "mongoose";
-import cloudinary from "../config/cloudinary.js";
+import cloudinary from "../../config/cloudinary.js";
 import { checkClassTeacherOwnership } from "#modules/class";
-import * as assignmentRepo from "../repositories/assignment.repository.js";
+import * as assignmentRepo from "./assignment.repository.js";
 
 const throwError = (message, status) => {
   const error = new Error(message);

@@ -8,8 +8,8 @@
 import mongoose from "mongoose";
 import { Lesson } from "#modules/lesson";
 import { LessonProgress } from "#modules/lesson";
-import Assignment from "../../models/assignment.model.js";
-import Submission from "../../models/submission.model.js";
+import { Assignment } from "#modules/assignment";
+import { Submission } from "#modules/assignment";
 
 // Bài đã rút lại (withdrawn) không được tính là đã nộp.
 const SUBMITTED_STATUSES = ["submitted", "late", "graded", "resubmitted"];

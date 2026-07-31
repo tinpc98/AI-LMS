@@ -20,8 +20,8 @@ import authRoutes from "#modules/auth/auth.routes.js";
 import userRoutes from "#modules/auth/user.routes.js";
 import classRoutes from "#modules/class/class.routes.js";
 import lessonRoutes from "#modules/lesson/lesson.routes.js";
+import assignmentRoutes from "#modules/assignment/assignment.routes.js";
 
-import AssignmentRouter from "./assignment.routes.js";
 import QuestionRouter from "./question.routes.js";
 import ExamRouter from "./exam.routes.js";
 import ExamAttemptRouter from "./examAttempt.routes.js";
@@ -55,7 +55,7 @@ router.use("/users", userRoutes);
 router.use("/classes", classRoutes);
 router.use("/courses", CourseRouter);
 router.use("/lessons", lessonRoutes);
-router.use("/assignments", AssignmentRouter);
+router.use("/assignments", assignmentRoutes);
 router.use("/attendances", AttendanceRouter);
 router.use("/grades", GradeRouter);
 router.use("/announcements", AnnouncementRouter);

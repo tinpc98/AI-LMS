@@ -4,9 +4,9 @@ import { LessonProgress } from "#modules/lesson";
 import LearningActivity from "../models/learningActivity.model.js";
 import Attendance from "../models/attendance.model.js";
 import Grade from "../models/grade.model.js";
-import Submission from "../models/submission.model.js";
+import { Submission } from "#modules/assignment";
 import ExamAttempt from "../models/examAttempt.model.js";
-import Assignment from "../models/assignment.model.js";
+import { Assignment } from "#modules/assignment";
 import Exam from "../models/exam.model.js";
 
 class AnalyticsService {

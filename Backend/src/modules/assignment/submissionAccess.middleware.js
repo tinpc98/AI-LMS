@@ -11,7 +11,7 @@
 //
 // Đặt ở đây thay vì giữ lại shared/ là có chủ ý: nếu để shared/, việc nó import
 // #modules/class sẽ tạo vi phạm no-shared-to-modules.
-import SubmissionModel from "../models/submission.model.js";
+import SubmissionModel from "./submission.model.js";
 import { checkClassTeacherOwnership } from "#modules/class";
 
 export const canViewSubmission = async (req, res, next) => {

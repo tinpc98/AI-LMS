@@ -1,8 +1,8 @@
 import mongoose from "mongoose";
 import Grade from "../models/grade.model.js";
 import { Class as classModel } from "#modules/class";
-import Assignment from "../models/assignment.model.js";
-import Submission from "../models/submission.model.js";
+import { Assignment } from "#modules/assignment";
+import { Submission } from "#modules/assignment";
 import Exam from "../models/exam.model.js";
 import ExamAttempt from "../models/examAttempt.model.js";
 import { User } from "#modules/auth";

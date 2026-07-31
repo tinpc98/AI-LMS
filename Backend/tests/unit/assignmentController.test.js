@@ -3,9 +3,9 @@
 // Mock toàn bộ Mongoose model + Cloudinary + checkClassTeacherOwnership (qua classModel).
 import { describe, it, expect, afterEach, vi } from "vitest";
 import mongoose from "mongoose";
-import assignmentController from "../../src/controllers/assignment.controller.js";
-import Assignment from "../../src/models/assignment.model.js";
-import Submission from "../../src/models/submission.model.js";
+import assignmentController from "../../src/modules/assignment/assignment.controller.js";
+import { Assignment } from "#modules/assignment";
+import { Submission } from "#modules/assignment";
 import cloudinary from "../../src/config/cloudinary.js";
 import { Class as classModel } from "#modules/class";
 

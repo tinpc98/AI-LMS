@@ -1,4 +1,4 @@
-import * as assignmentService from "../services/assignment.service.js";
+import * as assignmentService from "./assignment.service.js";
 
 const assignmentController = {
   // ==========================================
@@ -25,13 +25,11 @@ const assignmentController = {
         teacherRole: req.user?.role,
       });
 
-      return res
-        .status(201)
-        .json({
-          message: "Tạo bài tập thành công",
-          assignment: newAssignment,
-          data: newAssignment,
-        });
+      return res.status(201).json({
+        message: "Tạo bài tập thành công",
+        assignment: newAssignment,
+        data: newAssignment,
+      });
     } catch (error) {
       return res
         .status(error.status || 500)

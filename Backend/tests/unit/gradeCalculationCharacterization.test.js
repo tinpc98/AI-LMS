@@ -7,10 +7,10 @@ import { describe, it, expect, afterEach, vi } from "vitest";
 import gradeService from "../../src/services/grade.service.js";
 import { Class as classModel } from "#modules/class";
 import { User } from "#modules/auth";
-import Assignment from "../../src/models/assignment.model.js";
+import { Assignment } from "#modules/assignment";
 import Exam from "../../src/models/exam.model.js";
 import Grade from "../../src/models/grade.model.js";
-import Submission from "../../src/models/submission.model.js";
+import { Submission } from "#modules/assignment";
 import ExamAttempt from "../../src/models/examAttempt.model.js";
 
 const CLASS_ID = "607f1f77bcf86cd799439111";

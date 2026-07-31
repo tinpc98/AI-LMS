@@ -1,8 +1,8 @@
 // File: src/repositories/assignment.repository.js
 // Chứa toàn bộ query Mongoose cho Assignment + Submission — không chứa business logic,
 // không phụ thuộc req/res. Tách ra từ assignment.controller.js (PR-08).
-import Assignment from "../models/assignment.model.js";
-import Submission from "../models/submission.model.js";
+import Assignment from "./assignment.model.js";
+import Submission from "./submission.model.js";
 
 export const findAssignmentById = (id, { session } = {}) => {
   const query = Assignment.findById(id);
