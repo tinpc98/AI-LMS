@@ -106,47 +106,20 @@ export function useStudentLive(
     return list;
   }, [classInfo, classId]);
 
-  // Past Sessions history list
-  const pastSessions: IExtendedLiveSession[] = useMemo(() => {
-    const list: IExtendedLiveSession[] = [
-      {
-        _id: "past-1",
-        id: "past-1",
-        classId: classId || "",
-        roomName: "room-past-1",
-        meetingRoomId: "room-past-1",
-        sessionNumber: 1,
-        title: "Buổi 1: Tổng quan môn học & Giới thiệu chương trình",
-        createdBy: "",
-        scheduledStart: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-        status: "Completed",
-        isLiveNow: false,
-        platform: "Jitsi Meet",
-        teacherName: classInfo?.teacher?.fullName || "Giảng viên",
-        createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-        updatedAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-      },
-      {
-        _id: "past-2",
-        id: "past-2",
-        classId: classId || "",
-        roomName: "room-past-2",
-        meetingRoomId: "room-past-2",
-        sessionNumber: 2,
-        title: "Buổi 2: Hướng dẫn thực hành dự án & Thảo luận nhóm",
-        createdBy: "",
-        scheduledStart: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-        status: "Completed",
-        isLiveNow: false,
-        platform: "Jitsi Meet",
-        teacherName: classInfo?.teacher?.fullName || "Giảng viên",
-        createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-        updatedAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-      },
-    ];
-
-    return list;
-  }, [classInfo, classId]);
+  // Lịch sử các buổi học đã diễn ra.
+  //
+  // ĐÃ GỠ HAI BUỔI HỌC BỊA (Wave 5). Bản cũ trả về cứng "Buổi 1: Tổng quan môn học" và
+  // "Buổi 2: Hướng dẫn thực hành dự án" với mốc thời gian 7 ngày và 3 ngày trước, cho MỌI
+  // lớp. Chúng được trộn thẳng vào cùng chỗ với dữ liệu thật từ API, không nhãn mác gì, và
+  // LiveSessionCard lấy pastSessions[0] làm mục hiển thị dự phòng — nên học sinh nhìn thấy
+  // một buổi học chưa từng tồn tại trong lớp của mình. stats.attended cũng đếm cả hai.
+  //
+  // Trả mảng rỗng cho tới khi có API thật: LiveSessionCard đã có sẵn trạng thái rỗng đúng
+  // nghĩa ("Chưa có buổi học trực tuyến — Giảng viên sẽ tạo buổi học khi bắt đầu tiết học"),
+  // nên màn hình trống ở đây là câu trả lời trung thực, không phải lỗi thiếu sót.
+  //
+  // TODO: backend chưa có endpoint liệt kê buổi học đã kết thúc theo lớp.
+  const pastSessions: IExtendedLiveSession[] = useMemo(() => [], []);
 
   // Stats calculation
   const stats: StudentLiveStats = useMemo(() => {
