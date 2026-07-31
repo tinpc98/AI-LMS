@@ -1,5 +1,6 @@
 import xlsx from "xlsx";
 import Question from "./question.model.js";
+import { ValidationError } from "#shared/utils/appError.js";
 
 const importQuestionsFromExcel = async (fileBuffer) => {
   // 1. Đọc dữ liệu từ buffer
@@ -8,7 +9,7 @@ const importQuestionsFromExcel = async (fileBuffer) => {
   const rawData = xlsx.utils.sheet_to_json(workbook.Sheets[sheetName]);
 
   if (!rawData || rawData.length === 0) {
-    throw new Error("File Excel trống hoặc không đúng định dạng!");
+    throw new ValidationError("File Excel trống hoặc không đúng định dạng!");
   }
 
   const validQuestions = [];
@@ -56,7 +57,7 @@ const importQuestionsFromExcel = async (fileBuffer) => {
 
   // 4. Kiểm tra xem sau khi lọc, có còn câu nào hợp lệ để thêm không
   if (validQuestions.length === 0) {
-    throw new Error(
+    throw new ValidationError(
       "Không có câu hỏi nào được thêm mới! Tất cả đều đã trùng lặp hoặc file bị lỗi."
     );
   }
