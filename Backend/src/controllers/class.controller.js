@@ -5,6 +5,7 @@ import classModel from "../models/class.model.js";
 import Course from "../models/course.model.js";
 import User from "../models/user.models.js";
 import classService from "../services/class.service.js";
+import { attachStudentProgress } from "../services/classProgress.service.js";
 
 // Lấy danh sách lớp học (Hỗ trợ phân trang, tìm kiếm và lọc theo vai trò)
 export const ClassList = async (req, res) => {
@@ -31,8 +32,12 @@ export const ClassList = async (req, res) => {
       classModel.countDocuments(finalQuery),
     ]);
 
+    // Bổ sung tiến độ học tập thật cho học sinh (thay cho số ngẫu nhiên phía Frontend).
+    // Với giáo viên/admin, hàm này trả về danh sách nguyên trạng và không tốn query nào.
+    const dataWithProgress = await attachStudentProgress(classList, { id: userId, role: userRole });
+
     return res.status(200).json({ success: true, message: "Lấy danh sách lớp học thành công",
-      data: classList,
+      data: dataWithProgress,
       pagination: {
         total,
         page: pageNum,

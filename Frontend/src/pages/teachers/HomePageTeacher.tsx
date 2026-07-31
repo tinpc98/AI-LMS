@@ -1,9 +1,7 @@
-import { useState, useEffect, useCallback } from "react";
 import { Row, Col, Alert, Button } from "antd";
 import { ReloadOutlined } from "@ant-design/icons";
 import { useAuth } from "../../hooks/useAuth";
-import { classApi } from "../../api/classApi";
-import axiosClient from "../../api/axiosClient";
+import { useTeacherDashboardQuery } from "../../features/dashboard/hooks/useTeacherDashboardQuery";
 
 import { TeacherWelcomeHeader } from "../../components/teacher/TeacherWelcomeHeader";
 import { TeacherQuickStats } from "../../components/teacher/TeacherQuickStats";
@@ -17,88 +15,17 @@ import { TeacherLiveSessionWidget } from "../../components/teacher/TeacherLiveSe
 export default function HomePageTeacher() {
   const { user } = useAuth();
 
-  // State Management
-  const [classes, setClasses] = useState<any[]>([]);
-  const [announcements, setAnnouncements] = useState<any[]>([]);
-  const [assignments, setAssignments] = useState<any[]>([]);
-  const [activeLiveSessions, setActiveLiveSessions] = useState<any[]>([]);
-
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
-
-  // Fetch real data from Backend
-  const fetchDashboardData = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-
-    try {
-      // 1. Fetch Classes
-      const classRes = await classApi.getMyClasses();
-      const rawClasses = classRes.data?.data || classRes.data?.classList || classRes.data || [];
-      const classList = Array.isArray(rawClasses) ? rawClasses : [];
-      setClasses(classList);
-
-      // 2. Fetch Announcements
-      try {
-        const annRes = await axiosClient.get("/api/announcements");
-        const rawAnn = annRes.data?.data || annRes.data?.items || annRes.data || [];
-        setAnnouncements(Array.isArray(rawAnn) ? rawAnn : []);
-      } catch (e) {
-        console.warn("[Teacher Dashboard] Announcements fetch warning:", e);
-      }
-
-      // 3. Fetch Assignments for assigned classes
-      try {
-        if (classList.length > 0) {
-          const assignmentPromises = classList.slice(0, 5).map((cls: any) =>
-            axiosClient.get(`/api/assignments/class/${cls._id}`).catch(() => null)
-          );
-          const assignmentResults = await Promise.all(assignmentPromises);
-          const aggregatedAssignments: any[] = [];
-          assignmentResults.forEach((res) => {
-            if (res?.data?.assignments) {
-              aggregatedAssignments.push(...res.data.assignments);
-            }
-          });
-          setAssignments(aggregatedAssignments);
-        }
-      } catch (e) {
-        console.warn("[Teacher Dashboard] Assignments fetch warning:", e);
-      }
-
-      // 4. Fetch Active Live Sessions
-      try {
-        if (classList.length > 0) {
-          const livePromises = classList.slice(0, 5).map((cls: any) =>
-            axiosClient.get(`/api/live/classes/${cls._id}/active`).catch(() => null)
-          );
-          const liveResults = await Promise.all(livePromises);
-          const activeSessions = liveResults
-            .filter((res) => res?.data?.data && res.data.data.status === "Live")
-            .map((res) => res?.data?.data);
-          setActiveLiveSessions(activeSessions);
-        }
-      } catch (e) {
-        console.warn("[Teacher Dashboard] Live Sessions fetch warning:", e);
-      }
-
-    } catch (err: any) {
-      console.error("[Teacher Dashboard] Fetch Error:", err);
-      setError(err.message || "Lỗi khi tải dữ liệu từ máy chủ. Vui lòng thử lại!");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchDashboardData();
-  }, [fetchDashboardData]);
-
-  // Aggregate Stats
-  const totalStudentsCount = classes.reduce((sum, c) => {
-    const studentCount = c.currentStudents ?? (Array.isArray(c.students) ? c.students.length : 0);
-    return sum + studentCount;
-  }, 0);
+  // Toàn bộ việc lấy & ghép dữ liệu nằm ở hook/service, component chỉ hiển thị.
+  const {
+    classes,
+    announcements,
+    assignments,
+    activeLiveSessions,
+    totalStudentsCount,
+    loading,
+    error,
+    refetch,
+  } = useTeacherDashboardQuery();
 
   return (
     <div style={{ padding: "24px", maxWidth: 1400, margin: "0 auto", backgroundColor: "#f8f9fa", minHeight: "100vh" }}>
@@ -108,7 +35,7 @@ export default function HomePageTeacher() {
         email={user?.email}
         avatar={(user as any)?.avatar}
         loading={loading}
-        onRefresh={fetchDashboardData}
+        onRefresh={refetch}
       />
 
       {/* Error Alert State */}
@@ -119,7 +46,7 @@ export default function HomePageTeacher() {
           type="error"
           showIcon
           action={
-            <Button size="small" type="primary" danger icon={<ReloadOutlined />} onClick={fetchDashboardData}>
+            <Button size="small" type="primary" danger icon={<ReloadOutlined />} onClick={() => refetch()}>
               Thử lại
             </Button>
           }

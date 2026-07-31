@@ -41,7 +41,10 @@ export const studentClassApi = {
           : null,
         totalStudents: totalStud,
         maxStudents: item.maxStudents || 40,
-        progress: item.progress !== undefined ? item.progress : Math.floor(Math.random() * 40) + 50,
+        // Backend (GET /api/classes) nay đã trả tiến độ thật cho học sinh. Khi lớp chưa có
+        // bài giảng/bài tập nào, Backend trả null — giữ nguyên null để UI hiển thị "—",
+        // TUYỆT ĐỐI không sinh số ngẫu nhiên thay thế như bản cũ.
+        progress: typeof item.progress === "number" ? item.progress : null,
         status: mappedStatus,
         startDate: item.startDate || item.createdAt || new Date().toISOString(),
         endDate: item.endDate,

@@ -34,10 +34,25 @@ export const mapClassResponse = (rawClasses: any[]): TodayClassItem[] => {
   });
 };
 
+// Cửa sổ thời gian để quy đổi "còn bao lâu tới hạn" thành mức khẩn cấp 0-100.
+// Bài tập còn hơn 7 ngày coi như chưa gấp; càng sát hạn giá trị càng cao.
+const URGENCY_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
+
+const computeUrgentPercent = (dueDate: string, isSubmitted: boolean): number => {
+  if (isSubmitted) return 100;
+
+  const msLeft = new Date(dueDate).getTime() - Date.now();
+  if (!Number.isFinite(msLeft)) return 0;
+  if (msLeft <= 0) return 100; // đã quá hạn
+
+  const ratio = 1 - msLeft / URGENCY_WINDOW_MS;
+  return Math.min(100, Math.max(0, Math.round(ratio * 100)));
+};
+
 export const mapAssignmentResponse = (rawAssignments: any[], classMap?: Map<string, string>): AssignmentSummaryItem[] => {
   if (!Array.isArray(rawAssignments)) return [];
 
-  return rawAssignments.map((item: any) => {
+  return rawAssignments.map((item: any, index: number) => {
     const dueDate = item.dueDate || item.createdAt || new Date().toISOString();
     const isSubmitted = Boolean(item.submission || item.isSubmitted);
     const isLate = dueDate && new Date(dueDate).getTime() < Date.now() && !isSubmitted;
@@ -45,13 +60,16 @@ export const mapAssignmentResponse = (rawAssignments: any[], classMap?: Map<stri
     const className = item.className || (classMap && classMap.get(classId)) || "Lớp học";
 
     return {
-      id: item._id || item.id || `assign-${Math.random()}`,
+      // Fallback dùng index thay vì Math.random(): key ngẫu nhiên sẽ đổi sau MỖI lần render,
+      // khiến React huỷ và dựng lại toàn bộ item thay vì tái sử dụng.
+      id: item._id || item.id || `assign-${index}`,
       title: item.title || "Bài tập mới",
       className,
       classId,
       dueDate,
       status: isSubmitted ? "SUBMITTED" : isLate ? "LATE" : "PENDING",
-      urgentPercent: isSubmitted ? 100 : Math.min(100, Math.max(15, Math.floor(Math.random() * 60) + 20)),
+      // Suy ra từ hạn nộp thật thay vì số ngẫu nhiên (Wave 1.1).
+      urgentPercent: computeUrgentPercent(dueDate, isSubmitted),
     };
   });
 };
@@ -59,12 +77,12 @@ export const mapAssignmentResponse = (rawAssignments: any[], classMap?: Map<stri
 export const mapExamResponse = (rawExams: any[], classMap?: Map<string, string>): ExamSummaryItem[] => {
   if (!Array.isArray(rawExams)) return [];
 
-  return rawExams.map((item: any) => {
+  return rawExams.map((item: any, index: number) => {
     const classId = item.classId?._id || item.classId || "";
     const className = item.className || (classMap && classMap.get(classId)) || "Lớp học";
 
     return {
-      id: item._id || item.id || `exam-${Math.random()}`,
+      id: item._id || item.id || `exam-${index}`,
       title: item.title || "Bài kiểm tra đánh giá",
       className,
       startTime: item.startTime || item.createdAt || new Date().toISOString(),
@@ -79,8 +97,8 @@ export const mapExamResponse = (rawExams: any[], classMap?: Map<string, string>)
 export const mapAnnouncementResponse = (rawAnnouncements: any[]): AnnouncementSummaryItem[] => {
   if (!Array.isArray(rawAnnouncements)) return [];
 
-  return rawAnnouncements.map((item: any) => ({
-    id: item._id || item.id || `ann-${Math.random()}`,
+  return rawAnnouncements.map((item: any, index: number) => ({
+    id: item._id || item.id || `ann-${index}`,
     title: item.title || "Thông báo từ giảng viên",
     content: item.content || "",
     authorName: item.createdBy?.fullName || item.authorName || "Giảng viên",
