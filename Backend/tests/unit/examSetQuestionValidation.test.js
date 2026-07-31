@@ -4,7 +4,7 @@ import { describe, it, expect } from "vitest";
 import {
   examSetQuestionCreateValidation,
   examSetQuestionUpdateValidation,
-} from "../../src/utils/validators.js";
+} from "../../src/modules/exam-set/examSet.validator.js";
 import { isEditableExamSetStatus } from "#modules/exam-set/examSet.service.js";
 import {
   createRequest,

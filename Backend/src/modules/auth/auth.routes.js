@@ -5,7 +5,7 @@
 // qua /api/auth và ngược lại — sơ đồ URL nhân đôi, không phản ánh đúng phân quyền.
 import { Router } from "express";
 import { getMyProfile, login, updateMyProfile } from "./auth.controller.js";
-import { loginValidation } from "../../utils/validators.js";
+import { loginValidation } from "./auth.validator.js";
 import { verifyUser } from "./auth.middleware.js";
 import { loginRateLimit } from "./loginRateLimit.middleware.js";
 

@@ -41,8 +41,8 @@ import {
   examSetShareListValidation,
   examSetSharedWithMeValidation,
   examSetShareUpdateMetadataValidation,
-} from "../../utils/validators.js";
-import { examSetVersionsValidation } from "../../utils/validators.js";
+} from "./examSet.validator.js";
+import { examSetVersionsValidation } from "./examSet.validator.js";
 import multer from "multer";
 
 const router = express.Router();

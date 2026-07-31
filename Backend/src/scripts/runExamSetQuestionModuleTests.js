@@ -12,7 +12,7 @@ import {
   examSetQuestionCreateValidation,
   examSetQuestionUpdateValidation,
   reorderQuestionsValidation,
-} from "../utils/validators.js";
+} from "#modules/exam-set/examSet.validator.js";
 
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key-change-in-env";
 
