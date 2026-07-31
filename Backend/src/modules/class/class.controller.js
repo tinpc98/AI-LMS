@@ -1,7 +1,7 @@
 import crypto from "crypto";
 import mongoose from "mongoose";
 import { matchedData } from "express-validator";
-import classModel from "./class.model.js";
+import * as classRepo from "./class.repository.js";
 import { Course } from "#modules/course";
 import { User } from "#modules/auth";
 import classService from "./class.service.js";
@@ -22,18 +22,8 @@ export const ClassList = async (req, res) => {
     );
 
     const [classList, total] = await Promise.all([
-      classModel
-        .find(finalQuery)
-        .populate("teacherId", "fullName email avatar phone teachingSubjects")
-        .populate("assignedBy", "fullName email")
-        .populate("courseId", "courseName subject grade status description")
-        .populate("students.studentId", "fullName email avatar phone")
-        .populate("resources.uploadedBy", "fullName email")
-        .sort(sortOption)
-        .skip(skip)
-        .limit(limitNum)
-        .lean(),
-      classModel.countDocuments(finalQuery),
+      classRepo.findClassesPaginated(finalQuery, { skip, limit: limitNum, sort: sortOption }),
+      classRepo.countClasses(finalQuery),
     ]);
 
     // Bổ sung tiến độ học tập thật cho học sinh (thay cho số ngẫu nhiên phía Frontend).
@@ -71,14 +61,7 @@ export const ClassListById = async (req, res) => {
   }
 
   try {
-    const classDetail = await classModel
-      .findById(id)
-      .populate("teacherId", "fullName email phone avatar teachingSubjects")
-      .populate("assignedBy", "fullName email")
-      .populate("students.studentId", "fullName email phone avatar")
-      .populate("resources.uploadedBy", "fullName email")
-      .populate("courseId", "courseName subject grade status description")
-      .lean();
+    const classDetail = await classRepo.findClassByIdPopulated(id);
 
     if (!classDetail) {
       return res.status(404).json({ success: false, message: "Lớp học không tồn tại" });
@@ -177,7 +160,7 @@ export const AddNewClass = async (req, res) => {
       status: status || "Draft",
     };
 
-    const savedClass = await new classModel(newClassData).save();
+    const savedClass = await classRepo.createClass(newClassData).save();
     return res
       .status(201)
       .json({ success: true, message: "Tạo lớp học thành công", data: savedClass });
@@ -209,13 +192,7 @@ export const UpdateClass = async (req, res) => {
         .json({ success: false, message: "Không có trường hợp lệ nào để cập nhật." });
     }
 
-    const updatedClass = await classModel
-      .findByIdAndUpdate(id, updateData, { new: true, runValidators: true })
-      .populate("teacherId", "fullName email phone avatar teachingSubjects")
-      .populate("assignedBy", "fullName email")
-      .populate("students.studentId", "fullName email phone avatar")
-      .populate("resources.uploadedBy", "fullName email")
-      .populate("courseId", "courseName subject grade status description");
+    const updatedClass = await classRepo.updateClassByIdPopulated(id, updateData);
 
     if (!updatedClass) {
       return res.status(404).json({ success: false, message: "Lớp học không tồn tại" });
@@ -249,7 +226,7 @@ export const AssignTeacher = async (req, res) => {
 
   try {
     // Validate Class Status before assigning
-    const targetClass = await classModel.findById(id);
+    const targetClass = await classRepo.findClassById(id);
     if (!targetClass) {
       return res.status(404).json({ success: false, message: "Lớp học không tồn tại" });
     }
@@ -268,17 +245,11 @@ export const AssignTeacher = async (req, res) => {
       return res.status(400).json({ success: false, message: "Giáo viên không hợp lệ" });
     }
 
-    const updatedClass = await classModel
-      .findByIdAndUpdate(
-        id,
-        { teacherId, assignedBy: req.user.id || req.user._id, assignedAt: new Date() },
-        { new: true, runValidators: true }
-      )
-      .populate("teacherId", "fullName email avatar phone teachingSubjects")
-      .populate("assignedBy", "fullName email")
-      .populate("courseId", "courseName subject grade status description")
-      .populate("students.studentId", "fullName email avatar phone")
-      .populate("resources.uploadedBy", "fullName email");
+    const updatedClass = await classRepo.updateClassByIdPopulated(id, {
+      teacherId,
+      assignedBy: req.user.id || req.user._id,
+      assignedAt: new Date(),
+    });
 
     if (!updatedClass) {
       return res.status(404).json({ success: false, message: "Lớp học không tồn tại" });
@@ -318,28 +289,21 @@ export const AssignStudent = async (req, res) => {
         .json({ success: false, message: "Student not found or invalid role." });
     }
 
-    const updatedClass = await classModel
-      .findOneAndUpdate(
-        {
-          _id: id,
-          isEnrollmentOpen: true,
-          "students.studentId": { $ne: studentId },
-          $expr: { $lt: [{ $size: { $ifNull: ["$students", []] } }, "$maxStudents"] },
-        },
-        {
-          $push: { students: { studentId, joinedAt: new Date(), status: "Enrolled" } },
-          $inc: { currentStudents: 1 },
-        },
-        { new: true, runValidators: true }
-      )
-      .populate("teacherId", "fullName email avatar phone teachingSubjects")
-      .populate("assignedBy", "fullName email")
-      .populate("courseId", "courseName subject grade status description")
-      .populate("students.studentId", "fullName email avatar phone")
-      .populate("resources.uploadedBy", "fullName email");
+    const updatedClass = await classRepo.findOneAndUpdateClassPopulated(
+      {
+        _id: id,
+        isEnrollmentOpen: true,
+        "students.studentId": { $ne: studentId },
+        $expr: { $lt: [{ $size: { $ifNull: ["$students", []] } }, "$maxStudents"] },
+      },
+      {
+        $push: { students: { studentId, joinedAt: new Date(), status: "Enrolled" } },
+        $inc: { currentStudents: 1 },
+      }
+    );
 
     if (!updatedClass) {
-      const classCheck = await classModel.findById(id);
+      const classCheck = await classRepo.findClassById(id);
       if (!classCheck) return res.status(404).json({ success: false, message: "Class not found." });
       if (!classCheck.isEnrollmentOpen)
         return res
@@ -388,20 +352,13 @@ export const RemoveStudent = async (req, res) => {
   }
 
   try {
-    const updatedClass = await classModel
-      .findOneAndUpdate(
-        { _id: id, "students.studentId": studentId },
-        {
-          $pull: { students: { studentId } },
-          $inc: { currentStudents: -1 },
-        },
-        { new: true, runValidators: true }
-      )
-      .populate("teacherId", "fullName email avatar phone teachingSubjects")
-      .populate("assignedBy", "fullName email")
-      .populate("courseId", "courseName subject grade status description")
-      .populate("students.studentId", "fullName email avatar phone")
-      .populate("resources.uploadedBy", "fullName email");
+    const updatedClass = await classRepo.findOneAndUpdateClassPopulated(
+      { _id: id, "students.studentId": studentId },
+      {
+        $pull: { students: { studentId } },
+        $inc: { currentStudents: -1 },
+      }
+    );
 
     if (!updatedClass) {
       return res.status(404).json({ success: false, message: "Lớp học không tồn tại" });
@@ -435,7 +392,7 @@ export const AddResource = async (req, res) => {
         .json({ success: false, message: "Tiêu đề và URL tài nguyên là bắt buộc" });
     }
 
-    const targetClass = await classModel.findById(id);
+    const targetClass = await classRepo.findClassById(id);
     if (!targetClass) {
       return res.status(404).json({ success: false, message: "Lớp học không tồn tại" });
     }
@@ -495,7 +452,7 @@ export const RemoveResource = async (req, res) => {
         .json({ success: false, message: "Bạn không có quyền xóa tài nguyên của lớp học này!" });
     }
 
-    const targetClass = await classModel.findById(id);
+    const targetClass = await classRepo.findClassById(id);
     if (!targetClass) {
       return res.status(404).json({ success: false, message: "Lớp học không tồn tại" });
     }
@@ -528,7 +485,7 @@ export const DeleteClass = async (req, res) => {
 
   try {
     const userId = req.user?.id || req.user?._id;
-    const deleteClass = await classModel.softDelete(id, userId);
+    const deleteClass = await classRepo.softDeleteClass(id, userId);
 
     if (!deleteClass) {
       return res.status(404).json({ success: false, message: "Lớp học không tồn tại" });
@@ -560,19 +517,13 @@ export const ClassTrashList = async (req, res) => {
     );
 
     const [classList, total] = await Promise.all([
-      classModel
-        .find(finalQuery)
-        .withDeleted()
-        .populate("teacherId", "fullName email avatar phone teachingSubjects")
-        .populate("assignedBy", "fullName email")
-        .populate("courseId", "courseName subject grade status description")
-        .populate("students.studentId", "fullName email avatar phone")
-        .populate("resources.uploadedBy", "fullName email")
-        .sort(sortOption)
-        .skip(skip)
-        .limit(limitNum)
-        .lean(),
-      classModel.countDocuments(finalQuery).withDeleted(),
+      classRepo.findClassesPaginated(finalQuery, {
+        skip,
+        limit: limitNum,
+        sort: sortOption,
+        withDeleted: true,
+      }),
+      classRepo.countClasses(finalQuery, { withDeleted: true }),
     ]);
 
     return res.status(200).json({
@@ -604,7 +555,7 @@ export const RestoreClass = async (req, res) => {
   }
 
   try {
-    const restoredClass = await classModel.restore(id);
+    const restoredClass = await classRepo.restoreClass(id);
 
     if (!restoredClass) {
       return res.status(404).json({
@@ -636,7 +587,7 @@ export const PermanentDeleteClass = async (req, res) => {
   }
 
   try {
-    const deleted = await classModel.findOneAndDelete({ _id: id, isDeleted: true }).withDeleted();
+    const deleted = await classRepo.permanentlyDeleteClass(id);
 
     if (!deleted) {
       return res.status(404).json({
@@ -670,7 +621,7 @@ export const UnassignTeacher = async (req, res) => {
 
   try {
     // Validate Class Status before unassigning
-    const targetClass = await classModel.findById(id);
+    const targetClass = await classRepo.findClassById(id);
     if (!targetClass) {
       return res.status(404).json({ success: false, message: "Lớp học không tồn tại" });
     }
@@ -683,23 +634,13 @@ export const UnassignTeacher = async (req, res) => {
       });
     }
 
-    const updatedClass = await classModel
-      .findByIdAndUpdate(
-        id,
-        {
-          $set: {
-            teacherId: null,
-            assignedBy: null,
-            assignedAt: null,
-          },
-        },
-        { new: true }
-      )
-      .populate("teacherId", "fullName email avatar phone teachingSubjects")
-      .populate("assignedBy", "fullName email")
-      .populate("courseId", "courseName subject grade status description")
-      .populate("students.studentId", "fullName email avatar phone")
-      .populate("resources.uploadedBy", "fullName email");
+    const updatedClass = await classRepo.updateClassByIdPopulated(id, {
+      $set: {
+        teacherId: null,
+        assignedBy: null,
+        assignedAt: null,
+      },
+    });
 
     if (!updatedClass) {
       return res.status(404).json({ success: false, message: "Lớp học không tồn tại" });
@@ -739,10 +680,9 @@ export const UpdateStudentStatus = async (req, res) => {
   }
 
   try {
-    const updatedClass = await classModel.findOneAndUpdate(
+    const updatedClass = await classRepo.findOneAndUpdateClass(
       { _id: id, "students.studentId": studentId },
-      { $set: { "students.$.status": status } },
-      { new: true, runValidators: true }
+      { $set: { "students.$.status": status } }
     );
 
     if (!updatedClass) {
