@@ -7,15 +7,7 @@ const scheduleSchema = new Schema(
     days: [
       {
         type: String,
-        enum: [
-          "Monday",
-          "Tuesday",
-          "Wednesday",
-          "Thursday",
-          "Friday",
-          "Saturday",
-          "Sunday",
-        ],
+        enum: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
       },
     ],
     startTime: { type: String, trim: true, default: "" },
@@ -226,20 +218,13 @@ const classSchema = new Schema(
     // Trạng thái vòng đời lớp học chuẩn hóa (loại bỏ giá trị legacy)
     status: {
       type: String,
-      enum: [
-        "Draft",
-        "Ready",
-        "Ongoing",
-        "Completed",
-        "Cancelled",
-        "Archived"
-      ],
+      enum: ["Draft", "Ready", "Ongoing", "Completed", "Cancelled", "Archived"],
       default: "Draft",
     },
     isDeleted: {
       type: Boolean,
-      default: false
-    }
+      default: false,
+    },
   },
   { timestamps: true }
 );

@@ -66,7 +66,7 @@ const userSchema = new Schema(
     },
     isDeleted: {
       type: Boolean,
-      default: false
+      default: false,
     },
 
     // --- CÁC TRƯỜNG DÀNH RIÊNG CHO TEACHER ---

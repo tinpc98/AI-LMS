@@ -1,5 +1,5 @@
-import 'dotenv/config';
-import fs from 'fs';
+import "dotenv/config";
+import fs from "fs";
 import { GeminiAIProvider } from "../ai/providers/gemini.provider.js";
 import { AIErrorCode } from "../utils/aiError.js";
 
@@ -84,7 +84,7 @@ async function runUnitTests() {
 
     // 9. Timeout (Mock Promise không resolve)
     console.log("\n6. Test Timeout");
-    provider.ai.models.generateContent = () => new Promise(resolve => setTimeout(resolve, 5000));
+    provider.ai.models.generateContent = () => new Promise((resolve) => setTimeout(resolve, 5000));
     try {
       await provider.generateJSON({ prompt: "test", timeoutMs: 50 });
       assert(false, "Không ném lỗi timeout");
@@ -111,8 +111,10 @@ async function runUnitTests() {
     // 13. Smoke script không dùng process.exit()
     console.log("\n9. Test Script Code");
     const smokeContent = fs.readFileSync("src/scripts/testGeminiProviderSmoke.js", "utf8");
-    assert(!smokeContent.includes("process.exit("), "testGeminiProviderSmoke.js không gọi process.exit()");
-
+    assert(
+      !smokeContent.includes("process.exit("),
+      "testGeminiProviderSmoke.js không gọi process.exit()"
+    );
   } catch (error) {
     console.error("Lỗi không mong muốn trong lúc test:", error);
     failed++;

@@ -26,9 +26,9 @@ const liveSessionSchema = new mongoose.Schema(
         joinTime: { type: Date, default: Date.now },
         leaveTime: { type: Date, default: null },
         durationSeconds: { type: Number, default: 0 },
-        status: { type: String, enum: ["Present", "Late", "Absent"], default: "Present" }
-      }
-    ]
+        status: { type: String, enum: ["Present", "Late", "Absent"], default: "Present" },
+      },
+    ],
   },
   { timestamps: true }
 );

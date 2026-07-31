@@ -63,7 +63,11 @@ const EditModelModal = ({ open, mode, initialValues, onSubmit, onCancel }: EditM
           />
         </Form.Item>
 
-        <Form.Item name="name" label="Model Name" rules={[{ required: true, message: "Please enter model name" }]}>
+        <Form.Item
+          name="name"
+          label="Model Name"
+          rules={[{ required: true, message: "Please enter model name" }]}
+        >
           <Input placeholder="e.g. GPT-4.5 Turbo" />
         </Form.Item>
 
@@ -75,7 +79,11 @@ const EditModelModal = ({ open, mode, initialValues, onSubmit, onCancel }: EditM
           <InputNumber min={1} max={99} style={{ width: "100%" }} />
         </Form.Item>
 
-        <Form.Item name="maxContextTokens" label="Context Window (Tokens)" rules={[{ required: true }]}>
+        <Form.Item
+          name="maxContextTokens"
+          label="Context Window (Tokens)"
+          rules={[{ required: true }]}
+        >
           <InputNumber min={4000} max={2000000} step={4000} style={{ width: "100%" }} />
         </Form.Item>
 

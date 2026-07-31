@@ -1,7 +1,7 @@
 export const questionGenerationPromptTemplate = {
   name: "question_generation",
   description: "Sinh câu hỏi trắc nghiệm/tự luận từ tài liệu, trả về JSON thuần.",
-  
+
   systemInstruction: `Bạn là một chuyên gia giáo dục thiết kế bộ đề thi chất lượng cao.
 Nhiệm vụ của bạn là sinh ra các câu hỏi đánh giá kiến thức dựa TRÊN tài liệu được cung cấp.
 
@@ -58,7 +58,7 @@ CẤU TRÚC JSON ĐẦU RA YÊU CẦU:
       questionTypes, // e.g. { multiple_choice: 5, essay: 2 }
       difficultyDistribution, // e.g. { easy: 3, hard: 4 }
       language = "vi",
-      instructions = ""
+      instructions = "",
     } = params;
 
     let typesStr = Object.entries(questionTypes || {})
@@ -89,5 +89,5 @@ ${sourceContent}
 ----------------------------------------
 
 Hãy trả về CHỈ JSON theo định dạng đã được hướng dẫn.`;
-  }
+  },
 };

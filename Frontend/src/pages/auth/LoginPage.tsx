@@ -57,7 +57,8 @@ const Login = () => {
       }
     } catch (error: unknown) {
       if (axios.isAxiosError(error)) {
-        const serverMessage = error.response?.data?.message || "Tài khoản hoặc mật khẩu không chính xác!";
+        const serverMessage =
+          error.response?.data?.message || "Tài khoản hoặc mật khẩu không chính xác!";
         toast.error(serverMessage);
       } else {
         toast.error("Đã xảy ra lỗi hệ thống không xác định.");
@@ -109,7 +110,9 @@ const Login = () => {
           {/* Tiêu đề Form */}
           <div className="text-center mb-6">
             <h1 className="text-2xl font-bold text-white tracking-tight">Chào mừng trở lại</h1>
-            <p className="text-xs text-slate-400 mt-1.5">Vui lòng đăng nhập vào tài khoản của bạn</p>
+            <p className="text-xs text-slate-400 mt-1.5">
+              Vui lòng đăng nhập vào tài khoản của bạn
+            </p>
           </div>
 
           {/* Logic Form */}
@@ -140,14 +143,19 @@ const Login = () => {
                     },
                   })}
                 />
-                {errors.email && <p className="text-red-400 text-xs mt-1.5 px-0.5">{errors.email.message}</p>}
+                {errors.email && (
+                  <p className="text-red-400 text-xs mt-1.5 px-0.5">{errors.email.message}</p>
+                )}
               </div>
             </div>
 
             {/* Password Field */}
             <div className="space-y-1">
               <div className="flex justify-between items-center px-0.5">
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider" htmlFor="password">
+                <label
+                  className="text-[10px] font-bold text-slate-400 uppercase tracking-wider"
+                  htmlFor="password"
+                >
                   Mật khẩu
                 </label>
                 <a
@@ -171,7 +179,9 @@ const Login = () => {
                     },
                   })}
                 />
-                {errors.password && <p className="text-red-400 text-xs mt-1.5 px-0.5">{errors.password.message}</p>}
+                {errors.password && (
+                  <p className="text-red-400 text-xs mt-1.5 px-0.5">{errors.password.message}</p>
+                )}
               </div>
             </div>
 
@@ -258,7 +268,8 @@ const Login = () => {
             Hệ thống LMS thông minh tích hợp AI thế hệ mới
           </h2>
           <p className="text-base text-slate-300 mt-4 leading-relaxed font-light">
-            Hỗ trợ bài giảng sinh động, quản lý lớp học toàn diện và công cụ học tập tương tác cá nhân hóa.
+            Hỗ trợ bài giảng sinh động, quản lý lớp học toàn diện và công cụ học tập tương tác cá
+            nhân hóa.
           </p>
         </div>
       </section>

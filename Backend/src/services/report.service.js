@@ -250,10 +250,7 @@ export const buildGradesExcel = async (classId) => {
 export const buildAttendanceExcel = async (classId) => {
   // 1. Lấy thông tin lớp và học sinh song song với việc lấy điểm danh
   const [targetClass, allRecords] = await Promise.all([
-    classModel
-      .findById(classId)
-      .populate("students.studentId", "fullName email")
-      .lean(),
+    classModel.findById(classId).populate("students.studentId", "fullName email").lean(),
     Attendance.find({ classId, isDeleted: false }).lean(),
   ]);
 
@@ -372,4 +369,7 @@ export const buildAttendanceExcel = async (classId) => {
  * @param {string} name
  */
 export const sanitizeFilename = (name = "") =>
-  name.replace(/[^\w\s\-_.]/g, "").replace(/\s+/g, "_").trim() || "Class";
+  name
+    .replace(/[^\w\s\-_.]/g, "")
+    .replace(/\s+/g, "_")
+    .trim() || "Class";

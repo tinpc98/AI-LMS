@@ -1,5 +1,14 @@
 import axiosClient from "../../api/axiosClient";
-import type { DashboardResponse, DashboardData, OverviewCardItem, RegistrationChartItem, CourseDistributionItem, ClassStatusItem, AIUsageItem, TodayClassRecord } from "./dashboard.types";
+import type {
+  DashboardResponse,
+  DashboardData,
+  OverviewCardItem,
+  RegistrationChartItem,
+  CourseDistributionItem,
+  ClassStatusItem,
+  AIUsageItem,
+  TodayClassRecord,
+} from "./dashboard.types";
 import { mockUsers } from "../accountManagement/account.mock";
 import { mockCourses } from "../courseManagement/course.mock";
 import { mockClasses } from "../classManagement/class.mock";

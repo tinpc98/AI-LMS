@@ -43,10 +43,12 @@ export const ExamStartModal: React.FC<ExamStartModalProps> = React.memo(
 
           <Space size={16} style={{ marginBottom: 16 }}>
             <Text type="secondary" style={{ fontSize: 13 }}>
-              <ClockCircleOutlined style={{ marginRight: 4 }} />Thời gian: <strong>{item.duration || 45} phút</strong>
+              <ClockCircleOutlined style={{ marginRight: 4 }} />
+              Thời gian: <strong>{item.duration || 45} phút</strong>
             </Text>
             <Text type="secondary" style={{ fontSize: 13 }}>
-              <QuestionCircleOutlined style={{ marginRight: 4 }} />Số câu: <strong>{questionCount} câu</strong>
+              <QuestionCircleOutlined style={{ marginRight: 4 }} />
+              Số câu: <strong>{questionCount} câu</strong>
             </Text>
           </Space>
 

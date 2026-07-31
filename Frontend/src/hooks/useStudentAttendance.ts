@@ -21,7 +21,8 @@ export function useStudentAttendance(classId?: string) {
   useEffect(() => {
     if (classId) {
       setLoading(true);
-      attendanceApi.getAttendanceByStudent("me", classId)
+      attendanceApi
+        .getAttendanceByStudent("me", classId)
         .then((res) => {
           setRawRecords(res.data.data || []);
         })
@@ -144,9 +145,12 @@ export function useStudentAttendance(classId?: string) {
     setFilters((prev) => ({ ...prev, monthFilter: value }));
   }, []);
 
-  const handleStatusFilterChange = useCallback((value: StudentAttendanceFilterOptions["statusFilter"]) => {
-    setFilters((prev) => ({ ...prev, statusFilter: value }));
-  }, []);
+  const handleStatusFilterChange = useCallback(
+    (value: StudentAttendanceFilterOptions["statusFilter"]) => {
+      setFilters((prev) => ({ ...prev, statusFilter: value }));
+    },
+    []
+  );
 
   const handleViewModeChange = useCallback((value: StudentAttendanceFilterOptions["viewMode"]) => {
     setFilters((prev) => ({ ...prev, viewMode: value }));

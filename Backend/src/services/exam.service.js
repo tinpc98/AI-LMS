@@ -41,7 +41,7 @@ const generateExamWithMatrix = async (params) => {
     // Bẫy lỗi thực chiến: Ngân hàng không đủ câu hỏi
     if (mcqs.length < mcqCount) {
       throw new Error(
-        `Kho dữ liệu chỉ còn ${mcqs.length} câu trắc nghiệm cho chủ đề này, không đủ ${mcqCount} câu yêu cầu.`,
+        `Kho dữ liệu chỉ còn ${mcqs.length} câu trắc nghiệm cho chủ đề này, không đủ ${mcqCount} câu yêu cầu.`
       );
     }
     const mcqsWithPoints = distributePoints(mcqs, mcqPoints);
@@ -56,7 +56,7 @@ const generateExamWithMatrix = async (params) => {
 
     if (essays.length < essayCount) {
       throw new Error(
-        `Kho dữ liệu chỉ còn ${essays.length} câu tự luận cho chủ đề này, không đủ ${essayCount} câu yêu cầu.`,
+        `Kho dữ liệu chỉ còn ${essays.length} câu tự luận cho chủ đề này, không đủ ${essayCount} câu yêu cầu.`
       );
     }
 

@@ -26,17 +26,13 @@ const gradeSubmission = async (attemptId, studentAnswers) => {
     const gracePeriod = 2; // Cho phép 2 phút bù giờ do độ trễ mạng
 
     if (timeElapsed > exam.duration + gracePeriod) {
-      attempt.endTime = new Date(
-        attempt.startTime.getTime() + exam.duration * 60000,
-      );
+      attempt.endTime = new Date(attempt.startTime.getTime() + exam.duration * 60000);
     } else {
       attempt.endTime = now;
     }
 
     // 3. Tạo một Map để tra cứu nhanh số điểm phân bổ cho từng câu hỏi trong Đề thi này
-    const examPointsMap = new Map(
-      exam.questions.map((q) => [q.questionId.toString(), q.points]),
-    );
+    const examPointsMap = new Map(exam.questions.map((q) => [q.questionId.toString(), q.points]));
 
     // 4. Lấy danh sách chi tiết các Câu hỏi từ DB
     const questionIds = exam.questions.map((q) => q.questionId);
@@ -116,16 +112,12 @@ const gradeEssay = async (attemptId, essayGrades, userId, userRole) => {
       throw error;
     }
 
-    const examPointsMap = new Map(
-      exam.questions.map((q) => [q.questionId.toString(), q.points]),
-    );
+    const examPointsMap = new Map(exam.questions.map((q) => [q.questionId.toString(), q.points]));
 
     // Lặp qua mảng điểm giáo viên gửi lên và cập nhật trực tiếp vào câu trả lời
     for (const grade of essayGrades) {
       const qIdStr = grade.questionId.toString();
-      const answerIndex = attempt.answers.findIndex(
-        (ans) => ans.questionId.toString() === qIdStr,
-      );
+      const answerIndex = attempt.answers.findIndex((ans) => ans.questionId.toString() === qIdStr);
 
       if (answerIndex !== -1) {
         // Ép kiểu an toàn, chống giá trị NaN / undefined

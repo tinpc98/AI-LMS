@@ -57,7 +57,15 @@ export const loginService = async (email, password) => {
 };
 
 export const getUserTrashService = async (queryParams) => {
-  const { search, role, status, page = 1, limit = 10, sort = "deletedAt", order = "desc" } = queryParams;
+  const {
+    search,
+    role,
+    status,
+    page = 1,
+    limit = 10,
+    sort = "deletedAt",
+    order = "desc",
+  } = queryParams;
   const query = { isDeleted: true };
 
   if (search) {

@@ -14,13 +14,18 @@ export interface IExamSet {
 export const examSetApi = {
   // Lấy danh sách bộ đề thi
   getExamSets: async (params?: any): Promise<IExamSet[]> => {
-    const response = await axiosClient.get<{ success?: boolean; data: IExamSet[] }>("/api/exam-sets", { params });
+    const response = await axiosClient.get<{ success?: boolean; data: IExamSet[] }>(
+      "/api/exam-sets",
+      { params }
+    );
     return (response.data as any).data ?? response.data ?? [];
   },
 
   // Lấy chi tiết bộ đề thi theo ID
   getExamSetById: async (id: string): Promise<IExamSet> => {
-    const response = await axiosClient.get<{ success?: boolean; data: IExamSet }>(`/api/exam-sets/${id}`);
+    const response = await axiosClient.get<{ success?: boolean; data: IExamSet }>(
+      `/api/exam-sets/${id}`
+    );
     return (response.data as any).data ?? response.data;
   },
 

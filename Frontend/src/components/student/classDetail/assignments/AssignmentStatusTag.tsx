@@ -17,7 +17,11 @@ export const AssignmentStatusTag: React.FC<AssignmentStatusTagProps> = React.mem
   switch (status) {
     case "Submitted":
       return (
-        <Tag color="success" icon={<CheckCircleOutlined />} style={{ borderRadius: 8, fontWeight: 600 }}>
+        <Tag
+          color="success"
+          icon={<CheckCircleOutlined />}
+          style={{ borderRadius: 8, fontWeight: 600 }}
+        >
           Đã nộp bài
         </Tag>
       );
@@ -29,20 +33,32 @@ export const AssignmentStatusTag: React.FC<AssignmentStatusTagProps> = React.mem
       );
     case "Late":
       return (
-        <Tag color="error" icon={<ExclamationCircleOutlined />} style={{ borderRadius: 8, fontWeight: 600 }}>
+        <Tag
+          color="error"
+          icon={<ExclamationCircleOutlined />}
+          style={{ borderRadius: 8, fontWeight: 600 }}
+        >
           Nộp trễ hạn
         </Tag>
       );
     case "Missing":
       return (
-        <Tag color="default" icon={<CloseCircleOutlined />} style={{ borderRadius: 8, fontWeight: 600 }}>
+        <Tag
+          color="default"
+          icon={<CloseCircleOutlined />}
+          style={{ borderRadius: 8, fontWeight: 600 }}
+        >
           Quá hạn chưa nộp
         </Tag>
       );
     case "Pending":
     default:
       return (
-        <Tag color="warning" icon={<ClockCircleOutlined />} style={{ borderRadius: 8, fontWeight: 600 }}>
+        <Tag
+          color="warning"
+          icon={<ClockCircleOutlined />}
+          style={{ borderRadius: 8, fontWeight: 600 }}
+        >
           Chưa nộp bài
         </Tag>
       );

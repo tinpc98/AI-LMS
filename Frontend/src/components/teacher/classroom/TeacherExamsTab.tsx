@@ -107,13 +107,16 @@ export const TeacherExamsTab: React.FC<TeacherExamsTabProps> = React.memo(
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase().trim();
         result = result.filter(
-          (e) => e.title.toLowerCase().includes(q) || (e.aiPromptUsed || "").toLowerCase().includes(q)
+          (e) =>
+            e.title.toLowerCase().includes(q) || (e.aiPromptUsed || "").toLowerCase().includes(q)
         );
       }
 
       // Status filter
       if (statusFilter !== "all") {
-        result = result.filter((e) => (e.status || "").toUpperCase() === statusFilter.toUpperCase());
+        result = result.filter(
+          (e) => (e.status || "").toUpperCase() === statusFilter.toUpperCase()
+        );
       }
 
       // Sort
@@ -121,7 +124,10 @@ export const TeacherExamsTab: React.FC<TeacherExamsTabProps> = React.memo(
         if (sortBy === "duration") return b.duration - a.duration;
         if (sortBy === "title") return a.title.localeCompare(b.title);
         // Default: newest
-        return new Date(b.createdAt || b.startTime).getTime() - new Date(a.createdAt || a.startTime).getTime();
+        return (
+          new Date(b.createdAt || b.startTime).getTime() -
+          new Date(a.createdAt || a.startTime).getTime()
+        );
       });
 
       return result;
@@ -156,7 +162,9 @@ export const TeacherExamsTab: React.FC<TeacherExamsTabProps> = React.memo(
       const newStatus = exam.status === "PUBLISHED" ? "DRAFT" : "PUBLISHED";
       try {
         await examApi.updateExam(exam._id, { status: newStatus });
-        toast.success(`Đã chuyển trạng thái bài thi thành ${newStatus === "PUBLISHED" ? "Đang diễn ra" : "Bản nháp"}`);
+        toast.success(
+          `Đã chuyển trạng thái bài thi thành ${newStatus === "PUBLISHED" ? "Đang diễn ra" : "Bản nháp"}`
+        );
         fetchExams();
       } catch (err: any) {
         toast.error(err.response?.data?.message || "Lỗi cập nhật trạng thái bài thi!");
@@ -189,7 +197,11 @@ export const TeacherExamsTab: React.FC<TeacherExamsTabProps> = React.memo(
               {record.isAIGenerated && <Tag color="purple">🤖 AI Generated</Tag>}
             </Space>
             {record.aiPromptUsed && (
-              <Paragraph type="secondary" ellipsis={{ rows: 1 }} style={{ margin: "4px 0 0", fontSize: 12 }}>
+              <Paragraph
+                type="secondary"
+                ellipsis={{ rows: 1 }}
+                style={{ margin: "4px 0 0", fontSize: 12 }}
+              >
                 Prompt: {record.aiPromptUsed}
               </Paragraph>
             )}
@@ -204,7 +216,9 @@ export const TeacherExamsTab: React.FC<TeacherExamsTabProps> = React.memo(
           <div>
             <Space size={6}>
               <ClockCircleOutlined style={{ color: "#1890ff" }} />
-              <Text strong style={{ fontSize: 13 }}>{record.duration} phút</Text>
+              <Text strong style={{ fontSize: 13 }}>
+                {record.duration} phút
+              </Text>
             </Space>
             <div style={{ fontSize: 12, color: "#8c8c8c", marginTop: 2 }}>
               Bắt đầu: {new Date(record.startTime).toLocaleString("vi-VN")}
@@ -224,7 +238,11 @@ export const TeacherExamsTab: React.FC<TeacherExamsTabProps> = React.memo(
         dataIndex: "maxScore",
         key: "maxScore",
         width: 120,
-        render: (score) => <Text strong style={{ color: "#52c41a" }}>{score || 10} điểm</Text>,
+        render: (score) => (
+          <Text strong style={{ color: "#52c41a" }}>
+            {score || 10} điểm
+          </Text>
+        ),
       },
       {
         title: "Thao tác",
@@ -305,7 +323,16 @@ export const TeacherExamsTab: React.FC<TeacherExamsTabProps> = React.memo(
           }}
           styles={{ body: { padding: "24px 32px" } }}
         >
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 16, marginBottom: 20 }}>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              flexWrap: "wrap",
+              gap: 16,
+              marginBottom: 20,
+            }}
+          >
             <div>
               <Space size={12} align="center">
                 <FileDoneOutlined style={{ fontSize: 28, color: "#fff" }} />
@@ -313,8 +340,16 @@ export const TeacherExamsTab: React.FC<TeacherExamsTabProps> = React.memo(
                   Quản lý Bài kiểm tra Lớp: {className}
                 </Title>
               </Space>
-              <Text style={{ color: "rgba(255,255,255,0.85)", display: "block", marginTop: 4, fontSize: 13 }}>
-                Quản lý các bài thi trắc nghiệm & tự luận, xem lượt thi của sinh viên, cảnh báo gian lận và chấm bài.
+              <Text
+                style={{
+                  color: "rgba(255,255,255,0.85)",
+                  display: "block",
+                  marginTop: 4,
+                  fontSize: 13,
+                }}
+              >
+                Quản lý các bài thi trắc nghiệm & tự luận, xem lượt thi của sinh viên, cảnh báo gian
+                lận và chấm bài.
               </Text>
             </div>
 
@@ -351,9 +386,20 @@ export const TeacherExamsTab: React.FC<TeacherExamsTabProps> = React.memo(
 
           <Row gutter={[16, 16]}>
             <Col xs={12} sm={8} md={6}>
-              <div style={{ backgroundColor: "rgba(255,255,255,0.15)", padding: "12px 16px", borderRadius: 12, border: "1px solid rgba(255,255,255,0.25)" }}>
+              <div
+                style={{
+                  backgroundColor: "rgba(255,255,255,0.15)",
+                  padding: "12px 16px",
+                  borderRadius: 12,
+                  border: "1px solid rgba(255,255,255,0.25)",
+                }}
+              >
                 <Statistic
-                  title={<Text style={{ color: "rgba(255,255,255,0.85)", fontSize: 12 }}>Tổng số bài thi</Text>}
+                  title={
+                    <Text style={{ color: "rgba(255,255,255,0.85)", fontSize: 12 }}>
+                      Tổng số bài thi
+                    </Text>
+                  }
                   value={stats.total}
                   styles={{ content: { color: "#fff", fontWeight: 700, fontSize: 20 } }}
                 />
@@ -361,9 +407,20 @@ export const TeacherExamsTab: React.FC<TeacherExamsTabProps> = React.memo(
             </Col>
 
             <Col xs={12} sm={8} md={6}>
-              <div style={{ backgroundColor: "rgba(255,255,255,0.15)", padding: "12px 16px", borderRadius: 12, border: "1px solid rgba(255,255,255,0.25)" }}>
+              <div
+                style={{
+                  backgroundColor: "rgba(255,255,255,0.15)",
+                  padding: "12px 16px",
+                  borderRadius: 12,
+                  border: "1px solid rgba(255,255,255,0.25)",
+                }}
+              >
                 <Statistic
-                  title={<Text style={{ color: "rgba(255,255,255,0.85)", fontSize: 12 }}>🟢 Đang diễn ra</Text>}
+                  title={
+                    <Text style={{ color: "rgba(255,255,255,0.85)", fontSize: 12 }}>
+                      🟢 Đang diễn ra
+                    </Text>
+                  }
                   value={stats.publishedCount}
                   prefix={<CheckCircleOutlined style={{ color: "#b7eb8f", marginRight: 6 }} />}
                   styles={{ content: { color: "#fff", fontWeight: 700, fontSize: 20 } }}
@@ -372,9 +429,20 @@ export const TeacherExamsTab: React.FC<TeacherExamsTabProps> = React.memo(
             </Col>
 
             <Col xs={12} sm={8} md={6}>
-              <div style={{ backgroundColor: "rgba(255,255,255,0.15)", padding: "12px 16px", borderRadius: 12, border: "1px solid rgba(255,255,255,0.25)" }}>
+              <div
+                style={{
+                  backgroundColor: "rgba(255,255,255,0.15)",
+                  padding: "12px 16px",
+                  borderRadius: 12,
+                  border: "1px solid rgba(255,255,255,0.25)",
+                }}
+              >
                 <Statistic
-                  title={<Text style={{ color: "rgba(255,255,255,0.85)", fontSize: 12 }}>🔵 Đã kết thúc</Text>}
+                  title={
+                    <Text style={{ color: "rgba(255,255,255,0.85)", fontSize: 12 }}>
+                      🔵 Đã kết thúc
+                    </Text>
+                  }
                   value={stats.completedCount}
                   styles={{ content: { color: "#fff", fontWeight: 700, fontSize: 20 } }}
                 />
@@ -382,9 +450,20 @@ export const TeacherExamsTab: React.FC<TeacherExamsTabProps> = React.memo(
             </Col>
 
             <Col xs={12} sm={8} md={6}>
-              <div style={{ backgroundColor: "rgba(255,255,255,0.15)", padding: "12px 16px", borderRadius: 12, border: "1px solid rgba(255,255,255,0.25)" }}>
+              <div
+                style={{
+                  backgroundColor: "rgba(255,255,255,0.15)",
+                  padding: "12px 16px",
+                  borderRadius: 12,
+                  border: "1px solid rgba(255,255,255,0.25)",
+                }}
+              >
                 <Statistic
-                  title={<Text style={{ color: "rgba(255,255,255,0.85)", fontSize: 12 }}>🤖 Đề thi AI</Text>}
+                  title={
+                    <Text style={{ color: "rgba(255,255,255,0.85)", fontSize: 12 }}>
+                      🤖 Đề thi AI
+                    </Text>
+                  }
                   value={stats.aiCount}
                   prefix={<RobotOutlined style={{ color: "#ffe58f", marginRight: 6 }} />}
                   styles={{ content: { color: "#fff", fontWeight: 700, fontSize: 20 } }}
@@ -401,7 +480,17 @@ export const TeacherExamsTab: React.FC<TeacherExamsTabProps> = React.memo(
             description={error}
             type="error"
             showIcon
-            action={<Button size="small" type="primary" danger icon={<ReloadOutlined />} onClick={fetchExams}>Thử lại</Button>}
+            action={
+              <Button
+                size="small"
+                type="primary"
+                danger
+                icon={<ReloadOutlined />}
+                onClick={fetchExams}
+              >
+                Thử lại
+              </Button>
+            }
             style={{ borderRadius: 8 }}
           />
         )}
@@ -409,7 +498,15 @@ export const TeacherExamsTab: React.FC<TeacherExamsTabProps> = React.memo(
         {/* 2. Main Content: Toolbar & Table */}
         <Card
           title={
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                flexWrap: "wrap",
+                gap: 12,
+              }}
+            >
               <Space size={12} wrap>
                 <Input
                   placeholder="Tìm tên bài thi..."

@@ -1,5 +1,10 @@
 import { Card, Col, Row, Statistic } from "antd";
-import { AppstoreOutlined, CheckCircleOutlined, ExclamationCircleOutlined, UserOutlined } from "@ant-design/icons";
+import {
+  AppstoreOutlined,
+  CheckCircleOutlined,
+  ExclamationCircleOutlined,
+  UserOutlined,
+} from "@ant-design/icons";
 import type { TeacherAssignmentStats } from "./teacherAssignment.types";
 
 interface TeacherAssignmentStatisticProps {

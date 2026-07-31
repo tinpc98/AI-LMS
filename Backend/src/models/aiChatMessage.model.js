@@ -63,7 +63,10 @@ const aiChatMessageSchema = new mongoose.Schema(
 // Tránh double submit tin nhắn assistant với cùng fingerprint
 aiChatMessageSchema.index(
   { sessionId: 1, role: 1, requestFingerprint: 1 },
-  { unique: true, partialFilterExpression: { role: "assistant", requestFingerprint: { $type: "string" } } }
+  {
+    unique: true,
+    partialFilterExpression: { role: "assistant", requestFingerprint: { $type: "string" } },
+  }
 );
 
 export default mongoose.model("AIChatMessage", aiChatMessageSchema);

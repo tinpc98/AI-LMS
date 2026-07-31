@@ -5,7 +5,9 @@ import type { IExtendedAssignment } from "../types/studentAssignment";
 
 export function useSubmission(onSubmissionUpdated?: () => void) {
   // Submission modal state
-  const [submittingAssignment, setSubmittingAssignment] = useState<IExtendedAssignment | null>(null);
+  const [submittingAssignment, setSubmittingAssignment] = useState<IExtendedAssignment | null>(
+    null
+  );
   const [isSubmitModalOpen, setIsSubmitModalOpen] = useState(false);
 
   // Feedback modal state

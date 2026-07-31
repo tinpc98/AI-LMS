@@ -8,12 +8,14 @@ import crypto from "crypto";
 const generateFingerprint = (userId, classId, examSetId, blueprint) => {
   // S4-FIX-02: Canonicalize blueprint deeply using deterministic stringify
   const canonicalize = (obj) => {
-    if (obj === null || typeof obj !== 'object') return obj;
+    if (obj === null || typeof obj !== "object") return obj;
     if (Array.isArray(obj)) return obj.map(canonicalize);
-    return Object.keys(obj).sort().reduce((acc, key) => {
-      acc[key] = canonicalize(obj[key]);
-      return acc;
-    }, {});
+    return Object.keys(obj)
+      .sort()
+      .reduce((acc, key) => {
+        acc[key] = canonicalize(obj[key]);
+        return acc;
+      }, {});
   };
 
   const blueprintStr = JSON.stringify(canonicalize(blueprint));
@@ -45,11 +47,11 @@ const distributePoints = (questions, totalPoints) => {
  */
 const findValidBucketCounts = (buckets, targetTypes, targetDiffs) => {
   const resultCounts = new Array(buckets.length).fill(0);
-  
+
   // Initialize with 0 to prevent NaN
   const remTypes = {};
   const remDiffs = {};
-  
+
   for (const b of buckets) {
     remTypes[b.type] = targetTypes[b.type] || 0;
     remDiffs[b.diff] = targetDiffs[b.diff] || 0;
@@ -96,7 +98,13 @@ const findValidBucketCounts = (buckets, targetTypes, targetDiffs) => {
  * Lựa chọn câu hỏi theo đúng phân bố (deterministic)
  */
 const selectQuestionsByBlueprint = (pool, blueprint) => {
-  const { totalQuestions, questionTypeDistribution, difficultyDistribution, shuffleQuestions, shuffleOptions } = blueprint;
+  const {
+    totalQuestions,
+    questionTypeDistribution,
+    difficultyDistribution,
+    shuffleQuestions,
+    shuffleOptions,
+  } = blueprint;
 
   // Validate totals
   const totalTypes = Object.values(questionTypeDistribution).reduce((a, b) => a + b, 0);
@@ -116,7 +124,9 @@ const selectQuestionsByBlueprint = (pool, blueprint) => {
       buckets.push({
         type: t,
         diff: d,
-        available: pool.filter((q) => q.type === t && q.difficulty === d).sort((a, b) => a.questionId.localeCompare(b.questionId)), // Sort deterministic
+        available: pool
+          .filter((q) => q.type === t && q.difficulty === d)
+          .sort((a, b) => a.questionId.localeCompare(b.questionId)), // Sort deterministic
       });
     }
   }
@@ -140,7 +150,7 @@ const selectQuestionsByBlueprint = (pool, blueprint) => {
 
   // Shuffle questions if requested
   if (shuffleQuestions) {
-    // Deterministic shuffle logic usually requires a seed. 
+    // Deterministic shuffle logic usually requires a seed.
     // We use a simple pseudo-random approach using the question IDs if strict determinism is needed for tests.
     // For now, we will just sort by a hash of the question ID + title to be deterministic yet mixed.
     selectedQuestions.sort((a, b) => {
@@ -153,7 +163,11 @@ const selectQuestionsByBlueprint = (pool, blueprint) => {
   // Shuffle options if requested
   if (shuffleOptions) {
     for (const q of selectedQuestions) {
-      if ((q.type === "multiple_choice" || q.type === "true_false") && q.options && q.options.length > 0) {
+      if (
+        (q.type === "multiple_choice" || q.type === "true_false") &&
+        q.options &&
+        q.options.length > 0
+      ) {
         q.options.sort((a, b) => {
           const hashA = crypto.createHash("md5").update(a.id).digest("hex");
           const hashB = crypto.createHash("md5").update(b.id).digest("hex");
@@ -180,14 +194,14 @@ const generateExamFromSet = async ({ userId, classId, examSetId, blueprint }) =>
   // S4-FIX-05: IDOR check with Role and Sharing
   const user = await User.findById(userId).lean();
   const userRole = (user?.role || "").toLowerCase();
-  
+
   if (userRole !== "admin" && examSet.ownerId.toString() !== userId.toString()) {
     const share = await ExamSetShare.findOne({
       examSetId,
       sharedWithUserId: userId,
       status: "ACTIVE",
       $or: [{ expiresAt: null }, { expiresAt: { $gt: new Date() } }],
-      permission: { $in: ["VIEW", "EDIT"] }
+      permission: { $in: ["VIEW", "EDIT"] },
     }).lean();
 
     if (!share) {
@@ -199,7 +213,7 @@ const generateExamFromSet = async ({ userId, classId, examSetId, blueprint }) =>
 
   // 2. Check Idempotency (Fingerprint) - S4-FIX-02
   const fingerprint = generateFingerprint(userId, classId, examSetId, blueprint);
-  
+
   const existingDraft = await Exam.findOne({
     createdBy: userId,
     status: "DRAFT",

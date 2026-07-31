@@ -63,7 +63,9 @@ export const TeacherAssignmentsWidget: React.FC<AssignmentWidgetProps> = React.m
                       <Space size={12} style={{ fontSize: 12, marginTop: 4 }}>
                         {item.deadline && (
                           <Space size={4}>
-                            <ClockCircleOutlined style={{ color: isPastDeadline ? "#ff4d4f" : "#8c8c8c" }} />
+                            <ClockCircleOutlined
+                              style={{ color: isPastDeadline ? "#ff4d4f" : "#8c8c8c" }}
+                            />
                             <Text type={isPastDeadline ? "danger" : "secondary"}>
                               Hạn nộp: {new Date(item.deadline).toLocaleString("vi-VN")}
                             </Text>

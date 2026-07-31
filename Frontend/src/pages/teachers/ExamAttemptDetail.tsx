@@ -20,9 +20,7 @@ export default function ExamAttemptDetail() {
   useEffect(() => {
     const fetchReviewData = async () => {
       try {
-        const response = await axiosClient.get(
-          `/api/exam-attempts/${attemptId}/review`,
-        );
+        const response = await axiosClient.get(`/api/exam-attempts/${attemptId}/review`);
         const data = response.data.data;
         setReviewData(data);
 
@@ -66,19 +64,19 @@ export default function ExamAttemptDetail() {
 
   const handleAIGrade = async (qId: string, maxPoints: number) => {
     if (!attemptId) return;
-    setAILoading(prev => ({ ...prev, [qId]: true }));
+    setAILoading((prev) => ({ ...prev, [qId]: true }));
     try {
       const result = await aiApi.generateGradeSuggestion(attemptId, qId);
       let score = result.suggestedScore;
       if (score > maxPoints) score = maxPoints;
-      
-      setEssayGrades(prev => ({ ...prev, [qId]: score }));
-      setAIFeedbacks(prev => ({ ...prev, [qId]: result.feedback }));
+
+      setEssayGrades((prev) => ({ ...prev, [qId]: score }));
+      setAIFeedbacks((prev) => ({ ...prev, [qId]: result.feedback }));
       toast.success("AI đã đưa ra đề xuất điểm!");
     } catch (err: any) {
       toast.error(err.response?.data?.message || "Lỗi khi gọi AI chấm điểm");
     } finally {
-      setAILoading(prev => ({ ...prev, [qId]: false }));
+      setAILoading((prev) => ({ ...prev, [qId]: false }));
     }
   };
 
@@ -102,7 +100,9 @@ export default function ExamAttemptDetail() {
       navigate(-1); // Quay lại trang trước
     } catch (error: any) {
       console.error("🔥 LỖI TỪ BACKEND:", error.response?.data || error);
-      toast.error(error.response?.data?.message || "Phê duyệt điểm thất bại. Vui lòng thử lại sau.");
+      toast.error(
+        error.response?.data?.message || "Phê duyệt điểm thất bại. Vui lòng thử lại sau."
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -113,9 +113,7 @@ export default function ExamAttemptDetail() {
     return (
       <div className="ml-[280px] pt-16 min-h-screen flex items-center justify-center bg-gray-50">
         <div className="flex flex-col items-center gap-2 text-primary">
-          <span className="material-symbols-outlined animate-spin text-4xl">
-            progress_activity
-          </span>
+          <span className="material-symbols-outlined animate-spin text-4xl">progress_activity</span>
           <p className="font-medium">Đang tải dữ liệu bài làm...</p>
         </div>
       </div>
@@ -132,10 +130,10 @@ export default function ExamAttemptDetail() {
 
   // Tính toán thống kê nhanh
   const correctCount = reviewData.answersDetail.filter(
-    (a: any) => a.pointsEarned > 0 && a.type !== "ESSAY",
+    (a: any) => a.pointsEarned > 0 && a.type !== "ESSAY"
   ).length;
   const wrongCount = reviewData.answersDetail.filter(
-    (a: any) => a.pointsEarned === 0 && a.type !== "ESSAY",
+    (a: any) => a.pointsEarned === 0 && a.type !== "ESSAY"
   ).length;
 
   return (
@@ -155,9 +153,7 @@ export default function ExamAttemptDetail() {
           />
           <div>
             <div className="flex items-center gap-3 mb-1">
-              <h2 className="text-2xl font-bold text-gray-900">
-                {reviewData.student?.fullName}
-              </h2>
+              <h2 className="text-2xl font-bold text-gray-900">{reviewData.student?.fullName}</h2>
               <span className="bg-blue-50 text-blue-600 text-xs font-bold px-2.5 py-1 rounded-md border border-blue-100">
                 ID: {reviewData.student?.studentCode || "Chưa cập nhật"}
               </span>
@@ -167,17 +163,12 @@ export default function ExamAttemptDetail() {
             </p>
             <div className="flex items-center gap-4 text-sm text-gray-500 font-medium">
               <span className="flex items-center gap-1">
-                <span className="material-symbols-outlined text-[18px]">
-                  schedule
-                </span>{" "}
-                Thời gian làm bài: {reviewData.duration || "Không rõ"}
+                <span className="material-symbols-outlined text-[18px]">schedule</span> Thời gian
+                làm bài: {reviewData.duration || "Không rõ"}
               </span>
               <span className="flex items-center gap-1">
-                <span className="material-symbols-outlined text-[18px]">
-                  calendar_today
-                </span>{" "}
-                Ngày nộp:{" "}
-                {new Date(reviewData.submittedAt).toLocaleString("vi-VN")}
+                <span className="material-symbols-outlined text-[18px]">calendar_today</span> Ngày
+                nộp: {new Date(reviewData.submittedAt).toLocaleString("vi-VN")}
               </span>
             </div>
           </div>
@@ -185,16 +176,12 @@ export default function ExamAttemptDetail() {
 
         <div className="mt-6 md:mt-0 flex flex-col items-end">
           <div className="flex items-center gap-2 bg-indigo-50 text-primary border border-indigo-100 px-4 py-1.5 rounded-full text-sm font-semibold mb-3">
-            <span className="material-symbols-outlined text-[18px]">
-              auto_awesome
-            </span>{" "}
-            Đang duyệt bài
+            <span className="material-symbols-outlined text-[18px]">auto_awesome</span> Đang duyệt
+            bài
           </div>
           <p className="text-5xl font-extrabold text-gray-900 tracking-tight">
             {reviewData.totalScore}
-            <span className="text-2xl text-gray-400 font-medium tracking-normal">
-              /10
-            </span>
+            <span className="text-2xl text-gray-400 font-medium tracking-normal">/10</span>
           </p>
           <p
             className={`font-bold uppercase tracking-wider text-xs mt-1 ${reviewData.totalScore >= 5 ? "text-green-600" : "text-red-500"}`}
@@ -216,18 +203,14 @@ export default function ExamAttemptDetail() {
         <div className="flex-1 w-full bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
           <div className="flex justify-between items-center p-5 border-b border-gray-100 bg-gray-50/50">
             <h3 className="text-lg font-bold flex items-center gap-2 text-gray-800">
-              <span className="material-symbols-outlined text-gray-500">
-                description
-              </span>{" "}
-              Chi tiết bài làm
+              <span className="material-symbols-outlined text-gray-500">description</span> Chi tiết
+              bài làm
             </h3>
             <div className="flex gap-2 text-sm font-bold">
               <span className="bg-green-100 text-green-700 px-3 py-1 rounded-md">
                 {correctCount} Đúng
               </span>
-              <span className="bg-red-100 text-red-700 px-3 py-1 rounded-md">
-                {wrongCount} Sai
-              </span>
+              <span className="bg-red-100 text-red-700 px-3 py-1 rounded-md">{wrongCount} Sai</span>
             </div>
           </div>
 
@@ -263,11 +246,7 @@ export default function ExamAttemptDetail() {
                               : ""
                           }
                           onChange={(e) =>
-                            handleGradeChange(
-                              ans.questionId,
-                              e.target.value,
-                              ans.maxPoints || 5,
-                            )
+                            handleGradeChange(ans.questionId, e.target.value, ans.maxPoints || 5)
                           }
                         />
                       </div>
@@ -277,7 +256,9 @@ export default function ExamAttemptDetail() {
                         className="flex items-center gap-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 px-3 py-1.5 rounded-lg text-sm font-bold transition-colors disabled:opacity-50"
                       >
                         {aiLoading[ans.questionId] ? (
-                          <span className="material-symbols-outlined text-sm animate-spin">progress_activity</span>
+                          <span className="material-symbols-outlined text-sm animate-spin">
+                            progress_activity
+                          </span>
                         ) : (
                           <span className="material-symbols-outlined text-sm">auto_awesome</span>
                         )}
@@ -293,21 +274,16 @@ export default function ExamAttemptDetail() {
                   )}
                 </div>
 
-                <p className="text-gray-800 font-medium mb-5">
-                  {ans.questionContent}
-                </p>
+                <p className="text-gray-800 font-medium mb-5">{ans.questionContent}</p>
 
                 {ans.type !== "ESSAY" && (
                   <div className="space-y-3">
                     {ans.options && ans.options.length > 0 ? (
                       ans.options.map((opt: any, i: number) => {
-                        const optText =
-                          typeof opt === "string" ? opt : opt.text;
+                        const optText = typeof opt === "string" ? opt : opt.text;
 
                         const letterKey = String.fromCharCode(65 + i);
-                        const studentAns = String(
-                          ans.studentAnswer || "",
-                        ).trim();
+                        const studentAns = String(ans.studentAnswer || "").trim();
 
                         const isStudentChoice =
                           studentAns === optText.trim() ||
@@ -319,13 +295,11 @@ export default function ExamAttemptDetail() {
                           ans.correctAnswer?.trim() === optText.trim() ||
                           ans.correctAnswer?.trim() === letterKey;
 
-                        let optionStyle =
-                          "border-gray-200 text-gray-600 bg-white";
+                        let optionStyle = "border-gray-200 text-gray-600 bg-white";
                         let icon = null;
 
                         if (isCorrectAnswer) {
-                          optionStyle =
-                            "border-green-500 bg-green-50 text-green-800 font-medium";
+                          optionStyle = "border-green-500 bg-green-50 text-green-800 font-medium";
                           icon = (
                             <span className="material-symbols-outlined text-green-600 ml-auto">
                               check_circle
@@ -334,8 +308,7 @@ export default function ExamAttemptDetail() {
                         }
 
                         if (isStudentChoice && !isCorrectAnswer) {
-                          optionStyle =
-                            "border-red-400 bg-red-50 text-red-800 font-medium";
+                          optionStyle = "border-red-400 bg-red-50 text-red-800 font-medium";
                           icon = (
                             <span className="material-symbols-outlined text-red-500 ml-auto">
                               cancel
@@ -356,9 +329,7 @@ export default function ExamAttemptDetail() {
                         );
                       })
                     ) : (
-                      <div className="text-gray-400 italic">
-                        Không có danh sách lựa chọn.
-                      </div>
+                      <div className="text-gray-400 italic">Không có danh sách lựa chọn.</div>
                     )}
                   </div>
                 )}
@@ -380,7 +351,9 @@ export default function ExamAttemptDetail() {
                     {aiFeedbacks[ans.questionId] && (
                       <div className="bg-indigo-50 border border-indigo-100 p-5 rounded-xl mt-4">
                         <p className="text-xs font-bold uppercase tracking-wider text-indigo-500 mb-2 flex items-center gap-1">
-                          <span className="material-symbols-outlined text-[16px]">auto_awesome</span>
+                          <span className="material-symbols-outlined text-[16px]">
+                            auto_awesome
+                          </span>
                           Nhận xét từ AI Scholar:
                         </p>
                         <p className="text-gray-800 whitespace-pre-wrap text-sm">
@@ -414,15 +387,11 @@ export default function ExamAttemptDetail() {
                 >
                   {reviewData.cheatWarnings || 0}
                 </p>
-                <p className="text-xs font-bold text-gray-500 uppercase mt-1">
-                  Lần cảnh báo
-                </p>
+                <p className="text-xs font-bold text-gray-500 uppercase mt-1">Lần cảnh báo</p>
               </div>
               <div className="bg-gray-50 border border-gray-100 rounded-xl p-4 text-center">
                 <p className="text-2xl font-black text-gray-800">0</p>
-                <p className="text-xs font-bold text-gray-500 uppercase mt-1">
-                  Vi phạm nặng
-                </p>
+                <p className="text-xs font-bold text-gray-500 uppercase mt-1">Vi phạm nặng</p>
               </div>
             </div>
           </div>
@@ -430,10 +399,7 @@ export default function ExamAttemptDetail() {
           <div className="bg-white rounded-2xl border border-gray-200 p-0 shadow-sm overflow-hidden flex flex-col max-h-[350px]">
             <div className="p-5 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
               <h3 className="font-bold text-gray-800 flex items-center gap-2">
-                <span className="material-symbols-outlined text-gray-500">
-                  policy
-                </span>{" "}
-                Log hành vi
+                <span className="material-symbols-outlined text-gray-500">policy</span> Log hành vi
               </h3>
               <span className="span text-xs font-bold text-gray-400">
                 Tổng: {reviewData.cheatWarnings || 0} lần
@@ -445,19 +411,13 @@ export default function ExamAttemptDetail() {
                 <div className="relative pl-6 border-l-2 border-red-400 pb-2">
                   <div className="absolute w-3 h-3 bg-red-500 rounded-full -left-[7px] top-1 border-2 border-white"></div>
                   <div className="flex justify-between items-start mb-1">
-                    <p className="font-bold text-red-500 text-sm">
-                      Hệ thống giám sát
-                    </p>
+                    <p className="font-bold text-red-500 text-sm">Hệ thống giám sát</p>
                   </div>
-                  <h4 className="font-bold text-gray-800 mt-1">
-                    Cảnh báo rời tab / mất focus
-                  </h4>
+                  <h4 className="font-bold text-gray-800 mt-1">Cảnh báo rời tab / mất focus</h4>
                   <p className="text-sm text-gray-500 mt-1">
                     Học sinh đã vi phạm tổng cộng{" "}
-                    <strong className="text-red-600">
-                      {reviewData.cheatWarnings}
-                    </strong>{" "}
-                    lần trong quá trình làm bài.
+                    <strong className="text-red-600">{reviewData.cheatWarnings}</strong> lần trong
+                    quá trình làm bài.
                   </p>
                 </div>
               ) : (
@@ -470,15 +430,13 @@ export default function ExamAttemptDetail() {
 
           <div className="flex gap-3">
             <button className="flex-1 bg-white border border-gray-300 text-gray-700 py-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-gray-50 transition">
-              <span className="material-symbols-outlined">videocam</span> Xem
-              lại
+              <span className="material-symbols-outlined">videocam</span> Xem lại
             </button>
             <button
               onClick={() => setShowApprovalPopup(true)}
               className="flex-[1.5] bg-primary text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-primary/90 transition shadow-md shadow-primary/30"
             >
-              <span className="material-symbols-outlined">verified</span> Phê
-              duyệt
+              <span className="material-symbols-outlined">verified</span> Phê duyệt
             </button>
           </div>
         </div>
@@ -488,19 +446,15 @@ export default function ExamAttemptDetail() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
           <div className="bg-white rounded-2xl w-full max-w-md p-6 shadow-2xl scale-100 animate-in zoom-in-95 duration-200">
             <div className="w-12 h-12 rounded-full bg-blue-100 text-primary flex items-center justify-center mb-4 mx-auto">
-              <span className="material-symbols-outlined text-2xl">
-                task_alt
-              </span>
+              <span className="material-symbols-outlined text-2xl">task_alt</span>
             </div>
             <h3 className="text-xl font-bold text-center text-gray-900 mb-2">
               Xác nhận phê duyệt?
             </h3>
             <p className="text-center text-gray-500 mb-6">
               Bạn sắp chốt điểm cho học sinh{" "}
-              <strong className="text-gray-800">
-                {reviewData.student?.fullName}
-              </strong>
-              . Hành động này sẽ cập nhật điểm chính thức vào hệ thống.
+              <strong className="text-gray-800">{reviewData.student?.fullName}</strong>. Hành động
+              này sẽ cập nhật điểm chính thức vào hệ thống.
             </p>
 
             <div className="flex gap-3">

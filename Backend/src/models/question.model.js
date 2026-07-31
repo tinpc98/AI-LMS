@@ -40,7 +40,7 @@ const questionSchema = new mongoose.Schema(
       },
     ],
   },
-  { timestamps: true },
+  { timestamps: true }
 );
 
 questionSchema.plugin(softDeletePlugin);

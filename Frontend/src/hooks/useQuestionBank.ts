@@ -126,6 +126,6 @@ export function useQuestionBank() {
     filteredQuestions,
     fetchQuestions,
     handleDeleteQuestion,
-    handleCustomImport
+    handleCustomImport,
   };
 }

@@ -35,7 +35,12 @@ const tests = [
     fn: async () => {
       const examSet = createExamSet();
 
-      const result = await updateExamSetTagsService(examSet, ["  #Math  ", "science", "math", "#Science"]);
+      const result = await updateExamSetTagsService(examSet, [
+        "  #Math  ",
+        "science",
+        "math",
+        "#Science",
+      ]);
 
       assert.deepEqual(result.tags, ["math", "science"]);
       assert.equal(result.status, "draft");

@@ -14,14 +14,26 @@ export const AttendanceRateCard: React.FC<AttendanceRateCardProps> = React.memo(
 
   // Determine stroke color based on rate
   let strokeColor = "#52c41a"; // Green >= 95%
-  let statusTag = <Tag color="success" icon={<SafetyCertificateOutlined />}>Đạt chuẩn chuyên cần</Tag>;
+  let statusTag = (
+    <Tag color="success" icon={<SafetyCertificateOutlined />}>
+      Đạt chuẩn chuyên cần
+    </Tag>
+  );
 
   if (rate < 80) {
     strokeColor = "#ff4d4f"; // Red < 80%
-    statusTag = <Tag color="error" icon={<WarningOutlined />}>Cảnh báo nguy cơ bị cấm thi</Tag>;
+    statusTag = (
+      <Tag color="error" icon={<WarningOutlined />}>
+        Cảnh báo nguy cơ bị cấm thi
+      </Tag>
+    );
   } else if (rate < 95) {
     strokeColor = "#faad14"; // Orange 80-94%
-    statusTag = <Tag color="warning" icon={<WarningOutlined />}>Cần cải thiện chuyên cần</Tag>;
+    statusTag = (
+      <Tag color="warning" icon={<WarningOutlined />}>
+        Cần cải thiện chuyên cần
+      </Tag>
+    );
   }
 
   return (
@@ -36,7 +48,12 @@ export const AttendanceRateCard: React.FC<AttendanceRateCardProps> = React.memo(
     >
       <Row gutter={[24, 16]} align="middle">
         {/* Left Column: Progress Circle */}
-        <Col xs={24} sm={8} md={6} style={{ textAlign: "center", borderRight: "1px dashed #f0f0f0" }}>
+        <Col
+          xs={24}
+          sm={8}
+          md={6}
+          style={{ textAlign: "center", borderRight: "1px dashed #f0f0f0" }}
+        >
           <Progress
             type="circle"
             percent={rate}
@@ -66,7 +83,8 @@ export const AttendanceRateCard: React.FC<AttendanceRateCardProps> = React.memo(
           </div>
 
           <Text type="secondary" style={{ fontSize: 13, display: "block", marginBottom: 12 }}>
-            Tỷ lệ chuyên cần được tính dựa trên số buổi có mặt, đi muộn và nghỉ học có phép so với tổng số buổi học.
+            Tỷ lệ chuyên cần được tính dựa trên số buổi có mặt, đi muộn và nghỉ học có phép so với
+            tổng số buổi học.
           </Text>
 
           {/* Warning Banners */}

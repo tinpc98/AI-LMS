@@ -14,16 +14,21 @@ export const generateGradeSuggestion = async (req, res) => {
     const teacherId = req.user?.id || req.user?._id;
 
     if (!attemptId || !mongoose.Types.ObjectId.isValid(attemptId) || !questionId) {
-      return res.status(400).json({ success: false, message: "Thiếu hoặc sai attemptId/questionId" });
+      return res
+        .status(400)
+        .json({ success: false, message: "Thiếu hoặc sai attemptId/questionId" });
     }
 
     const attempt = await ExamAttempt.findById(attemptId).populate("examId");
-    if (!attempt) return res.status(404).json({ success: false, message: "Không tìm thấy phiên làm bài" });
+    if (!attempt)
+      return res.status(404).json({ success: false, message: "Không tìm thấy phiên làm bài" });
 
     try {
       await verifyClassTeacherAccess(attempt.examId.classId, teacherId, req.user.role);
     } catch (authError) {
-      return res.status(authError.status || 403).json({ success: false, message: authError.message });
+      return res
+        .status(authError.status || 403)
+        .json({ success: false, message: authError.message });
     }
 
     const suggestion = await aiGradingService.generateGradeSuggestion({
@@ -67,12 +72,15 @@ export const confirmGradeSuggestion = async (req, res) => {
     }
 
     const attempt = await ExamAttempt.findById(attemptId).populate("examId");
-    if (!attempt) return res.status(404).json({ success: false, message: "Không tìm thấy phiên làm bài" });
+    if (!attempt)
+      return res.status(404).json({ success: false, message: "Không tìm thấy phiên làm bài" });
 
     try {
       await verifyClassTeacherAccess(attempt.examId.classId, teacherId, req.user.role);
     } catch (authError) {
-      return res.status(authError.status || 403).json({ success: false, message: authError.message });
+      return res
+        .status(authError.status || 403)
+        .json({ success: false, message: authError.message });
     }
 
     const validActions = ["accept", "adjust", "reject"];

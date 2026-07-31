@@ -61,7 +61,10 @@ export const StudentClassHeader: React.FC<StudentClassHeaderProps> = React.memo(
             <Space align="center" size={12} style={{ marginBottom: 6, flexWrap: "wrap" }}>
               <ClassStatusTag status={status} />
               {classCode && (
-                <Text type="secondary" style={{ fontSize: 13, fontWeight: 600, fontFamily: "monospace" }}>
+                <Text
+                  type="secondary"
+                  style={{ fontSize: 13, fontWeight: 600, fontFamily: "monospace" }}
+                >
                   #{classCode}
                 </Text>
               )}

@@ -43,7 +43,11 @@ export const TeacherQuickStats: React.FC<TeacherQuickStatsProps> = React.memo(
             styles={{ body: { padding: "16px 20px" } }}
           >
             <Statistic
-              title={<Text type="secondary" style={{ fontSize: 13 }}>Lớp phụ trách</Text>}
+              title={
+                <Text type="secondary" style={{ fontSize: 13 }}>
+                  Lớp phụ trách
+                </Text>
+              }
               value={totalClasses}
               suffix="lớp"
               prefix={<BookOutlined style={{ color: "#1890ff", marginRight: 8 }} />}
@@ -68,7 +72,11 @@ export const TeacherQuickStats: React.FC<TeacherQuickStatsProps> = React.memo(
             styles={{ body: { padding: "16px 20px" } }}
           >
             <Statistic
-              title={<Text type="secondary" style={{ fontSize: 13 }}>Tổng học sinh</Text>}
+              title={
+                <Text type="secondary" style={{ fontSize: 13 }}>
+                  Tổng học sinh
+                </Text>
+              }
               value={totalStudents}
               suffix="học sinh"
               prefix={<TeamOutlined style={{ color: "#52c41a", marginRight: 8 }} />}
@@ -95,14 +103,22 @@ export const TeacherQuickStats: React.FC<TeacherQuickStatsProps> = React.memo(
             <Statistic
               title={
                 <Space size={6}>
-                  <Text type="secondary" style={{ fontSize: 13 }}>Bài nộp cần chấm</Text>
-                  {pendingSubmissionsCount > 0 && <Badge count={pendingSubmissionsCount} overflowCount={99} />}
+                  <Text type="secondary" style={{ fontSize: 13 }}>
+                    Bài nộp cần chấm
+                  </Text>
+                  {pendingSubmissionsCount > 0 && (
+                    <Badge count={pendingSubmissionsCount} overflowCount={99} />
+                  )}
                 </Space>
               }
               value={pendingSubmissionsCount}
               suffix="bài"
               prefix={<FormOutlined style={{ color: "#faad14", marginRight: 8 }} />}
-              valueStyle={{ fontWeight: 700, fontSize: 24, color: pendingSubmissionsCount > 0 ? "#d48806" : "inherit" }}
+              valueStyle={{
+                fontWeight: 700,
+                fontSize: 24,
+                color: pendingSubmissionsCount > 0 ? "#d48806" : "inherit",
+              }}
             />
             <Text type="secondary" style={{ fontSize: 12 }}>
               Bài làm chờ chấm điểm
@@ -125,14 +141,26 @@ export const TeacherQuickStats: React.FC<TeacherQuickStatsProps> = React.memo(
             <Statistic
               title={
                 <Space size={6}>
-                  <Text type="secondary" style={{ fontSize: 13 }}>Live Session</Text>
-                  {activeLiveSessionsCount > 0 && <Badge status="processing" text="LIVE" style={{ color: "#ff4d4f", fontWeight: 700 }} />}
+                  <Text type="secondary" style={{ fontSize: 13 }}>
+                    Live Session
+                  </Text>
+                  {activeLiveSessionsCount > 0 && (
+                    <Badge
+                      status="processing"
+                      text="LIVE"
+                      style={{ color: "#ff4d4f", fontWeight: 700 }}
+                    />
+                  )}
                 </Space>
               }
               value={activeLiveSessionsCount}
               suffix="phòng"
               prefix={<VideoCameraOutlined style={{ color: "#ff4d4f", marginRight: 8 }} />}
-              valueStyle={{ fontWeight: 700, fontSize: 24, color: activeLiveSessionsCount > 0 ? "#ff4d4f" : "inherit" }}
+              valueStyle={{
+                fontWeight: 700,
+                fontSize: 24,
+                color: activeLiveSessionsCount > 0 ? "#ff4d4f" : "inherit",
+              }}
             />
             <Text type="secondary" style={{ fontSize: 12 }}>
               Phòng học trực tuyến đang mở
@@ -153,7 +181,11 @@ export const TeacherQuickStats: React.FC<TeacherQuickStatsProps> = React.memo(
             styles={{ body: { padding: "16px 20px" } }}
           >
             <Statistic
-              title={<Text type="secondary" style={{ fontSize: 13 }}>Thông báo</Text>}
+              title={
+                <Text type="secondary" style={{ fontSize: 13 }}>
+                  Thông báo
+                </Text>
+              }
               value={totalAnnouncementsCount}
               suffix="tin"
               prefix={<NotificationOutlined style={{ color: "#722ed1", marginRight: 8 }} />}

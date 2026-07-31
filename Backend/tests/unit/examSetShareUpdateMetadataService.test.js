@@ -46,8 +46,10 @@ const makeShare = (props = {}) => {
   return data;
 };
 
-const mockExamSet = (doc) => vi.spyOn(ExamSet, "findOne").mockImplementation(() => Promise.resolve(doc));
-const mockShare = (doc) => vi.spyOn(ExamSetShare, "findOne").mockImplementation(() => Promise.resolve(doc));
+const mockExamSet = (doc) =>
+  vi.spyOn(ExamSet, "findOne").mockImplementation(() => Promise.resolve(doc));
+const mockShare = (doc) =>
+  vi.spyOn(ExamSetShare, "findOne").mockImplementation(() => Promise.resolve(doc));
 
 afterEach(() => {
   vi.restoreAllMocks();
@@ -57,14 +59,26 @@ describe("updateExamSetShareMetadataService — A. Success", () => {
   it("A1. Owner cập nhật expiresAt thành công", async () => {
     mockExamSet(makeExamSet());
     mockShare(makeShare({ expiresAt: null }));
-    const res = await updateExamSetShareMetadataService(EXAM_SET_ID, SHARE_ID, OWNER_ID, "Teacher", { expiresAt: FUTURE_DATE });
+    const res = await updateExamSetShareMetadataService(
+      EXAM_SET_ID,
+      SHARE_ID,
+      OWNER_ID,
+      "Teacher",
+      { expiresAt: FUTURE_DATE }
+    );
     expect(res.statusCode).toBe(200);
   });
 
   it("A2. Owner xóa expiresAt bằng null", async () => {
     mockExamSet(makeExamSet());
     mockShare(makeShare({ expiresAt: FAR_FUTURE }));
-    const res = await updateExamSetShareMetadataService(EXAM_SET_ID, SHARE_ID, OWNER_ID, "Teacher", { expiresAt: null });
+    const res = await updateExamSetShareMetadataService(
+      EXAM_SET_ID,
+      SHARE_ID,
+      OWNER_ID,
+      "Teacher",
+      { expiresAt: null }
+    );
     expect(res.statusCode).toBe(200);
     expect(res.data.expiresAt).toBe(null);
   });
@@ -72,14 +86,26 @@ describe("updateExamSetShareMetadataService — A. Success", () => {
   it("A3. Owner cập nhật note thành công", async () => {
     mockExamSet(makeExamSet());
     mockShare(makeShare({ note: "" }));
-    const res = await updateExamSetShareMetadataService(EXAM_SET_ID, SHARE_ID, OWNER_ID, "Teacher", { note: "Ghi chú mới" });
+    const res = await updateExamSetShareMetadataService(
+      EXAM_SET_ID,
+      SHARE_ID,
+      OWNER_ID,
+      "Teacher",
+      { note: "Ghi chú mới" }
+    );
     expect(res.statusCode).toBe(200);
   });
 
   it("A4. Owner xóa note bằng null", async () => {
     mockExamSet(makeExamSet());
     mockShare(makeShare({ note: "note cũ" }));
-    const res = await updateExamSetShareMetadataService(EXAM_SET_ID, SHARE_ID, OWNER_ID, "Teacher", { note: null });
+    const res = await updateExamSetShareMetadataService(
+      EXAM_SET_ID,
+      SHARE_ID,
+      OWNER_ID,
+      "Teacher",
+      { note: null }
+    );
     expect(res.statusCode).toBe(200);
     expect(res.data.note).toBe("");
   });
@@ -87,7 +113,13 @@ describe("updateExamSetShareMetadataService — A. Success", () => {
   it("A5. Owner cập nhật cả expiresAt và note", async () => {
     mockExamSet(makeExamSet());
     mockShare(makeShare({ expiresAt: null, note: "" }));
-    const res = await updateExamSetShareMetadataService(EXAM_SET_ID, SHARE_ID, OWNER_ID, "Teacher", { expiresAt: FUTURE_DATE, note: "Cả hai field" });
+    const res = await updateExamSetShareMetadataService(
+      EXAM_SET_ID,
+      SHARE_ID,
+      OWNER_ID,
+      "Teacher",
+      { expiresAt: FUTURE_DATE, note: "Cả hai field" }
+    );
     expect(res.statusCode).toBe(200);
   });
 
@@ -95,35 +127,65 @@ describe("updateExamSetShareMetadataService — A. Success", () => {
     const otherUserId = "999f1f77bcf86cd799439999";
     mockExamSet(makeExamSet());
     mockShare(makeShare({ note: "" }));
-    const res = await updateExamSetShareMetadataService(EXAM_SET_ID, SHARE_ID, otherUserId, "Admin", { note: "Admin update" });
+    const res = await updateExamSetShareMetadataService(
+      EXAM_SET_ID,
+      SHARE_ID,
+      otherUserId,
+      "Admin",
+      { note: "Admin update" }
+    );
     expect(res.statusCode).toBe(200);
   });
 
   it("A7. Share ACTIVE đã hết hạn được gia hạn thành công", async () => {
     mockExamSet(makeExamSet());
     mockShare(makeShare({ expiresAt: PAST_DATE, note: "old" }));
-    const res = await updateExamSetShareMetadataService(EXAM_SET_ID, SHARE_ID, OWNER_ID, "Teacher", { expiresAt: FUTURE_DATE });
+    const res = await updateExamSetShareMetadataService(
+      EXAM_SET_ID,
+      SHARE_ID,
+      OWNER_ID,
+      "Teacher",
+      { expiresAt: FUTURE_DATE }
+    );
     expect(res.statusCode).toBe(200);
   });
 
   it("A8. expiresAt tương lai được lưu đúng", async () => {
     mockExamSet(makeExamSet());
     mockShare(makeShare({ expiresAt: null }));
-    const res = await updateExamSetShareMetadataService(EXAM_SET_ID, SHARE_ID, OWNER_ID, "Teacher", { expiresAt: FUTURE_DATE });
+    const res = await updateExamSetShareMetadataService(
+      EXAM_SET_ID,
+      SHARE_ID,
+      OWNER_ID,
+      "Teacher",
+      { expiresAt: FUTURE_DATE }
+    );
     expect(res.data.expiresAt instanceof Date || res.data.expiresAt !== undefined).toBe(true);
   });
 
   it("A9. Note được trim", async () => {
     mockExamSet(makeExamSet());
     mockShare(makeShare({ note: "" }));
-    const res = await updateExamSetShareMetadataService(EXAM_SET_ID, SHARE_ID, OWNER_ID, "Teacher", { note: "  trimmed  " });
+    const res = await updateExamSetShareMetadataService(
+      EXAM_SET_ID,
+      SHARE_ID,
+      OWNER_ID,
+      "Teacher",
+      { note: "  trimmed  " }
+    );
     expect(res.data.note).toBe("trimmed");
   });
 
   it("A10. Chuỗi rỗng sau trim được chuẩn hóa thành rỗng (note = '')", async () => {
     mockExamSet(makeExamSet());
     mockShare(makeShare({ note: "old note" }));
-    const res = await updateExamSetShareMetadataService(EXAM_SET_ID, SHARE_ID, OWNER_ID, "Teacher", { note: "   " });
+    const res = await updateExamSetShareMetadataService(
+      EXAM_SET_ID,
+      SHARE_ID,
+      OWNER_ID,
+      "Teacher",
+      { note: "   " }
+    );
     expect(res.data.note).toBe("");
   });
 
@@ -132,7 +194,13 @@ describe("updateExamSetShareMetadataService — A. Success", () => {
     const share = makeShare({ note: "old", updatedAt: originalDate });
     mockExamSet(makeExamSet());
     mockShare(share);
-    const res = await updateExamSetShareMetadataService(EXAM_SET_ID, SHARE_ID, OWNER_ID, "Teacher", { note: "new note" });
+    const res = await updateExamSetShareMetadataService(
+      EXAM_SET_ID,
+      SHARE_ID,
+      OWNER_ID,
+      "Teacher",
+      { note: "new note" }
+    );
     expect(res.data.updatedAt > originalDate || res.statusCode === 200).toBe(true);
   });
 
@@ -141,7 +209,13 @@ describe("updateExamSetShareMetadataService — A. Success", () => {
     const share = makeShare({ createdAt, note: "old" });
     mockExamSet(makeExamSet());
     mockShare(share);
-    const res = await updateExamSetShareMetadataService(EXAM_SET_ID, SHARE_ID, OWNER_ID, "Teacher", { note: "new" });
+    const res = await updateExamSetShareMetadataService(
+      EXAM_SET_ID,
+      SHARE_ID,
+      OWNER_ID,
+      "Teacher",
+      { note: "new" }
+    );
     expect(res.data.createdAt).toEqual(createdAt);
   });
 });
@@ -151,7 +225,9 @@ describe("updateExamSetShareMetadataService — B. Field Integrity", () => {
     const share = makeShare({ permission: "VIEW", note: "old" });
     mockExamSet(makeExamSet());
     mockShare(share);
-    await updateExamSetShareMetadataService(EXAM_SET_ID, SHARE_ID, OWNER_ID, "Teacher", { note: "new" });
+    await updateExamSetShareMetadataService(EXAM_SET_ID, SHARE_ID, OWNER_ID, "Teacher", {
+      note: "new",
+    });
     expect(share.permission).toBe("VIEW");
   });
 
@@ -159,7 +235,9 @@ describe("updateExamSetShareMetadataService — B. Field Integrity", () => {
     const share = makeShare({ status: "ACTIVE", note: "old" });
     mockExamSet(makeExamSet());
     mockShare(share);
-    await updateExamSetShareMetadataService(EXAM_SET_ID, SHARE_ID, OWNER_ID, "Teacher", { note: "new" });
+    await updateExamSetShareMetadataService(EXAM_SET_ID, SHARE_ID, OWNER_ID, "Teacher", {
+      note: "new",
+    });
     expect(share.status).toBe("ACTIVE");
   });
 
@@ -167,7 +245,9 @@ describe("updateExamSetShareMetadataService — B. Field Integrity", () => {
     const share = makeShare({ ownerId: OWNER_ID, note: "old" });
     mockExamSet(makeExamSet());
     mockShare(share);
-    await updateExamSetShareMetadataService(EXAM_SET_ID, SHARE_ID, OWNER_ID, "Teacher", { note: "new" });
+    await updateExamSetShareMetadataService(EXAM_SET_ID, SHARE_ID, OWNER_ID, "Teacher", {
+      note: "new",
+    });
     expect(String(share.ownerId)).toBe(OWNER_ID);
   });
 
@@ -175,7 +255,9 @@ describe("updateExamSetShareMetadataService — B. Field Integrity", () => {
     const share = makeShare({ sharedWithUserId: SHARED_USER_ID, note: "old" });
     mockExamSet(makeExamSet());
     mockShare(share);
-    await updateExamSetShareMetadataService(EXAM_SET_ID, SHARE_ID, OWNER_ID, "Teacher", { note: "new" });
+    await updateExamSetShareMetadataService(EXAM_SET_ID, SHARE_ID, OWNER_ID, "Teacher", {
+      note: "new",
+    });
     expect(String(share.sharedWithUserId)).toBe(SHARED_USER_ID);
   });
 
@@ -183,7 +265,9 @@ describe("updateExamSetShareMetadataService — B. Field Integrity", () => {
     const share = makeShare({ sharedBy: OWNER_ID, note: "old" });
     mockExamSet(makeExamSet());
     mockShare(share);
-    await updateExamSetShareMetadataService(EXAM_SET_ID, SHARE_ID, OWNER_ID, "Teacher", { note: "new" });
+    await updateExamSetShareMetadataService(EXAM_SET_ID, SHARE_ID, OWNER_ID, "Teacher", {
+      note: "new",
+    });
     expect(String(share.sharedBy)).toBe(OWNER_ID);
   });
 
@@ -191,7 +275,9 @@ describe("updateExamSetShareMetadataService — B. Field Integrity", () => {
     const share = makeShare({ revokedAt: null, note: "old" });
     mockExamSet(makeExamSet());
     mockShare(share);
-    await updateExamSetShareMetadataService(EXAM_SET_ID, SHARE_ID, OWNER_ID, "Teacher", { note: "new" });
+    await updateExamSetShareMetadataService(EXAM_SET_ID, SHARE_ID, OWNER_ID, "Teacher", {
+      note: "new",
+    });
     expect(share.revokedAt).toBe(null);
   });
 
@@ -199,7 +285,9 @@ describe("updateExamSetShareMetadataService — B. Field Integrity", () => {
     const share = makeShare({ revokedBy: null, note: "old" });
     mockExamSet(makeExamSet());
     mockShare(share);
-    await updateExamSetShareMetadataService(EXAM_SET_ID, SHARE_ID, OWNER_ID, "Teacher", { note: "new" });
+    await updateExamSetShareMetadataService(EXAM_SET_ID, SHARE_ID, OWNER_ID, "Teacher", {
+      note: "new",
+    });
     expect(share.revokedBy).toBe(null);
   });
 
@@ -207,7 +295,10 @@ describe("updateExamSetShareMetadataService — B. Field Integrity", () => {
     const share = makeShare({ note: "old", expiresAt: null, permission: "EDIT", status: "ACTIVE" });
     mockExamSet(makeExamSet());
     mockShare(share);
-    await updateExamSetShareMetadataService(EXAM_SET_ID, SHARE_ID, OWNER_ID, "Teacher", { note: "new", expiresAt: FUTURE_DATE });
+    await updateExamSetShareMetadataService(EXAM_SET_ID, SHARE_ID, OWNER_ID, "Teacher", {
+      note: "new",
+      expiresAt: FUTURE_DATE,
+    });
     expect(share.permission).toBe("EDIT");
     expect(share.status).toBe("ACTIVE");
   });
@@ -223,7 +314,9 @@ describe("updateExamSetShareMetadataService — C. Validation", () => {
   it("C2. shareId sai ObjectId → 400", async () => {
     mockExamSet(makeExamSet());
     await expect(
-      updateExamSetShareMetadataService(EXAM_SET_ID, "invalid-id", OWNER_ID, "Teacher", { note: "x" })
+      updateExamSetShareMetadataService(EXAM_SET_ID, "invalid-id", OWNER_ID, "Teacher", {
+        note: "x",
+      })
     ).rejects.toMatchObject({ status: 400 });
   });
 
@@ -271,7 +364,10 @@ describe("updateExamSetShareMetadataService — C. Validation", () => {
     const sameExpiry = FAR_FUTURE;
     mockShare(makeShare({ note: sameNote, expiresAt: sameExpiry }));
     await expect(
-      updateExamSetShareMetadataService(EXAM_SET_ID, SHARE_ID, OWNER_ID, "Teacher", { note: sameNote, expiresAt: sameExpiry.toISOString() })
+      updateExamSetShareMetadataService(EXAM_SET_ID, SHARE_ID, OWNER_ID, "Teacher", {
+        note: sameNote,
+        expiresAt: sameExpiry.toISOString(),
+      })
     ).rejects.toMatchObject({ status: 409 });
   });
 
@@ -280,7 +376,9 @@ describe("updateExamSetShareMetadataService — C. Validation", () => {
     const sameExpiry = FAR_FUTURE;
     mockShare(makeShare({ expiresAt: sameExpiry }));
     await expect(
-      updateExamSetShareMetadataService(EXAM_SET_ID, SHARE_ID, OWNER_ID, "Teacher", { expiresAt: sameExpiry.toISOString() })
+      updateExamSetShareMetadataService(EXAM_SET_ID, SHARE_ID, OWNER_ID, "Teacher", {
+        expiresAt: sameExpiry.toISOString(),
+      })
     ).rejects.toMatchObject({ status: 409 });
   });
 
@@ -289,7 +387,9 @@ describe("updateExamSetShareMetadataService — C. Validation", () => {
     const sameNote = "same";
     mockShare(makeShare({ note: sameNote }));
     await expect(
-      updateExamSetShareMetadataService(EXAM_SET_ID, SHARE_ID, OWNER_ID, "Teacher", { note: sameNote })
+      updateExamSetShareMetadataService(EXAM_SET_ID, SHARE_ID, OWNER_ID, "Teacher", {
+        note: sameNote,
+      })
     ).rejects.toMatchObject({ status: 409 });
   });
 });
@@ -299,21 +399,27 @@ describe("updateExamSetShareMetadataService — D. Authorization", () => {
     mockExamSet(makeExamSet({ ownerId: OWNER_ID }));
     const otherTeacherId = "999f1f77bcf86cd799439001";
     await expect(
-      updateExamSetShareMetadataService(EXAM_SET_ID, SHARE_ID, otherTeacherId, "Teacher", { note: "x" })
+      updateExamSetShareMetadataService(EXAM_SET_ID, SHARE_ID, otherTeacherId, "Teacher", {
+        note: "x",
+      })
     ).rejects.toMatchObject({ status: 403 });
   });
 
   it("D2. Shared VIEW bị 403", async () => {
     mockExamSet(makeExamSet({ ownerId: OWNER_ID }));
     await expect(
-      updateExamSetShareMetadataService(EXAM_SET_ID, SHARE_ID, SHARED_USER_ID, "Teacher", { note: "x" })
+      updateExamSetShareMetadataService(EXAM_SET_ID, SHARE_ID, SHARED_USER_ID, "Teacher", {
+        note: "x",
+      })
     ).rejects.toMatchObject({ status: 403 });
   });
 
   it("D3. Shared EDIT bị 403", async () => {
     mockExamSet(makeExamSet({ ownerId: OWNER_ID }));
     await expect(
-      updateExamSetShareMetadataService(EXAM_SET_ID, SHARE_ID, SHARED_USER_ID, "Teacher", { note: "x" })
+      updateExamSetShareMetadataService(EXAM_SET_ID, SHARE_ID, SHARED_USER_ID, "Teacher", {
+        note: "x",
+      })
     ).rejects.toMatchObject({ status: 403 });
   });
 
@@ -329,7 +435,9 @@ describe("updateExamSetShareMetadataService — D. Authorization", () => {
     mockExamSet(makeExamSet({ ownerId: OWNER_ID }));
     mockShare(makeShare({ note: "" }));
     const adminId = "999f1f77bcf86cd799439003";
-    const res = await updateExamSetShareMetadataService(EXAM_SET_ID, SHARE_ID, adminId, "Admin", { note: "admin note" });
+    const res = await updateExamSetShareMetadataService(EXAM_SET_ID, SHARE_ID, adminId, "Admin", {
+      note: "admin note",
+    });
     expect(res.statusCode).toBe(200);
   });
 });
@@ -378,7 +486,10 @@ describe("updateExamSetShareMetadataService — E. State / Edge Cases", () => {
     const note = "same value";
     mockShare(makeShare({ note, expiresAt: null }));
     await expect(
-      updateExamSetShareMetadataService(EXAM_SET_ID, SHARE_ID, OWNER_ID, "Teacher", { note, expiresAt: null })
+      updateExamSetShareMetadataService(EXAM_SET_ID, SHARE_ID, OWNER_ID, "Teacher", {
+        note,
+        expiresAt: null,
+      })
     ).rejects.toMatchObject({ status: 409 });
   });
 
@@ -387,7 +498,9 @@ describe("updateExamSetShareMetadataService — E. State / Edge Cases", () => {
     mockExamSet(makeExamSet());
     mockShare(makeShare({ expiresAt: existingExpiry }));
     await expect(
-      updateExamSetShareMetadataService(EXAM_SET_ID, SHARE_ID, OWNER_ID, "Teacher", { expiresAt: existingExpiry.toISOString() })
+      updateExamSetShareMetadataService(EXAM_SET_ID, SHARE_ID, OWNER_ID, "Teacher", {
+        expiresAt: existingExpiry.toISOString(),
+      })
     ).rejects.toMatchObject({ status: 409 });
   });
 
@@ -404,7 +517,13 @@ describe("updateExamSetShareMetadataService — E. State / Edge Cases", () => {
     const existingNote = "same";
     mockExamSet(makeExamSet());
     mockShare(makeShare({ note: existingNote, expiresAt: null }));
-    const res = await updateExamSetShareMetadataService(EXAM_SET_ID, SHARE_ID, OWNER_ID, "Teacher", { note: existingNote, expiresAt: FUTURE_DATE });
+    const res = await updateExamSetShareMetadataService(
+      EXAM_SET_ID,
+      SHARE_ID,
+      OWNER_ID,
+      "Teacher",
+      { note: existingNote, expiresAt: FUTURE_DATE }
+    );
     expect(res.statusCode).toBe(200);
   });
 });

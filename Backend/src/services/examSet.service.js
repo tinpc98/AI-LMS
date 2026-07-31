@@ -198,7 +198,12 @@ export const getExamSetDetailService = async (examSetId, user) => {
  * @param {string} currentUserRole
  * @param {Object} payload { sharedWithUserId, permission, expiresAt, note }
  */
-export const createExamSetShareService = async (examSetId, currentUserId, currentUserRole, payload = {}) => {
+export const createExamSetShareService = async (
+  examSetId,
+  currentUserId,
+  currentUserRole,
+  payload = {}
+) => {
   const { sharedWithUserId, permission, expiresAt = null, note = "" } = payload;
 
   if (!examSetId || !Types.ObjectId.isValid(examSetId)) {
@@ -319,7 +324,12 @@ export const createExamSetShareService = async (examSetId, currentUserId, curren
   return { statusCode: 200, message: "Share re-activated successfully", data: updated };
 };
 
-export const revokeExamSetShareService = async (examSetId, shareId, currentUserId, currentUserRole) => {
+export const revokeExamSetShareService = async (
+  examSetId,
+  shareId,
+  currentUserId,
+  currentUserRole
+) => {
   if (!examSetId || !Types.ObjectId.isValid(examSetId)) {
     const error = new Error("examSetId không hợp lệ");
     error.status = 400;
@@ -539,7 +549,12 @@ const escapeRegex = (value) => {
   return String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 };
 
-export const listExamSetSharesService = async (examSetId, currentUserId, currentUserRole, options = {}) => {
+export const listExamSetSharesService = async (
+  examSetId,
+  currentUserId,
+  currentUserRole,
+  options = {}
+) => {
   if (!examSetId || !Types.ObjectId.isValid(examSetId)) {
     const error = new Error("examSetId không hợp lệ");
     error.status = 400;
@@ -579,7 +594,9 @@ export const listExamSetSharesService = async (examSetId, currentUserId, current
     filter.permission = options.permission;
   }
 
-  const sortBy = ["createdAt", "updatedAt", "expiresAt", "status", "permission"].includes(options.sortBy)
+  const sortBy = ["createdAt", "updatedAt", "expiresAt", "status", "permission"].includes(
+    options.sortBy
+  )
     ? options.sortBy
     : "createdAt";
   const sortOrder = String(options.sortOrder || "desc").toLowerCase() === "asc" ? 1 : -1;
@@ -627,7 +644,9 @@ export const listExamSetSharesService = async (examSetId, currentUserId, current
   const mappedItems = items.map((share) => {
     const shareObject = share.toObject ? share.toObject() : share;
     const effectiveStatus =
-      shareObject.status === EXAM_SET_SHARE_STATUS.ACTIVE && shareObject.expiresAt && new Date(shareObject.expiresAt).getTime() <= Date.now()
+      shareObject.status === EXAM_SET_SHARE_STATUS.ACTIVE &&
+      shareObject.expiresAt &&
+      new Date(shareObject.expiresAt).getTime() <= Date.now()
         ? EXAM_SET_SHARE_STATUS.EXPIRED
         : shareObject.status;
 
@@ -836,7 +855,12 @@ export const listSharedExamSetsService = async (currentUserId, currentUserRole, 
  * @param {string} currentUserRole
  * @param {Object} options - { page, limit, sort }
  */
-export const getExamSetVersionsService = async (examSetId, currentUserId, currentUserRole, options = {}) => {
+export const getExamSetVersionsService = async (
+  examSetId,
+  currentUserId,
+  currentUserRole,
+  options = {}
+) => {
   if (!examSetId || !Types.ObjectId.isValid(examSetId)) {
     const error = new Error("examSetId không hợp lệ");
     error.status = 400;
@@ -865,10 +889,7 @@ export const getExamSetVersionsService = async (examSetId, currentUserId, curren
 
   // Build base filter: include root doc and any doc that references rootExamSetId
   const filter = {
-    $or: [
-      { _id: rootId },
-      { rootExamSetId: rootId },
-    ],
+    $or: [{ _id: rootId }, { rootExamSetId: rootId }],
     isDeleted: false,
   };
 
@@ -899,10 +920,7 @@ export const getExamSetVersionsService = async (examSetId, currentUserId, curren
   const skip = (page - 1) * limit;
   query.skip(skip).limit(limit);
 
-  const [items, total] = await Promise.all([
-    query.exec(),
-    ExamSet.countDocuments(filter),
-  ]);
+  const [items, total] = await Promise.all([query.exec(), ExamSet.countDocuments(filter)]);
 
   const versions = (items || []).map((doc) => ({
     id: String(doc._id),
@@ -944,7 +962,9 @@ export const isEditableExamSetStatus = (status) => {
 };
 
 export const ensureEssayQuestionFieldsAllowed = (type, payload, existingQuestion = null) => {
-  const questionType = String(type || "").trim().toLowerCase();
+  const questionType = String(type || "")
+    .trim()
+    .toLowerCase();
   if (questionType !== "essay") {
     return;
   }
@@ -961,8 +981,8 @@ export const ensureEssayQuestionFieldsAllowed = (type, payload, existingQuestion
     payload.score !== undefined
       ? payload.score
       : payload.points !== undefined
-      ? payload.points
-      : existingQuestion?.points;
+        ? payload.points
+        : existingQuestion?.points;
 
   if (effectiveScore === undefined) {
     const error = new Error("Score là bắt buộc cho ESSAY");
@@ -1014,7 +1034,9 @@ const validateTrueFalsePayload = (questionData) => {
       error.status = 400;
       throw error;
     }
-    return String(option.text || "").trim().toLowerCase();
+    return String(option.text || "")
+      .trim()
+      .toLowerCase();
   });
 
   if (!normalized.includes("true") || !normalized.includes("false")) {
@@ -1025,13 +1047,22 @@ const validateTrueFalsePayload = (questionData) => {
 };
 
 const validateMultipleChoicePayload = (questionData) => {
-  if (!questionData.options || !Array.isArray(questionData.options) || questionData.options.length < 2) {
+  if (
+    !questionData.options ||
+    !Array.isArray(questionData.options) ||
+    questionData.options.length < 2
+  ) {
     const error = new Error("Câu hỏi trắc nghiệm phải có ít nhất 2 lựa chọn");
     error.status = 400;
     throw error;
   }
 
-  const hasCorrectAnswer = questionData.options.some((opt) => opt.isCorrect === true || opt.id === questionData.correctAnswer || opt.text === questionData.correctAnswer);
+  const hasCorrectAnswer = questionData.options.some(
+    (opt) =>
+      opt.isCorrect === true ||
+      opt.id === questionData.correctAnswer ||
+      opt.text === questionData.correctAnswer
+  );
   if (!hasCorrectAnswer) {
     const error = new Error("Phải có ít nhất 1 đáp án đúng");
     error.status = 400;
@@ -1048,7 +1079,9 @@ const validateShortAnswerPayload = (questionData) => {
 };
 
 const validateQuestionPayloadByType = (type, questionData) => {
-  const normalizedType = String(type || "").trim().toLowerCase();
+  const normalizedType = String(type || "")
+    .trim()
+    .toLowerCase();
   switch (normalizedType) {
     case "multiple_choice":
       return validateMultipleChoicePayload(questionData);
@@ -1064,7 +1097,9 @@ const validateQuestionPayloadByType = (type, questionData) => {
 };
 
 const normalizeQuestionPayload = (type, questionData) => {
-  const normalizedType = String(type || "").trim().toLowerCase();
+  const normalizedType = String(type || "")
+    .trim()
+    .toLowerCase();
   if (normalizedType === "true_false") {
     if (questionData.options === undefined || questionData.options === null) {
       const correctAnswerValue = normalizeBooleanAnswer(questionData.correctAnswer);
@@ -1081,7 +1116,9 @@ const resolveUpdateField = (field, updateData, existingQuestion) => {
 };
 
 const validateQuestionUpdatePayloadByType = (type, updateData, existingQuestion) => {
-  const normalizedType = String(type || "").trim().toLowerCase();
+  const normalizedType = String(type || "")
+    .trim()
+    .toLowerCase();
   const effectiveOptions = resolveUpdateField("options", updateData, existingQuestion);
   const effectiveCorrectAnswer = resolveUpdateField("correctAnswer", updateData, existingQuestion);
   const effectivePoints = resolveUpdateField("points", updateData, existingQuestion);
@@ -1098,7 +1135,9 @@ const validateQuestionUpdatePayloadByType = (type, updateData, existingQuestion)
 
     if (updateData.correctAnswer !== undefined && Array.isArray(effectiveOptions)) {
       const matchById = effectiveOptions.some((option) => option.id === updateData.correctAnswer);
-      const matchByText = effectiveOptions.some((option) => option.text === updateData.correctAnswer);
+      const matchByText = effectiveOptions.some(
+        (option) => option.text === updateData.correctAnswer
+      );
       if (!matchById && !matchByText) {
         const error = new Error("correctAnswer phải tồn tại trong options");
         error.status = 400;
@@ -1129,7 +1168,9 @@ const validateQuestionUpdatePayloadByType = (type, updateData, existingQuestion)
           error.status = 400;
           throw error;
         }
-        return String(option.text || "").trim().toLowerCase();
+        return String(option.text || "")
+          .trim()
+          .toLowerCase();
       });
       if (!normalized.includes("true") || !normalized.includes("false")) {
         const error = new Error("TRUE_FALSE options phải gồm True và False");
@@ -1148,7 +1189,11 @@ const validateQuestionUpdatePayloadByType = (type, updateData, existingQuestion)
   }
 
   if (normalizedType === "essay") {
-    if (updateData.score !== undefined || updateData.points !== undefined || updateData.type !== undefined) {
+    if (
+      updateData.score !== undefined ||
+      updateData.points !== undefined ||
+      updateData.type !== undefined
+    ) {
       ensureEssayQuestionFieldsAllowed(normalizedType, updateData, existingQuestion);
     }
   }
@@ -1252,7 +1297,9 @@ export const duplicateExamSetService = async (examSetId, currentUserId, currentU
   const sourceExamSet = await ExamSet.findOne({
     _id: examSetId,
     isDeleted: false,
-  }).populate("ownerId", "fullName avatar").populate("folderId", "name");
+  })
+    .populate("ownerId", "fullName avatar")
+    .populate("folderId", "name");
 
   if (!sourceExamSet) {
     const error = new Error("Bộ đề thi không tồn tại hoặc đã bị xóa");
@@ -1260,7 +1307,9 @@ export const duplicateExamSetService = async (examSetId, currentUserId, currentU
     throw error;
   }
 
-  const sourceOwnerId = sourceExamSet.ownerId ? String(sourceExamSet.ownerId._id || sourceExamSet.ownerId) : "";
+  const sourceOwnerId = sourceExamSet.ownerId
+    ? String(sourceExamSet.ownerId._id || sourceExamSet.ownerId)
+    : "";
   const userRole = (currentUserRole || "").toLowerCase();
   const isOwner = sourceOwnerId === String(currentUserId);
   const isAdmin = userRole === "admin";
@@ -1350,7 +1399,9 @@ export const createNewExamSetVersionService = async (examSetId, currentUserId, c
     throw error;
   }
 
-  const sourceOwnerId = sourceExamSet.ownerId ? String(sourceExamSet.ownerId._id || sourceExamSet.ownerId) : "";
+  const sourceOwnerId = sourceExamSet.ownerId
+    ? String(sourceExamSet.ownerId._id || sourceExamSet.ownerId)
+    : "";
   const userRole = String(currentUserRole || "").toLowerCase();
   const isOwner = sourceOwnerId === String(currentUserId);
   const isAdmin = userRole === "admin";
@@ -1380,21 +1431,21 @@ export const createNewExamSetVersionService = async (examSetId, currentUserId, c
     throw error;
   }
 
-  const rootExamSetId = sourceExamSet.rootExamSetId ? sourceExamSet.rootExamSetId : sourceExamSet._id;
+  const rootExamSetId = sourceExamSet.rootExamSetId
+    ? sourceExamSet.rootExamSetId
+    : sourceExamSet._id;
 
   const maxVersionExamSet = await ExamSet.findOne({
-    $or: [
-      { rootExamSetId: rootExamSetId },
-      { _id: rootExamSetId, rootExamSetId: null },
-    ],
+    $or: [{ rootExamSetId: rootExamSetId }, { _id: rootExamSetId, rootExamSetId: null }],
   })
     .sort({ versionNumber: -1 })
     .select("versionNumber")
     .lean();
 
-  const nextVersionNumber = maxVersionExamSet && typeof maxVersionExamSet.versionNumber === "number"
-    ? maxVersionExamSet.versionNumber + 1
-    : (sourceExamSet.versionNumber || 1) + 1;
+  const nextVersionNumber =
+    maxVersionExamSet && typeof maxVersionExamSet.versionNumber === "number"
+      ? maxVersionExamSet.versionNumber + 1
+      : (sourceExamSet.versionNumber || 1) + 1;
 
   let sourceUpdated = false;
   if (!sourceExamSet.rootExamSetId) {
@@ -1505,7 +1556,9 @@ export const createNewExamSetVersionService = async (examSetId, currentUserId, c
   } catch (error) {
     const isDuplicateKey = error && (error.code === 11000 || error.codeName === "DuplicateKey");
     if (isDuplicateKey) {
-      const duplicateError = new Error("Đã có phiên bản mới được tạo với cùng versionNumber. Vui lòng thử lại.");
+      const duplicateError = new Error(
+        "Đã có phiên bản mới được tạo với cùng versionNumber. Vui lòng thử lại."
+      );
       duplicateError.status = 409;
       throw duplicateError;
     }
@@ -1525,7 +1578,11 @@ export const createNewExamSetVersionService = async (examSetId, currentUserId, c
  * Restore a prior version by creating a new draft cloned from the given source version.
  * The new version's previousVersionId points to the latest version in the lineage (NOT the restored source).
  */
-export const restoreExamSetVersionService = async (sourceExamSetId, currentUserId, currentUserRole) => {
+export const restoreExamSetVersionService = async (
+  sourceExamSetId,
+  currentUserId,
+  currentUserRole
+) => {
   if (!sourceExamSetId || !Types.ObjectId.isValid(sourceExamSetId)) {
     const error = new Error("examSetId không hợp lệ");
     error.status = 400;
@@ -1555,13 +1612,9 @@ export const restoreExamSetVersionService = async (sourceExamSetId, currentUserI
 
   // Find the latest version in the lineage
   const latest = await ExamSet.findOne({
-    $or: [
-      { rootExamSetId: rootId },
-      { _id: rootId, rootExamSetId: null },
-    ],
+    $or: [{ rootExamSetId: rootId }, { _id: rootId, rootExamSetId: null }],
     isDeleted: false,
-  })
-    .sort({ versionNumber: -1 });
+  }).sort({ versionNumber: -1 });
 
   if (!latest) {
     const error = new Error("Không thể xác định phiên bản mới nhất của chuỗi");
@@ -1570,12 +1623,18 @@ export const restoreExamSetVersionService = async (sourceExamSetId, currentUserI
   }
 
   // Compute next version number
-  const nextVersionNumber = (typeof latest.versionNumber === "number" ? latest.versionNumber : (source.versionNumber || 1)) + 1;
+  const nextVersionNumber =
+    (typeof latest.versionNumber === "number" ? latest.versionNumber : source.versionNumber || 1) +
+    1;
 
   // Prepare folder preservation if exists and belongs to owner
   let folderId = null;
   if (source.folderId) {
-    const folder = await Folder.findOne({ _id: source.folderId, ownerId: sourceOwnerId, isDeleted: false });
+    const folder = await Folder.findOne({
+      _id: source.folderId,
+      ownerId: sourceOwnerId,
+      isDeleted: false,
+    });
     if (folder) folderId = source.folderId;
   }
 
@@ -1667,7 +1726,9 @@ export const restoreExamSetVersionService = async (sourceExamSetId, currentUserI
   } catch (err) {
     const isDuplicateKey = err && (err.code === 11000 || err.codeName === "DuplicateKey");
     if (isDuplicateKey) {
-      const duplicateError = new Error("Đã có phiên bản mới được tạo với cùng versionNumber. Vui lòng thử lại.");
+      const duplicateError = new Error(
+        "Đã có phiên bản mới được tạo với cùng versionNumber. Vui lòng thử lại."
+      );
       duplicateError.status = 409;
       throw duplicateError;
     }
@@ -1854,7 +1915,9 @@ export const updateExamSetService = async (examSetId, ownerId, updateData) => {
   const updatedExamSet = await ExamSet.findByIdAndUpdate(examSetId, updateFields, {
     new: true,
     runValidators: true,
-  }).populate("folderId", "name").populate("ownerId", "fullName email");
+  })
+    .populate("folderId", "name")
+    .populate("ownerId", "fullName email");
 
   return updatedExamSet;
 };
@@ -1975,7 +2038,7 @@ export const addQuestionToExamSetService = async (examSetId, ownerId, questionDa
   normalizeQuestionPayload(questionData.type, questionData);
 
   // Check if question ID already exists
-  const questionExists = examSet.questions.some(q => q.questionId === questionData.questionId);
+  const questionExists = examSet.questions.some((q) => q.questionId === questionData.questionId);
   if (questionExists) {
     const error = new Error("questionId đã tồn tại trong bộ đề thi này");
     error.status = 400;
@@ -1994,8 +2057,8 @@ export const addQuestionToExamSetService = async (examSetId, ownerId, questionDa
       questionData.points !== undefined
         ? questionData.points
         : questionData.score !== undefined
-        ? questionData.score
-        : 1,
+          ? questionData.score
+          : 1,
     difficulty: questionData.difficulty || "medium",
     options: questionData.options || [],
     correctAnswer: questionData.correctAnswer !== undefined ? questionData.correctAnswer : "",
@@ -2031,7 +2094,12 @@ export const addQuestionToExamSetService = async (examSetId, ownerId, questionDa
  * @param {Object} updateData - Question data to update
  * @returns {Object} Updated exam set with modified question
  */
-export const updateQuestionInExamSetService = async (examSetId, ownerId, questionId, updateData) => {
+export const updateQuestionInExamSetService = async (
+  examSetId,
+  ownerId,
+  questionId,
+  updateData
+) => {
   // Find exam set and verify ownership
   const examSet = await ExamSet.findOne({
     _id: examSetId,
@@ -2053,7 +2121,7 @@ export const updateQuestionInExamSetService = async (examSetId, ownerId, questio
   }
 
   // Find question in the questions array
-  const questionIndex = examSet.questions.findIndex(q => q.questionId === questionId);
+  const questionIndex = examSet.questions.findIndex((q) => q.questionId === questionId);
   if (questionIndex === -1) {
     const error = new Error("Câu hỏi không tồn tại");
     error.status = 404;
@@ -2069,7 +2137,9 @@ export const updateQuestionInExamSetService = async (examSetId, ownerId, questio
     throw error;
   }
 
-  const effectiveType = updateData.type ? String(updateData.type).trim().toLowerCase() : question.type;
+  const effectiveType = updateData.type
+    ? String(updateData.type).trim().toLowerCase()
+    : question.type;
   if (!VALID_QUESTION_TYPES.includes(effectiveType)) {
     const error = new Error("Loại câu hỏi không hợp lệ");
     error.status = 400;
@@ -2087,7 +2157,11 @@ export const updateQuestionInExamSetService = async (examSetId, ownerId, questio
   validateQuestionUpdatePayloadByType(effectiveType, updateData, question);
   normalizeQuestionPayload(effectiveType, mergedQuestion);
 
-  if (effectiveType === "true_false" && updateData.correctAnswer !== undefined && updateData.options === undefined) {
+  if (
+    effectiveType === "true_false" &&
+    updateData.correctAnswer !== undefined &&
+    updateData.options === undefined
+  ) {
     question.options = mergedQuestion.options;
   }
 
@@ -2125,9 +2199,15 @@ export const updateQuestionInExamSetService = async (examSetId, ownerId, questio
   // Update fields if provided
   for (const field of allowedFields) {
     if (field in updateData && updateData[field] !== undefined) {
-      if (field === "content" || field === "hint" || field === "explanation" || field === "category") {
+      if (
+        field === "content" ||
+        field === "hint" ||
+        field === "explanation" ||
+        field === "category"
+      ) {
         // Trim string fields
-        question[field] = typeof updateData[field] === "string" ? updateData[field].trim() : updateData[field];
+        question[field] =
+          typeof updateData[field] === "string" ? updateData[field].trim() : updateData[field];
       } else {
         question[field] = updateData[field];
       }
@@ -2150,7 +2230,7 @@ export const updateQuestionInExamSetService = async (examSetId, ownerId, questio
       throw error;
     }
 
-    const hasCorrectAnswer = question.options.some(opt => opt.isCorrect === true);
+    const hasCorrectAnswer = question.options.some((opt) => opt.isCorrect === true);
     if (!hasCorrectAnswer) {
       const error = new Error("Phải có ít nhất 1 đáp án đúng");
       error.status = 400;
@@ -2163,7 +2243,7 @@ export const updateQuestionInExamSetService = async (examSetId, ownerId, questio
       throw error;
     }
 
-    const hasCorrectAnswer = question.options.some(opt => opt.isCorrect === true);
+    const hasCorrectAnswer = question.options.some((opt) => opt.isCorrect === true);
     if (!hasCorrectAnswer) {
       const error = new Error("Phải có 1 đáp án đúng");
       error.status = 400;
@@ -2196,7 +2276,12 @@ export const updateQuestionInExamSetService = async (examSetId, ownerId, questio
  * @param {Array} reorderItems
  * @returns {Object} Updated exam set
  */
-export const reorderQuestionsInExamSetService = async (examSetId, currentUserId, currentUserRole, reorderItems) => {
+export const reorderQuestionsInExamSetService = async (
+  examSetId,
+  currentUserId,
+  currentUserRole,
+  reorderItems
+) => {
   if (!examSetId || !Types.ObjectId.isValid(examSetId)) {
     const error = new Error("examSetId không hợp lệ");
     error.status = 400;
@@ -2226,7 +2311,13 @@ export const reorderQuestionsInExamSetService = async (examSetId, currentUserId,
       throw error;
     }
 
-    if (order === undefined || order === null || typeof order !== "number" || !Number.isInteger(order) || order < 0) {
+    if (
+      order === undefined ||
+      order === null ||
+      typeof order !== "number" ||
+      !Number.isInteger(order) ||
+      order < 0
+    ) {
       const error = new Error(`questions[${index}].order phải là số nguyên không âm`);
       error.status = 400;
       throw error;
@@ -2278,8 +2369,8 @@ export const reorderQuestionsInExamSetService = async (examSetId, currentUserId,
     throw error;
   }
 
-  const existingQuestionIds = new Set(examSet.questions.map(q => q.questionId));
-  const reorderItemMap = new Map(normalizedItems.map(item => [item.questionId, item.order]));
+  const existingQuestionIds = new Set(examSet.questions.map((q) => q.questionId));
+  const reorderItemMap = new Map(normalizedItems.map((item) => [item.questionId, item.order]));
 
   for (const { questionId } of normalizedItems) {
     if (!existingQuestionIds.has(questionId)) {
@@ -2291,7 +2382,9 @@ export const reorderQuestionsInExamSetService = async (examSetId, currentUserId,
 
   const finalOrderSet = new Set();
   for (const question of examSet.questions) {
-    const newOrder = reorderItemMap.has(question.questionId) ? reorderItemMap.get(question.questionId) : question.order;
+    const newOrder = reorderItemMap.has(question.questionId)
+      ? reorderItemMap.get(question.questionId)
+      : question.order;
     if (finalOrderSet.has(newOrder)) {
       const error = new Error("Không được phép duplicate order sau khi sắp xếp lại câu hỏi");
       error.status = 400;
@@ -2300,7 +2393,7 @@ export const reorderQuestionsInExamSetService = async (examSetId, currentUserId,
     finalOrderSet.add(newOrder);
   }
 
-  examSet.questions = examSet.questions.map(question => {
+  examSet.questions = examSet.questions.map((question) => {
     const reorderItem = reorderItemMap.get(question.questionId);
     if (reorderItem !== undefined) {
       question.order = reorderItem;
@@ -2322,7 +2415,12 @@ export const reorderQuestionsInExamSetService = async (examSetId, currentUserId,
  * @param {string} questionId
  * @returns {Object} Updated exam set
  */
-export const deleteQuestionFromExamSetService = async (examSetId, currentUserId, currentUserRole, questionId) => {
+export const deleteQuestionFromExamSetService = async (
+  examSetId,
+  currentUserId,
+  currentUserRole,
+  questionId
+) => {
   if (!examSetId || !Types.ObjectId.isValid(examSetId)) {
     const error = new Error("examSetId không hợp lệ");
     error.status = 400;
@@ -2364,7 +2462,7 @@ export const deleteQuestionFromExamSetService = async (examSetId, currentUserId,
     throw error;
   }
 
-  const questionIndex = examSet.questions.findIndex(q => q.questionId === normalizedQuestionId);
+  const questionIndex = examSet.questions.findIndex((q) => q.questionId === normalizedQuestionId);
   if (questionIndex === -1) {
     const error = new Error("Câu hỏi không tồn tại trong bộ đề thi");
     error.status = 404;

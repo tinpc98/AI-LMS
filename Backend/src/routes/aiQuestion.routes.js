@@ -26,7 +26,9 @@ router.use(checkAILessonAccess);
 export const validateQuestionGenerationRequest = [
   body("folderId").isMongoId().withMessage("folderId không hợp lệ"),
   body("title").notEmpty().withMessage("title không được để trống").isString(),
-  body("questionCount").isInt({ min: 1, max: 100 }).withMessage("questionCount phải là số từ 1 đến 100"),
+  body("questionCount")
+    .isInt({ min: 1, max: 100 })
+    .withMessage("questionCount phải là số từ 1 đến 100"),
   body("questionTypes").custom((questionTypes, { req }) => {
     if (!questionTypes || typeof questionTypes !== "object" || Array.isArray(questionTypes)) {
       throw new Error("questionTypes phải là object");
@@ -48,7 +50,11 @@ export const validateQuestionGenerationRequest = [
     return true;
   }),
   body("difficultyDistribution").custom((difficultyDistribution, { req }) => {
-    if (!difficultyDistribution || typeof difficultyDistribution !== "object" || Array.isArray(difficultyDistribution)) {
+    if (
+      !difficultyDistribution ||
+      typeof difficultyDistribution !== "object" ||
+      Array.isArray(difficultyDistribution)
+    ) {
       throw new Error("difficultyDistribution phải là object");
     }
     const supportedDifficulties = new Set(["easy", "medium", "hard"]);

@@ -25,7 +25,9 @@ const CourseToolbar = ({ filters, onFiltersChange, onRefresh, onCreate }: Course
           style={{ width: "100%" }}
           placeholder="Subject"
           value={filters.subject}
-          onChange={(value: CourseSubject | "All") => onFiltersChange({ ...filters, subject: value })}
+          onChange={(value: CourseSubject | "All") =>
+            onFiltersChange({ ...filters, subject: value })
+          }
           options={[
             { label: "All Subjects", value: "All" },
             { label: "Mathematics", value: "Mathematics" },

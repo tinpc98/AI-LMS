@@ -39,21 +39,36 @@ export const ClassCard: React.FC<ClassCardProps> = React.memo(({ item }) => {
     >
       <div>
         {/* Header: Status Tag & Class Code */}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginBottom: 12,
+          }}
+        >
           <ClassStatusTag status={item.status} />
           {item.classCode && (
-            <Text type="secondary" style={{ fontSize: 12, fontWeight: 600, fontFamily: "monospace" }}>
+            <Text
+              type="secondary"
+              style={{ fontSize: 12, fontWeight: 600, fontFamily: "monospace" }}
+            >
               #{item.classCode}
             </Text>
           )}
         </div>
 
         {/* Class Name & Subject */}
-        <Title level={5} style={{ margin: "0 0 4px 0", fontSize: 16, fontWeight: 700 }} ellipsis={{ rows: 2 }}>
+        <Title
+          level={5}
+          style={{ margin: "0 0 4px 0", fontSize: 16, fontWeight: 700 }}
+          ellipsis={{ rows: 2 }}
+        >
           {item.className}
         </Title>
         <Text type="secondary" style={{ fontSize: 12, display: "block", marginBottom: 16 }}>
-          <BookOutlined style={{ marginRight: 4 }} /> {item.subject || item.courseName || "Khóa học chính"}
+          <BookOutlined style={{ marginRight: 4 }} />{" "}
+          {item.subject || item.courseName || "Khóa học chính"}
         </Text>
 
         {/* Teacher Info */}
@@ -85,7 +100,14 @@ export const ClassCard: React.FC<ClassCardProps> = React.memo(({ item }) => {
         </div>
 
         {/* Class Info Meta: Student count & Start Date */}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginBottom: 16,
+          }}
+        >
           <Tooltip title={`Sĩ số lớp: ${item.totalStudents || 0}/${item.maxStudents || 40}`}>
             <Space size={6} align="center">
               <TeamOutlined style={{ color: "#8c8c8c", fontSize: 14 }} />

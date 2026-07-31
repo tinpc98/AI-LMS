@@ -27,18 +27,23 @@ class AICoreService {
     }
 
     const config = await aiUsageService.getOrCreateConfig();
-    const providerName = process.env.AI_PROVIDER || preferredProviderName || config.defaultProvider || "google-gemini";
+    const providerName =
+      process.env.AI_PROVIDER || preferredProviderName || config.defaultProvider || "google-gemini";
 
     if (providerName === "mock") return this.mockProvider;
 
     const modelName = process.env.AI_MODEL || config.defaultModel;
     if (!modelName) {
-      throw new AIError("Chưa cấu hình model name cho AI Provider!", AIErrorCode.AI_CONFIG_ERROR, 500);
+      throw new AIError(
+        "Chưa cấu hình model name cho AI Provider!",
+        AIErrorCode.AI_CONFIG_ERROR,
+        500
+      );
     }
 
     let provider = this.providers.get(providerName);
     if (provider) {
-        provider.modelName = modelName; 
+      provider.modelName = modelName;
     }
 
     // Lazy load Gemini if key became available in env
@@ -51,10 +56,18 @@ class AICoreService {
 
     if (!provider) {
       if (process.env.AI_MOCK_MODE === "false") {
-        throw new AIError(`Cấu hình AI Core chưa sẵn sàng: Thiếu API Key hoặc cấu hình sai cho provider '${providerName}'!`, AIErrorCode.AI_CONFIG_ERROR, 500);
+        throw new AIError(
+          `Cấu hình AI Core chưa sẵn sàng: Thiếu API Key hoặc cấu hình sai cho provider '${providerName}'!`,
+          AIErrorCode.AI_CONFIG_ERROR,
+          500
+        );
       }
-      
-      throw new AIError(`Cấu hình AI Core chưa sẵn sàng: Thiếu API Key cho provider '${providerName}'!`, AIErrorCode.AI_CONFIG_ERROR, 500);
+
+      throw new AIError(
+        `Cấu hình AI Core chưa sẵn sàng: Thiếu API Key cho provider '${providerName}'!`,
+        AIErrorCode.AI_CONFIG_ERROR,
+        500
+      );
     }
 
     return provider;
@@ -156,7 +169,12 @@ class AICoreService {
       }
 
       if (error instanceof AIError) throw error;
-      throw new AIError(`Lỗi xử lý AI Core (${feature}): ${errorMessage}`, AIErrorCode.AI_PROVIDER_ERROR, 500, error);
+      throw new AIError(
+        `Lỗi xử lý AI Core (${feature}): ${errorMessage}`,
+        AIErrorCode.AI_PROVIDER_ERROR,
+        500,
+        error
+      );
     }
   }
 }

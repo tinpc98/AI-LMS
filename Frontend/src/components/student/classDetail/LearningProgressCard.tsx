@@ -62,11 +62,17 @@ export const LearningProgressCard: React.FC<LearningProgressCardProps> = React.m
           <Col xs={24} sm={16}>
             <Space direction="vertical" size={12} style={{ width: "100%" }}>
               {/* Average Score */}
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div
+                style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}
+              >
                 <Text style={{ fontSize: 13, color: "#595959" }}>
-                  <TrophyOutlined style={{ color: "#faad14", marginRight: 6 }} /> Điểm trung bình tích lũy:
+                  <TrophyOutlined style={{ color: "#faad14", marginRight: 6 }} /> Điểm trung bình
+                  tích lũy:
                 </Text>
-                <Tag color="gold" style={{ fontSize: 13, fontWeight: 700, borderRadius: 8, padding: "2px 10px" }}>
+                <Tag
+                  color="gold"
+                  style={{ fontSize: 13, fontWeight: 700, borderRadius: 8, padding: "2px 10px" }}
+                >
                   {averageScore} / 10.0
                 </Tag>
               </div>
@@ -75,14 +81,22 @@ export const LearningProgressCard: React.FC<LearningProgressCardProps> = React.m
               <div>
                 <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 2 }}>
                   <Text style={{ fontSize: 12, color: "#595959" }}>
-                    <CheckCircleOutlined style={{ color: "#1890ff", marginRight: 6 }} /> Bài tập: {completedAssignments}/{totalAssignments} bài
+                    <CheckCircleOutlined style={{ color: "#1890ff", marginRight: 6 }} /> Bài tập:{" "}
+                    {completedAssignments}/{totalAssignments} bài
                   </Text>
                   <Text style={{ fontSize: 12, fontWeight: 600 }}>
-                    {totalAssignments > 0 ? Math.round((completedAssignments / totalAssignments) * 100) : 0}%
+                    {totalAssignments > 0
+                      ? Math.round((completedAssignments / totalAssignments) * 100)
+                      : 0}
+                    %
                   </Text>
                 </div>
                 <Progress
-                  percent={totalAssignments > 0 ? Math.round((completedAssignments / totalAssignments) * 100) : 0}
+                  percent={
+                    totalAssignments > 0
+                      ? Math.round((completedAssignments / totalAssignments) * 100)
+                      : 0
+                  }
                   showInfo={false}
                   size="small"
                   strokeColor="#1890ff"
@@ -93,7 +107,8 @@ export const LearningProgressCard: React.FC<LearningProgressCardProps> = React.m
               <div>
                 <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 2 }}>
                   <Text style={{ fontSize: 12, color: "#595959" }}>
-                    <FormOutlined style={{ color: "#fa8c16", marginRight: 6 }} /> Bài kiểm tra: {completedExams}/{totalExams} bài
+                    <FormOutlined style={{ color: "#fa8c16", marginRight: 6 }} /> Bài kiểm tra:{" "}
+                    {completedExams}/{totalExams} bài
                   </Text>
                   <Text style={{ fontSize: 12, fontWeight: 600 }}>
                     {totalExams > 0 ? Math.round((completedExams / totalExams) * 100) : 0}%

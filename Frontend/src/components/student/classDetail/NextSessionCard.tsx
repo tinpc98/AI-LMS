@@ -1,6 +1,11 @@
 import React from "react";
 import { Card, Typography, Space, Tag, Button } from "antd";
-import { CalendarOutlined, ClockCircleOutlined, EnvironmentOutlined, VideoCameraOutlined } from "@ant-design/icons";
+import {
+  CalendarOutlined,
+  ClockCircleOutlined,
+  EnvironmentOutlined,
+  VideoCameraOutlined,
+} from "@ant-design/icons";
 import EmptyState from "../../common/EmptyState";
 
 const { Text, Title } = Typography;
@@ -42,7 +47,9 @@ export const NextSessionCard: React.FC<NextSessionCardProps> = React.memo(
     }
 
     const daysText = schedule?.days?.join(", ") || "Hàng tuần";
-    const timeText = hasTime ? `${schedule?.startTime} - ${schedule?.endTime}` : "Thời gian sắp diễn ra";
+    const timeText = hasTime
+      ? `${schedule?.startTime} - ${schedule?.endTime}`
+      : "Thời gian sắp diễn ra";
 
     return (
       <Card
@@ -67,7 +74,14 @@ export const NextSessionCard: React.FC<NextSessionCardProps> = React.memo(
             padding: 16,
           }}
         >
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              marginBottom: 8,
+            }}
+          >
             <Tag color={isLiveNow ? "error" : "processing"} style={{ borderRadius: 8 }}>
               {isLiveNow ? "🔴 Đang học trực tuyến" : "Lịch học định kỳ"}
             </Tag>

@@ -28,7 +28,13 @@ export class BaseAIProvider {
    * @param {number} [options.timeoutMs=30000]
    * @returns {Promise<{ text: string, inputTokens: number, outputTokens: number, durationMs: number }>}
    */
-  async generateText({ prompt, systemInstruction, temperature = 0.7, maxTokens = 2048, timeoutMs = 30000 }) {
+  async generateText({
+    prompt,
+    systemInstruction,
+    temperature = 0.7,
+    maxTokens = 2048,
+    timeoutMs = 30000,
+  }) {
     throw new AIError(
       `generateText() method not implemented in ${this.name}`,
       AIErrorCode.AI_PROVIDER_ERROR,
@@ -47,7 +53,14 @@ export class BaseAIProvider {
    * @param {number} [options.timeoutMs=30000]
    * @returns {Promise<{ data: any, rawText: string, inputTokens: number, outputTokens: number, durationMs: number }>}
    */
-  async generateJSON({ prompt, systemInstruction, responseSchema, temperature = 0.2, maxTokens = 4096, timeoutMs = 30000 }) {
+  async generateJSON({
+    prompt,
+    systemInstruction,
+    responseSchema,
+    temperature = 0.2,
+    maxTokens = 4096,
+    timeoutMs = 30000,
+  }) {
     throw new AIError(
       `generateJSON() method not implemented in ${this.name}`,
       AIErrorCode.AI_PROVIDER_ERROR,
@@ -64,7 +77,12 @@ export class BaseAIProvider {
    * @param {number} [options.timeoutMs=30000]
    * @returns {Promise<{ embedding: number[], durationMs: number }>}
    */
-  async generateEmbedding({ text, taskType = "RETRIEVAL_DOCUMENT", dimensions = 768, timeoutMs = 30000 }) {
+  async generateEmbedding({
+    text,
+    taskType = "RETRIEVAL_DOCUMENT",
+    dimensions = 768,
+    timeoutMs = 30000,
+  }) {
     throw new AIError(
       `generateEmbedding() method not implemented in ${this.name}`,
       AIErrorCode.AI_PROVIDER_ERROR,

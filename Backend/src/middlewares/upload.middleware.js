@@ -15,12 +15,7 @@ const fileFilter = (req, file, cb) => {
   if (allowedMimeTypes.includes(file.mimetype)) {
     cb(null, true);
   } else {
-    cb(
-      new Error(
-        "Định dạng file không được hỗ trợ. Chỉ nhận Ảnh, PDF hoặc Word!",
-      ),
-      false,
-    );
+    cb(new Error("Định dạng file không được hỗ trợ. Chỉ nhận Ảnh, PDF hoặc Word!"), false);
   }
 };
 

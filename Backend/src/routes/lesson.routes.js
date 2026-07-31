@@ -6,25 +6,13 @@ import upload from "../middlewares/upload.middleware.js";
 const router = express.Router();
 
 // Tạo bài giảng mới (Tối đa 5 files đính kèm)
-router.post(
-  "/",
-  verifyUser,
-  isTeacher,
-  upload.array("files", 5),
-  lessonController.createLesson,
-);
+router.post("/", verifyUser, isTeacher, upload.array("files", 5), lessonController.createLesson);
 
 // Lấy toàn bộ bài giảng của một lớp học cụ thể
 router.get("/class/:classId", verifyUser, lessonController.getLessonsByClass);
 
 // Cập nhật bài giảng
-router.put(
-  "/:id",
-  verifyUser,
-  isTeacher,
-  upload.array("files", 5),
-  lessonController.updateLesson,
-);
+router.put("/:id", verifyUser, isTeacher, upload.array("files", 5), lessonController.updateLesson);
 
 // Xóa bài giảng
 router.delete("/:id", verifyUser, isTeacher, lessonController.deleteLesson);

@@ -5,15 +5,14 @@ import { AIError, AIErrorCode } from "../utils/aiError.js";
  * Controller xử lý luồng AI Summary
  */
 class AISummaryController {
-  
   // POST /api/ai/lectures/:lessonId/summary
   async generateSummary(req, res) {
     try {
       const lesson = req.aiLesson;
       const user = req.user;
-      
+
       const summary = await aiSummaryService.generateSummary(lesson, user);
-      
+
       return res.status(200).json({
         success: true,
         message: "Tạo bản tóm tắt AI thành công",
@@ -28,7 +27,7 @@ class AISummaryController {
           suggestedReviewTopics: summary.suggestedReviewTopics,
           sourceWarnings: summary.sourceWarnings,
           createdAt: summary.createdAt,
-        }
+        },
       });
     } catch (error) {
       if (error instanceof AIError) {
@@ -43,7 +42,7 @@ class AISummaryController {
       return res.status(500).json({
         success: false,
         code: AIErrorCode.AI_PROVIDER_ERROR,
-        message: `Lỗi hệ thống khi tạo tóm tắt: ${error.message}`
+        message: `Lỗi hệ thống khi tạo tóm tắt: ${error.message}`,
       });
     }
   }
@@ -65,21 +64,21 @@ class AISummaryController {
         return res.status(404).json({
           success: false,
           code: "NOT_FOUND",
-          message: "Chưa có bản tóm tắt nào khả dụng cho bài giảng này."
+          message: "Chưa có bản tóm tắt nào khả dụng cho bài giảng này.",
         });
       }
 
       return res.status(200).json({
         success: true,
         message: "Lấy bản tóm tắt thành công",
-        data: summary
+        data: summary,
       });
     } catch (error) {
       console.error("[AISummaryController.getSummary] Lỗi hệ thống:", error);
       return res.status(500).json({
         success: false,
         code: AIErrorCode.AI_PROVIDER_ERROR,
-        message: `Lỗi hệ thống khi lấy tóm tắt: ${error.message}`
+        message: `Lỗi hệ thống khi lấy tóm tắt: ${error.message}`,
       });
     }
   }
@@ -95,7 +94,7 @@ class AISummaryController {
       return res.status(200).json({
         success: true,
         message: "Duyệt bản tóm tắt thành công.",
-        data: summary
+        data: summary,
       });
     } catch (error) {
       if (error instanceof AIError) {
@@ -110,7 +109,7 @@ class AISummaryController {
       return res.status(500).json({
         success: false,
         code: AIErrorCode.AI_PROVIDER_ERROR,
-        message: `Lỗi hệ thống khi duyệt tóm tắt: ${error.message}`
+        message: `Lỗi hệ thống khi duyệt tóm tắt: ${error.message}`,
       });
     }
   }
@@ -127,7 +126,7 @@ class AISummaryController {
       return res.status(200).json({
         success: true,
         message: "Đã từ chối bản tóm tắt.",
-        data: summary
+        data: summary,
       });
     } catch (error) {
       if (error instanceof AIError) {
@@ -142,7 +141,7 @@ class AISummaryController {
       return res.status(500).json({
         success: false,
         code: AIErrorCode.AI_PROVIDER_ERROR,
-        message: `Lỗi hệ thống khi từ chối tóm tắt: ${error.message}`
+        message: `Lỗi hệ thống khi từ chối tóm tắt: ${error.message}`,
       });
     }
   }

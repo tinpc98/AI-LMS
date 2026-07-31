@@ -74,7 +74,14 @@ export const LiveSessionCard: React.FC<LiveSessionCardProps> = React.memo(
                 padding: 16,
               }}
             >
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  marginBottom: 8,
+                }}
+              >
                 <Badge
                   status="processing"
                   text={<span style={{ color: "#1890ff", fontWeight: 600 }}>Đang diễn ra</span>}
@@ -121,7 +128,14 @@ export const LiveSessionCard: React.FC<LiveSessionCardProps> = React.memo(
                 padding: 16,
               }}
             >
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  marginBottom: 8,
+                }}
+              >
                 <Badge
                   color="green"
                   text={<span style={{ color: "#52c41a", fontWeight: 600 }}>Sắp diễn ra</span>}
@@ -169,7 +183,14 @@ export const LiveSessionCard: React.FC<LiveSessionCardProps> = React.memo(
                 padding: 16,
               }}
             >
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  marginBottom: 8,
+                }}
+              >
                 <Badge
                   color="default"
                   text={<span style={{ color: "#8c8c8c", fontWeight: 600 }}>Đã kết thúc</span>}

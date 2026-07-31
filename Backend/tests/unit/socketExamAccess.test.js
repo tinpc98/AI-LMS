@@ -35,13 +35,19 @@ describe("checkSocketExamAccess — validation cơ bản", () => {
   });
 
   it("examId sai định dạng → SOCKET_INVALID_EXAM_ID", async () => {
-    const result = await checkSocketExamAccess({ id: STUDENT_ID, role: "student" }, { examId: "not-an-id" });
+    const result = await checkSocketExamAccess(
+      { id: STUDENT_ID, role: "student" },
+      { examId: "not-an-id" }
+    );
     expect(result).toMatchObject({ allowed: false, code: "SOCKET_INVALID_EXAM_ID" });
   });
 
   it("exam không tồn tại/đã xóa → SOCKET_EXAM_NOT_FOUND", async () => {
     vi.spyOn(Exam, "findOne").mockReturnValue(mongooseQuery(null));
-    const result = await checkSocketExamAccess({ id: STUDENT_ID, role: "student" }, { examId: EXAM_ID, attemptId: ATTEMPT_ID });
+    const result = await checkSocketExamAccess(
+      { id: STUDENT_ID, role: "student" },
+      { examId: EXAM_ID, attemptId: ATTEMPT_ID }
+    );
     expect(result).toMatchObject({ allowed: false, code: "SOCKET_EXAM_NOT_FOUND" });
   });
 });
@@ -49,7 +55,10 @@ describe("checkSocketExamAccess — validation cơ bản", () => {
 describe("checkSocketExamAccess — admin", () => {
   it("admin luôn được phép truy cập bất kỳ đề thi nào", async () => {
     vi.spyOn(Exam, "findOne").mockReturnValue(mongooseQuery({ _id: EXAM_ID, classId: CLASS_ID }));
-    const result = await checkSocketExamAccess({ id: "admin-1", role: "admin" }, { examId: EXAM_ID });
+    const result = await checkSocketExamAccess(
+      { id: "admin-1", role: "admin" },
+      { examId: EXAM_ID }
+    );
     expect(result).toMatchObject({ allowed: true, accessType: "admin" });
   });
 });
@@ -57,17 +66,29 @@ describe("checkSocketExamAccess — admin", () => {
 describe("checkSocketExamAccess — teacher", () => {
   it("giáo viên không phụ trách lớp của đề thi → SOCKET_EXAM_ACCESS_DENIED", async () => {
     vi.spyOn(Exam, "findOne").mockReturnValue(mongooseQuery({ _id: EXAM_ID, classId: CLASS_ID }));
-    vi.spyOn(classModel, "findById").mockResolvedValue({ _id: CLASS_ID, teacherId: OWNER_TEACHER_ID });
+    vi.spyOn(classModel, "findById").mockResolvedValue({
+      _id: CLASS_ID,
+      teacherId: OWNER_TEACHER_ID,
+    });
 
-    const result = await checkSocketExamAccess({ id: OTHER_TEACHER_ID, role: "teacher" }, { examId: EXAM_ID });
+    const result = await checkSocketExamAccess(
+      { id: OTHER_TEACHER_ID, role: "teacher" },
+      { examId: EXAM_ID }
+    );
     expect(result).toMatchObject({ allowed: false, code: "SOCKET_EXAM_ACCESS_DENIED" });
   });
 
   it("giáo viên phụ trách lớp của đề thi → allowed", async () => {
     vi.spyOn(Exam, "findOne").mockReturnValue(mongooseQuery({ _id: EXAM_ID, classId: CLASS_ID }));
-    vi.spyOn(classModel, "findById").mockResolvedValue({ _id: CLASS_ID, teacherId: OWNER_TEACHER_ID });
+    vi.spyOn(classModel, "findById").mockResolvedValue({
+      _id: CLASS_ID,
+      teacherId: OWNER_TEACHER_ID,
+    });
 
-    const result = await checkSocketExamAccess({ id: OWNER_TEACHER_ID, role: "teacher" }, { examId: EXAM_ID });
+    const result = await checkSocketExamAccess(
+      { id: OWNER_TEACHER_ID, role: "teacher" },
+      { examId: EXAM_ID }
+    );
     expect(result).toMatchObject({ allowed: true, accessType: "teacher-owner" });
   });
 });
@@ -75,7 +96,10 @@ describe("checkSocketExamAccess — teacher", () => {
 describe("checkSocketExamAccess — student", () => {
   it("thiếu attemptId → SOCKET_INVALID_ATTEMPT_ID", async () => {
     vi.spyOn(Exam, "findOne").mockReturnValue(mongooseQuery({ _id: EXAM_ID, classId: CLASS_ID }));
-    const result = await checkSocketExamAccess({ id: STUDENT_ID, role: "student" }, { examId: EXAM_ID });
+    const result = await checkSocketExamAccess(
+      { id: STUDENT_ID, role: "student" },
+      { examId: EXAM_ID }
+    );
     expect(result).toMatchObject({ allowed: false, code: "SOCKET_INVALID_ATTEMPT_ID" });
   });
 
@@ -85,7 +109,10 @@ describe("checkSocketExamAccess — student", () => {
       mongooseQuery({ _id: ATTEMPT_ID, examId: EXAM_ID, studentId: OTHER_STUDENT_ID })
     );
 
-    const result = await checkSocketExamAccess({ id: STUDENT_ID, role: "student" }, { examId: EXAM_ID, attemptId: ATTEMPT_ID });
+    const result = await checkSocketExamAccess(
+      { id: STUDENT_ID, role: "student" },
+      { examId: EXAM_ID, attemptId: ATTEMPT_ID }
+    );
     expect(result).toMatchObject({ allowed: false, code: "SOCKET_EXAM_ACCESS_DENIED" });
   });
 
@@ -96,7 +123,10 @@ describe("checkSocketExamAccess — student", () => {
       mongooseQuery({ _id: ATTEMPT_ID, examId: OTHER_EXAM_ID, studentId: STUDENT_ID })
     );
 
-    const result = await checkSocketExamAccess({ id: STUDENT_ID, role: "student" }, { examId: EXAM_ID, attemptId: ATTEMPT_ID });
+    const result = await checkSocketExamAccess(
+      { id: STUDENT_ID, role: "student" },
+      { examId: EXAM_ID, attemptId: ATTEMPT_ID }
+    );
     expect(result).toMatchObject({ allowed: false, code: "SOCKET_EXAM_ACCESS_DENIED" });
   });
 
@@ -106,7 +136,10 @@ describe("checkSocketExamAccess — student", () => {
       mongooseQuery({ _id: ATTEMPT_ID, examId: EXAM_ID, studentId: STUDENT_ID })
     );
 
-    const result = await checkSocketExamAccess({ id: STUDENT_ID, role: "student" }, { examId: EXAM_ID, attemptId: ATTEMPT_ID });
+    const result = await checkSocketExamAccess(
+      { id: STUDENT_ID, role: "student" },
+      { examId: EXAM_ID, attemptId: ATTEMPT_ID }
+    );
     expect(result).toMatchObject({ allowed: true, accessType: "student-owner" });
     expect(result.attempt._id).toBe(ATTEMPT_ID);
   });

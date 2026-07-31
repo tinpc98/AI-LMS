@@ -88,7 +88,8 @@ export const collectProgressTotals = async (studentId, classIds = []) => {
   for (const lesson of lessons) ensure(lesson.classId).totalLessons += 1;
   for (const assignment of assignments) ensure(assignment.classId).totalAssignments += 1;
   for (const row of progressRows) ensure(row._id).lessonProgressSum = row.lessonProgressSum || 0;
-  for (const row of submissionRows) ensure(row._id).submittedAssignments = row.submittedAssignments || 0;
+  for (const row of submissionRows)
+    ensure(row._id).submittedAssignments = row.submittedAssignments || 0;
 
   return totals;
 };

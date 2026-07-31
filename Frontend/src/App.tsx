@@ -33,10 +33,14 @@ const ExamAttemptDetail = lazy(() => import("./pages/teachers/ExamAttemptDetail"
 // Admin Components (Lazy Loaded)
 const AdminLayout = lazy(() => import("./components/layout/AdminLayout"));
 const DashboardPage = lazy(() => import("./features/dashboard/DashboardPage"));
-const AccountManagementPage = lazy(() => import("./features/accountManagement/AccountManagementPage"));
+const AccountManagementPage = lazy(
+  () => import("./features/accountManagement/AccountManagementPage")
+);
 const CourseManagementPage = lazy(() => import("./features/courseManagement/CourseManagementPage"));
 const ClassManagementPage = lazy(() => import("./features/classManagement/ClassManagementPage"));
-const TeacherAssignmentPage = lazy(() => import("./features/teacherAssignment/TeacherAssignmentPage"));
+const TeacherAssignmentPage = lazy(
+  () => import("./features/teacherAssignment/TeacherAssignmentPage")
+);
 const AIManagementPage = lazy(() => import("./features/aiManagement/AIManagementPage"));
 const ReportPage = lazy(() => import("./pages/Report/ReportPage"));
 const ProfilePage = lazy(() => import("./pages/admin/Profile/ProfilePage"));
@@ -46,7 +50,9 @@ const LiveSessionLayout = lazy(() => import("./components/layout/LiveSessionLayo
 const LiveSessionPage = lazy(() => import("./pages/live/LiveSessionPage"));
 
 const PageLoadingFallback = () => (
-  <div style={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "100vh" }}>
+  <div
+    style={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "100vh" }}
+  >
     <Spin size="large" tip="Đang tải trang..." />
   </div>
 );
@@ -84,7 +90,7 @@ function App() {
               <Route path="lessonview/:lessonId" element={<LessonView />} />
               <Route path="notifications" element={<NotificationCenterPage />} />
             </Route>
-            
+
             {/* Live Session Route cho Student (Full màn hình, không Header/Sidebar) */}
             <Route path="/student/live" element={<LiveSessionLayout />}>
               <Route path=":sessionId" element={<LiveSessionPage />} />
@@ -106,7 +112,7 @@ function App() {
               <Route path="examresults/:examId" element={<ExamResults />} />
               <Route path="exam-review/:attemptId" element={<ExamAttemptDetail />} />
             </Route>
-            
+
             {/* Live Session Route cho Teacher (Full màn hình, không Header/Sidebar) */}
             <Route path="/teacher/live" element={<LiveSessionLayout />}>
               <Route path=":sessionId" element={<LiveSessionPage />} />
@@ -124,12 +130,23 @@ function App() {
               <Route path="ai-management" element={<AIManagementPage />} />
               <Route path="reports" element={<ReportPage />} />
               <Route path="profile" element={<ProfilePage />} />
-              <Route path="system" element={<AdminPage title="System Management" description="Configure system-wide settings." />} />
+              <Route
+                path="system"
+                element={
+                  <AdminPage
+                    title="System Management"
+                    description="Configure system-wide settings."
+                  />
+                }
+              />
             </Route>
           </Route>
 
           {/* ================= 404 NOT FOUND ================= */}
-          <Route path="*" element={<h2 style={{ textAlign: "center", marginTop: 40 }}>Trang không tồn tại!</h2>} />
+          <Route
+            path="*"
+            element={<h2 style={{ textAlign: "center", marginTop: 40 }}>Trang không tồn tại!</h2>}
+          />
         </Routes>
       </Suspense>
     </>

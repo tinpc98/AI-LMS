@@ -5,14 +5,19 @@ import { LIVE_ERROR_CODES, sendLiveError } from "../validators/live.validator.js
 
 // ============================================================================
 // 1. RESOLVER MIDDLEWARES (PHÂN GIẢI DỮ LIỆU)
-// Mục tiêu: Bóc tách ID từ nhiều nguồn khác nhau (body, params) và gộp chung 
+// Mục tiêu: Bóc tách ID từ nhiều nguồn khác nhau (body, params) và gộp chung
 // vào biến `req.classContextId` để các middleware phân quyền phía sau đọc.
 // ============================================================================
 
 export const resolveClassIdFromBody = (req, res, next) => {
   const classId = req.body?.classId;
   if (!classId || !mongoose.Types.ObjectId.isValid(classId)) {
-    return sendLiveError(res, 400, LIVE_ERROR_CODES.INVALID_CLASS_ID, "ID lớp học không hợp lệ hoặc bị thiếu trong body!");
+    return sendLiveError(
+      res,
+      400,
+      LIVE_ERROR_CODES.INVALID_CLASS_ID,
+      "ID lớp học không hợp lệ hoặc bị thiếu trong body!"
+    );
   }
   req.classContextId = classId;
   return next();
@@ -21,7 +26,12 @@ export const resolveClassIdFromBody = (req, res, next) => {
 export const resolveClassIdFromParams = (req, res, next) => {
   const classId = req.params?.classId;
   if (!classId || !mongoose.Types.ObjectId.isValid(classId)) {
-    return sendLiveError(res, 400, LIVE_ERROR_CODES.INVALID_CLASS_ID, "ID lớp học không hợp lệ hoặc bị thiếu trong đường dẫn!");
+    return sendLiveError(
+      res,
+      400,
+      LIVE_ERROR_CODES.INVALID_CLASS_ID,
+      "ID lớp học không hợp lệ hoặc bị thiếu trong đường dẫn!"
+    );
   }
   req.classContextId = classId;
   return next();
@@ -31,25 +41,38 @@ export const resolveLiveSession = async (req, res, next) => {
   try {
     const sessionId = req.params?.sessionId;
     if (!sessionId || !mongoose.Types.ObjectId.isValid(sessionId)) {
-      return sendLiveError(res, 400, LIVE_ERROR_CODES.INVALID_SESSION_ID, "sessionId không hợp lệ!");
+      return sendLiveError(
+        res,
+        400,
+        LIVE_ERROR_CODES.INVALID_SESSION_ID,
+        "sessionId không hợp lệ!"
+      );
     }
-    
+
     // Select the necessary fields to determine class context and deleted status
-    const session = await LiveSession.findById(sessionId).select("classId status isDeleted roomName");
-    
+    const session = await LiveSession.findById(sessionId).select(
+      "classId status isDeleted roomName"
+    );
+
     if (!session || session.isDeleted) {
-      return sendLiveError(res, 404, LIVE_ERROR_CODES.SESSION_NOT_FOUND, "Buổi học trực tuyến không tồn tại hoặc đã bị xóa!");
+      return sendLiveError(
+        res,
+        404,
+        LIVE_ERROR_CODES.SESSION_NOT_FOUND,
+        "Buổi học trực tuyến không tồn tại hoặc đã bị xóa!"
+      );
     }
-    
+
     req.liveSession = session;
     req.classContextId = session.classId?.toString();
     return next();
   } catch (error) {
     console.error("[LiveAuthMW] resolveLiveSession Error:", error);
-    return res.status(500).json({ success: false, message: "Lỗi hệ thống khi tải thông tin buổi học" });
+    return res
+      .status(500)
+      .json({ success: false, message: "Lỗi hệ thống khi tải thông tin buổi học" });
   }
 };
-
 
 // ============================================================================
 // 2. AUTHORIZATION MIDDLEWARES (PHÂN QUYỀN TRUY CẬP)
@@ -77,9 +100,10 @@ export const checkClassTeacherOwnership = async (req, res, next) => {
 
     const classId = req.classContextId;
     if (!classId) {
-      return res.status(500).json({ 
-        success: false, 
-        message: "Lỗi logic Backend: Chưa khai báo Resolver Middleware trước Authorization Middleware." 
+      return res.status(500).json({
+        success: false,
+        message:
+          "Lỗi logic Backend: Chưa khai báo Resolver Middleware trước Authorization Middleware.",
       });
     }
 
@@ -96,7 +120,11 @@ export const checkClassTeacherOwnership = async (req, res, next) => {
     const userId = req.user?.id || req.user?._id;
 
     // 2. Kiểm tra Teacher Owner: teacherId của lớp phải trùng với ID Giáo viên đăng nhập
-    if (userRole === "teacher" && classInfo.teacherId && classInfo.teacherId.toString() === userId?.toString()) {
+    if (
+      userRole === "teacher" &&
+      classInfo.teacherId &&
+      classInfo.teacherId.toString() === userId?.toString()
+    ) {
       req.classInfo = classInfo;
       return next();
     }
@@ -133,9 +161,10 @@ export const checkClassEnrollment = async (req, res, next) => {
 
     const classId = req.classContextId;
     if (!classId) {
-      return res.status(500).json({ 
-        success: false, 
-        message: "Lỗi logic Backend: Chưa khai báo Resolver Middleware trước Authorization Middleware." 
+      return res.status(500).json({
+        success: false,
+        message:
+          "Lỗi logic Backend: Chưa khai báo Resolver Middleware trước Authorization Middleware.",
       });
     }
 
@@ -152,7 +181,11 @@ export const checkClassEnrollment = async (req, res, next) => {
     const userId = req.user?.id || req.user?._id;
 
     // 2. Giáo viên chủ trì lớp được phép xem/truy cập
-    if (userRole === "teacher" && classInfo.teacherId && classInfo.teacherId.toString() === userId?.toString()) {
+    if (
+      userRole === "teacher" &&
+      classInfo.teacherId &&
+      classInfo.teacherId.toString() === userId?.toString()
+    ) {
       req.classInfo = classInfo;
       req.isClassOwner = true;
       return next();
@@ -161,7 +194,8 @@ export const checkClassEnrollment = async (req, res, next) => {
     // 3. Học sinh phải nằm trong danh sách students với status "Enrolled"
     if (Array.isArray(classInfo.students)) {
       const isEnrolled = classInfo.students.some(
-        (s) => s.studentId && s.studentId.toString() === userId?.toString() && s.status === "Enrolled"
+        (s) =>
+          s.studentId && s.studentId.toString() === userId?.toString() && s.status === "Enrolled"
       );
       if (isEnrolled) {
         req.classInfo = classInfo;
@@ -178,6 +212,8 @@ export const checkClassEnrollment = async (req, res, next) => {
     );
   } catch (error) {
     console.error("[LiveAuthMW] checkClassEnrollment Error:", error);
-    return res.status(500).json({ success: false, message: "Lỗi kiểm tra danh sách đăng ký lớp học" });
+    return res
+      .status(500)
+      .json({ success: false, message: "Lỗi kiểm tra danh sách đăng ký lớp học" });
   }
 };

@@ -1,4 +1,16 @@
-import { Button, Col, Empty, Input, Row, Select, Switch, Table, Tag, Tooltip, Typography } from "antd";
+import {
+  Button,
+  Col,
+  Empty,
+  Input,
+  Row,
+  Select,
+  Switch,
+  Table,
+  Tag,
+  Tooltip,
+  Typography,
+} from "antd";
 import {
   EyeOutlined,
   EditOutlined,
@@ -7,7 +19,12 @@ import {
   PlusOutlined,
   ReloadOutlined,
 } from "@ant-design/icons";
-import type { AIModel, PromptCategory, PromptStatus, PromptTemplate } from "../types/aiManagement.types";
+import type {
+  AIModel,
+  PromptCategory,
+  PromptStatus,
+  PromptTemplate,
+} from "../types/aiManagement.types";
 
 interface PromptTemplateTableProps {
   data: PromptTemplate[];
@@ -151,7 +168,12 @@ const PromptTemplateTable = ({
             <Button size="small" icon={<CopyOutlined />} onClick={() => onDuplicate(record)} />
           </Tooltip>
           <Tooltip title="Delete Prompt">
-            <Button size="small" danger icon={<DeleteOutlined />} onClick={() => onDelete(record.id)} />
+            <Button
+              size="small"
+              danger
+              icon={<DeleteOutlined />}
+              onClick={() => onDelete(record.id)}
+            />
           </Tooltip>
         </div>
       ),
@@ -201,7 +223,15 @@ const PromptTemplateTable = ({
           />
         </Col>
         <Col xs={24} sm={12} md={3}>
-          <Button icon={<ReloadOutlined />} onClick={() => { onSearchChange(""); onCategoryFilterChange("All"); onStatusFilterChange("All"); }} block>
+          <Button
+            icon={<ReloadOutlined />}
+            onClick={() => {
+              onSearchChange("");
+              onCategoryFilterChange("All");
+              onStatusFilterChange("All");
+            }}
+            block
+          >
             Reset
           </Button>
         </Col>

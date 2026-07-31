@@ -32,7 +32,13 @@ afterEach(() => {
 
 describe("ExamSet question CRUD recalculates metrics", () => {
   it("Add question recalculates metrics", async () => {
-    const examSet = createExamSet({ _id: "set-1", ownerId: "user-1", status: "draft", isDeleted: false, questions: [] });
+    const examSet = createExamSet({
+      _id: "set-1",
+      ownerId: "user-1",
+      status: "draft",
+      isDeleted: false,
+      questions: [],
+    });
     vi.spyOn(ExamSet, "findOne").mockImplementation(async () => examSet);
 
     const questionData = {
@@ -59,7 +65,15 @@ describe("ExamSet question CRUD recalculates metrics", () => {
       status: "draft",
       isDeleted: false,
       questions: [
-        createQuestion({ questionId: "q-2", order: 0, type: "short_answer", content: "Name a planet.", points: 2, correctAnswer: "Mars", isActive: true }),
+        createQuestion({
+          questionId: "q-2",
+          order: 0,
+          type: "short_answer",
+          content: "Name a planet.",
+          points: 2,
+          correctAnswer: "Mars",
+          isActive: true,
+        }),
       ],
     });
     vi.spyOn(ExamSet, "findOne").mockImplementation(async () => examSet);
@@ -76,7 +90,15 @@ describe("ExamSet question CRUD recalculates metrics", () => {
       status: "draft",
       isDeleted: false,
       questions: [
-        createQuestion({ questionId: "q-3a", order: 0, type: "essay", content: "Explain MVC.", points: 4, score: 4, isActive: true }),
+        createQuestion({
+          questionId: "q-3a",
+          order: 0,
+          type: "essay",
+          content: "Explain MVC.",
+          points: 4,
+          score: 4,
+          isActive: true,
+        }),
         createQuestion({
           questionId: "q-3b",
           order: 1,
@@ -94,7 +116,12 @@ describe("ExamSet question CRUD recalculates metrics", () => {
     });
     vi.spyOn(ExamSet, "findOne").mockImplementation(async () => examSet);
 
-    const result = await deleteQuestionFromExamSetService("507f1f77bcf86cd799439011", "user-3", "teacher", "q-3a");
+    const result = await deleteQuestionFromExamSetService(
+      "507f1f77bcf86cd799439011",
+      "user-3",
+      "teacher",
+      "q-3a"
+    );
     expect(result.questionCount).toBe(1);
     expect(result.totalPoints).toBe(3);
   });

@@ -36,7 +36,10 @@ export const ExamCard: React.FC<ExamCardProps> = React.memo(
 
     const questionCount = item.questions ? item.questions.length : item.totalQuestions || 20;
     const maxScore = item.maxScore || 10;
-    const isCompleted = item.status === "Completed" && item.attempt?.totalScore !== undefined && item.attempt?.totalScore !== null;
+    const isCompleted =
+      item.status === "Completed" &&
+      item.attempt?.totalScore !== undefined &&
+      item.attempt?.totalScore !== null;
 
     return (
       <Card
@@ -61,7 +64,14 @@ export const ExamCard: React.FC<ExamCardProps> = React.memo(
         }}
       >
         {/* Header Status Tag & Duration */}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginBottom: 12,
+          }}
+        >
           <ExamStatusTag status={item.status} />
           <Tag color="blue" style={{ borderRadius: 6, margin: 0, fontWeight: 600 }}>
             <ClockCircleOutlined style={{ marginRight: 4 }} /> {item.duration || 45} phút
@@ -104,8 +114,23 @@ export const ExamCard: React.FC<ExamCardProps> = React.memo(
         </Paragraph>
 
         {/* Exam Metadata Grid */}
-        <div style={{ backgroundColor: "#fafafa", borderRadius: 8, padding: "8px 12px", marginBottom: 14 }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 12, marginBottom: 4 }}>
+        <div
+          style={{
+            backgroundColor: "#fafafa",
+            borderRadius: 8,
+            padding: "8px 12px",
+            marginBottom: 14,
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              fontSize: 12,
+              marginBottom: 4,
+            }}
+          >
             <Text type="secondary">
               <ClockCircleOutlined style={{ marginRight: 4 }} /> Ngày/giờ mở thi:
             </Text>
@@ -114,11 +139,20 @@ export const ExamCard: React.FC<ExamCardProps> = React.memo(
             </Text>
           </div>
 
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 12 }}>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              fontSize: 12,
+            }}
+          >
             <Text type="secondary">
               <QuestionCircleOutlined style={{ marginRight: 4 }} /> Số lượng câu hỏi:
             </Text>
-            <Text strong>{questionCount} câu ({maxScore} điểm)</Text>
+            <Text strong>
+              {questionCount} câu ({maxScore} điểm)
+            </Text>
           </div>
         </div>
 
@@ -139,7 +173,10 @@ export const ExamCard: React.FC<ExamCardProps> = React.memo(
             <Text style={{ fontSize: 12, color: "#531dab", fontWeight: 600 }}>
               <TrophyOutlined style={{ marginRight: 6 }} /> Điểm số bài thi:
             </Text>
-            <Tag color="purple" style={{ borderRadius: 6, fontWeight: 700, fontSize: 13, margin: 0 }}>
+            <Tag
+              color="purple"
+              style={{ borderRadius: 6, fontWeight: 700, fontSize: 13, margin: 0 }}
+            >
               {item.attempt?.totalScore} / {maxScore}
             </Tag>
           </div>

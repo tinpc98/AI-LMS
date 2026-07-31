@@ -1,6 +1,28 @@
 import React, { useState, useEffect } from "react";
-import { Drawer, Form, InputNumber, Input, Button, Typography, Space, Card, Tag, Avatar, Divider, Alert, Row, Col, Tooltip } from "antd";
-import { UserOutlined, EditOutlined, CheckCircleOutlined, TrophyOutlined, InfoCircleOutlined } from "@ant-design/icons";
+import {
+  Drawer,
+  Form,
+  InputNumber,
+  Input,
+  Button,
+  Typography,
+  Space,
+  Card,
+  Tag,
+  Avatar,
+  Divider,
+  Alert,
+  Row,
+  Col,
+  Tooltip,
+} from "antd";
+import {
+  UserOutlined,
+  EditOutlined,
+  CheckCircleOutlined,
+  TrophyOutlined,
+  InfoCircleOutlined,
+} from "@ant-design/icons";
 import gradeApi from "../../../api/gradeApi";
 import type { IGradeItemDef, IStudentGradeData } from "../../../api/gradeApi";
 import { toast } from "../../../utils/toast";
@@ -22,7 +44,10 @@ export const GradeDetailDrawer: React.FC<GradeDetailDrawerProps> = React.memo(
     const [form] = Form.useForm();
     const [submitting, setSubmitting] = useState(false);
 
-    const sObj = typeof student?.studentId === "object" && student?.studentId !== null ? student.studentId : student;
+    const sObj =
+      typeof student?.studentId === "object" && student?.studentId !== null
+        ? student.studentId
+        : student;
     const studentName = sObj?.fullName || student?.fullName || "Học sinh";
     const studentEmail = sObj?.email || student?.email || "";
     const studentAvatar = sObj?.avatar || student?.avatar;
@@ -33,7 +58,7 @@ export const GradeDetailDrawer: React.FC<GradeDetailDrawerProps> = React.memo(
       if (open && student) {
         const initialValues: Record<string, any> = {};
         const sg = studentGradesData?.grades || {};
-        
+
         gradeItems.forEach((item) => {
           const match = sg[item._id];
           if (match) {
@@ -55,7 +80,7 @@ export const GradeDetailDrawer: React.FC<GradeDetailDrawerProps> = React.memo(
 
       try {
         const promises = gradeItems
-          .filter(item => item.type === "Manual") // Only save manual items
+          .filter((item) => item.type === "Manual") // Only save manual items
           .map(async (item) => {
             const scoreVal = values[`score_${item._id}`];
             if (scoreVal !== undefined && scoreVal !== null && scoreVal !== "") {
@@ -98,7 +123,11 @@ export const GradeDetailDrawer: React.FC<GradeDetailDrawerProps> = React.memo(
         {student && (
           <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
             {/* Student Info Card */}
-            <Card size="small" style={{ backgroundColor: "#f8f9fa", borderRadius: 8 }} styles={{ body: { padding: 12 } }}>
+            <Card
+              size="small"
+              style={{ backgroundColor: "#f8f9fa", borderRadius: 8 }}
+              styles={{ body: { padding: 12 } }}
+            >
               <Space size={12}>
                 <Avatar
                   src={student?.avatar || undefined}
@@ -127,14 +156,29 @@ export const GradeDetailDrawer: React.FC<GradeDetailDrawerProps> = React.memo(
                   <Card
                     key={item._id}
                     size="small"
-                    style={{ marginBottom: 14, borderRadius: 8, border: "1px solid #e8e8e8", opacity: isManual ? 1 : 0.7 }}
+                    style={{
+                      marginBottom: 14,
+                      borderRadius: 8,
+                      border: "1px solid #e8e8e8",
+                      opacity: isManual ? 1 : 0.7,
+                    }}
                     title={
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                        }}
+                      >
                         <Space>
-                          <Text strong style={{ fontSize: 13 }}>{item.title}</Text>
+                          <Text strong style={{ fontSize: 13 }}>
+                            {item.title}
+                          </Text>
                           {!isManual && (
                             <Tooltip title="Điểm này được lấy tự động từ hệ thống (Bài tập / Bài thi). Không thể sửa trực tiếp tại đây.">
-                              <Tag icon={<InfoCircleOutlined />} color="default">Tự động</Tag>
+                              <Tag icon={<InfoCircleOutlined />} color="default">
+                                Tự động
+                              </Tag>
                             </Tooltip>
                           )}
                         </Space>
@@ -178,7 +222,12 @@ export const GradeDetailDrawer: React.FC<GradeDetailDrawerProps> = React.memo(
 
               <div style={{ display: "flex", justifyContent: "flex-end", gap: 12, marginTop: 24 }}>
                 <Button onClick={onClose}>Hủy</Button>
-                <Button type="primary" htmlType="submit" loading={submitting} icon={<CheckCircleOutlined />}>
+                <Button
+                  type="primary"
+                  htmlType="submit"
+                  loading={submitting}
+                  icon={<CheckCircleOutlined />}
+                >
                   Lưu bảng điểm
                 </Button>
               </div>

@@ -224,7 +224,9 @@ export const getExamsByClass = async (req, res) => {
 
     // RBAC: học sinh chỉ xem lớp mình học, giáo viên chỉ xem lớp mình phụ trách (admin xem tất cả)
     if (userRole === "student") {
-      const isStudentInClass = targetClass.students?.some((s) => s.studentId?.toString() === userId);
+      const isStudentInClass = targetClass.students?.some(
+        (s) => s.studentId?.toString() === userId
+      );
       if (!isStudentInClass) {
         return res.status(200).json({ success: true, data: [] });
       }
@@ -248,7 +250,9 @@ export const getExamsByClass = async (req, res) => {
       data,
     });
   } catch (error) {
-    return res.status(500).json({ message: error.message || "Lỗi hệ thống khi lấy danh sách đề thi." });
+    return res
+      .status(500)
+      .json({ message: error.message || "Lỗi hệ thống khi lấy danh sách đề thi." });
   }
 };
 
@@ -265,7 +269,10 @@ export const getAllExams = async (req, res) => {
       examFilter = { $or: [{ classId: { $in: classIds } }, { createdBy: userId }] };
     } else if (userRole !== "admin") {
       // student (hoặc role khác): chỉ xem đề đã công bố của các lớp mình học
-      const enrolledClasses = await classModel.find({ "students.studentId": userId }).select("_id").lean();
+      const enrolledClasses = await classModel
+        .find({ "students.studentId": userId })
+        .select("_id")
+        .lean();
       const classIds = enrolledClasses.map((c) => c._id);
       examFilter = { classId: { $in: classIds }, status: { $in: ["PUBLISHED", "COMPLETED"] } };
     }
@@ -288,16 +295,19 @@ export const getAllExams = async (req, res) => {
       updatedExams.push(exam);
     }
 
-    const data = userRole === "admin" || userRole === "teacher"
-      ? updatedExams
-      : updatedExams.map((exam) => redactExamAnswersForStudent(exam.toObject()));
+    const data =
+      userRole === "admin" || userRole === "teacher"
+        ? updatedExams
+        : updatedExams.map((exam) => redactExamAnswersForStudent(exam.toObject()));
 
     return res.status(200).json({
       success: true,
       data,
     });
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message || "Lỗi hệ thống khi tải danh sách đề thi." });
+    return res
+      .status(500)
+      .json({ success: false, message: error.message || "Lỗi hệ thống khi tải danh sách đề thi." });
   }
 };
 
@@ -322,11 +332,18 @@ export const getExamById = async (req, res) => {
     // S4-FIX-01: RBAC & IDOR check
     if (userRole === "student") {
       if (!targetClass) return res.status(404).json({ message: "Không tìm thấy kỳ thi!" });
-      const isStudentInClass = targetClass.students?.some(s => s.studentId?.toString() === userId);
+      const isStudentInClass = targetClass.students?.some(
+        (s) => s.studentId?.toString() === userId
+      );
       if (!isStudentInClass) return res.status(404).json({ message: "Không tìm thấy kỳ thi!" });
-      if (exam.status !== "PUBLISHED" && exam.status !== "COMPLETED") return res.status(404).json({ message: "Không tìm thấy kỳ thi!" });
+      if (exam.status !== "PUBLISHED" && exam.status !== "COMPLETED")
+        return res.status(404).json({ message: "Không tìm thấy kỳ thi!" });
     } else if (userRole === "teacher") {
-      const classTeacherId = (targetClass?.teacherId?._id || targetClass?.teacherId || "").toString();
+      const classTeacherId = (
+        targetClass?.teacherId?._id ||
+        targetClass?.teacherId ||
+        ""
+      ).toString();
       const isCreator = (exam.createdBy?._id || exam.createdBy || "").toString() === userId;
       if (classTeacherId !== userId && !isCreator) {
         return res.status(403).json({ message: "Bạn không có quyền truy cập đề thi này!" });
@@ -337,7 +354,7 @@ export const getExamById = async (req, res) => {
     if (exam.questions && exam.questions.length > 0) {
       exam.questions = exam.questions.map((q) => {
         let questionData = q.isSnapshot && q.snapshotData ? q.snapshotData : q.questionId;
-        
+
         // S4-FIX-01: Redact answers for student
         if (userRole === "student" && questionData) {
           const safeData = { ...questionData };
@@ -349,8 +366,8 @@ export const getExamById = async (req, res) => {
           delete safeData.feedbackCorrect;
           delete safeData.feedbackIncorrect;
           if (Array.isArray(safeData.options)) {
-            safeData.options = safeData.options.map(opt => {
-              if (typeof opt === 'string') return opt;
+            safeData.options = safeData.options.map((opt) => {
+              if (typeof opt === "string") return opt;
               const safeOpt = { ...opt };
               delete safeOpt.isCorrect;
               return safeOpt;
@@ -368,7 +385,9 @@ export const getExamById = async (req, res) => {
 
     return res.status(200).json({ data: exam });
   } catch (error) {
-    return res.status(500).json({ message: error.message || "Lỗi hệ thống khi tải chi tiết đề thi." });
+    return res
+      .status(500)
+      .json({ message: error.message || "Lỗi hệ thống khi tải chi tiết đề thi." });
   }
 };
 
@@ -410,32 +429,42 @@ export const generateFromExamSet = async (req, res) => {
     if (typeof totalPoints !== "number" || totalPoints !== 10) {
       return res.status(400).json({ message: "Tổng điểm phải bằng đúng 10!" }); // S4-FIX-03
     }
-    if (!questionTypeDistribution || typeof questionTypeDistribution !== "object" || Array.isArray(questionTypeDistribution) || 
-        !difficultyDistribution || typeof difficultyDistribution !== "object" || Array.isArray(difficultyDistribution)) {
+    if (
+      !questionTypeDistribution ||
+      typeof questionTypeDistribution !== "object" ||
+      Array.isArray(questionTypeDistribution) ||
+      !difficultyDistribution ||
+      typeof difficultyDistribution !== "object" ||
+      Array.isArray(difficultyDistribution)
+    ) {
       return res.status(400).json({ message: "Phân bố câu hỏi không hợp lệ!" });
     }
 
     const validTypes = ["multiple_choice", "true_false", "short_answer", "essay"];
     const validDiffs = ["easy", "medium", "hard"];
-    
+
     for (const [key, value] of Object.entries(questionTypeDistribution)) {
-      if (!validTypes.includes(key)) return res.status(400).json({ message: `Loại câu hỏi ${key} không hợp lệ!` });
-      if (!Number.isInteger(value) || value < 0) return res.status(400).json({ message: "Giá trị phân bổ phải là số nguyên >= 0!" });
+      if (!validTypes.includes(key))
+        return res.status(400).json({ message: `Loại câu hỏi ${key} không hợp lệ!` });
+      if (!Number.isInteger(value) || value < 0)
+        return res.status(400).json({ message: "Giá trị phân bổ phải là số nguyên >= 0!" });
     }
     for (const [key, value] of Object.entries(difficultyDistribution)) {
-      if (!validDiffs.includes(key)) return res.status(400).json({ message: `Độ khó ${key} không hợp lệ!` });
-      if (!Number.isInteger(value) || value < 0) return res.status(400).json({ message: "Giá trị phân bổ phải là số nguyên >= 0!" });
+      if (!validDiffs.includes(key))
+        return res.status(400).json({ message: `Độ khó ${key} không hợp lệ!` });
+      if (!Number.isInteger(value) || value < 0)
+        return res.status(400).json({ message: "Giá trị phân bổ phải là số nguyên >= 0!" });
     }
 
     const targetClass = await classModel.findOne({ _id: classId, isDeleted: false });
     if (!targetClass) {
       return res.status(404).json({ message: "Lớp học không tồn tại!" });
     }
-    
+
     // Check if Teacher has access to the class
     const userId = (req.user._id || req.user.id || "").toString();
     const userRole = (req.user.role || "").toLowerCase();
-    
+
     if (userRole !== "admin") {
       const classTeacherId = (targetClass.teacherId?._id || targetClass.teacherId || "").toString();
       if (classTeacherId !== userId) {
@@ -456,7 +485,7 @@ export const generateFromExamSet = async (req, res) => {
         difficultyDistribution,
         shuffleQuestions: !!shuffleQuestions,
         shuffleOptions: !!shuffleOptions,
-      }
+      },
     });
 
     return res.status(201).json({

@@ -17,7 +17,11 @@ export const NotificationSummary: React.FC<NotificationSummaryProps> = React.mem
   return (
     <Row gutter={[12, 12]} style={{ marginBottom: 24 }}>
       <Col xs={12} sm={8} md={4} style={{ flexGrow: 1 }}>
-        <Card bordered={false} styles={{ body: { padding: "12px 16px" } }} style={{ borderRadius: 12, backgroundColor: "#fafafa" }}>
+        <Card
+          bordered={false}
+          styles={{ body: { padding: "12px 16px" } }}
+          style={{ borderRadius: 12, backgroundColor: "#fafafa" }}
+        >
           <Statistic
             title={<span style={{ fontSize: 11, color: "#8c8c8c" }}>Tổng thông báo</span>}
             value={stats.total}
@@ -28,7 +32,11 @@ export const NotificationSummary: React.FC<NotificationSummaryProps> = React.mem
       </Col>
 
       <Col xs={12} sm={8} md={4} style={{ flexGrow: 1 }}>
-        <Card bordered={false} styles={{ body: { padding: "12px 16px" } }} style={{ borderRadius: 12, backgroundColor: "#e6f7ff" }}>
+        <Card
+          bordered={false}
+          styles={{ body: { padding: "12px 16px" } }}
+          style={{ borderRadius: 12, backgroundColor: "#e6f7ff" }}
+        >
           <Statistic
             title={<span style={{ fontSize: 11, color: "#8c8c8c" }}>Chưa đọc</span>}
             value={stats.unread}
@@ -39,7 +47,11 @@ export const NotificationSummary: React.FC<NotificationSummaryProps> = React.mem
       </Col>
 
       <Col xs={12} sm={8} md={4} style={{ flexGrow: 1 }}>
-        <Card bordered={false} styles={{ body: { padding: "12px 16px" } }} style={{ borderRadius: 12, backgroundColor: "#f6ffed" }}>
+        <Card
+          bordered={false}
+          styles={{ body: { padding: "12px 16px" } }}
+          style={{ borderRadius: 12, backgroundColor: "#f6ffed" }}
+        >
           <Statistic
             title={<span style={{ fontSize: 11, color: "#8c8c8c" }}>Đã đọc</span>}
             value={stats.read}
@@ -50,7 +62,11 @@ export const NotificationSummary: React.FC<NotificationSummaryProps> = React.mem
       </Col>
 
       <Col xs={12} sm={8} md={4} style={{ flexGrow: 1 }}>
-        <Card bordered={false} styles={{ body: { padding: "12px 16px" } }} style={{ borderRadius: 12, backgroundColor: "#fff7e6" }}>
+        <Card
+          bordered={false}
+          styles={{ body: { padding: "12px 16px" } }}
+          style={{ borderRadius: 12, backgroundColor: "#fff7e6" }}
+        >
           <Statistic
             title={<span style={{ fontSize: 11, color: "#8c8c8c" }}>Hôm nay</span>}
             value={stats.todayCount}
@@ -61,7 +77,11 @@ export const NotificationSummary: React.FC<NotificationSummaryProps> = React.mem
       </Col>
 
       <Col xs={12} sm={8} md={4} style={{ flexGrow: 1 }}>
-        <Card bordered={false} styles={{ body: { padding: "12px 16px" } }} style={{ borderRadius: 12, backgroundColor: "#f9f0ff" }}>
+        <Card
+          bordered={false}
+          styles={{ body: { padding: "12px 16px" } }}
+          style={{ borderRadius: 12, backgroundColor: "#f9f0ff" }}
+        >
           <Statistic
             title={<span style={{ fontSize: 11, color: "#8c8c8c" }}>Tuần này</span>}
             value={stats.thisWeekCount}

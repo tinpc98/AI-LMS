@@ -1,10 +1,4 @@
-export const sendSuccess = (
-  res,
-  message,
-  data = null,
-  pagination = null,
-  statusCode = 200
-) => {
+export const sendSuccess = (res, message, data = null, pagination = null, statusCode = 200) => {
   const response = {
     success: true,
     message,
@@ -14,12 +8,7 @@ export const sendSuccess = (
   return res.status(statusCode).json(response);
 };
 
-export const sendError = (
-  res,
-  message,
-  statusCode = 400,
-  errors = null
-) => {
+export const sendError = (res, message, statusCode = 400, errors = null) => {
   const response = {
     success: false,
     message,

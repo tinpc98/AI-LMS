@@ -54,9 +54,7 @@ const AdminLayout = () => {
         {/* Header */}
         <AdminHeader
           collapsed={collapsed}
-          onToggleCollapse={() =>
-            setCollapsed((prev) => !prev)
-          }
+          onToggleCollapse={() => setCollapsed((prev) => !prev)}
           onMobileMenuOpen={() => setMobileOpen(true)}
           isMobile={isMobile}
         />

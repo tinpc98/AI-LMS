@@ -86,7 +86,11 @@ afterEach(() => {
 describe("createNewExamSetVersionService", () => {
   it("Owner can create a new version from the latest published exam set", async () => {
     const sourceExamSet = createExamSet();
-    const folder = { _id: sourceExamSet.folderId, ownerId: sourceExamSet.ownerId, isDeleted: false };
+    const folder = {
+      _id: sourceExamSet.folderId,
+      ownerId: sourceExamSet.ownerId,
+      isDeleted: false,
+    };
 
     vi.spyOn(ExamSet, "findOne").mockImplementation((query) => {
       if (query && query._id === sourceExamSet._id && query.isDeleted === false) {
@@ -103,7 +107,11 @@ describe("createNewExamSetVersionService", () => {
       return this;
     });
 
-    const result = await createNewExamSetVersionService(sourceExamSet._id, sourceExamSet.ownerId, "Teacher");
+    const result = await createNewExamSetVersionService(
+      sourceExamSet._id,
+      sourceExamSet.ownerId,
+      "Teacher"
+    );
 
     expect(result.versionNumber).toBe(2);
     expect(result.status).toBe("draft");

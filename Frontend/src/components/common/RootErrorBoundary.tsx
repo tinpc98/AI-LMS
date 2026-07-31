@@ -37,8 +37,8 @@ class RootErrorBoundary extends Component<Props, State> {
         <div className="h-screen w-screen flex flex-col items-center justify-center bg-background p-6 text-center">
           <h2 className="text-2xl font-bold text-red-600 mb-4">Đã xảy ra lỗi không mong muốn</h2>
           <p className="text-gray-700 mb-8 max-w-md">
-            Ứng dụng gặp sự cố khi hiển thị trang này. Vui lòng thử tải lại. Nếu lỗi tiếp diễn,
-            hãy liên hệ quản trị viên hệ thống.
+            Ứng dụng gặp sự cố khi hiển thị trang này. Vui lòng thử tải lại. Nếu lỗi tiếp diễn, hãy
+            liên hệ quản trị viên hệ thống.
           </p>
           <button
             onClick={this.handleReload}

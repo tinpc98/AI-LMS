@@ -48,11 +48,6 @@ router.patch("/:id/read", verifyUser, markAsRead);
  *     "content": "Kỳ thi giữa kỳ sẽ diễn ra vào ngày 15/08/2026."
  *   }
  */
-router.post(
-  "/send-bulk",
-  verifyUser,
-  isAdmin,
-  sendBulkNotification
-);
+router.post("/send-bulk", verifyUser, isAdmin, sendBulkNotification);
 
 export default router;

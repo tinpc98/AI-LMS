@@ -56,13 +56,13 @@ async function runIntegrationTests() {
     // 1. Setup Test Data
     const teacherId = new mongoose.Types.ObjectId();
     const folderId = new mongoose.Types.ObjectId();
-    
+
     const user = new User({
       _id: teacherId,
       email: `teacher_${Date.now()}@test.com`,
       password: "password123",
       fullName: "Test Teacher",
-      role: "Teacher"
+      role: "Teacher",
     });
     await user.save();
     cleanupIds.users.push(teacherId);
@@ -70,7 +70,7 @@ async function runIntegrationTests() {
     const folder = new Folder({
       _id: folderId,
       ownerId: teacherId,
-      name: "Test Folder"
+      name: "Test Folder",
     });
     await folder.save();
     cleanupIds.folders.push(folderId);
@@ -82,7 +82,7 @@ async function runIntegrationTests() {
     console.log("\n1. Testing Valid Import");
     const validData = [
       { content: "Q1", type: "MCQ", options: "A|B", correctAnswer: "A", points: 2 },
-      { content: "Q2", type: "ESSAY", points: 5 }
+      { content: "Q2", type: "ESSAY", points: 5 },
     ];
     const validBuffer = createExcelBuffer(validData);
 
@@ -91,7 +91,7 @@ async function runIntegrationTests() {
       ownerId: teacherId,
       folderId,
       title: "Test Exam 1",
-      description: "Desc"
+      description: "Desc",
     });
     cleanupIds.examSets.push(examSet._id);
 
@@ -103,51 +103,77 @@ async function runIntegrationTests() {
     assertTest(String(examSet.ownerId) === String(teacherId), "ownerId is correctly assigned");
 
     const finalQuestionCount = await Question.countDocuments();
-    assertTest(initialQuestionCount === finalQuestionCount, "Does NOT create document in 'questions' collection");
+    assertTest(
+      initialQuestionCount === finalQuestionCount,
+      "Does NOT create document in 'questions' collection"
+    );
 
     // 3. Test Access Control
     console.log("\n2. Testing Access Control & Validation");
-    
+
     // Thiếu folderId
     try {
       await importExcelToExamSet({
-        fileBuffer: validBuffer, ownerId: teacherId, folderId: "", title: "T"
+        fileBuffer: validBuffer,
+        ownerId: teacherId,
+        folderId: "",
+        title: "T",
       });
       assertTest(false, "Should throw Thiếu folderId");
     } catch (err) {
-      assertTest(err.statusCode === 400 && err.message === "Thiếu folderId", "Trả về 400 Thiếu folderId");
+      assertTest(
+        err.statusCode === 400 && err.message === "Thiếu folderId",
+        "Trả về 400 Thiếu folderId"
+      );
     }
 
     // folderId không hợp lệ
     try {
       await importExcelToExamSet({
-        fileBuffer: validBuffer, ownerId: teacherId, folderId: "invalid", title: "T"
+        fileBuffer: validBuffer,
+        ownerId: teacherId,
+        folderId: "invalid",
+        title: "T",
       });
       assertTest(false, "Should throw folderId không hợp lệ");
     } catch (err) {
-      assertTest(err.statusCode === 400 && err.message === "folderId không hợp lệ", "Trả về 400 folderId không hợp lệ");
+      assertTest(
+        err.statusCode === 400 && err.message === "folderId không hợp lệ",
+        "Trả về 400 folderId không hợp lệ"
+      );
     }
 
     // Folder không tồn tại
     try {
       await importExcelToExamSet({
-        fileBuffer: validBuffer, ownerId: teacherId, folderId: new mongoose.Types.ObjectId(), title: "T"
+        fileBuffer: validBuffer,
+        ownerId: teacherId,
+        folderId: new mongoose.Types.ObjectId(),
+        title: "T",
       });
       assertTest(false, "Should throw Folder không tồn tại");
     } catch (err) {
-      assertTest(err.statusCode === 404 && err.message === "Folder không tồn tại", "Trả về 404 Folder không tồn tại");
+      assertTest(
+        err.statusCode === 404 && err.message === "Folder không tồn tại",
+        "Trả về 404 Folder không tồn tại"
+      );
     }
 
     // Folder thuộc người khác
     try {
       await importExcelToExamSet({
-        fileBuffer: validBuffer, ownerId: new mongoose.Types.ObjectId(), folderId, title: "T"
+        fileBuffer: validBuffer,
+        ownerId: new mongoose.Types.ObjectId(),
+        folderId,
+        title: "T",
       });
       assertTest(false, "Should throw Không có quyền truy cập Folder");
     } catch (err) {
-      assertTest(err.statusCode === 403 && err.message === "Không có quyền truy cập Folder", "Trả về 403 Không có quyền truy cập Folder");
+      assertTest(
+        err.statusCode === 403 && err.message === "Không có quyền truy cập Folder",
+        "Trả về 403 Không có quyền truy cập Folder"
+      );
     }
-
   } catch (error) {
     console.error("❌ Exception during test execution:", error);
     failed++;

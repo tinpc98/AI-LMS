@@ -24,7 +24,8 @@ export const MaterialPreviewDrawer: React.FC<MaterialPreviewDrawerProps> = React
     // Determine preview mode
     const isPdf = typeLower.includes("pdf") || urlLower.endsWith(".pdf");
     const isImage = typeLower.includes("image") || urlLower.match(/\.(png|jpe?g|gif|webp)$/);
-    const isVideo = typeLower.includes("video") || urlLower.endsWith(".mp4") || urlLower.endsWith(".webm");
+    const isVideo =
+      typeLower.includes("video") || urlLower.endsWith(".mp4") || urlLower.endsWith(".webm");
     const isLink = typeLower.includes("link") || urlLower.startsWith("http");
 
     const canPreview = isPdf || isImage || isVideo || isLink;
@@ -84,11 +85,26 @@ export const MaterialPreviewDrawer: React.FC<MaterialPreviewDrawerProps> = React
               <img
                 src={item.url}
                 alt={item.title}
-                style={{ maxWidth: "100%", height: "auto", borderRadius: 8, boxShadow: "0 2px 8px rgba(0,0,0,0.1)" }}
+                style={{
+                  maxWidth: "100%",
+                  height: "auto",
+                  borderRadius: 8,
+                  boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+                }}
               />
             </div>
           ) : isVideo ? (
-            <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", backgroundColor: "#000", borderRadius: 12, overflow: "hidden" }}>
+            <div
+              style={{
+                flex: 1,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                backgroundColor: "#000",
+                borderRadius: 12,
+                overflow: "hidden",
+              }}
+            >
               <video controls style={{ width: "100%", maxHeight: "100%" }}>
                 <source src={item.url} />
                 Trình duyệt của bạn không hỗ trợ phát thẻ video.
@@ -97,7 +113,14 @@ export const MaterialPreviewDrawer: React.FC<MaterialPreviewDrawerProps> = React
           ) : (
             // PDF or Web Link iframe embed
             <div style={{ flex: 1, display: "flex", flexDirection: "column", height: "100%" }}>
-              <div style={{ marginBottom: 12, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div
+                style={{
+                  marginBottom: 12,
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                }}
+              >
                 <Text type="secondary" style={{ fontSize: 12 }}>
                   Nếu khung xem trước không hiển thị, bạn có thể mở trong tab mới:
                 </Text>

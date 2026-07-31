@@ -57,7 +57,14 @@ export const TeacherAnnouncementsWidget: React.FC<TeacherAnnouncementsWidgetProp
               <List.Item style={{ padding: "12px 0" }}>
                 <List.Item.Meta
                   title={
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        gap: 8,
+                      }}
+                    >
                       <Text strong style={{ fontSize: 14 }}>
                         {item.title}
                       </Text>

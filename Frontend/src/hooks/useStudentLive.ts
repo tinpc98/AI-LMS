@@ -1,10 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import liveApi from "../api/liveApi";
 import type { ILiveSession } from "../interface/liveInterface";
-import type {
-  IExtendedLiveSession,
-  StudentLiveStats,
-} from "../types/studentLive";
+import type { IExtendedLiveSession, StudentLiveStats } from "../types/studentLive";
 
 export function useStudentLive(
   classId?: string,

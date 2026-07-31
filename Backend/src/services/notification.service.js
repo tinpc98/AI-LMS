@@ -104,10 +104,7 @@ class NotificationService {
   async resolveEnrolledUserIds(targetRole) {
     // Lấy tất cả lớp học đang hoạt động (không bị xóa mềm)
     // softDeletePlugin tự động filter isDeleted: false nên chỉ cần find({})
-    const activeClasses = await classModel
-      .find({})
-      .select("teacherId students.studentId")
-      .lean();
+    const activeClasses = await classModel.find({}).select("teacherId students.studentId").lean();
 
     const enrolledIdSet = new Set();
 
@@ -205,9 +202,7 @@ class NotificationService {
 
     // ── Bước 3: Build mảng document ──
     // Dùng .map() để tạo 1 document cho mỗi người nhận
-    const senderObjectId = senderId
-      ? new mongoose.Types.ObjectId(senderId)
-      : null;
+    const senderObjectId = senderId ? new mongoose.Types.ObjectId(senderId) : null;
 
     const notificationDocs = recipientIds.map((recipientId) => ({
       recipientId,
@@ -233,7 +228,7 @@ class NotificationService {
   // ──────────────────────────────────────────────
   // 6. NOTIFY LIVE SESSION CREATED (REALTIME)
   // ──────────────────────────────────────────────
-  
+
   /**
    * Tạo thông báo khi Teacher bắt đầu Live Session và emit qua Socket
    * Hàm này sử dụng bulkWrite upsert để ngăn chặn việc tạo trùng lặp
@@ -254,7 +249,7 @@ class NotificationService {
       // 2. Chuẩn bị bulkWrite ops với upsert
       const bulkOps = activeStudents.map((s) => {
         const recipientId = typeof s.studentId === "object" ? s.studentId._id : s.studentId;
-        
+
         return {
           updateOne: {
             // Điều kiện filter để upsert (phải khớp với unique compound index: recipientId, type, entityId)
@@ -281,26 +276,26 @@ class NotificationService {
                   className: classInfo.className,
                   teacherName: teacherInfo?.fullName || "Giảng viên",
                   sessionNumber: session.sessionNumber,
-                  roomName: session.roomName
+                  roomName: session.roomName,
                 },
                 isRead: false,
-                readAt: null
-              }
+                readAt: null,
+              },
             },
-            upsert: true
-          }
+            upsert: true,
+          },
         };
       });
 
       // 3. Thực thi bulkWrite
       const result = await Notification.bulkWrite(bulkOps, { ordered: false });
-      
+
       // Nếu upsertedCount > 0, tức là có thông báo mới được tạo (không bị duplicate)
       // Ta cần fetch lại những notification vừa mới tạo để emit qua socket
       if (result.upsertedCount > 0 && io) {
         // Lấy danh sách ID của các docs vừa được insert
         const upsertedIds = Object.values(result.upsertedIds);
-        
+
         const newNotifications = await Notification.find({ _id: { $in: upsertedIds } })
           .populate("actorId senderId", "fullName email avatar")
           .lean();
@@ -309,10 +304,11 @@ class NotificationService {
         newNotifications.forEach((notif) => {
           io.to(`user:${notif.recipientId}`).emit("notification:new", notif);
         });
-        
-        console.log(`✅ [NotificationService] Đã tạo và emit ${result.upsertedCount} thông báo LiveSession.`);
-      }
 
+        console.log(
+          `✅ [NotificationService] Đã tạo và emit ${result.upsertedCount} thông báo LiveSession.`
+        );
+      }
     } catch (error) {
       console.error("❌ [NotificationService] notifyLiveSessionCreated Error:", error);
     }
@@ -335,7 +331,7 @@ class NotificationService {
 
       const bulkOps = activeStudents.map((s) => {
         const recipientId = typeof s.studentId === "object" ? s.studentId._id : s.studentId;
-        
+
         return {
           updateOne: {
             filter: {
@@ -360,22 +356,26 @@ class NotificationService {
                 metadata: {
                   className: classInfo.className,
                   sessionNumber: session.sessionNumber,
-                  duration: session.actualEnd ? Math.round((session.actualEnd.getTime() - session.actualStart.getTime())/60000) : 0
+                  duration: session.actualEnd
+                    ? Math.round(
+                        (session.actualEnd.getTime() - session.actualStart.getTime()) / 60000
+                      )
+                    : 0,
                 },
                 isRead: false,
-                readAt: null
-              }
+                readAt: null,
+              },
             },
-            upsert: true
-          }
+            upsert: true,
+          },
         };
       });
 
       const result = await Notification.bulkWrite(bulkOps, { ordered: false });
-      
+
       if (result.upsertedCount > 0 && io) {
         const upsertedIds = Object.values(result.upsertedIds);
-        
+
         const newNotifications = await Notification.find({ _id: { $in: upsertedIds } })
           .populate("actorId senderId", "fullName email avatar")
           .lean();
@@ -383,10 +383,11 @@ class NotificationService {
         newNotifications.forEach((notif) => {
           io.to(`user:${notif.recipientId}`).emit("notification:new", notif);
         });
-        
-        console.log(`✅ [NotificationService] Đã tạo và emit ${result.upsertedCount} thông báo LiveSession_ENDED.`);
-      }
 
+        console.log(
+          `✅ [NotificationService] Đã tạo và emit ${result.upsertedCount} thông báo LiveSession_ENDED.`
+        );
+      }
     } catch (error) {
       console.error("❌ [NotificationService] notifyLiveSessionEnded Error:", error);
     }
@@ -418,7 +419,7 @@ class NotificationService {
         .limit(limit)
         .lean(),
       Notification.countDocuments(filter),
-      Notification.countDocuments({ recipientId: userId, isRead: false })
+      Notification.countDocuments({ recipientId: userId, isRead: false }),
     ]);
 
     return {
@@ -429,7 +430,7 @@ class NotificationService {
         limit,
         totalItems,
         totalPages: Math.ceil(totalItems / limit),
-      }
+      },
     };
   }
 
@@ -464,6 +465,5 @@ class NotificationService {
     );
   }
 }
-
 
 export default new NotificationService();

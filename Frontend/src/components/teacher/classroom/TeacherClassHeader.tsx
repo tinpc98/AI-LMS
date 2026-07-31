@@ -43,8 +43,16 @@ export const TeacherClassHeader: React.FC<TeacherClassHeaderProps> = React.memo(
               Quản lý lớp học của tôi
             </Title>
           </Space>
-          <Text style={{ color: "rgba(255,255,255,0.85)", display: "block", marginTop: 4, fontSize: 14 }}>
-            Theo dõi trạng thái, danh sách học sinh và điều phối hoạt động giảng dạy trong các lớp học được phân công.
+          <Text
+            style={{
+              color: "rgba(255,255,255,0.85)",
+              display: "block",
+              marginTop: 4,
+              fontSize: 14,
+            }}
+          >
+            Theo dõi trạng thái, danh sách học sinh và điều phối hoạt động giảng dạy trong các lớp
+            học được phân công.
           </Text>
         </div>
 
@@ -60,7 +68,9 @@ export const TeacherClassHeader: React.FC<TeacherClassHeaderProps> = React.memo(
               }}
             >
               <Statistic
-                title={<Text style={{ color: "rgba(255,255,255,0.85)", fontSize: 12 }}>Tổng số lớp</Text>}
+                title={
+                  <Text style={{ color: "rgba(255,255,255,0.85)", fontSize: 12 }}>Tổng số lớp</Text>
+                }
                 value={totalClasses}
                 suffix="lớp"
                 valueStyle={{ color: "#fff", fontWeight: 700, fontSize: 22 }}
@@ -80,7 +90,11 @@ export const TeacherClassHeader: React.FC<TeacherClassHeaderProps> = React.memo(
               }}
             >
               <Statistic
-                title={<Text style={{ color: "rgba(255,255,255,0.85)", fontSize: 12 }}>Đang hoạt động</Text>}
+                title={
+                  <Text style={{ color: "rgba(255,255,255,0.85)", fontSize: 12 }}>
+                    Đang hoạt động
+                  </Text>
+                }
                 value={activeClasses}
                 suffix="lớp"
                 prefix={<CheckCircleOutlined style={{ color: "#b7eb8f", marginRight: 6 }} />}
@@ -101,7 +115,11 @@ export const TeacherClassHeader: React.FC<TeacherClassHeaderProps> = React.memo(
               }}
             >
               <Statistic
-                title={<Text style={{ color: "rgba(255,255,255,0.85)", fontSize: 12 }}>Đã hoàn thành</Text>}
+                title={
+                  <Text style={{ color: "rgba(255,255,255,0.85)", fontSize: 12 }}>
+                    Đã hoàn thành
+                  </Text>
+                }
                 value={completedClasses}
                 suffix="lớp"
                 prefix={<ClockCircleOutlined style={{ color: "#ffe58f", marginRight: 6 }} />}
@@ -122,7 +140,11 @@ export const TeacherClassHeader: React.FC<TeacherClassHeaderProps> = React.memo(
               }}
             >
               <Statistic
-                title={<Text style={{ color: "rgba(255,255,255,0.85)", fontSize: 12 }}>Tổng học sinh</Text>}
+                title={
+                  <Text style={{ color: "rgba(255,255,255,0.85)", fontSize: 12 }}>
+                    Tổng học sinh
+                  </Text>
+                }
                 value={totalStudents}
                 suffix="học sinh"
                 prefix={<TeamOutlined style={{ color: "#e6f7ff", marginRight: 6 }} />}

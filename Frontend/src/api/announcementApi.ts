@@ -23,9 +23,12 @@ export const announcementApi = {
     const params: Record<string, string> = { scope: "Class", classId };
     if (search) params.search = search;
 
-    const response = await axiosClient.get<{ data: IAnnouncement[]; items?: IAnnouncement[] }>("/api/announcements", {
-      params,
-    });
+    const response = await axiosClient.get<{ data: IAnnouncement[]; items?: IAnnouncement[] }>(
+      "/api/announcements",
+      {
+        params,
+      }
+    );
     return response.data.data || response.data.items || response.data || [];
   },
 
@@ -55,7 +58,10 @@ export const announcementApi = {
     id: string,
     data: { title?: string; content?: string }
   ): Promise<IAnnouncement> => {
-    const response = await axiosClient.put<{ data: IAnnouncement }>(`/api/announcements/${id}`, data);
+    const response = await axiosClient.put<{ data: IAnnouncement }>(
+      `/api/announcements/${id}`,
+      data
+    );
     return response.data.data || response.data;
   },
 

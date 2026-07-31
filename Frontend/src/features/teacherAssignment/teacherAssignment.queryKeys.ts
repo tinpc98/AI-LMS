@@ -5,7 +5,8 @@ import type { TeacherAssignmentFilters } from "./teacherAssignment.types";
 // "all" là root key dùng để invalidate toàn bộ nhánh sau khi assign/remove teacher.
 export const teacherAssignmentQueryKeys = {
   all: ["teacher-assignments"] as const,
-  classes: (filters: TeacherAssignmentFilters) => ["teacher-assignments", "classes", filters] as const,
+  classes: (filters: TeacherAssignmentFilters) =>
+    ["teacher-assignments", "classes", filters] as const,
   allClasses: ["teacher-assignments", "allClasses"] as const,
   teachers: ["teacher-assignments", "teachers"] as const,
   courses: ["teacher-assignments", "courses"] as const,

@@ -16,7 +16,11 @@ export const LiveStatistic: React.FC<LiveStatisticProps> = React.memo(({ stats }
   return (
     <Row gutter={[12, 12]} style={{ marginBottom: 24 }}>
       <Col xs={12} sm={6}>
-        <Card bordered={false} styles={{ body: { padding: "12px 16px" } }} style={{ borderRadius: 12, backgroundColor: "#fafafa" }}>
+        <Card
+          bordered={false}
+          styles={{ body: { padding: "12px 16px" } }}
+          style={{ borderRadius: 12, backgroundColor: "#fafafa" }}
+        >
           <Statistic
             title={<span style={{ fontSize: 11, color: "#8c8c8c" }}>Tổng số buổi Live</span>}
             value={stats.total}
@@ -27,7 +31,11 @@ export const LiveStatistic: React.FC<LiveStatisticProps> = React.memo(({ stats }
       </Col>
 
       <Col xs={12} sm={6}>
-        <Card bordered={false} styles={{ body: { padding: "12px 16px" } }} style={{ borderRadius: 12, backgroundColor: "#f6ffed" }}>
+        <Card
+          bordered={false}
+          styles={{ body: { padding: "12px 16px" } }}
+          style={{ borderRadius: 12, backgroundColor: "#f6ffed" }}
+        >
           <Statistic
             title={<span style={{ fontSize: 11, color: "#8c8c8c" }}>Đã tham gia</span>}
             value={stats.attended}
@@ -38,7 +46,11 @@ export const LiveStatistic: React.FC<LiveStatisticProps> = React.memo(({ stats }
       </Col>
 
       <Col xs={12} sm={6}>
-        <Card bordered={false} styles={{ body: { padding: "12px 16px" } }} style={{ borderRadius: 12, backgroundColor: "#fff1f0" }}>
+        <Card
+          bordered={false}
+          styles={{ body: { padding: "12px 16px" } }}
+          style={{ borderRadius: 12, backgroundColor: "#fff1f0" }}
+        >
           <Statistic
             title={<span style={{ fontSize: 11, color: "#8c8c8c" }}>Đã bỏ lỡ</span>}
             value={stats.missed}
@@ -49,7 +61,11 @@ export const LiveStatistic: React.FC<LiveStatisticProps> = React.memo(({ stats }
       </Col>
 
       <Col xs={12} sm={6}>
-        <Card bordered={false} styles={{ body: { padding: "12px 16px" } }} style={{ borderRadius: 12, backgroundColor: "#e6f7ff" }}>
+        <Card
+          bordered={false}
+          styles={{ body: { padding: "12px 16px" } }}
+          style={{ borderRadius: 12, backgroundColor: "#e6f7ff" }}
+        >
           <Statistic
             title={<span style={{ fontSize: 11, color: "#8c8c8c" }}>Sắp diễn ra</span>}
             value={stats.upcoming}

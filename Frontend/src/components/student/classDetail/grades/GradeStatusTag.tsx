@@ -17,25 +17,41 @@ export const GradeStatusTag: React.FC<GradeStatusTagProps> = React.memo(({ statu
   switch (status) {
     case "Graded":
       return (
-        <Tag color="success" icon={<CheckCircleOutlined />} style={{ borderRadius: 8, fontWeight: 600 }}>
+        <Tag
+          color="success"
+          icon={<CheckCircleOutlined />}
+          style={{ borderRadius: 8, fontWeight: 600 }}
+        >
           Đã chấm điểm
         </Tag>
       );
     case "Pending":
       return (
-        <Tag color="warning" icon={<ClockCircleOutlined />} style={{ borderRadius: 8, fontWeight: 600 }}>
+        <Tag
+          color="warning"
+          icon={<ClockCircleOutlined />}
+          style={{ borderRadius: 8, fontWeight: 600 }}
+        >
           Chờ chấm điểm
         </Tag>
       );
     case "Not Submitted":
       return (
-        <Tag color="orange" icon={<ExclamationCircleOutlined />} style={{ borderRadius: 8, fontWeight: 600 }}>
+        <Tag
+          color="orange"
+          icon={<ExclamationCircleOutlined />}
+          style={{ borderRadius: 8, fontWeight: 600 }}
+        >
           Chưa nộp bài
         </Tag>
       );
     case "Missing":
       return (
-        <Tag color="error" icon={<CloseCircleOutlined />} style={{ borderRadius: 8, fontWeight: 600 }}>
+        <Tag
+          color="error"
+          icon={<CloseCircleOutlined />}
+          style={{ borderRadius: 8, fontWeight: 600 }}
+        >
           Bỏ lỡ deadline
         </Tag>
       );

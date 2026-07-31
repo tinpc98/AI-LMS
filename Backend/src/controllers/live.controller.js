@@ -35,7 +35,9 @@ export const createLiveSession = async (req, res) => {
       return sendLiveError(res, error.statusCode, error.code, error.message, error.details);
     }
     console.error("[LiveController] createLiveSession Error:", error);
-    return res.status(500).json({ success: false, message: error.message || "Lỗi server khi tạo buổi học" });
+    return res
+      .status(500)
+      .json({ success: false, message: error.message || "Lỗi server khi tạo buổi học" });
   }
 };
 
@@ -52,7 +54,12 @@ export const getActiveLiveSession = async (req, res) => {
       return sendLiveError(res, error.statusCode, error.code, error.message, error.details);
     }
     console.error("[LiveController] getActiveLiveSession Error:", error);
-    return res.status(500).json({ success: false, message: error.message || "Lỗi server khi lấy buổi học đang diễn ra" });
+    return res
+      .status(500)
+      .json({
+        success: false,
+        message: error.message || "Lỗi server khi lấy buổi học đang diễn ra",
+      });
   }
 };
 
@@ -69,7 +76,9 @@ export const getLiveSessionDetail = async (req, res) => {
       return sendLiveError(res, error.statusCode, error.code, error.message, error.details);
     }
     console.error("[LiveController] getLiveSessionDetail Error:", error);
-    return res.status(500).json({ success: false, message: error.message || "Lỗi server khi lấy chi tiết buổi học" });
+    return res
+      .status(500)
+      .json({ success: false, message: error.message || "Lỗi server khi lấy chi tiết buổi học" });
   }
 };
 
@@ -87,7 +96,9 @@ export const getLiveSessionHistory = async (req, res) => {
       return sendLiveError(res, error.statusCode, error.code, error.message, error.details);
     }
     console.error("[LiveController] getLiveSessionHistory Error:", error);
-    return res.status(500).json({ success: false, message: error.message || "Lỗi server khi lấy lịch sử buổi học" });
+    return res
+      .status(500)
+      .json({ success: false, message: error.message || "Lỗi server khi lấy lịch sử buổi học" });
   }
 };
 
@@ -116,6 +127,8 @@ export const endLiveSession = async (req, res) => {
       return sendLiveError(res, error.statusCode, error.code, error.message, error.details);
     }
     console.error("[LiveController] endLiveSession Error:", error);
-    return res.status(500).json({ success: false, message: error.message || "Lỗi server khi kết thúc buổi học" });
+    return res
+      .status(500)
+      .json({ success: false, message: error.message || "Lỗi server khi kết thúc buổi học" });
   }
 };

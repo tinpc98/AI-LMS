@@ -3,8 +3,18 @@ import { describe, it, expect } from "vitest";
 import { recalculateExamSetMetrics } from "../../src/services/examSet.metrics.js";
 
 const cases = [
-  { name: "Empty questions array", examSet: { questions: [] }, expectedCount: 0, expectedPoints: 0 },
-  { name: "Single valid question score 3", examSet: { questions: [{ points: 3 }] }, expectedCount: 1, expectedPoints: 3 },
+  {
+    name: "Empty questions array",
+    examSet: { questions: [] },
+    expectedCount: 0,
+    expectedPoints: 0,
+  },
+  {
+    name: "Single valid question score 3",
+    examSet: { questions: [{ points: 3 }] },
+    expectedCount: 1,
+    expectedPoints: 3,
+  },
   {
     name: "Multiple valid questions with decimals",
     examSet: { questions: [{ points: 2.5 }, { points: 1.5 }, { points: 0 }] },
@@ -31,7 +41,13 @@ const cases = [
   },
   {
     name: "Soft deleted question excluded",
-    examSet: { questions: [{ points: 3 }, { points: 2, isDeleted: true }, { points: 4, deletedAt: new Date() }] },
+    examSet: {
+      questions: [
+        { points: 3 },
+        { points: 2, isDeleted: true },
+        { points: 4, deletedAt: new Date() },
+      ],
+    },
     expectedCount: 1,
     expectedPoints: 3,
   },

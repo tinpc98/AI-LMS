@@ -50,7 +50,8 @@ export const AssignmentDetailDrawer: React.FC<AssignmentDetailDrawerProps> = Rea
         ? (item.teacherId as any).fullName
         : "Giảng viên";
 
-    const hasSubmitted = item.status === "Submitted" || item.status === "Late" || item.status === "Graded";
+    const hasSubmitted =
+      item.status === "Submitted" || item.status === "Late" || item.status === "Graded";
     const isGraded = item.status === "Graded";
 
     return (
@@ -133,7 +134,10 @@ export const AssignmentDetailDrawer: React.FC<AssignmentDetailDrawerProps> = Rea
 
           {/* Description & Requirements */}
           <div style={{ marginBottom: 20 }}>
-            <Text strong style={{ fontSize: 14, color: "#262626", display: "block", marginBottom: 6 }}>
+            <Text
+              strong
+              style={{ fontSize: 14, color: "#262626", display: "block", marginBottom: 6 }}
+            >
               Yêu cầu bài tập:
             </Text>
             <Paragraph
@@ -154,8 +158,12 @@ export const AssignmentDetailDrawer: React.FC<AssignmentDetailDrawerProps> = Rea
           {/* Attached Files from Teacher */}
           {item.attachments && item.attachments.length > 0 && (
             <div style={{ marginBottom: 24 }}>
-              <Text strong style={{ fontSize: 14, color: "#262626", display: "block", marginBottom: 8 }}>
-                <PaperClipOutlined style={{ marginRight: 6 }} /> Tài liệu / Đề bài đính kèm ({item.attachments.length}):
+              <Text
+                strong
+                style={{ fontSize: 14, color: "#262626", display: "block", marginBottom: 8 }}
+              >
+                <PaperClipOutlined style={{ marginRight: 6 }} /> Tài liệu / Đề bài đính kèm (
+                {item.attachments.length}):
               </Text>
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 {item.attachments.map((att, idx) => (

@@ -31,7 +31,12 @@ const adminMenuItems: AdminMenuItem[] = [
     icon: <UsergroupAddOutlined />,
   },
   { key: "courses", label: "Course Management", path: "/admin/courses", icon: <BookOutlined /> },
-  { key: "classes", label: "Class Management", path: "/admin/classes", icon: <ApartmentOutlined /> },
+  {
+    key: "classes",
+    label: "Class Management",
+    path: "/admin/classes",
+    icon: <ApartmentOutlined />,
+  },
   {
     key: "teachers",
     label: "Teacher Assignment",
@@ -60,11 +65,7 @@ const getSelectedKey = (pathname: string) => {
   // Ưu tiên route dài nhất trước
   const match = flattened
     .sort((a, b) => b.path.length - a.path.length)
-    .find(
-      (item) =>
-        normalizedPath === item.path ||
-        normalizedPath.startsWith(`${item.path}/`)
-    );
+    .find((item) => normalizedPath === item.path || normalizedPath.startsWith(`${item.path}/`));
 
   return match?.key ?? "dashboard";
 };

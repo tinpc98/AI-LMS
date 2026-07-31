@@ -11,7 +11,9 @@ const ConflictAlert = ({ conflict }: ConflictAlertProps) => {
 
   const confClass = conflict.conflictingClass;
   const daysText = confClass ? formatScheduleDays(confClass.schedule.days) : "";
-  const timeText = confClass ? formatScheduleTime(confClass.schedule.startTime, confClass.schedule.endTime) : "";
+  const timeText = confClass
+    ? formatScheduleTime(confClass.schedule.startTime, confClass.schedule.endTime)
+    : "";
 
   const detailText = confClass
     ? `Conflict detected with class "${confClass.className}" (${confClass.classCode}) on ${daysText} (${timeText}).`

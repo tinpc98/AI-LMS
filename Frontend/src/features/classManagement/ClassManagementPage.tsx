@@ -7,7 +7,13 @@ import ClassTable from "./ClassTable";
 import ClassToolbar from "./ClassToolbar";
 import DeleteConfirmModal from "./DeleteConfirmModal";
 import { classService } from "./classService";
-import type { ClassFilters, ClassFormValues, ClassRecord, ClassStatus, Pagination } from "./class.types";
+import type {
+  ClassFilters,
+  ClassFormValues,
+  ClassRecord,
+  ClassStatus,
+  Pagination,
+} from "./class.types";
 
 const initialFilters: ClassFilters = {
   search: "",
@@ -138,7 +144,6 @@ const ClassManagementPage = () => {
       message.error("Unable to update class status");
     }
   };
-
 
   const handleDeleteRequest = (classRecord: ClassRecord) => {
     setSelectedClass(classRecord);

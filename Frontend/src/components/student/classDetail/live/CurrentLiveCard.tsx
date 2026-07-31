@@ -48,12 +48,18 @@ export const CurrentLiveCard: React.FC<CurrentLiveCardProps> = React.memo(
               {session.title}
             </Title>
 
-            <Paragraph style={{ color: "rgba(255, 255, 255, 0.85)", fontSize: 13, margin: "0 0 16px 0" }}>
-              Lớp học trực tuyến đang diễn ra. Giảng viên đã sẵn sàng trong phòng học. Nhấn nút bên dưới để tham gia ngay!
+            <Paragraph
+              style={{ color: "rgba(255, 255, 255, 0.85)", fontSize: 13, margin: "0 0 16px 0" }}
+            >
+              Lớp học trực tuyến đang diễn ra. Giảng viên đã sẵn sàng trong phòng học. Nhấn nút bên
+              dưới để tham gia ngay!
             </Paragraph>
 
             <Space size={12} align="center">
-              <Avatar icon={<UserOutlined />} style={{ backgroundColor: "#ffffff", color: "#096dd9" }} />
+              <Avatar
+                icon={<UserOutlined />}
+                style={{ backgroundColor: "#ffffff", color: "#096dd9" }}
+              />
               <div>
                 <Text strong style={{ color: "#ffffff", fontSize: 13, display: "block" }}>
                   {session.teacherName || "Giảng viên phụ trách"}
@@ -75,7 +81,14 @@ export const CurrentLiveCard: React.FC<CurrentLiveCardProps> = React.memo(
                 border: "1px solid rgba(255, 255, 255, 0.2)",
               }}
             >
-              <Text style={{ color: "rgba(255, 255, 255, 0.9)", fontSize: 12, display: "block", marginBottom: 12 }}>
+              <Text
+                style={{
+                  color: "rgba(255, 255, 255, 0.9)",
+                  fontSize: 12,
+                  display: "block",
+                  marginBottom: 12,
+                }}
+              >
                 Phòng học trực tuyến đã mở
               </Text>
 

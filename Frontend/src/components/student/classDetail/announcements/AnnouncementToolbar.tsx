@@ -15,14 +15,7 @@ interface AnnouncementToolbarProps {
 }
 
 export const AnnouncementToolbar: React.FC<AnnouncementToolbarProps> = React.memo(
-  ({
-    searchQuery,
-    filterType,
-    sortBy,
-    onSearchChange,
-    onFilterTypeChange,
-    onSortChange,
-  }) => {
+  ({ searchQuery, filterType, sortBy, onSearchChange, onFilterTypeChange, onSortChange }) => {
     return (
       <div
         style={{

@@ -7,7 +7,13 @@ import CourseTable from "./CourseTable";
 import CourseToolbar from "./CourseToolbar";
 import DeleteConfirmModal from "./DeleteConfirmModal";
 import { courseService } from "./courseService";
-import type { CourseFilters, CourseFormValues, CourseRecord, CourseStatus, Pagination } from "./course.types";
+import type {
+  CourseFilters,
+  CourseFormValues,
+  CourseRecord,
+  CourseStatus,
+  Pagination,
+} from "./course.types";
 
 const initialFilters: CourseFilters = {
   search: "",
@@ -20,7 +26,12 @@ const initialFilters: CourseFilters = {
 const CourseManagementPage = () => {
   const [activeTab, setActiveTab] = useState("active");
   const [courses, setCourses] = useState<CourseRecord[]>([]);
-  const [pagination, setPagination] = useState<Pagination>({ page: 1, limit: 10, total: 0, totalPages: 0 });
+  const [pagination, setPagination] = useState<Pagination>({
+    page: 1,
+    limit: 10,
+    total: 0,
+    totalPages: 0,
+  });
   const [filters, setFilters] = useState<CourseFilters>(initialFilters);
   const [loading, setLoading] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
@@ -33,23 +44,27 @@ const CourseManagementPage = () => {
 
   const searchTimeoutRef = useRef<number | null>(null);
 
-  const loadCourses = useCallback(async (currentFilters = filters) => {
-    setLoading(true);
-    try {
-      const fetchFn = activeTab === "trash" ? courseService.getTrashCourses : courseService.getCourses;
-      const response = await fetchFn(currentFilters);
-      if (response.success) {
-        setCourses(response.data);
-        if (response.pagination) {
-          setPagination(response.pagination);
+  const loadCourses = useCallback(
+    async (currentFilters = filters) => {
+      setLoading(true);
+      try {
+        const fetchFn =
+          activeTab === "trash" ? courseService.getTrashCourses : courseService.getCourses;
+        const response = await fetchFn(currentFilters);
+        if (response.success) {
+          setCourses(response.data);
+          if (response.pagination) {
+            setPagination(response.pagination);
+          }
         }
+      } catch {
+        message.error("Failed to load courses");
+      } finally {
+        setLoading(false);
       }
-    } catch {
-      message.error("Failed to load courses");
-    } finally {
-      setLoading(false);
-    }
-  }, [activeTab, filters]);
+    },
+    [activeTab, filters]
+  );
 
   useEffect(() => {
     void loadCourses();
@@ -116,7 +131,12 @@ const CourseManagementPage = () => {
 
   const handleChangeStatus = async (course: CourseRecord) => {
     try {
-      const nextStatus: CourseStatus = course.status === "Published" ? "Closed" : course.status === "Closed" ? "Draft" : "Published";
+      const nextStatus: CourseStatus =
+        course.status === "Published"
+          ? "Closed"
+          : course.status === "Closed"
+            ? "Draft"
+            : "Published";
       await courseService.updateStatus(course.id, nextStatus);
       message.success(`Status changed to ${nextStatus}`);
       await loadCourses();
@@ -195,7 +215,9 @@ const CourseManagementPage = () => {
         />
 
         <div style={{ marginTop: 16 }}>
-          <Typography.Text type="secondary">Showing total {pagination.total} course(s)</Typography.Text>
+          <Typography.Text type="secondary">
+            Showing total {pagination.total} course(s)
+          </Typography.Text>
         </div>
 
         <div style={{ marginTop: 16 }}>
@@ -228,7 +250,11 @@ const CourseManagementPage = () => {
         onCancel={() => setModalOpen(false)}
       />
 
-      <CourseDetailDrawer open={detailOpen} course={selectedCourse} onClose={() => setDetailOpen(false)} />
+      <CourseDetailDrawer
+        open={detailOpen}
+        course={selectedCourse}
+        onClose={() => setDetailOpen(false)}
+      />
 
       <DeleteConfirmModal
         open={deleteOpen}

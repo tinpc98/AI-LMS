@@ -63,7 +63,10 @@ const AIManagementPage = () => {
   const dashboardStats = useMemo(() => {
     const activeModelsCount = modelHook.models.filter((m) => m.status === "Active").length;
     const enabledFeaturesCount = featureHook.features.filter((f) => f.enabled).length;
-    const todayRequestsCount = featureHook.features.reduce((sum, f) => sum + (f.enabled ? f.dailyRequests : 0), 0);
+    const todayRequestsCount = featureHook.features.reduce(
+      (sum, f) => sum + (f.enabled ? f.dailyRequests : 0),
+      0
+    );
     const avgResponseTimeMs = 450;
 
     return {

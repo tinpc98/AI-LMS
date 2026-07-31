@@ -82,10 +82,14 @@ function ToastItem({ item, onClose }: { item: ToastMessage; onClose: () => void 
   return (
     <div
       className={`pointer-events-auto bg-white rounded-2xl border ${style.border} shadow-2xl p-4 transition-all duration-300 relative overflow-hidden flex items-start gap-3 transform ${
-        isClosing ? "translate-x-full opacity-0" : "translate-x-0 opacity-100 animate-in slide-in-from-right-full"
+        isClosing
+          ? "translate-x-full opacity-0"
+          : "translate-x-0 opacity-100 animate-in slide-in-from-right-full"
       }`}
     >
-      <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${style.iconBg}`}>
+      <div
+        className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${style.iconBg}`}
+      >
         <span className="material-symbols-outlined text-2xl font-bold">{style.icon}</span>
       </div>
 

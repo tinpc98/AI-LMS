@@ -18,25 +18,37 @@ export const attendanceApi = {
 
   // Lấy danh sách buổi học ảo
   getClassSessions: (classId: string) =>
-    axiosClient.get<{ message: string; data: IVirtualSession[] }>(`/api/attendances/class/${classId}/sessions`),
+    axiosClient.get<{ message: string; data: IVirtualSession[] }>(
+      `/api/attendances/class/${classId}/sessions`
+    ),
 
   // Lấy ma trận điểm danh của lớp
   getAttendanceMatrix: (classId: string) =>
-    axiosClient.get<{ message: string; data: IAttendanceMatrix }>(`/api/attendances/class/${classId}/matrix`),
+    axiosClient.get<{ message: string; data: IAttendanceMatrix }>(
+      `/api/attendances/class/${classId}/matrix`
+    ),
 
   // Lấy danh sách điểm danh theo lớp (và ngày nếu có)
   getAttendanceByClass: (classId: string, date?: string) => {
     const params = date ? { date } : {};
-    return axiosClient.get<{ message: string; data: IAttendanceItem[] }>(`/api/attendances/class/${classId}`, { params });
+    return axiosClient.get<{ message: string; data: IAttendanceItem[] }>(
+      `/api/attendances/class/${classId}`,
+      { params }
+    );
   },
 
   // Lấy lịch sử điểm danh của học sinh
   getAttendanceByStudent: (studentId: string, classId?: string) => {
     const params = classId ? { classId } : {};
-    return axiosClient.get<{ message: string; data: IAttendanceItem[] }>(`/api/attendances/student/${studentId}`, { params });
+    return axiosClient.get<{ message: string; data: IAttendanceItem[] }>(
+      `/api/attendances/student/${studentId}`,
+      { params }
+    );
   },
 
   // Lấy thống kê tỷ lệ điểm danh theo lớp
   getAttendanceStats: (classId: string) =>
-    axiosClient.get<{ message: string; data: IAttendanceStats }>(`/api/attendances/stats/class/${classId}`),
+    axiosClient.get<{ message: string; data: IAttendanceStats }>(
+      `/api/attendances/stats/class/${classId}`
+    ),
 };

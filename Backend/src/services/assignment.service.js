@@ -31,7 +31,16 @@ const uploadFiles = async (files) => {
 };
 
 export const createAssignmentService = async ({
-  title, description, deadline, classId, lessonId, isAIGenerated, aiPromptUsed, files, teacherId, teacherRole,
+  title,
+  description,
+  deadline,
+  classId,
+  lessonId,
+  isAIGenerated,
+  aiPromptUsed,
+  files,
+  teacherId,
+  teacherRole,
 }) => {
   if (!title || !deadline || !classId) {
     throwError("Thiếu thông tin: Tiêu đề, Hạn nộp hoặc ClassId", 400);
@@ -64,7 +73,14 @@ export const createAssignmentService = async ({
   return newAssignment;
 };
 
-export const gradeSubmissionService = async ({ submissionId, grade, feedback, aiFeedback, userId, userRole }) => {
+export const gradeSubmissionService = async ({
+  submissionId,
+  grade,
+  feedback,
+  aiFeedback,
+  userId,
+  userRole,
+}) => {
   const session = await mongoose.startSession();
   session.startTransaction();
   try {
@@ -77,7 +93,9 @@ export const gradeSubmissionService = async ({ submissionId, grade, feedback, ai
       throwError("Không tìm thấy bài nộp này", 404);
     }
 
-    const assignment = await assignmentRepo.findAssignmentById(submission.assignmentId, { session });
+    const assignment = await assignmentRepo.findAssignmentById(submission.assignmentId, {
+      session,
+    });
     if (!assignment) {
       throwError("Bài tập không tồn tại", 404);
     }
@@ -105,7 +123,16 @@ export const gradeSubmissionService = async ({ submissionId, grade, feedback, ai
   }
 };
 
-export const updateAssignmentService = async ({ id, title, description, deadline, lessonId, files, userId, userRole }) => {
+export const updateAssignmentService = async ({
+  id,
+  title,
+  description,
+  deadline,
+  lessonId,
+  files,
+  userId,
+  userRole,
+}) => {
   if (!id || !mongoose.Types.ObjectId.isValid(id)) {
     throwError("ID bài tập không hợp lệ!", 400);
   }
@@ -186,7 +213,13 @@ export const getAssignmentsByClassService = async ({ classId, page, limit }) => 
   };
 };
 
-export const getSubmissionsByAssignmentService = async ({ assignmentId, page, limit, userId, userRole }) => {
+export const getSubmissionsByAssignmentService = async ({
+  assignmentId,
+  page,
+  limit,
+  userId,
+  userRole,
+}) => {
   if (!assignmentId || !mongoose.Types.ObjectId.isValid(assignmentId)) {
     return { submissions: [], pagination: null };
   }
@@ -221,7 +254,10 @@ export const getMySubmissionService = async ({ assignmentId, studentId }) => {
     throwError("INVALID_ID", 400);
   }
 
-  const submission = await assignmentRepo.findSubmissionByAssignmentAndStudent(assignmentId, studentId);
+  const submission = await assignmentRepo.findSubmissionByAssignmentAndStudent(
+    assignmentId,
+    studentId
+  );
   if (!submission) {
     throwError("SUBMISSION_NOT_FOUND", 404);
   }
@@ -242,12 +278,20 @@ export const submitAssignmentService = async ({ assignmentId, content, files, st
       throwError("Bài tập không tồn tại hoặc đã bị xóa!", 404);
     }
 
-    let submission = await assignmentRepo.findSubmissionByAssignmentAndStudentWithDeleted(assignmentId, studentId, { session });
+    let submission = await assignmentRepo.findSubmissionByAssignmentAndStudentWithDeleted(
+      assignmentId,
+      studentId,
+      { session }
+    );
 
     const now = new Date();
     const isLate = now > new Date(assignment.deadline);
 
-    if (submission && ((submission.grade !== null && submission.grade !== undefined) || submission.status === "graded")) {
+    if (
+      submission &&
+      ((submission.grade !== null && submission.grade !== undefined) ||
+        submission.status === "graded")
+    ) {
       throwError("Bài nộp đã được Giáo viên chấm điểm. Bạn không thể nộp lại bài nữa!", 409);
     }
 
@@ -327,12 +371,18 @@ export const cancelSubmissionService = async ({ assignmentId, studentId }) => {
     throwError("Bài tập đã quá hạn deadline. Bạn không thể hủy bài nộp nữa!", 400);
   }
 
-  const submission = await assignmentRepo.findSubmissionByAssignmentAndStudentWithDeleted(assignmentId, studentId);
+  const submission = await assignmentRepo.findSubmissionByAssignmentAndStudentWithDeleted(
+    assignmentId,
+    studentId
+  );
   if (!submission || submission.status === "withdrawn") {
     throwError("Không tìm thấy bài nộp hợp lệ để hủy!", 404);
   }
 
-  if ((submission.grade !== null && submission.grade !== undefined) || submission.status === "graded") {
+  if (
+    (submission.grade !== null && submission.grade !== undefined) ||
+    submission.status === "graded"
+  ) {
     throwError("Bài nộp đã được Giáo viên chấm điểm. Bạn không thể hủy bài nộp!", 409);
   }
 

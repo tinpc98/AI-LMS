@@ -1,5 +1,17 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
-import { Card, Table, Button, Typography, Space, Alert, Skeleton, Tag, Tooltip, Divider, Badge } from "antd";
+import {
+  Card,
+  Table,
+  Button,
+  Typography,
+  Space,
+  Alert,
+  Skeleton,
+  Tag,
+  Tooltip,
+  Divider,
+  Badge,
+} from "antd";
 import type { ColumnsType } from "antd/es/table";
 import {
   CalendarOutlined,
@@ -11,7 +23,7 @@ import {
   ReloadOutlined,
   EditOutlined,
   EyeOutlined,
-  RightOutlined
+  RightOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
 import isBetween from "dayjs/plugin/isBetween";
@@ -41,11 +53,11 @@ export const TeacherAttendanceTab: React.FC<TeacherAttendanceTabProps> = React.m
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
     const [historyOpen, setHistoryOpen] = useState<boolean>(false);
-    
+
     // Popup state
     const [popupOpen, setPopupOpen] = useState<boolean>(false);
     const [selectedSession, setSelectedSession] = useState<IVirtualSession | null>(null);
-    
+
     // Current time ticker for active countdowns
     const [currentTime, setCurrentTime] = useState<dayjs.Dayjs>(dayjs());
 
@@ -90,13 +102,13 @@ export const TeacherAttendanceTab: React.FC<TeacherAttendanceTabProps> = React.m
       let current: IVirtualSession | null = null;
       let next: IVirtualSession | null = null;
 
-      sessions.forEach(s => {
+      sessions.forEach((s) => {
         const start = dayjs(`${s.date}T${s.startTime}:00`);
         const end = dayjs(`${s.date}T${s.endTime}:00`);
 
         if (currentTime.isAfter(end)) {
           past.push(s);
-        } else if (currentTime.isBetween(start, end, null, '[]')) {
+        } else if (currentTime.isBetween(start, end, null, "[]")) {
           if (!current) current = s; // Select first matching as current (there should only be 1)
         } else if (currentTime.isBefore(start)) {
           upcoming.push(s);
@@ -105,10 +117,10 @@ export const TeacherAttendanceTab: React.FC<TeacherAttendanceTabProps> = React.m
 
       // Sort past descending (newest first)
       past.sort((a, b) => dayjs(b.date).valueOf() - dayjs(a.date).valueOf());
-      
+
       // Sort upcoming ascending (nearest first)
       upcoming.sort((a, b) => dayjs(a.date).valueOf() - dayjs(b.date).valueOf());
-      
+
       if (upcoming.length > 0) {
         next = upcoming[0];
       }
@@ -117,7 +129,7 @@ export const TeacherAttendanceTab: React.FC<TeacherAttendanceTabProps> = React.m
         current,
         next,
         upcomingList: upcoming.slice(1, 6), // limit 5
-        recentList: past.slice(0, 5) // limit 5
+        recentList: past.slice(0, 5), // limit 5
       };
     }, [sessions, currentTime]);
 
@@ -125,7 +137,7 @@ export const TeacherAttendanceTab: React.FC<TeacherAttendanceTabProps> = React.m
       const end = dayjs(`${dateStr}T${endStr}:00`);
       const diffMs = end.diff(currentTime);
       if (diffMs <= 0) return "Đã kết thúc";
-      
+
       const hours = Math.floor(diffMs / (1000 * 60 * 60));
       const mins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
       return `Còn ${hours} giờ ${mins} phút`;
@@ -151,10 +163,18 @@ export const TeacherAttendanceTab: React.FC<TeacherAttendanceTabProps> = React.m
           const { present, absent, late, excused } = record.stats;
           return (
             <Space size={16} style={{ fontSize: 13 }}>
-              <span style={{ color: "#52c41a" }}><CheckCircleOutlined /> {present}</span>
-              <span style={{ color: "#faad14" }}><ClockCircleOutlined /> {late}</span>
-              <span style={{ color: "#1890ff" }}><InfoCircleOutlined /> {excused}</span>
-              <span style={{ color: "#ff4d4f" }}><CloseCircleOutlined /> {absent}</span>
+              <span style={{ color: "#52c41a" }}>
+                <CheckCircleOutlined /> {present}
+              </span>
+              <span style={{ color: "#faad14" }}>
+                <ClockCircleOutlined /> {late}
+              </span>
+              <span style={{ color: "#1890ff" }}>
+                <InfoCircleOutlined /> {excused}
+              </span>
+              <span style={{ color: "#ff4d4f" }}>
+                <CloseCircleOutlined /> {absent}
+              </span>
             </Space>
           );
         },
@@ -164,7 +184,12 @@ export const TeacherAttendanceTab: React.FC<TeacherAttendanceTabProps> = React.m
         key: "action",
         align: "right",
         render: (_, record) => (
-          <Button type="default" size="small" icon={<EyeOutlined />} onClick={() => handleOpenPopup(record)}>
+          <Button
+            type="default"
+            size="small"
+            icon={<EyeOutlined />}
+            onClick={() => handleOpenPopup(record)}
+          >
             Xem
           </Button>
         ),
@@ -184,7 +209,9 @@ export const TeacherAttendanceTab: React.FC<TeacherAttendanceTabProps> = React.m
         render: (_, record) => (
           <Space>
             <ClockCircleOutlined style={{ color: "#faad14" }} />
-            <Text>{record.startTime} - {record.endTime}</Text>
+            <Text>
+              {record.startTime} - {record.endTime}
+            </Text>
           </Space>
         ),
       },
@@ -192,7 +219,7 @@ export const TeacherAttendanceTab: React.FC<TeacherAttendanceTabProps> = React.m
         title: "Trạng thái",
         key: "status",
         render: () => <Tag color="default">Chưa đến giờ</Tag>,
-      }
+      },
     ];
 
     return (
@@ -204,11 +231,19 @@ export const TeacherAttendanceTab: React.FC<TeacherAttendanceTabProps> = React.m
             background: "linear-gradient(135deg, #1890ff 0%, #096dd9 100%)",
             color: "#fff",
             boxShadow: "0 8px 24px rgba(24, 144, 255, 0.25)",
-            border: "none"
+            border: "none",
           }}
           styles={{ body: { padding: "20px 24px" } }}
         >
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 16 }}>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              flexWrap: "wrap",
+              gap: 16,
+            }}
+          >
             <div>
               <Title level={4} style={{ color: "#fff", margin: 0, fontWeight: 700 }}>
                 📌 Tổng quan Điểm danh: {className}
@@ -221,7 +256,12 @@ export const TeacherAttendanceTab: React.FC<TeacherAttendanceTabProps> = React.m
               type="default"
               icon={<HistoryOutlined />}
               onClick={() => setHistoryOpen(true)}
-              style={{ backgroundColor: "rgba(255,255,255,0.2)", borderColor: "rgba(255,255,255,0.4)", color: "#fff", fontWeight: 600 }}
+              style={{
+                backgroundColor: "rgba(255,255,255,0.2)",
+                borderColor: "rgba(255,255,255,0.4)",
+                color: "#fff",
+                fontWeight: 600,
+              }}
             >
               Xem Ma trận điểm danh
             </Button>
@@ -234,7 +274,17 @@ export const TeacherAttendanceTab: React.FC<TeacherAttendanceTabProps> = React.m
             description={error}
             type="error"
             showIcon
-            action={<Button size="small" type="primary" danger icon={<ReloadOutlined />} onClick={fetchSessions}>Thử lại</Button>}
+            action={
+              <Button
+                size="small"
+                type="primary"
+                danger
+                icon={<ReloadOutlined />}
+                onClick={fetchSessions}
+              >
+                Thử lại
+              </Button>
+            }
           />
         )}
 
@@ -242,41 +292,65 @@ export const TeacherAttendanceTab: React.FC<TeacherAttendanceTabProps> = React.m
           <Skeleton active paragraph={{ rows: 6 }} />
         ) : (
           <Space direction="vertical" size="large" style={{ width: "100%" }}>
-            
             {/* CURRENT SESSION */}
             {categorized.current && (
-              <Card 
-                style={{ 
-                  borderRadius: 12, 
-                  border: "2px solid #52c41a", 
-                  boxShadow: "0 4px 12px rgba(82, 196, 26, 0.15)" 
+              <Card
+                style={{
+                  borderRadius: 12,
+                  border: "2px solid #52c41a",
+                  boxShadow: "0 4px 12px rgba(82, 196, 26, 0.15)",
                 }}
               >
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 16 }}>
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    flexWrap: "wrap",
+                    gap: 16,
+                  }}
+                >
                   <div>
-                    <Badge color="green" text={<Text strong style={{ color: "#52c41a" }}>BUỔI HỌC ĐANG DIỄN RA</Text>} />
+                    <Badge
+                      color="green"
+                      text={
+                        <Text strong style={{ color: "#52c41a" }}>
+                          BUỔI HỌC ĐANG DIỄN RA
+                        </Text>
+                      }
+                    />
                     <Title level={4} style={{ margin: "8px 0 4px 0" }}>
                       {dayjs(categorized.current.date).format("dddd, DD/MM/YYYY")}
                     </Title>
                     <Space size="large" style={{ color: "#595959" }}>
-                      <span><ClockCircleOutlined /> {categorized.current.startTime} - {categorized.current.endTime}</span>
-                      <Text type="danger" strong>({renderCountdown(categorized.current.endTime, categorized.current.date)})</Text>
+                      <span>
+                        <ClockCircleOutlined /> {categorized.current.startTime} -{" "}
+                        {categorized.current.endTime}
+                      </span>
+                      <Text type="danger" strong>
+                        ({renderCountdown(categorized.current.endTime, categorized.current.date)})
+                      </Text>
                     </Space>
                   </div>
-                  
+
                   <div style={{ textAlign: "right" }}>
                     <div style={{ marginBottom: 12 }}>
                       <Text type="secondary">Trạng thái: </Text>
                       {categorized.current.hasRecords ? (
-                         <Tag color="success">Đã lưu điểm danh</Tag>
+                        <Tag color="success">Đã lưu điểm danh</Tag>
                       ) : (
-                         <Tag color="processing">Chưa điểm danh</Tag>
+                        <Tag color="processing">Chưa điểm danh</Tag>
                       )}
                     </div>
-                    <Button 
-                      type="primary" 
-                      size="large" 
-                      style={{ fontWeight: 600, background: categorized.current.hasRecords ? "#fff" : "#1890ff", color: categorized.current.hasRecords ? "#1890ff" : "#fff", borderColor: "#1890ff" }}
+                    <Button
+                      type="primary"
+                      size="large"
+                      style={{
+                        fontWeight: 600,
+                        background: categorized.current.hasRecords ? "#fff" : "#1890ff",
+                        color: categorized.current.hasRecords ? "#1890ff" : "#fff",
+                        borderColor: "#1890ff",
+                      }}
                       icon={<EditOutlined />}
                       onClick={() => handleOpenPopup(categorized.current!)}
                     >
@@ -289,16 +363,31 @@ export const TeacherAttendanceTab: React.FC<TeacherAttendanceTabProps> = React.m
 
             {/* NEXT SESSION */}
             {categorized.next && (
-              <Card style={{ borderRadius: 12, borderLeft: "4px solid #1890ff", background: "#f0f5ff" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 16 }}>
+              <Card
+                style={{ borderRadius: 12, borderLeft: "4px solid #1890ff", background: "#f0f5ff" }}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    flexWrap: "wrap",
+                    gap: 16,
+                  }}
+                >
                   <div>
-                    <Text type="secondary" strong>BUỔI HỌC TIẾP THEO</Text>
+                    <Text type="secondary" strong>
+                      BUỔI HỌC TIẾP THEO
+                    </Text>
                     <div style={{ fontSize: 16, fontWeight: 500, marginTop: 4 }}>
-                      {dayjs(categorized.next.date).format("dddd, DD/MM/YYYY")} | {categorized.next.startTime} - {categorized.next.endTime}
+                      {dayjs(categorized.next.date).format("dddd, DD/MM/YYYY")} |{" "}
+                      {categorized.next.startTime} - {categorized.next.endTime}
                     </div>
                   </div>
                   <div>
-                    <Tag color="blue">{renderUpcomingCountdown(categorized.next.startTime, categorized.next.date)}</Tag>
+                    <Tag color="blue">
+                      {renderUpcomingCountdown(categorized.next.startTime, categorized.next.date)}
+                    </Tag>
                   </div>
                 </div>
               </Card>
@@ -333,7 +422,6 @@ export const TeacherAttendanceTab: React.FC<TeacherAttendanceTabProps> = React.m
                 />
               </div>
             </div>
-
           </Space>
         )}
 

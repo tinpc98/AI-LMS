@@ -56,7 +56,7 @@ export interface StudentGPAResponse {
 
 export const mapGPAResponse = (data: any): StudentGPAResponse => {
   const gpaRaw = data?.gpa;
-  const gpa = (gpaRaw === null || gpaRaw === undefined) ? null : Number(gpaRaw);
+  const gpa = gpaRaw === null || gpaRaw === undefined ? null : Number(gpaRaw);
 
   return {
     classId: data?.classId || "",
@@ -71,7 +71,9 @@ export const mapGPAResponse = (data: any): StudentGPAResponse => {
 export const gradeApi = {
   // Lấy bảng điểm của toàn bộ lớp học (Dạng Matrix)
   getGradesByClass: async (classId: string): Promise<IGradeMatrixResponse> => {
-    const response = await axiosClient.get<{ success?: boolean; data: IGradeMatrixResponse }>(`/api/grades/class/${classId}`);
+    const response = await axiosClient.get<{ success?: boolean; data: IGradeMatrixResponse }>(
+      `/api/grades/class/${classId}`
+    );
     return response.data.data ?? response.data;
   },
 
@@ -86,12 +88,18 @@ export const gradeApi = {
     feedback?: string;
     aiFeedback?: string;
   }): Promise<IGrade> => {
-    const response = await axiosClient.post<{ success?: boolean; data: IGrade }>("/api/grades", data);
+    const response = await axiosClient.post<{ success?: boolean; data: IGrade }>(
+      "/api/grades",
+      data
+    );
     return response.data.data ?? response.data;
   },
 
   // Lấy bảng điểm cá nhân của học sinh (Dạng Matrix)
-  getGradesByStudent: async (studentId: string, classId?: string): Promise<IGradeMatrixResponse> => {
+  getGradesByStudent: async (
+    studentId: string,
+    classId?: string
+  ): Promise<IGradeMatrixResponse> => {
     const response = await axiosClient.get<{ success?: boolean; data: IGradeMatrixResponse }>(
       `/api/grades/student/${studentId}${classId ? `?classId=${classId}` : ""}`
     );

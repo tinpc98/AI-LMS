@@ -18,7 +18,11 @@ export const GradeStatistic: React.FC<GradeStatisticProps> = React.memo(({ stats
   return (
     <Row gutter={[12, 12]} style={{ marginBottom: 24 }}>
       <Col xs={12} sm={8} md={4} lg={4}>
-        <Card bordered={false} styles={{ body: { padding: "12px 16px" } }} style={{ borderRadius: 12, backgroundColor: "#f9f0ff" }}>
+        <Card
+          bordered={false}
+          styles={{ body: { padding: "12px 16px" } }}
+          style={{ borderRadius: 12, backgroundColor: "#f9f0ff" }}
+        >
           <Statistic
             title={<span style={{ fontSize: 11, color: "#8c8c8c" }}>GPA tích lũy</span>}
             value={stats.gpa !== null ? stats.gpa : "--"}
@@ -30,7 +34,11 @@ export const GradeStatistic: React.FC<GradeStatisticProps> = React.memo(({ stats
       </Col>
 
       <Col xs={12} sm={8} md={4} lg={4}>
-        <Card bordered={false} styles={{ body: { padding: "12px 16px" } }} style={{ borderRadius: 12, backgroundColor: "#e6f7ff" }}>
+        <Card
+          bordered={false}
+          styles={{ body: { padding: "12px 16px" } }}
+          style={{ borderRadius: 12, backgroundColor: "#e6f7ff" }}
+        >
           <Statistic
             title={<span style={{ fontSize: 11, color: "#8c8c8c" }}>ĐTB lớp học</span>}
             value={stats.classAvgGpa !== null ? stats.classAvgGpa : "--"}
@@ -42,7 +50,11 @@ export const GradeStatistic: React.FC<GradeStatisticProps> = React.memo(({ stats
       </Col>
 
       <Col xs={12} sm={8} md={4} lg={4}>
-        <Card bordered={false} styles={{ body: { padding: "12px 16px" } }} style={{ borderRadius: 12, backgroundColor: "#f6ffed" }}>
+        <Card
+          bordered={false}
+          styles={{ body: { padding: "12px 16px" } }}
+          style={{ borderRadius: 12, backgroundColor: "#f6ffed" }}
+        >
           <Statistic
             title={<span style={{ fontSize: 11, color: "#8c8c8c" }}>Số bài đã chấm</span>}
             value={stats.gradedCount}
@@ -53,7 +65,11 @@ export const GradeStatistic: React.FC<GradeStatisticProps> = React.memo(({ stats
       </Col>
 
       <Col xs={12} sm={8} md={4} lg={4}>
-        <Card bordered={false} styles={{ body: { padding: "12px 16px" } }} style={{ borderRadius: 12, backgroundColor: "#fafafa" }}>
+        <Card
+          bordered={false}
+          styles={{ body: { padding: "12px 16px" } }}
+          style={{ borderRadius: 12, backgroundColor: "#fafafa" }}
+        >
           <Statistic
             title={<span style={{ fontSize: 11, color: "#8c8c8c" }}>ĐTB Bài tập</span>}
             value={stats.assignmentAvg !== null ? stats.assignmentAvg : "--"}
@@ -65,7 +81,11 @@ export const GradeStatistic: React.FC<GradeStatisticProps> = React.memo(({ stats
       </Col>
 
       <Col xs={12} sm={8} md={4} lg={4}>
-        <Card bordered={false} styles={{ body: { padding: "12px 16px" } }} style={{ borderRadius: 12, backgroundColor: "#fffbe6" }}>
+        <Card
+          bordered={false}
+          styles={{ body: { padding: "12px 16px" } }}
+          style={{ borderRadius: 12, backgroundColor: "#fffbe6" }}
+        >
           <Statistic
             title={<span style={{ fontSize: 11, color: "#8c8c8c" }}>ĐTB Bài thi</span>}
             value={stats.examAvg !== null ? stats.examAvg : "--"}
@@ -77,7 +97,11 @@ export const GradeStatistic: React.FC<GradeStatisticProps> = React.memo(({ stats
       </Col>
 
       <Col xs={12} sm={8} md={4} lg={4}>
-        <Card bordered={false} styles={{ body: { padding: "12px 16px" } }} style={{ borderRadius: 12, backgroundColor: "#e6fffb" }}>
+        <Card
+          bordered={false}
+          styles={{ body: { padding: "12px 16px" } }}
+          style={{ borderRadius: 12, backgroundColor: "#e6fffb" }}
+        >
           <Statistic
             title={<span style={{ fontSize: 11, color: "#8c8c8c" }}>Chuyên cần</span>}
             value={stats.attendanceRate}

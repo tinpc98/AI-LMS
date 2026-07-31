@@ -28,11 +28,10 @@ export const sendBulkNotification = async (req, res) => {
 
     // Nếu không tìm thấy người nhận nào → vẫn trả 200 nhưng thông báo rõ
     if (result.notificationsSent === 0) {
-      return sendSuccess(
-        res,
-        result.message || "Không có thông báo nào được gửi.",
-        { recipientCount: 0, notificationsSent: 0 }
-      );
+      return sendSuccess(res, result.message || "Không có thông báo nào được gửi.", {
+        recipientCount: 0,
+        notificationsSent: 0,
+      });
     }
 
     return sendSuccess(
@@ -90,7 +89,11 @@ export const markAsRead = async (req, res) => {
     const notification = await notificationService.markAsRead(id, userId);
     return sendSuccess(res, "Đã đánh dấu thông báo là đã đọc", notification);
   } catch (error) {
-    return sendError(res, error.message || "Lỗi khi đánh dấu đã đọc", error.message?.includes("không") ? 404 : 500);
+    return sendError(
+      res,
+      error.message || "Lỗi khi đánh dấu đã đọc",
+      error.message?.includes("không") ? 404 : 500
+    );
   }
 };
 

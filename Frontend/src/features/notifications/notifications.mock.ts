@@ -2,7 +2,13 @@ export interface NotificationRecord {
   id: string;
   title: string;
   description: string;
-  type: "student_registered" | "teacher_assigned" | "course_created" | "ai_generated" | "live_started" | "system";
+  type:
+    | "student_registered"
+    | "teacher_assigned"
+    | "course_created"
+    | "ai_generated"
+    | "live_started"
+    | "system";
   timestamp: string;
   status: "unread" | "read";
   targetUrl?: string;

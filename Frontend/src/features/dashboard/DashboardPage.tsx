@@ -33,7 +33,11 @@ export const DashboardPage: React.FC = () => {
           description={error.message}
           type="error"
           showIcon
-          action={<span style={{ cursor: "pointer", fontWeight: 600 }} onClick={() => refetch()}>Thử lại</span>}
+          action={
+            <span style={{ cursor: "pointer", fontWeight: 600 }} onClick={() => refetch()}>
+              Thử lại
+            </span>
+          }
           style={{ marginBottom: "20px", borderRadius: "12px" }}
         />
       )}

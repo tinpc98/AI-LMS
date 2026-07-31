@@ -26,9 +26,7 @@ const normalizeBearerToken = (rawToken) => {
  */
 export const socketAuthMiddleware = async (socket, next) => {
   try {
-    const rawToken =
-      socket.handshake.auth?.token ||
-      socket.handshake.headers?.authorization;
+    const rawToken = socket.handshake.auth?.token || socket.handshake.headers?.authorization;
 
     const token = normalizeBearerToken(rawToken);
 
@@ -43,7 +41,10 @@ export const socketAuthMiddleware = async (socket, next) => {
       decoded = jwt.verify(token, process.env.JWT_SECRET);
     } catch (jwtErr) {
       return next(
-        createSocketError("SOCKET_AUTH_INVALID_TOKEN", "Token xác thực không hợp lệ hoặc đã hết hạn.")
+        createSocketError(
+          "SOCKET_AUTH_INVALID_TOKEN",
+          "Token xác thực không hợp lệ hoặc đã hết hạn."
+        )
       );
     }
 

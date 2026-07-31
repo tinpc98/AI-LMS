@@ -13,18 +13,35 @@ import attendanceService from "./attendance.service.js";
  */
 
 // 1. Tạo mới phiên học trực tuyến (Create Live Session)
-export const createSessionService = async ({ classId, title, scheduledStart, scheduledEnd, userId, io }) => {
+export const createSessionService = async ({
+  classId,
+  title,
+  scheduledStart,
+  scheduledEnd,
+  userId,
+  io,
+}) => {
   if (!classId || !mongoose.Types.ObjectId.isValid(classId)) {
     throw new LiveError("classId không hợp lệ!", 400, LIVE_ERROR_CODES.INVALID_CLASS_ID);
   }
 
-  const classInfo = await classModel.findById(classId).select("_id className isDeleted teacherId nextLiveSessionNumber students");
+  const classInfo = await classModel
+    .findById(classId)
+    .select("_id className isDeleted teacherId nextLiveSessionNumber students");
   if (!classInfo || classInfo.isDeleted) {
-    throw new LiveError("Lớp học không tồn tại hoặc đã bị xóa!", 404, LIVE_ERROR_CODES.CLASS_NOT_FOUND);
+    throw new LiveError(
+      "Lớp học không tồn tại hoặc đã bị xóa!",
+      404,
+      LIVE_ERROR_CODES.CLASS_NOT_FOUND
+    );
   }
 
   // Kiểm tra xem đã có phiên Live nào đang diễn ra hay chưa
-  const existingActive = await LiveSession.findOne({ classId, status: "Live", isDeleted: false }).lean();
+  const existingActive = await LiveSession.findOne({
+    classId,
+    status: "Live",
+    isDeleted: false,
+  }).lean();
   if (existingActive) {
     throw new LiveError(
       "Lớp học đã có một buổi học trực tuyến đang diễn ra.",
@@ -36,9 +53,12 @@ export const createSessionService = async ({ classId, title, scheduledStart, sch
 
   // Khởi tạo Counter nếu class chưa từng được cấp (Migration gracefully)
   if (classInfo.nextLiveSessionNumber === undefined) {
-    const lastSession = await LiveSession.findOne({ classId }).sort({ sessionNumber: -1 }).select("sessionNumber").lean();
+    const lastSession = await LiveSession.findOne({ classId })
+      .sort({ sessionNumber: -1 })
+      .select("sessionNumber")
+      .lean();
     const currentMax = lastSession?.sessionNumber || 0;
-    
+
     // Set initial value only if it still doesn't exist to prevent race on migration itself
     await classModel.updateOne(
       { _id: classId, nextLiveSessionNumber: { $exists: false } },
@@ -74,7 +94,10 @@ export const createSessionService = async ({ classId, title, scheduledStart, sch
   });
 
   // Re-populate creator info
-  const populatedSession = await LiveSession.findById(session._id).populate("createdBy", "fullName name email");
+  const populatedSession = await LiveSession.findById(session._id).populate(
+    "createdBy",
+    "fullName name email"
+  );
 
   if (io) {
     io.to(`room_class_${classId}`).emit("LIVE_SESSION_STARTED", {
@@ -91,12 +114,14 @@ export const createSessionService = async ({ classId, title, scheduledStart, sch
   }
 
   // Bắn thông báo realtime cho Student (chạy bất đồng bộ, không chờ)
-  notificationService.notifyLiveSessionCreated({
-    session: session,
-    classInfo: classInfo,
-    teacherInfo: populatedSession.createdBy,
-    io: io
-  }).catch(err => console.error("❌ Notification Error in createSessionService:", err));
+  notificationService
+    .notifyLiveSessionCreated({
+      session: session,
+      classInfo: classInfo,
+      teacherInfo: populatedSession.createdBy,
+      io: io,
+    })
+    .catch((err) => console.error("❌ Notification Error in createSessionService:", err));
 
   return mapLiveSessionResponse(populatedSession);
 };
@@ -125,7 +150,11 @@ export const getSessionDetailService = async (sessionId) => {
     .lean();
 
   if (!session) {
-    throw new LiveError("Buổi học trực tuyến không tồn tại hoặc đã bị xóa!", 404, LIVE_ERROR_CODES.SESSION_NOT_FOUND);
+    throw new LiveError(
+      "Buổi học trực tuyến không tồn tại hoặc đã bị xóa!",
+      404,
+      LIVE_ERROR_CODES.SESSION_NOT_FOUND
+    );
   }
 
   return mapLiveSessionResponse(session);
@@ -183,7 +212,11 @@ export const endSessionService = async ({ sessionId, classId, userId, io }) => {
     }
     queryFilter.classId = classId;
   } else {
-    throw new LiveError("Cần cung cấp sessionId hoặc classId để kết thúc buổi học!", 400, LIVE_ERROR_CODES.INVALID_SESSION_ID);
+    throw new LiveError(
+      "Cần cung cấp sessionId hoặc classId để kết thúc buổi học!",
+      400,
+      LIVE_ERROR_CODES.INVALID_SESSION_ID
+    );
   }
 
   const session = await LiveSession.findOneAndUpdate(
@@ -197,7 +230,11 @@ export const endSessionService = async ({ sessionId, classId, userId, io }) => {
   ).populate("createdBy endedBy", "fullName name email");
 
   if (!session) {
-    throw new LiveError("Không có buổi học trực tuyến nào đang diễn ra để kết thúc.", 404, LIVE_ERROR_CODES.SESSION_NOT_ACTIVE);
+    throw new LiveError(
+      "Không có buổi học trực tuyến nào đang diễn ra để kết thúc.",
+      404,
+      LIVE_ERROR_CODES.SESSION_NOT_ACTIVE
+    );
   }
 
   const targetClassId = session.classId?.toString();
@@ -214,28 +251,30 @@ export const endSessionService = async ({ sessionId, classId, userId, io }) => {
 
   // Bắn thông báo realtime (Session Ended)
   const classInfo = await classModel.findById(targetClassId).lean();
-  notificationService.notifyLiveSessionEnded({
-    session,
-    classInfo,
-    teacherInfo: session.endedBy,
-    io
-  }).catch(err => console.error("❌ Notification Error in notifyLiveSessionEnded:", err));
+  notificationService
+    .notifyLiveSessionEnded({
+      session,
+      classInfo,
+      teacherInfo: session.endedBy,
+      io,
+    })
+    .catch((err) => console.error("❌ Notification Error in notifyLiveSessionEnded:", err));
 
   // Tự động đồng bộ Điểm danh (Attendance)
   try {
     if (session.participants && session.participants.length > 0) {
-      const records = session.participants.map(p => ({
+      const records = session.participants.map((p) => ({
         studentId: p.studentId,
         status: p.durationSeconds > 60 ? "Present" : "Absent", // Vd: > 1 phút tính là có mặt
-        note: `Điểm danh tự động từ Live Session (Tham gia ${Math.round(p.durationSeconds / 60)} phút)`
+        note: `Điểm danh tự động từ Live Session (Tham gia ${Math.round(p.durationSeconds / 60)} phút)`,
       }));
 
       // Gọi logic điểm danh
       await attendanceService.markAttendance({
         classId: targetClassId,
-        date: new Date().toISOString().split('T')[0], // Ngày hiện tại (chỉ lấy YYYY-MM-DD)
+        date: new Date().toISOString().split("T")[0], // Ngày hiện tại (chỉ lấy YYYY-MM-DD)
         records,
-        teacherId: userId
+        teacherId: userId,
       });
       console.log(`✅ [LIVE_SERVICE] Đã đồng bộ điểm danh cho ${records.length} học sinh.`);
     }

@@ -2,7 +2,9 @@ import { useState, useCallback } from "react";
 import type { IExtendedAnnouncement } from "../types/studentAnnouncement";
 
 export function useAnnouncementDetail(onMarkAsRead?: (id: string) => void) {
-  const [selectedAnnouncement, setSelectedAnnouncement] = useState<IExtendedAnnouncement | null>(null);
+  const [selectedAnnouncement, setSelectedAnnouncement] = useState<IExtendedAnnouncement | null>(
+    null
+  );
   const [isDetailOpen, setIsDetailOpen] = useState(false);
 
   const openDetail = useCallback(

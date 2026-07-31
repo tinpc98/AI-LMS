@@ -11,7 +11,13 @@ interface AIQuestionGeneratorModalProps {
   onSuccess: () => void;
 }
 
-export function AIQuestionGeneratorModal({ isOpen, onClose, lessonId, folderId, onSuccess }: AIQuestionGeneratorModalProps) {
+export function AIQuestionGeneratorModal({
+  isOpen,
+  onClose,
+  lessonId,
+  folderId,
+  onSuccess,
+}: AIQuestionGeneratorModalProps) {
   const [form] = Form.useForm();
   const [isGenerating, setIsGenerating] = useState(false);
 
@@ -21,17 +27,31 @@ export function AIQuestionGeneratorModal({ isOpen, onClose, lessonId, folderId, 
       return;
     }
 
-    const { title, questionCount, mcqCount, tfCount, shortCount, essayCount, easyCount, mediumCount, hardCount } = values;
+    const {
+      title,
+      questionCount,
+      mcqCount,
+      tfCount,
+      shortCount,
+      essayCount,
+      easyCount,
+      mediumCount,
+      hardCount,
+    } = values;
 
     const totalTypes = (mcqCount || 0) + (tfCount || 0) + (shortCount || 0) + (essayCount || 0);
     if (totalTypes !== questionCount) {
-      toast.error(`Tổng số câu hỏi phân bổ theo loại (${totalTypes}) phải bằng Tổng số câu (${questionCount})`);
+      toast.error(
+        `Tổng số câu hỏi phân bổ theo loại (${totalTypes}) phải bằng Tổng số câu (${questionCount})`
+      );
       return;
     }
 
     const totalDiff = (easyCount || 0) + (mediumCount || 0) + (hardCount || 0);
     if (totalDiff !== questionCount) {
-      toast.error(`Tổng số câu hỏi phân bổ theo độ khó (${totalDiff}) phải bằng Tổng số câu (${questionCount})`);
+      toast.error(
+        `Tổng số câu hỏi phân bổ theo độ khó (${totalDiff}) phải bằng Tổng số câu (${questionCount})`
+      );
       return;
     }
 
@@ -51,7 +71,7 @@ export function AIQuestionGeneratorModal({ isOpen, onClose, lessonId, folderId, 
           easy: easyCount || 0,
           medium: mediumCount || 0,
           hard: hardCount || 0,
-        }
+        },
       };
 
       await aiApi.generateQuestionSet(lessonId, payload);
@@ -96,7 +116,10 @@ export function AIQuestionGeneratorModal({ isOpen, onClose, lessonId, folderId, 
         }}
       >
         <div className="bg-indigo-50 border border-indigo-100 rounded-lg p-4 mb-6 text-sm text-indigo-800 flex flex-col gap-2">
-          <p>Hệ thống AI sẽ phân tích nội dung bài học để sinh ra bộ câu hỏi trắc nghiệm và tự luận phù hợp nhất.</p>
+          <p>
+            Hệ thống AI sẽ phân tích nội dung bài học để sinh ra bộ câu hỏi trắc nghiệm và tự luận
+            phù hợp nhất.
+          </p>
           <div className="flex items-center gap-1.5 text-amber-600 font-medium bg-amber-50 p-2 rounded border border-amber-100 w-fit">
             <span className="material-symbols-outlined text-[16px]">warning</span>
             Nội dung do AI đề xuất — giáo viên cần kiểm tra kỹ trước khi xuất bản.
@@ -151,8 +174,15 @@ export function AIQuestionGeneratorModal({ isOpen, onClose, lessonId, folderId, 
         </div>
 
         <div className="flex justify-end gap-3 mt-6">
-          <Button onClick={onClose} disabled={isGenerating}>Hủy</Button>
-          <Button type="primary" htmlType="submit" loading={isGenerating} className="bg-indigo-600 hover:bg-indigo-700">
+          <Button onClick={onClose} disabled={isGenerating}>
+            Hủy
+          </Button>
+          <Button
+            type="primary"
+            htmlType="submit"
+            loading={isGenerating}
+            className="bg-indigo-600 hover:bg-indigo-700"
+          >
             {isGenerating ? "Đang xử lý..." : "Bắt đầu sinh"}
           </Button>
         </div>

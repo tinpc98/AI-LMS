@@ -1,5 +1,11 @@
 import { Avatar, Button, Empty, Table, Tooltip } from "antd";
-import { EyeOutlined, EditOutlined, SyncOutlined, DeleteOutlined, UnlockOutlined } from "@ant-design/icons";
+import {
+  EyeOutlined,
+  EditOutlined,
+  SyncOutlined,
+  DeleteOutlined,
+  UnlockOutlined,
+} from "@ant-design/icons";
 import type { CourseRecord } from "./course.types";
 
 interface CourseTableProps {
@@ -84,7 +90,9 @@ const CourseTable = ({
       title: "Status",
       dataIndex: "status",
       key: "status",
-      render: (status: CourseRecord["status"]) => <span style={{ color: getStatusColor(status) }}>{status}</span>,
+      render: (status: CourseRecord["status"]) => (
+        <span style={{ color: getStatusColor(status) }}>{status}</span>
+      ),
     },
     {
       title: "Created At",
@@ -101,12 +109,21 @@ const CourseTable = ({
             <>
               {onRestore && (
                 <Tooltip title="Restore">
-                  <Button size="small" icon={<UnlockOutlined />} onClick={() => onRestore(record)} />
+                  <Button
+                    size="small"
+                    icon={<UnlockOutlined />}
+                    onClick={() => onRestore(record)}
+                  />
                 </Tooltip>
               )}
               {onPermanentDelete && (
                 <Tooltip title="Permanent Delete">
-                  <Button size="small" danger icon={<DeleteOutlined />} onClick={() => onPermanentDelete(record)} />
+                  <Button
+                    size="small"
+                    danger
+                    icon={<DeleteOutlined />}
+                    onClick={() => onPermanentDelete(record)}
+                  />
                 </Tooltip>
               )}
             </>
@@ -120,12 +137,21 @@ const CourseTable = ({
               </Tooltip>
               {onChangeStatus && (
                 <Tooltip title="Change Status">
-                  <Button size="small" icon={<SyncOutlined />} onClick={() => onChangeStatus(record)} />
+                  <Button
+                    size="small"
+                    icon={<SyncOutlined />}
+                    onClick={() => onChangeStatus(record)}
+                  />
                 </Tooltip>
               )}
               {onDelete && (
                 <Tooltip title="Delete">
-                  <Button size="small" danger icon={<DeleteOutlined />} onClick={() => onDelete(record)} />
+                  <Button
+                    size="small"
+                    danger
+                    icon={<DeleteOutlined />}
+                    onClick={() => onDelete(record)}
+                  />
                 </Tooltip>
               )}
             </>
@@ -144,9 +170,7 @@ const CourseTable = ({
       pagination={pagination}
       onChange={onChange}
       locale={{
-        emptyText: loading ? null : (
-          <Empty description="No courses found" />
-        ),
+        emptyText: loading ? null : <Empty description="No courses found" />,
       }}
     />
   );

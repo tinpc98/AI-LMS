@@ -1,6 +1,11 @@
 import React from "react";
 import { Drawer, Avatar, Tag, Typography, Space, Card, Divider } from "antd";
-import { NotificationOutlined, UserOutlined, ClockCircleOutlined, PaperClipOutlined } from "@ant-design/icons";
+import {
+  NotificationOutlined,
+  UserOutlined,
+  ClockCircleOutlined,
+  PaperClipOutlined,
+} from "@ant-design/icons";
 import type { IAnnouncement } from "../../../api/announcementApi";
 
 const { Text, Title, Paragraph } = Typography;
@@ -12,8 +17,8 @@ interface TeacherAnnouncementDetailDrawerProps {
   className?: string;
 }
 
-export const TeacherAnnouncementDetailDrawer: React.FC<TeacherAnnouncementDetailDrawerProps> = React.memo(
-  ({ open, onClose, announcement, className = "Lớp học" }) => {
+export const TeacherAnnouncementDetailDrawer: React.FC<TeacherAnnouncementDetailDrawerProps> =
+  React.memo(({ open, onClose, announcement, className = "Lớp học" }) => {
     const creatorObj = typeof announcement?.createdBy === "object" ? announcement.createdBy : null;
     const creatorName = creatorObj?.fullName || "Giáo viên";
     const creatorEmail = creatorObj?.email || "";
@@ -36,7 +41,10 @@ export const TeacherAnnouncementDetailDrawer: React.FC<TeacherAnnouncementDetail
           <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
             {/* Header Info */}
             <div>
-              <Title level={4} style={{ margin: 0, marginBottom: 8, color: "#1f1f1f", fontWeight: 700 }}>
+              <Title
+                level={4}
+                style={{ margin: 0, marginBottom: 8, color: "#1f1f1f", fontWeight: 700 }}
+              >
                 {announcement.title}
               </Title>
 
@@ -50,7 +58,11 @@ export const TeacherAnnouncementDetailDrawer: React.FC<TeacherAnnouncementDetail
                   <Text strong style={{ fontSize: 14, display: "block" }}>
                     {creatorName}
                   </Text>
-                  {creatorEmail && <Text type="secondary" style={{ fontSize: 12 }}>{creatorEmail}</Text>}
+                  {creatorEmail && (
+                    <Text type="secondary" style={{ fontSize: 12 }}>
+                      {creatorEmail}
+                    </Text>
+                  )}
                 </div>
               </Space>
             </div>
@@ -72,8 +84,19 @@ export const TeacherAnnouncementDetailDrawer: React.FC<TeacherAnnouncementDetail
             </Space>
 
             {/* Content Box */}
-            <Card style={{ backgroundColor: "#fafafa", borderRadius: 8, marginTop: 8 }} styles={{ body: { padding: 16 } }}>
-              <Paragraph style={{ fontSize: 15, lineHeight: 1.6, whiteSpace: "pre-wrap", margin: 0, color: "#262626" }}>
+            <Card
+              style={{ backgroundColor: "#fafafa", borderRadius: 8, marginTop: 8 }}
+              styles={{ body: { padding: 16 } }}
+            >
+              <Paragraph
+                style={{
+                  fontSize: 15,
+                  lineHeight: 1.6,
+                  whiteSpace: "pre-wrap",
+                  margin: 0,
+                  color: "#262626",
+                }}
+              >
                 {announcement.content}
               </Paragraph>
             </Card>
@@ -81,7 +104,10 @@ export const TeacherAnnouncementDetailDrawer: React.FC<TeacherAnnouncementDetail
             {/* Attachments */}
             {announcement.attachments && announcement.attachments.length > 0 && (
               <div style={{ marginTop: 8 }}>
-                <Text strong style={{ fontSize: 13, color: "#8c8c8c", display: "block", marginBottom: 8 }}>
+                <Text
+                  strong
+                  style={{ fontSize: 13, color: "#8c8c8c", display: "block", marginBottom: 8 }}
+                >
                   📎 TỆP ĐÍNH KÈM ({announcement.attachments.length}):
                 </Text>
                 <Space wrap size={8}>
@@ -112,7 +138,6 @@ export const TeacherAnnouncementDetailDrawer: React.FC<TeacherAnnouncementDetail
         ) : null}
       </Drawer>
     );
-  }
-);
+  });
 
 TeacherAnnouncementDetailDrawer.displayName = "TeacherAnnouncementDetailDrawer";

@@ -39,7 +39,14 @@ export const AIUsageChart: React.FC<AIUsageChartProps> = ({ data, loading }) => 
         }}
         styles={{ body: { padding: "24px" } }}
       >
-        <div style={{ marginBottom: "20px", display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+        <div
+          style={{
+            marginBottom: "20px",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "flex-start",
+          }}
+        >
           <div>
             <Title level={4} style={{ margin: 0, fontWeight: 700 }}>
               Sử dụng AI theo tính năng 🤖
@@ -76,12 +83,7 @@ export const AIUsageChart: React.FC<AIUsageChartProps> = ({ data, loading }) => 
                   labelStyle={{ fontWeight: 600, color: "#1f1f1f" }}
                 />
                 <Legend verticalAlign="top" height={36} align="right" />
-                <Bar
-                  name="Lượt sử dụng AI"
-                  dataKey="count"
-                  radius={[8, 8, 0, 0]}
-                  barSize={38}
-                >
+                <Bar name="Lượt sử dụng AI" dataKey="count" radius={[8, 8, 0, 0]} barSize={38}>
                   {data.map((entry, index) => (
                     <Cell key={`bar-cell-${index}`} fill={entry.fill} />
                   ))}

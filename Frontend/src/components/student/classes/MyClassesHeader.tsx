@@ -71,9 +71,7 @@ export const MyClassesHeader: React.FC<MyClassesHeaderProps> = React.memo(
                 >
                   <Space size={6} align="center">
                     <SyncOutlined spin style={{ color: "#52c41a", fontSize: 14 }} />
-                    <Text style={{ fontSize: 12, color: "#389e0d" }}>
-                      Đang học
-                    </Text>
+                    <Text style={{ fontSize: 12, color: "#389e0d" }}>Đang học</Text>
                   </Space>
                   <div style={{ fontSize: 18, fontWeight: 700, color: "#237804", marginTop: 2 }}>
                     {activeClassesCount}

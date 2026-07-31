@@ -37,9 +37,12 @@ export function useAnalytics(classId?: string) {
   const downloadReport = useCallback(() => {
     if (!classId) return;
     const url = analyticsApi.getTeacherExportUrl(classId);
-    
+
     // Add auth token to query params if needed or rely on cookies
-    const token = localStorage.getItem("token") || sessionStorage.getItem("token") || localStorage.getItem("accessToken");
+    const token =
+      localStorage.getItem("token") ||
+      sessionStorage.getItem("token") ||
+      localStorage.getItem("accessToken");
     window.open(`${url}?token=${token}`, "_blank");
   }, [classId]);
 
@@ -49,6 +52,6 @@ export function useAnalytics(classId?: string) {
     loading,
     fetchStudentDashboard,
     fetchTeacherDashboard,
-    downloadReport
+    downloadReport,
   };
 }

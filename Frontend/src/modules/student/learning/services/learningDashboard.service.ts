@@ -21,7 +21,9 @@ import {
 import type { LearningDashboardState } from "../types/learningDashboard.types";
 
 export const learningDashboardService = {
-  fetchDashboardData: async (userId?: string): Promise<Omit<LearningDashboardState, "loading" | "error">> => {
+  fetchDashboardData: async (
+    userId?: string
+  ): Promise<Omit<LearningDashboardState, "loading" | "error">> => {
     // 1. Fetch Enrolled Classes
     const classRes = await classApi.getMyClasses();
     const rawClasses = classRes.data?.data || classRes.data?.classList || classRes.data || [];
@@ -42,9 +44,19 @@ export const learningDashboardService = {
       const topClasses = classList.slice(0, 5);
 
       const [assResults, examResults, annResults] = await Promise.all([
-        Promise.all(topClasses.map((c: any) => assignmentApi.getAssignmentsByClass(c._id || c.id).catch(() => []))),
-        Promise.all(topClasses.map((c: any) => examApi.getExamsByClass(c._id || c.id).catch(() => []))),
-        Promise.all(topClasses.slice(0, 3).map((c: any) => announcementApi.getAnnouncementsByClass(c._id || c.id).catch(() => []))),
+        Promise.all(
+          topClasses.map((c: any) =>
+            assignmentApi.getAssignmentsByClass(c._id || c.id).catch(() => [])
+          )
+        ),
+        Promise.all(
+          topClasses.map((c: any) => examApi.getExamsByClass(c._id || c.id).catch(() => []))
+        ),
+        Promise.all(
+          topClasses
+            .slice(0, 3)
+            .map((c: any) => announcementApi.getAnnouncementsByClass(c._id || c.id).catch(() => []))
+        ),
       ]);
 
       assResults.forEach((list) => {
@@ -92,9 +104,16 @@ export const learningDashboardService = {
     };
 
     const learningScore = calculateLearningScore(statistics);
-    const learningInsight = calculateLearningInsights(statistics, learningScore, assignments, exams);
+    const learningInsight = calculateLearningInsights(
+      statistics,
+      learningScore,
+      assignments,
+      exams
+    );
 
-    const pendingAssignmentsCount = assignments.filter((a) => a.status === "PENDING" || a.status === "LATE").length;
+    const pendingAssignmentsCount = assignments.filter(
+      (a) => a.status === "PENDING" || a.status === "LATE"
+    ).length;
     const upcomingExamsCount = exams.filter((e) => e.status === "NOT_STARTED").length;
     const unreadAnnouncementsCount = announcements.filter((a) => !a.isRead).length;
 
@@ -107,8 +126,8 @@ export const learningDashboardService = {
       unreadAnnouncementsCount,
       overallProgressPercent: Math.round(
         attendance.attendanceRate * 0.3 +
-        assignmentCompletionRate * 0.35 +
-        examPerformanceRate * 0.35
+          assignmentCompletionRate * 0.35 +
+          examPerformanceRate * 0.35
       ),
     };
 

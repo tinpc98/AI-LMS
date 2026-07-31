@@ -36,20 +36,46 @@ afterEach(() => {
 
 describe("generateFingerprint", () => {
   it("là hàm thuần, cùng input luôn ra cùng hash", () => {
-    const h1 = aiKnowledgeIndexingService.generateFingerprint("nội dung", "gemini", "model-1", 768, "cfg1");
-    const h2 = aiKnowledgeIndexingService.generateFingerprint("nội dung", "gemini", "model-1", 768, "cfg1");
+    const h1 = aiKnowledgeIndexingService.generateFingerprint(
+      "nội dung",
+      "gemini",
+      "model-1",
+      768,
+      "cfg1"
+    );
+    const h2 = aiKnowledgeIndexingService.generateFingerprint(
+      "nội dung",
+      "gemini",
+      "model-1",
+      768,
+      "cfg1"
+    );
     expect(h1).toBe(h2);
     expect(h1).toMatch(/^[a-f0-9]{64}$/);
   });
 
   it("nội dung khác nhau → hash khác nhau", () => {
-    const h1 = aiKnowledgeIndexingService.generateFingerprint("nội dung A", "gemini", "model-1", 768, "cfg1");
-    const h2 = aiKnowledgeIndexingService.generateFingerprint("nội dung B", "gemini", "model-1", 768, "cfg1");
+    const h1 = aiKnowledgeIndexingService.generateFingerprint(
+      "nội dung A",
+      "gemini",
+      "model-1",
+      768,
+      "cfg1"
+    );
+    const h2 = aiKnowledgeIndexingService.generateFingerprint(
+      "nội dung B",
+      "gemini",
+      "model-1",
+      768,
+      "cfg1"
+    );
     expect(h1).not.toBe(h2);
   });
 
   it("trả về null nếu content rỗng/falsy", () => {
-    expect(aiKnowledgeIndexingService.generateFingerprint("", "gemini", "model-1", 768, "cfg1")).toBeNull();
+    expect(
+      aiKnowledgeIndexingService.generateFingerprint("", "gemini", "model-1", 768, "cfg1")
+    ).toBeNull();
   });
 });
 
@@ -62,7 +88,12 @@ describe("embedChunksSafely", () => {
     });
 
     const texts = ["a", "bb", "ccc", "dddd", "e"];
-    const results = await aiKnowledgeIndexingService.embedChunksSafely(texts, provider, DIMENSIONS, 2);
+    const results = await aiKnowledgeIndexingService.embedChunksSafely(
+      texts,
+      provider,
+      DIMENSIONS,
+      2
+    );
 
     expect(calls).toEqual(texts);
     expect(results.map((r) => r[0])).toEqual([1, 2, 3, 4, 1]);
@@ -85,10 +116,23 @@ describe("indexSource", () => {
     const embedSpy = vi.spyOn(provider, "generateEmbedding");
 
     const content = "Nội dung bài giảng ổn định";
-    const fingerprint = aiKnowledgeIndexingService.generateFingerprint(content, "fake-provider", "fake-model", DIMENSIONS, "max2400_ov300");
-    const existingSource = { _id: "src-old", sourceFingerprint: fingerprint, status: "ready", indexVersion: 1 };
+    const fingerprint = aiKnowledgeIndexingService.generateFingerprint(
+      content,
+      "fake-provider",
+      "fake-model",
+      DIMENSIONS,
+      "max2400_ov300"
+    );
+    const existingSource = {
+      _id: "src-old",
+      sourceFingerprint: fingerprint,
+      status: "ready",
+      indexVersion: 1,
+    };
 
-    vi.spyOn(AIKnowledgeSource, "findOne").mockReturnValue({ sort: () => Promise.resolve(existingSource) });
+    vi.spyOn(AIKnowledgeSource, "findOne").mockReturnValue({
+      sort: () => Promise.resolve(existingSource),
+    });
     const createSpy = vi.spyOn(AIKnowledgeSource, "create");
 
     const result = await aiKnowledgeIndexingService.indexSource(
@@ -96,19 +140,40 @@ describe("indexSource", () => {
       baseArgs({ provider })
     );
 
-    expect(result).toEqual({ status: "ready", message: "Đã index trước đó", source: existingSource });
+    expect(result).toEqual({
+      status: "ready",
+      message: "Đã index trước đó",
+      source: existingSource,
+    });
     expect(embedSpy).not.toHaveBeenCalled();
     expect(createSpy).not.toHaveBeenCalled();
   });
 
   it("force=true → vẫn re-index dù fingerprint không đổi", async () => {
     const content = "Nội dung bài giảng ổn định";
-    const fingerprint = aiKnowledgeIndexingService.generateFingerprint(content, "fake-provider", "fake-model", DIMENSIONS, "max2400_ov300");
-    const existingSource = { _id: "src-old", sourceFingerprint: fingerprint, status: "ready", indexVersion: 1 };
+    const fingerprint = aiKnowledgeIndexingService.generateFingerprint(
+      content,
+      "fake-provider",
+      "fake-model",
+      DIMENSIONS,
+      "max2400_ov300"
+    );
+    const existingSource = {
+      _id: "src-old",
+      sourceFingerprint: fingerprint,
+      status: "ready",
+      indexVersion: 1,
+    };
 
-    vi.spyOn(AIKnowledgeSource, "findOne").mockReturnValue({ sort: () => Promise.resolve(existingSource) });
+    vi.spyOn(AIKnowledgeSource, "findOne").mockReturnValue({
+      sort: () => Promise.resolve(existingSource),
+    });
 
-    const newSourceDoc = { _id: "src-new", status: "indexing", save: vi.fn().mockResolvedValue(true) };
+    const newSourceDoc = {
+      _id: "src-new",
+      status: "indexing",
+      save: vi.fn().mockResolvedValue(true),
+    };
     vi.spyOn(AIKnowledgeSource, "create").mockResolvedValue(newSourceDoc);
     vi.spyOn(AIKnowledgeChunk, "insertMany").mockResolvedValue([]);
     vi.spyOn(AIKnowledgeSource, "updateMany").mockResolvedValue({});
@@ -124,31 +189,59 @@ describe("indexSource", () => {
   });
 
   it("nội dung mới → tạo source version tiếp theo, insert chunks, chuyển version cũ thành superseded", async () => {
-    vi.spyOn(AIKnowledgeSource, "findOne").mockReturnValue({ sort: () => Promise.resolve({ _id: "src-old", indexVersion: 2, sourceFingerprint: "khac", status: "ready" }) });
+    vi.spyOn(AIKnowledgeSource, "findOne").mockReturnValue({
+      sort: () =>
+        Promise.resolve({
+          _id: "src-old",
+          indexVersion: 2,
+          sourceFingerprint: "khac",
+          status: "ready",
+        }),
+    });
 
-    const newSourceDoc = { _id: "src-new", status: "indexing", save: vi.fn().mockResolvedValue(true) };
+    const newSourceDoc = {
+      _id: "src-new",
+      status: "indexing",
+      save: vi.fn().mockResolvedValue(true),
+    };
     vi.spyOn(AIKnowledgeSource, "create").mockResolvedValue(newSourceDoc);
     const insertSpy = vi.spyOn(AIKnowledgeChunk, "insertMany").mockResolvedValue([]);
     const updateManySpy = vi.spyOn(AIKnowledgeSource, "updateMany").mockResolvedValue({});
-    vi.spyOn(AIKnowledgeSource, "find").mockReturnValue({ select: () => Promise.resolve([{ _id: "src-old" }]) });
+    vi.spyOn(AIKnowledgeSource, "find").mockReturnValue({
+      select: () => Promise.resolve([{ _id: "src-old" }]),
+    });
     const chunkUpdateManySpy = vi.spyOn(AIKnowledgeChunk, "updateMany").mockResolvedValue({});
 
     const result = await aiKnowledgeIndexingService.indexSource(
-      { sourceType: "lesson_text", sourceId: "s1", sourceName: "Test", content: "Nội dung hoàn toàn mới" },
+      {
+        sourceType: "lesson_text",
+        sourceId: "s1",
+        sourceName: "Test",
+        content: "Nội dung hoàn toàn mới",
+      },
       baseArgs()
     );
 
     expect(result.status).toBe("ready");
-    expect(AIKnowledgeSource.create).toHaveBeenCalledWith(expect.objectContaining({ indexVersion: 3, status: "indexing" }));
+    expect(AIKnowledgeSource.create).toHaveBeenCalledWith(
+      expect.objectContaining({ indexVersion: 3, status: "indexing" })
+    );
     expect(insertSpy).toHaveBeenCalled();
     expect(updateManySpy).toHaveBeenCalled();
-    expect(chunkUpdateManySpy).toHaveBeenCalledWith({ sourceId: { $in: ["src-old"] } }, { $set: { status: "superseded" } });
+    expect(chunkUpdateManySpy).toHaveBeenCalledWith(
+      { sourceId: { $in: ["src-old"] } },
+      { $set: { status: "superseded" } }
+    );
     expect(newSourceDoc.status).toBe("ready");
   });
 
   it("vector sai dimensions → đánh dấu source failed, xóa chunk mồ côi, ném lỗi", async () => {
     vi.spyOn(AIKnowledgeSource, "findOne").mockReturnValue({ sort: () => Promise.resolve(null) });
-    const newSourceDoc = { _id: "src-new", status: "indexing", save: vi.fn().mockResolvedValue(true) };
+    const newSourceDoc = {
+      _id: "src-new",
+      status: "indexing",
+      save: vi.fn().mockResolvedValue(true),
+    };
     vi.spyOn(AIKnowledgeSource, "create").mockResolvedValue(newSourceDoc);
     const deleteManySpy = vi.spyOn(AIKnowledgeChunk, "deleteMany").mockResolvedValue({});
 
@@ -156,7 +249,12 @@ describe("indexSource", () => {
 
     await expect(
       aiKnowledgeIndexingService.indexSource(
-        { sourceType: "lesson_text", sourceId: "s1", sourceName: "Test", content: "Nội dung bất kỳ" },
+        {
+          sourceType: "lesson_text",
+          sourceId: "s1",
+          sourceName: "Test",
+          content: "Nội dung bất kỳ",
+        },
         baseArgs({ provider: badProvider })
       )
     ).rejects.toThrow(/dimensions/i);
@@ -167,7 +265,11 @@ describe("indexSource", () => {
 
   it("vector chứa NaN → đánh dấu source failed, ném lỗi", async () => {
     vi.spyOn(AIKnowledgeSource, "findOne").mockReturnValue({ sort: () => Promise.resolve(null) });
-    const newSourceDoc = { _id: "src-new", status: "indexing", save: vi.fn().mockResolvedValue(true) };
+    const newSourceDoc = {
+      _id: "src-new",
+      status: "indexing",
+      save: vi.fn().mockResolvedValue(true),
+    };
     vi.spyOn(AIKnowledgeSource, "create").mockResolvedValue(newSourceDoc);
     vi.spyOn(AIKnowledgeChunk, "deleteMany").mockResolvedValue({});
 
@@ -175,7 +277,12 @@ describe("indexSource", () => {
 
     await expect(
       aiKnowledgeIndexingService.indexSource(
-        { sourceType: "lesson_text", sourceId: "s1", sourceName: "Test", content: "Nội dung bất kỳ" },
+        {
+          sourceType: "lesson_text",
+          sourceId: "s1",
+          sourceName: "Test",
+          content: "Nội dung bất kỳ",
+        },
         baseArgs({ provider: nanProvider })
       )
     ).rejects.toThrow(/NaN|Infinity/i);
@@ -185,14 +292,23 @@ describe("indexSource", () => {
 
   it("insertMany thất bại → dọn dẹp chunk mồ côi rồi ném lại lỗi gốc", async () => {
     vi.spyOn(AIKnowledgeSource, "findOne").mockReturnValue({ sort: () => Promise.resolve(null) });
-    const newSourceDoc = { _id: "src-new", status: "indexing", save: vi.fn().mockResolvedValue(true) };
+    const newSourceDoc = {
+      _id: "src-new",
+      status: "indexing",
+      save: vi.fn().mockResolvedValue(true),
+    };
     vi.spyOn(AIKnowledgeSource, "create").mockResolvedValue(newSourceDoc);
     vi.spyOn(AIKnowledgeChunk, "insertMany").mockRejectedValue(new Error("Mongo insert lỗi"));
     const deleteManySpy = vi.spyOn(AIKnowledgeChunk, "deleteMany").mockResolvedValue({});
 
     await expect(
       aiKnowledgeIndexingService.indexSource(
-        { sourceType: "lesson_text", sourceId: "s1", sourceName: "Test", content: "Nội dung bất kỳ" },
+        {
+          sourceType: "lesson_text",
+          sourceId: "s1",
+          sourceName: "Test",
+          content: "Nội dung bất kỳ",
+        },
         baseArgs()
       )
     ).rejects.toThrow("Mongo insert lỗi");
@@ -212,7 +328,9 @@ describe("checkEmbeddingConfigConsistency", () => {
   });
 
   it("chưa có chunk nào trong DB → coi là consistent (không có gì để so sánh)", async () => {
-    vi.spyOn(AIKnowledgeChunk, "findOne").mockReturnValue({ select: () => ({ lean: () => Promise.resolve(null) }) });
+    vi.spyOn(AIKnowledgeChunk, "findOne").mockReturnValue({
+      select: () => ({ lean: () => Promise.resolve(null) }),
+    });
 
     const result = await aiKnowledgeIndexingService.checkEmbeddingConfigConsistency();
     expect(result).toEqual({ consistent: true, reason: "no_existing_chunks" });
@@ -221,7 +339,10 @@ describe("checkEmbeddingConfigConsistency", () => {
   it("dimensions env khớp với dữ liệu đã index → consistent, không cảnh báo", async () => {
     process.env.AI_EMBEDDING_DIMENSIONS = "768";
     vi.spyOn(AIKnowledgeChunk, "findOne").mockReturnValue({
-      select: () => ({ lean: () => Promise.resolve({ embeddingDimensions: 768, embeddingModel: "gemini-embedding-2" }) }),
+      select: () => ({
+        lean: () =>
+          Promise.resolve({ embeddingDimensions: 768, embeddingModel: "gemini-embedding-2" }),
+      }),
     });
     const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
 
@@ -233,7 +354,10 @@ describe("checkEmbeddingConfigConsistency", () => {
   it("dimensions env LỆCH với dữ liệu đã index → không consistent, có cảnh báo console.warn", async () => {
     process.env.AI_EMBEDDING_DIMENSIONS = "1536";
     vi.spyOn(AIKnowledgeChunk, "findOne").mockReturnValue({
-      select: () => ({ lean: () => Promise.resolve({ embeddingDimensions: 768, embeddingModel: "gemini-embedding-2" }) }),
+      select: () => ({
+        lean: () =>
+          Promise.resolve({ embeddingDimensions: 768, embeddingModel: "gemini-embedding-2" }),
+      }),
     });
     const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
 

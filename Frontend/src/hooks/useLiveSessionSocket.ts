@@ -83,7 +83,9 @@ export function useLiveSessionSocket({
       if (data?.classId && data.classId !== classId) return;
 
       if (!isTeacher) {
-        toast.info(`📢 Lớp học trực tuyến "${data.title || "Buổi học"}" vừa bắt đầu! Bạn có thể tham gia ngay.`);
+        toast.info(
+          `📢 Lớp học trực tuyến "${data.title || "Buổi học"}" vừa bắt đầu! Bạn có thể tham gia ngay.`
+        );
       }
 
       if (onStartedRef.current) {

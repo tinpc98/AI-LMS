@@ -28,7 +28,15 @@ export default function HomePageTeacher() {
   } = useTeacherDashboardQuery();
 
   return (
-    <div style={{ padding: "24px", maxWidth: 1400, margin: "0 auto", backgroundColor: "#f8f9fa", minHeight: "100vh" }}>
+    <div
+      style={{
+        padding: "24px",
+        maxWidth: 1400,
+        margin: "0 auto",
+        backgroundColor: "#f8f9fa",
+        minHeight: "100vh",
+      }}
+    >
       {/* 1. Header Section */}
       <TeacherWelcomeHeader
         fullName={user?.fullName}
@@ -46,7 +54,13 @@ export default function HomePageTeacher() {
           type="error"
           showIcon
           action={
-            <Button size="small" type="primary" danger icon={<ReloadOutlined />} onClick={() => refetch()}>
+            <Button
+              size="small"
+              type="primary"
+              danger
+              icon={<ReloadOutlined />}
+              onClick={() => refetch()}
+            >
               Thử lại
             </Button>
           }

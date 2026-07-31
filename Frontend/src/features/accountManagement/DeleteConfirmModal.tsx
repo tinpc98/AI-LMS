@@ -7,7 +7,12 @@ interface DeleteConfirmModalProps {
   onCancel: () => void;
 }
 
-const DeleteConfirmModal = ({ open, accountName, onConfirm, onCancel }: DeleteConfirmModalProps) => {
+const DeleteConfirmModal = ({
+  open,
+  accountName,
+  onConfirm,
+  onCancel,
+}: DeleteConfirmModalProps) => {
   return (
     <Modal
       open={open}
@@ -17,7 +22,8 @@ const DeleteConfirmModal = ({ open, accountName, onConfirm, onCancel }: DeleteCo
       onOk={onConfirm}
       onCancel={onCancel}
     >
-      Are you sure you want to delete <strong>{accountName || "this account"}</strong>? This action cannot be undone.
+      Are you sure you want to delete <strong>{accountName || "this account"}</strong>? This action
+      cannot be undone.
     </Modal>
   );
 };

@@ -26,7 +26,15 @@ QUY TẮC BẮT BUỘC:
 4. LƯU Ý QUAN TRỌNG: Đây CHỈ LÀ ĐIỂM ĐỀ XUẤT. AI KHÔNG CÓ QUYỀN cập nhật điểm chính thức. Quyết định cuối cùng thuộc về giáo viên.
 5. Nếu thiếu dữ liệu hoặc có vấn đề, hãy thêm mô tả vào mảng "warnings".`,
 
-  buildPrompt: ({ questionContent, questionType = "essay", studentAnswer, referenceAnswer, rubric, maxScore = 10.0, language = "vi" }) => {
+  buildPrompt: ({
+    questionContent,
+    questionType = "essay",
+    studentAnswer,
+    referenceAnswer,
+    rubric,
+    maxScore = 10.0,
+    language = "vi",
+  }) => {
     return `Hãy chấm bài làm sau (Ngôn ngữ: ${language}):
 LOẠI CÂU HỎI: ${questionType}
 CÂU HỎI: ${questionContent}

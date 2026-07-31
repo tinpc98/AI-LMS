@@ -1,4 +1,17 @@
-import { Button, Card, Col, Empty, Input, Row, Select, Statistic, Table, Tag, Tooltip, Typography } from "antd";
+import {
+  Button,
+  Card,
+  Col,
+  Empty,
+  Input,
+  Row,
+  Select,
+  Statistic,
+  Table,
+  Tag,
+  Tooltip,
+  Typography,
+} from "antd";
 import {
   FilePdfOutlined,
   FileWordOutlined,
@@ -14,7 +27,12 @@ import {
   CloseCircleOutlined,
   BookOutlined,
 } from "@ant-design/icons";
-import type { KnowledgeCategory, KnowledgeDocument, KnowledgeFileType, KnowledgeStatus } from "../types/aiManagement.types";
+import type {
+  KnowledgeCategory,
+  KnowledgeDocument,
+  KnowledgeFileType,
+  KnowledgeStatus,
+} from "../types/aiManagement.types";
 
 interface KnowledgeTableProps {
   data: KnowledgeDocument[];
@@ -48,11 +66,23 @@ const getFileIcon = (fileType: KnowledgeFileType) => {
 const getStatusTag = (status: KnowledgeStatus) => {
   switch (status) {
     case "Indexed":
-      return <Tag color="green" icon={<CheckCircleOutlined />}>Indexed</Tag>;
+      return (
+        <Tag color="green" icon={<CheckCircleOutlined />}>
+          Indexed
+        </Tag>
+      );
     case "Pending":
-      return <Tag color="orange" icon={<ClockCircleOutlined />}>Pending</Tag>;
+      return (
+        <Tag color="orange" icon={<ClockCircleOutlined />}>
+          Pending
+        </Tag>
+      );
     case "Failed":
-      return <Tag color="red" icon={<CloseCircleOutlined />}>Failed</Tag>;
+      return (
+        <Tag color="red" icon={<CloseCircleOutlined />}>
+          Failed
+        </Tag>
+      );
   }
 };
 
@@ -145,7 +175,12 @@ const KnowledgeTable = ({
             />
           </Tooltip>
           <Tooltip title="Delete Document">
-            <Button size="small" danger icon={<DeleteOutlined />} onClick={() => onDelete(record.id)} />
+            <Button
+              size="small"
+              danger
+              icon={<DeleteOutlined />}
+              onClick={() => onDelete(record.id)}
+            />
           </Tooltip>
         </div>
       ),
@@ -237,7 +272,15 @@ const KnowledgeTable = ({
           />
         </Col>
         <Col xs={24} sm={12} md={3}>
-          <Button icon={<ReloadOutlined />} onClick={() => { onSearchChange(""); onCategoryFilterChange("All"); onStatusFilterChange("All"); }} block>
+          <Button
+            icon={<ReloadOutlined />}
+            onClick={() => {
+              onSearchChange("");
+              onCategoryFilterChange("All");
+              onStatusFilterChange("All");
+            }}
+            block
+          >
             Reset
           </Button>
         </Col>

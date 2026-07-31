@@ -43,15 +43,15 @@ export const exportClassReportCSV = async (req, res) => {
 
     // Lấy ranking (có đủ điểm số các thành phần)
     const ranking = await learningRankingService.getClassRanking(classId, { limit: 10000 });
-    
+
     let csvData = "Rank,Student Name,Email,Lesson XP,Attendance XP,Activity XP,Grade XP,Total XP\n";
-    ranking.items.forEach(r => {
+    ranking.items.forEach((r) => {
       csvData += `${r.rank},"${r.fullName}","${r.email}",${r.lessonXP},${r.attendanceXP},${r.activityXP},${r.gradeXP},${r.totalXP}\n`;
     });
 
     res.setHeader("Content-Type", "text/csv; charset=utf-8");
     res.setHeader("Content-Disposition", `attachment; filename=Class_Report_${classId}.csv`);
-    return res.status(200).send(Buffer.from("\uFEFF" + csvData, 'utf-8')); // Add BOM cho Excel nhận UTF-8
+    return res.status(200).send(Buffer.from("\uFEFF" + csvData, "utf-8")); // Add BOM cho Excel nhận UTF-8
   } catch (error) {
     return sendError(res, error.message || "Lỗi khi xuất báo cáo", 500);
   }

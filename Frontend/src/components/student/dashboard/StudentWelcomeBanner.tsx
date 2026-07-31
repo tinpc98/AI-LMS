@@ -73,7 +73,9 @@ export const StudentWelcomeBanner: React.FC<StudentWelcomeBannerProps> = React.m
               <Avatar
                 size={64}
                 src={(user as any)?.avatar || undefined}
-                icon={!(user as any)?.avatar ? <UserOutlined style={{ fontSize: 32 }} /> : undefined}
+                icon={
+                  !(user as any)?.avatar ? <UserOutlined style={{ fontSize: 32 }} /> : undefined
+                }
                 style={{
                   backgroundColor: "rgba(255, 255, 255, 0.2)",
                   border: "2px solid rgba(255, 255, 255, 0.6)",

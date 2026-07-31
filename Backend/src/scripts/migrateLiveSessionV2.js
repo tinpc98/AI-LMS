@@ -15,9 +15,12 @@ dotenv.config();
 export async function migrateLiveSessionV2(options = {}) {
   const isApply = options.apply || process.argv.includes("--apply");
   const mode = isApply ? "apply" : "dry-run";
-  const reportFlag = options.report || process.argv.find((arg) => arg.startsWith("--report="))?.split("=")[1];
+  const reportFlag =
+    options.report || process.argv.find((arg) => arg.startsWith("--report="))?.split("=")[1];
 
-  console.log(`\n🔍 [MIGRATION_V2] Bắt đầu Migration LiveSession V2 ở chế độ: [${mode.toUpperCase()}]`);
+  console.log(
+    `\n🔍 [MIGRATION_V2] Bắt đầu Migration LiveSession V2 ở chế độ: [${mode.toUpperCase()}]`
+  );
 
   const report = {
     timestamp: new Date().toISOString(),
@@ -48,7 +51,8 @@ export async function migrateLiveSessionV2(options = {}) {
     });
 
     for (const session of missingRoomSessions) {
-      const generatedRoom = session.meetingRoomId || generateLiveSessionRoomName(session.classId, session._id);
+      const generatedRoom =
+        session.meetingRoomId || generateLiveSessionRoomName(session.classId, session._id);
       report.roomNamesAdded++;
 
       if (isApply) {
@@ -116,7 +120,12 @@ export async function migrateLiveSessionV2(options = {}) {
     // 4. Kiểm tra / Khởi tạo Indexes trên MongoDB
     if (isApply) {
       await LiveSession.syncIndexes();
-      report.indexesCreated.push("classId_1_status_1", "roomName_1_sparse", "classId_1_sessionNumber_unique", "classId_1_partial_status_Live");
+      report.indexesCreated.push(
+        "classId_1_status_1",
+        "roomName_1_sparse",
+        "classId_1_sessionNumber_unique",
+        "classId_1_partial_status_Live"
+      );
     }
 
     console.log(`\n📊 [MIGRATION_V2] Báo Cáo Migration (${mode.toUpperCase()}):`);

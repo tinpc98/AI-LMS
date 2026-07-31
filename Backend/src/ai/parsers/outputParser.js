@@ -10,7 +10,7 @@ export const cleanJsonString = (rawText) => {
   let cleaned = rawText.trim();
   // Strip markdown codeblock backticks
   cleaned = cleaned.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/i, "");
-  
+
   // Find first '{' or '[' and last '}' or ']'
   const firstBrace = cleaned.search(/[\{\[]/);
   const lastBrace = cleaned.search(/[\}\]][^}]*$/);
@@ -54,17 +54,33 @@ export const safeParseJSON = (rawText) => {
  */
 export const validateSummaryOutput = (parsedData) => {
   if (!parsedData || typeof parsedData !== "object") {
-    throw new AIError("Dữ liệu summary AI không phải là object hợp lệ", AIErrorCode.AI_OUTPUT_INVALID, 502);
+    throw new AIError(
+      "Dữ liệu summary AI không phải là object hợp lệ",
+      AIErrorCode.AI_OUTPUT_INVALID,
+      502
+    );
   }
 
-  if (!parsedData.summary || typeof parsedData.summary !== "string" || parsedData.summary.trim() === "") {
-    throw new AIError("AI Output thiếu trường 'summary' hoặc dữ liệu rỗng", AIErrorCode.AI_OUTPUT_INVALID, 502);
+  if (
+    !parsedData.summary ||
+    typeof parsedData.summary !== "string" ||
+    parsedData.summary.trim() === ""
+  ) {
+    throw new AIError(
+      "AI Output thiếu trường 'summary' hoặc dữ liệu rỗng",
+      AIErrorCode.AI_OUTPUT_INVALID,
+      502
+    );
   }
 
   return {
     summary: parsedData.summary.trim(),
-    keyPoints: Array.isArray(parsedData.keyPoints) ? parsedData.keyPoints.map((k) => String(k).trim()) : [],
-    suggestedReviewTopics: Array.isArray(parsedData.suggestedReviewTopics) ? parsedData.suggestedReviewTopics.map((t) => String(t).trim()) : [],
+    keyPoints: Array.isArray(parsedData.keyPoints)
+      ? parsedData.keyPoints.map((k) => String(k).trim())
+      : [],
+    suggestedReviewTopics: Array.isArray(parsedData.suggestedReviewTopics)
+      ? parsedData.suggestedReviewTopics.map((t) => String(t).trim())
+      : [],
   };
 };
 
@@ -73,11 +89,19 @@ export const validateSummaryOutput = (parsedData) => {
  */
 export const validateExamOutput = (parsedData, targetTotalPoints = 10.0) => {
   if (!parsedData || typeof parsedData !== "object") {
-    throw new AIError("Dữ liệu sinh đề AI không phải object hợp lệ", AIErrorCode.AI_OUTPUT_INVALID, 502);
+    throw new AIError(
+      "Dữ liệu sinh đề AI không phải object hợp lệ",
+      AIErrorCode.AI_OUTPUT_INVALID,
+      502
+    );
   }
 
   if (!Array.isArray(parsedData.questions) || parsedData.questions.length === 0) {
-    throw new AIError("AI Output không chứa danh sách câu hỏi 'questions'", AIErrorCode.AI_OUTPUT_INVALID, 502);
+    throw new AIError(
+      "AI Output không chứa danh sách câu hỏi 'questions'",
+      AIErrorCode.AI_OUTPUT_INVALID,
+      502
+    );
   }
 
   const validQuestions = [];
@@ -85,7 +109,11 @@ export const validateExamOutput = (parsedData, targetTotalPoints = 10.0) => {
 
   for (const [idx, q] of parsedData.questions.entries()) {
     if (!q.content || typeof q.content !== "string" || q.content.trim() === "") {
-      throw new AIError(`Câu hỏi index [${idx}] thiếu nội dung (content)`, AIErrorCode.AI_OUTPUT_INVALID, 502);
+      throw new AIError(
+        `Câu hỏi index [${idx}] thiếu nội dung (content)`,
+        AIErrorCode.AI_OUTPUT_INVALID,
+        502
+      );
     }
 
     const type = String(q.type || "multiple_choice").toLowerCase();
@@ -94,7 +122,11 @@ export const validateExamOutput = (parsedData, targetTotalPoints = 10.0) => {
 
     if (type === "multiple_choice") {
       if (!Array.isArray(q.options) || q.options.length < 2) {
-        throw new AIError(`Câu hỏi trắc nghiệm [${idx}] phải có tối thiểu 2 đáp án (options)`, AIErrorCode.AI_OUTPUT_INVALID, 502);
+        throw new AIError(
+          `Câu hỏi trắc nghiệm [${idx}] phải có tối thiểu 2 đáp án (options)`,
+          AIErrorCode.AI_OUTPUT_INVALID,
+          502
+        );
       }
 
       // Ensure option IDs
@@ -153,14 +185,22 @@ export const validateExamOutput = (parsedData, targetTotalPoints = 10.0) => {
  */
 export const validateGradingOutput = (parsedData, maxAllowedScore = 10.0) => {
   if (!parsedData || typeof parsedData !== "object") {
-    throw new AIError("Dữ liệu chấm bài AI không phải object hợp lệ", AIErrorCode.AI_OUTPUT_INVALID, 502);
+    throw new AIError(
+      "Dữ liệu chấm bài AI không phải object hợp lệ",
+      AIErrorCode.AI_OUTPUT_INVALID,
+      502
+    );
   }
 
-  let suggestedScore = typeof parsedData.suggestedScore === "number" ? parsedData.suggestedScore : 0;
+  let suggestedScore =
+    typeof parsedData.suggestedScore === "number" ? parsedData.suggestedScore : 0;
   if (suggestedScore < 0) suggestedScore = 0;
   if (suggestedScore > maxAllowedScore) suggestedScore = maxAllowedScore;
 
-  const confidence = typeof parsedData.confidence === "number" ? Math.min(Math.max(parsedData.confidence, 0), 1) : 0.8;
+  const confidence =
+    typeof parsedData.confidence === "number"
+      ? Math.min(Math.max(parsedData.confidence, 0), 1)
+      : 0.8;
 
   return {
     suggestedScore: Number(suggestedScore.toFixed(2)),

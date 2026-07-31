@@ -1,11 +1,32 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
-import { Modal, Table, Avatar, Radio, Input, Button, Space, Typography, Progress, Alert } from "antd";
+import {
+  Modal,
+  Table,
+  Avatar,
+  Radio,
+  Input,
+  Button,
+  Space,
+  Typography,
+  Progress,
+  Alert,
+} from "antd";
 import type { ColumnsType } from "antd/es/table";
-import { UserOutlined, SaveOutlined, CheckCircleOutlined, CloseCircleOutlined, ClockCircleOutlined } from "@ant-design/icons";
+import {
+  UserOutlined,
+  SaveOutlined,
+  CheckCircleOutlined,
+  CloseCircleOutlined,
+  ClockCircleOutlined,
+} from "@ant-design/icons";
 import dayjs from "dayjs";
 import { attendanceApi } from "../../../api/attendanceApi";
 import { toast } from "../../../utils/toast";
-import type { AttendanceStatus, IStudentAttendanceRecord, IVirtualSession } from "../../../interface/attendanceInterface";
+import type {
+  AttendanceStatus,
+  IStudentAttendanceRecord,
+  IVirtualSession,
+} from "../../../interface/attendanceInterface";
 
 const { Text } = Typography;
 
@@ -17,7 +38,13 @@ interface AttendancePopupProps {
   onSaved: () => void;
 }
 
-export const AttendancePopup: React.FC<AttendancePopupProps> = ({ open, onClose, session, students, onSaved }) => {
+export const AttendancePopup: React.FC<AttendancePopupProps> = ({
+  open,
+  onClose,
+  session,
+  students,
+  onSaved,
+}) => {
   const [records, setRecords] = useState<IStudentAttendanceRecord[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [saving, setSaving] = useState<boolean>(false);
@@ -50,11 +77,11 @@ export const AttendancePopup: React.FC<AttendancePopupProps> = ({ open, onClose,
     const end = dayjs(`${session.date}T${session.endTime}:00`);
     const diffMs = end.diff(currentTime);
     if (diffMs <= 0) return "00:00:00";
-    
+
     const h = Math.floor(diffMs / (1000 * 60 * 60));
     const m = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
     const s = Math.floor((diffMs % (1000 * 60)) / 1000);
-    return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+    return `${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
   }, [session, currentTime, isClosed, isUpcoming]);
 
   const fetchAttendance = useCallback(async () => {
@@ -69,7 +96,9 @@ export const AttendancePopup: React.FC<AttendancePopupProps> = ({ open, onClose,
         const sId = (studentObj?._id || st._id || st.studentId).toString();
 
         const foundRecord = existingRecords.find((rec: any) => {
-          const recStudentId = (typeof rec.studentId === "object" ? rec.studentId?._id : rec.studentId || "").toString();
+          const recStudentId = (
+            typeof rec.studentId === "object" ? rec.studentId?._id : rec.studentId || ""
+          ).toString();
           return recStudentId === sId;
         });
 
@@ -142,8 +171,12 @@ export const AttendancePopup: React.FC<AttendancePopupProps> = ({ open, onClose,
         <Space size={12}>
           <Avatar src={record.avatar} icon={!record.avatar ? <UserOutlined /> : undefined} />
           <div>
-            <Text strong style={{ display: "block" }}>{record.fullName}</Text>
-            <Text type="secondary" style={{ fontSize: 12 }}>{record.email}</Text>
+            <Text strong style={{ display: "block" }}>
+              {record.fullName}
+            </Text>
+            <Text type="secondary" style={{ fontSize: 12 }}>
+              {record.email}
+            </Text>
           </div>
         </Space>
       ),
@@ -160,16 +193,40 @@ export const AttendancePopup: React.FC<AttendancePopupProps> = ({ open, onClose,
           size="middle"
           disabled={isClosed || isUpcoming}
         >
-          <Radio.Button value="Present" style={{ backgroundColor: record.status === "Present" ? "#52c41a" : undefined, color: record.status === "Present" ? "#fff" : undefined }}>
+          <Radio.Button
+            value="Present"
+            style={{
+              backgroundColor: record.status === "Present" ? "#52c41a" : undefined,
+              color: record.status === "Present" ? "#fff" : undefined,
+            }}
+          >
             Có mặt
           </Radio.Button>
-          <Radio.Button value="Late" style={{ backgroundColor: record.status === "Late" ? "#faad14" : undefined, color: record.status === "Late" ? "#fff" : undefined }}>
+          <Radio.Button
+            value="Late"
+            style={{
+              backgroundColor: record.status === "Late" ? "#faad14" : undefined,
+              color: record.status === "Late" ? "#fff" : undefined,
+            }}
+          >
             Đi muộn
           </Radio.Button>
-          <Radio.Button value="Excused" style={{ backgroundColor: record.status === "Excused" ? "#1890ff" : undefined, color: record.status === "Excused" ? "#fff" : undefined }}>
+          <Radio.Button
+            value="Excused"
+            style={{
+              backgroundColor: record.status === "Excused" ? "#1890ff" : undefined,
+              color: record.status === "Excused" ? "#fff" : undefined,
+            }}
+          >
             Có phép
           </Radio.Button>
-          <Radio.Button value="Absent" style={{ backgroundColor: record.status === "Absent" ? "#ff4d4f" : undefined, color: record.status === "Absent" ? "#fff" : undefined }}>
+          <Radio.Button
+            value="Absent"
+            style={{
+              backgroundColor: record.status === "Absent" ? "#ff4d4f" : undefined,
+              color: record.status === "Absent" ? "#fff" : undefined,
+            }}
+          >
             Vắng
           </Radio.Button>
         </Radio.Group>
@@ -189,25 +246,48 @@ export const AttendancePopup: React.FC<AttendancePopupProps> = ({ open, onClose,
     },
   ];
 
-  const presentCount = records.filter(r => r.status === "Present").length;
+  const presentCount = records.filter((r) => r.status === "Present").length;
   const totalCount = records.length;
   const rate = totalCount > 0 ? Math.round((presentCount / totalCount) * 100) : 0;
 
   return (
     <Modal
       title={
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", paddingRight: 24 }}>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "flex-start",
+            paddingRight: 24,
+          }}
+        >
           <div>
-            <Text strong style={{ fontSize: 18 }}>Điểm danh buổi học: {session ? dayjs(session.date).format("DD/MM/YYYY") : ""}</Text>
-            <br/>
-            <Text type="secondary" style={{ fontSize: 13, fontWeight: "normal" }}>Thời gian: {session?.startTime} - {session?.endTime}</Text>
+            <Text strong style={{ fontSize: 18 }}>
+              Điểm danh buổi học: {session ? dayjs(session.date).format("DD/MM/YYYY") : ""}
+            </Text>
+            <br />
+            <Text type="secondary" style={{ fontSize: 13, fontWeight: "normal" }}>
+              Thời gian: {session?.startTime} - {session?.endTime}
+            </Text>
           </div>
           {activeCountdown && (
-            <div style={{ textAlign: "right", background: "#fff1f0", padding: "4px 12px", borderRadius: 6, border: "1px solid #ffccc7" }}>
-              <Text type="danger" strong style={{ fontSize: 12, display: "block" }}>THỜI GIAN CÒN LẠI</Text>
+            <div
+              style={{
+                textAlign: "right",
+                background: "#fff1f0",
+                padding: "4px 12px",
+                borderRadius: 6,
+                border: "1px solid #ffccc7",
+              }}
+            >
+              <Text type="danger" strong style={{ fontSize: 12, display: "block" }}>
+                THỜI GIAN CÒN LẠI
+              </Text>
               <Space size={6}>
                 <ClockCircleOutlined style={{ color: "#ff4d4f" }} />
-                <Text type="danger" strong style={{ fontSize: 16, fontFamily: "monospace" }}>{activeCountdown}</Text>
+                <Text type="danger" strong style={{ fontSize: 16, fontFamily: "monospace" }}>
+                  {activeCountdown}
+                </Text>
               </Space>
             </div>
           )}
@@ -219,29 +299,55 @@ export const AttendancePopup: React.FC<AttendancePopupProps> = ({ open, onClose,
       footer={
         <Space>
           <Button onClick={onClose}>Đóng</Button>
-          <Button type="primary" icon={<SaveOutlined />} onClick={handleSave} loading={saving} disabled={isClosed || isUpcoming}>
+          <Button
+            type="primary"
+            icon={<SaveOutlined />}
+            onClick={handleSave}
+            loading={saving}
+            disabled={isClosed || isUpcoming}
+          >
             Lưu điểm danh
           </Button>
         </Space>
       }
     >
       {isClosed && (
-        <Alert message="Thời gian điểm danh đã kết thúc. Bạn không thể lưu điểm danh cho buổi học này nữa." type="error" showIcon style={{ marginBottom: 16 }} />
+        <Alert
+          message="Thời gian điểm danh đã kết thúc. Bạn không thể lưu điểm danh cho buổi học này nữa."
+          type="error"
+          showIcon
+          style={{ marginBottom: 16 }}
+        />
       )}
       {isUpcoming && (
-        <Alert message="Buổi học chưa bắt đầu." type="warning" showIcon style={{ marginBottom: 16 }} />
+        <Alert
+          message="Buổi học chưa bắt đầu."
+          type="warning"
+          showIcon
+          style={{ marginBottom: 16 }}
+        />
       )}
-      
+
       <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 16 }}>
         <Space>
-          <Button size="small" icon={<CheckCircleOutlined />} onClick={() => handleMarkAll("Present")} disabled={isClosed || isUpcoming}>
+          <Button
+            size="small"
+            icon={<CheckCircleOutlined />}
+            onClick={() => handleMarkAll("Present")}
+            disabled={isClosed || isUpcoming}
+          >
             Có mặt tất cả
           </Button>
-          <Button size="small" icon={<CloseCircleOutlined />} onClick={() => handleMarkAll("Absent")} disabled={isClosed || isUpcoming}>
+          <Button
+            size="small"
+            icon={<CloseCircleOutlined />}
+            onClick={() => handleMarkAll("Absent")}
+            disabled={isClosed || isUpcoming}
+          >
             Vắng tất cả
           </Button>
         </Space>
-        
+
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <Text>Tỷ lệ đi học: {rate}%</Text>
           <Progress type="circle" percent={rate} size={32} />

@@ -114,45 +114,28 @@ export const uploadExcelMiddleware = (req, res, next) => {
  * Import exam set from Excel file
  * Access: Teacher, Admin
  */
-router.post(
-  "/import-excel",
-  isTeacher,
-  uploadExcelMiddleware,
-  importExcelExamSet
-);
+router.post("/import-excel", isTeacher, uploadExcelMiddleware, importExcelExamSet);
 
 /**
  * PATCH /api/exam-sets/:examSetId/save-draft
  * Save current draft data for an exam set
  * Access: Owner, Admin, Shared EDIT
  */
-router.patch(
-  "/:examSetId/save-draft",
-  requireExamSetAccess("EDIT"),
-  saveDraftExamSet
-);
+router.patch("/:examSetId/save-draft", requireExamSetAccess("EDIT"), saveDraftExamSet);
 
 /**
  * POST /api/exam-sets/:examSetId/duplicate
  * Duplicate an existing exam set as a new draft owned by the current user
  * Access: Owner, Admin only
  */
-router.post(
-  "/:examSetId/duplicate",
-  requireExamSetEditAccess,
-  duplicateExamSet
-);
+router.post("/:examSetId/duplicate", requireExamSetEditAccess, duplicateExamSet);
 
 /**
  * POST /api/exam-sets/:examSetId/new-version
  * Create a new version of the latest exam set
  * Access: Owner, Admin only
  */
-router.post(
-  "/:examSetId/new-version",
-  requireExamSetEditAccess,
-  createNewExamSetVersion
-);
+router.post("/:examSetId/new-version", requireExamSetEditAccess, createNewExamSetVersion);
 
 /**
  * POST /api/exam-sets/:examSetId/shares
@@ -225,11 +208,7 @@ router.get(
  * Create a new draft version cloned from an older version (restore)
  * Access: Owner, Admin only
  */
-router.post(
-  "/:examSetId/restore",
-  requireExamSetEditAccess,
-  restoreExamSetVersion
-);
+router.post("/:examSetId/restore", requireExamSetEditAccess, restoreExamSetVersion);
 
 /**
  * GET /api/exam-sets/:id
@@ -281,11 +260,7 @@ router.patch(
  * Delete question in exam set
  * Access: Owner, Admin, Shared EDIT
  */
-router.delete(
-  "/:id/questions/:questionId",
-  requireExamSetAccess("EDIT"),
-  deleteQuestionInExamSet
-);
+router.delete("/:id/questions/:questionId", requireExamSetAccess("EDIT"), deleteQuestionInExamSet);
 
 /**
  * PATCH /api/exam-sets/:id

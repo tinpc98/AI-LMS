@@ -72,12 +72,7 @@ export const getFolderService = async (folderId, userId) => {
  * @param {number} limit - Items per page
  * @returns {Object} Paginated folders
  */
-export const getFolderListService = async (
-  userId,
-  parentFolderId = null,
-  page = 1,
-  limit = 10
-) => {
+export const getFolderListService = async (userId, parentFolderId = null, page = 1, limit = 10) => {
   const query = {
     ownerId: userId,
     isDeleted: false,

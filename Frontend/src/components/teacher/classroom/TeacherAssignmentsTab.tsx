@@ -83,7 +83,8 @@ export const TeacherAssignmentsTab: React.FC<TeacherAssignmentsTabProps> = React
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase().trim();
         result = result.filter(
-          (a) => a.title.toLowerCase().includes(q) || (a.description || "").toLowerCase().includes(q)
+          (a) =>
+            a.title.toLowerCase().includes(q) || (a.description || "").toLowerCase().includes(q)
         );
       }
 
@@ -97,10 +98,15 @@ export const TeacherAssignmentsTab: React.FC<TeacherAssignmentsTabProps> = React
 
       // Sort
       result.sort((a, b) => {
-        if (sortBy === "deadline-asc") return new Date(a.deadline).getTime() - new Date(b.deadline).getTime();
-        if (sortBy === "deadline-desc") return new Date(b.deadline).getTime() - new Date(a.deadline).getTime();
+        if (sortBy === "deadline-asc")
+          return new Date(a.deadline).getTime() - new Date(b.deadline).getTime();
+        if (sortBy === "deadline-desc")
+          return new Date(b.deadline).getTime() - new Date(a.deadline).getTime();
         // Default: newest
-        return new Date(b.createdAt || b.deadline).getTime() - new Date(a.createdAt || a.deadline).getTime();
+        return (
+          new Date(b.createdAt || b.deadline).getTime() -
+          new Date(a.createdAt || a.deadline).getTime()
+        );
       });
 
       return result;
@@ -131,14 +137,24 @@ export const TeacherAssignmentsTab: React.FC<TeacherAssignmentsTabProps> = React
               {(record as any).isAIGenerated && <Tag color="purple">🤖 AI Created</Tag>}
             </Space>
             {record.description && (
-              <Paragraph type="secondary" ellipsis={{ rows: 2 }} style={{ margin: "4px 0 0", fontSize: 13 }}>
+              <Paragraph
+                type="secondary"
+                ellipsis={{ rows: 2 }}
+                style={{ margin: "4px 0 0", fontSize: 13 }}
+              >
                 {record.description}
               </Paragraph>
             )}
             {record.attachments && record.attachments.length > 0 && (
               <Space size={8} style={{ marginTop: 6 }}>
                 {record.attachments.map((att: any, idx: number) => (
-                  <a key={att.publicId || idx} href={att.url} target="_blank" rel="noreferrer" style={{ fontSize: 12 }}>
+                  <a
+                    key={att.publicId || idx}
+                    href={att.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    style={{ fontSize: 12 }}
+                  >
                     <PaperClipOutlined /> {att.name || "Tệp đính kèm"}
                   </a>
                 ))}
@@ -161,7 +177,11 @@ export const TeacherAssignmentsTab: React.FC<TeacherAssignmentsTabProps> = React
                 <Text style={{ fontSize: 13 }}>{new Date(deadline).toLocaleString("vi-VN")}</Text>
               </Space>
               <div style={{ marginTop: 2 }}>
-                {isExpired ? <Tag color="error">🔴 Đã đóng / Hết hạn</Tag> : <Tag color="success">🟢 Đang mở nộp</Tag>}
+                {isExpired ? (
+                  <Tag color="error">🔴 Đã đóng / Hết hạn</Tag>
+                ) : (
+                  <Tag color="success">🟢 Đang mở nộp</Tag>
+                )}
               </div>
             </div>
           );
@@ -216,7 +236,16 @@ export const TeacherAssignmentsTab: React.FC<TeacherAssignmentsTabProps> = React
           }}
           styles={{ body: { padding: "24px 32px" } }}
         >
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 16, marginBottom: 20 }}>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              flexWrap: "wrap",
+              gap: 16,
+              marginBottom: 20,
+            }}
+          >
             <div>
               <Space size={12} align="center">
                 <FormOutlined style={{ fontSize: 28, color: "#fff" }} />
@@ -224,8 +253,16 @@ export const TeacherAssignmentsTab: React.FC<TeacherAssignmentsTabProps> = React
                   Quản lý Bài tập Lớp: {className}
                 </Title>
               </Space>
-              <Text style={{ color: "rgba(255,255,255,0.85)", display: "block", marginTop: 4, fontSize: 13 }}>
-                Giao bài tập, quản lý thời gian nộp bài và thực hiện chấm điểm, nhận xét cho học sinh trong lớp.
+              <Text
+                style={{
+                  color: "rgba(255,255,255,0.85)",
+                  display: "block",
+                  marginTop: 4,
+                  fontSize: 13,
+                }}
+              >
+                Giao bài tập, quản lý thời gian nộp bài và thực hiện chấm điểm, nhận xét cho học
+                sinh trong lớp.
               </Text>
             </div>
 
@@ -248,9 +285,20 @@ export const TeacherAssignmentsTab: React.FC<TeacherAssignmentsTabProps> = React
 
           <Row gutter={[16, 16]}>
             <Col xs={12} sm={8} md={6}>
-              <div style={{ backgroundColor: "rgba(255,255,255,0.15)", padding: "12px 16px", borderRadius: 12, border: "1px solid rgba(255,255,255,0.25)" }}>
+              <div
+                style={{
+                  backgroundColor: "rgba(255,255,255,0.15)",
+                  padding: "12px 16px",
+                  borderRadius: 12,
+                  border: "1px solid rgba(255,255,255,0.25)",
+                }}
+              >
                 <Statistic
-                  title={<Text style={{ color: "rgba(255,255,255,0.85)", fontSize: 12 }}>Tổng số bài tập</Text>}
+                  title={
+                    <Text style={{ color: "rgba(255,255,255,0.85)", fontSize: 12 }}>
+                      Tổng số bài tập
+                    </Text>
+                  }
                   value={stats.total}
                   styles={{ content: { color: "#fff", fontWeight: 700, fontSize: 20 } }}
                 />
@@ -258,9 +306,20 @@ export const TeacherAssignmentsTab: React.FC<TeacherAssignmentsTabProps> = React
             </Col>
 
             <Col xs={12} sm={8} md={6}>
-              <div style={{ backgroundColor: "rgba(255,255,255,0.15)", padding: "12px 16px", borderRadius: 12, border: "1px solid rgba(255,255,255,0.25)" }}>
+              <div
+                style={{
+                  backgroundColor: "rgba(255,255,255,0.15)",
+                  padding: "12px 16px",
+                  borderRadius: 12,
+                  border: "1px solid rgba(255,255,255,0.25)",
+                }}
+              >
                 <Statistic
-                  title={<Text style={{ color: "rgba(255,255,255,0.85)", fontSize: 12 }}>🟢 Đang mở nộp</Text>}
+                  title={
+                    <Text style={{ color: "rgba(255,255,255,0.85)", fontSize: 12 }}>
+                      🟢 Đang mở nộp
+                    </Text>
+                  }
                   value={stats.openCount}
                   prefix={<CheckCircleOutlined style={{ color: "#b7eb8f", marginRight: 6 }} />}
                   styles={{ content: { color: "#fff", fontWeight: 700, fontSize: 20 } }}
@@ -269,20 +328,44 @@ export const TeacherAssignmentsTab: React.FC<TeacherAssignmentsTabProps> = React
             </Col>
 
             <Col xs={12} sm={8} md={6}>
-              <div style={{ backgroundColor: "rgba(255,255,255,0.15)", padding: "12px 16px", borderRadius: 12, border: "1px solid rgba(255,255,255,0.25)" }}>
+              <div
+                style={{
+                  backgroundColor: "rgba(255,255,255,0.15)",
+                  padding: "12px 16px",
+                  borderRadius: 12,
+                  border: "1px solid rgba(255,255,255,0.25)",
+                }}
+              >
                 <Statistic
-                  title={<Text style={{ color: "rgba(255,255,255,0.85)", fontSize: 12 }}>🔴 Đã hết hạn</Text>}
+                  title={
+                    <Text style={{ color: "rgba(255,255,255,0.85)", fontSize: 12 }}>
+                      🔴 Đã hết hạn
+                    </Text>
+                  }
                   value={stats.closedCount}
-                  prefix={<ExclamationCircleOutlined style={{ color: "#ff9c6e", marginRight: 6 }} />}
+                  prefix={
+                    <ExclamationCircleOutlined style={{ color: "#ff9c6e", marginRight: 6 }} />
+                  }
                   styles={{ content: { color: "#fff", fontWeight: 700, fontSize: 20 } }}
                 />
               </div>
             </Col>
 
             <Col xs={12} sm={8} md={6}>
-              <div style={{ backgroundColor: "rgba(255,255,255,0.15)", padding: "12px 16px", borderRadius: 12, border: "1px solid rgba(255,255,255,0.25)" }}>
+              <div
+                style={{
+                  backgroundColor: "rgba(255,255,255,0.15)",
+                  padding: "12px 16px",
+                  borderRadius: 12,
+                  border: "1px solid rgba(255,255,255,0.25)",
+                }}
+              >
                 <Statistic
-                  title={<Text style={{ color: "rgba(255,255,255,0.85)", fontSize: 12 }}>🤖 Bài tập AI</Text>}
+                  title={
+                    <Text style={{ color: "rgba(255,255,255,0.85)", fontSize: 12 }}>
+                      🤖 Bài tập AI
+                    </Text>
+                  }
                   value={stats.aiGeneratedCount}
                   styles={{ content: { color: "#fff", fontWeight: 700, fontSize: 20 } }}
                 />
@@ -294,7 +377,15 @@ export const TeacherAssignmentsTab: React.FC<TeacherAssignmentsTabProps> = React
         {/* 2. Main Content: Toolbar & Table */}
         <Card
           title={
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                flexWrap: "wrap",
+                gap: 12,
+              }}
+            >
               <Space size={12} wrap>
                 <Input
                   placeholder="Tìm kiếm bài tập..."

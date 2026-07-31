@@ -1,6 +1,6 @@
 /**
  * Chuẩn hóa đáp án thành mảng các chuỗi ký tự sạch
- * @param {any} answer 
+ * @param {any} answer
  * @returns {string[]}
  */
 export const normalizeAnswer = (answer) => {
@@ -15,7 +15,7 @@ export const normalizeAnswer = (answer) => {
   } else if (typeof answer === "string") {
     const trimmed = answer.trim();
     if (!trimmed) return [];
-    
+
     // Thử parse nếu là JSON array string: '["A", "B"]'
     if (trimmed.startsWith("[") && trimmed.endsWith("]")) {
       try {
@@ -39,9 +39,7 @@ export const normalizeAnswer = (answer) => {
   }
 
   // Trim từng element, bỏ chuỗi rỗng và loại bỏ trùng lặp (Deduplicate)
-  const cleaned = list
-    .map((item) => String(item).trim())
-    .filter((item) => item.length > 0);
+  const cleaned = list.map((item) => String(item).trim()).filter((item) => item.length > 0);
 
   const unique = Array.from(new Set(cleaned));
   unique.sort(); // Sắp xếp theo thứ tự bảng chữ cái
@@ -51,8 +49,8 @@ export const normalizeAnswer = (answer) => {
 
 /**
  * So sánh hai đáp án (không phụ thuộc thứ tự các phần tử)
- * @param {any} correctAnswer 
- * @param {any} studentAnswer 
+ * @param {any} correctAnswer
+ * @param {any} studentAnswer
  * @returns {boolean}
  */
 export const compareAnswers = (correctAnswer, studentAnswer) => {

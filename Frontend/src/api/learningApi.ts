@@ -59,21 +59,34 @@ export interface IRankingResponse {
 const learningApi = {
   // Progress
   getStudentProgress: async (classId: string) => {
-    const response = await axiosClient.get<ILessonProgress[]>(`/api/learning/progress/class/${classId}`);
+    const response = await axiosClient.get<ILessonProgress[]>(
+      `/api/learning/progress/class/${classId}`
+    );
     return (response.data as any).data ?? response.data ?? [];
   },
-  updateLessonProgress: async (payload: { lessonId: string; classId: string; progress: number; durationSeconds?: number }) => {
+  updateLessonProgress: async (payload: {
+    lessonId: string;
+    classId: string;
+    progress: number;
+    durationSeconds?: number;
+  }) => {
     const response = await axiosClient.post<ILessonProgress>(`/api/learning/progress`, payload);
     return (response.data as any).data ?? response.data;
   },
 
   // Ranking
   getClassRanking: async (classId: string, params?: any) => {
-    const response = await axiosClient.get<IRankingResponse>(`/api/learning/ranking/class/${classId}`, { params });
+    const response = await axiosClient.get<IRankingResponse>(
+      `/api/learning/ranking/class/${classId}`,
+      { params }
+    );
     return (response.data as any).data ?? response.data;
   },
   getStudentRanking: async (classId: string, studentId: string = "me") => {
-    const response = await axiosClient.get<IStudentRank>(`/api/learning/ranking/student/${studentId}`, { params: { classId } });
+    const response = await axiosClient.get<IStudentRank>(
+      `/api/learning/ranking/student/${studentId}`,
+      { params: { classId } }
+    );
     return (response.data as any).data ?? response.data;
   },
 
@@ -83,7 +96,9 @@ const learningApi = {
     return (response.data as any).data ?? response.data ?? [];
   },
   getMyActivities: async (params?: { classId?: string }) => {
-    const response = await axiosClient.get<ILearningActivity[]>(`/api/learning/activities`, { params });
+    const response = await axiosClient.get<ILearningActivity[]>(`/api/learning/activities`, {
+      params,
+    });
     return (response.data as any).data ?? response.data ?? [];
   },
 };

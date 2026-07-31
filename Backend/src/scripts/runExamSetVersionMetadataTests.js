@@ -103,7 +103,11 @@ const tests = [
         },
       });
 
-      const folder = { _id: sourceExamSet.folderId, ownerId: sourceExamSet.ownerId, isDeleted: false };
+      const folder = {
+        _id: sourceExamSet.folderId,
+        ownerId: sourceExamSet.ownerId,
+        isDeleted: false,
+      };
       Folder.findOne = async () => folder;
 
       ExamSet.prototype.save = async function () {
@@ -113,7 +117,11 @@ const tests = [
         return this;
       };
 
-      const result = await duplicateExamSetService(sourceExamSet._id, "507f1f77bcf86cd799439011", "Teacher");
+      const result = await duplicateExamSetService(
+        sourceExamSet._id,
+        "507f1f77bcf86cd799439011",
+        "Teacher"
+      );
 
       ExamSet.findOne = originalFindOne;
       Folder.findOne = originalFolderFindOne;

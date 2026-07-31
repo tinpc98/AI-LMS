@@ -23,9 +23,7 @@ export const TodayClassesTable: React.FC<TodayClassesTableProps> = ({ classes, l
       key: "className",
       render: (text, record) => (
         <div>
-          <Text style={{ fontWeight: 600, color: "#1f1f1f", display: "block" }}>
-            {text}
-          </Text>
+          <Text style={{ fontWeight: 600, color: "#1f1f1f", display: "block" }}>{text}</Text>
           <Text type="secondary" style={{ fontSize: "12px" }}>
             {record.classCode}
           </Text>
@@ -84,11 +82,25 @@ export const TodayClassesTable: React.FC<TodayClassesTableProps> = ({ classes, l
         const percent = Math.round((current / max) * 100);
         return (
           <div style={{ width: 120 }}>
-            <div style={{ display: "flex", justifyContent: "space-between", fontSize: "12px", marginBottom: 2 }}>
-              <span>{current}/{max}</span>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                fontSize: "12px",
+                marginBottom: 2,
+              }}
+            >
+              <span>
+                {current}/{max}
+              </span>
               <span style={{ color: "#8c8c8c" }}>{percent}%</span>
             </div>
-            <Progress percent={percent} size="small" showInfo={false} strokeColor={percent >= 100 ? "#ff4d4f" : "#1677ff"} />
+            <Progress
+              percent={percent}
+              size="small"
+              showInfo={false}
+              strokeColor={percent >= 100 ? "#ff4d4f" : "#1677ff"}
+            />
           </div>
         );
       },
@@ -113,7 +125,11 @@ export const TodayClassesTable: React.FC<TodayClassesTableProps> = ({ classes, l
           color = "error";
           label = "Đã hủy";
         }
-        return <Tag color={color} style={{ borderRadius: "6px" }}>{label}</Tag>;
+        return (
+          <Tag color={color} style={{ borderRadius: "6px" }}>
+            {label}
+          </Tag>
+        );
       },
     },
     {
@@ -148,7 +164,16 @@ export const TodayClassesTable: React.FC<TodayClassesTableProps> = ({ classes, l
         }}
         styles={{ body: { padding: "24px" } }}
       >
-        <div style={{ marginBottom: "20px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "12px" }}>
+        <div
+          style={{
+            marginBottom: "20px",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            flexWrap: "wrap",
+            gap: "12px",
+          }}
+        >
           <div>
             <Title level={4} style={{ margin: 0, fontWeight: 700 }}>
               Danh sách lớp học hôm nay & lịch học 🗓️

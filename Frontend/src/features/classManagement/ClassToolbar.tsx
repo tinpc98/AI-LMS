@@ -11,7 +11,14 @@ interface ClassToolbarProps {
   learningModeOptions: Array<{ label: string; value: ClassLearningMode | "All" }>;
 }
 
-const ClassToolbar = ({ filters, onFiltersChange, onRefresh, onCreate, courseOptions, learningModeOptions }: ClassToolbarProps) => {
+const ClassToolbar = ({
+  filters,
+  onFiltersChange,
+  onRefresh,
+  onCreate,
+  courseOptions,
+  learningModeOptions,
+}: ClassToolbarProps) => {
   return (
     <Row gutter={[12, 12]} align="middle">
       <Col xs={24} md={8}>
@@ -29,7 +36,10 @@ const ClassToolbar = ({ filters, onFiltersChange, onRefresh, onCreate, courseOpt
           value={filters.courseId || undefined}
           allowClear
           onChange={(value) => onFiltersChange({ ...filters, courseId: value || "" })}
-          options={[{ label: "All Courses", value: "" }, ...courseOptions.map((item) => ({ label: item.label, value: item.id }))]}
+          options={[
+            { label: "All Courses", value: "" },
+            ...courseOptions.map((item) => ({ label: item.label, value: item.id })),
+          ]}
         />
       </Col>
       <Col xs={24} sm={12} md={4}>
@@ -37,7 +47,9 @@ const ClassToolbar = ({ filters, onFiltersChange, onRefresh, onCreate, courseOpt
           style={{ width: "100%" }}
           placeholder="Learning Mode"
           value={filters.learningMode}
-          onChange={(value: ClassLearningMode | "All") => onFiltersChange({ ...filters, learningMode: value })}
+          onChange={(value: ClassLearningMode | "All") =>
+            onFiltersChange({ ...filters, learningMode: value })
+          }
           options={learningModeOptions}
         />
       </Col>

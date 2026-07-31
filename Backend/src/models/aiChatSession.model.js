@@ -34,7 +34,7 @@ const aiChatSessionSchema = new mongoose.Schema(
     lastMessageAt: {
       type: Date,
       default: Date.now,
-    }
+    },
   },
   { timestamps: true }
 );

@@ -74,7 +74,10 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({ onRefresh, loa
               Xin chào Admin 👋
             </Title>
           </div>
-          <Text type="secondary" style={{ fontSize: "14px", display: "inline-flex", alignItems: "center", marginTop: 4 }}>
+          <Text
+            type="secondary"
+            style={{ fontSize: "14px", display: "inline-flex", alignItems: "center", marginTop: 4 }}
+          >
             <CalendarOutlined style={{ marginRight: 6, color: "#1677ff" }} />
             {capitalizedDate} — Hệ thống quản lý luyện thi THPT Quốc Gia
           </Text>

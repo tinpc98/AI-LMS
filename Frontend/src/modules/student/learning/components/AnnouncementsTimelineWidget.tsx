@@ -15,7 +15,8 @@ export const AnnouncementsTimelineWidget: React.FC<AnnouncementsTimelineWidgetPr
       <Card
         title={
           <span style={{ fontSize: 15, fontWeight: 700 }}>
-            <NotificationOutlined style={{ color: "#13c2c2", marginRight: 6 }} /> Thông báo mới nhất ({announcements.length})
+            <NotificationOutlined style={{ color: "#13c2c2", marginRight: 6 }} /> Thông báo mới nhất
+            ({announcements.length})
           </span>
         }
         style={{ borderRadius: 16, border: "1px solid #f0f0f0", marginBottom: 24 }}

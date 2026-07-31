@@ -2,7 +2,7 @@ import { Router } from "express";
 import {
   getStudentDashboard,
   getTeacherDashboard,
-  exportClassReportCSV
+  exportClassReportCSV,
 } from "../controllers/analytics.controller.js";
 import { verifyUser } from "../middlewares/auth.middleware.js";
 

@@ -15,7 +15,7 @@ class GamificationService {
         badgeType,
         title,
         description,
-        icon
+        icon,
       });
 
       return newBadge;

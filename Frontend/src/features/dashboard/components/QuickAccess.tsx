@@ -135,7 +135,10 @@ export const QuickAccess: React.FC = () => {
                 >
                   {item.badge && (
                     <div style={{ position: "absolute", top: 10, right: 10 }}>
-                      <Badge count={item.badge} style={{ backgroundColor: item.color, fontSize: "10px" }} />
+                      <Badge
+                        count={item.badge}
+                        style={{ backgroundColor: item.color, fontSize: "10px" }}
+                      />
                     </div>
                   )}
 
@@ -157,16 +160,38 @@ export const QuickAccess: React.FC = () => {
                       {iconMap[item.iconName]}
                     </div>
 
-                    <Title level={5} style={{ fontSize: "14px", margin: "0 0 6px 0", fontWeight: 600 }}>
+                    <Title
+                      level={5}
+                      style={{ fontSize: "14px", margin: "0 0 6px 0", fontWeight: 600 }}
+                    >
                       {item.title}
                     </Title>
 
-                    <Text type="secondary" style={{ fontSize: "12px", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
+                    <Text
+                      type="secondary"
+                      style={{
+                        fontSize: "12px",
+                        display: "-webkit-box",
+                        WebkitLineClamp: 2,
+                        WebkitBoxOrient: "vertical",
+                        overflow: "hidden",
+                      }}
+                    >
                       {item.description}
                     </Text>
                   </div>
 
-                  <div style={{ marginTop: 14, display: "flex", alignItems: "center", gap: 4, color: item.color, fontSize: "12px", fontWeight: 600 }}>
+                  <div
+                    style={{
+                      marginTop: 14,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 4,
+                      color: item.color,
+                      fontSize: "12px",
+                      fontWeight: 600,
+                    }}
+                  >
                     Mở ngay <ArrowRightOutlined style={{ fontSize: "10px" }} />
                   </div>
                 </Card>

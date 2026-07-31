@@ -24,7 +24,13 @@ class AttendanceService {
     }
 
     const { startDate, endDate, schedule } = classData;
-    if (!startDate || !endDate || !schedule || !Array.isArray(schedule.days) || schedule.days.length === 0) {
+    if (
+      !startDate ||
+      !endDate ||
+      !schedule ||
+      !Array.isArray(schedule.days) ||
+      schedule.days.length === 0
+    ) {
       return [];
     }
 
@@ -38,7 +44,7 @@ class AttendanceService {
 
     const existingRecords = await Attendance.find({ classId }).lean();
     const recordsByDate = {};
-    existingRecords.forEach(r => {
+    existingRecords.forEach((r) => {
       const dateStr = r.date.toISOString().split("T")[0];
       if (!recordsByDate[dateStr]) recordsByDate[dateStr] = [];
       recordsByDate[dateStr].push(r);
@@ -46,7 +52,7 @@ class AttendanceService {
 
     const sessions = [];
     const currentServerTime = new Date();
-    
+
     let current = new Date(start);
     current.setHours(0, 0, 0, 0);
     const loopEnd = new Date(end);
@@ -57,30 +63,30 @@ class AttendanceService {
         const dateStr = current.toISOString().split("T")[0];
         const startTimeStr = schedule.startTime || "00:00";
         const endTimeStr = schedule.endTime || "23:59";
-        
+
         // Parse time assuming local time GMT+7
         const sessionStart = new Date(`${dateStr}T${startTimeStr}:00+07:00`);
         const sessionEnd = new Date(`${dateStr}T${endTimeStr}:00+07:00`);
 
         let status = "Upcoming";
         const hasRecords = !!recordsByDate[dateStr] && recordsByDate[dateStr].length > 0;
-        
+
         if (currentServerTime > sessionEnd) {
           status = "Closed";
         } else if (currentServerTime >= sessionStart && currentServerTime <= sessionEnd) {
           status = hasRecords ? "Saved" : "Open";
         }
-        
+
         let presentCount = 0;
         let absentCount = 0;
         let lateCount = 0;
         let excusedCount = 0;
 
         if (hasRecords) {
-           presentCount = recordsByDate[dateStr].filter(r => r.status === "Present").length;
-           absentCount = recordsByDate[dateStr].filter(r => r.status === "Absent").length;
-           lateCount = recordsByDate[dateStr].filter(r => r.status === "Late").length;
-           excusedCount = recordsByDate[dateStr].filter(r => r.status === "Excused").length;
+          presentCount = recordsByDate[dateStr].filter((r) => r.status === "Present").length;
+          absentCount = recordsByDate[dateStr].filter((r) => r.status === "Absent").length;
+          lateCount = recordsByDate[dateStr].filter((r) => r.status === "Late").length;
+          excusedCount = recordsByDate[dateStr].filter((r) => r.status === "Excused").length;
         }
 
         sessions.push({
@@ -97,8 +103,8 @@ class AttendanceService {
             absent: absentCount,
             late: lateCount,
             excused: excusedCount,
-            total: presentCount + absentCount + lateCount + excusedCount
-          }
+            total: presentCount + absentCount + lateCount + excusedCount,
+          },
         });
       }
       current.setDate(current.getDate() + 1);
@@ -113,10 +119,11 @@ class AttendanceService {
       throw new Error("ID lớp học không hợp lệ!");
     }
 
-    const classData = await classModel.findById(classId)
+    const classData = await classModel
+      .findById(classId)
       .populate("students.studentId", "fullName email avatar")
       .lean();
-      
+
     if (!classData) {
       throw new Error("Lớp học không tồn tại!");
     }
@@ -129,27 +136,29 @@ class AttendanceService {
     // Lấy toàn bộ bản ghi điểm danh
     const records = await Attendance.find({ classId }).lean();
     const recordsMap = {};
-    records.forEach(r => {
+    records.forEach((r) => {
       const studentId = r.studentId.toString();
       const dateStr = r.date.toISOString().split("T")[0];
       if (!recordsMap[studentId]) recordsMap[studentId] = {};
       recordsMap[studentId][dateStr] = r;
     });
 
-    const students = (classData.students || []).map(s => {
-      const stu = s.studentId || {};
-      return {
-        _id: stu._id,
-        fullName: stu.fullName || "Học sinh",
-        email: stu.email || "",
-        avatar: stu.avatar || ""
-      };
-    }).filter(s => s._id);
+    const students = (classData.students || [])
+      .map((s) => {
+        const stu = s.studentId || {};
+        return {
+          _id: stu._id,
+          fullName: stu.fullName || "Học sinh",
+          email: stu.email || "",
+          avatar: stu.avatar || "",
+        };
+      })
+      .filter((s) => s._id);
 
     return {
       sessions,
       students,
-      records: recordsMap
+      records: recordsMap,
     };
   }
 

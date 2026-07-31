@@ -1,5 +1,22 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
-import { Drawer, Table, Avatar, Tag, Button, Typography, Space, Spin, Empty, Card, Row, Col, Statistic, Progress, Input, Select } from "antd";
+import {
+  Drawer,
+  Table,
+  Avatar,
+  Tag,
+  Button,
+  Typography,
+  Space,
+  Spin,
+  Empty,
+  Card,
+  Row,
+  Col,
+  Statistic,
+  Progress,
+  Input,
+  Select,
+} from "antd";
 import type { ColumnsType } from "antd/es/table";
 import {
   FileDoneOutlined,
@@ -71,9 +88,21 @@ export const TeacherSubmissionsDrawer: React.FC<TeacherSubmissionsDrawerProps> =
       const scores = gradedList.map((s) => Number(s.grade));
       const maxScore = scores.length > 0 ? Math.max(...scores) : 0;
       const minScore = scores.length > 0 ? Math.min(...scores) : 0;
-      const avgScore = scores.length > 0 ? parseFloat((scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(1)) : 0;
+      const avgScore =
+        scores.length > 0
+          ? parseFloat((scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(1))
+          : 0;
 
-      return { total, gradedCount, ungradedCount, lateCount, submittedCount, maxScore, minScore, avgScore };
+      return {
+        total,
+        gradedCount,
+        ungradedCount,
+        lateCount,
+        submittedCount,
+        maxScore,
+        minScore,
+        avgScore,
+      };
     }, [submissions]);
 
     // Filter & Sort submissions
@@ -184,7 +213,13 @@ export const TeacherSubmissionsDrawer: React.FC<TeacherSubmissionsDrawerProps> =
             {record.attachments && record.attachments.length > 0 && (
               <Space size={6} wrap style={{ marginTop: 2 }}>
                 {record.attachments.map((att: any, i: number) => (
-                  <a key={att.publicId || i} href={att.url} target="_blank" rel="noreferrer" style={{ fontSize: 12 }}>
+                  <a
+                    key={att.publicId || i}
+                    href={att.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    style={{ fontSize: 12 }}
+                  >
                     <PaperClipOutlined /> {att.name || "File đính kèm"}
                   </a>
                 ))}
@@ -198,7 +233,8 @@ export const TeacherSubmissionsDrawer: React.FC<TeacherSubmissionsDrawerProps> =
         key: "gradeInfo",
         width: 200,
         render: (_, record) => {
-          const graderObj = typeof (record as any).gradedBy === "object" ? (record as any).gradedBy : null;
+          const graderObj =
+            typeof (record as any).gradedBy === "object" ? (record as any).gradedBy : null;
           const graderName = graderObj?.fullName;
 
           return (
@@ -213,7 +249,11 @@ export const TeacherSubmissionsDrawer: React.FC<TeacherSubmissionsDrawerProps> =
                 </Text>
               )}
               {record.feedback && (
-                <Paragraph type="secondary" ellipsis={{ rows: 2 }} style={{ fontSize: 12, marginTop: 4, margin: 0 }}>
+                <Paragraph
+                  type="secondary"
+                  ellipsis={{ rows: 2 }}
+                  style={{ fontSize: 12, marginTop: 4, margin: 0 }}
+                >
                   💬 {record.feedback}
                 </Paragraph>
               )}
@@ -257,7 +297,12 @@ export const TeacherSubmissionsDrawer: React.FC<TeacherSubmissionsDrawerProps> =
                 <FileDoneOutlined style={{ color: "#1890ff" }} />
                 <span>Danh sách bài nộp: {assignment?.title}</span>
               </Space>
-              <Button type="text" icon={<ReloadOutlined spin={loading} />} onClick={fetchSubmissions} title="Làm mới" />
+              <Button
+                type="text"
+                icon={<ReloadOutlined spin={loading} />}
+                onClick={fetchSubmissions}
+                title="Làm mới"
+              />
             </div>
           }
           placement="right"
@@ -267,34 +312,77 @@ export const TeacherSubmissionsDrawer: React.FC<TeacherSubmissionsDrawerProps> =
           styles={{ body: { padding: 20 } }}
         >
           {/* 1. Quick Statistics Cards Header */}
-          <Card size="small" style={{ marginBottom: 16, backgroundColor: "#f8f9fa", borderRadius: 12 }}>
+          <Card
+            size="small"
+            style={{ marginBottom: 16, backgroundColor: "#f8f9fa", borderRadius: 12 }}
+          >
             <Row gutter={[12, 12]}>
               <Col xs={12} sm={6} md={3}>
-                <Statistic title={<Text style={{ fontSize: 11 }}>Tổng bài nộp</Text>} value={stats.total} styles={{ content: { fontSize: 18, fontWeight: 700 } }} />
+                <Statistic
+                  title={<Text style={{ fontSize: 11 }}>Tổng bài nộp</Text>}
+                  value={stats.total}
+                  styles={{ content: { fontSize: 18, fontWeight: 700 } }}
+                />
               </Col>
               <Col xs={12} sm={6} md={3}>
-                <Statistic title={<Text style={{ fontSize: 11 }}>🔵 Đã chấm</Text>} value={stats.gradedCount} styles={{ content: { fontSize: 18, fontWeight: 700, color: "#1890ff" } }} />
+                <Statistic
+                  title={<Text style={{ fontSize: 11 }}>🔵 Đã chấm</Text>}
+                  value={stats.gradedCount}
+                  styles={{ content: { fontSize: 18, fontWeight: 700, color: "#1890ff" } }}
+                />
               </Col>
               <Col xs={12} sm={6} md={3}>
-                <Statistic title={<Text style={{ fontSize: 11 }}>🟡 Chưa chấm</Text>} value={stats.ungradedCount} styles={{ content: { fontSize: 18, fontWeight: 700, color: "#faad14" } }} />
+                <Statistic
+                  title={<Text style={{ fontSize: 11 }}>🟡 Chưa chấm</Text>}
+                  value={stats.ungradedCount}
+                  styles={{ content: { fontSize: 18, fontWeight: 700, color: "#faad14" } }}
+                />
               </Col>
               <Col xs={12} sm={6} md={3}>
-                <Statistic title={<Text style={{ fontSize: 11 }}>🔴 Nộp trễ</Text>} value={stats.lateCount} styles={{ content: { fontSize: 18, fontWeight: 700, color: "#ff4d4f" } }} />
+                <Statistic
+                  title={<Text style={{ fontSize: 11 }}>🔴 Nộp trễ</Text>}
+                  value={stats.lateCount}
+                  styles={{ content: { fontSize: 18, fontWeight: 700, color: "#ff4d4f" } }}
+                />
               </Col>
               <Col xs={12} sm={6} md={4}>
-                <Statistic title={<Text style={{ fontSize: 11 }}>⭐ Điểm trung bình</Text>} value={stats.avgScore} suffix="/100" styles={{ content: { fontSize: 18, fontWeight: 700, color: "#52c41a" } }} />
+                <Statistic
+                  title={<Text style={{ fontSize: 11 }}>⭐ Điểm trung bình</Text>}
+                  value={stats.avgScore}
+                  suffix="/100"
+                  styles={{ content: { fontSize: 18, fontWeight: 700, color: "#52c41a" } }}
+                />
               </Col>
               <Col xs={12} sm={6} md={4}>
-                <Statistic title={<Text style={{ fontSize: 11 }}>🏆 Điểm cao nhất</Text>} value={stats.maxScore} suffix="/100" styles={{ content: { fontSize: 18, fontWeight: 700, color: "#722ed1" } }} />
+                <Statistic
+                  title={<Text style={{ fontSize: 11 }}>🏆 Điểm cao nhất</Text>}
+                  value={stats.maxScore}
+                  suffix="/100"
+                  styles={{ content: { fontSize: 18, fontWeight: 700, color: "#722ed1" } }}
+                />
               </Col>
               <Col xs={12} sm={6} md={4}>
-                <Statistic title={<Text style={{ fontSize: 11 }}>📉 Điểm thấp nhất</Text>} value={stats.minScore} suffix="/100" styles={{ content: { fontSize: 18, fontWeight: 700, color: "#fa8c16" } }} />
+                <Statistic
+                  title={<Text style={{ fontSize: 11 }}>📉 Điểm thấp nhất</Text>}
+                  value={stats.minScore}
+                  suffix="/100"
+                  styles={{ content: { fontSize: 18, fontWeight: 700, color: "#fa8c16" } }}
+                />
               </Col>
             </Row>
           </Card>
 
           {/* 2. Toolbar: Search, Filter, Sort */}
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12, marginBottom: 16 }}>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              flexWrap: "wrap",
+              gap: 12,
+              marginBottom: 16,
+            }}
+          >
             <Space size={12} wrap>
               <Input
                 placeholder="Tìm sinh viên theo tên/email/mã..."
@@ -347,7 +435,11 @@ export const TeacherSubmissionsDrawer: React.FC<TeacherSubmissionsDrawerProps> =
           ) : (
             <Empty
               image={Empty.PRESENTED_IMAGE_SIMPLE}
-              description={searchQuery || statusFilter !== "all" ? "Không tìm thấy bài nộp nào phù hợp với bộ lọc." : "Chưa có học sinh nào nộp bài tập này."}
+              description={
+                searchQuery || statusFilter !== "all"
+                  ? "Không tìm thấy bài nộp nào phù hợp với bộ lọc."
+                  : "Chưa có học sinh nào nộp bài tập này."
+              }
             />
           )}
         </Drawer>

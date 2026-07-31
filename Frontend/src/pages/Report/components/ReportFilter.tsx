@@ -91,11 +91,7 @@ export const ReportFilter: React.FC<ReportFilterProps> = ({
 
         <Form.Item className="mb-0">
           <Space>
-            <Button
-              icon={<ReloadOutlined />}
-              onClick={handleReset}
-              className="rounded-lg"
-            >
+            <Button icon={<ReloadOutlined />} onClick={handleReset} className="rounded-lg">
               Làm mới
             </Button>
             <Button

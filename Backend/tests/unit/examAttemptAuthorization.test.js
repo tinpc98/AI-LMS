@@ -35,10 +35,18 @@ describe("examAttemptService.gradeEssay — AUTHZ-02", () => {
     vi.spyOn(ExamAttempt, "findById").mockReturnValue({
       populate: () => ({ session: () => Promise.resolve(attempt) }),
     });
-    vi.spyOn(classModel, "findById").mockResolvedValue({ _id: CLASS_ID, teacherId: OWNER_TEACHER_ID });
+    vi.spyOn(classModel, "findById").mockResolvedValue({
+      _id: CLASS_ID,
+      teacherId: OWNER_TEACHER_ID,
+    });
 
     await expect(
-      examAttemptService.gradeEssay("attempt-1", [{ questionId: "q1", pointsEarned: 5 }], OTHER_TEACHER_ID, "Teacher")
+      examAttemptService.gradeEssay(
+        "attempt-1",
+        [{ questionId: "q1", pointsEarned: 5 }],
+        OTHER_TEACHER_ID,
+        "Teacher"
+      )
     ).rejects.toMatchObject({ status: 403 });
 
     expect(attempt.save).not.toHaveBeenCalled();
@@ -55,7 +63,10 @@ describe("examAttemptService.gradeEssay — AUTHZ-02", () => {
     vi.spyOn(ExamAttempt, "findById").mockReturnValue({
       populate: () => ({ session: () => Promise.resolve(attempt) }),
     });
-    vi.spyOn(classModel, "findById").mockResolvedValue({ _id: CLASS_ID, teacherId: OWNER_TEACHER_ID });
+    vi.spyOn(classModel, "findById").mockResolvedValue({
+      _id: CLASS_ID,
+      teacherId: OWNER_TEACHER_ID,
+    });
 
     const result = await examAttemptService.gradeEssay(
       "attempt-1",

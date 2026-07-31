@@ -133,8 +133,12 @@ export const NotificationDetailDrawer: React.FC<NotificationDetailDrawerProps> =
           {/* Attachments if any */}
           {item.attachments && item.attachments.length > 0 && (
             <div style={{ marginBottom: 20 }}>
-              <Text strong style={{ fontSize: 13, color: "#8c8c8c", display: "block", marginBottom: 8 }}>
-                <PaperClipOutlined style={{ marginRight: 4 }} /> File đính kèm ({item.attachments.length}):
+              <Text
+                strong
+                style={{ fontSize: 13, color: "#8c8c8c", display: "block", marginBottom: 8 }}
+              >
+                <PaperClipOutlined style={{ marginRight: 4 }} /> File đính kèm (
+                {item.attachments.length}):
               </Text>
               <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                 {item.attachments.map((att, idx) => (

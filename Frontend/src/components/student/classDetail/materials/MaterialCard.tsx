@@ -53,7 +53,12 @@ export function getMaterialTypeMeta(type: string = "", url: string = "") {
       label: "Web Link",
     };
   }
-  if (typeLower.includes("slide") || typeLower.includes("powerpoint") || urlLower.endsWith(".ppt") || urlLower.endsWith(".pptx")) {
+  if (
+    typeLower.includes("slide") ||
+    typeLower.includes("powerpoint") ||
+    urlLower.endsWith(".ppt") ||
+    urlLower.endsWith(".pptx")
+  ) {
     return {
       icon: <FilePptOutlined style={{ fontSize: 28, color: "#fa8c16" }} />,
       color: "orange",
@@ -131,8 +136,22 @@ export const MaterialCard: React.FC<MaterialCardProps> = React.memo(
         }}
       >
         {/* Header Icon + Type Tag */}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
-          <div style={{ backgroundColor: "#fafafa", padding: 10, borderRadius: 12, border: "1px solid #f0f0f0" }}>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "flex-start",
+            marginBottom: 12,
+          }}
+        >
+          <div
+            style={{
+              backgroundColor: "#fafafa",
+              padding: 10,
+              borderRadius: 12,
+              border: "1px solid #f0f0f0",
+            }}
+          >
             {meta.icon}
           </div>
           <Tag color={meta.color} style={{ borderRadius: 8, fontWeight: 600, margin: 0 }}>

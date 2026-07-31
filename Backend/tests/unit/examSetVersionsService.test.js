@@ -45,18 +45,60 @@ afterEach(() => {
 
 describe("getExamSetVersionsService", () => {
   it("Owner can retrieve full lineage versions sorted desc", async () => {
-    const source = createExamSet({ _id: "607f1f77bcf86cd799439101", ownerId: "owner-1", rootExamSetId: null, versionNumber: 2 });
+    const source = createExamSet({
+      _id: "607f1f77bcf86cd799439101",
+      ownerId: "owner-1",
+      rootExamSetId: null,
+      versionNumber: 2,
+    });
     vi.spyOn(ExamSet, "findOne").mockImplementation(() => ({ lean: () => source }));
 
     const versions = [
-      { _id: "607f1f77bcf86cd799439103", title: "v3", versionNumber: 3, isLatestVersion: true, ownerId: "owner-1", questionCount: 3, totalPoints: 30, createdAt: new Date(), updatedAt: new Date(), publishedAt: null },
-      { _id: "607f1f77bcf86cd799439102", title: "v2", versionNumber: 2, isLatestVersion: false, ownerId: "owner-1", questionCount: 2, totalPoints: 20, createdAt: new Date(), updatedAt: new Date(), publishedAt: null },
-      { _id: "607f1f77bcf86cd799439101", title: "v1", versionNumber: 1, isLatestVersion: false, ownerId: "owner-1", questionCount: 1, totalPoints: 10, createdAt: new Date(), updatedAt: new Date(), publishedAt: null },
+      {
+        _id: "607f1f77bcf86cd799439103",
+        title: "v3",
+        versionNumber: 3,
+        isLatestVersion: true,
+        ownerId: "owner-1",
+        questionCount: 3,
+        totalPoints: 30,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        publishedAt: null,
+      },
+      {
+        _id: "607f1f77bcf86cd799439102",
+        title: "v2",
+        versionNumber: 2,
+        isLatestVersion: false,
+        ownerId: "owner-1",
+        questionCount: 2,
+        totalPoints: 20,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        publishedAt: null,
+      },
+      {
+        _id: "607f1f77bcf86cd799439101",
+        title: "v1",
+        versionNumber: 1,
+        isLatestVersion: false,
+        ownerId: "owner-1",
+        questionCount: 1,
+        totalPoints: 10,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        publishedAt: null,
+      },
     ];
     vi.spyOn(ExamSet, "find").mockImplementation(() => mockFindList(versions));
     vi.spyOn(ExamSet, "countDocuments").mockImplementation(async () => versions.length);
 
-    const res = await getExamSetVersionsService(source._id, "owner-1", "teacher", { page: 1, limit: 10, sort: "desc" });
+    const res = await getExamSetVersionsService(source._id, "owner-1", "teacher", {
+      page: 1,
+      limit: 10,
+      sort: "desc",
+    });
 
     expect(res.versions.length).toBe(3);
     expect(res.versions[0].versionNumber).toBe(3);
@@ -64,25 +106,65 @@ describe("getExamSetVersionsService", () => {
   });
 
   it("Sort asc works", async () => {
-    const source = createExamSet({ _id: "607f1f77bcf86cd799439201", ownerId: "owner-2", rootExamSetId: "607f1f77bcf86cd799439201", versionNumber: 2 });
+    const source = createExamSet({
+      _id: "607f1f77bcf86cd799439201",
+      ownerId: "owner-2",
+      rootExamSetId: "607f1f77bcf86cd799439201",
+      versionNumber: 2,
+    });
     vi.spyOn(ExamSet, "findOne").mockImplementation(() => ({ lean: () => source }));
 
     const versions = [
-      { _id: "607f1f77bcf86cd799439202", versionNumber: 1, ownerId: "owner-2", questionCount: 1, totalPoints: 10, createdAt: new Date(), updatedAt: new Date() },
-      { _id: "607f1f77bcf86cd799439203", versionNumber: 2, ownerId: "owner-2", questionCount: 2, totalPoints: 20, createdAt: new Date(), updatedAt: new Date() },
+      {
+        _id: "607f1f77bcf86cd799439202",
+        versionNumber: 1,
+        ownerId: "owner-2",
+        questionCount: 1,
+        totalPoints: 10,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+      {
+        _id: "607f1f77bcf86cd799439203",
+        versionNumber: 2,
+        ownerId: "owner-2",
+        questionCount: 2,
+        totalPoints: 20,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
     ];
     vi.spyOn(ExamSet, "find").mockImplementation(() => mockFindList(versions));
     vi.spyOn(ExamSet, "countDocuments").mockImplementation(async () => versions.length);
 
-    const res = await getExamSetVersionsService(source._id, "owner-2", "teacher", { page: 1, limit: 10, sort: "asc" });
+    const res = await getExamSetVersionsService(source._id, "owner-2", "teacher", {
+      page: 1,
+      limit: 10,
+      sort: "asc",
+    });
     expect(res.versions[0].versionNumber).toBe(1);
   });
 
   it("Source without rootExamSetId uses its own id as root", async () => {
-    const source = createExamSet({ _id: "607f1f77bcf86cd799439301", ownerId: "owner-3", rootExamSetId: null, versionNumber: 1 });
+    const source = createExamSet({
+      _id: "607f1f77bcf86cd799439301",
+      ownerId: "owner-3",
+      rootExamSetId: null,
+      versionNumber: 1,
+    });
     vi.spyOn(ExamSet, "findOne").mockImplementation(() => ({ lean: () => source }));
 
-    const versions = [{ _id: "607f1f77bcf86cd799439301", versionNumber: 1, ownerId: "owner-3", questionCount: 1, totalPoints: 10, createdAt: new Date(), updatedAt: new Date() }];
+    const versions = [
+      {
+        _id: "607f1f77bcf86cd799439301",
+        versionNumber: 1,
+        ownerId: "owner-3",
+        questionCount: 1,
+        totalPoints: 10,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+    ];
     vi.spyOn(ExamSet, "find").mockImplementation(() => mockFindList(versions));
     vi.spyOn(ExamSet, "countDocuments").mockImplementation(async () => 1);
 
@@ -92,7 +174,11 @@ describe("getExamSetVersionsService", () => {
   });
 
   it("Unauthorized user cannot access lineage", async () => {
-    const source = createExamSet({ _id: "607f1f77bcf86cd799439401", ownerId: "owner-x", rootExamSetId: null });
+    const source = createExamSet({
+      _id: "607f1f77bcf86cd799439401",
+      ownerId: "owner-x",
+      rootExamSetId: null,
+    });
     vi.spyOn(ExamSet, "findOne").mockImplementation(() => ({ lean: () => source }));
 
     await expect(

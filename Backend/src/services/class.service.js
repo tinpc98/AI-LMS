@@ -7,9 +7,9 @@ import mongoose from "mongoose";
 class ClassService {
   /**
    * Xây dựng bộ điều kiện query (Query Builder) cho danh sách lớp học.
-   * Hỗ trợ search, filter, advanced filters (teacherId, learningMode, dateRange), 
+   * Hỗ trợ search, filter, advanced filters (teacherId, learningMode, dateRange),
    * phân quyền dữ liệu, phân trang và sắp xếp an toàn.
-   * 
+   *
    * @param {Object} query - Object req.query từ client
    * @param {Boolean} isTrash - Cờ hiệu (true = lấy thùng rác, false = lấy danh sách bình thường)
    * @param {String} userRole - Vai trò của user (admin/teacher/student)
@@ -17,17 +17,17 @@ class ClassService {
    * @returns {Object} - { finalQuery, skip, limitNum, pageNum, sortOption }
    */
   buildClassQueryOptions(query, isTrash = false, userRole = "", userId = "") {
-    const { 
-      search, 
-      courseId, 
-      status, 
-      teacherId, 
-      learningMode, 
-      startDate, 
-      endDate, 
-      page = 1, 
-      limit = 10, 
-      sort 
+    const {
+      search,
+      courseId,
+      status,
+      teacherId,
+      learningMode,
+      startDate,
+      endDate,
+      page = 1,
+      limit = 10,
+      sort,
     } = query;
 
     const filterConditions = [{ isDeleted: isTrash }];
@@ -88,7 +88,8 @@ class ClassService {
     }
 
     // Tổng hợp điều kiện truy vấn Mongoose
-    const finalQuery = filterConditions.length === 1 ? filterConditions[0] : { $and: filterConditions };
+    const finalQuery =
+      filterConditions.length === 1 ? filterConditions[0] : { $and: filterConditions };
 
     // Xử lý Pagination
     const pageNum = Math.max(1, Number(page) || 1);
@@ -97,7 +98,15 @@ class ClassService {
 
     // Xử lý Sorting (Hỗ trợ Ant Design Table format: sortField & sortOrder = 'ascend' | 'descend')
     const { sortField, sortOrder } = query;
-    const SORT_WHITELIST = ["createdAt", "className", "startDate", "endDate", "maxStudents", "status", "classCode"];
+    const SORT_WHITELIST = [
+      "createdAt",
+      "className",
+      "startDate",
+      "endDate",
+      "maxStudents",
+      "status",
+      "classCode",
+    ];
     let sortOption = { createdAt: -1 }; // Mặc định
 
     if (sortField && SORT_WHITELIST.includes(sortField)) {
@@ -105,7 +114,10 @@ class ClassService {
       sortOption = { [sortField]: direction };
     } else if (sort && sort.trim()) {
       // Fallback cho tham số sort kiểu cũ (VD: -className)
-      const parts = sort.split(",").map((s) => s.trim()).filter(Boolean);
+      const parts = sort
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean);
       const sortObj = {};
       parts.forEach((part) => {
         const desc = part.startsWith("-");

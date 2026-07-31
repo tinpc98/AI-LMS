@@ -12,7 +12,7 @@ export const indexLessonKnowledge = async (req, res, next) => {
     // và `aiLessonAccessMiddleware` sẽ đảm bảo lesson thuộc về lớp mà teacher dạy.
     // Lưu ý: RAG Backend architecture yêu cầu: không tự tiện index lớp khác.
     if (!req.aiLesson) {
-       throw new AIError("Lỗi middleware bài giảng.", AIErrorCode.AI_PROVIDER_ERROR, 500);
+      throw new AIError("Lỗi middleware bài giảng.", AIErrorCode.AI_PROVIDER_ERROR, 500);
     }
 
     const result = await aiKnowledgeIndexingService.indexLessonKnowledge(lessonId, userId, force);
@@ -39,7 +39,7 @@ export const getIndexStatus = async (req, res, next) => {
     const { lessonId } = req.params;
 
     if (!req.aiLesson) {
-       throw new AIError("Lỗi middleware bài giảng.", AIErrorCode.AI_PROVIDER_ERROR, 500);
+      throw new AIError("Lỗi middleware bài giảng.", AIErrorCode.AI_PROVIDER_ERROR, 500);
     }
 
     // Lấy thông tin mới nhất từ DB

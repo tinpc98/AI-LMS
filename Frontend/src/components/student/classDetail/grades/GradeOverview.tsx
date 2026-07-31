@@ -32,7 +32,8 @@ export const GradeOverview: React.FC<GradeOverviewProps> = React.memo(({ stats }
           <Space direction="vertical" size={8} style={{ width: "100%" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <Text strong style={{ fontSize: 14, color: "#1f2937" }}>
-                <RocketOutlined style={{ color: "#1890ff", marginRight: 6 }} /> Tiến độ hoàn thành điểm số
+                <RocketOutlined style={{ color: "#1890ff", marginRight: 6 }} /> Tiến độ hoàn thành
+                điểm số
               </Text>
               <Text strong style={{ color: "#1890ff", fontSize: 16 }}>
                 {stats.overallProgress}%
@@ -53,7 +54,10 @@ export const GradeOverview: React.FC<GradeOverviewProps> = React.memo(({ stats }
 
         {/* Right Col: Category Breakdown Progress Indicators */}
         <Col xs={24} md={16}>
-          <Text strong style={{ fontSize: 13, color: "#8c8c8c", display: "block", marginBottom: 12 }}>
+          <Text
+            strong
+            style={{ fontSize: 13, color: "#8c8c8c", display: "block", marginBottom: 12 }}
+          >
             Phân rã điểm số các danh mục:
           </Text>
 
@@ -66,7 +70,12 @@ export const GradeOverview: React.FC<GradeOverviewProps> = React.memo(({ stats }
                 <div style={{ fontSize: 16, fontWeight: 700, color: "#08979c" }}>
                   {stats.assignmentAvg !== null ? `${stats.assignmentAvg} / 10` : "--"}
                 </div>
-                <Progress percent={stats.assignmentAvg ? stats.assignmentAvg * 10 : 0} showInfo={false} size="small" strokeColor="#13c2c2" />
+                <Progress
+                  percent={stats.assignmentAvg ? stats.assignmentAvg * 10 : 0}
+                  showInfo={false}
+                  size="small"
+                  strokeColor="#13c2c2"
+                />
               </div>
             </Col>
 
@@ -78,7 +87,12 @@ export const GradeOverview: React.FC<GradeOverviewProps> = React.memo(({ stats }
                 <div style={{ fontSize: 16, fontWeight: 700, color: "#d48806" }}>
                   {stats.examAvg !== null ? `${stats.examAvg} / 10` : "--"}
                 </div>
-                <Progress percent={stats.examAvg ? stats.examAvg * 10 : 0} showInfo={false} size="small" strokeColor="#faad14" />
+                <Progress
+                  percent={stats.examAvg ? stats.examAvg * 10 : 0}
+                  showInfo={false}
+                  size="small"
+                  strokeColor="#faad14"
+                />
               </div>
             </Col>
 
@@ -90,7 +104,12 @@ export const GradeOverview: React.FC<GradeOverviewProps> = React.memo(({ stats }
                 <div style={{ fontSize: 16, fontWeight: 700, color: "#006d75" }}>
                   {stats.attendanceRate}%
                 </div>
-                <Progress percent={stats.attendanceRate} showInfo={false} size="small" strokeColor="#36cfc9" />
+                <Progress
+                  percent={stats.attendanceRate}
+                  showInfo={false}
+                  size="small"
+                  strokeColor="#36cfc9"
+                />
               </div>
             </Col>
 
@@ -102,7 +121,12 @@ export const GradeOverview: React.FC<GradeOverviewProps> = React.memo(({ stats }
                 <div style={{ fontSize: 16, fontWeight: 700, color: "#531dab" }}>
                   {stats.gpa !== null ? `${stats.gpa} / 10` : "--"}
                 </div>
-                <Progress percent={stats.gpa ? stats.gpa * 10 : 0} showInfo={false} size="small" strokeColor="#722ed1" />
+                <Progress
+                  percent={stats.gpa ? stats.gpa * 10 : 0}
+                  showInfo={false}
+                  size="small"
+                  strokeColor="#722ed1"
+                />
               </div>
             </Col>
           </Row>

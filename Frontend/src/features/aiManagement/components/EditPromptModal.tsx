@@ -1,6 +1,11 @@
 import { useEffect } from "react";
 import { Form, Input, Modal, Select } from "antd";
-import type { AIModel, PromptCategory, PromptStatus, PromptTemplate } from "../types/aiManagement.types";
+import type {
+  AIModel,
+  PromptCategory,
+  PromptStatus,
+  PromptTemplate,
+} from "../types/aiManagement.types";
 
 interface EditPromptModalProps {
   open: boolean;
@@ -43,7 +48,10 @@ const EditPromptModal = ({
     try {
       const values = await form.validateFields();
       const variables = values.variablesString
-        ? values.variablesString.split(",").map((v: string) => v.trim()).filter(Boolean)
+        ? values.variablesString
+            .split(",")
+            .map((v: string) => v.trim())
+            .filter(Boolean)
         : [];
 
       delete values.variablesString;
@@ -60,7 +68,9 @@ const EditPromptModal = ({
 
   return (
     <Modal
-      title={mode === "create" ? "Create Prompt Template" : `Edit Prompt: ${initialValues?.name || ""}`}
+      title={
+        mode === "create" ? "Create Prompt Template" : `Edit Prompt: ${initialValues?.name || ""}`
+      }
       open={open}
       onOk={handleOk}
       onCancel={onCancel}
@@ -68,7 +78,11 @@ const EditPromptModal = ({
       width={640}
     >
       <Form form={form} layout="vertical" style={{ marginTop: 12 }}>
-        <Form.Item name="name" label="Prompt Name" rules={[{ required: true, message: "Enter prompt name" }]}>
+        <Form.Item
+          name="name"
+          label="Prompt Name"
+          rules={[{ required: true, message: "Enter prompt name" }]}
+        >
           <Input placeholder="e.g. AI Chatbot Assistant" />
         </Form.Item>
 

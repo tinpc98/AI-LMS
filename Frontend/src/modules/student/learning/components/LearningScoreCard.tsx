@@ -34,9 +34,17 @@ export const LearningScoreCard: React.FC<LearningScoreCardProps> = React.memo(({
       }}
       styles={{ body: { padding: 20 } }}
     >
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: 12,
+        }}
+      >
         <Text strong style={{ fontSize: 15, color: "#1f2937" }}>
-          <TrophyOutlined style={{ color: "#faad14", marginRight: 6 }} /> Đánh giá Năng lực Học tập Tổng hợp
+          <TrophyOutlined style={{ color: "#faad14", marginRight: 6 }} /> Đánh giá Năng lực Học tập
+          Tổng hợp
         </Text>
         <Tag color="green" icon={<RiseOutlined />}>
           +{score.trendPercent}% so với tháng trước
@@ -56,7 +64,10 @@ export const LearningScoreCard: React.FC<LearningScoreCardProps> = React.memo(({
           <Text type="secondary" style={{ fontSize: 12, display: "block" }}>
             Xếp loại năng lực:
           </Text>
-          <Title level={4} style={{ margin: "2px 0 6px 0", color: getLevelColor(score.level), fontWeight: 700 }}>
+          <Title
+            level={4}
+            style={{ margin: "2px 0 6px 0", color: getLevelColor(score.level), fontWeight: 700 }}
+          >
             {score.level.toUpperCase()}
           </Title>
           <Paragraph type="secondary" style={{ fontSize: 13, margin: 0, lineHeight: 1.5 }}>

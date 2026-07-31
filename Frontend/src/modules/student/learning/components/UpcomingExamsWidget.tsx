@@ -14,7 +14,8 @@ export const UpcomingExamsWidget: React.FC<UpcomingExamsWidgetProps> = React.mem
     <Card
       title={
         <span style={{ fontSize: 15, fontWeight: 700 }}>
-          <FormOutlined style={{ color: "#722ed1", marginRight: 6 }} /> Lịch thi & Kiểm tra sắp tới ({exams.length})
+          <FormOutlined style={{ color: "#722ed1", marginRight: 6 }} /> Lịch thi & Kiểm tra sắp tới
+          ({exams.length})
         </span>
       }
       style={{ borderRadius: 16, border: "1px solid #f0f0f0", marginBottom: 24 }}
@@ -36,7 +37,9 @@ export const UpcomingExamsWidget: React.FC<UpcomingExamsWidgetProps> = React.mem
                 padding: "10px 14px",
               }}
             >
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div
+                style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}
+              >
                 <Text strong style={{ fontSize: 13, color: "#391085" }}>
                   {item.title}
                 </Text>

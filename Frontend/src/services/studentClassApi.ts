@@ -21,7 +21,7 @@ export const studentClassApi = {
         mappedStatus = "Active";
       }
 
-      const totalStud = item.students ? item.students.length : (item.currentStudents || 0);
+      const totalStud = item.students ? item.students.length : item.currentStudents || 0;
 
       return {
         _id: item._id || item.id,

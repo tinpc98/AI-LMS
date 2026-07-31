@@ -17,7 +17,7 @@ export const resolveExamQuestions = async (exam, targetQuestionIds = null) => {
   // 1. Phân loại câu hỏi thành snapshot hoặc legacy
   for (const q of exam.questions) {
     if (!q || !q.questionId) continue;
-    
+
     // Normalize ID an toàn: xử lý populated document
     let rawId = q.questionId;
     if (rawId && typeof rawId === "object" && rawId._id) {
@@ -74,7 +74,7 @@ export const resolveExamQuestions = async (exam, targetQuestionIds = null) => {
   // 2. Tải các câu hỏi Legacy chưa được populate
   if (legacyQuestionIdsToFetch.size > 0) {
     // S5-FIX-09: Lọc các ID hợp lệ để tránh Mongoose CastError 500
-    const validLegacyIds = Array.from(legacyQuestionIdsToFetch).filter(id => 
+    const validLegacyIds = Array.from(legacyQuestionIdsToFetch).filter((id) =>
       mongoose.Types.ObjectId.isValid(id)
     );
 
@@ -84,24 +84,24 @@ export const resolveExamQuestions = async (exam, targetQuestionIds = null) => {
       }).lean();
 
       for (const lq of legacyQuestions) {
-      const qIdStr = lq._id.toString();
-      const config = examQuestionsConfig.get(qIdStr);
-      questionMap.set(qIdStr, {
-        _id: qIdStr,
-        questionId: qIdStr,
-        source: "legacy",
-        type: lq.type,
-        content: lq.content,
-        options: lq.options || [],
-        correctAnswer: lq.correctAnswer,
-        acceptedAnswers: lq.acceptedAnswers || [],
-        suggestedAnswer: lq.suggestedAnswer,
-        rubric: lq.rubric,
-        points: config?.points || 1,
-      });
+        const qIdStr = lq._id.toString();
+        const config = examQuestionsConfig.get(qIdStr);
+        questionMap.set(qIdStr, {
+          _id: qIdStr,
+          questionId: qIdStr,
+          source: "legacy",
+          type: lq.type,
+          content: lq.content,
+          options: lq.options || [],
+          correctAnswer: lq.correctAnswer,
+          acceptedAnswers: lq.acceptedAnswers || [],
+          suggestedAnswer: lq.suggestedAnswer,
+          rubric: lq.rubric,
+          points: config?.points || 1,
+        });
+      }
     }
   }
-  }
-  
+
   return questionMap;
 };

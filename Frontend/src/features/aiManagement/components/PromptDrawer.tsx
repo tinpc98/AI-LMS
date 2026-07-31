@@ -41,7 +41,13 @@ const PromptDrawer = ({ open, prompt, models, onClose }: PromptDrawerProps) => {
   }
 
   return (
-    <Drawer title="Prompt Template Details & Live Preview" placement="right" width={560} open={open} onClose={onClose}>
+    <Drawer
+      title="Prompt Template Details & Live Preview"
+      placement="right"
+      width={560}
+      open={open}
+      onClose={onClose}
+    >
       <div style={{ marginBottom: 20 }}>
         <Typography.Title level={4} style={{ margin: 0 }}>
           {prompt.name}
@@ -77,7 +83,11 @@ const PromptDrawer = ({ open, prompt, models, onClose }: PromptDrawerProps) => {
         </Typography.Paragraph>
       </Card>
 
-      <Card size="small" title="User Prompt Template" style={{ marginBottom: 16, background: "#f8fafc" }}>
+      <Card
+        size="small"
+        title="User Prompt Template"
+        style={{ marginBottom: 16, background: "#f8fafc" }}
+      >
         <Typography.Paragraph
           style={{ margin: 0, fontFamily: "monospace", fontSize: 13, whiteSpace: "pre-wrap" }}
         >
@@ -90,7 +100,10 @@ const PromptDrawer = ({ open, prompt, models, onClose }: PromptDrawerProps) => {
         title="Live Sample Preview"
         style={{ marginBottom: 16, background: "#f0fdf4", borderColor: "#bbf7d0" }}
       >
-        <Typography.Text type="secondary" style={{ fontSize: 11, display: "block", marginBottom: 6 }}>
+        <Typography.Text
+          type="secondary"
+          style={{ fontSize: 11, display: "block", marginBottom: 6 }}
+        >
           Interpolated with sample variable values:
         </Typography.Text>
         <Typography.Paragraph

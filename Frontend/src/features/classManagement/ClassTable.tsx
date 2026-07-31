@@ -1,5 +1,11 @@
 import { Button, Empty, Table, Tag, Tooltip } from "antd";
-import { EyeOutlined, EditOutlined, SyncOutlined, DeleteOutlined, UndoOutlined } from "@ant-design/icons";
+import {
+  EyeOutlined,
+  EditOutlined,
+  SyncOutlined,
+  DeleteOutlined,
+  UndoOutlined,
+} from "@ant-design/icons";
 import type { ClassRecord, ClassStatus, Pagination } from "./class.types";
 
 interface ClassTableProps {
@@ -35,10 +41,20 @@ const getStatusColor = (status: ClassStatus) => {
   }
 };
 
-const ClassTable = ({ 
-  data, loading, activeTab, pagination, onChange,
-  courseOptions, teacherOptions, 
-  onView, onEdit, onChangeStatus, onDelete, onRestore, onForceDelete 
+const ClassTable = ({
+  data,
+  loading,
+  activeTab,
+  pagination,
+  onChange,
+  courseOptions,
+  teacherOptions,
+  onView,
+  onEdit,
+  onChangeStatus,
+  onDelete,
+  onRestore,
+  onForceDelete,
 }: ClassTableProps) => {
   const columns = [
     {
@@ -71,7 +87,8 @@ const ClassTable = ({
       key: "teacher",
       width: 150,
       ellipsis: true,
-      render: (teacher?: { id: string; fullName: string } | null) => teacher ? teacher.fullName : "—",
+      render: (teacher?: { id: string; fullName: string } | null) =>
+        teacher ? teacher.fullName : "—",
     },
     {
       title: "Learning Mode",
@@ -97,7 +114,8 @@ const ClassTable = ({
       width: 90,
       sorter: true,
       dataIndex: "maxStudents", // mapping sorter to maxStudents temporarily as currentStudents is not explicitly in whitelist
-      render: (_: unknown, record: ClassRecord) => `${record.currentStudents}/${record.maxStudents}`,
+      render: (_: unknown, record: ClassRecord) =>
+        `${record.currentStudents}/${record.maxStudents}`,
     },
     {
       title: "Status",
@@ -113,7 +131,8 @@ const ClassTable = ({
       width: 140,
       sorter: true,
       dataIndex: "startDate", // used for sorting
-      render: (_: unknown, record: ClassRecord) => `${new Date(record.startDate).toLocaleDateString("vi-VN")} → ${new Date(record.endDate).toLocaleDateString("vi-VN")}`,
+      render: (_: unknown, record: ClassRecord) =>
+        `${new Date(record.startDate).toLocaleDateString("vi-VN")} → ${new Date(record.endDate).toLocaleDateString("vi-VN")}`,
     },
     {
       title: "Actions",
@@ -129,12 +148,23 @@ const ClassTable = ({
               </Tooltip>
               {onRestore && (
                 <Tooltip title="Restore">
-                  <Button size="small" type="primary" ghost icon={<UndoOutlined />} onClick={() => onRestore(record)} />
+                  <Button
+                    size="small"
+                    type="primary"
+                    ghost
+                    icon={<UndoOutlined />}
+                    onClick={() => onRestore(record)}
+                  />
                 </Tooltip>
               )}
               {onForceDelete && (
                 <Tooltip title="Permanent Delete">
-                  <Button size="small" danger icon={<DeleteOutlined />} onClick={() => onForceDelete(record)} />
+                  <Button
+                    size="small"
+                    danger
+                    icon={<DeleteOutlined />}
+                    onClick={() => onForceDelete(record)}
+                  />
                 </Tooltip>
               )}
             </div>
@@ -153,7 +183,12 @@ const ClassTable = ({
               <Button size="small" icon={<SyncOutlined />} onClick={() => onChangeStatus(record)} />
             </Tooltip>
             <Tooltip title="Delete">
-              <Button size="small" danger icon={<DeleteOutlined />} onClick={() => onDelete(record)} />
+              <Button
+                size="small"
+                danger
+                icon={<DeleteOutlined />}
+                onClick={() => onDelete(record)}
+              />
             </Tooltip>
           </div>
         );

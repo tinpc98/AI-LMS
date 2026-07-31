@@ -42,10 +42,7 @@ const attendanceSchema = new Schema(
   { timestamps: true }
 );
 
-attendanceSchema.index(
-  { classId: 1, studentId: 1, date: 1 },
-  { unique: true }
-);
+attendanceSchema.index({ classId: 1, studentId: 1, date: 1 }, { unique: true });
 
 attendanceSchema.index({ classId: 1, date: 1 });
 attendanceSchema.index({ studentId: 1 });

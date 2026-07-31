@@ -24,14 +24,14 @@ export const runAIPendingRecovery = async () => {
         // 1. Atomic claim & Mark as timeout inside transaction
         const claimed = await AIUsage.findOneAndUpdate(
           { _id: usage._id, status: "pending", quotaState: "reserved" },
-          { 
-            $set: { 
-              status: "timeout", 
+          {
+            $set: {
+              status: "timeout",
               quotaState: "refunded",
               quotaRefundedAt: new Date(),
               finalizedAt: new Date(),
-              errorMessage: "Hệ thống hoặc Provider không phản hồi sau 5 phút (Timeout tự động)" 
-            } 
+              errorMessage: "Hệ thống hoặc Provider không phản hồi sau 5 phút (Timeout tự động)",
+            },
           },
           { session }
         );
@@ -47,7 +47,9 @@ export const runAIPendingRecovery = async () => {
         );
 
         if (refundRes.modifiedCount === 0) {
-          console.warn(`[CRON WARNING] Không thể hoàn Quota cho usage ${usage._id}: usageCount đã = 0 hoặc không tìm thấy document.`);
+          console.warn(
+            `[CRON WARNING] Không thể hoàn Quota cho usage ${usage._id}: usageCount đã = 0 hoặc không tìm thấy document.`
+          );
         }
 
         recoveredCount++;

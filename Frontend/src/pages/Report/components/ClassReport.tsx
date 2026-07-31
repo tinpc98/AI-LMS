@@ -1,16 +1,13 @@
 import React from "react";
 import { Row, Col, Card, Table, Tag, Progress, Statistic } from "antd";
-import { AppstoreOutlined, CheckCircleOutlined, ClockCircleOutlined, TeamOutlined } from "@ant-design/icons";
-import { mockClasses } from "../../../features/classManagement/class.mock";
 import {
-  ResponsiveContainer,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-} from "recharts";
+  AppstoreOutlined,
+  CheckCircleOutlined,
+  ClockCircleOutlined,
+  TeamOutlined,
+} from "@ant-design/icons";
+import { mockClasses } from "../../../features/classManagement/class.mock";
+import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from "recharts";
 
 export const ClassReport: React.FC = () => {
   const activeClasses = mockClasses.filter((c) => c.status === "Active").length;
@@ -51,7 +48,9 @@ export const ClassReport: React.FC = () => {
         <div className="text-xs text-gray-600">
           <div>{record.schedule?.days?.join(", ") || "N/A"}</div>
           <div>
-            {record.schedule?.startTime ? `${record.schedule.startTime} - ${record.schedule.endTime}` : "N/A"}
+            {record.schedule?.startTime
+              ? `${record.schedule.startTime} - ${record.schedule.endTime}`
+              : "N/A"}
           </div>
         </div>
       ),
@@ -64,7 +63,9 @@ export const ClassReport: React.FC = () => {
         return (
           <div className="w-36">
             <div className="flex justify-between text-xs mb-1">
-              <span>{record.currentStudents}/{record.maxStudents} HS</span>
+              <span>
+                {record.currentStudents}/{record.maxStudents} HS
+              </span>
               <span className="font-semibold">{percent}%</span>
             </div>
             <Progress percent={percent} size="small" showInfo={false} />
@@ -76,15 +77,18 @@ export const ClassReport: React.FC = () => {
       title: "Phòng học",
       dataIndex: "classroom",
       key: "classroom",
-      render: (room: string) => room ? <Tag color="gold">{room}</Tag> : <Tag color="default">Trực tuyến</Tag>,
+      render: (room: string) =>
+        room ? <Tag color="gold">{room}</Tag> : <Tag color="default">Trực tuyến</Tag>,
     },
     {
       title: "Trạng thái",
       dataIndex: "status",
       key: "status",
       render: (status: string) => {
-        const color = status === "Active" ? "success" : status === "Upcoming" ? "processing" : "default";
-        const label = status === "Active" ? "Đang diễn ra" : status === "Upcoming" ? "Sắp mở" : "Đã xong";
+        const color =
+          status === "Active" ? "success" : status === "Upcoming" ? "processing" : "default";
+        const label =
+          status === "Active" ? "Đang diễn ra" : status === "Upcoming" ? "Sắp mở" : "Đã xong";
         return <Tag color={color}>{label}</Tag>;
       },
     },
@@ -109,7 +113,9 @@ export const ClassReport: React.FC = () => {
             <Statistic
               title="Lớp Đang Hoạt Động"
               value={activeClasses}
-              prefix={<CheckCircleOutlined className="text-green-500 mr-2 p-2 bg-green-50 rounded-lg" />}
+              prefix={
+                <CheckCircleOutlined className="text-green-500 mr-2 p-2 bg-green-50 rounded-lg" />
+              }
             />
           </Card>
         </Col>
@@ -119,7 +125,9 @@ export const ClassReport: React.FC = () => {
             <Statistic
               title="Lớp Sắp Khai Giảng"
               value={upcomingClasses}
-              prefix={<ClockCircleOutlined className="text-amber-500 mr-2 p-2 bg-amber-50 rounded-lg" />}
+              prefix={
+                <ClockCircleOutlined className="text-amber-500 mr-2 p-2 bg-amber-50 rounded-lg" />
+              }
             />
           </Card>
         </Col>
@@ -131,7 +139,8 @@ export const ClassReport: React.FC = () => {
               value={
                 mockClasses.length > 0
                   ? Math.round(
-                      mockClasses.reduce((acc, c) => acc + c.currentStudents, 0) / mockClasses.length
+                      mockClasses.reduce((acc, c) => acc + c.currentStudents, 0) /
+                        mockClasses.length
                     )
                   : 0
               }
@@ -143,7 +152,10 @@ export const ClassReport: React.FC = () => {
       </Row>
 
       {/* Chart */}
-      <Card title="So sánh Sĩ số Thực tế vs Chỉ tiêu Sĩ số Tối đa của các Lớp" className="rounded-xl border border-gray-100 shadow-sm">
+      <Card
+        title="So sánh Sĩ số Thực tế vs Chỉ tiêu Sĩ số Tối đa của các Lớp"
+        className="rounded-xl border border-gray-100 shadow-sm"
+      >
         <div className="h-72">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={classFillRateData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
@@ -159,13 +171,11 @@ export const ClassReport: React.FC = () => {
       </Card>
 
       {/* Table */}
-      <Card title="Báo Cáo Chi Tiết Các Lớp Học" className="rounded-xl border border-gray-100 shadow-sm">
-        <Table
-          columns={columns}
-          dataSource={mockClasses}
-          rowKey="id"
-          pagination={false}
-        />
+      <Card
+        title="Báo Cáo Chi Tiết Các Lớp Học"
+        className="rounded-xl border border-gray-100 shadow-sm"
+      >
+        <Table columns={columns} dataSource={mockClasses} rowKey="id" pagination={false} />
       </Card>
     </div>
   );

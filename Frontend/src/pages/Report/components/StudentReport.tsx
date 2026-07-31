@@ -3,15 +3,7 @@ import { Row, Col, Card, Table, Tag, Progress, Avatar, Statistic } from "antd";
 import { UserOutlined, TrophyOutlined, CheckCircleOutlined } from "@ant-design/icons";
 import { mockUsers } from "../../../features/accountManagement/account.mock";
 import { mockClasses } from "../../../features/classManagement/class.mock";
-import {
-  ResponsiveContainer,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-} from "recharts";
+import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from "recharts";
 
 export const StudentReport: React.FC = () => {
   const students = mockUsers.filter((u) => u.role === "Student");
@@ -98,7 +90,9 @@ export const StudentReport: React.FC = () => {
             <Statistic
               title="Học Sinh Đang Học (Active)"
               value={activeStudents * 150 + 5}
-              prefix={<CheckCircleOutlined className="text-green-500 mr-2 p-2 bg-green-50 rounded-lg" />}
+              prefix={
+                <CheckCircleOutlined className="text-green-500 mr-2 p-2 bg-green-50 rounded-lg" />
+              }
             />
           </Card>
         </Col>
@@ -117,10 +111,16 @@ export const StudentReport: React.FC = () => {
       </Row>
 
       {/* Chart Row */}
-      <Card title="Phân tích Điểm Trung bình theo Môn học (Top Học sinh)" className="rounded-xl border border-gray-100 shadow-sm">
+      <Card
+        title="Phân tích Điểm Trung bình theo Môn học (Top Học sinh)"
+        className="rounded-xl border border-gray-100 shadow-sm"
+      >
         <div className="h-72">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={studentPerformanceData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+            <BarChart
+              data={studentPerformanceData}
+              margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+            >
               <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
               <XAxis dataKey="name" tickLine={false} />
               <YAxis domain={[0, 10]} tickLine={false} axisLine={false} />
@@ -134,13 +134,11 @@ export const StudentReport: React.FC = () => {
       </Card>
 
       {/* Table Row */}
-      <Card title="Danh Sách Học Sinh & Kết Quả Học Tập" className="rounded-xl border border-gray-100 shadow-sm">
-        <Table
-          columns={columns}
-          dataSource={students}
-          rowKey="id"
-          pagination={{ pageSize: 5 }}
-        />
+      <Card
+        title="Danh Sách Học Sinh & Kết Quả Học Tập"
+        className="rounded-xl border border-gray-100 shadow-sm"
+      >
+        <Table columns={columns} dataSource={students} rowKey="id" pagination={{ pageSize: 5 }} />
       </Card>
     </div>
   );

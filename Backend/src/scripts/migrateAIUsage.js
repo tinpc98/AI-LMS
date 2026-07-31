@@ -24,21 +24,26 @@ async function runDryRunMigration() {
     if (missingQuotaState > 0) {
       const stats = await AIUsage.aggregate([
         { $match: { quotaState: { $exists: false } } },
-        { $group: { _id: "$status", count: { $sum: 1 } } }
+        { $group: { _id: "$status", count: { $sum: 1 } } },
       ]);
       console.log("\nBreakdown of records to migrate by status:");
-      stats.forEach(s => {
+      stats.forEach((s) => {
         console.log(` - Status '${s._id}': ${s.count} records`);
       });
 
       console.log("\nProposed Migration Strategy (DRY RUN - No changes will be made):");
-      console.log(" 1. status = 'pending' -> quotaState = 'reserved', quotaDateString = formatted(createdAt)");
-      console.log(" 2. status = 'success' -> quotaState = 'consumed', quotaDateString = formatted(createdAt), finalizedAt = formatted(updatedAt)");
-      console.log(" 3. status IN ('error', 'timeout', 'invalid_output') -> quotaState = 'refunded', quotaDateString = formatted(createdAt), quotaRefundedAt = formatted(updatedAt), finalizedAt = formatted(updatedAt)");
+      console.log(
+        " 1. status = 'pending' -> quotaState = 'reserved', quotaDateString = formatted(createdAt)"
+      );
+      console.log(
+        " 2. status = 'success' -> quotaState = 'consumed', quotaDateString = formatted(createdAt), finalizedAt = formatted(updatedAt)"
+      );
+      console.log(
+        " 3. status IN ('error', 'timeout', 'invalid_output') -> quotaState = 'refunded', quotaDateString = formatted(createdAt), quotaRefundedAt = formatted(updatedAt), finalizedAt = formatted(updatedAt)"
+      );
     } else {
       console.log("No records need migration.");
     }
-
   } catch (error) {
     console.error("Migration dry run error:", error);
   } finally {

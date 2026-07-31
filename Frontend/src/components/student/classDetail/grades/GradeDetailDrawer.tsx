@@ -78,11 +78,17 @@ export const GradeDetailDrawer: React.FC<GradeDetailDrawerProps> = React.memo(
                   Kết quả chấm điểm cá nhân
                 </Text>
                 <Title level={2} style={{ margin: 0, color: "#722ed1", fontWeight: 700 }}>
-                  {item.score} <span style={{ fontSize: 16, color: "#8c8c8c", fontWeight: 400 }}>/ {item.maxScore} điểm</span>
+                  {item.score}{" "}
+                  <span style={{ fontSize: 16, color: "#8c8c8c", fontWeight: 400 }}>
+                    / {item.maxScore} điểm
+                  </span>
                 </Title>
               </div>
 
-              <Tag color="purple" style={{ borderRadius: 8, fontSize: 14, padding: "6px 12px", fontWeight: 700 }}>
+              <Tag
+                color="purple"
+                style={{ borderRadius: 8, fontSize: 14, padding: "6px 12px", fontWeight: 700 }}
+              >
                 Trọng số: {item.weight}%
               </Tag>
             </div>
@@ -132,8 +138,12 @@ export const GradeDetailDrawer: React.FC<GradeDetailDrawerProps> = React.memo(
           {/* Teacher Written Feedback */}
           {item.feedback && (
             <div style={{ marginBottom: 20 }}>
-              <Text strong style={{ fontSize: 14, color: "#262626", display: "block", marginBottom: 6 }}>
-                <CommentOutlined style={{ color: "#1890ff", marginRight: 6 }} /> Nhận xét của giảng viên:
+              <Text
+                strong
+                style={{ fontSize: 14, color: "#262626", display: "block", marginBottom: 6 }}
+              >
+                <CommentOutlined style={{ color: "#1890ff", marginRight: 6 }} /> Nhận xét của giảng
+                viên:
               </Text>
               <Paragraph
                 style={{
@@ -154,7 +164,10 @@ export const GradeDetailDrawer: React.FC<GradeDetailDrawerProps> = React.memo(
           {/* AI Assistant Feedback */}
           {item.aiFeedback && (
             <div>
-              <Text strong style={{ fontSize: 14, color: "#1890ff", display: "block", marginBottom: 6 }}>
+              <Text
+                strong
+                style={{ fontSize: 14, color: "#1890ff", display: "block", marginBottom: 6 }}
+              >
                 <RobotOutlined style={{ marginRight: 6 }} /> Gợi ý & Phân tích từ AI Assistant:
               </Text>
               <Paragraph

@@ -23,7 +23,7 @@ axiosClient.interceptors.request.use(
         console.log(
           "[axios] Request:",
           config.method?.toUpperCase(),
-          (config.baseURL ?? "") + config.url,
+          (config.baseURL ?? "") + config.url
         );
       }
     } catch (e) {
@@ -36,7 +36,7 @@ axiosClient.interceptors.request.use(
       console.log("[axios] Request error:", error.message);
     }
     return Promise.reject(error);
-  },
+  }
 );
 
 // 2. RESPONSE INTERCEPTOR: Quản lý phản hồi và Tự động Logout khi Token hết hạn
@@ -49,11 +49,7 @@ axiosClient.interceptors.response.use(
   },
   (error: AxiosError) => {
     if (import.meta.env.DEV) {
-      console.log(
-        "[axios] Response error:",
-        error.response?.status,
-        error.message,
-      );
+      console.log("[axios] Response error:", error.response?.status, error.message);
     }
 
     const requestUrl = error.config?.url || "";
@@ -71,14 +67,11 @@ axiosClient.interceptors.response.use(
         window.dispatchEvent(new Event("unauthorized-logout"));
       }
     } else if (error.response?.status === 403) {
-      toast.error(
-        "Bạn không có quyền thực hiện thao tác này!",
-        "Từ chối truy cập"
-      );
+      toast.error("Bạn không có quyền thực hiện thao tác này!", "Từ chối truy cập");
     }
 
     return Promise.reject(error);
-  },
+  }
 );
 
 export default axiosClient;

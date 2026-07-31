@@ -11,7 +11,11 @@ class AIVectorRetrieverService {
       throw new AIError("Query vector không hợp lệ.", AIErrorCode.AI_INVALID_INPUT, 400);
     }
     if (!classId || !lessonId) {
-      throw new AIError("Yêu cầu classId và lessonId để giới hạn phạm vi tìm kiếm (Pre-filter).", AIErrorCode.AI_INVALID_INPUT, 400);
+      throw new AIError(
+        "Yêu cầu classId và lessonId để giới hạn phạm vi tìm kiếm (Pre-filter).",
+        AIErrorCode.AI_INVALID_INPUT,
+        400
+      );
     }
 
     const vectorIndexName = process.env.AI_VECTOR_INDEX_NAME || "ai_knowledge_vector_index";
@@ -38,41 +42,43 @@ class AIVectorRetrieverService {
                 { classId: new mongoose.Types.ObjectId(classId) },
                 { lessonId: new mongoose.Types.ObjectId(lessonId) },
                 { status: "ready" },
-                { isDeleted: false }
-              ]
-            }
-          }
+                { isDeleted: false },
+              ],
+            },
+          },
         },
         {
           $project: {
             embedding: 0, // Không trả vector ra ngoài
-            score: { $meta: "vectorSearchScore" }
-          }
-        }
+            score: { $meta: "vectorSearchScore" },
+          },
+        },
       ]);
 
-      const filteredResults = results
-        .filter(doc => doc.score >= minScore)
-        .slice(0, topK);
+      const filteredResults = results.filter((doc) => doc.score >= minScore).slice(0, topK);
 
-      return filteredResults.map(doc => ({
+      return filteredResults.map((doc) => ({
         chunkId: doc.chunkId,
         sourceName: doc.sourceName,
         sourceType: doc.sourceType,
         lessonId: doc.lessonId.toString(),
         excerpt: doc.content,
-        score: doc.score
+        score: doc.score,
       }));
     } catch (error) {
       const errMsg = error.message ? error.message.toLowerCase() : "";
       if (errMsg.includes("index") || errMsg.includes("search")) {
-         throw new AIError(
-           "Hệ thống Vector Search chưa được cấu hình (Index Not Found). Vui lòng cấu hình Atlas Vector Search theo tài liệu.",
-           AIErrorCode.AI_CONFIG_ERROR,
-           500
-         );
+        throw new AIError(
+          "Hệ thống Vector Search chưa được cấu hình (Index Not Found). Vui lòng cấu hình Atlas Vector Search theo tài liệu.",
+          AIErrorCode.AI_CONFIG_ERROR,
+          500
+        );
       }
-      throw new AIError("Lỗi truy vấn Vector Search: " + error.message, AIErrorCode.AI_PROVIDER_ERROR, 500);
+      throw new AIError(
+        "Lỗi truy vấn Vector Search: " + error.message,
+        AIErrorCode.AI_PROVIDER_ERROR,
+        500
+      );
     }
   }
 

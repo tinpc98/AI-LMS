@@ -11,7 +11,18 @@ import { calculateGradeMatrix } from "./gradeCalculator.js";
 
 class GradeService {
   // Tạo mới hoặc Cập nhật điểm số của học sinh theo cột điểm (Manual Grades)
-  async upsertGrade({ studentId, classId, courseId, category, score, weight, feedback, aiFeedback, gradedBy, gradedByRole }) {
+  async upsertGrade({
+    studentId,
+    classId,
+    courseId,
+    category,
+    score,
+    weight,
+    feedback,
+    aiFeedback,
+    gradedBy,
+    gradedByRole,
+  }) {
     if (!mongoose.Types.ObjectId.isValid(classId)) {
       throw new Error("ID lớp học không hợp lệ!");
     }
@@ -55,37 +66,43 @@ class GradeService {
 
     // 1. Fetch Students
     let students = classExists.students
-      .filter(s => s.status === "Enrolled")
-      .map(s => ({ studentId: s.studentId, status: s.status }));
-      
-    if (targetStudentId) {
-      students = students.filter(s => s.studentId.toString() === targetStudentId.toString());
-    }
-    const studentIds = students.map(s => s.studentId);
+      .filter((s) => s.status === "Enrolled")
+      .map((s) => ({ studentId: s.studentId, status: s.status }));
 
-    const users = await User.find({ _id: { $in: studentIds } }, "fullName email avatar studentCode").lean();
-    const userMap = new Map(users.map(u => [u._id.toString(), u]));
+    if (targetStudentId) {
+      students = students.filter((s) => s.studentId.toString() === targetStudentId.toString());
+    }
+    const studentIds = students.map((s) => s.studentId);
+
+    const users = await User.find(
+      { _id: { $in: studentIds } },
+      "fullName email avatar studentCode"
+    ).lean();
+    const userMap = new Map(users.map((u) => [u._id.toString(), u]));
 
     // 2. Fetch Source Records
     const assignments = await Assignment.find({ classId, isDeleted: false }, "_id title").lean();
-    const exams = await Exam.find({ classId, isDeleted: false }, "_id title maxScore status").lean();
+    const exams = await Exam.find(
+      { classId, isDeleted: false },
+      "_id title maxScore status"
+    ).lean();
     const manualGrades = await Grade.find({ classId }).lean();
-    
+
     // Nếu có targetStudentId, giới hạn Submissions và ExamAttempts
-    const assignmentIds = assignments.map(a => a._id);
+    const assignmentIds = assignments.map((a) => a._id);
     const submissions = await Submission.find({
       assignmentId: { $in: assignmentIds },
       studentId: { $in: studentIds },
       isDeleted: false,
-      grade: { $ne: null }
+      grade: { $ne: null },
     }).lean();
 
-    const examIds = exams.map(e => e._id);
+    const examIds = exams.map((e) => e._id);
     const attempts = await ExamAttempt.find({
       examId: { $in: examIds },
       studentId: { $in: studentIds },
       status: "GRADED",
-      isDeleted: false
+      isDeleted: false,
     }).lean();
 
     // 3+4. Tính gradeItems + ma trận điểm từng học sinh (pure calculation, tách sang gradeCalculator.js)
@@ -122,20 +139,23 @@ class GradeService {
     if (!mongoose.Types.ObjectId.isValid(studentId)) {
       return { gradeItems: [], students: [] };
     }
-    
+
     // Nếu truyền classId thì chỉ tính cho 1 lớp
     if (classId && mongoose.Types.ObjectId.isValid(classId)) {
       return await this.aggregateGradesMatrix(classId, studentId);
     }
-    
+
     // Nếu không truyền classId, fallback về query cũ
     const grades = await Grade.find({ studentId })
       .populate("classId", "className classCode")
       .populate("gradedBy", "fullName email")
       .sort({ createdAt: -1 })
       .lean();
-      
-    return { gradeItems: [], students: [{ student: { _id: studentId }, grades: {}, legacyGrades: grades }] };
+
+    return {
+      gradeItems: [],
+      students: [{ student: { _id: studentId }, grades: {}, legacyGrades: grades }],
+    };
   }
 
   // Tính điểm trung bình môn (GPA) theo tỷ trọng gradingWeight của lớp
@@ -151,7 +171,7 @@ class GradeService {
       gpa: studentData.avgGPA,
       weights: data.weights,
       gradesCount: Object.keys(studentData.grades).length,
-      detail: studentData.grades, 
+      detail: studentData.grades,
     };
   }
 }

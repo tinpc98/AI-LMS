@@ -1,11 +1,21 @@
 // Unit test cho module tính toán điểm THUẦN (PR-09) — không mock Mongoose/DB,
 // vì gradeCalculator.js không phụ thuộc framework, chỉ nhận/trả plain object.
 import { describe, it, expect } from "vitest";
-import { buildGradeItems, computeWeightedGPA, computeStudentGrade, calculateGradeMatrix } from "../../src/services/gradeCalculator.js";
+import {
+  buildGradeItems,
+  computeWeightedGPA,
+  computeStudentGrade,
+  calculateGradeMatrix,
+} from "../../src/services/gradeCalculator.js";
 
 describe("buildGradeItems", () => {
   it("luôn có 3 cột manual mặc định (Attendance/Midterm/Final) kể cả khi chưa có điểm nào", () => {
-    const items = buildGradeItems({ gradingWeight: null, manualGrades: [], assignments: [], exams: [] });
+    const items = buildGradeItems({
+      gradingWeight: null,
+      manualGrades: [],
+      assignments: [],
+      exams: [],
+    });
     expect(items.map((i) => i.category)).toEqual(["Attendance", "Midterm", "Final"]);
   });
 
@@ -35,7 +45,12 @@ describe("buildGradeItems", () => {
   });
 
   it("exam maxScore mặc định là 10 nếu không khai báo", () => {
-    const items = buildGradeItems({ gradingWeight: null, manualGrades: [], assignments: [], exams: [{ _id: "e1", title: "Thi" }] });
+    const items = buildGradeItems({
+      gradingWeight: null,
+      manualGrades: [],
+      assignments: [],
+      exams: [{ _id: "e1", title: "Thi" }],
+    });
     expect(items.find((i) => i.type === "Exam").maxScore).toBe(10);
   });
 });
@@ -65,7 +80,12 @@ describe("computeWeightedGPA", () => {
   it("có Exam nhưng không có Midterm/Final thủ công → Exam average áp dụng cho cả 2 trọng số", () => {
     const cat = emptyCat();
     cat.Exam = { sum: 16, count: 2 }; // avg = 8
-    const result = computeWeightedGPA(cat, { attendance: 10, assignment: 20, midterm: 30, final: 40 });
+    const result = computeWeightedGPA(cat, {
+      attendance: 10,
+      assignment: 20,
+      midterm: 30,
+      final: 40,
+    });
     // avg=8, (midterm+final)=70% → 8*0.7=5.6
     expect(result).toEqual({ avgGPA: 5.6, totalWeight: 70 });
   });
@@ -74,7 +94,12 @@ describe("computeWeightedGPA", () => {
     const cat = emptyCat();
     cat.Midterm = { sum: 6, count: 1 };
     cat.Exam = { sum: 16, count: 2 };
-    const result = computeWeightedGPA(cat, { attendance: 10, assignment: 20, midterm: 30, final: 40 });
+    const result = computeWeightedGPA(cat, {
+      attendance: 10,
+      assignment: 20,
+      midterm: 30,
+      final: 40,
+    });
     // Chỉ Midterm được tính: 6*0.3=1.8, totalWeight chỉ 30 (Exam bị bỏ qua vì đã có Midterm)
     expect(result).toEqual({ avgGPA: 1.8, totalWeight: 30 });
   });
@@ -82,7 +107,12 @@ describe("computeWeightedGPA", () => {
   it("kết quả GPA được làm tròn 2 chữ số thập phân", () => {
     const cat = emptyCat();
     cat.Attendance = { sum: 7, count: 3 }; // avg = 2.333...
-    const result = computeWeightedGPA(cat, { attendance: 100, assignment: 0, midterm: 0, final: 0 });
+    const result = computeWeightedGPA(cat, {
+      attendance: 100,
+      assignment: 0,
+      midterm: 0,
+      final: 0,
+    });
     expect(result.avgGPA).toBe(2.33);
   });
 });
@@ -150,7 +180,10 @@ describe("computeStudentGrade", () => {
 
 describe("calculateGradeMatrix", () => {
   it("kết hợp buildGradeItems + computeStudentGrade cho toàn bộ danh sách học sinh", () => {
-    const userMap = new Map([["s1", { fullName: "A" }], ["s2", { fullName: "B" }]]);
+    const userMap = new Map([
+      ["s1", { fullName: "A" }],
+      ["s2", { fullName: "B" }],
+    ]);
     const result = calculateGradeMatrix({
       students: [{ studentId: "s1" }, { studentId: "s2" }],
       userMap,

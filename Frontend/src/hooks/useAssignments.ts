@@ -95,9 +95,7 @@ export function useAssignments(
     if (filters.searchQuery.trim()) {
       const q = filters.searchQuery.toLowerCase().trim();
       result = result.filter(
-        (a) =>
-          a.title.toLowerCase().includes(q) ||
-          (a.description || "").toLowerCase().includes(q)
+        (a) => a.title.toLowerCase().includes(q) || (a.description || "").toLowerCase().includes(q)
       );
     }
 
@@ -139,9 +137,12 @@ export function useAssignments(
     setFilters((prev) => ({ ...prev, searchQuery: value }));
   }, []);
 
-  const handleStatusFilterChange = useCallback((value: StudentAssignmentFilterOptions["statusFilter"]) => {
-    setFilters((prev) => ({ ...prev, statusFilter: value }));
-  }, []);
+  const handleStatusFilterChange = useCallback(
+    (value: StudentAssignmentFilterOptions["statusFilter"]) => {
+      setFilters((prev) => ({ ...prev, statusFilter: value }));
+    },
+    []
+  );
 
   const handleSortChange = useCallback((value: StudentAssignmentFilterOptions["sortBy"]) => {
     setFilters((prev) => ({ ...prev, sortBy: value }));

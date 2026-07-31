@@ -49,30 +49,39 @@ export function useExamDetail() {
     setIsStartModalOpen(false);
   }, []);
 
-  const handleConfirmStart = useCallback(async (examId: string, attemptId?: string) => {
-    setIsStartModalOpen(false);
-    setIsDetailOpen(false);
-    if (attemptId) {
-      navigate(`/exam/${attemptId}`);
-    } else {
-      const studentId = getStudentId();
-      if (!studentId) {
-        toast.error("Không tìm thấy thông tin đăng nhập. Vui lòng đăng nhập lại!", "Lỗi xác thực");
-        return;
+  const handleConfirmStart = useCallback(
+    async (examId: string, attemptId?: string) => {
+      setIsStartModalOpen(false);
+      setIsDetailOpen(false);
+      if (attemptId) {
+        navigate(`/exam/${attemptId}`);
+      } else {
+        const studentId = getStudentId();
+        if (!studentId) {
+          toast.error(
+            "Không tìm thấy thông tin đăng nhập. Vui lòng đăng nhập lại!",
+            "Lỗi xác thực"
+          );
+          return;
+        }
+        try {
+          const response = await axiosClient.post<{ data: { _id: string } }>(
+            "/api/exam-attempts/start",
+            {
+              examId,
+              studentId,
+            }
+          );
+          const newAttemptId = response.data.data._id;
+          navigate(`/exam/${newAttemptId}`);
+        } catch (error: any) {
+          console.error("Lỗi khi tạo phiên làm bài:", error);
+          toast.error(error.response?.data?.message || "Không thể bắt đầu bài thi.", "Lỗi bài thi");
+        }
       }
-      try {
-        const response = await axiosClient.post<{ data: { _id: string } }>("/api/exam-attempts/start", {
-          examId,
-          studentId,
-        });
-        const newAttemptId = response.data.data._id;
-        navigate(`/exam/${newAttemptId}`);
-      } catch (error: any) {
-        console.error("Lỗi khi tạo phiên làm bài:", error);
-        toast.error(error.response?.data?.message || "Không thể bắt đầu bài thi.", "Lỗi bài thi");
-      }
-    }
-  }, [navigate, getStudentId]);
+    },
+    [navigate, getStudentId]
+  );
 
   return {
     selectedExam,

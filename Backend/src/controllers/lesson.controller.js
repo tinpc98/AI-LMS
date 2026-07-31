@@ -17,7 +17,7 @@ const uploadToCloudinary = (fileBuffer, originalName) => {
           url: result.secure_url,
           publicId: result.public_id,
         });
-      },
+      }
     );
     stream.end(fileBuffer);
   });
@@ -29,32 +29,24 @@ const lessonController = {
   createLesson: async (req, res) => {
     try {
       // Bổ sung lấy order, isPublished, duration từ body
-      const {
-        title,
-        description,
-        videoUrl,
-        classId,
-        order,
-        isPublished,
-        duration,
-      } = req.body;
+      const { title, description, videoUrl, classId, order, isPublished, duration } = req.body;
       const teacherId = req.user.id || req.user._id;
 
       if (!title || !classId) {
-        return res
-          .status(400)
-          .json({ message: "Thiếu thông tin bắt buộc: Tiêu đề hoặc ClassId" });
+        return res.status(400).json({ message: "Thiếu thông tin bắt buộc: Tiêu đề hoặc ClassId" });
       }
 
       const isAuthorized = await checkClassTeacherOwnership(classId, teacherId, req.user?.role);
       if (!isAuthorized) {
-        return res.status(403).json({ message: "Bạn không có quyền tạo bài giảng cho lớp học này!" });
+        return res
+          .status(403)
+          .json({ message: "Bạn không có quyền tạo bài giảng cho lớp học này!" });
       }
 
       let attachments = [];
       if (req.files && req.files.length > 0) {
         const uploadPromises = req.files.map((file) =>
-          uploadToCloudinary(file.buffer, file.originalname),
+          uploadToCloudinary(file.buffer, file.originalname)
         );
         attachments = await Promise.all(uploadPromises);
       }
@@ -77,9 +69,7 @@ const lessonController = {
       });
 
       await newLesson.save();
-      return res
-        .status(201)
-        .json({ message: "Tạo bài giảng thành công", lesson: newLesson });
+      return res.status(201).json({ message: "Tạo bài giảng thành công", lesson: newLesson });
     } catch (error) {
       return res.status(500).json({
         message: "Lỗi server khi tạo bài giảng",
@@ -117,8 +107,7 @@ const lessonController = {
   updateLesson: async (req, res) => {
     try {
       const { id } = req.params;
-      const { title, description, videoUrl, order, isPublished, duration } =
-        req.body;
+      const { title, description, videoUrl, order, isPublished, duration } = req.body;
       const userId = req.user.id || req.user._id;
 
       const lesson = await Lesson.findById(id);
@@ -142,23 +131,20 @@ const lessonController = {
       if (order !== undefined) lesson.order = Number(order);
       if (duration !== undefined) lesson.duration = Number(duration);
       if (isPublished !== undefined) {
-        lesson.isPublished =
-          isPublished === "false" ? false : Boolean(isPublished);
+        lesson.isPublished = isPublished === "false" ? false : Boolean(isPublished);
       }
 
       // Xử lý upload file mới (nếu có)
       if (req.files && req.files.length > 0) {
         const uploadPromises = req.files.map((file) =>
-          uploadToCloudinary(file.buffer, file.originalname),
+          uploadToCloudinary(file.buffer, file.originalname)
         );
         const newAttachments = await Promise.all(uploadPromises);
         lesson.attachments.push(...newAttachments);
       }
 
       await lesson.save();
-      return res
-        .status(200)
-        .json({ message: "Cập nhật bài giảng thành công", lesson });
+      return res.status(200).json({ message: "Cập nhật bài giảng thành công", lesson });
     } catch (error) {
       return res.status(500).json({
         message: "Lỗi server khi sửa bài giảng",
@@ -187,15 +173,13 @@ const lessonController = {
 
       if (lesson.attachments && lesson.attachments.length > 0) {
         const deletePromises = lesson.attachments.map((file) =>
-          cloudinary.uploader.destroy(file.publicId),
+          cloudinary.uploader.destroy(file.publicId)
         );
         await Promise.all(deletePromises);
       }
 
       await lesson.softDelete(userId);
-      return res
-        .status(200)
-        .json({ message: "Xóa bài giảng và tài liệu liên quan thành công" });
+      return res.status(200).json({ message: "Xóa bài giảng và tài liệu liên quan thành công" });
     } catch (error) {
       return res.status(500).json({
         message: "Lỗi server khi xóa bài giảng",

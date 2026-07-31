@@ -13,7 +13,13 @@ interface CreateAssignmentModalProps {
 
 const MAX_FILES = 5;
 
-const CreateAssignmentModal = ({ isOpen, onClose, classId, lessonId, onCreated }: CreateAssignmentModalProps) => {
+const CreateAssignmentModal = ({
+  isOpen,
+  onClose,
+  classId,
+  lessonId,
+  onCreated,
+}: CreateAssignmentModalProps) => {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [deadline, setDeadline] = useState("");
@@ -96,7 +102,11 @@ const CreateAssignmentModal = ({ isOpen, onClose, classId, lessonId, onCreated }
       <div className="w-full max-w-[560px] overflow-y-auto rounded-2xl bg-white p-8 shadow-2xl max-h-[90vh]">
         <div className="mb-6 flex items-center justify-between">
           <h3 className="text-lg font-bold text-on-surface">Giao bài tập mới</h3>
-          <button type="button" onClick={onClose} className="text-on-surface-variant hover:text-on-surface">
+          <button
+            type="button"
+            onClick={onClose}
+            className="text-on-surface-variant hover:text-on-surface"
+          >
             <span className="material-symbols-outlined">close</span>
           </button>
         </div>
@@ -117,7 +127,9 @@ const CreateAssignmentModal = ({ isOpen, onClose, classId, lessonId, onCreated }
           </div>
 
           <div>
-            <label className="mb-1.5 block text-sm font-semibold text-on-surface">Mô tả / Hướng dẫn chi tiết</label>
+            <label className="mb-1.5 block text-sm font-semibold text-on-surface">
+              Mô tả / Hướng dẫn chi tiết
+            </label>
             <textarea
               value={description}
               onChange={(event) => setDescription(event.target.value)}
@@ -150,9 +162,15 @@ const CreateAssignmentModal = ({ isOpen, onClose, classId, lessonId, onCreated }
                 onChange={handleFileChange}
                 className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
               />
-              <span className="material-symbols-outlined mb-1 text-[32px] text-on-surface-variant">upload_file</span>
-              <p className="text-sm font-medium text-on-surface">Nhấp hoặc kéo thả file đề bài vào đây</p>
-              <p className="mt-0.5 text-xs text-on-surface-variant">PDF, Word, Excel, ZIP hoặc ảnh...</p>
+              <span className="material-symbols-outlined mb-1 text-[32px] text-on-surface-variant">
+                upload_file
+              </span>
+              <p className="text-sm font-medium text-on-surface">
+                Nhấp hoặc kéo thả file đề bài vào đây
+              </p>
+              <p className="mt-0.5 text-xs text-on-surface-variant">
+                PDF, Word, Excel, ZIP hoặc ảnh...
+              </p>
             </div>
 
             {selectedFiles.length > 0 && (
@@ -162,7 +180,9 @@ const CreateAssignmentModal = ({ isOpen, onClose, classId, lessonId, onCreated }
                     key={`${file.name}-${index}`}
                     className="flex items-center justify-between rounded-lg border border-outline-variant bg-surface p-2"
                   >
-                    <span className="max-w-[85%] truncate text-sm text-on-surface">{file.name}</span>
+                    <span className="max-w-[85%] truncate text-sm text-on-surface">
+                      {file.name}
+                    </span>
                     <button
                       type="button"
                       onClick={() => removeFile(index)}

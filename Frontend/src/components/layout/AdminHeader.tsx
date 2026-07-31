@@ -74,7 +74,15 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({
         <div className={styles.headerLeft}>
           <Button
             type="text"
-            icon={isMobile ? <MenuUnfoldOutlined /> : collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+            icon={
+              isMobile ? (
+                <MenuUnfoldOutlined />
+              ) : collapsed ? (
+                <MenuUnfoldOutlined />
+              ) : (
+                <MenuFoldOutlined />
+              )
+            }
             onClick={isMobile ? onMobileMenuOpen : onToggleCollapse}
             className={styles.headerButton}
           />

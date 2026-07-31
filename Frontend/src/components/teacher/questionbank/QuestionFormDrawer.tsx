@@ -123,7 +123,10 @@ export const QuestionFormDrawer: React.FC<QuestionFormDrawerProps> = React.memo(
                   label="Chủ đề / Bài học *"
                   rules={[{ required: true, message: "Vui lòng nhập chủ đề!" }]}
                 >
-                  <Input placeholder="Ví dụ: Unit 8: Ordering a meal / Lập trình Web" maxLength={150} />
+                  <Input
+                    placeholder="Ví dụ: Unit 8: Ordering a meal / Lập trình Web"
+                    maxLength={150}
+                  />
                 </Form.Item>
               </Col>
 
@@ -162,16 +165,28 @@ export const QuestionFormDrawer: React.FC<QuestionFormDrawerProps> = React.memo(
           </Form.Item>
 
           {questionType === "MCQ" && (
-            <Card title="📌 Các phương án trắc nghiệm & Đáp án đúng" size="small" style={{ marginBottom: 20, borderRadius: 8 }}>
+            <Card
+              title="📌 Các phương án trắc nghiệm & Đáp án đúng"
+              size="small"
+              style={{ marginBottom: 20, borderRadius: 8 }}
+            >
               <Row gutter={12}>
                 <Col span={12}>
-                  <Form.Item name="optionA" label="Phương án A *" rules={[{ required: true, message: "Vui lòng nhập phương án A!" }]}>
+                  <Form.Item
+                    name="optionA"
+                    label="Phương án A *"
+                    rules={[{ required: true, message: "Vui lòng nhập phương án A!" }]}
+                  >
                     <Input placeholder="Nội dung đáp án A" />
                   </Form.Item>
                 </Col>
 
                 <Col span={12}>
-                  <Form.Item name="optionB" label="Phương án B *" rules={[{ required: true, message: "Vui lòng nhập phương án B!" }]}>
+                  <Form.Item
+                    name="optionB"
+                    label="Phương án B *"
+                    rules={[{ required: true, message: "Vui lòng nhập phương án B!" }]}
+                  >
                     <Input placeholder="Nội dung đáp án B" />
                   </Form.Item>
                 </Col>
@@ -202,7 +217,12 @@ export const QuestionFormDrawer: React.FC<QuestionFormDrawerProps> = React.memo(
 
           <div style={{ display: "flex", justifyContent: "flex-end", gap: 12, marginTop: 24 }}>
             <Button onClick={onClose}>Hủy</Button>
-            <Button type="primary" htmlType="submit" loading={submitting} icon={<CheckCircleOutlined />}>
+            <Button
+              type="primary"
+              htmlType="submit"
+              loading={submitting}
+              icon={<CheckCircleOutlined />}
+            >
               {isEditing ? "Lưu thay đổi" : "Thêm câu hỏi"}
             </Button>
           </div>

@@ -52,7 +52,16 @@ describe("getExamSetDetailService", () => {
       questionCount: 1,
       totalPoints: 10,
       version: 1,
-      questions: [{ questionId: "q-1", order: 0, type: "short_answer", content: "What is 2+2?", points: 10, correctAnswer: "4" }],
+      questions: [
+        {
+          questionId: "q-1",
+          order: 0,
+          type: "short_answer",
+          content: "What is 2+2?",
+          points: 10,
+          correctAnswer: "4",
+        },
+      ],
       createdAt: new Date("2024-01-01T00:00:00.000Z"),
       updatedAt: new Date("2024-01-02T00:00:00.000Z"),
     });

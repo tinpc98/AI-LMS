@@ -16,31 +16,41 @@ interface AnnouncementFeedProps {
   onDetail: (item: IExtendedAnnouncement) => void;
 }
 
-export const AnnouncementFeed: React.FC<AnnouncementFeedProps> = React.memo(({ groups, onDetail }) => {
-  return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-      {groups.map((group) => (
-        <div key={group.groupTitle}>
-          {/* Group Header */}
-          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
-            <ClockCircleOutlined style={{ color: "#1890ff", fontSize: 14 }} />
-            <Text strong style={{ fontSize: 13, color: "#8c8c8c", textTransform: "uppercase", letterSpacing: 0.5 }}>
-              {group.groupTitle} ({group.items.length})
-            </Text>
-            <Divider style={{ margin: 0, flex: 1 }} />
-          </div>
+export const AnnouncementFeed: React.FC<AnnouncementFeedProps> = React.memo(
+  ({ groups, onDetail }) => {
+    return (
+      <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+        {groups.map((group) => (
+          <div key={group.groupTitle}>
+            {/* Group Header */}
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+              <ClockCircleOutlined style={{ color: "#1890ff", fontSize: 14 }} />
+              <Text
+                strong
+                style={{
+                  fontSize: 13,
+                  color: "#8c8c8c",
+                  textTransform: "uppercase",
+                  letterSpacing: 0.5,
+                }}
+              >
+                {group.groupTitle} ({group.items.length})
+              </Text>
+              <Divider style={{ margin: 0, flex: 1 }} />
+            </div>
 
-          {/* Feed Cards List */}
-          <div>
-            {group.items.map((item) => (
-              <AnnouncementCard key={item._id} item={item} onDetail={onDetail} />
-            ))}
+            {/* Feed Cards List */}
+            <div>
+              {group.items.map((item) => (
+                <AnnouncementCard key={item._id} item={item} onDetail={onDetail} />
+              ))}
+            </div>
           </div>
-        </div>
-      ))}
-    </div>
-  );
-});
+        ))}
+      </div>
+    );
+  }
+);
 
 AnnouncementFeed.displayName = "AnnouncementFeed";
 

@@ -36,7 +36,9 @@ async function runTests() {
   try {
     // TEST 1: AIError & Error Codes
     console.log("1. Testing AIError Utility:");
-    const err = new AIError("Lỗi kết nối AI", AIErrorCode.AI_PROVIDER_ERROR, 502, { detail: "test" });
+    const err = new AIError("Lỗi kết nối AI", AIErrorCode.AI_PROVIDER_ERROR, 502, {
+      detail: "test",
+    });
     assert(err.isAIError === true, "AIError has isAIError = true");
     assert(err.code === "AI_PROVIDER_ERROR", "AIError retains code");
     assert(err.status === 502, "AIError retains status code");
@@ -49,7 +51,10 @@ async function runTests() {
     assert(textRes.inputTokens > 0, "Mock provider returns token count");
 
     const jsonRes = await mockProvider.generateJSON({ prompt: "summary bài giảng" });
-    assert(jsonRes && typeof jsonRes.data === "object", "Mock provider generateJSON returns object");
+    assert(
+      jsonRes && typeof jsonRes.data === "object",
+      "Mock provider generateJSON returns object"
+    );
     assert(jsonRes.data.summary !== undefined, "Mock provider summary response has expected field");
 
     // TEST 3: Prompt Manager
@@ -58,22 +63,32 @@ async function runTests() {
     assert(summaryPrompt.name === "summary", "PromptManager builds summary prompt template");
     assert(summaryPrompt.prompt.includes("Bài 1"), "Prompt incorporates variables correctly");
 
-    const examPrompt = promptManager.build("exam", { topic: "Toán 12", mcqCount: 2, essayCount: 1 });
+    const examPrompt = promptManager.build("exam", {
+      topic: "Toán 12",
+      mcqCount: 2,
+      essayCount: 1,
+    });
     assert(examPrompt.name === "exam", "PromptManager builds exam prompt template");
     assert(examPrompt.prompt.includes("Toán 12"), "Exam prompt contains topic");
 
     // TEST 4: Output Parser & Cleaning
     console.log("\n4. Testing Output Parser & Cleaning:");
-    const markdownJson = "```json\n{\"summary\": \"Tóm tắt mẫu\", \"keyPoints\": [\"Ý 1\"]}\n```";
+    const markdownJson = '```json\n{"summary": "Tóm tắt mẫu", "keyPoints": ["Ý 1"]}\n```';
     const cleaned = cleanJsonString(markdownJson);
-    assert(cleaned.startsWith("{") && cleaned.endsWith("}"), "cleanJsonString strips markdown fences");
+    assert(
+      cleaned.startsWith("{") && cleaned.endsWith("}"),
+      "cleanJsonString strips markdown fences"
+    );
 
     const parsed = safeParseJSON(markdownJson);
     assert(parsed.summary === "Tóm tắt mẫu", "safeParseJSON parses markdown JSON");
 
     const validatedSummary = validateSummaryOutput(parsed);
     assert(validatedSummary.summary === "Tóm tắt mẫu", "validateSummaryOutput validates fields");
-    assert(Array.isArray(validatedSummary.keyPoints), "validateSummaryOutput returns array keyPoints");
+    assert(
+      Array.isArray(validatedSummary.keyPoints),
+      "validateSummaryOutput returns array keyPoints"
+    );
 
     // TEST 5: Exam Output Validation
     console.log("\n5. Testing Exam Output Validation:");
@@ -83,7 +98,10 @@ async function runTests() {
         {
           type: "multiple_choice",
           content: "1 + 1 = ?",
-          options: [{ id: "opt_1", text: "2" }, { id: "opt_2", text: "3" }],
+          options: [
+            { id: "opt_1", text: "2" },
+            { id: "opt_2", text: "3" },
+          ],
           correctAnswer: "opt_1",
           points: 5.0,
         },
@@ -106,7 +124,10 @@ async function runTests() {
       aiFeedback: "Bài làm tốt",
     };
     const validatedGrading = validateGradingOutput(mockGradingJson, 10.0);
-    assert(validatedGrading.suggestedScore === 8.5, "validateGradingOutput validates suggestedScore");
+    assert(
+      validatedGrading.suggestedScore === 8.5,
+      "validateGradingOutput validates suggestedScore"
+    );
     assert(validatedGrading.confidence === 0.9, "validateGradingOutput validates confidence");
 
     // TEST 7: AI Core Service with Mock Provider
@@ -135,22 +156,35 @@ async function runTests() {
       validatorFunc: validateSummaryOutput,
     });
 
-    assert(coreResult && coreResult.data && coreResult.data.summary !== undefined, "executeStructuredAI returns validated data");
-    assert(coreResult.usage && coreResult.usage.provider === "mock", "executeStructuredAI uses Mock Provider in mock mode");
-    assert(coreResult.usageId === usageIdTest, "executeStructuredAI returns usageId from AIUsageService");
+    assert(
+      coreResult && coreResult.data && coreResult.data.summary !== undefined,
+      "executeStructuredAI returns validated data"
+    );
+    assert(
+      coreResult.usage && coreResult.usage.provider === "mock",
+      "executeStructuredAI uses Mock Provider in mock mode"
+    );
+    assert(
+      coreResult.usageId === usageIdTest,
+      "executeStructuredAI returns usageId from AIUsageService"
+    );
 
     // TEST 8: AI Feature Flag Mapping
     console.log("\n8. Testing AI Feature Flag Mapping:");
     try {
-      const originalCheckUserQuota = aiUsageService.constructor.prototype.checkUserQuota.bind(aiUsageService);
+      const originalCheckUserQuota =
+        aiUsageService.constructor.prototype.checkUserQuota.bind(aiUsageService);
       aiUsageService.checkUserQuota = originalCheckUserQuota;
 
-      const configMock = { isGloballyEnabled: true, featureFlags: { "questionGen": false } };
+      const configMock = { isGloballyEnabled: true, featureFlags: { questionGen: false } };
       aiUsageService.getOrCreateConfig = async () => configMock;
       await aiUsageService.checkUserQuota(dummyUserId, "student", "question-gen");
       assert(false, "Feature flag mapping failed to block disabled feature");
     } catch (e) {
-      assert(e.code === AIErrorCode.AI_FEATURE_DISABLED, "Feature flag mapping correctly blocked question-gen via questionGen flag");
+      assert(
+        e.code === AIErrorCode.AI_FEATURE_DISABLED,
+        "Feature flag mapping correctly blocked question-gen via questionGen flag"
+      );
     }
 
     // TEST 9: AI Provider Config & Fallback
@@ -164,10 +198,12 @@ async function runTests() {
       await aiCoreService.resolveProvider();
       assert(false, "resolveProvider did not throw on missing key when MOCK_MODE=false");
     } catch (e) {
-      assert(e.code === AIErrorCode.AI_CONFIG_ERROR, "resolveProvider throws AI_CONFIG_ERROR when MOCK_MODE=false and key missing");
+      assert(
+        e.code === AIErrorCode.AI_CONFIG_ERROR,
+        "resolveProvider throws AI_CONFIG_ERROR when MOCK_MODE=false and key missing"
+      );
     }
     process.env.NODE_ENV = originalEnv;
-
   } catch (error) {
     console.error("❌ Exception during test execution:", error);
     failed++;

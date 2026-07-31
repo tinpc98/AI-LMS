@@ -1,7 +1,10 @@
 // Unit test cho module tính tiến độ THUẦN (Wave 1.1) — không mock Mongoose/DB,
 // vì classProgressCalculator.js chỉ nhận/trả plain object.
 import { describe, it, expect } from "vitest";
-import { computeClassProgress, buildProgressMap } from "../../src/services/classProgressCalculator.js";
+import {
+  computeClassProgress,
+  buildProgressMap,
+} from "../../src/services/classProgressCalculator.js";
 
 describe("computeClassProgress", () => {
   it("trả null khi lớp chưa có bài giảng lẫn bài tập — để UI hiển thị '—' thay vì khẳng định 0%", () => {

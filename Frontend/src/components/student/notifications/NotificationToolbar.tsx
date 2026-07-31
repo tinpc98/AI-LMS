@@ -15,14 +15,7 @@ interface NotificationToolbarProps {
 }
 
 export const NotificationToolbar: React.FC<NotificationToolbarProps> = React.memo(
-  ({
-    searchQuery,
-    category,
-    sortBy,
-    onSearchChange,
-    onCategoryChange,
-    onSortChange,
-  }) => {
+  ({ searchQuery, category, sortBy, onSearchChange, onCategoryChange, onSortChange }) => {
     return (
       <div
         style={{

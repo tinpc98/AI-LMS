@@ -61,7 +61,8 @@ export const LiveClassTab: React.FC<LiveClassTabProps> = React.memo(
             meetingRoomId: activeSession.roomName || (activeSession as any).meetingRoomId || "",
             sessionNumber: activeSession.sessionNumber || 1,
             title: activeSession.title || `Buổi học trực tuyến lớp ${classInfo?.className || ""}`,
-            createdBy: typeof activeSession.createdBy === "object" ? activeSession.createdBy.name : "",
+            createdBy:
+              typeof activeSession.createdBy === "object" ? activeSession.createdBy.name : "",
             status: "Live",
             isLiveNow: true,
             platform: "8x8 JaaS",
@@ -85,9 +86,12 @@ export const LiveClassTab: React.FC<LiveClassTabProps> = React.memo(
       if (onJoinLiveRoom) {
         onJoinLiveRoom();
       }
-      const sessionId = activeSession?.id || (activeSession as any)?._id || session._id || session.id;
+      const sessionId =
+        activeSession?.id || (activeSession as any)?._id || session._id || session.id;
       if (sessionId) {
-        navigate(`/student/live/${sessionId}`, { state: { classId, returnUrl: location.pathname } });
+        navigate(`/student/live/${sessionId}`, {
+          state: { classId, returnUrl: location.pathname },
+        });
       }
     };
 

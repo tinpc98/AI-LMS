@@ -94,9 +94,7 @@ export function useStudentExams(
     if (filters.searchQuery.trim()) {
       const q = filters.searchQuery.toLowerCase().trim();
       result = result.filter(
-        (e) =>
-          e.title.toLowerCase().includes(q) ||
-          (e.description || "").toLowerCase().includes(q)
+        (e) => e.title.toLowerCase().includes(q) || (e.description || "").toLowerCase().includes(q)
       );
     }
 
@@ -139,9 +137,12 @@ export function useStudentExams(
     setFilters((prev) => ({ ...prev, searchQuery: value }));
   }, []);
 
-  const handleStatusFilterChange = useCallback((value: StudentExamFilterOptions["statusFilter"]) => {
-    setFilters((prev) => ({ ...prev, statusFilter: value }));
-  }, []);
+  const handleStatusFilterChange = useCallback(
+    (value: StudentExamFilterOptions["statusFilter"]) => {
+      setFilters((prev) => ({ ...prev, statusFilter: value }));
+    },
+    []
+  );
 
   const handleSortChange = useCallback((value: StudentExamFilterOptions["sortBy"]) => {
     setFilters((prev) => ({ ...prev, sortBy: value }));

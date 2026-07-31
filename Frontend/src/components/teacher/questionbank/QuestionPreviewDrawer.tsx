@@ -36,22 +36,51 @@ export const QuestionPreviewDrawer: React.FC<QuestionPreviewDrawerProps> = React
             <Tag color={isMCQ ? "blue" : "purple"}>
               {isMCQ ? "🔵 Trắc nghiệm (MCQ)" : "🟣 Tự luận (ESSAY)"}
             </Tag>
-            <Tag color={question.difficulty === "EASY" ? "green" : question.difficulty === "HARD" ? "red" : "orange"}>
-              Độ khó: {question.difficulty === "EASY" ? "Dễ" : question.difficulty === "HARD" ? "Khó" : "Vừa"}
+            <Tag
+              color={
+                question.difficulty === "EASY"
+                  ? "green"
+                  : question.difficulty === "HARD"
+                    ? "red"
+                    : "orange"
+              }
+            >
+              Độ khó:{" "}
+              {question.difficulty === "EASY"
+                ? "Dễ"
+                : question.difficulty === "HARD"
+                  ? "Khó"
+                  : "Vừa"}
             </Tag>
             {question.topic && <Tag color="cyan">Chủ đề: {question.topic}</Tag>}
           </Space>
 
           {/* Question Content Box */}
-          <Card title="📌 Nội dung câu hỏi" style={{ borderRadius: 8, backgroundColor: "#fafafa" }} styles={{ body: { padding: 16 } }}>
-            <Paragraph style={{ fontSize: 15, fontWeight: 600, color: "#1f1f1f", whiteSpace: "pre-wrap", margin: 0 }}>
+          <Card
+            title="📌 Nội dung câu hỏi"
+            style={{ borderRadius: 8, backgroundColor: "#fafafa" }}
+            styles={{ body: { padding: 16 } }}
+          >
+            <Paragraph
+              style={{
+                fontSize: 15,
+                fontWeight: 600,
+                color: "#1f1f1f",
+                whiteSpace: "pre-wrap",
+                margin: 0,
+              }}
+            >
               {question.content}
             </Paragraph>
           </Card>
 
           {/* MCQ Options List */}
           {isMCQ && question.options && question.options.length > 0 && (
-            <Card title="🎯 Các phương án lựa chọn" style={{ borderRadius: 8 }} styles={{ body: { padding: 16 } }}>
+            <Card
+              title="🎯 Các phương án lựa chọn"
+              style={{ borderRadius: 8 }}
+              styles={{ body: { padding: 16 } }}
+            >
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                 {question.options.map((opt: string, idx: number) => {
                   const label = String.fromCharCode(65 + idx); // A, B, C, D
@@ -71,7 +100,10 @@ export const QuestionPreviewDrawer: React.FC<QuestionPreviewDrawerProps> = React
                       }}
                     >
                       <Space size={10}>
-                        <Text strong style={{ color: isCorrect ? "#52c41a" : "#595959", fontSize: 14 }}>
+                        <Text
+                          strong
+                          style={{ color: isCorrect ? "#52c41a" : "#595959", fontSize: 14 }}
+                        >
                           {label}. {opt}
                         </Text>
                       </Space>

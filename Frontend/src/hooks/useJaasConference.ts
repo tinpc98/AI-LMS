@@ -1,10 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { liveApi } from "../api/liveApi";
-import type {
-  ConferenceStatus,
-  JaasConferenceData,
-  LiveSessionError,
-} from "../types/liveSession";
+import type { ConferenceStatus, JaasConferenceData, LiveSessionError } from "../types/liveSession";
 import { normalizeLiveSessionError } from "../utils/liveSessionError";
 import envConfig from "../config/env";
 import { toast } from "../utils/toast";
@@ -46,7 +42,9 @@ export function useJaasConference() {
   const openConference = useCallback(
     async (sessionId: string) => {
       if (!sessionId) {
-        const normalized = normalizeLiveSessionError(new Error("sessionId không hợp lệ để kết nối phòng học."));
+        const normalized = normalizeLiveSessionError(
+          new Error("sessionId không hợp lệ để kết nối phòng học.")
+        );
         setError(normalized);
         setStatus("error");
         return;
@@ -54,7 +52,9 @@ export function useJaasConference() {
 
       // Guard double request: nếu đang in-flight request đúng sessionId hoặc state preparing/joining
       if (inFlightRef.current === sessionId || status === "preparing" || status === "joining") {
-        console.warn(`⚠️ [useJaasConference] In-flight request blocked for sessionId: ${sessionId}`);
+        console.warn(
+          `⚠️ [useJaasConference] In-flight request blocked for sessionId: ${sessionId}`
+        );
         return;
       }
 

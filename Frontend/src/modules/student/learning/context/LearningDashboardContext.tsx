@@ -8,7 +8,9 @@ interface LearningDashboardContextValue extends LearningDashboardState {
 
 const LearningDashboardContext = createContext<LearningDashboardContextValue | null>(null);
 
-export const LearningDashboardProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const LearningDashboardProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
   const dashboard = useLearningDashboard();
 
   return (

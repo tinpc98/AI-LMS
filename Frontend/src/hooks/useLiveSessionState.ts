@@ -13,7 +13,12 @@ interface UseLiveSessionStateProps {
 export function useLiveSessionState({ classId, autoFetchActive = true }: UseLiveSessionStateProps) {
   const [activeSession, setActiveSession] = useState<ILiveSession | null>(null);
   const [history, setHistory] = useState<ILiveSession[]>([]);
-  const [pagination, setPagination] = useState({ page: 1, limit: 10, totalItems: 0, totalPages: 0 });
+  const [pagination, setPagination] = useState({
+    page: 1,
+    limit: 10,
+    totalItems: 0,
+    totalPages: 0,
+  });
 
   const isCreatingRef = React.useRef<boolean>(false);
   const [isLoadingActive, setIsLoadingActive] = useState<boolean>(false);
@@ -87,10 +92,15 @@ export function useLiveSessionState({ classId, autoFetchActive = true }: UseLive
       } catch (err: unknown) {
         const normalized = normalizeLiveSessionError(err);
         setError(normalized);
-        
-        if (normalized.code === "LIVE_SESSION_ALREADY_ACTIVE" || normalized.code === "SESSION_ALREADY_ACTIVE") {
+
+        if (
+          normalized.code === "LIVE_SESSION_ALREADY_ACTIVE" ||
+          normalized.code === "SESSION_ALREADY_ACTIVE"
+        ) {
           await fetchActiveSession();
-          toast.error("Lớp học đã có một buổi học đang diễn ra. Hệ thống đã tải lại trạng thái hiện tại.");
+          toast.error(
+            "Lớp học đã có một buổi học đang diễn ra. Hệ thống đã tải lại trạng thái hiện tại."
+          );
           return;
         }
 

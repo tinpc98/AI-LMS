@@ -35,9 +35,9 @@ export const initCronJobs = (runImmediately = false) => {
 
         console.log(
           `[CRON] ✅ Automated class status update executed successfully.` +
-          ` Activated → Ongoing: ${summary.activatedToOngoing} |` +
-          ` Completed: ${summary.completedExpired} |` +
-          ` Total modified: ${summary.totalModified} documents.`
+            ` Activated → Ongoing: ${summary.activatedToOngoing} |` +
+            ` Completed: ${summary.completedExpired} |` +
+            ` Total modified: ${summary.totalModified} documents.`
         );
       } catch (error) {
         // Log chi tiết lỗi nhưng KHÔNG throw hoặc process.exit()
@@ -57,13 +57,14 @@ export const initCronJobs = (runImmediately = false) => {
   if (runImmediately) {
     console.log("[CRON] 🔄 runImmediately=true — Thực thi ngay lần đầu khi khởi động...");
 
-    cronService.runClassStatusUpdate()
+    cronService
+      .runClassStatusUpdate()
       .then((summary) => {
         console.log(
           `[CRON] ✅ Initial run complete.` +
-          ` Activated → Ongoing: ${summary.activatedToOngoing} |` +
-          ` Completed: ${summary.completedExpired} |` +
-          ` Total modified: ${summary.totalModified} documents.`
+            ` Activated → Ongoing: ${summary.activatedToOngoing} |` +
+            ` Completed: ${summary.completedExpired} |` +
+            ` Total modified: ${summary.totalModified} documents.`
         );
       })
       .catch((error) => {
@@ -81,7 +82,9 @@ export const initCronJobs = (runImmediately = false) => {
       try {
         const result = await runAIPendingRecovery();
         if (result.totalRecovered > 0) {
-          console.log(`[CRON] ♻️ AI Pending Recovery: Khôi phục thành công ${result.totalRecovered} requests bị kẹt.`);
+          console.log(
+            `[CRON] ♻️ AI Pending Recovery: Khôi phục thành công ${result.totalRecovered} requests bị kẹt.`
+          );
         }
       } catch (error) {
         console.error("[CRON ERROR] ❌ AI Pending Recovery Failed:", error);

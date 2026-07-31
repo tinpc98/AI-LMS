@@ -22,7 +22,11 @@ export function normalizeLiveSessionError(err: unknown): LiveSessionError {
   const backendMsg = errorObj?.response?.data?.message || errorObj?.message;
 
   // 1. Mất kết nối mạng (Axios network error hoặc offline)
-  if (!navigator.onLine || errorObj?.code === "ERR_NETWORK" || backendMsg?.includes("Network Error")) {
+  if (
+    !navigator.onLine ||
+    errorObj?.code === "ERR_NETWORK" ||
+    backendMsg?.includes("Network Error")
+  ) {
     return {
       code: "NETWORK_ERROR",
       title: "Mất kết nối mạng",
@@ -107,7 +111,11 @@ export function mapMediaError(err: unknown): { code: MediaErrorCode; message: st
   const name = (err as { name?: string })?.name || "";
   const msg = (err as { message?: string })?.message || "";
 
-  if (name === "NotAllowedError" || name === "PermissionDeniedError" || msg.includes("Permission denied")) {
+  if (
+    name === "NotAllowedError" ||
+    name === "PermissionDeniedError" ||
+    msg.includes("Permission denied")
+  ) {
     return {
       code: "MEDIA_PERMISSION_DENIED",
       message:
@@ -115,14 +123,22 @@ export function mapMediaError(err: unknown): { code: MediaErrorCode; message: st
     };
   }
 
-  if (name === "NotFoundError" || name === "DevicesNotFoundError" || msg.includes("Requested device not found")) {
+  if (
+    name === "NotFoundError" ||
+    name === "DevicesNotFoundError" ||
+    msg.includes("Requested device not found")
+  ) {
     return {
       code: "MEDIA_DEVICE_NOT_FOUND",
       message: "Không tìm thấy thiết bị Camera hoặc Microphone kết nối với máy tính.",
     };
   }
 
-  if (name === "NotReadableError" || name === "TrackStartError" || msg.includes("Could not start video source")) {
+  if (
+    name === "NotReadableError" ||
+    name === "TrackStartError" ||
+    msg.includes("Could not start video source")
+  ) {
     return {
       code: "MEDIA_DEVICE_BUSY",
       message: "Camera hoặc Microphone đang được sử dụng bởi một ứng dụng khác (Zoom, Teams,...).",

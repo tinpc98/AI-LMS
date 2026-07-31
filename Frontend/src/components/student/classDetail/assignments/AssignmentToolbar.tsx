@@ -15,14 +15,7 @@ interface AssignmentToolbarProps {
 }
 
 export const AssignmentToolbar: React.FC<AssignmentToolbarProps> = React.memo(
-  ({
-    searchQuery,
-    statusFilter,
-    sortBy,
-    onSearchChange,
-    onStatusFilterChange,
-    onSortChange,
-  }) => {
+  ({ searchQuery, statusFilter, sortBy, onSearchChange, onStatusFilterChange, onSortChange }) => {
     return (
       <div
         style={{

@@ -212,8 +212,12 @@ export const ProfilePage: React.FC = () => {
               </Tag>
             </div>
             <Paragraph className="text-gray-500 !mb-0 mt-1 flex items-center gap-4 text-xs">
-              <span><MailOutlined className="mr-1" /> {adminUser.email}</span>
-              <span><PhoneOutlined className="mr-1" /> {adminUser.phone}</span>
+              <span>
+                <MailOutlined className="mr-1" /> {adminUser.email}
+              </span>
+              <span>
+                <PhoneOutlined className="mr-1" /> {adminUser.phone}
+              </span>
             </Paragraph>
           </div>
         </div>

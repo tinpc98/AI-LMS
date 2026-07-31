@@ -79,20 +79,15 @@ export const startExam = async (req, res) => {
 
     if (existingAttempt) {
       console.log(
-        `🔎 Đã có bài làm với trạng thái: ${existingAttempt.status}. Exam: ${examId}, Student: ${studentId}`,
+        `🔎 Đã có bài làm với trạng thái: ${existingAttempt.status}. Exam: ${examId}, Student: ${studentId}`
       );
 
-      const completedStatuses = [
-        "SUBMITTED",
-        "PARTIALLY_GRADED",
-        "GRADED",
-      ];
+      const completedStatuses = ["SUBMITTED", "PARTIALLY_GRADED", "GRADED"];
 
       if (completedStatuses.includes(existingAttempt.status)) {
         return res.status(400).json({
           success: false,
-          message:
-            "Bạn đã hoàn thành bài thi này. Hệ thống không cho phép làm lại bài cũ!",
+          message: "Bạn đã hoàn thành bài thi này. Hệ thống không cho phép làm lại bài cũ!",
         });
       }
 
@@ -154,10 +149,7 @@ export const getExamAttemptDetail = async (req, res) => {
       });
     }
 
-    if (
-      userRole === "student" &&
-      attempt.studentId?.toString() !== userId?.toString()
-    ) {
+    if (userRole === "student" && attempt.studentId?.toString() !== userId?.toString()) {
       return res.status(403).json({
         success: false,
         message: "Bạn không có quyền xem lượt thi của người khác!",
@@ -173,9 +165,7 @@ export const getExamAttemptDetail = async (req, res) => {
       });
     }
 
-    const { resolveExamQuestions } = await import(
-      "../utils/examQuestionResolver.js"
-    );
+    const { resolveExamQuestions } = await import("../utils/examQuestionResolver.js");
 
     const questionMap = await resolveExamQuestions(exam);
     const formattedQuestions = [];
@@ -194,11 +184,9 @@ export const getExamAttemptDetail = async (req, res) => {
 
       const safeOptions =
         details.options?.map((option) => {
-          if (typeof option === 'string') return option;
+          if (typeof option === "string") return option;
           const safeOption =
-            typeof option?.toObject === "function"
-              ? option.toObject()
-              : { ...option };
+            typeof option?.toObject === "function" ? option.toObject() : { ...option };
 
           delete safeOption.isCorrect;
 
@@ -271,21 +259,14 @@ export const submitExam = async (req, res) => {
       });
     }
 
-    if (
-      userRole === "student" &&
-      attempt.studentId?.toString() !== userId?.toString()
-    ) {
+    if (userRole === "student" && attempt.studentId?.toString() !== userId?.toString()) {
       return res.status(403).json({
         success: false,
         message: "Bạn không có quyền nộp bài thi của người khác!",
       });
     }
 
-    const gradedAttempt = await examAttemptService.gradeSubmission(
-      attemptId,
-      answers,
-      userId,
-    );
+    const gradedAttempt = await examAttemptService.gradeSubmission(attemptId, answers, userId);
 
     return res.status(200).json({
       success: true,
@@ -350,15 +331,11 @@ export const getAttemptForReview = async (req, res) => {
       });
     }
 
-    const { resolveExamQuestions } = await import(
-      "../utils/examQuestionResolver.js"
-    );
+    const { resolveExamQuestions } = await import("../utils/examQuestionResolver.js");
 
     const questionMap = await resolveExamQuestions(exam);
 
-    const validAnswers = (attempt.answers || []).filter(
-      (answer) => answer && answer.questionId,
-    );
+    const validAnswers = (attempt.answers || []).filter((answer) => answer && answer.questionId);
 
     const reviewData = {
       attemptId: attempt._id,
@@ -378,24 +355,17 @@ export const getAttemptForReview = async (req, res) => {
         const questionInfo = questionMap.get(questionId);
 
         const examQuestionConfig = exam.questions?.find(
-          (config) =>
-            config.questionId &&
-            config.questionId.toString() === questionId,
+          (config) => config.questionId && config.questionId.toString() === questionId
         );
 
-        const assignedPoints =
-          examQuestionConfig?.points ?? questionInfo?.points ?? 1;
+        const assignedPoints = examQuestionConfig?.points ?? questionInfo?.points ?? 1;
 
         return {
           questionId: answer.questionId,
           type: questionInfo?.type,
           questionContent: questionInfo?.content,
           options: questionInfo?.options,
-          studentAnswer:
-            answer.essayText ||
-            answer.selectedOption ||
-            answer.answer ||
-            "",
+          studentAnswer: answer.essayText || answer.selectedOption || answer.answer || "",
           correctAnswer: questionInfo?.correctAnswer,
           pointsEarned: answer.pointsEarned,
           maxPoints: assignedPoints,
@@ -446,7 +416,7 @@ export const gradeEssaySubmit = async (req, res) => {
       attemptId,
       essayGrades,
       userId,
-      userRole,
+      userRole
     );
 
     return res.status(200).json({
@@ -493,7 +463,12 @@ export const getAttemptsByExam = async (req, res) => {
     const userRole = (req.user.role || "").toLowerCase();
     const isAuthorized = await checkClassTeacherOwnership(exam.classId, userId, userRole);
     if (!isAuthorized) {
-      return res.status(403).json({ success: false, message: "Bạn không có quyền xem danh sách bài làm của lớp học này!" });
+      return res
+        .status(403)
+        .json({
+          success: false,
+          message: "Bạn không có quyền xem danh sách bài làm của lớp học này!",
+        });
     }
 
     const page = Math.max(1, Number(req.query.page) || 1);
@@ -510,17 +485,13 @@ export const getAttemptsByExam = async (req, res) => {
         .skip(skip)
         .limit(limit)
         .lean(),
-      ExamAttempt.find({ examId }).select("status").lean()
+      ExamAttempt.find({ examId }).select("status").lean(),
     ]);
 
     const stats = {
       total: allAttempts.length,
-      graded: allAttempts.filter(
-        (attempt) => attempt.status === "GRADED",
-      ).length,
-      pending: allAttempts.filter(
-        (attempt) => attempt.status === "SUBMITTED",
-      ).length,
+      graded: allAttempts.filter((attempt) => attempt.status === "GRADED").length,
+      pending: allAttempts.filter((attempt) => attempt.status === "SUBMITTED").length,
     };
 
     return res.status(200).json({
@@ -532,8 +503,8 @@ export const getAttemptsByExam = async (req, res) => {
         total: allAttempts.length,
         page,
         limit,
-        totalPages: Math.ceil(allAttempts.length / limit)
-      }
+        totalPages: Math.ceil(allAttempts.length / limit),
+      },
     });
   } catch (error) {
     console.error("Lỗi khi lấy danh sách bài thi:", error);
@@ -578,9 +549,7 @@ export const recordCheatWarning = async (req, res) => {
       "suspicious_audio",
     ];
 
-    const normalizedCheatType = validCheatTypes.includes(cheatType)
-      ? cheatType
-      : "switch_tab";
+    const normalizedCheatType = validCheatTypes.includes(cheatType) ? cheatType : "switch_tab";
 
     attempt.cheatWarnings = (attempt.cheatWarnings || 0) + 1;
 
@@ -596,7 +565,7 @@ export const recordCheatWarning = async (req, res) => {
     await attempt.save();
 
     console.log(
-      `🚨 Đã ghi nhận gian lận (${normalizedCheatType}) cho attempt ${attemptId}. Tổng số lần: ${attempt.cheatWarnings}`,
+      `🚨 Đã ghi nhận gian lận (${normalizedCheatType}) cho attempt ${attemptId}. Tổng số lần: ${attempt.cheatWarnings}`
     );
 
     return res.status(200).json({

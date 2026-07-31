@@ -1,5 +1,16 @@
 import { useEffect } from "react";
-import { Button, Card, Col, Form, InputNumber, Row, Select, Slider, Switch, Typography } from "antd";
+import {
+  Button,
+  Card,
+  Col,
+  Form,
+  InputNumber,
+  Row,
+  Select,
+  Slider,
+  Switch,
+  Typography,
+} from "antd";
 import { SaveOutlined, ReloadOutlined, SettingOutlined } from "@ant-design/icons";
 import type { AIConfiguration, AIModel } from "../types/aiManagement.types";
 
@@ -27,7 +38,8 @@ const ConfigurationForm = ({ config, models, saving, onSave, onReset }: Configur
       bordered={false}
       title={
         <span>
-          <SettingOutlined style={{ marginRight: 8, color: "#1890ff" }} /> System AI Global Configuration & Limits
+          <SettingOutlined style={{ marginRight: 8, color: "#1890ff" }} /> System AI Global
+          Configuration & Limits
         </span>
       }
     >
@@ -104,11 +116,19 @@ const ConfigurationForm = ({ config, models, saving, onSave, onReset }: Configur
               <InputNumber min={512} max={32000} step={512} style={{ width: "100%" }} />
             </Form.Item>
 
-            <Form.Item name="requestTimeoutSec" label="Request Timeout (Seconds)" rules={[{ required: true }]}>
+            <Form.Item
+              name="requestTimeoutSec"
+              label="Request Timeout (Seconds)"
+              rules={[{ required: true }]}
+            >
               <InputNumber min={5} max={120} style={{ width: "100%" }} />
             </Form.Item>
 
-            <Form.Item name="retryCount" label="Automatic Retry Count on Error" rules={[{ required: true }]}>
+            <Form.Item
+              name="retryCount"
+              label="Automatic Retry Count on Error"
+              rules={[{ required: true }]}
+            >
               <InputNumber min={0} max={5} style={{ width: "100%" }} />
             </Form.Item>
           </Col>
@@ -118,23 +138,43 @@ const ConfigurationForm = ({ config, models, saving, onSave, onReset }: Configur
               Rate Limits & Security Policies
             </Typography.Title>
 
-            <Form.Item name="dailyRequestLimit" label="System Total Daily Limit (Requests/day)" rules={[{ required: true }]}>
+            <Form.Item
+              name="dailyRequestLimit"
+              label="System Total Daily Limit (Requests/day)"
+              rules={[{ required: true }]}
+            >
               <InputNumber min={1000} max={1000000} step={1000} style={{ width: "100%" }} />
             </Form.Item>
 
-            <Form.Item name="teacherRequestLimit" label="Teacher Account Limit (Requests/day)" rules={[{ required: true }]}>
+            <Form.Item
+              name="teacherRequestLimit"
+              label="Teacher Account Limit (Requests/day)"
+              rules={[{ required: true }]}
+            >
               <InputNumber min={50} max={10000} step={50} style={{ width: "100%" }} />
             </Form.Item>
 
-            <Form.Item name="studentRequestLimit" label="Student Account Limit (Requests/day)" rules={[{ required: true }]}>
+            <Form.Item
+              name="studentRequestLimit"
+              label="Student Account Limit (Requests/day)"
+              rules={[{ required: true }]}
+            >
               <InputNumber min={10} max={2000} step={10} style={{ width: "100%" }} />
             </Form.Item>
 
-            <Form.Item name="enableSafetyFilter" label="Enable Content Safety & Toxic Filter" valuePropName="checked">
+            <Form.Item
+              name="enableSafetyFilter"
+              label="Enable Content Safety & Toxic Filter"
+              valuePropName="checked"
+            >
               <Switch />
             </Form.Item>
 
-            <Form.Item name="enableUsageLogging" label="Enable Detailed Token & Audit Trail Logging" valuePropName="checked">
+            <Form.Item
+              name="enableUsageLogging"
+              label="Enable Detailed Token & Audit Trail Logging"
+              valuePropName="checked"
+            >
               <Switch />
             </Form.Item>
           </Col>

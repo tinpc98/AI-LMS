@@ -25,7 +25,9 @@ export const useTeacherDashboardQuery = () => {
     activeLiveSessions: data?.activeLiveSessions ?? [],
     totalStudentsCount,
     loading: isLoading,
-    error: error ? (error as Error).message || "Lỗi khi tải dữ liệu từ máy chủ. Vui lòng thử lại!" : null,
+    error: error
+      ? (error as Error).message || "Lỗi khi tải dữ liệu từ máy chủ. Vui lòng thử lại!"
+      : null,
     refetch,
   };
 };

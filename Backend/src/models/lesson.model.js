@@ -47,7 +47,7 @@ const lessonSchema = new mongoose.Schema(
       required: [true, "Bài giảng phải có giáo viên phụ trách"],
     },
   },
-  { timestamps: true },
+  { timestamps: true }
 );
 
 lessonSchema.index({ classId: 1, isPublished: 1, order: 1 });

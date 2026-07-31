@@ -18,10 +18,10 @@ export const TeacherBreadcrumb: React.FC = React.memo(() => {
 
   const breadcrumbItems = useMemo(() => {
     const pathSnippets = location.pathname.split("/").filter((i) => i);
-    
+
     const extraItems = pathSnippets.map((_, index) => {
       const url = `/${pathSnippets.slice(0, index + 1).join("/")}`;
-      
+
       // Tìm nhãn phù hợp trong map hoặc lấy mẫu route gốc
       const baseRouteKey = Object.keys(breadcrumbNameMap).find(
         (key) => url === key || url.startsWith(`${key}/`)

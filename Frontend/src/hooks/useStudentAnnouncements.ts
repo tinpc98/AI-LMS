@@ -32,14 +32,21 @@ export function useStudentAnnouncements(rawAnnouncements: IAnnouncement[] = []) 
       else if (diffDays <= 30) dateGroup = "Tháng này";
 
       // Tags calculation
-      const isPinned = idx === 0 || item.title.toLowerCase().includes("ghim") || item.title.toLowerCase().includes("quan trọng");
-      const isImportant = item.title.toLowerCase().includes("lưu ý") || item.title.toLowerCase().includes("khẩn") || isPinned;
+      const isPinned =
+        idx === 0 ||
+        item.title.toLowerCase().includes("ghim") ||
+        item.title.toLowerCase().includes("quan trọng");
+      const isImportant =
+        item.title.toLowerCase().includes("lưu ý") ||
+        item.title.toLowerCase().includes("khẩn") ||
+        isPinned;
 
       let tagType: AnnouncementTagType = "General";
       const titleLower = item.title.toLowerCase();
       if (isPinned) tagType = "Pinned";
       else if (isImportant) tagType = "Important";
-      else if (titleLower.includes("bài tập") || titleLower.includes("hạn nộp")) tagType = "Assignment";
+      else if (titleLower.includes("bài tập") || titleLower.includes("hạn nộp"))
+        tagType = "Assignment";
       else if (titleLower.includes("kiểm tra") || titleLower.includes("thi")) tagType = "Exam";
       else if (titleLower.includes("hệ thống")) tagType = "System";
 
@@ -89,9 +96,7 @@ export function useStudentAnnouncements(rawAnnouncements: IAnnouncement[] = []) 
     if (filters.searchQuery.trim()) {
       const q = filters.searchQuery.toLowerCase().trim();
       result = result.filter(
-        (item) =>
-          item.title.toLowerCase().includes(q) ||
-          item.content.toLowerCase().includes(q)
+        (item) => item.title.toLowerCase().includes(q) || item.content.toLowerCase().includes(q)
       );
     }
 
@@ -103,7 +108,12 @@ export function useStudentAnnouncements(rawAnnouncements: IAnnouncement[] = []) 
     } else if (filters.filterType === "pinned") {
       result = result.filter((item) => item.isPinned);
     } else if (filters.filterType === "this_week") {
-      result = result.filter((item) => item.dateGroup === "Hôm nay" || item.dateGroup === "Hôm qua" || item.dateGroup === "Tuần này");
+      result = result.filter(
+        (item) =>
+          item.dateGroup === "Hôm nay" ||
+          item.dateGroup === "Hôm qua" ||
+          item.dateGroup === "Tuần này"
+      );
     } else if (filters.filterType === "this_month") {
       result = result.filter((item) => item.dateGroup !== "Cũ hơn");
     }
@@ -158,9 +168,12 @@ export function useStudentAnnouncements(rawAnnouncements: IAnnouncement[] = []) 
     setFilters((prev) => ({ ...prev, searchQuery: value }));
   }, []);
 
-  const handleFilterTypeChange = useCallback((value: StudentAnnouncementFilterOptions["filterType"]) => {
-    setFilters((prev) => ({ ...prev, filterType: value }));
-  }, []);
+  const handleFilterTypeChange = useCallback(
+    (value: StudentAnnouncementFilterOptions["filterType"]) => {
+      setFilters((prev) => ({ ...prev, filterType: value }));
+    },
+    []
+  );
 
   const handleSortChange = useCallback((value: StudentAnnouncementFilterOptions["sortBy"]) => {
     setFilters((prev) => ({ ...prev, sortBy: value }));

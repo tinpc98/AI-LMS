@@ -16,18 +16,12 @@ const router = express.Router();
 const upload = multer({
   storage: multer.memoryStorage(),
   fileFilter: (req, file, cb) => {
-    console.log(
-      "👉 File đang upload:",
-      file.originalname,
-      "| Mimetype:",
-      file.mimetype,
-    );
+    console.log("👉 File đang upload:", file.originalname, "| Mimetype:", file.mimetype);
 
     const ext = path.extname(file.originalname).toLowerCase();
 
     if (
-      file.mimetype ===
-        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ||
+      file.mimetype === "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ||
       file.mimetype === "application/vnd.ms-excel" ||
       ext === ".xlsx" ||
       ext === ".xls"

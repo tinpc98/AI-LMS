@@ -1,4 +1,16 @@
-import { Badge, Button, Input, Row, Col, Select, Table, Tag, Tooltip, Typography, Empty } from "antd";
+import {
+  Badge,
+  Button,
+  Input,
+  Row,
+  Col,
+  Select,
+  Table,
+  Tag,
+  Tooltip,
+  Typography,
+  Empty,
+} from "antd";
 import {
   EyeOutlined,
   EditOutlined,
@@ -59,9 +71,7 @@ const AIModelTable = ({
       dataIndex: "provider",
       key: "provider",
       width: 120,
-      render: (provider: ModelProvider) => (
-        <Tag color={getProviderColor(provider)}>{provider}</Tag>
-      ),
+      render: (provider: ModelProvider) => <Tag color={getProviderColor(provider)}>{provider}</Tag>,
     },
     {
       title: "Model Name",
@@ -71,7 +81,14 @@ const AIModelTable = ({
         <div>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <Typography.Text strong>{record.name}</Typography.Text>
-            {record.isDefault && <Badge status="success" text={<span style={{ fontSize: 11, color: "#52c41a", fontWeight: 600 }}>Default</span>} />}
+            {record.isDefault && (
+              <Badge
+                status="success"
+                text={
+                  <span style={{ fontSize: 11, color: "#52c41a", fontWeight: 600 }}>Default</span>
+                }
+              />
+            )}
           </div>
           <Typography.Text type="secondary" style={{ fontSize: 12 }}>
             Version: {record.version}
@@ -186,7 +203,15 @@ const AIModelTable = ({
           />
         </Col>
         <Col xs={24} sm={12} md={3}>
-          <Button icon={<ReloadOutlined />} onClick={() => { onSearchChange(""); onStatusFilterChange("All"); onProviderFilterChange("All"); }} block>
+          <Button
+            icon={<ReloadOutlined />}
+            onClick={() => {
+              onSearchChange("");
+              onStatusFilterChange("All");
+              onProviderFilterChange("All");
+            }}
+            block
+          >
             Reset
           </Button>
         </Col>

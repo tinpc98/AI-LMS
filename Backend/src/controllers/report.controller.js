@@ -1,5 +1,9 @@
 import mongoose from "mongoose";
-import { buildGradesExcel, buildAttendanceExcel, sanitizeFilename } from "../services/report.service.js";
+import {
+  buildGradesExcel,
+  buildAttendanceExcel,
+  sanitizeFilename,
+} from "../services/report.service.js";
 import { sendError } from "../utils/response.js";
 
 // ─────────────────────────────────────────────
@@ -29,10 +33,7 @@ const sendExcelFile = (res, buffer, filename) => {
     "Content-Type",
     "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
   );
-  res.setHeader(
-    "Content-Disposition",
-    `attachment; filename="${filename}.xlsx"`
-  );
+  res.setHeader("Content-Disposition", `attachment; filename="${filename}.xlsx"`);
   res.setHeader("Content-Length", buffer.length);
   res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
   res.end(buffer);

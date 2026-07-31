@@ -26,16 +26,15 @@ export const calculateExamPerformanceRate = (exams: ExamSummaryItem[]): number =
   if (!exams || exams.length === 0) return 85;
   const completedExams = exams.filter((e) => e.score !== null);
   if (completedExams.length === 0) return 85;
-  const avgScore = completedExams.reduce((acc, curr) => acc + (curr.score || 0), 0) / completedExams.length;
+  const avgScore =
+    completedExams.reduce((acc, curr) => acc + (curr.score || 0), 0) / completedExams.length;
   return Math.round((avgScore / 10) * 100);
 };
 
 export const calculateLearningScore = (stats: LearningStatistics): LearningScore => {
   const gpaPercent = (stats.gpa / 10) * 100;
   const overall = Math.round(
-    stats.attendanceRate * 0.25 +
-    stats.assignmentCompletionRate * 0.35 +
-    gpaPercent * 0.4
+    stats.attendanceRate * 0.25 + stats.assignmentCompletionRate * 0.35 + gpaPercent * 0.4
   );
 
   let level: LearningScore["level"] = "Good";
@@ -142,8 +141,8 @@ export function formatSchedule(schedule: any): string {
       Array.isArray(schedule.days) && schedule.days.length > 0
         ? schedule.days.join(", ")
         : typeof schedule.days === "string"
-        ? schedule.days
-        : "";
+          ? schedule.days
+          : "";
 
     const startTime = schedule.startTime || "";
     const endTime = schedule.endTime || "";

@@ -45,12 +45,7 @@ const examAttemptSchema = new mongoose.Schema(
       {
         cheatType: {
           type: String,
-          enum: [
-            "TAB_SWITCH",
-            "FULLSCREEN_EXIT",
-            "COPY_PASTE",
-            "MULTIPLE_FACES",
-          ],
+          enum: ["TAB_SWITCH", "FULLSCREEN_EXIT", "COPY_PASTE", "MULTIPLE_FACES"],
         },
         timestamp: {
           type: Date,
@@ -63,7 +58,7 @@ const examAttemptSchema = new mongoose.Schema(
       default: 0,
     },
   },
-  { timestamps: true },
+  { timestamps: true }
 );
 
 examAttemptSchema.plugin(softDeletePlugin);

@@ -122,7 +122,13 @@ export const ReportPage: React.FC = () => {
       <div className="mb-6">
         <Breadcrumb
           items={[
-            { title: <span className="flex items-center gap-1"><HomeOutlined /> Trang chủ</span> },
+            {
+              title: (
+                <span className="flex items-center gap-1">
+                  <HomeOutlined /> Trang chủ
+                </span>
+              ),
+            },
             { title: "Báo cáo & Thống kê" },
           ]}
           className="mb-2 text-xs text-gray-500"
@@ -133,7 +139,8 @@ export const ReportPage: React.FC = () => {
               Báo Cáo & Phân Tích Dữ Liệu LMS
             </Title>
             <Paragraph className="text-gray-500 !mb-0">
-              Hệ thống theo dõi toàn diện hiệu suất học tập, khóa học, giáo viên và hoạt động trợ lý AI.
+              Hệ thống theo dõi toàn diện hiệu suất học tập, khóa học, giáo viên và hoạt động trợ lý
+              AI.
             </Paragraph>
           </div>
         </div>

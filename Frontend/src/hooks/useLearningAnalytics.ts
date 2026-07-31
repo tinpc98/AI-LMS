@@ -1,6 +1,12 @@
 import { useState, useCallback } from "react";
 import learningApi from "../api/learningApi";
-import type { ILessonProgress, ILearningActivity, IStudentBadge, IRankingResponse, IStudentRank } from "../api/learningApi";
+import type {
+  ILessonProgress,
+  ILearningActivity,
+  IStudentBadge,
+  IRankingResponse,
+  IStudentRank,
+} from "../api/learningApi";
 import { toast } from "../utils/toast";
 
 export function useLearningAnalytics(classId?: string) {
@@ -24,38 +30,49 @@ export function useLearningAnalytics(classId?: string) {
     }
   }, [classId]);
 
-  const updateProgress = useCallback(async (lessonId: string, progress: number, durationSeconds?: number) => {
-    if (!classId) return;
-    try {
-      const data = await learningApi.updateLessonProgress({ classId, lessonId, progress, durationSeconds });
-      // Update local state
-      setProgressData(prev => {
-        const idx = prev.findIndex(p => p.lessonId === lessonId);
-        if (idx >= 0) {
-          const newArr = [...prev];
-          newArr[idx] = data;
-          return newArr;
-        }
-        return [...prev, data];
-      });
-    } catch (error) {
-      console.error(error);
-    }
-  }, [classId]);
+  const updateProgress = useCallback(
+    async (lessonId: string, progress: number, durationSeconds?: number) => {
+      if (!classId) return;
+      try {
+        const data = await learningApi.updateLessonProgress({
+          classId,
+          lessonId,
+          progress,
+          durationSeconds,
+        });
+        // Update local state
+        setProgressData((prev) => {
+          const idx = prev.findIndex((p) => p.lessonId === lessonId);
+          if (idx >= 0) {
+            const newArr = [...prev];
+            newArr[idx] = data;
+            return newArr;
+          }
+          return [...prev, data];
+        });
+      } catch (error) {
+        console.error(error);
+      }
+    },
+    [classId]
+  );
 
-  const fetchClassRanking = useCallback(async (params?: any) => {
-    if (!classId) return;
-    try {
-      setLoading(true);
-      const data = await learningApi.getClassRanking(classId, params);
-      setClassRanking(data);
-    } catch (error) {
-      console.error(error);
-      toast.error("Không thể lấy bảng xếp hạng");
-    } finally {
-      setLoading(false);
-    }
-  }, [classId]);
+  const fetchClassRanking = useCallback(
+    async (params?: any) => {
+      if (!classId) return;
+      try {
+        setLoading(true);
+        const data = await learningApi.getClassRanking(classId, params);
+        setClassRanking(data);
+      } catch (error) {
+        console.error(error);
+        toast.error("Không thể lấy bảng xếp hạng");
+      } finally {
+        setLoading(false);
+      }
+    },
+    [classId]
+  );
 
   const fetchMyRank = useCallback(async () => {
     if (!classId) return;
@@ -97,6 +114,6 @@ export function useLearningAnalytics(classId?: string) {
     fetchClassRanking,
     fetchMyRank,
     fetchMyBadges,
-    fetchMyActivities
+    fetchMyActivities,
   };
 }

@@ -13,7 +13,9 @@ interface IAssignmentCreateResponse {
 const assignmentApi = {
   // Lấy danh sách bài tập của lớp
   getAssignmentsByClass: async (classId: string): Promise<IAssignment[]> => {
-    const response = await axiosClient.get<IAssignmentListResponse>(`/api/assignments/class/${classId}`);
+    const response = await axiosClient.get<IAssignmentListResponse>(
+      `/api/assignments/class/${classId}`
+    );
     return response.data.assignments ?? [];
   },
 
@@ -25,21 +27,29 @@ const assignmentApi = {
 
   // Tạo bài tập mới (multipart/form-data)
   createAssignment: async (formData: FormData): Promise<IAssignment> => {
-    const response = await axiosClient.post<IAssignmentCreateResponse>("/api/assignments", formData, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    });
+    const response = await axiosClient.post<IAssignmentCreateResponse>(
+      "/api/assignments",
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      }
+    );
     return response.data.assignment;
   },
 
   // Cập nhật bài tập (multipart/form-data)
   updateAssignment: async (id: string, formData: FormData): Promise<IAssignment> => {
-    const response = await axiosClient.put<{ assignment: IAssignment }>(`/api/assignments/${id}`, formData, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    });
+    const response = await axiosClient.put<{ assignment: IAssignment }>(
+      `/api/assignments/${id}`,
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      }
+    );
     return response.data.assignment;
   },
 
@@ -50,7 +60,9 @@ const assignmentApi = {
 
   // Giáo viên xem danh sách bài nộp của bài tập
   getSubmissionsByAssignment: async (assignmentId: string): Promise<ISubmission[]> => {
-    const response = await axiosClient.get<{ submissions: ISubmission[] }>(`/api/assignments/submissions/${assignmentId}`);
+    const response = await axiosClient.get<{ submissions: ISubmission[] }>(
+      `/api/assignments/submissions/${assignmentId}`
+    );
     return response.data.submissions ?? [];
   },
 
@@ -59,14 +71,19 @@ const assignmentApi = {
     submissionId: string,
     data: { grade: number; feedback?: string; aiFeedback?: string }
   ): Promise<ISubmission> => {
-    const response = await axiosClient.put<{ submission: ISubmission }>(`/api/assignments/grade/${submissionId}`, data);
+    const response = await axiosClient.put<{ submission: ISubmission }>(
+      `/api/assignments/grade/${submissionId}`,
+      data
+    );
     return response.data.submission;
   },
 
   // Xem chi tiết 1 bài nộp cụ thể (đã được xác thực quyền)
   getSubmissionById: async (submissionId: string): Promise<ISubmission | null> => {
     try {
-      const response = await axiosClient.get<{ submission: ISubmission }>(`/api/assignments/submissions/detail/${submissionId}`);
+      const response = await axiosClient.get<{ submission: ISubmission }>(
+        `/api/assignments/submissions/detail/${submissionId}`
+      );
       return (response.data as any).submission ?? (response.data as any).data ?? null;
     } catch {
       return null;
@@ -76,7 +93,9 @@ const assignmentApi = {
   // Học sinh xem bài nộp cá nhân
   getMySubmission: async (assignmentId: string): Promise<ISubmission | null> => {
     try {
-      const response = await axiosClient.get<{ submission: ISubmission }>(`/api/assignments/${assignmentId}/my-submission`);
+      const response = await axiosClient.get<{ submission: ISubmission }>(
+        `/api/assignments/${assignmentId}/my-submission`
+      );
       return (response.data as any).submission ?? (response.data as any).data ?? null;
     } catch (err: any) {
       if (err.response?.status === 404) return null; // No submission found

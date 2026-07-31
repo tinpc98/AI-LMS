@@ -66,9 +66,7 @@ export const PageContainer: React.FC<PageContainerProps> = React.memo(
                 </h1>
               )}
               {subTitle && (
-                <div style={{ marginTop: 4, color: "#6b7280", fontSize: "14px" }}>
-                  {subTitle}
-                </div>
+                <div style={{ marginTop: 4, color: "#6b7280", fontSize: "14px" }}>{subTitle}</div>
               )}
             </div>
             {extra && <div style={{ display: "flex", gap: 12, alignItems: "center" }}>{extra}</div>}

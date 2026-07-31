@@ -39,18 +39,25 @@ afterEach(() => {
 describe("createExamSetShareService", () => {
   it("Share VIEW created", async () => {
     vi.spyOn(ExamSet, "findOne").mockImplementation(() => Promise.resolve(createExamSet()));
-    vi.spyOn(User, "findOne").mockImplementation(() => Promise.resolve(createUser({ role: "Teacher" })));
+    vi.spyOn(User, "findOne").mockImplementation(() =>
+      Promise.resolve(createUser({ role: "Teacher" }))
+    );
     vi.spyOn(ExamSetShare, "findOne").mockImplementation(() => Promise.resolve(null));
     vi.spyOn(ExamSetShare.prototype, "save").mockImplementation(async function () {
       return this;
     });
 
-    const res = await createExamSetShareService("607f1f77bcf86cd799439111", "507f1f77bcf86cd799439011", "Teacher", {
-      sharedWithUserId: "607f1f77bcf86cd799439222",
-      permission: "VIEW",
-      expiresAt: null,
-      note: " hi ",
-    });
+    const res = await createExamSetShareService(
+      "607f1f77bcf86cd799439111",
+      "507f1f77bcf86cd799439011",
+      "Teacher",
+      {
+        sharedWithUserId: "607f1f77bcf86cd799439222",
+        permission: "VIEW",
+        expiresAt: null,
+        note: " hi ",
+      }
+    );
     expect(res.statusCode).toBe(201);
     expect(res.data.permission).toBe("VIEW");
     expect(String(res.data.ownerId)).toBe("507f1f77bcf86cd799439011");
@@ -58,18 +65,25 @@ describe("createExamSetShareService", () => {
 
   it("Share EDIT created", async () => {
     vi.spyOn(ExamSet, "findOne").mockImplementation(() => Promise.resolve(createExamSet()));
-    vi.spyOn(User, "findOne").mockImplementation(() => Promise.resolve(createUser({ role: "Teacher" })));
+    vi.spyOn(User, "findOne").mockImplementation(() =>
+      Promise.resolve(createUser({ role: "Teacher" }))
+    );
     vi.spyOn(ExamSetShare, "findOne").mockImplementation(() => Promise.resolve(null));
     vi.spyOn(ExamSetShare.prototype, "save").mockImplementation(async function () {
       return this;
     });
 
-    const res = await createExamSetShareService("607f1f77bcf86cd799439111", "507f1f77bcf86cd799439011", "Teacher", {
-      sharedWithUserId: "607f1f77bcf86cd799439222",
-      permission: "EDIT",
-      expiresAt: null,
-      note: "",
-    });
+    const res = await createExamSetShareService(
+      "607f1f77bcf86cd799439111",
+      "507f1f77bcf86cd799439011",
+      "Teacher",
+      {
+        sharedWithUserId: "607f1f77bcf86cd799439222",
+        permission: "EDIT",
+        expiresAt: null,
+        note: "",
+      }
+    );
     expect(res.statusCode).toBe(201);
     expect(res.data.permission).toBe("EDIT");
   });
@@ -77,7 +91,9 @@ describe("createExamSetShareService", () => {
   it("Duplicate ACTIVE returns 409", async () => {
     vi.spyOn(ExamSet, "findOne").mockImplementation(() => Promise.resolve(createExamSet()));
     vi.spyOn(User, "findOne").mockImplementation(() => Promise.resolve(createUser()));
-    vi.spyOn(ExamSetShare, "findOne").mockImplementation(() => Promise.resolve(createShare({ status: "ACTIVE" })));
+    vi.spyOn(ExamSetShare, "findOne").mockImplementation(() =>
+      Promise.resolve(createShare({ status: "ACTIVE" }))
+    );
 
     await expect(
       createExamSetShareService("607f1f77bcf86cd799439111", "507f1f77bcf86cd799439011", "Teacher", {
@@ -96,20 +112,29 @@ describe("createExamSetShareService", () => {
       return this;
     };
 
-    const res = await createExamSetShareService("607f1f77bcf86cd799439111", "507f1f77bcf86cd799439011", "Teacher", {
-      sharedWithUserId: "607f1f77bcf86cd799439222",
-      permission: "EDIT",
-      expiresAt: null,
-      note: "reactivated",
-    });
+    const res = await createExamSetShareService(
+      "607f1f77bcf86cd799439111",
+      "507f1f77bcf86cd799439011",
+      "Teacher",
+      {
+        sharedWithUserId: "607f1f77bcf86cd799439222",
+        permission: "EDIT",
+        expiresAt: null,
+        note: "reactivated",
+      }
+    );
     expect(res.statusCode).toBe(200);
     expect(res.data.status).toBe("ACTIVE");
     expect(res.data.permission).toBe("EDIT");
   });
 
   it("Cannot share to self", async () => {
-    vi.spyOn(ExamSet, "findOne").mockImplementation(() => Promise.resolve(createExamSet({ ownerId: "507f1f77bcf86cd799439011" })));
-    vi.spyOn(User, "findOne").mockImplementation(() => Promise.resolve(createUser({ _id: "507f1f77bcf86cd799439011" })));
+    vi.spyOn(ExamSet, "findOne").mockImplementation(() =>
+      Promise.resolve(createExamSet({ ownerId: "507f1f77bcf86cd799439011" }))
+    );
+    vi.spyOn(User, "findOne").mockImplementation(() =>
+      Promise.resolve(createUser({ _id: "507f1f77bcf86cd799439011" }))
+    );
 
     await expect(
       createExamSetShareService("607f1f77bcf86cd799439111", "507f1f77bcf86cd799439011", "Teacher", {
@@ -144,7 +169,9 @@ describe("createExamSetShareService", () => {
 
   it("Cannot share to Student", async () => {
     vi.spyOn(ExamSet, "findOne").mockImplementation(() => Promise.resolve(createExamSet()));
-    vi.spyOn(User, "findOne").mockImplementation(() => Promise.resolve(createUser({ role: "Student" })));
+    vi.spyOn(User, "findOne").mockImplementation(() =>
+      Promise.resolve(createUser({ role: "Student" }))
+    );
 
     await expect(
       createExamSetShareService("607f1f77bcf86cd799439111", "507f1f77bcf86cd799439011", "Teacher", {
@@ -155,8 +182,12 @@ describe("createExamSetShareService", () => {
   });
 
   it("Teacher not owner cannot share", async () => {
-    vi.spyOn(ExamSet, "findOne").mockImplementation(() => Promise.resolve(createExamSet({ ownerId: "owner-1" })));
-    vi.spyOn(User, "findOne").mockImplementation(() => Promise.resolve(createUser({ role: "Teacher" })));
+    vi.spyOn(ExamSet, "findOne").mockImplementation(() =>
+      Promise.resolve(createExamSet({ ownerId: "owner-1" }))
+    );
+    vi.spyOn(User, "findOne").mockImplementation(() =>
+      Promise.resolve(createUser({ role: "Teacher" }))
+    );
 
     await expect(
       createExamSetShareService("607f1f77bcf86cd799439111", "not-owner", "Teacher", {

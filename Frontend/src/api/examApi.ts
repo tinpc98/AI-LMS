@@ -32,7 +32,9 @@ export interface IExamAttempt {
 export const examApi = {
   // Lấy danh sách bài kiểm tra của lớp
   getExamsByClass: async (classId: string): Promise<IExam[]> => {
-    const response = await axiosClient.get<{ success?: boolean; data: IExam[] }>(`/api/exams/class/${classId}`);
+    const response = await axiosClient.get<{ success?: boolean; data: IExam[] }>(
+      `/api/exams/class/${classId}`
+    );
     return response.data.data ?? response.data ?? [];
   },
 
@@ -50,7 +52,10 @@ export const examApi = {
 
   // Sinh bài kiểm tra tự động từ AI
   autoGenerateExam: async (matrixData: any): Promise<IExam> => {
-    const response = await axiosClient.post<{ data: IExam }>("/api/exams/auto-generate", matrixData);
+    const response = await axiosClient.post<{ data: IExam }>(
+      "/api/exams/auto-generate",
+      matrixData
+    );
     return response.data.data;
   },
 
@@ -62,7 +67,9 @@ export const examApi = {
 
   // Lấy câu hỏi từ Ngân hàng câu hỏi
   getQuestions: async (params?: any): Promise<{ total: number; data: any[] }> => {
-    const response = await axiosClient.get<{ total: number; data: any[] }>("/api/questions", { params });
+    const response = await axiosClient.get<{ total: number; data: any[] }>("/api/questions", {
+      params,
+    });
     return response.data;
   },
 
@@ -73,9 +80,11 @@ export const examApi = {
 
   // Lấy danh sách lượt thi của sinh viên theo examId
   getAttemptsByExam: async (examId: string): Promise<{ attempts: IExamAttempt[]; stats?: any }> => {
-    const response = await axiosClient.get<{ success?: boolean; data: IExamAttempt[]; stats?: any }>(
-      `/api/exam-attempts/exam/${examId}`
-    );
+    const response = await axiosClient.get<{
+      success?: boolean;
+      data: IExamAttempt[];
+      stats?: any;
+    }>(`/api/exam-attempts/exam/${examId}`);
     return {
       attempts: response.data.data ?? [],
       stats: response.data.stats,

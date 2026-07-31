@@ -22,7 +22,6 @@ import GradesTab from "../../components/student/classDetail/grades/GradesTab";
 import AttendanceTab from "../../components/student/classDetail/attendance/AttendanceTab";
 import AnnouncementsTab from "../../components/student/classDetail/announcements/AnnouncementsTab";
 
-
 import ClassDiscussionTab from "../../components/student/classDetail/chat/ClassDiscussionTab";
 import ExamLobbyModals from "../../components/student/classDetail/exams/ExamLobbyModals";
 import type { ExamPopupState } from "../../components/student/classDetail/exams/ExamLobbyModals";
@@ -31,7 +30,12 @@ import { useStudentLive } from "../../hooks/useStudentLive";
 import { useLearningAnalytics } from "../../hooks/useLearningAnalytics";
 import { useAnalytics } from "../../hooks/useAnalytics";
 import { Tooltip, Avatar, List, Progress } from "antd";
-import { TrophyOutlined, StarOutlined, ClockCircleOutlined, ThunderboltOutlined } from "@ant-design/icons";
+import {
+  TrophyOutlined,
+  StarOutlined,
+  ClockCircleOutlined,
+  ThunderboltOutlined,
+} from "@ant-design/icons";
 
 export default function ClassDetail() {
   const { classId } = useParams<{ classId: string }>();
@@ -40,14 +44,8 @@ export default function ClassDetail() {
   const [searchQuery] = useState<string>("");
 
   // Custom hook for class details data
-  const {
-    classInfo,
-    lessons,
-    assignments,
-    submittedAssignmentIds,
-    isLoading,
-    errorMsg,
-  } = useClassDetail(classId);
+  const { classInfo, lessons, assignments, submittedAssignmentIds, isLoading, errorMsg } =
+    useClassDetail(classId);
 
   // Custom hook for Live Session
   const {
@@ -56,12 +54,11 @@ export default function ClassDetail() {
     handleJoinLiveClass,
   } = useJitsiLiveSession({ classId, isTeacher: false });
 
-  const {
-    currentLiveItem,
-    upcomingSessions,
-    pastSessions,
-    refreshLiveSession,
-  } = useStudentLive(classId, jitsiActiveSession, classInfo);
+  const { currentLiveItem, upcomingSessions, pastSessions, refreshLiveSession } = useStudentLive(
+    classId,
+    jitsiActiveSession,
+    classInfo
+  );
 
   // Sync state when Socket notifies useJitsiLiveSession that session started/ended
   useEffect(() => {
@@ -77,7 +74,7 @@ export default function ClassDetail() {
     fetchStudentProgress,
     fetchClassRanking,
     fetchMyRank,
-    fetchMyBadges
+    fetchMyBadges,
   } = useLearningAnalytics(classId);
 
   useEffect(() => {
@@ -142,7 +139,9 @@ export default function ClassDetail() {
   const formatTime = useCallback((seconds: number): string => {
     if (seconds <= 0) return "00:00";
     const h = Math.floor(seconds / 3600);
-    const m = Math.floor((seconds % 3600) / 60).toString().padStart(2, "0");
+    const m = Math.floor((seconds % 3600) / 60)
+      .toString()
+      .padStart(2, "0");
     const s = (seconds % 60).toString().padStart(2, "0");
     return h > 0 ? `${h}:${m}:${s}` : `${m}:${s}`;
   }, []);
@@ -175,10 +174,13 @@ export default function ClassDetail() {
     }
     setExamPopupState("LOADING");
     try {
-      const response = await axiosClient.post<{ data: { _id: string } }>("/api/exam-attempts/start", {
-        examId: exam._id,
-        studentId,
-      });
+      const response = await axiosClient.post<{ data: { _id: string } }>(
+        "/api/exam-attempts/start",
+        {
+          examId: exam._id,
+          studentId,
+        }
+      );
       const attemptId = response.data.data._id;
       navigate(`/exam/${attemptId}`);
     } catch (error: any) {
@@ -233,7 +235,11 @@ export default function ClassDetail() {
       <StudentClassHeader
         className={classInfo.className}
         classCode={classInfo.classCode}
-        subject={(classInfo as any).subject || (classInfo as any).courseId?.subject || (classInfo as any).courseId?.courseName}
+        subject={
+          (classInfo as any).subject ||
+          (classInfo as any).courseId?.subject ||
+          (classInfo as any).courseId?.courseName
+        }
         status={classInfo.status as any}
         teacher={classInfo.teacherId as any}
       />
@@ -248,7 +254,14 @@ export default function ClassDetail() {
           overflow: "hidden",
         }}
       >
-        <div style={{ display: "flex", borderBottom: "1px solid #f0f0f0", padding: "0 24px", overflowX: "auto" }}>
+        <div
+          style={{
+            display: "flex",
+            borderBottom: "1px solid #f0f0f0",
+            padding: "0 24px",
+            overflowX: "auto",
+          }}
+        >
           {[
             { key: "overview", label: "Tổng quan" },
             { key: "live", label: "Học trực tuyến" },
@@ -288,12 +301,17 @@ export default function ClassDetail() {
               <StatisticSection
                 attendanceRate={
                   studentDashboard?.attendance?.total
-                    ? Math.round((studentDashboard.attendance.present / studentDashboard.attendance.total) * 100)
+                    ? Math.round(
+                        (studentDashboard.attendance.present / studentDashboard.attendance.total) *
+                          100
+                      )
                     : 0
                 }
                 completedAssignments={studentDashboard?.assignment?.completed || 0}
                 totalAssignments={assignments.length}
-                completedExams={exams.filter((e: any) => e.score !== null && e.score !== undefined).length}
+                completedExams={
+                  exams.filter((e: any) => e.score !== null && e.score !== undefined).length
+                }
                 totalExams={exams.length}
                 overallProgress={studentDashboard?.progress?.averageProgress || 0}
               />
@@ -304,7 +322,11 @@ export default function ClassDetail() {
                     description={classInfo.description}
                     startDate={(classInfo as any).startDate}
                     endDate={(classInfo as any).endDate}
-                    currentStudents={classInfo.students ? classInfo.students.length : (classInfo as any).currentStudents || 0}
+                    currentStudents={
+                      classInfo.students
+                        ? classInfo.students.length
+                        : (classInfo as any).currentStudents || 0
+                    }
                     maxStudents={(classInfo as any).maxStudents || 40}
                     status={classInfo.status as any}
                     learningMode={classInfo.learningMode || "Offline"}
@@ -314,7 +336,9 @@ export default function ClassDetail() {
                     progressPercent={studentDashboard?.progress?.averageProgress || 0}
                     completedAssignments={studentDashboard?.assignment?.completed || 0}
                     totalAssignments={assignments.length}
-                    completedExams={exams.filter((e: any) => e.score !== null && e.score !== undefined).length}
+                    completedExams={
+                      exams.filter((e: any) => e.score !== null && e.score !== undefined).length
+                    }
                     totalExams={exams.length}
                     averageScore={studentDashboard?.assignment?.averageScore || 0}
                   />
@@ -340,7 +364,10 @@ export default function ClassDetail() {
 
           {/* TAB 1: TÀI LIỆU HỌC TẬP */}
           {activeTab === "materials" && (
-            <LearningMaterialsTab resources={(classInfo as any)?.resources || []} loading={isLoading} />
+            <LearningMaterialsTab
+              resources={(classInfo as any)?.resources || []}
+              loading={isLoading}
+            />
           )}
 
           {/* TAB 2: BÀI GIẢNG */}
@@ -354,7 +381,9 @@ export default function ClassDetail() {
               </div>
               {filteredLessons.length === 0 ? (
                 <div className="border-2 border-dashed border-outline-variant rounded-xl p-12 text-center text-secondary">
-                  <span className="material-symbols-outlined text-4xl mb-2 text-outline">description</span>
+                  <span className="material-symbols-outlined text-4xl mb-2 text-outline">
+                    description
+                  </span>
                   <p className="text-sm">Giảng viên chưa đăng tải giáo trình nào cho lớp này.</p>
                 </div>
               ) : (
@@ -365,12 +394,17 @@ export default function ClassDetail() {
                   >
                     <div className="flex items-center space-x-4 min-w-0">
                       <div className="w-12 h-12 bg-surface-container-low rounded-lg flex items-center justify-center text-primary group-hover:bg-primary-container group-hover:text-on-primary-container transition-colors flex-shrink-0">
-                        <span className="material-symbols-outlined text-2xl" style={{ fontVariationSettings: "'FILL' 1" }}>
+                        <span
+                          className="material-symbols-outlined text-2xl"
+                          style={{ fontVariationSettings: "'FILL' 1" }}
+                        >
                           {lesson.videoUrl ? "play_circle" : "picture_as_pdf"}
                         </span>
                       </div>
                       <div className="min-w-0">
-                        <h4 className="font-semibold text-on-surface text-sm sm:text-base truncate">{lesson.title}</h4>
+                        <h4 className="font-semibold text-on-surface text-sm sm:text-base truncate">
+                          {lesson.title}
+                        </h4>
                         <p className="text-xs text-secondary line-clamp-1 mt-0.5">
                           {lesson.description || "Không có mô tả chi tiết cho bài học này."}
                         </p>
@@ -409,29 +443,32 @@ export default function ClassDetail() {
 
           {/* TAB 3: BÀI TẬP CỦA TÔI */}
           {activeTab === "assignments" && (
-            <AssignmentsTab assignments={assignments} submittedIds={submittedAssignmentIds} loading={isLoading} />
+            <AssignmentsTab
+              assignments={assignments}
+              submittedIds={submittedAssignmentIds}
+              loading={isLoading}
+            />
           )}
 
           {/* TAB 4: THI TRỰC TUYẾN */}
           {activeTab === "exams" && <ExamsTab exams={exams as any} loading={isLoading} />}
 
           {/* TAB 5: BẢNG ĐIỂM */}
-          {activeTab === "grades" && classId && (
-            <GradesTab classId={classId} />
-          )}
+          {activeTab === "grades" && classId && <GradesTab classId={classId} />}
 
           {/* TAB 6: ĐIỂM DANH */}
           {activeTab === "attendance" && classId && <AttendanceTab classId={classId} />}
 
           {/* TAB 7: THÔNG BÁO LỚP HỌC */}
           {activeTab === "announcements" && (
-            <AnnouncementsTab rawAnnouncements={(classInfo as any)?.announcements || []} loading={isLoading} />
+            <AnnouncementsTab
+              rawAnnouncements={(classInfo as any)?.announcements || []}
+              loading={isLoading}
+            />
           )}
 
           {/* TAB 8: HỌC TRỰC TUYẾN */}
-          {activeTab === "live" && (
-            <Alert type="info" message="Live session is active." />
-          )}
+          {activeTab === "live" && <Alert type="info" message="Live session is active." />}
 
           {/* TAB 9: THẢO LUẬN LỚP HỌC */}
           {activeTab === "chat" && <ClassDiscussionTab />}
@@ -453,8 +490,14 @@ export default function ClassDetail() {
                     <List.Item>
                       <List.Item.Meta
                         avatar={<Avatar src={item.avatar}>{item.fullName[0]}</Avatar>}
-                        title={<span className="font-semibold">{index + 1}. {item.fullName}</span>}
-                        description={<span className="text-xs text-gray-500">{item.totalXP} XP</span>}
+                        title={
+                          <span className="font-semibold">
+                            {index + 1}. {item.fullName}
+                          </span>
+                        }
+                        description={
+                          <span className="text-xs text-gray-500">{item.totalXP} XP</span>
+                        }
                       />
                       {index === 0 && <StarOutlined className="text-yellow-500" />}
                     </List.Item>
@@ -462,7 +505,9 @@ export default function ClassDetail() {
                 />
               ) : (
                 <div className="text-center py-6 text-on-surface-variant">
-                  <span className="material-symbols-outlined text-4xl mb-2 opacity-50">leaderboard</span>
+                  <span className="material-symbols-outlined text-4xl mb-2 opacity-50">
+                    leaderboard
+                  </span>
                   <p className="text-sm font-medium">Chưa có dữ liệu xếp hạng.</p>
                 </div>
               )}
@@ -497,7 +542,7 @@ export default function ClassDetail() {
               </Row>
               {badges.length > 0 && (
                 <div className="mt-4 flex gap-2 overflow-x-auto">
-                  {badges.map(b => (
+                  {badges.map((b) => (
                     <Tooltip title={b.title} key={b._id}>
                       <Avatar src={b.icon} size={40} className="border-2 border-yellow-400" />
                     </Tooltip>

@@ -44,27 +44,33 @@ export const updateLessonProgress = async (req, res) => {
         completed: isCompleted,
         completedAt: isCompleted ? new Date() : null,
         totalLearningTime: durationSeconds || 0,
-        lastViewedAt: new Date()
+        lastViewedAt: new Date(),
       });
     } else {
       lp.progress = Math.max(lp.progress, currentProgress); // Never decrease progress
       if (!lp.completed && lp.progress >= 100) {
         lp.completed = true;
         lp.completedAt = new Date();
-        
+
         // Log Activity: Lesson Completed
         await LearningActivity.create({
-          studentId, classId, lessonId, activityType: "Lesson Completed"
+          studentId,
+          classId,
+          lessonId,
+          activityType: "Lesson Completed",
         });
       }
-      lp.totalLearningTime += (durationSeconds || 0);
+      lp.totalLearningTime += durationSeconds || 0;
       lp.lastViewedAt = new Date();
     }
     await lp.save();
 
     // Log Activity: Lesson Viewed
     await LearningActivity.create({
-      studentId, classId, lessonId, activityType: "Lesson Viewed"
+      studentId,
+      classId,
+      lessonId,
+      activityType: "Lesson Viewed",
     });
 
     return sendSuccess(res, "Cập nhật tiến độ thành công", lp);
@@ -92,7 +98,7 @@ export const getStudentRanking = async (req, res) => {
   try {
     let { studentId } = req.params;
     const { classId } = req.query;
-    
+
     if (studentId === "me") studentId = req.user.id || req.user._id;
 
     if (!classId || !mongoose.Types.ObjectId.isValid(classId)) {
@@ -122,15 +128,12 @@ export const getMyActivities = async (req, res) => {
   try {
     const studentId = req.user.id || req.user._id;
     const { classId } = req.query;
-    
+
     const filter = { studentId };
     if (classId) filter.classId = classId;
 
-    const activities = await LearningActivity.find(filter)
-      .sort({ createdAt: -1 })
-      .limit(50)
-      .lean();
-      
+    const activities = await LearningActivity.find(filter).sort({ createdAt: -1 }).limit(50).lean();
+
     return sendSuccess(res, "Lấy nhật ký hoạt động thành công", activities);
   } catch (error) {
     return sendError(res, error.message || "Lỗi khi lấy nhật ký hoạt động", 500);

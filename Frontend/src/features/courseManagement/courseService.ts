@@ -32,7 +32,10 @@ export const courseService = {
     return { ...response.data, data: mapCourse(response.data.data) };
   },
 
-  async updateStatus(id: string, status: "Draft" | "Published" | "Closed"): Promise<ApiResponse<CourseRecord>> {
+  async updateStatus(
+    id: string,
+    status: "Draft" | "Published" | "Closed"
+  ): Promise<ApiResponse<CourseRecord>> {
     const response = await axiosClient.put(`/api/courses/${id}`, { status });
     return { ...response.data, data: mapCourse(response.data.data) };
   },
@@ -60,5 +63,5 @@ export const courseService = {
   async permanentDeleteCourse(id: string): Promise<ApiResponse<void>> {
     const response = await axiosClient.delete(`/api/courses/${id}/force`);
     return response.data;
-  }
+  },
 };

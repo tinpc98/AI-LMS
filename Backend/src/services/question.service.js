@@ -48,9 +48,7 @@ const importQuestionsFromExcel = async (fileBuffer) => {
             .map((opt) => opt.trim())
         : [],
 
-      correctAnswer: row.correctAnswer
-        ? row.correctAnswer.toString().trim()
-        : "",
+      correctAnswer: row.correctAnswer ? row.correctAnswer.toString().trim() : "",
       difficulty: row.difficulty?.toString().trim() || "MEDIUM",
       topic: row.topic?.toString().trim(),
     });
@@ -59,7 +57,7 @@ const importQuestionsFromExcel = async (fileBuffer) => {
   // 4. Kiểm tra xem sau khi lọc, có còn câu nào hợp lệ để thêm không
   if (validQuestions.length === 0) {
     throw new Error(
-      "Không có câu hỏi nào được thêm mới! Tất cả đều đã trùng lặp hoặc file bị lỗi.",
+      "Không có câu hỏi nào được thêm mới! Tất cả đều đã trùng lặp hoặc file bị lỗi."
     );
   }
 

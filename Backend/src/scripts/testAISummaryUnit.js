@@ -25,7 +25,7 @@ async function runUnitTests() {
     const data = {
       summary: "Đây là tóm tắt",
       keyPoints: ["Điểm 1", " Điểm 2 "],
-      suggestedReviewTopics: ["Chủ đề 1"]
+      suggestedReviewTopics: ["Chủ đề 1"],
     };
     const res = summaryOutputValidator(data);
     assert.strictEqual(res.keyPoints[1], "Điểm 2", "Keypoint phải được trim");
@@ -45,7 +45,7 @@ async function runUnitTests() {
     const data = {
       summary: "Tóm tắt",
       keyPoints: ["Điểm 1", "  ", ""],
-      suggestedReviewTopics: ["", "Topic 1"]
+      suggestedReviewTopics: ["", "Topic 1"],
     };
     const res = summaryOutputValidator(data);
     assert.strictEqual(res.keyPoints.length, 1);
@@ -54,9 +54,15 @@ async function runUnitTests() {
 
   // 2. Extractor Tests
   await runTest("Extractor: Chặn URL không an toàn", () => {
-    assert.strictEqual(lessonContentExtractor.isUrlAllowed("http://res.cloudinary.com/test"), false); // HTTP
+    assert.strictEqual(
+      lessonContentExtractor.isUrlAllowed("http://res.cloudinary.com/test"),
+      false
+    ); // HTTP
     assert.strictEqual(lessonContentExtractor.isUrlAllowed("https://hacker.com/file.pdf"), false); // Not in allowed domains
-    assert.strictEqual(lessonContentExtractor.isUrlAllowed("https://res.cloudinary.com/test"), true); // OK
+    assert.strictEqual(
+      lessonContentExtractor.isUrlAllowed("https://res.cloudinary.com/test"),
+      true
+    ); // OK
   });
 
   await runTest("Extractor: Clean text filter null characters", () => {
@@ -67,7 +73,8 @@ async function runUnitTests() {
 
   const fs = await import("fs");
   const path = await import("path");
-  const fixturePath = (filename) => path.join(process.cwd(), "src", "scripts", "fixtures", filename);
+  const fixturePath = (filename) =>
+    path.join(process.cwd(), "src", "scripts", "fixtures", filename);
 
   await runTest("Extractor: PDF thật hợp lệ trích xuất được text", async () => {
     const buf = fs.readFileSync(fixturePath("valid-summary.pdf"));
@@ -133,9 +140,9 @@ async function runUnitTests() {
   await runTest("Controller: Truyền lessonId và IDOR bắt được", async () => {
     const aiSummaryController = (await import("../controllers/aiSummary.controller.js")).default;
     const aiSummaryService = (await import("../ai/services/aiSummary.service.js")).default;
-    
+
     let findOneParams = null;
-    
+
     // Mock Service function
     const originalApprove = aiSummaryService.approveSummary;
     try {
@@ -146,10 +153,10 @@ async function runUnitTests() {
 
       const req = {
         params: { lessonId: "L1", summaryId: "S1" },
-        user: { id: "U1" }
+        user: { id: "U1" },
       };
       const res = {
-        status: (code) => ({ json: (data) => ({ code, data }) })
+        status: (code) => ({ json: (data) => ({ code, data }) }),
       };
 
       await aiSummaryController.approveSummary(req, res);
@@ -166,13 +173,15 @@ async function runUnitTests() {
     const mongoose = (await import("mongoose")).default;
     const AISummary = (await import("../models/aiSummary.model.js")).default;
     const Lesson = (await import("../models/lesson.model.js")).default;
-    
+
     // Mock mongoose startSession
     const originalStartSession = mongoose.startSession;
     let endSessionCalled = false;
     mongoose.startSession = async () => ({
       withTransaction: async (cb) => cb(),
-      endSession: () => { endSessionCalled = true; }
+      endSession: () => {
+        endSessionCalled = true;
+      },
     });
 
     // Mock AISummary.findOne to simulate cross-lesson
@@ -181,16 +190,20 @@ async function runUnitTests() {
     AISummary.findOne = (query) => {
       findOneQuery = query;
       // Trả về null nếu lessonId không khớp (mô phỏng db behavior)
-      return { session: () => null }; 
+      return { session: () => null };
     };
 
     const originalSave = AISummary.prototype.save;
     let saveCalled = false;
-    AISummary.prototype.save = async function() { saveCalled = true; };
+    AISummary.prototype.save = async function () {
+      saveCalled = true;
+    };
 
     const originalUpdateMany = Lesson.updateMany;
     let updateManyCalled = false;
-    Lesson.updateMany = async () => { updateManyCalled = true; };
+    Lesson.updateMany = async () => {
+      updateManyCalled = true;
+    };
 
     try {
       await aiSummaryService.approveSummary("lesson_A", "summary_B", "teacher1");
@@ -215,13 +228,15 @@ async function runUnitTests() {
     const mongoose = (await import("mongoose")).default;
     const AISummary = (await import("../models/aiSummary.model.js")).default;
     const Lesson = (await import("../models/lesson.model.js")).default;
-    
+
     // Mock mongoose startSession
     const originalStartSession = mongoose.startSession;
     let endSessionCalled = false;
     mongoose.startSession = async () => ({
       withTransaction: async (cb) => cb(),
-      endSession: () => { endSessionCalled = true; }
+      endSession: () => {
+        endSessionCalled = true;
+      },
     });
 
     // Mock AISummary.findOne to simulate cross-lesson
@@ -229,16 +244,20 @@ async function runUnitTests() {
     let findOneQuery = null;
     AISummary.findOne = (query) => {
       findOneQuery = query;
-      return { session: () => null }; 
+      return { session: () => null };
     };
 
     const originalSave = AISummary.prototype.save;
     let saveCalled = false;
-    AISummary.prototype.save = async function() { saveCalled = true; };
+    AISummary.prototype.save = async function () {
+      saveCalled = true;
+    };
 
     const originalUpdateMany = Lesson.updateMany;
     let updateManyCalled = false;
-    Lesson.updateMany = async () => { updateManyCalled = true; };
+    Lesson.updateMany = async () => {
+      updateManyCalled = true;
+    };
 
     try {
       await aiSummaryService.rejectSummary("lesson_A", "summary_B", "teacher1", "Lý do");

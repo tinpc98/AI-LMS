@@ -54,7 +54,9 @@ export async function runSoftDeleteMigration() {
           },
         }
       );
-      console.log(`[Migration] ${name}: Matched ${result.matchedCount}, Modified ${result.modifiedCount}`);
+      console.log(
+        `[Migration] ${name}: Matched ${result.matchedCount}, Modified ${result.modifiedCount}`
+      );
     }
 
     console.log("[Migration] Soft Delete migration completed successfully!");

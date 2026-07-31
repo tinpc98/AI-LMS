@@ -40,10 +40,19 @@ export class DashboardErrorBoundary extends Component<Props, State> {
           <Alert
             type="error"
             message="Đã xảy ra lỗi khi hiển thị Learning Dashboard"
-            description={this.state.error?.message || "Vui lòng thử bấm nút Tải lại bên dưới để khôi phục dữ liệu."}
+            description={
+              this.state.error?.message ||
+              "Vui lòng thử bấm nút Tải lại bên dưới để khôi phục dữ liệu."
+            }
             showIcon
             action={
-              <Button type="primary" danger icon={<ReloadOutlined />} onClick={this.handleReset} style={{ borderRadius: 8 }}>
+              <Button
+                type="primary"
+                danger
+                icon={<ReloadOutlined />}
+                onClick={this.handleReset}
+                style={{ borderRadius: 8 }}
+              >
                 Thử lại (Retry)
               </Button>
             }

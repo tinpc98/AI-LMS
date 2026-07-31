@@ -17,19 +17,31 @@ export const ExamStatusTag: React.FC<ExamStatusTagProps> = React.memo(({ status 
   switch (status) {
     case "Available":
       return (
-        <Tag color="processing" icon={<PlayCircleOutlined />} style={{ borderRadius: 8, fontWeight: 600 }}>
+        <Tag
+          color="processing"
+          icon={<PlayCircleOutlined />}
+          style={{ borderRadius: 8, fontWeight: 600 }}
+        >
           Đang mở thi
         </Tag>
       );
     case "In Progress":
       return (
-        <Tag color="warning" icon={<SyncOutlined spin />} style={{ borderRadius: 8, fontWeight: 600 }}>
+        <Tag
+          color="warning"
+          icon={<SyncOutlined spin />}
+          style={{ borderRadius: 8, fontWeight: 600 }}
+        >
           Đang làm dở dang
         </Tag>
       );
     case "Completed":
       return (
-        <Tag color="purple" icon={<CheckCircleOutlined />} style={{ borderRadius: 8, fontWeight: 600 }}>
+        <Tag
+          color="purple"
+          icon={<CheckCircleOutlined />}
+          style={{ borderRadius: 8, fontWeight: 600 }}
+        >
           Đã hoàn thành
         </Tag>
       );
@@ -42,7 +54,11 @@ export const ExamStatusTag: React.FC<ExamStatusTagProps> = React.memo(({ status 
     case "Upcoming":
     default:
       return (
-        <Tag color="cyan" icon={<ClockCircleOutlined />} style={{ borderRadius: 8, fontWeight: 600 }}>
+        <Tag
+          color="cyan"
+          icon={<ClockCircleOutlined />}
+          style={{ borderRadius: 8, fontWeight: 600 }}
+        >
           Sắp diễn ra
         </Tag>
       );

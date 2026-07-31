@@ -28,23 +28,14 @@ router.put(
 router.delete("/:id", verifyUser, isTeacher, assignmentController.deleteAssignment);
 
 // Chấm điểm bài nộp (Body dạng raw JSON)
-router.put(
-  "/grade/:submissionId",
-  verifyUser,
-  isTeacher,
-  assignmentController.gradeSubmission
-);
+router.put("/grade/:submissionId", verifyUser, isTeacher, assignmentController.gradeSubmission);
 
 // --- Tuyến đường của Học sinh & Chung ---
 // Lấy chi tiết 1 bài tập
 router.get("/:id", verifyUser, assignmentController.getAssignmentById);
 
 // Lấy danh sách bài tập theo Lớp học
-router.get(
-  "/class/:classId",
-  verifyUser,
-  assignmentController.getAssignmentsByClass
-);
+router.get("/class/:classId", verifyUser, assignmentController.getAssignmentsByClass);
 
 // Giáo viên xem danh sách bài nộp của assignment
 router.get(
@@ -63,11 +54,7 @@ router.get(
 );
 
 // Học sinh xem bài nộp cá nhân
-router.get(
-  "/:assignmentId/my-submission",
-  verifyUser,
-  assignmentController.getMySubmission
-);
+router.get("/:assignmentId/my-submission", verifyUser, assignmentController.getMySubmission);
 
 // Học sinh Nộp bài / Nộp lại bài (Đính kèm max 5 file bài làm)
 router.post(
@@ -78,10 +65,6 @@ router.post(
 );
 
 // Học sinh Hủy nộp bài
-router.delete(
-  "/submit/:assignmentId",
-  verifyUser,
-  assignmentController.cancelSubmission
-);
+router.delete("/submit/:assignmentId", verifyUser, assignmentController.cancelSubmission);
 
 export default router;

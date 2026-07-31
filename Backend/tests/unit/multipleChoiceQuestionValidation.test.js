@@ -3,7 +3,12 @@
 import { describe, it, expect } from "vitest";
 import { validationResult } from "express-validator";
 import { multipleChoiceQuestionValidation } from "../../src/utils/validators.js";
-import { createRequest, createResponse, runMiddleware, extractErrorMessages } from "../helpers/expressMock.js";
+import {
+  createRequest,
+  createResponse,
+  runMiddleware,
+  extractErrorMessages,
+} from "../helpers/expressMock.js";
 
 const cases = [
   {

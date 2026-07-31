@@ -1,5 +1,17 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
-import { Card, Input, Select, Segmented, Pagination, Alert, Button, Skeleton, Empty, Typography, Space } from "antd";
+import {
+  Card,
+  Input,
+  Select,
+  Segmented,
+  Pagination,
+  Alert,
+  Button,
+  Skeleton,
+  Empty,
+  Typography,
+  Space,
+} from "antd";
 import {
   SearchOutlined,
   AppstoreOutlined,
@@ -53,7 +65,9 @@ export default function ClassroomManagement() {
   // Aggregate Stats
   const stats = useMemo(() => {
     const total = classes.length;
-    const active = classes.filter((c) => ["Active", "Ready", "Ongoing", "active"].includes(c.status)).length;
+    const active = classes.filter((c) =>
+      ["Active", "Ready", "Ongoing", "active"].includes(c.status)
+    ).length;
     const completed = classes.filter((c) => ["Completed", "completed"].includes(c.status)).length;
     const totalStudents = classes.reduce((sum, c) => {
       const count = c.currentStudents ?? (Array.isArray(c.students) ? c.students.length : 0);
@@ -79,7 +93,9 @@ export default function ClassroomManagement() {
 
     // Status Filter
     if (statusFilter !== "all") {
-      result = result.filter((c) => (c.status || "active").toLowerCase() === statusFilter.toLowerCase());
+      result = result.filter(
+        (c) => (c.status || "active").toLowerCase() === statusFilter.toLowerCase()
+      );
     }
 
     // Sort
@@ -99,7 +115,15 @@ export default function ClassroomManagement() {
   }, [filteredClasses, currentPage, pageSize]);
 
   return (
-    <div style={{ padding: "24px", maxWidth: 1400, margin: "0 auto", backgroundColor: "#f8f9fa", minHeight: "100vh" }}>
+    <div
+      style={{
+        padding: "24px",
+        maxWidth: 1400,
+        margin: "0 auto",
+        backgroundColor: "#f8f9fa",
+        minHeight: "100vh",
+      }}
+    >
       {/* 1. Header Banner & Stats Overview */}
       <TeacherClassHeader
         totalClasses={stats.total}
@@ -117,7 +141,13 @@ export default function ClassroomManagement() {
           type="error"
           showIcon
           action={
-            <Button size="small" type="primary" danger icon={<ReloadOutlined />} onClick={fetchClasses}>
+            <Button
+              size="small"
+              type="primary"
+              danger
+              icon={<ReloadOutlined />}
+              onClick={fetchClasses}
+            >
               Thử lại
             </Button>
           }
@@ -126,8 +156,19 @@ export default function ClassroomManagement() {
       )}
 
       {/* 2. Controls Toolbar (Search, Filter, Sort, View Toggle) */}
-      <Card style={{ borderRadius: 12, marginBottom: 24, boxShadow: "0 2px 8px rgba(0,0,0,0.04)" }} styles={{ body: { padding: 16 } }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 16 }}>
+      <Card
+        style={{ borderRadius: 12, marginBottom: 24, boxShadow: "0 2px 8px rgba(0,0,0,0.04)" }}
+        styles={{ body: { padding: 16 } }}
+      >
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            flexWrap: "wrap",
+            gap: 16,
+          }}
+        >
           {/* Left: Search input */}
           <Input
             placeholder="Tìm kiếm theo tên lớp hoặc mã tham gia..."

@@ -35,21 +35,15 @@ const isAdminOrAssignedTeacher = async (req, res, next) => {
 
       // Bảo vệ thêm: validate classId tại đây để trả lỗi sớm
       if (!classId || !mongoose.Types.ObjectId.isValid(classId)) {
-        return res
-          .status(400)
-          .json({ success: false, message: "ID lớp học không hợp lệ!" });
+        return res.status(400).json({ success: false, message: "ID lớp học không hợp lệ!" });
       }
 
       const targetClass = await classModel.findById(classId).lean();
       if (!targetClass) {
-        return res
-          .status(404)
-          .json({ success: false, message: "Lớp học không tồn tại!" });
+        return res.status(404).json({ success: false, message: "Lớp học không tồn tại!" });
       }
 
-      const isAssigned =
-        targetClass.teacherId &&
-        targetClass.teacherId.toString() === userId;
+      const isAssigned = targetClass.teacherId && targetClass.teacherId.toString() === userId;
 
       if (!isAssigned) {
         return res.status(403).json({
@@ -64,13 +58,12 @@ const isAdminOrAssignedTeacher = async (req, res, next) => {
     // Các role còn lại (Student, ...) → từ chối
     return res.status(403).json({
       success: false,
-      message: "Quyền truy cập bị từ chối. Chỉ Admin hoặc Giáo viên được phân công mới được xuất báo cáo!",
+      message:
+        "Quyền truy cập bị từ chối. Chỉ Admin hoặc Giáo viên được phân công mới được xuất báo cáo!",
     });
   } catch (error) {
     console.error("[ReportRouter] isAdminOrAssignedTeacher Error:", error);
-    return res
-      .status(500)
-      .json({ success: false, message: "Lỗi phân quyền nội bộ." });
+    return res.status(500).json({ success: false, message: "Lỗi phân quyền nội bộ." });
   }
 };
 
@@ -84,12 +77,7 @@ const isAdminOrAssignedTeacher = async (req, res, next) => {
  * @query ?format=excel  (mặc định – chỉ hỗ trợ excel hiện tại)
  * @access Admin | Teacher được phân công
  */
-router.get(
-  "/export/grades/:classId",
-  verifyUser,
-  isAdminOrAssignedTeacher,
-  exportGrades
-);
+router.get("/export/grades/:classId", verifyUser, isAdminOrAssignedTeacher, exportGrades);
 
 /**
  * GET /api/reports/export/attendance/:classId
@@ -97,11 +85,6 @@ router.get(
  * @query ?format=excel  (mặc định – chỉ hỗ trợ excel hiện tại)
  * @access Admin | Teacher được phân công
  */
-router.get(
-  "/export/attendance/:classId",
-  verifyUser,
-  isAdminOrAssignedTeacher,
-  exportAttendance
-);
+router.get("/export/attendance/:classId", verifyUser, isAdminOrAssignedTeacher, exportAttendance);
 
 export default router;

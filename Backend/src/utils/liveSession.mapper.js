@@ -24,18 +24,20 @@ export const mapLiveSessionResponse = (session, options = {}) => {
     scheduledEnd: doc.scheduledEnd || null,
     actualStart: doc.actualStart || null,
     actualEnd: doc.actualEnd || null,
-    createdBy: typeof doc.createdBy === "object" && doc.createdBy !== null
-      ? {
-          id: doc.createdBy._id?.toString() || doc.createdBy.id,
-          name: doc.createdBy.fullName || doc.createdBy.name || "Teacher",
-        }
-      : doc.createdBy,
-    endedBy: typeof doc.endedBy === "object" && doc.endedBy !== null
-      ? {
-          id: doc.endedBy._id?.toString() || doc.endedBy.id,
-          name: doc.endedBy.fullName || doc.endedBy.name || "Teacher",
-        }
-      : doc.endedBy,
+    createdBy:
+      typeof doc.createdBy === "object" && doc.createdBy !== null
+        ? {
+            id: doc.createdBy._id?.toString() || doc.createdBy.id,
+            name: doc.createdBy.fullName || doc.createdBy.name || "Teacher",
+          }
+        : doc.createdBy,
+    endedBy:
+      typeof doc.endedBy === "object" && doc.endedBy !== null
+        ? {
+            id: doc.endedBy._id?.toString() || doc.endedBy.id,
+            name: doc.endedBy.fullName || doc.endedBy.name || "Teacher",
+          }
+        : doc.endedBy,
     recordingUrl: doc.recordingUrl || "",
     createdAt: doc.createdAt,
     updatedAt: doc.updatedAt,

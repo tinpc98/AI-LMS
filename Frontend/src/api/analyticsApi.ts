@@ -41,11 +41,15 @@ export interface ITeacherAnalytics {
 
 const analyticsApi = {
   getStudentDashboard: async (classId: string) => {
-    const response = await axiosClient.get<IStudentAnalytics>(`/api/analytics/student/dashboard/${classId}`);
+    const response = await axiosClient.get<IStudentAnalytics>(
+      `/api/analytics/student/dashboard/${classId}`
+    );
     return (response.data as any).data ?? response.data;
   },
   getTeacherDashboard: async (classId: string) => {
-    const response = await axiosClient.get<ITeacherAnalytics>(`/api/analytics/teacher/dashboard/${classId}`);
+    const response = await axiosClient.get<ITeacherAnalytics>(
+      `/api/analytics/teacher/dashboard/${classId}`
+    );
     return (response.data as any).data ?? response.data;
   },
   getTeacherExportUrl: (classId: string) => {

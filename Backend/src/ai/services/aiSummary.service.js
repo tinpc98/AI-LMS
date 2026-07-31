@@ -15,10 +15,10 @@ class AISummaryService {
    */
   generateFingerprint({ title, description, attachments, contentText }) {
     const attachmentKeys = (attachments || [])
-      .map(a => a.publicId || a.url || "")
+      .map((a) => a.publicId || a.url || "")
       .sort()
       .join("|");
-    
+
     const raw = `${title || ""}|${description || ""}|${attachmentKeys}|${contentText || ""}|${SUMMARY_PROMPT_VERSION}`;
     return crypto.createHash("sha256").update(raw).digest("hex");
   }
@@ -32,7 +32,8 @@ class AISummaryService {
     }
 
     // 1. Trích xuất nội dung bài giảng
-    const { text: contentText, warnings: sourceWarnings } = await lessonContentExtractor.extractLessonContent(lesson);
+    const { text: contentText, warnings: sourceWarnings } =
+      await lessonContentExtractor.extractLessonContent(lesson);
 
     // Kiểm tra giới hạn đầu vào
     AIInputBudget.validateTextBudget(contentText, "AI Summary");
@@ -42,7 +43,7 @@ class AISummaryService {
       title: lesson.title,
       description: lesson.description,
       attachments: lesson.attachments,
-      contentText
+      contentText,
     });
 
     // 3. Chống generate trùng (Idempotency / Caching)
@@ -102,7 +103,11 @@ class AISummaryService {
       await session.withTransaction(async () => {
         const summary = await AISummary.findOne({ _id: summaryId, lessonId }).session(session);
         if (!summary) {
-          throw new AIError("Không tìm thấy bản tóm tắt hoặc không thuộc bài giảng này.", AIErrorCode.AI_INVALID_INPUT, 404);
+          throw new AIError(
+            "Không tìm thấy bản tóm tắt hoặc không thuộc bài giảng này.",
+            AIErrorCode.AI_INVALID_INPUT,
+            404
+          );
         }
 
         if (summary.status === "approved") {
@@ -110,7 +115,11 @@ class AISummaryService {
         }
 
         if (summary.status !== "draft") {
-          throw new AIError(`Không thể duyệt bản tóm tắt đang ở trạng thái '${summary.status}'.`, AIErrorCode.AI_INVALID_INPUT, 409);
+          throw new AIError(
+            `Không thể duyệt bản tóm tắt đang ở trạng thái '${summary.status}'.`,
+            AIErrorCode.AI_INVALID_INPUT,
+            409
+          );
         }
 
         // Cập nhật bản approved cũ (nếu có) thành superseded
@@ -124,7 +133,7 @@ class AISummaryService {
         summary.reviewedBy = userId;
         summary.approvedAt = new Date();
         await summary.save({ session });
-        
+
         approvedDoc = summary;
       });
       return approvedDoc;
@@ -143,11 +152,19 @@ class AISummaryService {
       await session.withTransaction(async () => {
         const summary = await AISummary.findOne({ _id: summaryId, lessonId }).session(session);
         if (!summary) {
-          throw new AIError("Không tìm thấy bản tóm tắt hoặc không thuộc bài giảng này.", AIErrorCode.AI_INVALID_INPUT, 404);
+          throw new AIError(
+            "Không tìm thấy bản tóm tắt hoặc không thuộc bài giảng này.",
+            AIErrorCode.AI_INVALID_INPUT,
+            404
+          );
         }
 
         if (summary.status !== "draft") {
-          throw new AIError(`Không thể từ chối bản tóm tắt đang ở trạng thái '${summary.status}'.`, AIErrorCode.AI_INVALID_INPUT, 409);
+          throw new AIError(
+            `Không thể từ chối bản tóm tắt đang ở trạng thái '${summary.status}'.`,
+            AIErrorCode.AI_INVALID_INPUT,
+            409
+          );
         }
 
         summary.status = "rejected";
@@ -155,7 +172,7 @@ class AISummaryService {
         summary.rejectedAt = new Date();
         summary.rejectionReason = reason || "Không có lý do.";
         await summary.save({ session });
-        
+
         rejectedDoc = summary;
       });
       return rejectedDoc;

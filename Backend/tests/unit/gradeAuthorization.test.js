@@ -77,7 +77,10 @@ describe("gradeService.getGradesByClass — AUTHZ-05", () => {
 
   it("Giáo viên phụ trách lớp xem được bảng điểm", async () => {
     vi.spyOn(classModel, "findById").mockResolvedValue(makeClass());
-    vi.spyOn(gradeService, "aggregateGradesMatrix").mockResolvedValue({ gradeItems: [], students: [] });
+    vi.spyOn(gradeService, "aggregateGradesMatrix").mockResolvedValue({
+      gradeItems: [],
+      students: [],
+    });
 
     const result = await gradeService.getGradesByClass(CLASS_ID, OWNER_TEACHER_ID, "Teacher");
     expect(result).toEqual({ gradeItems: [], students: [] });

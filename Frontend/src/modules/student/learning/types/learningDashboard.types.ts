@@ -96,7 +96,12 @@ export interface LearningInsight {
   examPerformanceRate: number;
   weakSubjects: string[];
   strongSubjects: string[];
-  upcomingDeadlines: Array<{ id: string; title: string; dueDate: string; type: "assignment" | "exam" }>;
+  upcomingDeadlines: Array<{
+    id: string;
+    title: string;
+    dueDate: string;
+    type: "assignment" | "exam";
+  }>;
   riskLevel: "low" | "medium" | "high";
   recommendedActions: string[];
 }

@@ -24,7 +24,13 @@ class AIUsageService {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     // return format YYYY-MM-DD local time relative to server
-    return today.getFullYear() + "-" + String(today.getMonth() + 1).padStart(2, "0") + "-" + String(today.getDate()).padStart(2, "0");
+    return (
+      today.getFullYear() +
+      "-" +
+      String(today.getMonth() + 1).padStart(2, "0") +
+      "-" +
+      String(today.getDate()).padStart(2, "0")
+    );
   }
 
   getRoleLimit(config, userRole) {
@@ -45,7 +51,11 @@ class AIUsageService {
     const config = await this.getOrCreateConfig();
 
     if (!config.isGloballyEnabled) {
-      throw new AIError("Tính năng AI toàn hệ thống hiện đang tạm khóa bởi Quản trị viên!", AIErrorCode.AI_FEATURE_DISABLED, 403);
+      throw new AIError(
+        "Tính năng AI toàn hệ thống hiện đang tạm khóa bởi Quản trị viên!",
+        AIErrorCode.AI_FEATURE_DISABLED,
+        403
+      );
     }
 
     const FEATURE_FLAG_MAP = {
@@ -59,12 +69,21 @@ class AIUsageService {
     const mappedFeature = FEATURE_FLAG_MAP[feature] || feature;
 
     if (config.featureFlags && config.featureFlags[mappedFeature] === false) {
-      throw new AIError(`Tính năng AI (${feature}) hiện đang bị tạm khóa!`, AIErrorCode.AI_FEATURE_DISABLED, 403);
+      throw new AIError(
+        `Tính năng AI (${feature}) hiện đang bị tạm khóa!`,
+        AIErrorCode.AI_FEATURE_DISABLED,
+        403
+      );
     }
 
     const dailyLimit = this.getRoleLimit(config, userRole);
     if (dailyLimit <= 0) {
-      throw new AIError(`Bạn đã sử dụng hết hạn mức AI trong ngày (0/${dailyLimit} lượt).`, AIErrorCode.AI_QUOTA_EXCEEDED, 429, { todayUsageCount: 0, dailyLimit });
+      throw new AIError(
+        `Bạn đã sử dụng hết hạn mức AI trong ngày (0/${dailyLimit} lượt).`,
+        AIErrorCode.AI_QUOTA_EXCEEDED,
+        429,
+        { todayUsageCount: 0, dailyLimit }
+      );
     }
 
     const dateString = this.getDateString();
@@ -72,7 +91,12 @@ class AIUsageService {
     const todayUsageCount = quotaDoc ? quotaDoc.usageCount : 0;
 
     if (todayUsageCount >= dailyLimit) {
-      throw new AIError(`Bạn đã sử dụng hết hạn mức AI trong ngày (${todayUsageCount}/${dailyLimit} lượt). Vui lòng thử lại vào ngày mai!`, AIErrorCode.AI_QUOTA_EXCEEDED, 429, { todayUsageCount, dailyLimit });
+      throw new AIError(
+        `Bạn đã sử dụng hết hạn mức AI trong ngày (${todayUsageCount}/${dailyLimit} lượt). Vui lòng thử lại vào ngày mai!`,
+        AIErrorCode.AI_QUOTA_EXCEEDED,
+        429,
+        { todayUsageCount, dailyLimit }
+      );
     }
 
     return { allowed: true, remaining: dailyLimit - todayUsageCount, dailyLimit, config };
@@ -83,28 +107,35 @@ class AIUsageService {
     return crypto.createHash("sha256").update(String(prompt)).digest("hex").slice(0, 32);
   }
 
-  calculateCost(inputTokens = 0, outputTokens = 0, provider = "google-gemini", model = "gemini-1.5-flash") {
+  calculateCost(
+    inputTokens = 0,
+    outputTokens = 0,
+    provider = "google-gemini",
+    model = "gemini-1.5-flash"
+  ) {
     if (provider === "mock") return { cost: 0, estimated: false };
-    
+
     let inputCostRate = 0;
     let outputCostRate = 0;
     let isEstimated = false;
 
     if (model.includes("gemini-1.5-flash")) {
       inputCostRate = 0.075 / 1000000;
-      outputCostRate = 0.30 / 1000000;
+      outputCostRate = 0.3 / 1000000;
     } else if (model.includes("gemini-1.5-pro")) {
       inputCostRate = 1.25 / 1000000;
-      outputCostRate = 5.00 / 1000000;
+      outputCostRate = 5.0 / 1000000;
     } else {
       // Fallback
       inputCostRate = 0.075 / 1000000;
-      outputCostRate = 0.30 / 1000000;
+      outputCostRate = 0.3 / 1000000;
       isEstimated = true;
-      console.warn(`[AIUsageService] Không có bảng giá cho model: ${model}. Dùng giá trị ước tính.`);
+      console.warn(
+        `[AIUsageService] Không có bảng giá cho model: ${model}. Dùng giá trị ước tính.`
+      );
     }
 
-    const totalCost = (inputTokens * inputCostRate) + (outputTokens * outputCostRate);
+    const totalCost = inputTokens * inputCostRate + outputTokens * outputCostRate;
     return { cost: Number(totalCost.toFixed(6)), estimated: isEstimated };
   }
 
@@ -112,16 +143,29 @@ class AIUsageService {
    * Atomic Quota Reservation & Create Pending Record
    */
   async reserveQuota(params, retryCount = 0) {
-    const { userId, userRole = "student", feature, provider = "google-gemini", model = "gemini-1.5-flash", referenceId = null, referenceType = null } = params;
+    const {
+      userId,
+      userRole = "student",
+      feature,
+      provider = "google-gemini",
+      model = "gemini-1.5-flash",
+      referenceId = null,
+      referenceType = null,
+    } = params;
     const config = await this.getOrCreateConfig();
     const dailyLimit = this.getRoleLimit(config, userRole);
-    
+
     if (dailyLimit <= 0) {
-      throw new AIError(`Bạn đã sử dụng hết hạn mức AI trong ngày (0/0 lượt).`, AIErrorCode.AI_QUOTA_EXCEEDED, 429, { todayUsageCount: 0, dailyLimit });
+      throw new AIError(
+        `Bạn đã sử dụng hết hạn mức AI trong ngày (0/0 lượt).`,
+        AIErrorCode.AI_QUOTA_EXCEEDED,
+        429,
+        { todayUsageCount: 0, dailyLimit }
+      );
     }
 
     const dateString = this.getDateString();
-    
+
     const session = await AIUsage.startSession();
     try {
       let usageId = null;
@@ -133,11 +177,22 @@ class AIUsageService {
           { new: true, upsert: true, setDefaultsOnInsert: true, session }
         );
 
-        const usageArr = await AIUsage.create([{
-          userId, feature, provider, model, status: "pending", referenceId, referenceType,
-          quotaState: "reserved",
-          quotaDateString: dateString
-        }], { session });
+        const usageArr = await AIUsage.create(
+          [
+            {
+              userId,
+              feature,
+              provider,
+              model,
+              status: "pending",
+              referenceId,
+              referenceType,
+              quotaState: "reserved",
+              quotaDateString: dateString,
+            },
+          ],
+          { session }
+        );
 
         usageId = usageArr[0]._id;
       });
@@ -147,19 +202,32 @@ class AIUsageService {
         // Document exists. Is it because of concurrent insert or maxed quota?
         const existing = await AIDailyQuota.findOne({ userId, dateString });
         if (existing && existing.usageCount >= dailyLimit) {
-          throw new AIError(`Bạn đã sử dụng hết hạn mức AI trong ngày (${existing.usageCount}/${dailyLimit} lượt).`, AIErrorCode.AI_QUOTA_EXCEEDED, 429, { todayUsageCount: existing.usageCount, dailyLimit });
+          throw new AIError(
+            `Bạn đã sử dụng hết hạn mức AI trong ngày (${existing.usageCount}/${dailyLimit} lượt).`,
+            AIErrorCode.AI_QUOTA_EXCEEDED,
+            429,
+            { todayUsageCount: existing.usageCount, dailyLimit }
+          );
         }
-        
+
         // Concurrent insert caused E11000. Retry!
         if (retryCount < 2) {
           return this.reserveQuota(params, retryCount + 1);
         } else {
-          throw new AIError(`Hệ thống đang bận, vui lòng thử lại sau.`, AIErrorCode.AI_PROVIDER_ERROR, 503);
+          throw new AIError(
+            `Hệ thống đang bận, vui lòng thử lại sau.`,
+            AIErrorCode.AI_PROVIDER_ERROR,
+            503
+          );
         }
       }
-      
+
       console.error("[AIUsageService] ⚠️ Failed to reserve AI quota:", err.message);
-      throw new AIError(`Lỗi hệ thống khi cấp phát Quota: ${err.message}`, AIErrorCode.AI_PROVIDER_ERROR, 500);
+      throw new AIError(
+        `Lỗi hệ thống khi cấp phát Quota: ${err.message}`,
+        AIErrorCode.AI_PROVIDER_ERROR,
+        500
+      );
     } finally {
       session.endSession();
     }
@@ -168,23 +236,42 @@ class AIUsageService {
   /**
    * Finalize AI Usage document asynchronously and idempotently
    */
-  async finalizeUsage(usageId, { inputTokens = 0, outputTokens = 0, durationMs = 0, status = "success", errorMessage = null, prompt = null }) {
+  async finalizeUsage(
+    usageId,
+    {
+      inputTokens = 0,
+      outputTokens = 0,
+      durationMs = 0,
+      status = "success",
+      errorMessage = null,
+      prompt = null,
+    }
+  ) {
     if (!usageId) return;
 
     const session = await AIUsage.startSession();
     try {
       await session.withTransaction(async () => {
         // Find and claim the specific record
-        const usage = await AIUsage.findOne({ _id: usageId, status: "pending", quotaState: "reserved" }).session(session);
-        
+        const usage = await AIUsage.findOne({
+          _id: usageId,
+          status: "pending",
+          quotaState: "reserved",
+        }).session(session);
+
         if (!usage) {
           // No op if already finalized or not found
           return;
         }
 
         const totalTokens = inputTokens + outputTokens;
-        const { cost: calculatedCost, estimated: isEstimated } = this.calculateCost(inputTokens, outputTokens, usage.provider, usage.model);
-        
+        const { cost: calculatedCost, estimated: isEstimated } = this.calculateCost(
+          inputTokens,
+          outputTokens,
+          usage.provider,
+          usage.model
+        );
+
         usage.status = status;
         usage.inputTokens = inputTokens;
         usage.outputTokens = outputTokens;
@@ -200,19 +287,21 @@ class AIUsageService {
         } else {
           usage.quotaState = "refunded";
           usage.quotaRefundedAt = new Date();
-          
+
           // Refund quota atomically only if usageCount > 0
           const refundRes = await AIDailyQuota.updateOne(
             { userId: usage.userId, dateString: usage.quotaDateString, usageCount: { $gt: 0 } },
             { $inc: { usageCount: -1 } },
             { session }
           );
-          
+
           if (refundRes.modifiedCount === 0) {
-            console.warn(`[AIUsageService] ⚠️ Cannot refund quota for usage ${usage._id}: usageCount is 0 or document missing.`);
+            console.warn(
+              `[AIUsageService] ⚠️ Cannot refund quota for usage ${usage._id}: usageCount is 0 or document missing.`
+            );
           }
         }
-        
+
         usage.finalizedAt = new Date();
         await usage.save({ session });
       });

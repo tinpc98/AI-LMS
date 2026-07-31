@@ -85,9 +85,7 @@ const ExamPageContent = () => {
   useEffect(() => {
     const fetchExamData = async () => {
       try {
-        const response = await axiosClient.get(
-          `/api/exam-attempts/${attemptId}`,
-        );
+        const response = await axiosClient.get(`/api/exam-attempts/${attemptId}`);
         console.log(attemptId);
 
         const data = response.data.data || response.data;
@@ -128,9 +126,7 @@ const ExamPageContent = () => {
   const handleAutoSubmit = async (isForced = false) => {
     isSubmittingRef.current = true;
     setModalType(isForced ? "warning" : "info");
-    setWarningMessage(
-      "Hệ thống đang xử lý nộp bài, vui lòng không tắt trình duyệt...",
-    );
+    setWarningMessage("Hệ thống đang xử lý nộp bài, vui lòng không tắt trình duyệt...");
     setIsWarningVisible(true);
 
     try {
@@ -155,7 +151,7 @@ const ExamPageContent = () => {
 
       setTimeout(() => {
         if (document.fullscreenElement) {
-          document.exitFullscreen().catch(err => console.error("Error exiting fullscreen:", err));
+          document.exitFullscreen().catch((err) => console.error("Error exiting fullscreen:", err));
         }
         if (examClassId) {
           navigate(`/student/classdetail/${examClassId}`);
@@ -167,9 +163,7 @@ const ExamPageContent = () => {
       isSubmittingRef.current = false;
       console.error("Lỗi nộp bài:", error);
       setModalType("warning");
-      setWarningMessage(
-        error.response?.data?.message || "Có lỗi xảy ra khi nộp bài!",
-      );
+      setWarningMessage(error.response?.data?.message || "Có lỗi xảy ra khi nộp bài!");
     }
   };
 
@@ -188,7 +182,7 @@ const ExamPageContent = () => {
     totalSeconds, // Truyền giây vào đây
     attemptId,
     handleAutoSubmit,
-    examEndTime, // Truyền thêm thời điểm kết thúc tuyệt đối (nếu có)
+    examEndTime // Truyền thêm thời điểm kết thúc tuyệt đối (nếu có)
   );
 
   const handleCheatAlert = useCallback(
@@ -210,18 +204,16 @@ const ExamPageContent = () => {
       setModalType("warning");
       if (currentViolations >= MAX_WARNINGS) {
         setWarningMessage(
-          `Đình chỉ thi! Bạn đã vi phạm ${MAX_WARNINGS} lần. Đang tự động nộp bài...`,
+          `Đình chỉ thi! Bạn đã vi phạm ${MAX_WARNINGS} lần. Đang tự động nộp bài...`
         );
         setIsWarningVisible(true);
         handleAutoSubmit(true);
       } else {
-        setWarningMessage(
-          `Lỗi: ${reason} (Vi phạm lần ${currentViolations}/${MAX_WARNINGS})`,
-        );
+        setWarningMessage(`Lỗi: ${reason} (Vi phạm lần ${currentViolations}/${MAX_WARNINGS})`);
         setIsWarningVisible(true);
       }
     },
-    [attemptId, MAX_WARNINGS],
+    [attemptId, MAX_WARNINGS]
   );
   useAntiCheat(handleCheatAlert);
 
@@ -272,7 +264,10 @@ const ExamPageContent = () => {
   }
 
   return (
-    <div ref={examContainerRef} className="bg-background text-on-surface font-sans min-h-screen overflow-hidden flex flex-col relative">
+    <div
+      ref={examContainerRef}
+      className="bg-background text-on-surface font-sans min-h-screen overflow-hidden flex flex-col relative"
+    >
       {!isFullscreen && (
         <div className="absolute inset-0 z-[200] flex flex-col items-center justify-center bg-white backdrop-blur-md bg-opacity-95">
           <h2 className="text-3xl font-bold mb-4 text-primary">Chế độ thi toàn màn hình</h2>
@@ -315,15 +310,16 @@ const ExamPageContent = () => {
           <div className="max-w-4xl mx-auto">
             <div className="flex justify-between items-start mb-8">
               <h2 className="text-2xl font-bold">
-                Câu {currentIndex + 1}: {typeof currentQ.content === 'string' ? currentQ.content : 'Nội dung câu hỏi không hợp lệ'}
+                Câu {currentIndex + 1}:{" "}
+                {typeof currentQ.content === "string"
+                  ? currentQ.content
+                  : "Nội dung câu hỏi không hợp lệ"}
               </h2>
               <button
                 onClick={toggleFlag}
                 className={`px-4 py-2 rounded-lg font-medium border transition-colors flex items-center gap-2 ${flagged.has(currentQ._id) ? "bg-yellow-100 border-yellow-400 text-yellow-700" : "bg-white border-gray-300 text-gray-600 hover:bg-gray-50"}`}
               >
-                {flagged.has(currentQ._id)
-                  ? "🚩 Đã đánh dấu"
-                  : "⚑ Đánh dấu xem lại"}
+                {flagged.has(currentQ._id) ? "🚩 Đã đánh dấu" : "⚑ Đánh dấu xem lại"}
               </button>
             </div>
 
@@ -346,7 +342,7 @@ const ExamPageContent = () => {
                         {label}
                       </div>
                       <span className="font-medium text-lg">
-                        {typeof opt === 'string' ? opt : 'Lựa chọn không hợp lệ'}
+                        {typeof opt === "string" ? opt : "Lựa chọn không hợp lệ"}
                       </span>
                     </button>
                   );
@@ -391,13 +387,9 @@ const ExamPageContent = () => {
               const isFlagged = flagged.has(q._id);
               const isActive = i === currentIndex;
               let boxClass = "bg-gray-200 text-gray-700 hover:bg-gray-300";
-              if (isFlagged)
-                boxClass = "bg-yellow-400 text-yellow-900 shadow-sm";
-              else if (isAnswered)
-                boxClass = "bg-green-500 text-white shadow-sm";
-              const activeClass = isActive
-                ? "ring-2 ring-primary ring-offset-2 scale-110"
-                : "";
+              if (isFlagged) boxClass = "bg-yellow-400 text-yellow-900 shadow-sm";
+              else if (isAnswered) boxClass = "bg-green-500 text-white shadow-sm";
+              const activeClass = isActive ? "ring-2 ring-primary ring-offset-2 scale-110" : "";
               return (
                 <button
                   key={q._id}
@@ -458,9 +450,7 @@ const ExamPageContent = () => {
                   modalType === "success" ? "bg-green-500" : "bg-gray-400"
                 }`}
               >
-                {modalType === "success"
-                  ? "Đang chuyển hướng..."
-                  : "Hệ thống đang xử lý..."}
+                {modalType === "success" ? "Đang chuyển hướng..." : "Hệ thống đang xử lý..."}
               </button>
             )}
           </div>

@@ -113,7 +113,8 @@ export const generateJaasTokenService = async ({ sessionId, user }) => {
 
   const userIdStr = String(user.id || user._id);
   const isTeacherOwner = classInfo.teacherId && String(classInfo.teacherId) === userIdStr;
-  const isEnrolledStudent = Array.isArray(classInfo.students) &&
+  const isEnrolledStudent =
+    Array.isArray(classInfo.students) &&
     classInfo.students.some((s) => String(s.studentId) === userIdStr && s.status === "Enrolled");
 
   if (!isTeacherOwner && !isEnrolledStudent) {
@@ -162,8 +163,6 @@ export const generateJaasTokenService = async ({ sessionId, user }) => {
       kid: apiKeyId,
     },
   });
-
-
 
   return {
     sessionId: targetSession._id.toString(),

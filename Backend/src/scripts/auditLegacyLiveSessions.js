@@ -26,7 +26,10 @@ export async function auditLegacyLiveSessions() {
     // 2. Thống kê LiveSessions
     const totalSessions = await LiveSession.countDocuments();
     const sessionsWithRoomName = await LiveSession.countDocuments({ roomName: { $ne: null } });
-    const activeLiveSessions = await LiveSession.countDocuments({ status: "Live", isDeleted: false });
+    const activeLiveSessions = await LiveSession.countDocuments({
+      status: "Live",
+      isDeleted: false,
+    });
 
     // 3. Kiểm tra lớp học bị trùng phiên Live (Multiple Active Live Sessions)
     const activeGroups = await LiveSession.aggregate([

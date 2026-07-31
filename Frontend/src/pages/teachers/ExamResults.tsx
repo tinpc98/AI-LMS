@@ -15,9 +15,7 @@ export default function ExamResults() {
         if (isFirstLoad) setIsLoading(true);
 
         // 1. Gọi API lấy danh sách học sinh làm bài
-        const resAttempts = await axiosClient.get(
-          `/api/exam-attempts/exam/${examId}`,
-        );
+        const resAttempts = await axiosClient.get(`/api/exam-attempts/exam/${examId}`);
         setStudentList(resAttempts.data.data || []);
 
         // 2. GỌI API LẤY CHI TIẾT KỲ THI ĐỂ HIỆN TÊN (Chỉ gọi lần đầu tiên)
@@ -76,14 +74,12 @@ export default function ExamResults() {
         badgeColor: "bg-red-100 text-red-700 border-red-200",
         icon: "warning",
         iconText: "Alert",
-        iconColor:
-          "text-white bg-red-500 shadow-sm shadow-red-200 animate-pulse",
+        iconColor: "text-white bg-red-500 shadow-sm shadow-red-200 animate-pulse",
         scoreColor: "text-red-600",
       },
       REVIEW: {
         label: "Review",
-        containerColor:
-          "bg-yellow-50/30 border-yellow-200 hover:border-yellow-400",
+        containerColor: "bg-yellow-50/30 border-yellow-200 hover:border-yellow-400",
         badgeColor: "bg-yellow-100 text-yellow-700 border-yellow-200",
         icon: "error_outline",
         iconText: "Warning",
@@ -100,15 +96,10 @@ export default function ExamResults() {
         {/* HEADER & BREADCRUMBS */}
         <div className="mb-8">
           <nav className="flex items-center gap-2 text-gray-500 text-sm mb-4">
-            <Link
-              to="/teacher"
-              className="hover:text-primary transition-colors font-medium"
-            >
+            <Link to="/teacher" className="hover:text-primary transition-colors font-medium">
               Quản lý kỳ thi
             </Link>
-            <span className="material-symbols-outlined text-base">
-              chevron_right
-            </span>
+            <span className="material-symbols-outlined text-base">chevron_right</span>
             <span className="text-gray-900 font-semibold">Kết quả</span>
           </nav>
 
@@ -118,10 +109,7 @@ export default function ExamResults() {
                 {examInfo ? examInfo.title : "Đang tải dữ liệu kỳ thi..."}
               </h2>
               <p className="text-gray-500 mt-2 font-medium">
-                Tổng cộng:{" "}
-                <span className="text-primary font-bold">
-                  {studentList.length || 0}
-                </span>{" "}
+                Tổng cộng: <span className="text-primary font-bold">{studentList.length || 0}</span>{" "}
                 học sinh tham gia
               </p>
             </div>
@@ -134,9 +122,7 @@ export default function ExamResults() {
                 <option>Cảnh báo (Alert)</option>
               </select>
               <button className="bg-primary text-white font-bold text-sm py-2.5 px-6 rounded-xl shadow-md hover:bg-primary/90 transition-all flex items-center gap-2">
-                <span className="material-symbols-outlined text-[18px]">
-                  download
-                </span>
+                <span className="material-symbols-outlined text-[18px]">download</span>
                 Xuất Excel
               </button>
             </div>
@@ -156,9 +142,7 @@ export default function ExamResults() {
             <span className="material-symbols-outlined text-4xl text-gray-300 mb-2">
               sentiment_dissatisfied
             </span>
-            <p className="text-gray-500">
-              Chưa có thí sinh nào hoàn thành bài thi này.
-            </p>
+            <p className="text-gray-500">Chưa có thí sinh nào hoàn thành bài thi này.</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-3 2xl:grid-cols-3 gap-4">
@@ -168,9 +152,7 @@ export default function ExamResults() {
               // Lấy thông tin học sinh từ trường populate studentId trong MongoDB
               const student = item.studentId || {};
               const studentName = student.fullName || "Học sinh";
-              const studentCode =
-                student.studentCode ||
-                `STU-${item._id.slice(-6).toUpperCase()}`;
+              const studentCode = student.studentCode || `STU-${item._id.slice(-6).toUpperCase()}`;
               const className = student.className || "10A1";
 
               return (
@@ -209,15 +191,11 @@ export default function ExamResults() {
                       </h3>
                       <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-gray-500 text-xs mt-1">
                         <span className="flex items-center gap-1 font-medium">
-                          <span className="material-symbols-outlined text-[14px]">
-                            badge
-                          </span>
+                          <span className="material-symbols-outlined text-[14px]">badge</span>
                           {studentCode}
                         </span>
                         <span>•</span>
-                        <span className="font-medium text-gray-700">
-                          Lớp {className}
-                        </span>
+                        <span className="font-medium text-gray-700">Lớp {className}</span>
                       </div>
                     </div>
                   </div>
@@ -230,23 +208,16 @@ export default function ExamResults() {
                       <p className="text-[10px] uppercase font-bold tracking-widest mb-1 text-gray-500">
                         Score
                       </p>
-                      <p
-                        className={`font-bold text-3xl ${currentStatus.scoreColor}`}
-                      >
-                        {item.totalScore !== undefined &&
-                        item.totalScore !== null
+                      <p className={`font-bold text-3xl ${currentStatus.scoreColor}`}>
+                        {item.totalScore !== undefined && item.totalScore !== null
                           ? item.totalScore
                           : "--"}
-                        <span className="text-sm font-medium text-gray-400">
-                          /10
-                        </span>
+                        <span className="text-sm font-medium text-gray-400">/10</span>
                       </p>
                     </div>
                     <div className="flex flex-col items-end gap-2">
                       <div className="flex items-center gap-1 text-gray-500 text-xs font-medium">
-                        <span className="material-symbols-outlined text-[14px]">
-                          timer
-                        </span>
+                        <span className="material-symbols-outlined text-[14px]">timer</span>
                         {item.duration || "42:15"}
                       </div>
                       <div

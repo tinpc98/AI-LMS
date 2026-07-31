@@ -7,7 +7,8 @@ const AIManagementHeader = () => {
         AI Management
       </Typography.Title>
       <Typography.Paragraph style={{ margin: 0, color: "#64748b" }}>
-        System-wide AI infrastructure governance, prompt repository, knowledge indexing, and rate limit configuration.
+        System-wide AI infrastructure governance, prompt repository, knowledge indexing, and rate
+        limit configuration.
       </Typography.Paragraph>
     </div>
   );

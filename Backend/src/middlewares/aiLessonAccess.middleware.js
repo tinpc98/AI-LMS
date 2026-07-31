@@ -17,12 +17,20 @@ export const checkAILessonAccess = async (req, res, next) => {
 
     const lesson = await Lesson.findById(lessonId).lean();
     if (!lesson || lesson.isDeleted) {
-      throw new AIError("Bài giảng không tồn tại hoặc đã bị xóa.", AIErrorCode.AI_INVALID_INPUT, 404);
+      throw new AIError(
+        "Bài giảng không tồn tại hoặc đã bị xóa.",
+        AIErrorCode.AI_INVALID_INPUT,
+        404
+      );
     }
 
     const classDoc = await Class.findById(lesson.classId).lean();
     if (!classDoc || classDoc.isDeleted) {
-      throw new AIError("Lớp học chứa bài giảng này không tồn tại.", AIErrorCode.AI_INVALID_INPUT, 404);
+      throw new AIError(
+        "Lớp học chứa bài giảng này không tồn tại.",
+        AIErrorCode.AI_INVALID_INPUT,
+        404
+      );
     }
 
     req.aiLesson = lesson; // Lưu lại để controller sử dụng
@@ -38,35 +46,52 @@ export const checkAILessonAccess = async (req, res, next) => {
       if (String(classDoc.teacherId) === String(userId)) {
         return next();
       }
-      throw new AIError("Bạn không phải là giáo viên phụ trách lớp học này.", AIErrorCode.AI_FEATURE_DISABLED, 403);
+      throw new AIError(
+        "Bạn không phải là giáo viên phụ trách lớp học này.",
+        AIErrorCode.AI_FEATURE_DISABLED,
+        403
+      );
     }
 
     // Student check
     if (userRole === "student") {
       // 1. Lesson must be published
       if (!lesson.isPublished) {
-        throw new AIError("Bài giảng này chưa được xuất bản.", AIErrorCode.AI_FEATURE_DISABLED, 403);
+        throw new AIError(
+          "Bài giảng này chưa được xuất bản.",
+          AIErrorCode.AI_FEATURE_DISABLED,
+          403
+        );
       }
 
       // 2. Student must be enrolled in class
-      const isEnrolled = classDoc.students && classDoc.students.some(s => 
-        String(s.studentId) === String(userId) && s.status === "Enrolled"
-      );
+      const isEnrolled =
+        classDoc.students &&
+        classDoc.students.some(
+          (s) => String(s.studentId) === String(userId) && s.status === "Enrolled"
+        );
 
       if (!isEnrolled) {
-        throw new AIError("Bạn không phải là học sinh hợp lệ của lớp học này.", AIErrorCode.AI_FEATURE_DISABLED, 403);
+        throw new AIError(
+          "Bạn không phải là học sinh hợp lệ của lớp học này.",
+          AIErrorCode.AI_FEATURE_DISABLED,
+          403
+        );
       }
 
       // 3. Prevent generating/approving/rejecting
       if (req.method !== "GET") {
-        throw new AIError("Học sinh không có quyền thực hiện thao tác này.", AIErrorCode.AI_FEATURE_DISABLED, 403);
+        throw new AIError(
+          "Học sinh không có quyền thực hiện thao tác này.",
+          AIErrorCode.AI_FEATURE_DISABLED,
+          403
+        );
       }
 
       return next();
     }
 
     throw new AIError("Vai trò không hợp lệ.", AIErrorCode.AI_FEATURE_DISABLED, 403);
-
   } catch (error) {
     if (error instanceof AIError) {
       return res.status(error.status).json({

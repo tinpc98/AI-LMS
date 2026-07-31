@@ -36,7 +36,11 @@ export const EmptyState: React.FC<EmptyStateProps> = React.memo(
           image={image}
           description={
             <div>
-              {title && <div style={{ fontWeight: 600, fontSize: 16, color: "#1f2937", marginBottom: 4 }}>{title}</div>}
+              {title && (
+                <div style={{ fontWeight: 600, fontSize: 16, color: "#1f2937", marginBottom: 4 }}>
+                  {title}
+                </div>
+              )}
               <div style={{ color: "#6b7280", fontSize: 14 }}>{description}</div>
             </div>
           }

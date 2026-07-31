@@ -34,8 +34,12 @@ export const AssignmentCard: React.FC<AssignmentCardProps> = React.memo(
         })
       : "Không giới hạn";
 
-    const hasSubmitted = item.status === "Submitted" || item.status === "Late" || item.status === "Graded";
-    const isGraded = item.status === "Graded" && item.submission?.grade !== null && item.submission?.grade !== undefined;
+    const hasSubmitted =
+      item.status === "Submitted" || item.status === "Late" || item.status === "Graded";
+    const isGraded =
+      item.status === "Graded" &&
+      item.submission?.grade !== null &&
+      item.submission?.grade !== undefined;
 
     // Deadline badge indicator
     let deadlineBadgeColor = "green";
@@ -76,7 +80,14 @@ export const AssignmentCard: React.FC<AssignmentCardProps> = React.memo(
         }}
       >
         {/* Top Header: Status Tag & Deadline Badge */}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginBottom: 12,
+          }}
+        >
           <AssignmentStatusTag status={item.status} />
           <Tag color={deadlineBadgeColor} style={{ borderRadius: 6, margin: 0, fontWeight: 600 }}>
             {deadlineBadgeText}
@@ -119,8 +130,23 @@ export const AssignmentCard: React.FC<AssignmentCardProps> = React.memo(
         </Paragraph>
 
         {/* Attachments & Deadline Details */}
-        <div style={{ backgroundColor: "#fafafa", borderRadius: 8, padding: "8px 12px", marginBottom: 14 }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 12, marginBottom: 4 }}>
+        <div
+          style={{
+            backgroundColor: "#fafafa",
+            borderRadius: 8,
+            padding: "8px 12px",
+            marginBottom: 14,
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              fontSize: 12,
+              marginBottom: 4,
+            }}
+          >
             <Text type="secondary">
               <ClockCircleOutlined style={{ marginRight: 4 }} /> Hạn nộp:
             </Text>
@@ -129,7 +155,14 @@ export const AssignmentCard: React.FC<AssignmentCardProps> = React.memo(
             </Text>
           </div>
 
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 12 }}>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              fontSize: 12,
+            }}
+          >
             <Text type="secondary">
               <PaperClipOutlined style={{ marginRight: 4 }} /> File đính kèm:
             </Text>
@@ -154,7 +187,10 @@ export const AssignmentCard: React.FC<AssignmentCardProps> = React.memo(
             <Text style={{ fontSize: 12, color: "#531dab", fontWeight: 600 }}>
               <TrophyOutlined style={{ marginRight: 6 }} /> Điểm số đạt được:
             </Text>
-            <Tag color="purple" style={{ borderRadius: 6, fontWeight: 700, fontSize: 13, margin: 0 }}>
+            <Tag
+              color="purple"
+              style={{ borderRadius: 6, fontWeight: 700, fontSize: 13, margin: 0 }}
+            >
               {item.submission?.grade} / 10
             </Tag>
           </div>

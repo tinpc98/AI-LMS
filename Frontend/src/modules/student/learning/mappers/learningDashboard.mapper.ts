@@ -49,7 +49,10 @@ const computeUrgentPercent = (dueDate: string, isSubmitted: boolean): number => 
   return Math.min(100, Math.max(0, Math.round(ratio * 100)));
 };
 
-export const mapAssignmentResponse = (rawAssignments: any[], classMap?: Map<string, string>): AssignmentSummaryItem[] => {
+export const mapAssignmentResponse = (
+  rawAssignments: any[],
+  classMap?: Map<string, string>
+): AssignmentSummaryItem[] => {
   if (!Array.isArray(rawAssignments)) return [];
 
   return rawAssignments.map((item: any, index: number) => {
@@ -74,7 +77,10 @@ export const mapAssignmentResponse = (rawAssignments: any[], classMap?: Map<stri
   });
 };
 
-export const mapExamResponse = (rawExams: any[], classMap?: Map<string, string>): ExamSummaryItem[] => {
+export const mapExamResponse = (
+  rawExams: any[],
+  classMap?: Map<string, string>
+): ExamSummaryItem[] => {
   if (!Array.isArray(rawExams)) return [];
 
   return rawExams.map((item: any, index: number) => {

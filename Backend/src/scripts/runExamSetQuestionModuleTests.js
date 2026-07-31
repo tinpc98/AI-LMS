@@ -67,11 +67,13 @@ const runMiddleware = async (middleware, req, res) => {
         }
 
         if (result && typeof result.then === "function") {
-          result.then(() => {
-            if (!settled) settle(null, true);
-          }).catch((error) => {
-            if (!settled) settle(error, false);
-          });
+          result
+            .then(() => {
+              if (!settled) settle(null, true);
+            })
+            .catch((error) => {
+              if (!settled) settle(error, false);
+            });
         }
       } catch (error) {
         settle(error, false);
@@ -325,8 +327,12 @@ validationTests.forEach((test) => {
 
     assert(res.statusCode === 400, `Expected 400, got ${res.statusCode}`);
     if (test.expectedMessageFragment) {
-      const message = typeof res.body.message === "string" ? res.body.message : JSON.stringify(res.body.message);
-      assert(message.includes(test.expectedMessageFragment), `Expected message to include '${test.expectedMessageFragment}', got '${message}'`);
+      const message =
+        typeof res.body.message === "string" ? res.body.message : JSON.stringify(res.body.message);
+      assert(
+        message.includes(test.expectedMessageFragment),
+        `Expected message to include '${test.expectedMessageFragment}', got '${message}'`
+      );
     }
   });
 });
@@ -541,7 +547,9 @@ addTest("Update question content does not change totalPoints", async () => {
   });
   const original = mockExamSetFindOne(examSet);
 
-  const result = await updateQuestionInExamSetService(examSet._id, ownerId, "q1", { content: "Name a star." });
+  const result = await updateQuestionInExamSetService(examSet._id, ownerId, "q1", {
+    content: "Name a star.",
+  });
   restoreExamSetFindOne(original);
 
   assert(result.questionCount === 1, `Expected questionCount 1, got ${result.questionCount}`);
@@ -679,7 +687,9 @@ addTest("Reorder questions preserves all questions and totalPoints", async () =>
 
 addTest("Service invalid examSetId returns 400", async () => {
   try {
-    await reorderQuestionsInExamSetService("invalid-id", "user-1", "admin", [{ questionId: "q1", order: 0 }]);
+    await reorderQuestionsInExamSetService("invalid-id", "user-1", "admin", [
+      { questionId: "q1", order: 0 },
+    ]);
     throw new Error("Expected error");
   } catch (error) {
     assert(error.status === 400, `Expected 400, got ${error.status}`);
@@ -708,7 +718,9 @@ addTest("Service unauthorized user returns 403", async () => {
   const original = mockExamSetFindOne(examSet);
 
   try {
-    await reorderQuestionsInExamSetService(examSet._id, "student-1", "Student", [{ questionId: "q1", order: 0 }]);
+    await reorderQuestionsInExamSetService(examSet._id, "student-1", "Student", [
+      { questionId: "q1", order: 0 },
+    ]);
     throw new Error("Expected 403 error");
   } catch (error) {
     assert(error.status === 403, `Expected 403, got ${error.status}`);
@@ -717,96 +729,105 @@ addTest("Service unauthorized user returns 403", async () => {
 });
 
 // Admin create/update/delete permission tests to capture current service bug
-addTest("Admin create question for another owner - expected behavior should allow admin", async () => {
-  const ownerId = "507f1f77bcf86cd799439011";
-  const adminId = "admin-1";
-  const examSet = createExamSet({
-    _id: "707f1f77bcf86cd799439019",
-    ownerId,
-    status: "draft",
-    isDeleted: false,
-    questions: [],
-  });
-  const original = mockExamSetFindOne(examSet);
+addTest(
+  "Admin create question for another owner - expected behavior should allow admin",
+  async () => {
+    const ownerId = "507f1f77bcf86cd799439011";
+    const adminId = "admin-1";
+    const examSet = createExamSet({
+      _id: "707f1f77bcf86cd799439019",
+      ownerId,
+      status: "draft",
+      isDeleted: false,
+      questions: [],
+    });
+    const original = mockExamSetFindOne(examSet);
 
-  const questionData = {
-    questionId: "q1",
-    type: "short_answer",
-    content: "Name a planet.",
-    correctAnswer: "Mars",
-    points: 2,
-  };
+    const questionData = {
+      questionId: "q1",
+      type: "short_answer",
+      content: "Name a planet.",
+      correctAnswer: "Mars",
+      points: 2,
+    };
 
-  try {
-    await addQuestionToExamSetService(examSet._id, adminId, questionData);
-    restoreExamSetFindOne(original);
-  } catch (error) {
-    restoreExamSetFindOne(original);
-    throw new Error(`Admin create question failed: ${error.message}`);
+    try {
+      await addQuestionToExamSetService(examSet._id, adminId, questionData);
+      restoreExamSetFindOne(original);
+    } catch (error) {
+      restoreExamSetFindOne(original);
+      throw new Error(`Admin create question failed: ${error.message}`);
+    }
   }
-});
+);
 
-addTest("Admin update question for another owner - expected behavior should allow admin", async () => {
-  const ownerId = "507f1f77bcf86cd799439011";
-  const adminId = "admin-1";
-  const examSet = createExamSet({
-    _id: "707f1f77bcf86cd799439020",
-    ownerId,
-    status: "draft",
-    isDeleted: false,
-    questions: [
-      createQuestion({
-        questionId: "q1",
-        order: 0,
-        type: "short_answer",
-        content: "Name a planet.",
-        correctAnswer: "Mars",
-        points: 2,
-        difficulty: "medium",
-      }),
-    ],
-  });
-  const original = mockExamSetFindOne(examSet);
+addTest(
+  "Admin update question for another owner - expected behavior should allow admin",
+  async () => {
+    const ownerId = "507f1f77bcf86cd799439011";
+    const adminId = "admin-1";
+    const examSet = createExamSet({
+      _id: "707f1f77bcf86cd799439020",
+      ownerId,
+      status: "draft",
+      isDeleted: false,
+      questions: [
+        createQuestion({
+          questionId: "q1",
+          order: 0,
+          type: "short_answer",
+          content: "Name a planet.",
+          correctAnswer: "Mars",
+          points: 2,
+          difficulty: "medium",
+        }),
+      ],
+    });
+    const original = mockExamSetFindOne(examSet);
 
-  try {
-    await updateQuestionInExamSetService(examSet._id, adminId, "q1", { content: "Name a star." });
-    restoreExamSetFindOne(original);
-  } catch (error) {
-    restoreExamSetFindOne(original);
-    throw new Error(`Admin update question failed: ${error.message}`);
+    try {
+      await updateQuestionInExamSetService(examSet._id, adminId, "q1", { content: "Name a star." });
+      restoreExamSetFindOne(original);
+    } catch (error) {
+      restoreExamSetFindOne(original);
+      throw new Error(`Admin update question failed: ${error.message}`);
+    }
   }
-});
+);
 
-addTest("Admin delete question for another owner - expected behavior should allow admin", async () => {
-  const ownerId = "507f1f77bcf86cd799439011";
-  const adminId = "admin-1";
-  const examSet = createExamSet({
-    _id: "707f1f77bcf86cd799439021",
-    ownerId,
-    status: "draft",
-    isDeleted: false,
-    questions: [
-      createQuestion({
-        questionId: "q1",
-        order: 0,
-        type: "short_answer",
-        content: "Name a planet.",
-        correctAnswer: "Mars",
-        points: 2,
-        difficulty: "medium",
-      }),
-    ],
-  });
-  const original = mockExamSetFindOne(examSet);
+addTest(
+  "Admin delete question for another owner - expected behavior should allow admin",
+  async () => {
+    const ownerId = "507f1f77bcf86cd799439011";
+    const adminId = "admin-1";
+    const examSet = createExamSet({
+      _id: "707f1f77bcf86cd799439021",
+      ownerId,
+      status: "draft",
+      isDeleted: false,
+      questions: [
+        createQuestion({
+          questionId: "q1",
+          order: 0,
+          type: "short_answer",
+          content: "Name a planet.",
+          correctAnswer: "Mars",
+          points: 2,
+          difficulty: "medium",
+        }),
+      ],
+    });
+    const original = mockExamSetFindOne(examSet);
 
-  try {
-    await deleteQuestionFromExamSetService(examSet._id, adminId, "Admin", "q1");
-    restoreExamSetFindOne(original);
-  } catch (error) {
-    restoreExamSetFindOne(original);
-    throw new Error(`Admin delete question failed: ${error.message}`);
+    try {
+      await deleteQuestionFromExamSetService(examSet._id, adminId, "Admin", "q1");
+      restoreExamSetFindOne(original);
+    } catch (error) {
+      restoreExamSetFindOne(original);
+      throw new Error(`Admin delete question failed: ${error.message}`);
+    }
   }
-});
+);
 
 const runAll = async () => {
   console.log(`TOTAL TESTS ${tests.length}`);
@@ -816,7 +837,9 @@ const runAll = async () => {
     index += 1;
     console.log(`START TEST ${index}/${tests.length}: ${test.name}`);
     const result = await runTest(test.name, test.fn);
-    console.log(`FINISH TEST ${index}/${tests.length}: ${test.name} => ${result ? "PASS" : "FAIL"}`);
+    console.log(
+      `FINISH TEST ${index}/${tests.length}: ${test.name} => ${result ? "PASS" : "FAIL"}`
+    );
     if (result) {
       passed += 1;
     }

@@ -64,7 +64,11 @@ export const checkSocketExamAccess = async (user, { examId, attemptId }) => {
       .select("_id studentId examId")
       .lean();
 
-    if (!attempt || attempt.examId.toString() !== examId || attempt.studentId.toString() !== user.id) {
+    if (
+      !attempt ||
+      attempt.examId.toString() !== examId ||
+      attempt.studentId.toString() !== user.id
+    ) {
       return {
         allowed: false,
         code: "SOCKET_EXAM_ACCESS_DENIED",

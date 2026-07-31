@@ -62,7 +62,7 @@ const courseSchema = new Schema(
   },
   {
     timestamps: true,
-  },
+  }
 );
 
 // Indexes nâng cao hiệu năng truy vấn khóa học

@@ -24,7 +24,8 @@ export function useStudentGrades(classId?: string) {
   useEffect(() => {
     if (classId) {
       setLoading(true);
-      gradeApi.getGradesByStudent("me", classId)
+      gradeApi
+        .getGradesByStudent("me", classId)
         .then((res) => {
           setGradeItemsDef(res.gradeItems || []);
           if (res.students && res.students.length > 0) {
@@ -48,14 +49,20 @@ export function useStudentGrades(classId?: string) {
       let category: GradeCategory = "Assignment";
       const catLower = (item.category || "").toLowerCase();
       if (catLower.includes("quiz")) category = "Quiz";
-      else if (catLower.includes("exam") || catLower.includes("midterm") || catLower.includes("final")) category = "Exam";
-      else if (catLower.includes("attendance") || catLower.includes("chuyên cần")) category = "Attendance";
+      else if (
+        catLower.includes("exam") ||
+        catLower.includes("midterm") ||
+        catLower.includes("final")
+      )
+        category = "Exam";
+      else if (catLower.includes("attendance") || catLower.includes("chuyên cần"))
+        category = "Attendance";
       else if (catLower === "assignment") category = "Assignment";
       else category = "Other";
 
       const match = sg[item._id];
       const score = match?.score !== undefined && match?.score !== null ? match.score : null;
-      
+
       list.push({
         _id: item._id,
         title: item.title,
@@ -78,8 +85,10 @@ export function useStudentGrades(classId?: string) {
     let totalWeightScored = 0;
     let gradedCount = 0;
 
-    let assignSum = 0, assignCount = 0;
-    let examSum = 0, examCount = 0;
+    let assignSum = 0,
+      assignCount = 0;
+    let examSum = 0,
+      examCount = 0;
 
     gradeItems.forEach((item) => {
       if (item.status === "Graded" && item.score !== null) {
@@ -97,14 +106,18 @@ export function useStudentGrades(classId?: string) {
       }
     });
 
-    const gpa = totalWeightScored > 0 ? Number((totalScoreWeighted / totalWeightScored).toFixed(1)) : null;
+    const gpa =
+      totalWeightScored > 0 ? Number((totalScoreWeighted / totalWeightScored).toFixed(1)) : null;
     const assignmentAvg = assignCount > 0 ? Number((assignSum / assignCount).toFixed(1)) : null;
     const examAvg = examCount > 0 ? Number((examSum / examCount).toFixed(1)) : null;
     const attendanceRate = 95; // Default standard attendance rate
 
     const overallProgress = Math.min(
       100,
-      Math.round(((gradedCount + (gradeItems.length - gradedCount) * 0.3) / Math.max(1, gradeItems.length)) * 100)
+      Math.round(
+        ((gradedCount + (gradeItems.length - gradedCount) * 0.3) / Math.max(1, gradeItems.length)) *
+          100
+      )
     );
 
     return {
@@ -164,13 +177,19 @@ export function useStudentGrades(classId?: string) {
     setFilters((prev) => ({ ...prev, searchQuery: value }));
   }, []);
 
-  const handleCategoryFilterChange = useCallback((value: StudentGradeFilterOptions["categoryFilter"]) => {
-    setFilters((prev) => ({ ...prev, categoryFilter: value }));
-  }, []);
+  const handleCategoryFilterChange = useCallback(
+    (value: StudentGradeFilterOptions["categoryFilter"]) => {
+      setFilters((prev) => ({ ...prev, categoryFilter: value }));
+    },
+    []
+  );
 
-  const handleStatusFilterChange = useCallback((value: StudentGradeFilterOptions["statusFilter"]) => {
-    setFilters((prev) => ({ ...prev, statusFilter: value }));
-  }, []);
+  const handleStatusFilterChange = useCallback(
+    (value: StudentGradeFilterOptions["statusFilter"]) => {
+      setFilters((prev) => ({ ...prev, statusFilter: value }));
+    },
+    []
+  );
 
   const handleSortChange = useCallback((value: StudentGradeFilterOptions["sortBy"]) => {
     setFilters((prev) => ({ ...prev, sortBy: value }));

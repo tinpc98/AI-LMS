@@ -1,4 +1,26 @@
-import { createExamSetService, getExamSetsService, updateExamSetService, deleteExamSetService, restoreExamSetService, addQuestionToExamSetService, updateQuestionInExamSetService, deleteQuestionFromExamSetService, reorderQuestionsInExamSetService, getExamSetDetailService, saveDraftExamSetService, duplicateExamSetService, updateExamSetTagsService, createNewExamSetVersionService, getExamSetVersionsService, restoreExamSetVersionService, createExamSetShareService, revokeExamSetShareService, listExamSetSharesService, listSharedExamSetsService, updateExamSetShareMetadataService } from "../services/examSet.service.js";
+import {
+  createExamSetService,
+  getExamSetsService,
+  updateExamSetService,
+  deleteExamSetService,
+  restoreExamSetService,
+  addQuestionToExamSetService,
+  updateQuestionInExamSetService,
+  deleteQuestionFromExamSetService,
+  reorderQuestionsInExamSetService,
+  getExamSetDetailService,
+  saveDraftExamSetService,
+  duplicateExamSetService,
+  updateExamSetTagsService,
+  createNewExamSetVersionService,
+  getExamSetVersionsService,
+  restoreExamSetVersionService,
+  createExamSetShareService,
+  revokeExamSetShareService,
+  listExamSetSharesService,
+  listSharedExamSetsService,
+  updateExamSetShareMetadataService,
+} from "../services/examSet.service.js";
 import { importExcelToExamSet } from "../services/examSetImport.service.js";
 import { Types } from "mongoose";
 
@@ -161,7 +183,11 @@ export const createNewExamSetVersion = async (req, res) => {
       });
     }
 
-    const newVersionExamSet = await createNewExamSetVersionService(examSetId, req.user.id, req.user.role);
+    const newVersionExamSet = await createNewExamSetVersionService(
+      examSetId,
+      req.user.id,
+      req.user.role
+    );
 
     return res.status(201).json({
       success: true,
@@ -191,13 +217,25 @@ export const getExamSetVersions = async (req, res) => {
     const limit = req.query.limit ? Number(req.query.limit) : undefined;
     const sort = req.query.sort ? String(req.query.sort) : undefined;
 
-    const result = await getExamSetVersionsService(examSetId, req.user.id, req.user.role, { page, limit, sort });
+    const result = await getExamSetVersionsService(examSetId, req.user.id, req.user.role, {
+      page,
+      limit,
+      sort,
+    });
 
-    return res.status(200).json({ success: true, message: "Exam set version history retrieved successfully", data: result });
+    return res
+      .status(200)
+      .json({
+        success: true,
+        message: "Exam set version history retrieved successfully",
+        data: result,
+      });
   } catch (error) {
     console.error("[ExamSet] Get versions error:", error.message);
     const status = error.status || 500;
-    return res.status(status).json({ success: false, message: error.message || "Lỗi lấy lịch sử phiên bản bộ đề thi" });
+    return res
+      .status(status)
+      .json({ success: false, message: error.message || "Lỗi lấy lịch sử phiên bản bộ đề thi" });
   }
 };
 
@@ -241,11 +279,15 @@ export const restoreExamSetVersion = async (req, res) => {
 
     const newVersion = await restoreExamSetVersionService(examSetId, req.user.id, req.user.role);
 
-    return res.status(201).json({ success: true, message: "Exam set restored as new version", data: newVersion });
+    return res
+      .status(201)
+      .json({ success: true, message: "Exam set restored as new version", data: newVersion });
   } catch (error) {
     console.error("[ExamSet] Restore-version error:", error.message);
     const status = error.status || 500;
-    return res.status(status).json({ success: false, message: error.message || "Lỗi khôi phục phiên bản bộ đề thi" });
+    return res
+      .status(status)
+      .json({ success: false, message: error.message || "Lỗi khôi phục phiên bản bộ đề thi" });
   }
 };
 
@@ -266,11 +308,15 @@ export const createExamSetShare = async (req, res) => {
 
     const result = await createExamSetShareService(examSetId, req.user.id, req.user.role, payload);
 
-    return res.status(result.statusCode).json({ success: true, message: result.message, data: result.data });
+    return res
+      .status(result.statusCode)
+      .json({ success: true, message: result.message, data: result.data });
   } catch (error) {
     console.error("[ExamSet] Create share error:", error.message);
     const status = error.status || 500;
-    return res.status(status).json({ success: false, message: error.message || "Lỗi tạo chia sẻ bộ đề thi" });
+    return res
+      .status(status)
+      .json({ success: false, message: error.message || "Lỗi tạo chia sẻ bộ đề thi" });
   }
 };
 
@@ -288,11 +334,15 @@ export const revokeExamSetShare = async (req, res) => {
 
     const result = await revokeExamSetShareService(examSetId, shareId, req.user.id, req.user.role);
 
-    return res.status(result.statusCode).json({ success: true, message: result.message, data: result.data });
+    return res
+      .status(result.statusCode)
+      .json({ success: true, message: result.message, data: result.data });
   } catch (error) {
     console.error("[ExamSet] Revoke share error:", error.message);
     const status = error.status || 500;
-    return res.status(status).json({ success: false, message: error.message || "Lỗi thu hồi chia sẻ bộ đề thi" });
+    return res
+      .status(status)
+      .json({ success: false, message: error.message || "Lỗi thu hồi chia sẻ bộ đề thi" });
   }
 };
 
@@ -316,11 +366,15 @@ export const listExamSetShares = async (req, res) => {
       sortOrder,
     });
 
-    return res.status(200).json({ success: true, message: "Exam Set shares retrieved successfully", data: result });
+    return res
+      .status(200)
+      .json({ success: true, message: "Exam Set shares retrieved successfully", data: result });
   } catch (error) {
     console.error("[ExamSet] List share error:", error.message);
     const status = error.status || 500;
-    return res.status(status).json({ success: false, message: error.message || "Lỗi lấy danh sách chia sẻ bộ đề thi" });
+    return res
+      .status(status)
+      .json({ success: false, message: error.message || "Lỗi lấy danh sách chia sẻ bộ đề thi" });
   }
 };
 
@@ -338,11 +392,18 @@ export const listSharedExamSets = async (req, res) => {
       sortOrder,
     });
 
-    return res.status(200).json({ success: true, message: "Shared Exam Sets retrieved successfully", data: result });
+    return res
+      .status(200)
+      .json({ success: true, message: "Shared Exam Sets retrieved successfully", data: result });
   } catch (error) {
     console.error("[ExamSet] List shared-with-me error:", error.message);
     const status = error.status || 500;
-    return res.status(status).json({ success: false, message: error.message || "Lỗi lấy danh sách bộ đề thi được chia sẻ" });
+    return res
+      .status(status)
+      .json({
+        success: false,
+        message: error.message || "Lỗi lấy danh sách bộ đề thi được chia sẻ",
+      });
   }
 };
 
@@ -583,7 +644,12 @@ export const deleteQuestionInExamSet = async (req, res) => {
   try {
     const { id, questionId } = req.params;
 
-    const examSet = await deleteQuestionFromExamSetService(id, req.user.id, req.user.role, questionId);
+    const examSet = await deleteQuestionFromExamSetService(
+      id,
+      req.user.id,
+      req.user.role,
+      questionId
+    );
 
     return res.status(200).json({
       success: true,
@@ -610,7 +676,12 @@ export const reorderQuestionsInExamSet = async (req, res) => {
     const { id } = req.params;
     const reorderItems = req.body.questions;
 
-    const examSet = await reorderQuestionsInExamSetService(id, req.user.id, req.user.role, reorderItems);
+    const examSet = await reorderQuestionsInExamSetService(
+      id,
+      req.user.id,
+      req.user.role,
+      reorderItems
+    );
 
     return res.status(200).json({
       success: true,
@@ -647,29 +718,29 @@ export const createImportExcelExamSetHandler = ({ importService = importExcelToE
         ownerId,
         folderId,
         title,
-        description
+        description,
       });
 
       return res.status(201).json({
-      success: true,
-      message: "Đã tạo bộ đề từ Excel thành công",
-      data: {
-        _id: examSet._id,
-        title: examSet.title,
-        status: examSet.status,
-        questionCount: examSet.questionCount,
-        totalPoints: examSet.totalPoints,
-        questions: examSet.questions
-      }
-    });
-  } catch (error) {
-    console.error("[ExamSet] Import Excel error:", error.message);
-    const status = error.status || error.statusCode || 500;
-    return res.status(status).json({
-      success: false,
-      message: error.message || "Lỗi import từ file Excel",
-    });
-  }
+        success: true,
+        message: "Đã tạo bộ đề từ Excel thành công",
+        data: {
+          _id: examSet._id,
+          title: examSet.title,
+          status: examSet.status,
+          questionCount: examSet.questionCount,
+          totalPoints: examSet.totalPoints,
+          questions: examSet.questions,
+        },
+      });
+    } catch (error) {
+      console.error("[ExamSet] Import Excel error:", error.message);
+      const status = error.status || error.statusCode || 500;
+      return res.status(status).json({
+        success: false,
+        message: error.message || "Lỗi import từ file Excel",
+      });
+    }
   };
 };
 

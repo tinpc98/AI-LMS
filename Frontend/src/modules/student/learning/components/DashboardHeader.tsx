@@ -40,7 +40,8 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = React.memo(
             </Tag>
           </Space>
           <Text type="secondary" style={{ fontSize: 13, display: "block", marginTop: 4 }}>
-            Hệ thống phân tích tiến độ học tập, tổng hợp kết quả và gợi ý lộ trình thông minh cho sinh viên.
+            Hệ thống phân tích tiến độ học tập, tổng hợp kết quả và gợi ý lộ trình thông minh cho
+            sinh viên.
           </Text>
         </div>
 

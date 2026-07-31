@@ -12,9 +12,7 @@ const AdminPage = ({ title, description }: AdminPageProps) => {
       <Typography.Title level={3} className={styles.pageTitle}>
         {title}
       </Typography.Title>
-      <Typography.Paragraph className={styles.pageDescription}>
-        {description}
-      </Typography.Paragraph>
+      <Typography.Paragraph className={styles.pageDescription}>{description}</Typography.Paragraph>
     </Card>
   );
 };

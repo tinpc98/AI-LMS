@@ -3,7 +3,11 @@ import ExamRouter from "../routes/exam.routes.js";
 
 let found = false;
 ExamRouter.stack.forEach((handler) => {
-  if (handler.route && handler.route.path === '/generate-from-examset' && handler.route.methods.post) {
+  if (
+    handler.route &&
+    handler.route.path === "/generate-from-examset" &&
+    handler.route.methods.post
+  ) {
     found = true;
   }
 });

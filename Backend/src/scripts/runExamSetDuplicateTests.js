@@ -89,7 +89,11 @@ const tests = [
     name: "Owner duplicate creates independent draft copy with cloned questions",
     fn: async () => {
       const sourceExamSet = createExamSet();
-      const folder = { _id: sourceExamSet.folderId, ownerId: sourceExamSet.ownerId, isDeleted: false };
+      const folder = {
+        _id: sourceExamSet.folderId,
+        ownerId: sourceExamSet.ownerId,
+        isDeleted: false,
+      };
 
       ExamSet.findOne = () => createQueryMock(sourceExamSet);
       Folder.findOne = async () => folder;
@@ -102,14 +106,21 @@ const tests = [
         return this;
       };
 
-      const result = await duplicateExamSetService(sourceExamSet._id, "507f1f77bcf86cd799439011", "Teacher");
+      const result = await duplicateExamSetService(
+        sourceExamSet._id,
+        "507f1f77bcf86cd799439011",
+        "Teacher"
+      );
 
       assert.notStrictEqual(result._id.toString(), sourceExamSet._id.toString());
       assert.equal(String(result.ownerId), "507f1f77bcf86cd799439011");
       assert.equal(result.status, "draft");
       assert.equal(result.title, "JavaScript Basic Test - Copy");
       assert.equal(result.questions.length, 1);
-      assert.notStrictEqual(result.questions[0]._id.toString(), sourceExamSet.questions[0]._id.toString());
+      assert.notStrictEqual(
+        result.questions[0]._id.toString(),
+        sourceExamSet.questions[0]._id.toString()
+      );
       assert.equal(result.questionCount, 1);
       assert.equal(result.totalPoints, 10);
       assert.equal(sourceExamSet.status, "published");
@@ -132,7 +143,11 @@ const tests = [
         return this;
       };
 
-      const result = await duplicateExamSetService(sourceExamSet._id, "507f1f77bcf86cd799439999", "Admin");
+      const result = await duplicateExamSetService(
+        sourceExamSet._id,
+        "507f1f77bcf86cd799439999",
+        "Admin"
+      );
 
       assert.equal(result.folderId, null);
       assert.equal(result.status, "draft");

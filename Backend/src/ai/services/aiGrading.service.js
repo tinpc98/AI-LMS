@@ -23,20 +23,13 @@ const deepCanonicalize = (obj) => {
 const generateFingerprint = (payload) => {
   // S5.5-06: Deep Canonicalize object trước khi hash
   const canonicalString = JSON.stringify(deepCanonicalize(payload));
-  return crypto
-    .createHash("sha256")
-    .update(canonicalString)
-    .digest("hex");
+  return crypto.createHash("sha256").update(canonicalString).digest("hex");
 };
 
 /**
  * Tạo đề xuất chấm điểm từ AI
  */
-const generateGradeSuggestion = async ({
-  attemptId,
-  questionId,
-  teacherId,
-}) => {
+const generateGradeSuggestion = async ({ attemptId, questionId, teacherId }) => {
   // 1. Kiểm tra bài làm
   const attempt = await ExamAttempt.findById(attemptId).populate("examId");
   if (!attempt) {
@@ -54,7 +47,11 @@ const generateGradeSuggestion = async ({
 
   const qType = questionInfo.type?.toLowerCase();
   if (qType !== "essay" && qType !== "short_answer") {
-    throw new AIError("Chỉ hỗ trợ AI chấm điểm câu hỏi tự luận (Essay / Short Answer)", AIErrorCode.AI_INVALID_INPUT, 400);
+    throw new AIError(
+      "Chỉ hỗ trợ AI chấm điểm câu hỏi tự luận (Essay / Short Answer)",
+      AIErrorCode.AI_INVALID_INPUT,
+      400
+    );
   }
 
   // 3. Lấy câu trả lời của học sinh
@@ -84,7 +81,10 @@ const generateGradeSuggestion = async ({
   AIInputBudget.validateGradingBudget(promptData.studentAnswer, "Bài làm của học sinh");
   AIInputBudget.validateGradingBudget(promptData.referenceAnswer, "Đáp án tham khảo");
   if (promptData.rubric) {
-    AIInputBudget.validateGradingBudget(JSON.stringify(promptData.rubric), "Tiêu chí chấm điểm (Rubric)");
+    AIInputBudget.validateGradingBudget(
+      JSON.stringify(promptData.rubric),
+      "Tiêu chí chấm điểm (Rubric)"
+    );
   }
 
   const fingerprintPayload = {
@@ -164,15 +164,27 @@ const confirmGradeSuggestion = async ({
 
   // S5-FIX-06: URL Bind Verification
   if (suggestion.attemptId.toString() !== attemptId.toString()) {
-    throw new AIError("Suggestion này không thuộc về phiên làm bài được yêu cầu", AIErrorCode.AI_INVALID_INPUT, 400);
+    throw new AIError(
+      "Suggestion này không thuộc về phiên làm bài được yêu cầu",
+      AIErrorCode.AI_INVALID_INPUT,
+      400
+    );
   }
-  
+
   if (suggestion.questionId.toString() !== questionId.toString()) {
-    throw new AIError("Suggestion này không thuộc về câu hỏi được yêu cầu", AIErrorCode.AI_INVALID_INPUT, 400);
+    throw new AIError(
+      "Suggestion này không thuộc về câu hỏi được yêu cầu",
+      AIErrorCode.AI_INVALID_INPUT,
+      400
+    );
   }
 
   if (suggestion.status !== "PENDING_REVIEW") {
-    throw new AIError("Gợi ý này đã được duyệt hoặc bị thay thế", AIErrorCode.AI_INVALID_INPUT, 409);
+    throw new AIError(
+      "Gợi ý này đã được duyệt hoặc bị thay thế",
+      AIErrorCode.AI_INVALID_INPUT,
+      409
+    );
   }
 
   const attempt = await ExamAttempt.findById(suggestion.attemptId).populate("examId");
@@ -194,7 +206,11 @@ const confirmGradeSuggestion = async ({
   );
 
   if (answerIndex === -1) {
-    throw new AIError("Học sinh không trả lời câu hỏi này, không thể ghi điểm", AIErrorCode.AI_INVALID_INPUT, 400);
+    throw new AIError(
+      "Học sinh không trả lời câu hỏi này, không thể ghi điểm",
+      AIErrorCode.AI_INVALID_INPUT,
+      400
+    );
   }
 
   const previousPointsEarned = attempt.answers[answerIndex].pointsEarned || 0;
@@ -203,8 +219,17 @@ const confirmGradeSuggestion = async ({
   if (action === "accept") {
     pointsToAward = suggestion.suggestedScore;
   } else if (action === "adjust") {
-    if (typeof finalScore !== "number" || !Number.isFinite(finalScore) || finalScore < 0 || finalScore > maxScore) {
-      throw new AIError(`Điểm xác nhận (${finalScore}) không hợp lệ (0 - ${maxScore})`, AIErrorCode.AI_INVALID_INPUT, 400);
+    if (
+      typeof finalScore !== "number" ||
+      !Number.isFinite(finalScore) ||
+      finalScore < 0 ||
+      finalScore > maxScore
+    ) {
+      throw new AIError(
+        `Điểm xác nhận (${finalScore}) không hợp lệ (0 - ${maxScore})`,
+        AIErrorCode.AI_INVALID_INPUT,
+        400
+      );
     }
     pointsToAward = finalScore;
   }
@@ -221,13 +246,14 @@ const confirmGradeSuggestion = async ({
       }
     }
     attempt.totalScore = Number(recalculatedTotal.toFixed(2));
-    
+
     // Tạm thời coi như một câu được chấm là có thể cập nhật, logic GRADED toàn phần nên được gọi tách biệt.
     await attempt.save();
   }
 
   // Cập nhật trạng thái Suggestion với Audit Fields
-  suggestion.status = action === "reject" ? "REJECTED" : action === "adjust" ? "ADJUSTED" : "ACCEPTED";
+  suggestion.status =
+    action === "reject" ? "REJECTED" : action === "adjust" ? "ADJUSTED" : "ACCEPTED";
   suggestion.action = action;
   suggestion.finalScore = action === "reject" ? null : pointsToAward;
   suggestion.teacherFeedback = teacherFeedback || "";

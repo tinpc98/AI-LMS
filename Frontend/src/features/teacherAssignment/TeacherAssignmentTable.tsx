@@ -114,9 +114,7 @@ const TeacherAssignmentTable = ({
         const time = formatScheduleTime(record.schedule?.startTime, record.schedule?.endTime);
         return (
           <div>
-            <Typography.Text style={{ display: "block", fontSize: 13 }}>
-              {days}
-            </Typography.Text>
+            <Typography.Text style={{ display: "block", fontSize: 13 }}>{days}</Typography.Text>
             <Typography.Text type="secondary" style={{ fontSize: 12 }}>
               {time}
             </Typography.Text>
@@ -140,20 +138,14 @@ const TeacherAssignmentTable = ({
       dataIndex: "learningMode",
       key: "learningMode",
       width: 130,
-      render: (mode: string) => (
-        <Tag color={getLearningModeColor(mode)}>{mode}</Tag>
-      ),
+      render: (mode: string) => <Tag color={getLearningModeColor(mode)}>{mode}</Tag>,
     },
     {
       title: "Assignment Status",
       key: "assignmentStatus",
       width: 140,
       render: (_: unknown, record: ClassRecord) =>
-        record.teacherId ? (
-          <Tag color="green">Assigned</Tag>
-        ) : (
-          <Tag color="orange">Unassigned</Tag>
-        ),
+        record.teacherId ? <Tag color="green">Assigned</Tag> : <Tag color="orange">Unassigned</Tag>,
     },
     {
       title: "Actions",
@@ -182,11 +174,7 @@ const TeacherAssignmentTable = ({
             ) : (
               <>
                 <Tooltip title="Change Teacher">
-                  <Button
-                    size="small"
-                    icon={<SwapOutlined />}
-                    onClick={() => onChange(record)}
-                  />
+                  <Button size="small" icon={<SwapOutlined />} onClick={() => onChange(record)} />
                 </Tooltip>
                 <Tooltip title="Remove Assignment">
                   <Button

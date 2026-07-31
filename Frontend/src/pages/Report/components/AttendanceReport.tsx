@@ -108,7 +108,9 @@ export const AttendanceReport: React.FC = () => {
               value={91.2}
               precision={1}
               suffix="%"
-              prefix={<CheckCircleOutlined className="text-blue-500 mr-2 p-2 bg-blue-50 rounded-lg" />}
+              prefix={
+                <CheckCircleOutlined className="text-blue-500 mr-2 p-2 bg-blue-50 rounded-lg" />
+              }
             />
           </Card>
         </Col>
@@ -118,17 +120,25 @@ export const AttendanceReport: React.FC = () => {
             <Statistic
               title="Tổng Số Buổi Live Đã Tổ Chức"
               value={48}
-              prefix={<VideoCameraOutlined className="text-purple-500 mr-2 p-2 bg-purple-50 rounded-lg" />}
+              prefix={
+                <VideoCameraOutlined className="text-purple-500 mr-2 p-2 bg-purple-50 rounded-lg" />
+              }
             />
           </Card>
         </Col>
       </Row>
 
       {/* Chart */}
-      <Card title="Xu hướng Điểm danh & Đi học đúng giờ theo Tuần" className="rounded-xl border border-gray-100 shadow-sm">
+      <Card
+        title="Xu hướng Điểm danh & Đi học đúng giờ theo Tuần"
+        className="rounded-xl border border-gray-100 shadow-sm"
+      >
         <div className="h-72">
           <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={attendanceWeeklyData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+            <AreaChart
+              data={attendanceWeeklyData}
+              margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+            >
               <defs>
                 <linearGradient id="colorPresent" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor="#52c41a" stopOpacity={0.8} />
@@ -139,14 +149,24 @@ export const AttendanceReport: React.FC = () => {
               <XAxis dataKey="day" tickLine={false} />
               <YAxis domain={[0, 100]} tickLine={false} axisLine={false} />
               <Tooltip />
-              <Area type="monotone" dataKey="present" name="Có mặt (%)" stroke="#52c41a" fillOpacity={1} fill="url(#colorPresent)" />
+              <Area
+                type="monotone"
+                dataKey="present"
+                name="Có mặt (%)"
+                stroke="#52c41a"
+                fillOpacity={1}
+                fill="url(#colorPresent)"
+              />
             </AreaChart>
           </ResponsiveContainer>
         </div>
       </Card>
 
       {/* Table */}
-      <Card title="Thống Kê Điểm Danh Theo Lớp Học" className="rounded-xl border border-gray-100 shadow-sm">
+      <Card
+        title="Thống Kê Điểm Danh Theo Lớp Học"
+        className="rounded-xl border border-gray-100 shadow-sm"
+      >
         <Table
           columns={columns}
           dataSource={attendanceByClassList}

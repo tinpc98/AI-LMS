@@ -63,14 +63,14 @@ class TextChunkerService {
       }
     }
 
-    segments = segments.map(s => s.trim()).filter(s => s.length > 0);
+    segments = segments.map((s) => s.trim()).filter((s) => s.length > 0);
 
     if (segments.length === 0) return [];
 
     // Bước 2: Ghép segments thành chunks với overlap
     const chunks = [];
     let currentChunk = "";
-    
+
     for (let i = 0; i < segments.length; i++) {
       const seg = segments[i];
 
@@ -81,13 +81,13 @@ class TextChunkerService {
       } else {
         // Đẩy chunk hiện tại vào kết quả
         chunks.push(currentChunk.trim());
-        
+
         // Tạo chunk mới với overlap
         let overlapText = "";
         if (effectiveOverlap > 0 && currentChunk.length > effectiveOverlap) {
           const tail = currentChunk.slice(-effectiveOverlap);
           const firstSpaceIndex = tail.indexOf(" ");
-          
+
           if (firstSpaceIndex !== -1) {
             overlapText = tail.slice(firstSpaceIndex + 1).trim();
           } else {
@@ -97,11 +97,11 @@ class TextChunkerService {
           overlapText = currentChunk;
         }
 
-        currentChunk = overlapText ? (overlapText + "\n" + seg) : seg;
-        
+        currentChunk = overlapText ? overlapText + "\n" + seg : seg;
+
         // Nếu vẫn quá lớn (do seg đã max), bỏ overlap
         if (currentChunk.length > effectiveMaxChars) {
-           currentChunk = seg;
+          currentChunk = seg;
         }
       }
     }
@@ -110,7 +110,7 @@ class TextChunkerService {
       chunks.push(currentChunk.trim());
     }
 
-    return chunks.filter(c => c.trim().length > 0);
+    return chunks.filter((c) => c.trim().length > 0);
   }
 }
 

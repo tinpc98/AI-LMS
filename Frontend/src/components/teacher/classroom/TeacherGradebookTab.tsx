@@ -134,11 +134,22 @@ export const TeacherGradebookTab: React.FC<TeacherGradebookTabProps> = React.mem
 
       const maxScore = gpas.length > 0 ? Math.max(...gpas) : 0;
       const minScore = gpas.length > 0 ? Math.min(...gpas) : 0;
-      const avgClassScore = gpas.length > 0 ? parseFloat((gpas.reduce((a, b) => a + b, 0) / gpas.length).toFixed(2)) : 0;
+      const avgClassScore =
+        gpas.length > 0
+          ? parseFloat((gpas.reduce((a, b) => a + b, 0) / gpas.length).toFixed(2))
+          : 0;
       const totalStudents = studentsGrades.length;
       const passRate = totalStudents > 0 ? Math.round((passedCount / totalStudents) * 100) : 0;
 
-      return { totalStudents, passedCount, failedCount, maxScore, minScore, avgClassScore, passRate };
+      return {
+        totalStudents,
+        passedCount,
+        failedCount,
+        maxScore,
+        minScore,
+        avgClassScore,
+        passRate,
+      };
     }, [studentGradeRows, studentsGrades.length]);
 
     // Filter & Sort table rows
@@ -168,7 +179,8 @@ export const TeacherGradebookTab: React.FC<TeacherGradebookTabProps> = React.mem
       // Sort
       result.sort((a, b) => {
         if (sortBy === "avg-asc") return (a.avgGPA ?? 0) - (b.avgGPA ?? 0);
-        if (sortBy === "name-asc") return (a.student?.fullName || "").localeCompare(b.student?.fullName || "");
+        if (sortBy === "name-asc")
+          return (a.student?.fullName || "").localeCompare(b.student?.fullName || "");
         // Default: avg-desc
         return (b.avgGPA ?? 0) - (a.avgGPA ?? 0);
       });
@@ -179,39 +191,67 @@ export const TeacherGradebookTab: React.FC<TeacherGradebookTabProps> = React.mem
     // Color code badge for GPA
     const getGPATag = (gpa: number | null) => {
       if (gpa === null) return <Tag color="default">N/A</Tag>;
-      if (gpa >= 9.0) return <Tag color="success" style={{ fontWeight: 700, fontSize: 14 }}>🟢 {gpa} (A+)</Tag>;
-      if (gpa >= 8.0) return <Tag color="processing" style={{ fontWeight: 700, fontSize: 14 }}>🔵 {gpa} (Giỏi)</Tag>;
-      if (gpa >= 6.5) return <Tag color="warning" style={{ fontWeight: 700, fontSize: 14 }}>🟠 {gpa} (Khá)</Tag>;
-      return <Tag color="error" style={{ fontWeight: 700, fontSize: 14 }}>🔴 {gpa} (Trung bình/Cần cố gắng)</Tag>;
+      if (gpa >= 9.0)
+        return (
+          <Tag color="success" style={{ fontWeight: 700, fontSize: 14 }}>
+            🟢 {gpa} (A+)
+          </Tag>
+        );
+      if (gpa >= 8.0)
+        return (
+          <Tag color="processing" style={{ fontWeight: 700, fontSize: 14 }}>
+            🔵 {gpa} (Giỏi)
+          </Tag>
+        );
+      if (gpa >= 6.5)
+        return (
+          <Tag color="warning" style={{ fontWeight: 700, fontSize: 14 }}>
+            🟠 {gpa} (Khá)
+          </Tag>
+        );
+      return (
+        <Tag color="error" style={{ fontWeight: 700, fontSize: 14 }}>
+          🔴 {gpa} (Trung bình/Cần cố gắng)
+        </Tag>
+      );
     };
 
     const dynamicColumns: ColumnsType<any> = useMemo(() => {
       const grouped: Record<string, IGradeItemDef[]> = {};
-      gradeItems.forEach(item => {
+      gradeItems.forEach((item) => {
         if (!grouped[item.category]) grouped[item.category] = [];
         grouped[item.category].push(item);
       });
 
       const cols: ColumnsType<any> = [];
 
-      Object.keys(grouped).forEach(cat => {
-        const children = grouped[cat].map(item => ({
+      Object.keys(grouped).forEach((cat) => {
+        const children = grouped[cat].map((item) => ({
           title: (
             <Tooltip title={`Tỷ trọng loại điểm: ${item.weight}%`}>
-              <Text strong style={{ fontSize: 13 }}>{item.title}</Text>
+              <Text strong style={{ fontSize: 13 }}>
+                {item.title}
+              </Text>
             </Tooltip>
           ),
           dataIndex: ["grades", item._id, "score"],
           key: item._id,
           width: 110,
           align: "center" as const,
-          render: (score: number | undefined) => (
-            score !== undefined && score !== null ? <Text strong>{score}</Text> : <Text type="secondary">-</Text>
-          ),
+          render: (score: number | undefined) =>
+            score !== undefined && score !== null ? (
+              <Text strong>{score}</Text>
+            ) : (
+              <Text type="secondary">-</Text>
+            ),
         }));
 
         cols.push({
-          title: <Text strong style={{ color: "#1890ff" }}>{cat}</Text>,
+          title: (
+            <Text strong style={{ color: "#1890ff" }}>
+              {cat}
+            </Text>
+          ),
           children,
         });
       });
@@ -233,7 +273,9 @@ export const TeacherGradebookTab: React.FC<TeacherGradebookTabProps> = React.mem
         fixed: "left" as const,
         width: 220,
         render: (_, record) => {
-          const code = record.studentCode || (record.studentIdStr ? `STU-${record.studentIdStr.slice(-6).toUpperCase()}` : "N/A");
+          const code =
+            record.studentCode ||
+            (record.studentIdStr ? `STU-${record.studentIdStr.slice(-6).toUpperCase()}` : "N/A");
           return (
             <Space size={12}>
               <Avatar
@@ -268,7 +310,11 @@ export const TeacherGradebookTab: React.FC<TeacherGradebookTabProps> = React.mem
         key: "letterGrade",
         width: 90,
         fixed: "right" as const,
-        render: (letter) => <Tag color="blue" style={{ fontWeight: 700 }}>{letter}</Tag>,
+        render: (letter) => (
+          <Tag color="blue" style={{ fontWeight: 700 }}>
+            {letter}
+          </Tag>
+        ),
       },
       {
         title: "Trạng thái",
@@ -278,9 +324,13 @@ export const TeacherGradebookTab: React.FC<TeacherGradebookTabProps> = React.mem
         render: (_, record) => {
           if (record.isPassed === null) return <Tag color="default">Chưa xếp loại</Tag>;
           return record.isPassed ? (
-            <Tag color="success" icon={<CheckCircleOutlined />}>ĐẠT</Tag>
+            <Tag color="success" icon={<CheckCircleOutlined />}>
+              ĐẠT
+            </Tag>
           ) : (
-            <Tag color="error" icon={<CloseCircleOutlined />}>CHƯA ĐẠT</Tag>
+            <Tag color="error" icon={<CloseCircleOutlined />}>
+              CHƯA ĐẠT
+            </Tag>
           );
         },
       },
@@ -319,7 +369,16 @@ export const TeacherGradebookTab: React.FC<TeacherGradebookTabProps> = React.mem
           }}
           styles={{ body: { padding: "24px 32px" } }}
         >
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 16, marginBottom: 20 }}>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              flexWrap: "wrap",
+              gap: 16,
+              marginBottom: 20,
+            }}
+          >
             <div>
               <Space size={12} align="center">
                 <TrophyOutlined style={{ fontSize: 28, color: "#fff" }} />
@@ -327,8 +386,16 @@ export const TeacherGradebookTab: React.FC<TeacherGradebookTabProps> = React.mem
                   Bảng điểm Tổng hợp Lớp: {className}
                 </Title>
               </Space>
-              <Text style={{ color: "rgba(255,255,255,0.85)", display: "block", marginTop: 4, fontSize: 13 }}>
-                Tổng hợp kết quả học tập (Điểm danh, Bài tập, Giữa kỳ, Cuối kỳ), điểm trung bình GPA và điểm chữ của sinh viên.
+              <Text
+                style={{
+                  color: "rgba(255,255,255,0.85)",
+                  display: "block",
+                  marginTop: 4,
+                  fontSize: 13,
+                }}
+              >
+                Tổng hợp kết quả học tập (Điểm danh, Bài tập, Giữa kỳ, Cuối kỳ), điểm trung bình GPA
+                và điểm chữ của sinh viên.
               </Text>
             </div>
 
@@ -349,9 +416,20 @@ export const TeacherGradebookTab: React.FC<TeacherGradebookTabProps> = React.mem
 
           <Row gutter={[16, 16]}>
             <Col xs={12} sm={8} md={4}>
-              <div style={{ backgroundColor: "rgba(255,255,255,0.15)", padding: "12px 16px", borderRadius: 12, border: "1px solid rgba(255,255,255,0.25)" }}>
+              <div
+                style={{
+                  backgroundColor: "rgba(255,255,255,0.15)",
+                  padding: "12px 16px",
+                  borderRadius: 12,
+                  border: "1px solid rgba(255,255,255,0.25)",
+                }}
+              >
                 <Statistic
-                  title={<Text style={{ color: "rgba(255,255,255,0.85)", fontSize: 12 }}>Điểm TB Lớp</Text>}
+                  title={
+                    <Text style={{ color: "rgba(255,255,255,0.85)", fontSize: 12 }}>
+                      Điểm TB Lớp
+                    </Text>
+                  }
                   value={stats.avgClassScore}
                   styles={{ content: { color: "#fff", fontWeight: 700, fontSize: 20 } }}
                 />
@@ -359,9 +437,20 @@ export const TeacherGradebookTab: React.FC<TeacherGradebookTabProps> = React.mem
             </Col>
 
             <Col xs={12} sm={8} md={4}>
-              <div style={{ backgroundColor: "rgba(255,255,255,0.15)", padding: "12px 16px", borderRadius: 12, border: "1px solid rgba(255,255,255,0.25)" }}>
+              <div
+                style={{
+                  backgroundColor: "rgba(255,255,255,0.15)",
+                  padding: "12px 16px",
+                  borderRadius: 12,
+                  border: "1px solid rgba(255,255,255,0.25)",
+                }}
+              >
                 <Statistic
-                  title={<Text style={{ color: "rgba(255,255,255,0.85)", fontSize: 12 }}>🏆 Điểm cao nhất</Text>}
+                  title={
+                    <Text style={{ color: "rgba(255,255,255,0.85)", fontSize: 12 }}>
+                      🏆 Điểm cao nhất
+                    </Text>
+                  }
                   value={stats.maxScore}
                   styles={{ content: { color: "#b7eb8f", fontWeight: 700, fontSize: 20 } }}
                 />
@@ -369,9 +458,20 @@ export const TeacherGradebookTab: React.FC<TeacherGradebookTabProps> = React.mem
             </Col>
 
             <Col xs={12} sm={8} md={4}>
-              <div style={{ backgroundColor: "rgba(255,255,255,0.15)", padding: "12px 16px", borderRadius: 12, border: "1px solid rgba(255,255,255,0.25)" }}>
+              <div
+                style={{
+                  backgroundColor: "rgba(255,255,255,0.15)",
+                  padding: "12px 16px",
+                  borderRadius: 12,
+                  border: "1px solid rgba(255,255,255,0.25)",
+                }}
+              >
                 <Statistic
-                  title={<Text style={{ color: "rgba(255,255,255,0.85)", fontSize: 12 }}>📉 Điểm thấp nhất</Text>}
+                  title={
+                    <Text style={{ color: "rgba(255,255,255,0.85)", fontSize: 12 }}>
+                      📉 Điểm thấp nhất
+                    </Text>
+                  }
                   value={stats.minScore}
                   styles={{ content: { color: "#ffccc7", fontWeight: 700, fontSize: 20 } }}
                 />
@@ -379,18 +479,48 @@ export const TeacherGradebookTab: React.FC<TeacherGradebookTabProps> = React.mem
             </Col>
 
             <Col xs={12} sm={8} md={6}>
-              <div style={{ backgroundColor: "rgba(255,255,255,0.15)", padding: "12px 16px", borderRadius: 12, border: "1px solid rgba(255,255,255,0.25)" }}>
-                <Text style={{ color: "rgba(255,255,255,0.85)", fontSize: 12, display: "block", marginBottom: 4 }}>
+              <div
+                style={{
+                  backgroundColor: "rgba(255,255,255,0.15)",
+                  padding: "12px 16px",
+                  borderRadius: 12,
+                  border: "1px solid rgba(255,255,255,0.25)",
+                }}
+              >
+                <Text
+                  style={{
+                    color: "rgba(255,255,255,0.85)",
+                    fontSize: 12,
+                    display: "block",
+                    marginBottom: 4,
+                  }}
+                >
                   Tỷ lệ Đạt môn: {stats.passRate}% ({stats.passedCount}/{stats.totalStudents})
                 </Text>
-                <Progress percent={stats.passRate} strokeColor="#52c41a" showInfo={false} size="small" />
+                <Progress
+                  percent={stats.passRate}
+                  strokeColor="#52c41a"
+                  showInfo={false}
+                  size="small"
+                />
               </div>
             </Col>
 
             <Col xs={12} sm={8} md={6}>
-              <div style={{ backgroundColor: "rgba(255,255,255,0.15)", padding: "12px 16px", borderRadius: 12, border: "1px solid rgba(255,255,255,0.25)" }}>
+              <div
+                style={{
+                  backgroundColor: "rgba(255,255,255,0.15)",
+                  padding: "12px 16px",
+                  borderRadius: 12,
+                  border: "1px solid rgba(255,255,255,0.25)",
+                }}
+              >
                 <Statistic
-                  title={<Text style={{ color: "rgba(255,255,255,0.85)", fontSize: 12 }}>🔴 Tỷ lệ Chưa đạt</Text>}
+                  title={
+                    <Text style={{ color: "rgba(255,255,255,0.85)", fontSize: 12 }}>
+                      🔴 Tỷ lệ Chưa đạt
+                    </Text>
+                  }
                   value={stats.failedCount}
                   suffix={`/ ${stats.totalStudents} sinh viên`}
                   styles={{ content: { color: "#fff", fontWeight: 700, fontSize: 18 } }}
@@ -407,7 +537,17 @@ export const TeacherGradebookTab: React.FC<TeacherGradebookTabProps> = React.mem
             description={error}
             type="error"
             showIcon
-            action={<Button size="small" type="primary" danger icon={<ReloadOutlined />} onClick={fetchGrades}>Thử lại</Button>}
+            action={
+              <Button
+                size="small"
+                type="primary"
+                danger
+                icon={<ReloadOutlined />}
+                onClick={fetchGrades}
+              >
+                Thử lại
+              </Button>
+            }
             style={{ borderRadius: 8 }}
           />
         )}
@@ -415,7 +555,15 @@ export const TeacherGradebookTab: React.FC<TeacherGradebookTabProps> = React.mem
         {/* 2. Main Content: Toolbar & Table */}
         <Card
           title={
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                flexWrap: "wrap",
+                gap: 12,
+              }}
+            >
               <Space size={12} wrap>
                 <Input
                   placeholder="Tìm học sinh theo tên/email/mã..."
@@ -453,13 +601,21 @@ export const TeacherGradebookTab: React.FC<TeacherGradebookTabProps> = React.mem
 
               <Space size={8}>
                 <Tooltip title="Chức năng Xuất Excel chưa được Backend hỗ trợ API">
-                  <Button type="default" disabled icon={<FileExcelOutlined style={{ color: "#52c41a" }} />}>
+                  <Button
+                    type="default"
+                    disabled
+                    icon={<FileExcelOutlined style={{ color: "#52c41a" }} />}
+                  >
                     Export Excel
                   </Button>
                 </Tooltip>
 
                 <Tooltip title="Chức năng Xuất PDF chưa được Backend hỗ trợ API">
-                  <Button type="default" disabled icon={<FilePdfOutlined style={{ color: "#ff4d4f" }} />}>
+                  <Button
+                    type="default"
+                    disabled
+                    icon={<FilePdfOutlined style={{ color: "#ff4d4f" }} />}
+                  >
                     Export PDF
                   </Button>
                 </Tooltip>
@@ -478,7 +634,7 @@ export const TeacherGradebookTab: React.FC<TeacherGradebookTabProps> = React.mem
               columns={columns}
               dataSource={filteredRows}
               rowKey={(record, index) => record.studentIdStr || `row-${index}`}
-              scroll={{ x: 'max-content' }}
+              scroll={{ x: "max-content" }}
               pagination={{ pageSize: 10 }}
             />
           ) : (
@@ -504,7 +660,7 @@ export const TeacherGradebookTab: React.FC<TeacherGradebookTabProps> = React.mem
           student={selectedStudent}
           classId={classId}
           gradeItems={gradeItems}
-          studentGradesData={studentsGrades.find(sg => sg.student?._id === selectedStudent?._id)}
+          studentGradesData={studentsGrades.find((sg) => sg.student?._id === selectedStudent?._id)}
           onSaved={fetchGrades}
         />
       </div>

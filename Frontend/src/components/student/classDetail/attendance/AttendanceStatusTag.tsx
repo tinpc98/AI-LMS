@@ -16,25 +16,41 @@ export const AttendanceStatusTag: React.FC<AttendanceStatusTagProps> = React.mem
   switch (status) {
     case "Present":
       return (
-        <Tag color="success" icon={<CheckCircleOutlined />} style={{ borderRadius: 8, fontWeight: 600 }}>
+        <Tag
+          color="success"
+          icon={<CheckCircleOutlined />}
+          style={{ borderRadius: 8, fontWeight: 600 }}
+        >
           Có mặt
         </Tag>
       );
     case "Late":
       return (
-        <Tag color="warning" icon={<ClockCircleOutlined />} style={{ borderRadius: 8, fontWeight: 600 }}>
+        <Tag
+          color="warning"
+          icon={<ClockCircleOutlined />}
+          style={{ borderRadius: 8, fontWeight: 600 }}
+        >
           Đi muộn
         </Tag>
       );
     case "Absent":
       return (
-        <Tag color="error" icon={<CloseCircleOutlined />} style={{ borderRadius: 8, fontWeight: 600 }}>
+        <Tag
+          color="error"
+          icon={<CloseCircleOutlined />}
+          style={{ borderRadius: 8, fontWeight: 600 }}
+        >
           Vắng mặt
         </Tag>
       );
     case "Excused":
       return (
-        <Tag color="processing" icon={<InfoCircleOutlined />} style={{ borderRadius: 8, fontWeight: 600 }}>
+        <Tag
+          color="processing"
+          icon={<InfoCircleOutlined />}
+          style={{ borderRadius: 8, fontWeight: 600 }}
+        >
           Nghỉ có phép
         </Tag>
       );

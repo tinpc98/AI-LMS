@@ -21,7 +21,8 @@ export const AttendanceChart: React.FC<AttendanceChartProps> = React.memo(({ sta
     <Card
       title={
         <span style={{ fontSize: 14, fontWeight: 700 }}>
-          <PieChartOutlined style={{ color: "#1890ff", marginRight: 6 }} /> Biểu đồ tỷ lệ các trạng thái điểm danh
+          <PieChartOutlined style={{ color: "#1890ff", marginRight: 6 }} /> Biểu đồ tỷ lệ các trạng
+          thái điểm danh
         </span>
       }
       size="small"
@@ -33,7 +34,12 @@ export const AttendanceChart: React.FC<AttendanceChartProps> = React.memo(({ sta
             <Text type="secondary" style={{ fontSize: 11 }}>
               Có mặt: {stats.present} buổi ({presentPercent}%)
             </Text>
-            <Progress percent={presentPercent} showInfo={false} strokeColor="#52c41a" size="small" />
+            <Progress
+              percent={presentPercent}
+              showInfo={false}
+              strokeColor="#52c41a"
+              size="small"
+            />
           </div>
         </Col>
 
@@ -60,7 +66,12 @@ export const AttendanceChart: React.FC<AttendanceChartProps> = React.memo(({ sta
             <Text type="secondary" style={{ fontSize: 11 }}>
               Có phép: {stats.excused} buổi ({excusedPercent}%)
             </Text>
-            <Progress percent={excusedPercent} showInfo={false} strokeColor="#1890ff" size="small" />
+            <Progress
+              percent={excusedPercent}
+              showInfo={false}
+              strokeColor="#1890ff"
+              size="small"
+            />
           </div>
         </Col>
       </Row>

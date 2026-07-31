@@ -68,9 +68,7 @@ export function useLearningMaterials(initialResources: ILearningMaterial[] = [])
     if (filters.searchQuery.trim()) {
       const q = filters.searchQuery.toLowerCase().trim();
       result = result.filter(
-        (m) =>
-          m.title.toLowerCase().includes(q) ||
-          (m.description || "").toLowerCase().includes(q)
+        (m) => m.title.toLowerCase().includes(q) || (m.description || "").toLowerCase().includes(q)
       );
     }
 
@@ -82,10 +80,24 @@ export function useLearningMaterials(initialResources: ILearningMaterial[] = [])
         const urlLower = (m.url || "").toLowerCase();
 
         if (targetType === "pdf") return typeLower.includes("pdf") || urlLower.endsWith(".pdf");
-        if (targetType === "video") return typeLower.includes("video") || urlLower.includes("youtube") || urlLower.endsWith(".mp4");
+        if (targetType === "video")
+          return (
+            typeLower.includes("video") || urlLower.includes("youtube") || urlLower.endsWith(".mp4")
+          );
         if (targetType === "link") return typeLower.includes("link") || urlLower.startsWith("http");
-        if (targetType === "slide") return typeLower.includes("slide") || typeLower.includes("powerpoint") || urlLower.endsWith(".ppt") || urlLower.endsWith(".pptx");
-        if (targetType === "document") return typeLower.includes("document") || urlLower.endsWith(".doc") || urlLower.endsWith(".docx");
+        if (targetType === "slide")
+          return (
+            typeLower.includes("slide") ||
+            typeLower.includes("powerpoint") ||
+            urlLower.endsWith(".ppt") ||
+            urlLower.endsWith(".pptx")
+          );
+        if (targetType === "document")
+          return (
+            typeLower.includes("document") ||
+            urlLower.endsWith(".doc") ||
+            urlLower.endsWith(".docx")
+          );
 
         return typeLower === targetType;
       });

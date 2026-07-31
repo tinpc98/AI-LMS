@@ -80,7 +80,11 @@ export const TeacherSidebar: React.FC<TeacherSidebarProps> = React.memo(
           />
           {(!collapsed || isMobile) && (
             <div style={{ minWidth: 0, overflow: "hidden" }}>
-              <Title level={5} style={{ color: "#fff", margin: 0, fontSize: 16, fontWeight: 700 }} ellipsis>
+              <Title
+                level={5}
+                style={{ color: "#fff", margin: 0, fontSize: 16, fontWeight: 700 }}
+                ellipsis
+              >
                 EduPortal AI
               </Title>
               <Tag color="cyan" style={{ fontSize: 10, margin: 0, borderRadius: 4 }}>
@@ -110,7 +114,7 @@ export const TeacherSidebar: React.FC<TeacherSidebarProps> = React.memo(
             backgroundColor: "rgba(0, 0, 0, 0.2)",
           }}
         >
-          {(!collapsed || isMobile) ? (
+          {!collapsed || isMobile ? (
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
               <Space size={10} style={{ minWidth: 0 }}>
                 <Avatar

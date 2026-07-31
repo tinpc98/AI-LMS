@@ -24,9 +24,11 @@ async function runAuditTests() {
     console.error("❌ Fatal Error: Missing MONGO_TEST_URI");
     process.exit(1);
   }
-  
+
   if (!uri.endsWith("_test") && !uri.includes("_test?")) {
-    console.error("❌ Fatal Error: Database name in MONGO_TEST_URI must have '_test' suffix for safety.");
+    console.error(
+      "❌ Fatal Error: Database name in MONGO_TEST_URI must have '_test' suffix for safety."
+    );
     process.exit(1);
   }
 
@@ -64,33 +66,49 @@ async function runAuditTests() {
     console.log("\n--- TEST: Concurrency (50 requests đồng thời) ---");
     config.roleQuotas.studentDailyQuota = 1;
     await config.save();
-    
+
     let successCount = 0;
     let rejectedCount = 0;
     let fallbackCount = 0;
 
     const promises = Array.from({ length: 50 }).map(() => {
-      return aiCoreService.executeStructuredAI({
-        userId: dummyUserId, userRole: "student", feature: "summary", templateName: "summary"
-      }).then(() => { successCount++; })
-        .catch((e) => { 
-          if (e.status === 429) rejectedCount++; 
+      return aiCoreService
+        .executeStructuredAI({
+          userId: dummyUserId,
+          userRole: "student",
+          feature: "summary",
+          templateName: "summary",
+        })
+        .then(() => {
+          successCount++;
+        })
+        .catch((e) => {
+          if (e.status === 429) rejectedCount++;
           else fallbackCount++;
         });
     });
-    
+
     await Promise.all(promises);
-    
-    assert(successCount === 1, `Chỉ đúng 1 request được cấp Quota thành công (Đạt: ${successCount})`);
-    assert(rejectedCount === 49, `Đúng 49 requests bị từ chối bằng mã lỗi 429 (Đạt: ${rejectedCount})`);
+
+    assert(
+      successCount === 1,
+      `Chỉ đúng 1 request được cấp Quota thành công (Đạt: ${successCount})`
+    );
+    assert(
+      rejectedCount === 49,
+      `Đúng 49 requests bị từ chối bằng mã lỗi 429 (Đạt: ${rejectedCount})`
+    );
     assert(fallbackCount === 0, `Không có request nào sập do lỗi khác ngoài 429`);
-    
+
     const quotaDoc = await AIDailyQuota.findOne({ userId: dummyUserId });
     assert(quotaDoc && quotaDoc.usageCount === 1, "Bảng quota đếm chính xác (usageCount = 1)");
 
     const usages = await AIUsage.find({ userId: dummyUserId });
     assert(usages.length === 1, "Chỉ tạo đúng 1 record AIUsage");
-    assert(usages[0].quotaState === "consumed", "AIUsage quotaState = consumed (vì mock provider luôn thành công)");
+    assert(
+      usages[0].quotaState === "consumed",
+      "AIUsage quotaState = consumed (vì mock provider luôn thành công)"
+    );
 
     // -----------------------------------------------------
     // TEST 2: Pending Recovery & Chống Double Refund
@@ -109,9 +127,9 @@ async function runAuditTests() {
       status: "pending",
       quotaState: "reserved",
       quotaDateString: aiUsageService.getDateString(),
-      createdAt: tenMinutesAgo
+      createdAt: tenMinutesAgo,
     });
-    
+
     let beforeRecover = await AIDailyQuota.findOne({ userId: dummyUserId });
     assert(beforeRecover.usageCount === 2, "Quota đang bị chiếm dụng (usageCount = 2)");
 
@@ -120,12 +138,12 @@ async function runAuditTests() {
       runAIPendingRecovery(),
       runAIPendingRecovery(),
       runAIPendingRecovery(),
-      runAIPendingRecovery()
+      runAIPendingRecovery(),
     ];
-    
+
     const cronResults = await Promise.all(cronPromises);
     const totalRecoveredByAllCrons = cronResults.reduce((sum, res) => sum + res.totalRecovered, 0);
-    
+
     assert(totalRecoveredByAllCrons === 1, "Atomic Cronjob: Chỉ 1 process claim được record kẹt");
 
     const recoveredUsage = await AIUsage.findById(stuckUsage._id);
@@ -148,7 +166,7 @@ async function runAuditTests() {
       status: "pending",
       quotaState: "reserved",
       quotaDateString: aiUsageService.getDateString(),
-      createdAt: tenMinutesAgo
+      createdAt: tenMinutesAgo,
     });
     await runAIPendingRecovery();
     const finalQuota = await AIDailyQuota.findOne({ userId: dummyUserId });

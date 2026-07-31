@@ -30,7 +30,11 @@ export const NotificationHeader: React.FC<NotificationHeaderProps> = React.memo(
               🔔 Notification Center
             </Title>
             {unreadCount > 0 && (
-              <Badge count={unreadCount} overflowCount={99} style={{ backgroundColor: "#1890ff" }} />
+              <Badge
+                count={unreadCount}
+                overflowCount={99}
+                style={{ backgroundColor: "#1890ff" }}
+              />
             )}
           </Space>
           <Text type="secondary" style={{ fontSize: 13, display: "block", marginTop: 4 }}>

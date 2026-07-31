@@ -17,7 +17,11 @@ export const ExamStatistic: React.FC<ExamStatisticProps> = React.memo(({ stats }
   return (
     <Row gutter={[12, 12]} style={{ marginBottom: 24 }}>
       <Col xs={12} sm={8} md={4.8} lg={4.8} style={{ flex: 1 }}>
-        <Card bordered={false} styles={{ body: { padding: "12px 16px" } }} style={{ borderRadius: 12, backgroundColor: "#fafafa" }}>
+        <Card
+          bordered={false}
+          styles={{ body: { padding: "12px 16px" } }}
+          style={{ borderRadius: 12, backgroundColor: "#fafafa" }}
+        >
           <Statistic
             title={<span style={{ fontSize: 11, color: "#8c8c8c" }}>Tổng bài thi</span>}
             value={stats.total}
@@ -28,7 +32,11 @@ export const ExamStatistic: React.FC<ExamStatisticProps> = React.memo(({ stats }
       </Col>
 
       <Col xs={12} sm={8} md={4.8} lg={4.8} style={{ flex: 1 }}>
-        <Card bordered={false} styles={{ body: { padding: "12px 16px" } }} style={{ borderRadius: 12, backgroundColor: "#e6f7ff" }}>
+        <Card
+          bordered={false}
+          styles={{ body: { padding: "12px 16px" } }}
+          style={{ borderRadius: 12, backgroundColor: "#e6f7ff" }}
+        >
           <Statistic
             title={<span style={{ fontSize: 11, color: "#8c8c8c" }}>Đang mở thi</span>}
             value={stats.available}
@@ -39,7 +47,11 @@ export const ExamStatistic: React.FC<ExamStatisticProps> = React.memo(({ stats }
       </Col>
 
       <Col xs={12} sm={8} md={4.8} lg={4.8} style={{ flex: 1 }}>
-        <Card bordered={false} styles={{ body: { padding: "12px 16px" } }} style={{ borderRadius: 12, backgroundColor: "#fffbe6" }}>
+        <Card
+          bordered={false}
+          styles={{ body: { padding: "12px 16px" } }}
+          style={{ borderRadius: 12, backgroundColor: "#fffbe6" }}
+        >
           <Statistic
             title={<span style={{ fontSize: 11, color: "#8c8c8c" }}>Đang làm dở dang</span>}
             value={stats.inProgress}
@@ -50,7 +62,11 @@ export const ExamStatistic: React.FC<ExamStatisticProps> = React.memo(({ stats }
       </Col>
 
       <Col xs={12} sm={8} md={4.8} lg={4.8} style={{ flex: 1 }}>
-        <Card bordered={false} styles={{ body: { padding: "12px 16px" } }} style={{ borderRadius: 12, backgroundColor: "#f6ffed" }}>
+        <Card
+          bordered={false}
+          styles={{ body: { padding: "12px 16px" } }}
+          style={{ borderRadius: 12, backgroundColor: "#f6ffed" }}
+        >
           <Statistic
             title={<span style={{ fontSize: 11, color: "#8c8c8c" }}>Đã hoàn thành</span>}
             value={stats.completed}
@@ -61,7 +77,11 @@ export const ExamStatistic: React.FC<ExamStatisticProps> = React.memo(({ stats }
       </Col>
 
       <Col xs={12} sm={8} md={4.8} lg={4.8} style={{ flex: 1 }}>
-        <Card bordered={false} styles={{ body: { padding: "12px 16px" } }} style={{ borderRadius: 12, backgroundColor: "#f9f0ff" }}>
+        <Card
+          bordered={false}
+          styles={{ body: { padding: "12px 16px" } }}
+          style={{ borderRadius: 12, backgroundColor: "#f9f0ff" }}
+        >
           <Statistic
             title={<span style={{ fontSize: 11, color: "#8c8c8c" }}>Điểm thi trung bình</span>}
             value={stats.averageScore !== null ? stats.averageScore : "--"}

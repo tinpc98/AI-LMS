@@ -15,7 +15,7 @@ const StudentAssignmentContent = () => {
     isSubmitting,
     fetchAssignmentDetail,
     submitAssignment,
-    cancelSubmission
+    cancelSubmission,
   } = useStudentAssignment(assignmentId);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -43,7 +43,8 @@ const StudentAssignmentContent = () => {
   const handleCancelSubmission = () => {
     Modal.confirm({
       title: "Xác nhận hủy bài nộp?",
-      content: "Sau khi hủy, bài nộp hiện tại sẽ không còn được tính là đã nộp. Bạn cần nộp lại bài trước thời hạn quy định.",
+      content:
+        "Sau khi hủy, bài nộp hiện tại sẽ không còn được tính là đã nộp. Bạn cần nộp lại bài trước thời hạn quy định.",
       okText: "Xác nhận hủy",
       okType: "danger",
       cancelText: "Quay lại",
@@ -82,7 +83,11 @@ const StudentAssignmentContent = () => {
           description={error}
           type="error"
           showIcon
-          action={<Button type="primary" danger onClick={fetchAssignmentDetail}>Thử lại</Button>}
+          action={
+            <Button type="primary" danger onClick={fetchAssignmentDetail}>
+              Thử lại
+            </Button>
+          }
         />
       </main>
     );
@@ -93,7 +98,9 @@ const StudentAssignmentContent = () => {
     : "Không có hạn nộp";
 
   const isGraded = Boolean(
-    mySubmission && (mySubmission.grade !== null && mySubmission.grade !== undefined || mySubmission.status === "graded")
+    mySubmission &&
+    ((mySubmission.grade !== null && mySubmission.grade !== undefined) ||
+      mySubmission.status === "graded")
   );
   const isPassedDeadline = Boolean(
     assignment?.deadline && new Date() > new Date(assignment.deadline)
@@ -144,7 +151,12 @@ const StudentAssignmentContent = () => {
                     </Tag>
                   ) : isActiveSubmitted ? (
                     <Tag color="success" style={{ borderRadius: 6, fontWeight: 700 }}>
-                      🟢 Đã nộp bài {mySubmission?.status === "late" ? "(Muộn)" : mySubmission?.status === "resubmitted" ? "(Đã nộp lại)" : ""}
+                      🟢 Đã nộp bài{" "}
+                      {mySubmission?.status === "late"
+                        ? "(Muộn)"
+                        : mySubmission?.status === "resubmitted"
+                          ? "(Đã nộp lại)"
+                          : ""}
                     </Tag>
                   ) : isWithdrawn ? (
                     <Tag color="warning" style={{ borderRadius: 6, fontWeight: 700 }}>
@@ -156,17 +168,22 @@ const StudentAssignmentContent = () => {
                     </Tag>
                   )}
                 </Space>
-                <span className="text-on-surface-variant text-body-sm">Hạn nộp: {deadlineFormatted}</span>
+                <span className="text-on-surface-variant text-body-sm">
+                  Hạn nộp: {deadlineFormatted}
+                </span>
               </div>
               <h3 className="font-headline-md text-headline-md text-on-surface mb-4">
                 {assignment?.title || "Hướng dẫn làm bài"}
               </h3>
               <p className="text-on-surface-variant leading-relaxed mb-4 whitespace-pre-wrap">
-                {assignment?.description || "Vui lòng đọc kỹ yêu cầu bài tập và hoàn thành bên dưới."}
+                {assignment?.description ||
+                  "Vui lòng đọc kỹ yêu cầu bài tập và hoàn thành bên dưới."}
               </p>
               {assignment?.attachments && assignment.attachments.length > 0 && (
                 <div className="mb-4 space-y-2">
-                  <h5 className="font-bold text-sm text-on-surface">Tài liệu đính kèm từ Giảng viên:</h5>
+                  <h5 className="font-bold text-sm text-on-surface">
+                    Tài liệu đính kèm từ Giảng viên:
+                  </h5>
                   {assignment.attachments.map((att: any, idx: number) => (
                     <a
                       key={att.publicId || idx}
@@ -182,7 +199,9 @@ const StudentAssignmentContent = () => {
               )}
               {mySubmission && mySubmission.attachments && mySubmission.attachments.length > 0 && (
                 <div className="mt-4 p-4 bg-surface-container-low rounded-xl border border-outline-variant">
-                  <h5 className="font-bold text-sm text-on-surface mb-2">Tệp bài làm hiện tại của bạn:</h5>
+                  <h5 className="font-bold text-sm text-on-surface mb-2">
+                    Tệp bài làm hiện tại của bạn:
+                  </h5>
                   <div className="space-y-1">
                     {mySubmission.attachments.map((att: any, idx: number) => (
                       <a
@@ -208,9 +227,7 @@ const StudentAssignmentContent = () => {
 
             {canSubmit && (
               <div className="bg-white rounded-xl border border-outline-variant p-8 shadow-sm">
-                <h4 className="text-body-lg font-semibold text-on-surface mb-4">
-                  Phần làm bài
-                </h4>
+                <h4 className="text-body-lg font-semibold text-on-surface mb-4">Phần làm bài</h4>
                 <textarea
                   className="w-full h-48 rounded-xl border-outline-variant focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all p-4 text-body-md mb-4"
                   placeholder="Nhập nội dung bài làm của bạn tại đây (có thể kèm link)..."
@@ -220,8 +237,12 @@ const StudentAssignmentContent = () => {
                 />
                 <div className="rounded-xl border border-outline-variant bg-surface-container-low p-4">
                   <div className="flex items-center justify-between">
-                    <label className="text-sm font-semibold text-on-surface">Đính kèm tệp bài làm</label>
-                    <span className="text-xs text-on-surface-variant">{selectedFiles.length}/5</span>
+                    <label className="text-sm font-semibold text-on-surface">
+                      Đính kèm tệp bài làm
+                    </label>
+                    <span className="text-xs text-on-surface-variant">
+                      {selectedFiles.length}/5
+                    </span>
                   </div>
                   <label className="mt-3 flex cursor-pointer items-center gap-2 rounded-xl border border-dashed border-outline-variant px-4 py-3 text-sm text-primary transition-colors hover:bg-primary/5">
                     <input type="file" multiple className="hidden" onChange={handleFileChange} />
@@ -252,7 +273,7 @@ const StudentAssignmentContent = () => {
             )}
           </div>
         </section>
-        
+
         {/* Extracted AI Tutor Sidebar */}
         <AITutorSidebar />
       </div>
@@ -260,10 +281,14 @@ const StudentAssignmentContent = () => {
       <footer className="fixed bottom-0 right-0 left-[280px] bg-white border-t border-outline-variant h-20 px-10 flex items-center justify-between z-40">
         <div className="flex items-center gap-8">
           <div className="flex flex-col">
-            <span className="text-on-surface-variant text-[12px] uppercase font-bold tracking-widest">Tiến độ</span>
+            <span className="text-on-surface-variant text-[12px] uppercase font-bold tracking-widest">
+              Tiến độ
+            </span>
             <div className="flex items-center gap-3">
               <div className="w-48 h-2 bg-slate-100 rounded-full overflow-hidden">
-                <div className={`h-full ${canSubmit ? "w-1/3 bg-warning" : "w-full bg-success"} rounded-full`}></div>
+                <div
+                  className={`h-full ${canSubmit ? "w-1/3 bg-warning" : "w-full bg-success"} rounded-full`}
+                ></div>
               </div>
               <span className="text-body-sm font-bold text-on-surface">
                 {canSubmit ? "Chưa hoàn thành" : "Đã hoàn thành"}
@@ -304,10 +329,12 @@ const StudentAssignmentContent = () => {
               cloud_upload
             </span>
           </div>
-          <h3 className="font-headline-md text-headline-md text-on-surface mb-2">Bạn có chắc muốn nộp bài?</h3>
+          <h3 className="font-headline-md text-headline-md text-on-surface mb-2">
+            Bạn có chắc muốn nộp bài?
+          </h3>
           <p className="text-on-surface-variant mb-8 leading-relaxed text-body-md">
-            Sau khi nộp, hệ thống sẽ ghi nhận thời gian nộp bài của bạn.
-            Nếu nộp muộn sau deadline, bài nộp sẽ bị đánh dấu "Nộp muộn".
+            Sau khi nộp, hệ thống sẽ ghi nhận thời gian nộp bài của bạn. Nếu nộp muộn sau deadline,
+            bài nộp sẽ bị đánh dấu "Nộp muộn".
           </p>
           <div className="flex gap-4">
             <button

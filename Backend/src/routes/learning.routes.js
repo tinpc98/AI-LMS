@@ -5,7 +5,7 @@ import {
   getClassRanking,
   getStudentRanking,
   getMyBadges,
-  getMyActivities
+  getMyActivities,
 } from "../controllers/learning.controller.js";
 import { verifyUser } from "../middlewares/auth.middleware.js";
 

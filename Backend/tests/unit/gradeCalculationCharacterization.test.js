@@ -33,7 +33,15 @@ const mongooseQuery = (resolvedValue) => {
   return query;
 };
 
-const mockClassAndSubs = ({ classDoc, users = [], assignments = [], exams = [], manualGrades = [], submissions = [], attempts = [] }) => {
+const mockClassAndSubs = ({
+  classDoc,
+  users = [],
+  assignments = [],
+  exams = [],
+  manualGrades = [],
+  submissions = [],
+  attempts = [],
+}) => {
   vi.spyOn(classModel, "findById").mockReturnValue(mongooseQuery(classDoc));
   vi.spyOn(User, "find").mockReturnValue(mongooseQuery(users));
   vi.spyOn(Assignment, "find").mockReturnValue(mongooseQuery(assignments));
@@ -57,7 +65,11 @@ describe("aggregateGradesMatrix — characterization", () => {
 
   it("Chỉ có điểm thủ công (Attendance + Midterm), không có gradingWeight riêng → dùng trọng số mặc định 10/20/30/40", async () => {
     mockClassAndSubs({
-      classDoc: { _id: CLASS_ID, students: [{ studentId: STUDENT_1, status: "Enrolled" }], gradingWeight: null },
+      classDoc: {
+        _id: CLASS_ID,
+        students: [{ studentId: STUDENT_1, status: "Enrolled" }],
+        gradingWeight: null,
+      },
       users: [{ _id: STUDENT_1, fullName: "Học sinh A" }],
       manualGrades: [
         { _id: "g1", studentId: STUDENT_1, category: "Attendance", score: 8, feedback: "" },
@@ -85,8 +97,12 @@ describe("aggregateGradesMatrix — characterization", () => {
       users: [{ _id: STUDENT_1, fullName: "Học sinh A" }],
       assignments: [{ _id: "a1", title: "BT1" }],
       exams: [{ _id: "e1", title: "Giữa kỳ", maxScore: 20, status: "Published" }],
-      submissions: [{ _id: "s1", assignmentId: "a1", studentId: STUDENT_1, grade: 9, feedback: "Tốt" }],
-      attempts: [{ _id: "at1", examId: "e1", studentId: STUDENT_1, totalScore: 16, status: "GRADED" }],
+      submissions: [
+        { _id: "s1", assignmentId: "a1", studentId: STUDENT_1, grade: 9, feedback: "Tốt" },
+      ],
+      attempts: [
+        { _id: "at1", examId: "e1", studentId: STUDENT_1, totalScore: 16, status: "GRADED" },
+      ],
     });
 
     const result = await gradeService.aggregateGradesMatrix(CLASS_ID);
@@ -103,7 +119,11 @@ describe("aggregateGradesMatrix — characterization", () => {
 
   it("Không có điểm nào cho học sinh → avgGPA = null, totalWeight = 0", async () => {
     mockClassAndSubs({
-      classDoc: { _id: CLASS_ID, students: [{ studentId: STUDENT_1, status: "Enrolled" }], gradingWeight: null },
+      classDoc: {
+        _id: CLASS_ID,
+        students: [{ studentId: STUDENT_1, status: "Enrolled" }],
+        gradingWeight: null,
+      },
       users: [{ _id: STUDENT_1, fullName: "Học sinh A" }],
     });
 
@@ -127,7 +147,9 @@ describe("aggregateGradesMatrix — characterization", () => {
         { _id: STUDENT_1, fullName: "A" },
         { _id: STUDENT_2, fullName: "B" },
       ],
-      manualGrades: [{ _id: "g1", studentId: STUDENT_1, category: "Attendance", score: 10, feedback: "" }],
+      manualGrades: [
+        { _id: "g1", studentId: STUDENT_1, category: "Attendance", score: 10, feedback: "" },
+      ],
     });
 
     const result = await gradeService.aggregateGradesMatrix(CLASS_ID);
@@ -178,13 +200,17 @@ describe("aggregateGradesMatrix — characterization", () => {
   it("gradeItems bao gồm manual categories (mặc định + phát sinh từ DB), assignment, exam", async () => {
     mockClassAndSubs({
       classDoc: { _id: CLASS_ID, students: [], gradingWeight: null },
-      manualGrades: [{ _id: "g1", studentId: STUDENT_1, category: "Other", score: 5, feedback: "" }],
+      manualGrades: [
+        { _id: "g1", studentId: STUDENT_1, category: "Other", score: 5, feedback: "" },
+      ],
       assignments: [{ _id: "a1", title: "BT1" }],
       exams: [{ _id: "e1", title: "Thi", maxScore: 10, status: "Published" }],
     });
 
     const result = await gradeService.aggregateGradesMatrix(CLASS_ID);
     const categories = result.gradeItems.map((gi) => gi.category);
-    expect(categories).toEqual(expect.arrayContaining(["Attendance", "Midterm", "Final", "Other", "Assignment", "Exam"]));
+    expect(categories).toEqual(
+      expect.arrayContaining(["Attendance", "Midterm", "Final", "Other", "Assignment", "Exam"])
+    );
   });
 });

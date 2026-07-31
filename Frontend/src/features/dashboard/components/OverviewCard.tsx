@@ -42,10 +42,7 @@ export const OverviewCard: React.FC<OverviewCardProps> = ({ item }) => {
   const isUp = item.trendType === "up";
 
   return (
-    <motion.div
-      whileHover={{ y: -4, transition: { duration: 0.2 } }}
-      style={{ height: "100%" }}
-    >
+    <motion.div whileHover={{ y: -4, transition: { duration: 0.2 } }} style={{ height: "100%" }}>
       <Card
         variant="borderless"
         style={{
@@ -61,7 +58,14 @@ export const OverviewCard: React.FC<OverviewCardProps> = ({ item }) => {
         }}
         styles={{ body: { padding: "20px" } }}
       >
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "flex-start",
+            marginBottom: 12,
+          }}
+        >
           <Text type="secondary" style={{ fontSize: "14px", fontWeight: 500 }}>
             {item.title}
           </Text>
@@ -87,11 +91,7 @@ export const OverviewCard: React.FC<OverviewCardProps> = ({ item }) => {
           <Statistic
             value={item.value}
             formatter={(value) => (
-              <CountUpComponent
-                end={Number(value)}
-                duration={1.8}
-                separator=","
-              />
+              <CountUpComponent end={Number(value)} duration={1.8} separator="," />
             )}
             styles={{
               content: {
@@ -103,7 +103,15 @@ export const OverviewCard: React.FC<OverviewCardProps> = ({ item }) => {
             }}
           />
 
-          <div style={{ marginTop: 12, display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+          <div
+            style={{
+              marginTop: 12,
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+              flexWrap: "wrap",
+            }}
+          >
             {item.trend !== 0 ? (
               <Tag
                 color={isUp ? "success" : "warning"}

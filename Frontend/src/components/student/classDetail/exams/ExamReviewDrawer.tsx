@@ -56,7 +56,10 @@ export const ExamReviewDrawer: React.FC<ExamReviewDrawerProps> = React.memo(
 
           <Divider style={{ margin: "20px 0" }} />
 
-          <Text strong style={{ fontSize: 14, color: "#262626", display: "block", marginBottom: 12 }}>
+          <Text
+            strong
+            style={{ fontSize: 14, color: "#262626", display: "block", marginBottom: 12 }}
+          >
             <BookOutlined style={{ marginRight: 6 }} /> Danh sách câu hỏi & Đáp án chi tiết:
           </Text>
 
@@ -90,7 +93,9 @@ export const ExamReviewDrawer: React.FC<ExamReviewDrawerProps> = React.memo(
                       backgroundColor: isCorrect ? "#fcffe6" : "#fff2f0",
                     }}
                   >
-                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
+                    <div
+                      style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}
+                    >
                       <Text strong style={{ fontSize: 13, color: "#1f2937" }}>
                         Câu {idx + 1}: {questionText}
                       </Text>
@@ -123,7 +128,15 @@ export const ExamReviewDrawer: React.FC<ExamReviewDrawerProps> = React.memo(
                       )}
 
                       {q.explanation && (
-                        <div style={{ marginTop: 6, backgroundColor: "#fff", padding: 8, borderRadius: 6, border: "1px dashed #d9d9d9" }}>
+                        <div
+                          style={{
+                            marginTop: 6,
+                            backgroundColor: "#fff",
+                            padding: 8,
+                            borderRadius: 6,
+                            border: "1px dashed #d9d9d9",
+                          }}
+                        >
                           <Text type="secondary" style={{ fontStyle: "italic" }}>
                             Lời giải: {q.explanation}
                           </Text>

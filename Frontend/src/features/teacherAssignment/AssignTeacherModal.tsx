@@ -2,7 +2,11 @@ import { useEffect, useMemo, useState } from "react";
 import { Avatar, Descriptions, Modal, Select, Tag, Typography } from "antd";
 import { UserOutlined } from "@ant-design/icons";
 import type { AccountRecord, ClassRecord, CourseRecord } from "./teacherAssignment.types";
-import { checkScheduleConflict, formatScheduleDays, formatScheduleTime } from "./teacherAssignmentUtils";
+import {
+  checkScheduleConflict,
+  formatScheduleDays,
+  formatScheduleTime,
+} from "./teacherAssignmentUtils";
 import ConflictAlert from "./ConflictAlert";
 
 interface AssignTeacherModalProps {
@@ -57,7 +61,15 @@ const AssignTeacherModal = ({
         value: teacher.id,
         searchValue: `${teacher.fullName} ${teacher.email}`.toLowerCase(),
         label: (
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "4px 0" }}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: 12,
+              padding: "4px 0",
+            }}
+          >
             <div style={{ display: "flex", alignItems: "center", gap: 8, overflow: "hidden" }}>
               <Avatar size="small" src={teacher.avatar} icon={<UserOutlined />}>
                 {teacher.fullName.charAt(0)}
@@ -75,7 +87,10 @@ const AssignTeacherModal = ({
               <Tag color="blue" style={{ margin: 0, fontSize: 11 }}>
                 {load} Classes
               </Tag>
-              <Tag color={statusText === "Available" ? "green" : "orange"} style={{ margin: 0, fontSize: 11 }}>
+              <Tag
+                color={statusText === "Available" ? "green" : "orange"}
+                style={{ margin: 0, fontSize: 11 }}
+              >
                 {statusText}
               </Tag>
             </div>
@@ -111,11 +126,13 @@ const AssignTeacherModal = ({
       <div style={{ marginBottom: 16 }}>
         <Descriptions column={1} size="small" bordered>
           <Descriptions.Item label="Class">
-            <Typography.Text strong>{classRecord.className}</Typography.Text> ({classRecord.classCode})
+            <Typography.Text strong>{classRecord.className}</Typography.Text> (
+            {classRecord.classCode})
           </Descriptions.Item>
           <Descriptions.Item label="Course">{courseName}</Descriptions.Item>
           <Descriptions.Item label="Schedule">
-            {formatScheduleDays(classRecord.schedule?.days)} • {formatScheduleTime(classRecord.schedule?.startTime, classRecord.schedule?.endTime)}
+            {formatScheduleDays(classRecord.schedule?.days)} •{" "}
+            {formatScheduleTime(classRecord.schedule?.startTime, classRecord.schedule?.endTime)}
           </Descriptions.Item>
         </Descriptions>
       </div>

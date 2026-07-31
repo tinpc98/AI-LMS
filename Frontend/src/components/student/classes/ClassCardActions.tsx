@@ -17,10 +17,26 @@ export const ClassCardActions: React.FC<ClassCardActionsProps> = React.memo(
     const isActive = status === "Active" || status === "active";
 
     return (
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginTop: 16 }}>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: 8,
+          marginTop: 16,
+        }}
+      >
         <div>
           {isLiveActive && (
-            <Badge status="processing" color="#ff4d4f" text={<span style={{ color: "#ff4d4f", fontWeight: 600, fontSize: 12 }}>🔴 Đang trực tuyến</span>} />
+            <Badge
+              status="processing"
+              color="#ff4d4f"
+              text={
+                <span style={{ color: "#ff4d4f", fontWeight: 600, fontSize: 12 }}>
+                  🔴 Đang trực tuyến
+                </span>
+              }
+            />
           )}
         </div>
 

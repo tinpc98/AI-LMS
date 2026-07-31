@@ -11,7 +11,13 @@ const KnowledgeDrawer = ({ open, doc, onClose }: KnowledgeDrawerProps) => {
   if (!doc) return null;
 
   return (
-    <Drawer title="Knowledge Document Details" placement="right" width={480} open={open} onClose={onClose}>
+    <Drawer
+      title="Knowledge Document Details"
+      placement="right"
+      width={480}
+      open={open}
+      onClose={onClose}
+    >
       <div style={{ marginBottom: 20 }}>
         <Typography.Title level={4} style={{ margin: 0 }}>
           {doc.name}
@@ -19,7 +25,9 @@ const KnowledgeDrawer = ({ open, doc, onClose }: KnowledgeDrawerProps) => {
         <Typography.Text type="secondary">Uploaded by {doc.uploadedBy}</Typography.Text>
         <div style={{ marginTop: 8, display: "flex", gap: 8 }}>
           <Tag color="blue">{doc.category}</Tag>
-          <Tag color={doc.status === "Indexed" ? "green" : doc.status === "Pending" ? "orange" : "red"}>
+          <Tag
+            color={doc.status === "Indexed" ? "green" : doc.status === "Pending" ? "orange" : "red"}
+          >
             {doc.status}
           </Tag>
           <Tag color="purple">{doc.fileType.toUpperCase()}</Tag>

@@ -69,7 +69,10 @@ export const OverviewCard: React.FC<OverviewCardProps> = React.memo(
       >
         {/* Class Description */}
         <div style={{ marginBottom: 20 }}>
-          <Text strong style={{ fontSize: 14, color: "#262626", display: "block", marginBottom: 6 }}>
+          <Text
+            strong
+            style={{ fontSize: 14, color: "#262626", display: "block", marginBottom: 6 }}
+          >
             Mô tả lớp học:
           </Text>
           <Paragraph type="secondary" style={{ fontSize: 13, lineHeight: 1.6, margin: 0 }}>
@@ -116,7 +119,10 @@ export const OverviewCard: React.FC<OverviewCardProps> = React.memo(
         {/* Calendar Integration */}
         {googleCalendarEventId && (
           <div style={{ marginTop: 20, paddingTop: 16, borderTop: "1px solid #f0f0f0" }}>
-            <Text strong style={{ fontSize: 14, color: "#262626", display: "block", marginBottom: 12 }}>
+            <Text
+              strong
+              style={{ fontSize: 14, color: "#262626", display: "block", marginBottom: 12 }}
+            >
               Lịch & Đồng bộ:
             </Text>
             <Space size={12} wrap>

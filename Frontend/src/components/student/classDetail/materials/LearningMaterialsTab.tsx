@@ -63,7 +63,11 @@ export const LearningMaterialsTab: React.FC<LearningMaterialsTabProps> = React.m
           {/* 5 Small Statistic Badges */}
           <Row gutter={[12, 12]}>
             <Col xs={12} sm={8} md={4.8} lg={4.8} style={{ flex: 1 }}>
-              <Card bordered={false} styles={{ body: { padding: "12px 16px" } }} style={{ borderRadius: 12, backgroundColor: "#fafafa" }}>
+              <Card
+                bordered={false}
+                styles={{ body: { padding: "12px 16px" } }}
+                style={{ borderRadius: 12, backgroundColor: "#fafafa" }}
+              >
                 <Statistic
                   title={<span style={{ fontSize: 11, color: "#8c8c8c" }}>Tổng tài liệu</span>}
                   value={stats.total}
@@ -74,7 +78,11 @@ export const LearningMaterialsTab: React.FC<LearningMaterialsTabProps> = React.m
             </Col>
 
             <Col xs={12} sm={8} md={4.8} lg={4.8} style={{ flex: 1 }}>
-              <Card bordered={false} styles={{ body: { padding: "12px 16px" } }} style={{ borderRadius: 12, backgroundColor: "#fff1f0" }}>
+              <Card
+                bordered={false}
+                styles={{ body: { padding: "12px 16px" } }}
+                style={{ borderRadius: 12, backgroundColor: "#fff1f0" }}
+              >
                 <Statistic
                   title={<span style={{ fontSize: 11, color: "#8c8c8c" }}>File PDF</span>}
                   value={stats.pdf}
@@ -85,7 +93,11 @@ export const LearningMaterialsTab: React.FC<LearningMaterialsTabProps> = React.m
             </Col>
 
             <Col xs={12} sm={8} md={4.8} lg={4.8} style={{ flex: 1 }}>
-              <Card bordered={false} styles={{ body: { padding: "12px 16px" } }} style={{ borderRadius: 12, backgroundColor: "#e6f7ff" }}>
+              <Card
+                bordered={false}
+                styles={{ body: { padding: "12px 16px" } }}
+                style={{ borderRadius: 12, backgroundColor: "#e6f7ff" }}
+              >
                 <Statistic
                   title={<span style={{ fontSize: 11, color: "#8c8c8c" }}>Video bài giảng</span>}
                   value={stats.video}
@@ -96,7 +108,11 @@ export const LearningMaterialsTab: React.FC<LearningMaterialsTabProps> = React.m
             </Col>
 
             <Col xs={12} sm={8} md={4.8} lg={4.8} style={{ flex: 1 }}>
-              <Card bordered={false} styles={{ body: { padding: "12px 16px" } }} style={{ borderRadius: 12, backgroundColor: "#e6fffb" }}>
+              <Card
+                bordered={false}
+                styles={{ body: { padding: "12px 16px" } }}
+                style={{ borderRadius: 12, backgroundColor: "#e6fffb" }}
+              >
                 <Statistic
                   title={<span style={{ fontSize: 11, color: "#8c8c8c" }}>Web Link</span>}
                   value={stats.link}
@@ -107,7 +123,11 @@ export const LearningMaterialsTab: React.FC<LearningMaterialsTabProps> = React.m
             </Col>
 
             <Col xs={12} sm={8} md={4.8} lg={4.8} style={{ flex: 1 }}>
-              <Card bordered={false} styles={{ body: { padding: "12px 16px" } }} style={{ borderRadius: 12, backgroundColor: "#fff7e6" }}>
+              <Card
+                bordered={false}
+                styles={{ body: { padding: "12px 16px" } }}
+                style={{ borderRadius: 12, backgroundColor: "#fff7e6" }}
+              >
                 <Statistic
                   title={<span style={{ fontSize: 11, color: "#8c8c8c" }}>Slide / Docx</span>}
                   value={stats.slide + stats.other}

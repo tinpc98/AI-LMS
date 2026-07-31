@@ -13,7 +13,7 @@ interface State {
 
 class ExamErrorBoundary extends Component<Props, State> {
   public state: State = {
-    hasError: false
+    hasError: false,
   };
 
   public static getDerivedStateFromError(error: Error): State {
@@ -30,7 +30,8 @@ class ExamErrorBoundary extends Component<Props, State> {
         <div className="h-screen w-screen flex flex-col items-center justify-center bg-background p-6 text-center">
           <h2 className="text-2xl font-bold text-red-600 mb-4">Không thể hiển thị bài thi</h2>
           <p className="text-gray-700 mb-8 max-w-md">
-            Đã xảy ra lỗi khi tải hoặc hiển thị bài thi. Tiến trình làm bài của bạn vẫn an toàn. Vui lòng thử lại.
+            Đã xảy ra lỗi khi tải hoặc hiển thị bài thi. Tiến trình làm bài của bạn vẫn an toàn. Vui
+            lòng thử lại.
           </p>
           <div className="flex gap-4">
             <button

@@ -1,6 +1,11 @@
 import React from "react";
 import { Card, Typography, Space, Tag, Progress, Row, Col } from "antd";
-import { TrophyOutlined, CheckCircleOutlined, CloseCircleOutlined, ClockCircleOutlined } from "@ant-design/icons";
+import {
+  TrophyOutlined,
+  CheckCircleOutlined,
+  CloseCircleOutlined,
+  ClockCircleOutlined,
+} from "@ant-design/icons";
 import type { IExamAttempt } from "../../../../api/examApi";
 
 const { Text, Title } = Typography;
@@ -33,7 +38,12 @@ export const ExamResultCard: React.FC<ExamResultCardProps> = React.memo(
           </Space>
         }
         size="small"
-        style={{ borderRadius: 12, backgroundColor: isPassed ? "#f6ffed" : "#fff1f0", border: `1px solid ${isPassed ? "#b7eb8f" : "#ffa39e"}`, marginBottom: 16 }}
+        style={{
+          borderRadius: 12,
+          backgroundColor: isPassed ? "#f6ffed" : "#fff1f0",
+          border: `1px solid ${isPassed ? "#b7eb8f" : "#ffa39e"}`,
+          marginBottom: 16,
+        }}
       >
         <Row gutter={[16, 12]} align="middle">
           <Col xs={24} sm={8} style={{ textAlign: "center" }}>
@@ -43,7 +53,9 @@ export const ExamResultCard: React.FC<ExamResultCardProps> = React.memo(
               width={80}
               strokeColor={isPassed ? "#52c41a" : "#ff4d4f"}
               format={() => (
-                <span style={{ fontSize: 16, fontWeight: 700, color: isPassed ? "#389e0d" : "#cf1322" }}>
+                <span
+                  style={{ fontSize: 16, fontWeight: 700, color: isPassed ? "#389e0d" : "#cf1322" }}
+                >
                   {score}/{maxScore}
                 </span>
               )}
@@ -57,11 +69,19 @@ export const ExamResultCard: React.FC<ExamResultCardProps> = React.memo(
                   Trạng thái kết quả:
                 </Text>
                 {isPassed ? (
-                  <Tag color="success" icon={<CheckCircleOutlined />} style={{ borderRadius: 6, fontWeight: 600 }}>
+                  <Tag
+                    color="success"
+                    icon={<CheckCircleOutlined />}
+                    style={{ borderRadius: 6, fontWeight: 600 }}
+                  >
                     ĐẠT (PASS)
                   </Tag>
                 ) : (
-                  <Tag color="error" icon={<CloseCircleOutlined />} style={{ borderRadius: 6, fontWeight: 600 }}>
+                  <Tag
+                    color="error"
+                    icon={<CloseCircleOutlined />}
+                    style={{ borderRadius: 6, fontWeight: 600 }}
+                  >
                     KHÔNG ĐẠT (FAIL)
                   </Tag>
                 )}

@@ -1,6 +1,11 @@
 import React from "react";
 import { Card, Typography, Space, Button, Tag } from "antd";
-import { ClockCircleOutlined, BookOutlined, ArrowRightOutlined, InfoCircleOutlined } from "@ant-design/icons";
+import {
+  ClockCircleOutlined,
+  BookOutlined,
+  ArrowRightOutlined,
+  InfoCircleOutlined,
+} from "@ant-design/icons";
 import NotificationIcon from "./NotificationIcon";
 import NotificationStatusBadge from "./NotificationStatusBadge";
 import type { INotificationItem } from "../../../types/studentNotification";
@@ -48,10 +53,23 @@ export const NotificationCard: React.FC<NotificationCardProps> = React.memo(
           {/* Main Body */}
           <div style={{ flex: 1, minWidth: 0 }}>
             {/* Header: Class name, status badge, date */}
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6, flexWrap: "wrap", gap: 6 }}>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginBottom: 6,
+                flexWrap: "wrap",
+                gap: 6,
+              }}
+            >
               <Space size={8} align="center">
                 {item.className && (
-                  <Tag color="blue" icon={<BookOutlined />} style={{ borderRadius: 6, fontWeight: 600 }}>
+                  <Tag
+                    color="blue"
+                    icon={<BookOutlined />}
+                    style={{ borderRadius: 6, fontWeight: 600 }}
+                  >
                     {item.className}
                   </Tag>
                 )}

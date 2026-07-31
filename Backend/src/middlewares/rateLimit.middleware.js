@@ -10,7 +10,13 @@
  * @param {string} options.code - Mã lỗi trả về khi vượt hạn mức.
  * @param {string} options.message - Thông báo lỗi trả về khi vượt hạn mức.
  */
-export const createRateLimiter = ({ windowMs, max, keyGenerator, code = "RATE_LIMIT_EXCEEDED", message }) => {
+export const createRateLimiter = ({
+  windowMs,
+  max,
+  keyGenerator,
+  code = "RATE_LIMIT_EXCEEDED",
+  message,
+}) => {
   const hits = new Map();
 
   // Dọn dẹp định kỳ các entry đã hết hạn để tránh rò rỉ bộ nhớ.

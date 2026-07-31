@@ -13,13 +13,20 @@ export const NotificationStatusBadge: React.FC<NotificationStatusBadgeProps> = R
     return (
       <Space size={6} align="center">
         {priority === "high" && (
-          <Tag color="volcano" icon={<FireOutlined />} style={{ borderRadius: 6, fontWeight: 700, margin: 0 }}>
+          <Tag
+            color="volcano"
+            icon={<FireOutlined />}
+            style={{ borderRadius: 6, fontWeight: 700, margin: 0 }}
+          >
             🔥 Important
           </Tag>
         )}
 
         {!isRead && (
-          <Badge status="processing" text={<span style={{ fontSize: 11, color: "#1890ff", fontWeight: 700 }}>Mới</span>} />
+          <Badge
+            status="processing"
+            text={<span style={{ fontSize: 11, color: "#1890ff", fontWeight: 700 }}>Mới</span>}
+          />
         )}
       </Space>
     );

@@ -1,7 +1,10 @@
 // Port từ src/scripts/runExamSetAccessMiddlewareTests.js (characterization test).
 // Nhóm: A. VIEW access (10) | B. EDIT access (5) | C. Integrity (8) | D. Request context (6) | E. Route integration (9)
 import { describe, it, expect, afterEach, vi } from "vitest";
-import { requireExamSetAccess, requireExamSetEditAccess } from "../../src/middlewares/examSetAccess.middleware.js";
+import {
+  requireExamSetAccess,
+  requireExamSetEditAccess,
+} from "../../src/middlewares/examSetAccess.middleware.js";
 import ExamSet from "../../src/models/examSet.model.js";
 import ExamSetShare from "../../src/models/examSetShare.model.js";
 
@@ -31,8 +34,15 @@ const makeShare = (props = {}) => ({
 });
 
 const makeReq = (opts = {}) => ({
-  user: opts.user !== undefined ? opts.user : { id: opts.userId || SHARED_USER_ID, role: opts.role || "Teacher" },
-  params: { id: opts.paramId || VALID_EXAM_SET_ID, examSetId: opts.paramExamSetId || undefined, ...opts.params },
+  user:
+    opts.user !== undefined
+      ? opts.user
+      : { id: opts.userId || SHARED_USER_ID, role: opts.role || "Teacher" },
+  params: {
+    id: opts.paramId || VALID_EXAM_SET_ID,
+    examSetId: opts.paramExamSetId || undefined,
+    ...opts.params,
+  },
 });
 
 const makeRes = () => {
@@ -59,8 +69,10 @@ const runMiddleware = async (permission, reqOpts = {}, options = {}) => {
   return { status: res._status, body: res._body, nextCalled, req };
 };
 
-const mockExamSet = (doc) => vi.spyOn(ExamSet, "findOne").mockImplementation(() => Promise.resolve(doc));
-const mockShare = (doc) => vi.spyOn(ExamSetShare, "findOne").mockImplementation(() => Promise.resolve(doc));
+const mockExamSet = (doc) =>
+  vi.spyOn(ExamSet, "findOne").mockImplementation(() => Promise.resolve(doc));
+const mockShare = (doc) =>
+  vi.spyOn(ExamSetShare, "findOne").mockImplementation(() => Promise.resolve(doc));
 const setup = (examSetDoc, shareDoc) => {
   mockExamSet(examSetDoc);
   mockShare(shareDoc);
@@ -97,14 +109,20 @@ describe("requireExamSetAccess — A. VIEW access", () => {
 
   it("A5. User không share bị 403", async () => {
     setup(makeExamSet(), null);
-    const { status, nextCalled } = await runMiddleware("VIEW", { userId: OTHER_USER_ID, role: "Teacher" });
+    const { status, nextCalled } = await runMiddleware("VIEW", {
+      userId: OTHER_USER_ID,
+      role: "Teacher",
+    });
     expect(nextCalled).toBe(false);
     expect(status).toBe(403);
   });
 
   it("A6. REVOKED share bị 403", async () => {
     setup(makeExamSet(), null);
-    const { status, nextCalled } = await runMiddleware("VIEW", { userId: SHARED_USER_ID, role: "Teacher" });
+    const { status, nextCalled } = await runMiddleware("VIEW", {
+      userId: SHARED_USER_ID,
+      role: "Teacher",
+    });
     expect(nextCalled).toBe(false);
     expect(status).toBe(403);
   });
@@ -156,14 +174,20 @@ describe("requireExamSetAccess — B. EDIT access", () => {
 
   it("B4. Shared VIEW truy cập EDIT bị 403", async () => {
     setup(makeExamSet(), makeShare({ permission: "VIEW" }));
-    const { status, nextCalled } = await runMiddleware("EDIT", { userId: SHARED_USER_ID, role: "Teacher" });
+    const { status, nextCalled } = await runMiddleware("EDIT", {
+      userId: SHARED_USER_ID,
+      role: "Teacher",
+    });
     expect(nextCalled).toBe(false);
     expect(status).toBe(403);
   });
 
   it("B5. User không share bị 403 (EDIT)", async () => {
     setup(makeExamSet(), null);
-    const { status, nextCalled } = await runMiddleware("EDIT", { userId: OTHER_USER_ID, role: "Teacher" });
+    const { status, nextCalled } = await runMiddleware("EDIT", {
+      userId: OTHER_USER_ID,
+      role: "Teacher",
+    });
     expect(nextCalled).toBe(false);
     expect(status).toBe(403);
   });
@@ -184,7 +208,10 @@ describe("requireExamSetAccess — C. Integrity", () => {
 
   it("C3. ExamSet không tồn tại trả 404", async () => {
     mockExamSet(null);
-    const { status, nextCalled } = await runMiddleware("VIEW", { userId: SHARED_USER_ID, role: "Teacher" });
+    const { status, nextCalled } = await runMiddleware("VIEW", {
+      userId: SHARED_USER_ID,
+      role: "Teacher",
+    });
     expect(nextCalled).toBe(false);
     expect(status).toBe(404);
   });
@@ -251,7 +278,10 @@ describe("requireExamSetAccess — D. Request context", () => {
 
   it("D2. Admin context: accessType=ADMIN, permission=EDIT, shareId=null", async () => {
     setup(makeExamSet(), null);
-    const { req, nextCalled } = await runMiddleware("VIEW", { userId: OTHER_USER_ID, role: "Admin" });
+    const { req, nextCalled } = await runMiddleware("VIEW", {
+      userId: OTHER_USER_ID,
+      role: "Admin",
+    });
     expect(nextCalled).toBe(true);
     expect(req.examSetAccess.accessType).toBe("ADMIN");
     expect(req.examSetAccess.permission).toBe("EDIT");
@@ -260,7 +290,10 @@ describe("requireExamSetAccess — D. Request context", () => {
 
   it("D3. Shared VIEW context: accessType=SHARED, permission=VIEW, shareId set", async () => {
     setup(makeExamSet(), makeShare({ permission: "VIEW", _id: SHARE_ID }));
-    const { req, nextCalled } = await runMiddleware("VIEW", { userId: SHARED_USER_ID, role: "Teacher" });
+    const { req, nextCalled } = await runMiddleware("VIEW", {
+      userId: SHARED_USER_ID,
+      role: "Teacher",
+    });
     expect(nextCalled).toBe(true);
     expect(req.examSetAccess.accessType).toBe("SHARED");
     expect(req.examSetAccess.permission).toBe("VIEW");
@@ -269,7 +302,10 @@ describe("requireExamSetAccess — D. Request context", () => {
 
   it("D4. Shared EDIT context: accessType=SHARED, permission=EDIT, shareId set", async () => {
     setup(makeExamSet(), makeShare({ permission: "EDIT", _id: SHARE_ID }));
-    const { req, nextCalled } = await runMiddleware("EDIT", { userId: SHARED_USER_ID, role: "Teacher" });
+    const { req, nextCalled } = await runMiddleware("EDIT", {
+      userId: SHARED_USER_ID,
+      role: "Teacher",
+    });
     expect(nextCalled).toBe(true);
     expect(req.examSetAccess.accessType).toBe("SHARED");
     expect(req.examSetAccess.permission).toBe("EDIT");
@@ -294,7 +330,10 @@ describe("requireExamSetAccess — D. Request context", () => {
     expect(adminReq.examSetAccess.shareId).toBe(null);
 
     setup(makeExamSet(), makeShare({ _id: SHARE_ID }));
-    const { req: sharedReq } = await runMiddleware("VIEW", { userId: SHARED_USER_ID, role: "Teacher" });
+    const { req: sharedReq } = await runMiddleware("VIEW", {
+      userId: SHARED_USER_ID,
+      role: "Teacher",
+    });
     expect(sharedReq.examSetAccess.shareId).not.toBe(null);
   });
 });
@@ -308,7 +347,10 @@ describe("requireExamSetAccess — E. Route integration", () => {
 
   it("E2. Shared VIEW gọi update (EDIT route) → 403", async () => {
     setup(makeExamSet(), makeShare({ permission: "VIEW" }));
-    const { status, nextCalled } = await runMiddleware("EDIT", { userId: SHARED_USER_ID, role: "Teacher" });
+    const { status, nextCalled } = await runMiddleware("EDIT", {
+      userId: SHARED_USER_ID,
+      role: "Teacher",
+    });
     expect(nextCalled).toBe(false);
     expect(status).toBe(403);
   });
@@ -327,7 +369,10 @@ describe("requireExamSetAccess — E. Route integration", () => {
 
   it("E5. Shared VIEW tạo Question (EDIT route) → 403", async () => {
     setup(makeExamSet(), makeShare({ permission: "VIEW" }));
-    const { status, nextCalled } = await runMiddleware("EDIT", { userId: SHARED_USER_ID, role: "Teacher" });
+    const { status, nextCalled } = await runMiddleware("EDIT", {
+      userId: SHARED_USER_ID,
+      role: "Teacher",
+    });
     expect(nextCalled).toBe(false);
     expect(status).toBe(403);
   });
@@ -335,7 +380,10 @@ describe("requireExamSetAccess — E. Route integration", () => {
   it("E6. requireExamSetAccess hỗ trợ param :examSetId (sub-resource routes)", async () => {
     setup(makeExamSet(), makeShare({ permission: "EDIT" }));
     const middleware = requireExamSetAccess("EDIT");
-    const req = { user: { id: SHARED_USER_ID, role: "Teacher" }, params: { examSetId: VALID_EXAM_SET_ID } };
+    const req = {
+      user: { id: SHARED_USER_ID, role: "Teacher" },
+      params: { examSetId: VALID_EXAM_SET_ID },
+    };
     const res = makeRes();
     let nextCalled = false;
     await middleware(req, res, () => {
@@ -347,7 +395,10 @@ describe("requireExamSetAccess — E. Route integration", () => {
   it("E7. requireExamSetAccess hỗ trợ option paramName custom", async () => {
     setup(makeExamSet(), makeShare({ permission: "VIEW" }));
     const middleware = requireExamSetAccess("VIEW", { paramName: "setId" });
-    const req = { user: { id: SHARED_USER_ID, role: "Teacher" }, params: { setId: VALID_EXAM_SET_ID } };
+    const req = {
+      user: { id: SHARED_USER_ID, role: "Teacher" },
+      params: { setId: VALID_EXAM_SET_ID },
+    };
     const res = makeRes();
     let nextCalled = false;
     await middleware(req, res, () => {

@@ -50,7 +50,15 @@ export const TeacherWelcomeHeader: React.FC<TeacherWelcomeHeaderProps> = React.m
         }}
         styles={{ body: { padding: "24px 32px" } }}
       >
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 16 }}>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            flexWrap: "wrap",
+            gap: 16,
+          }}
+        >
           <Space size={20} align="center">
             <Avatar
               size={64}
@@ -68,11 +76,22 @@ export const TeacherWelcomeHeader: React.FC<TeacherWelcomeHeaderProps> = React.m
                 <Title level={3} style={{ color: "#fff", margin: 0, fontWeight: 700 }}>
                   {greetingText}, {fullName}!
                 </Title>
-                <Tag color="cyan" icon={<CheckCircleOutlined />} style={{ borderRadius: 12, fontWeight: 600 }}>
+                <Tag
+                  color="cyan"
+                  icon={<CheckCircleOutlined />}
+                  style={{ borderRadius: 12, fontWeight: 600 }}
+                >
                   Giảng viên
                 </Tag>
               </Space>
-              <div style={{ display: "flex", alignItems: "center", gap: 16, color: "rgba(255, 255, 255, 0.85)" }}>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 16,
+                  color: "rgba(255, 255, 255, 0.85)",
+                }}
+              >
                 {email && <Text style={{ color: "rgba(255,255,255,0.85)" }}>{email}</Text>}
                 <Space size={6}>
                   <CalendarOutlined />

@@ -31,7 +31,13 @@ const createShare = (props = {}) => ({
 });
 
 const mockFindChain = (result) => ({
-  sort: () => ({ skip: () => ({ limit: () => ({ populate: () => ({ populate: () => ({ populate: () => Promise.resolve(result) }) }) }) }) }),
+  sort: () => ({
+    skip: () => ({
+      limit: () => ({
+        populate: () => ({ populate: () => ({ populate: () => Promise.resolve(result) }) }),
+      }),
+    }),
+  }),
 });
 
 afterEach(() => {
@@ -45,22 +51,41 @@ describe("listExamSetSharesService", () => {
     vi.spyOn(ExamSetShare, "countDocuments").mockImplementation(() => Promise.resolve(1));
     vi.spyOn(User, "find").mockImplementation(() => Promise.resolve([]));
 
-    const result = await listExamSetSharesService("607f1f77bcf86cd799439111", "507f1f77bcf86cd799439011", "Teacher", { page: 1, limit: 10 });
+    const result = await listExamSetSharesService(
+      "607f1f77bcf86cd799439111",
+      "507f1f77bcf86cd799439011",
+      "Teacher",
+      { page: 1, limit: 10 }
+    );
     expect(result.items.length).toBe(1);
     expect(result.pagination.totalItems).toBe(1);
   });
 
   it("Admin retrieves shares successfully", async () => {
-    vi.spyOn(ExamSet, "findOne").mockImplementation(() => Promise.resolve(createExamSet({ ownerId: "some-owner" })));
+    vi.spyOn(ExamSet, "findOne").mockImplementation(() =>
+      Promise.resolve(createExamSet({ ownerId: "some-owner" }))
+    );
     vi.spyOn(ExamSetShare, "find").mockImplementation(() =>
       mockFindChain([
-        createShare({ sharedWithUserId: { _id: "607f1f77bcf86cd799439222", fullName: "B", email: "b@example.com", role: "Teacher", avatar: "", status: "Active" } }),
+        createShare({
+          sharedWithUserId: {
+            _id: "607f1f77bcf86cd799439222",
+            fullName: "B",
+            email: "b@example.com",
+            role: "Teacher",
+            avatar: "",
+            status: "Active",
+          },
+        }),
       ])
     );
     vi.spyOn(ExamSetShare, "countDocuments").mockImplementation(() => Promise.resolve(1));
     vi.spyOn(User, "find").mockImplementation(() => Promise.resolve([]));
 
-    const result = await listExamSetSharesService("607f1f77bcf86cd799439111", "admin-id", "Admin", { page: 1, limit: 10 });
+    const result = await listExamSetSharesService("607f1f77bcf86cd799439111", "admin-id", "Admin", {
+      page: 1,
+      limit: 10,
+    });
     expect(result.items[0].sharedWithUser.email).toBe("b@example.com");
   });
 
@@ -69,13 +94,25 @@ describe("listExamSetSharesService", () => {
     const expired = createShare({
       status: "ACTIVE",
       expiresAt: new Date(Date.now() - 1000),
-      sharedWithUserId: { _id: "607f1f77bcf86cd799439222", fullName: "C", email: "c@example.com", role: "Teacher", avatar: "", status: "Active" },
+      sharedWithUserId: {
+        _id: "607f1f77bcf86cd799439222",
+        fullName: "C",
+        email: "c@example.com",
+        role: "Teacher",
+        avatar: "",
+        status: "Active",
+      },
     });
     vi.spyOn(ExamSetShare, "find").mockImplementation(() => mockFindChain([expired]));
     vi.spyOn(ExamSetShare, "countDocuments").mockImplementation(() => Promise.resolve(1));
     vi.spyOn(User, "find").mockImplementation(() => Promise.resolve([]));
 
-    const result = await listExamSetSharesService("607f1f77bcf86cd799439111", "507f1f77bcf86cd799439011", "Teacher", { page: 1, limit: 10 });
+    const result = await listExamSetSharesService(
+      "607f1f77bcf86cd799439111",
+      "507f1f77bcf86cd799439011",
+      "Teacher",
+      { page: 1, limit: 10 }
+    );
     expect(result.items[0].status).toBe("ACTIVE");
     expect(result.items[0].effectiveStatus).toBe("EXPIRED");
   });
@@ -89,7 +126,12 @@ describe("listExamSetSharesService", () => {
     vi.spyOn(ExamSetShare, "countDocuments").mockImplementation(() => Promise.resolve(0));
     vi.spyOn(User, "find").mockImplementation(() => Promise.resolve([]));
 
-    const result = await listExamSetSharesService("607f1f77bcf86cd799439111", "507f1f77bcf86cd799439011", "Teacher", { page: 1, limit: 10, permission: "EDIT" });
+    const result = await listExamSetSharesService(
+      "607f1f77bcf86cd799439111",
+      "507f1f77bcf86cd799439011",
+      "Teacher",
+      { page: 1, limit: 10, permission: "EDIT" }
+    );
     expect(result.pagination.totalItems).toBe(0);
   });
 
@@ -102,38 +144,60 @@ describe("listExamSetSharesService", () => {
     vi.spyOn(ExamSetShare, "countDocuments").mockImplementation(() => Promise.resolve(0));
     vi.spyOn(User, "find").mockImplementation(() => Promise.resolve([]));
 
-    const result = await listExamSetSharesService("607f1f77bcf86cd799439111", "507f1f77bcf86cd799439011", "Teacher", { page: 1, limit: 10, status: "REVOKED" });
+    const result = await listExamSetSharesService(
+      "607f1f77bcf86cd799439111",
+      "507f1f77bcf86cd799439011",
+      "Teacher",
+      { page: 1, limit: 10, status: "REVOKED" }
+    );
     expect(result.pagination.totalItems).toBe(0);
   });
 
   it("Search filters by user email and name", async () => {
     vi.spyOn(ExamSet, "findOne").mockImplementation(() => Promise.resolve(createExamSet()));
-    vi.spyOn(User, "find").mockImplementation(() => ({ select: () => Promise.resolve([{ _id: "607f1f77bcf86cd799439222" }]) }));
+    vi.spyOn(User, "find").mockImplementation(() => ({
+      select: () => Promise.resolve([{ _id: "607f1f77bcf86cd799439222" }]),
+    }));
     vi.spyOn(ExamSetShare, "find").mockImplementation((filter) => {
       expect(filter.sharedWithUserId).toEqual({ $in: ["607f1f77bcf86cd799439222"] });
       return mockFindChain([]);
     });
     vi.spyOn(ExamSetShare, "countDocuments").mockImplementation(() => Promise.resolve(0));
 
-    const result = await listExamSetSharesService("607f1f77bcf86cd799439111", "507f1f77bcf86cd799439011", "Teacher", { page: 1, limit: 10, search: "a@example.com" });
+    const result = await listExamSetSharesService(
+      "607f1f77bcf86cd799439111",
+      "507f1f77bcf86cd799439011",
+      "Teacher",
+      { page: 1, limit: 10, search: "a@example.com" }
+    );
     expect(result.pagination.totalItems).toBe(0);
   });
 
   it("Teacher not owner gets 403", async () => {
-    vi.spyOn(ExamSet, "findOne").mockImplementation(() => Promise.resolve(createExamSet({ ownerId: "507f1f77bcf86cd799439013" })));
+    vi.spyOn(ExamSet, "findOne").mockImplementation(() =>
+      Promise.resolve(createExamSet({ ownerId: "507f1f77bcf86cd799439013" }))
+    );
     vi.spyOn(User, "find").mockImplementation(() => Promise.resolve([]));
 
     await expect(
-      listExamSetSharesService("607f1f77bcf86cd799439111", "507f1f77bcf86cd799439011", "Teacher", { page: 1, limit: 10 })
+      listExamSetSharesService("607f1f77bcf86cd799439111", "507f1f77bcf86cd799439011", "Teacher", {
+        page: 1,
+        limit: 10,
+      })
     ).rejects.toMatchObject({ status: 403 });
   });
 
   it("Student gets 403", async () => {
-    vi.spyOn(ExamSet, "findOne").mockImplementation(() => Promise.resolve(createExamSet({ ownerId: "507f1f77bcf86cd799439013" })));
+    vi.spyOn(ExamSet, "findOne").mockImplementation(() =>
+      Promise.resolve(createExamSet({ ownerId: "507f1f77bcf86cd799439013" }))
+    );
     vi.spyOn(User, "find").mockImplementation(() => Promise.resolve([]));
 
     await expect(
-      listExamSetSharesService("607f1f77bcf86cd799439111", "507f1f77bcf86cd799439011", "Student", { page: 1, limit: 10 })
+      listExamSetSharesService("607f1f77bcf86cd799439111", "507f1f77bcf86cd799439011", "Student", {
+        page: 1,
+        limit: 10,
+      })
     ).rejects.toMatchObject({ status: 403 });
   });
 
@@ -142,7 +206,10 @@ describe("listExamSetSharesService", () => {
     vi.spyOn(User, "find").mockImplementation(() => Promise.resolve([]));
 
     await expect(
-      listExamSetSharesService("607f1f77bcf86cd799439999", "507f1f77bcf86cd799439011", "Admin", { page: 1, limit: 10 })
+      listExamSetSharesService("607f1f77bcf86cd799439999", "507f1f77bcf86cd799439011", "Admin", {
+        page: 1,
+        limit: 10,
+      })
     ).rejects.toMatchObject({ status: 404 });
   });
 });

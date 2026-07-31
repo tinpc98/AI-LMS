@@ -81,7 +81,9 @@ const TeacherAssignmentPage = () => {
         courses={courses}
         allClasses={allClasses}
         teachingLoadMap={teachingLoadMap}
-        onAssign={async (c, t) => { handleAssign(c, t); }}
+        onAssign={async (c, t) => {
+          handleAssign(c, t);
+        }}
         onCancel={() => setAssignModalOpen(false)}
       />
 
@@ -92,7 +94,9 @@ const TeacherAssignmentPage = () => {
         courses={courses}
         allClasses={allClasses}
         teachingLoadMap={teachingLoadMap}
-        onChange={async (c, t) => { handleChange(c, t); }}
+        onChange={async (c, t) => {
+          handleChange(c, t);
+        }}
         onCancel={() => setChangeModalOpen(false)}
       />
 
@@ -100,7 +104,9 @@ const TeacherAssignmentPage = () => {
         open={removeModalOpen}
         classRecord={selectedClass}
         teacher={selectedTeacher}
-        onConfirm={async () => { handleRemove(); }}
+        onConfirm={async () => {
+          handleRemove();
+        }}
         onCancel={() => setRemoveModalOpen(false)}
         loading={actionLoading}
       />

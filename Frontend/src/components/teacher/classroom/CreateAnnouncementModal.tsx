@@ -71,7 +71,10 @@ export const CreateAnnouncementModal: React.FC<CreateAnnouncementModalProps> = R
             label="Tiêu đề thông báo"
             rules={[{ required: true, message: "Vui lòng nhập tiêu đề thông báo!" }]}
           >
-            <Input placeholder="Ví dụ: Thông báo đổi lịch học tuần tới / Nhắc nhở nộp bài tập" maxLength={150} />
+            <Input
+              placeholder="Ví dụ: Thông báo đổi lịch học tuần tới / Nhắc nhở nộp bài tập"
+              maxLength={150}
+            />
           </Form.Item>
 
           <Form.Item
@@ -79,12 +82,20 @@ export const CreateAnnouncementModal: React.FC<CreateAnnouncementModalProps> = R
             label="Nội dung chi tiết thông báo"
             rules={[{ required: true, message: "Vui lòng nhập nội dung thông báo!" }]}
           >
-            <Input.TextArea rows={5} placeholder="Soạn nội dung thông báo gửi đến toàn thể học sinh trong lớp..." />
+            <Input.TextArea
+              rows={5}
+              placeholder="Soạn nội dung thông báo gửi đến toàn thể học sinh trong lớp..."
+            />
           </Form.Item>
 
           <div style={{ display: "flex", justifyContent: "flex-end", gap: 12, marginTop: 24 }}>
             <Button onClick={onClose}>Hủy</Button>
-            <Button type="primary" htmlType="submit" loading={submitting} icon={<CheckCircleOutlined />}>
+            <Button
+              type="primary"
+              htmlType="submit"
+              loading={submitting}
+              icon={<CheckCircleOutlined />}
+            >
               Đăng thông báo
             </Button>
           </div>

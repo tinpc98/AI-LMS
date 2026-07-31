@@ -19,7 +19,7 @@ export const classService = {
     const params: Record<string, any> = { ...filters };
     if (params.learningMode === "All") delete params.learningMode;
     if (params.status === "All") delete params.status;
-    
+
     const endpoint = isTrash ? "/api/classes/trash" : "/api/classes";
     const res = await axiosClient.get<ApiResponse<any[]>>(endpoint, { params });
     return {

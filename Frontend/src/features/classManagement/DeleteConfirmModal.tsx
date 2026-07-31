@@ -9,8 +9,16 @@ interface DeleteConfirmModalProps {
 
 const DeleteConfirmModal = ({ open, className, onConfirm, onCancel }: DeleteConfirmModalProps) => {
   return (
-    <Modal open={open} title="Delete Class" okText="Delete" okType="danger" onOk={onConfirm} onCancel={onCancel}>
-      Are you sure you want to delete <strong>{className || "this class"}</strong>? This action cannot be undone.
+    <Modal
+      open={open}
+      title="Delete Class"
+      okText="Delete"
+      okType="danger"
+      onOk={onConfirm}
+      onCancel={onCancel}
+    >
+      Are you sure you want to delete <strong>{className || "this class"}</strong>? This action
+      cannot be undone.
     </Modal>
   );
 };

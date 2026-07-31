@@ -11,7 +11,9 @@ const runTests = () => {
       console.log(`✅ PASS: ${testName}`);
       passed++;
     } else {
-      console.error(`❌ FAIL: ${testName} - Expected: ${JSON.stringify(expected)}, Actual: ${JSON.stringify(actual)}`);
+      console.error(
+        `❌ FAIL: ${testName} - Expected: ${JSON.stringify(expected)}, Actual: ${JSON.stringify(actual)}`
+      );
       failed++;
     }
   };

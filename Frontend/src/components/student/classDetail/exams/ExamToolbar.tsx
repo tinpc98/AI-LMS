@@ -15,14 +15,7 @@ interface ExamToolbarProps {
 }
 
 export const ExamToolbar: React.FC<ExamToolbarProps> = React.memo(
-  ({
-    searchQuery,
-    statusFilter,
-    sortBy,
-    onSearchChange,
-    onStatusFilterChange,
-    onSortChange,
-  }) => {
+  ({ searchQuery, statusFilter, sortBy, onSearchChange, onStatusFilterChange, onSortChange }) => {
     return (
       <div
         style={{

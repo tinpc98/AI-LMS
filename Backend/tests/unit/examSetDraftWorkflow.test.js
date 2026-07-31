@@ -4,7 +4,13 @@ import ExamSet from "../../src/models/examSet.model.js";
 import { requireExamSetDraftAccess } from "../../src/middlewares/examSetAccess.middleware.js";
 import { saveDraftExamSetService } from "../../src/services/examSet.service.js";
 
-const createReq = (overrides = {}) => ({ headers: {}, params: {}, body: {}, user: null, ...overrides });
+const createReq = (overrides = {}) => ({
+  headers: {},
+  params: {},
+  body: {},
+  user: null,
+  ...overrides,
+});
 
 const createRes = () => {
   const res = {};
@@ -57,7 +63,10 @@ describe("ExamSet draft workflow", () => {
     const examSet = { _id: "507f1f77bcf86cd799439022", ownerId: "owner-1", isDeleted: false };
     vi.spyOn(ExamSet, "findOne").mockImplementation(async () => examSet);
 
-    const req = createReq({ params: { examSetId: examSet._id }, user: { id: "student-1", role: "Student" } });
+    const req = createReq({
+      params: { examSetId: examSet._id },
+      user: { id: "student-1", role: "Student" },
+    });
     const res = createRes();
 
     let nextCalled = false;

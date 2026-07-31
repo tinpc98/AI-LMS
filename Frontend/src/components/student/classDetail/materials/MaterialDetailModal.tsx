@@ -1,6 +1,11 @@
 import React from "react";
 import { Modal, Descriptions, Tag, Button, Typography, Space } from "antd";
-import { InfoCircleOutlined, DownloadOutlined, CopyOutlined, UserOutlined } from "@ant-design/icons";
+import {
+  InfoCircleOutlined,
+  DownloadOutlined,
+  CopyOutlined,
+  UserOutlined,
+} from "@ant-design/icons";
 import type { ILearningMaterial } from "../../../../types/learningMaterial";
 import { getMaterialTypeMeta } from "./MaterialCard";
 
@@ -65,7 +70,12 @@ export const MaterialDetailModal: React.FC<MaterialDetailModalProps> = React.mem
         centered
       >
         <div style={{ padding: "12px 0" }}>
-          <Descriptions bordered column={1} size="small" styles={{ label: { width: "30%", fontWeight: 600 } }}>
+          <Descriptions
+            bordered
+            column={1}
+            size="small"
+            styles={{ label: { width: "30%", fontWeight: 600 } }}
+          >
             <Descriptions.Item label="Tên tài liệu">
               <Text strong style={{ color: "#1f2937" }}>
                 {item.title}

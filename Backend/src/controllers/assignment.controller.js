@@ -8,11 +8,18 @@ const assignmentController = {
   // 1. Tạo bài tập mới
   createAssignment: async (req, res) => {
     try {
-      const { title, description, deadline, classId, lessonId, isAIGenerated, aiPromptUsed } = req.body;
+      const { title, description, deadline, classId, lessonId, isAIGenerated, aiPromptUsed } =
+        req.body;
       const teacherId = req.user.id || req.user._id;
 
       const newAssignment = await assignmentService.createAssignmentService({
-        title, description, deadline, classId, lessonId, isAIGenerated, aiPromptUsed,
+        title,
+        description,
+        deadline,
+        classId,
+        lessonId,
+        isAIGenerated,
+        aiPromptUsed,
         files: req.files,
         teacherId,
         teacherRole: req.user?.role,
@@ -20,7 +27,11 @@ const assignmentController = {
 
       return res
         .status(201)
-        .json({ message: "Tạo bài tập thành công", assignment: newAssignment, data: newAssignment });
+        .json({
+          message: "Tạo bài tập thành công",
+          assignment: newAssignment,
+          data: newAssignment,
+        });
     } catch (error) {
       return res
         .status(error.status || 500)
@@ -36,7 +47,12 @@ const assignmentController = {
       const userId = req.user.id || req.user._id;
 
       const submission = await assignmentService.gradeSubmissionService({
-        submissionId, grade, feedback, aiFeedback, userId, userRole: req.user?.role,
+        submissionId,
+        grade,
+        feedback,
+        aiFeedback,
+        userId,
+        userRole: req.user?.role,
       });
 
       return res
@@ -57,15 +73,23 @@ const assignmentController = {
       const userId = req.user.id || req.user._id;
 
       const assignment = await assignmentService.updateAssignmentService({
-        id, title, description, deadline, lessonId,
+        id,
+        title,
+        description,
+        deadline,
+        lessonId,
         files: req.files,
         userId,
         userRole: req.user?.role,
       });
 
-      return res.status(200).json({ message: "Cập nhật bài tập thành công", assignment, data: assignment });
+      return res
+        .status(200)
+        .json({ message: "Cập nhật bài tập thành công", assignment, data: assignment });
     } catch (error) {
-      return res.status(error.status || 500).json({ message: error.message || "Lỗi server khi cập nhật bài tập" });
+      return res
+        .status(error.status || 500)
+        .json({ message: error.message || "Lỗi server khi cập nhật bài tập" });
     }
   },
 
@@ -78,7 +102,9 @@ const assignmentController = {
       await assignmentService.deleteAssignmentService({ id, userId, userRole: req.user?.role });
       return res.status(200).json({ message: "Xóa bài tập thành công" });
     } catch (error) {
-      return res.status(error.status || 500).json({ message: error.message || "Lỗi server khi xóa bài tập" });
+      return res
+        .status(error.status || 500)
+        .json({ message: error.message || "Lỗi server khi xóa bài tập" });
     }
   },
 
@@ -93,7 +119,9 @@ const assignmentController = {
       const assignment = await assignmentService.getAssignmentByIdService(id);
       return res.status(200).json({ assignment, data: assignment });
     } catch (error) {
-      return res.status(error.status || 500).json({ message: error.message || "Lỗi server khi lấy chi tiết bài tập" });
+      return res
+        .status(error.status || 500)
+        .json({ message: error.message || "Lỗi server khi lấy chi tiết bài tập" });
     }
   },
 
@@ -103,7 +131,11 @@ const assignmentController = {
       const { classId } = req.params;
       const { page, limit } = req.query;
 
-      const { assignments, pagination } = await assignmentService.getAssignmentsByClassService({ classId, page, limit });
+      const { assignments, pagination } = await assignmentService.getAssignmentsByClassService({
+        classId,
+        page,
+        limit,
+      });
 
       const responseBody = { assignments, data: assignments }; // Backward compatible
       if (pagination) responseBody.pagination = pagination;
@@ -122,9 +154,15 @@ const assignmentController = {
       const { page, limit } = req.query;
       const userId = req.user.id || req.user._id;
 
-      const { submissions, pagination } = await assignmentService.getSubmissionsByAssignmentService({
-        assignmentId, page, limit, userId, userRole: req.user?.role,
-      });
+      const { submissions, pagination } = await assignmentService.getSubmissionsByAssignmentService(
+        {
+          assignmentId,
+          page,
+          limit,
+          userId,
+          userRole: req.user?.role,
+        }
+      );
 
       const responseBody = { submissions, data: submissions };
       if (pagination) responseBody.pagination = pagination;
@@ -140,7 +178,9 @@ const assignmentController = {
   getSubmissionById: async (req, res) => {
     try {
       // req.submission đã được gán bởi middleware canViewSubmission
-      return res.status(200).json({ success: true, submission: req.submission, data: req.submission });
+      return res
+        .status(200)
+        .json({ success: true, submission: req.submission, data: req.submission });
     } catch (error) {
       return res.status(500).json({ message: error.message || "Lỗi server khi lấy bài nộp" });
     }
@@ -156,7 +196,10 @@ const assignmentController = {
       }
       const studentId = req.user.id || req.user._id;
 
-      const submission = await assignmentService.getMySubmissionService({ assignmentId, studentId });
+      const submission = await assignmentService.getMySubmissionService({
+        assignmentId,
+        studentId,
+      });
       return res.status(200).json({ success: true, submission, data: submission });
     } catch (error) {
       return res
@@ -173,13 +216,20 @@ const assignmentController = {
       const studentId = req.user.id || req.user._id;
 
       const { submission, isNew } = await assignmentService.submitAssignmentService({
-        assignmentId, content, files: req.files, studentId,
+        assignmentId,
+        content,
+        files: req.files,
+        studentId,
       });
 
       if (isNew) {
-        return res.status(201).json({ message: "Nộp bài tập thành công", submission, data: submission });
+        return res
+          .status(201)
+          .json({ message: "Nộp bài tập thành công", submission, data: submission });
       }
-      return res.status(200).json({ message: "Nộp lại bài tập thành công", submission, data: submission });
+      return res
+        .status(200)
+        .json({ message: "Nộp lại bài tập thành công", submission, data: submission });
     } catch (error) {
       return res
         .status(error.status || 500)
@@ -193,7 +243,10 @@ const assignmentController = {
       const { assignmentId } = req.params;
       const studentId = req.user.id || req.user._id;
 
-      const submission = await assignmentService.cancelSubmissionService({ assignmentId, studentId });
+      const submission = await assignmentService.cancelSubmissionService({
+        assignmentId,
+        studentId,
+      });
 
       return res.status(200).json({
         success: true,

@@ -53,7 +53,9 @@ export const ClassDiscussionTab: React.FC = React.memo(() => {
             return (
               <div key={msg.id} className="flex items-center justify-center my-2">
                 <div className="bg-surface-container-highest border border-primary/20 px-4 py-1.5 rounded-full text-xs flex items-center space-x-2 text-primary">
-                  <span className="material-symbols-outlined text-sm animate-pulse">auto_awesome</span>
+                  <span className="material-symbols-outlined text-sm animate-pulse">
+                    auto_awesome
+                  </span>
                   <span>{msg.text}</span>
                 </div>
               </div>
@@ -74,8 +76,8 @@ export const ClassDiscussionTab: React.FC = React.memo(() => {
                   msg.isTeacher
                     ? "bg-primary text-on-primary"
                     : isUser
-                    ? "bg-primary-container text-on-primary-container"
-                    : "bg-gray-300 text-gray-700"
+                      ? "bg-primary-container text-on-primary-container"
+                      : "bg-gray-300 text-gray-700"
                 }`}
               >
                 {msg.avatar}
@@ -96,8 +98,8 @@ export const ClassDiscussionTab: React.FC = React.memo(() => {
                     isUser
                       ? "bg-primary text-on-primary rounded-tr-none shadow-sm"
                       : msg.isTeacher
-                      ? "bg-primary-container/10 border border-primary/10 rounded-tl-none"
-                      : "bg-white rounded-tl-none shadow-sm"
+                        ? "bg-primary-container/10 border border-primary/10 rounded-tl-none"
+                        : "bg-white rounded-tl-none shadow-sm"
                   }`}
                 >
                   {msg.text}

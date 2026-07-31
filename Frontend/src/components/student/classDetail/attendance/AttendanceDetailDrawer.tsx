@@ -1,6 +1,11 @@
 import React from "react";
 import { Drawer, Button, Typography, Space, Descriptions, Divider } from "antd";
-import { CalendarOutlined, ClockCircleOutlined, UserOutlined, CommentOutlined } from "@ant-design/icons";
+import {
+  CalendarOutlined,
+  ClockCircleOutlined,
+  UserOutlined,
+  CommentOutlined,
+} from "@ant-design/icons";
 import AttendanceStatusTag from "./AttendanceStatusTag";
 import type { IExtendedAttendanceRecord } from "../../../../types/studentAttendance";
 
@@ -78,7 +83,8 @@ export const AttendanceDetailDrawer: React.FC<AttendanceDetailDrawerProps> = Rea
             </div>
 
             <Text type="secondary" style={{ fontSize: 12 }}>
-              <ClockCircleOutlined style={{ marginRight: 4 }} /> {item.sessionTime || "08:00 - 10:30"}
+              <ClockCircleOutlined style={{ marginRight: 4 }} />{" "}
+              {item.sessionTime || "08:00 - 10:30"}
             </Text>
           </div>
 
@@ -94,7 +100,9 @@ export const AttendanceDetailDrawer: React.FC<AttendanceDetailDrawerProps> = Rea
 
             <Descriptions.Item label="Ngày học">{formattedDate}</Descriptions.Item>
 
-            <Descriptions.Item label="Khung giờ">{item.sessionTime || "08:00 - 10:30"}</Descriptions.Item>
+            <Descriptions.Item label="Khung giờ">
+              {item.sessionTime || "08:00 - 10:30"}
+            </Descriptions.Item>
 
             <Descriptions.Item label="Giảng viên điểm danh">
               <Space size={6}>
@@ -109,8 +117,12 @@ export const AttendanceDetailDrawer: React.FC<AttendanceDetailDrawerProps> = Rea
           {/* Teacher Notes */}
           {item.note ? (
             <div>
-              <Text strong style={{ fontSize: 14, color: "#262626", display: "block", marginBottom: 6 }}>
-                <CommentOutlined style={{ color: "#1890ff", marginRight: 6 }} /> Ghi chú của giảng viên:
+              <Text
+                strong
+                style={{ fontSize: 14, color: "#262626", display: "block", marginBottom: 6 }}
+              >
+                <CommentOutlined style={{ color: "#1890ff", marginRight: 6 }} /> Ghi chú của giảng
+                viên:
               </Text>
               <Paragraph
                 style={{

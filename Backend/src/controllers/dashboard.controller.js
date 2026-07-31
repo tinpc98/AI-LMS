@@ -14,17 +14,9 @@ export const getAdminDashboard = async (req, res) => {
   try {
     const metrics = await dashboardService.getAdminMetrics();
 
-    return sendSuccess(
-      res,
-      "Admin dashboard metrics retrieved successfully",
-      metrics
-    );
+    return sendSuccess(res, "Admin dashboard metrics retrieved successfully", metrics);
   } catch (error) {
     console.error("[DashboardController] getAdminDashboard Error:", error);
-    return sendError(
-      res,
-      error.message || "Lỗi nội bộ khi tổng hợp số liệu dashboard",
-      500
-    );
+    return sendError(res, error.message || "Lỗi nội bộ khi tổng hợp số liệu dashboard", 500);
   }
 };

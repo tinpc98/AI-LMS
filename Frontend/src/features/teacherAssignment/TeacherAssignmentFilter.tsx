@@ -1,6 +1,10 @@
 import { Button, Col, Input, Row, Select } from "antd";
 import { ReloadOutlined } from "@ant-design/icons";
-import type { AccountRecord, CourseRecord, TeacherAssignmentFilters } from "./teacherAssignment.types";
+import type {
+  AccountRecord,
+  CourseRecord,
+  TeacherAssignmentFilters,
+} from "./teacherAssignment.types";
 
 interface TeacherAssignmentFilterProps {
   filters: TeacherAssignmentFilters;

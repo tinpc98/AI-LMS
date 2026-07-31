@@ -8,12 +8,7 @@ import { aiSummaryRateLimit } from "../middlewares/aiSummaryRateLimit.middleware
 const router = Router();
 
 // GET /api/ai/lectures/:lessonId/summary
-router.get(
-  "/:lessonId/summary",
-  requireAuth,
-  checkAILessonAccess,
-  aiSummaryController.getSummary
-);
+router.get("/:lessonId/summary", requireAuth, checkAILessonAccess, aiSummaryController.getSummary);
 
 // POST /api/ai/lectures/:lessonId/summary
 router.post(

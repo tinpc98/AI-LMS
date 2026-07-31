@@ -6,15 +6,11 @@ import Question from "../models/question.model.js";
 export const uploadExcelQuestions = async (req, res) => {
   try {
     if (!req.file) {
-      return res
-        .status(400)
-        .json({ message: "Vui lòng chọn file Excel để tải lên!" });
+      return res.status(400).json({ message: "Vui lòng chọn file Excel để tải lên!" });
     }
 
     // Truyền buffer của file sang tầng Service xử lý
-    const importedQuestions = await questionService.importQuestionsFromExcel(
-      req.file.buffer,
-    );
+    const importedQuestions = await questionService.importQuestionsFromExcel(req.file.buffer);
 
     res.status(201).json({
       message: `Nhập thành công ${importedQuestions.length} câu hỏi vào hệ thống!`,
@@ -53,8 +49,7 @@ export const getQuestions = async (req, res) => {
 // Thêm câu hỏi và chống trùng lặm câu hỏi
 export const createQuestion = async (req, res) => {
   try {
-    const { content, type, options, correctAnswer, difficulty, topic } =
-      req.body;
+    const { content, type, options, correctAnswer, difficulty, topic } = req.body;
 
     // BẪY CHỐNG TRÙNG: Tìm xem đã có câu nào nội dung y hệt chưa (Loại bỏ khoảng trắng thừa)
     const existingQ = await Question.findOne({ content: content.trim() });
@@ -76,9 +71,7 @@ export const createQuestion = async (req, res) => {
     });
 
     await newQuestion.save();
-    res
-      .status(201)
-      .json({ message: "Thêm câu hỏi thành công!", data: newQuestion });
+    res.status(201).json({ message: "Thêm câu hỏi thành công!", data: newQuestion });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -100,16 +93,13 @@ export const updateQuestion = async (req, res) => {
         _id: { $ne: id }, // Loại trừ chính nó ra
       });
       if (existingQ)
-        return res
-          .status(400)
-          .json({ message: "Nội dung sửa bị trùng với câu khác!" });
+        return res.status(400).json({ message: "Nội dung sửa bị trùng với câu khác!" });
     }
 
     const updatedQ = await Question.findByIdAndUpdate(id, updateData, {
       new: true,
     });
-    if (!updatedQ)
-      return res.status(404).json({ message: "Không tìm thấy câu hỏi!" });
+    if (!updatedQ) return res.status(404).json({ message: "Không tìm thấy câu hỏi!" });
 
     res.status(200).json({ message: "Cập nhật thành công!", data: updatedQ });
   } catch (error) {
@@ -125,8 +115,7 @@ export const deleteQuestion = async (req, res) => {
     const userId = req.user?.id || req.user?._id;
     const deletedQ = await Question.softDelete(id, userId);
 
-    if (!deletedQ)
-      return res.status(404).json({ message: "Không tìm thấy câu hỏi!" });
+    if (!deletedQ) return res.status(404).json({ message: "Không tìm thấy câu hỏi!" });
 
     res.status(200).json({ message: "Đã xóa câu hỏi khỏi Ngân hàng đề!" });
   } catch (error) {

@@ -3,15 +3,7 @@ import { Row, Col, Card, Table, Tag, Statistic } from "antd";
 import { BookOutlined, DollarOutlined, AppstoreOutlined } from "@ant-design/icons";
 import { mockCourses } from "../../../features/courseManagement/course.mock";
 import { mockClasses } from "../../../features/classManagement/class.mock";
-import {
-  ResponsiveContainer,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-} from "recharts";
+import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from "recharts";
 
 export const CourseReport: React.FC = () => {
   const publishedCourses = mockCourses.filter((c) => c.status === "Published").length;
@@ -53,16 +45,16 @@ export const CourseReport: React.FC = () => {
       dataIndex: "tuitionFee",
       key: "tuitionFee",
       render: (fee: number) => (
-        <span className="font-bold text-emerald-600">
-          {fee.toLocaleString("vi-VN")} VNĐ
-        </span>
+        <span className="font-bold text-emerald-600">{fee.toLocaleString("vi-VN")} VNĐ</span>
       ),
     },
     {
       title: "Thời lượng",
       key: "duration",
       render: (_: any, record: any) => (
-        <span>{record.durationWeeks} tuần ({record.totalLessons} bài học)</span>
+        <span>
+          {record.durationWeeks} tuần ({record.totalLessons} bài học)
+        </span>
       ),
     },
     {
@@ -78,8 +70,10 @@ export const CourseReport: React.FC = () => {
       dataIndex: "status",
       key: "status",
       render: (status: string) => {
-        const color = status === "Published" ? "success" : status === "Draft" ? "warning" : "default";
-        const label = status === "Published" ? "Đã xuất bản" : status === "Draft" ? "Bản nháp" : "Đã đóng";
+        const color =
+          status === "Published" ? "success" : status === "Draft" ? "warning" : "default";
+        const label =
+          status === "Published" ? "Đã xuất bản" : status === "Draft" ? "Bản nháp" : "Đã đóng";
         return <Tag color={color}>{label}</Tag>;
       },
     },
@@ -95,7 +89,9 @@ export const CourseReport: React.FC = () => {
               title="Tổng Số Khóa Học"
               value={mockCourses.length}
               prefix={<BookOutlined className="text-blue-500 mr-2 p-2 bg-blue-50 rounded-lg" />}
-              suffix={<span className="text-xs text-gray-400">({publishedCourses} đã xuất bản)</span>}
+              suffix={
+                <span className="text-xs text-gray-400">({publishedCourses} đã xuất bản)</span>
+              }
             />
           </Card>
         </Col>
@@ -104,7 +100,9 @@ export const CourseReport: React.FC = () => {
             <Statistic
               title="Tổng Số Bài Học Đã Biên Soạn"
               value={totalLessons}
-              prefix={<AppstoreOutlined className="text-purple-500 mr-2 p-2 bg-purple-50 rounded-lg" />}
+              prefix={
+                <AppstoreOutlined className="text-purple-500 mr-2 p-2 bg-purple-50 rounded-lg" />
+              }
               suffix="Bài học"
             />
           </Card>
@@ -120,7 +118,9 @@ export const CourseReport: React.FC = () => {
                     )
                   : 0
               }
-              prefix={<DollarOutlined className="text-emerald-500 mr-2 p-2 bg-emerald-50 rounded-lg" />}
+              prefix={
+                <DollarOutlined className="text-emerald-500 mr-2 p-2 bg-emerald-50 rounded-lg" />
+              }
               suffix="VNĐ"
             />
           </Card>
@@ -128,17 +128,44 @@ export const CourseReport: React.FC = () => {
       </Row>
 
       {/* Chart */}
-      <Card title="So sánh Học phí & Số bài học giữa các Khóa học" className="rounded-xl border border-gray-100 shadow-sm">
+      <Card
+        title="So sánh Học phí & Số bài học giữa các Khóa học"
+        className="rounded-xl border border-gray-100 shadow-sm"
+      >
         <div className="h-72">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={courseRevenueData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
               <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
               <XAxis dataKey="name" tickLine={false} />
-              <YAxis yAxisId="left" orientation="left" stroke="#1677ff" tickLine={false} axisLine={false} />
-              <YAxis yAxisId="right" orientation="right" stroke="#52c41a" tickLine={false} axisLine={false} />
+              <YAxis
+                yAxisId="left"
+                orientation="left"
+                stroke="#1677ff"
+                tickLine={false}
+                axisLine={false}
+              />
+              <YAxis
+                yAxisId="right"
+                orientation="right"
+                stroke="#52c41a"
+                tickLine={false}
+                axisLine={false}
+              />
               <Tooltip />
-              <Bar yAxisId="left" dataKey="fee" name="Học phí (VNĐ)" fill="#1677ff" radius={[4, 4, 0, 0]} />
-              <Bar yAxisId="right" dataKey="lessons" name="Số bài học" fill="#52c41a" radius={[4, 4, 0, 0]} />
+              <Bar
+                yAxisId="left"
+                dataKey="fee"
+                name="Học phí (VNĐ)"
+                fill="#1677ff"
+                radius={[4, 4, 0, 0]}
+              />
+              <Bar
+                yAxisId="right"
+                dataKey="lessons"
+                name="Số bài học"
+                fill="#52c41a"
+                radius={[4, 4, 0, 0]}
+              />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -146,12 +173,7 @@ export const CourseReport: React.FC = () => {
 
       {/* Course List Table */}
       <Card title="Danh Sách Các Khóa Học" className="rounded-xl border border-gray-100 shadow-sm">
-        <Table
-          columns={columns}
-          dataSource={mockCourses}
-          rowKey="id"
-          pagination={false}
-        />
+        <Table columns={columns} dataSource={mockCourses} rowKey="id" pagination={false} />
       </Card>
     </div>
   );

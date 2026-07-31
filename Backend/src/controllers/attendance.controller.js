@@ -7,7 +7,11 @@ export const markAttendance = async (req, res) => {
   try {
     const { classId, date, records } = req.body;
     if (!classId || !date || !Array.isArray(records) || records.length === 0) {
-      return sendError(res, "Vui lòng truyền đầy đủ classId, date và danh sách học sinh cần điểm danh", 400);
+      return sendError(
+        res,
+        "Vui lòng truyền đầy đủ classId, date và danh sách học sinh cần điểm danh",
+        400
+      );
     }
 
     const teacherId = req.user.id || req.user._id;

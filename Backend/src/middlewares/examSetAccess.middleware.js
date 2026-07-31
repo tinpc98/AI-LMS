@@ -138,9 +138,7 @@ export const requireExamSetAccess = (requiredPermission, options = {}) => {
     try {
       // ─── Step 1: Lấy examSetId từ route params ───────────────────────────
       const paramName = options.paramName || null;
-      const examSetId = paramName
-        ? req.params[paramName]
-        : req.params.examSetId || req.params.id;
+      const examSetId = paramName ? req.params[paramName] : req.params.examSetId || req.params.id;
 
       // ─── Step 2: Validate ObjectId ────────────────────────────────────────
       if (!examSetId || !Types.ObjectId.isValid(examSetId)) {
@@ -201,8 +199,7 @@ export const requireExamSetAccess = (requiredPermission, options = {}) => {
 
       // ─── Step 7: Kiểm tra Owner ───────────────────────────────────────────
       // ownerId có thể là ObjectId hoặc populated object
-      const isOwner =
-        String(examSet.ownerId?._id || examSet.ownerId) === userId;
+      const isOwner = String(examSet.ownerId?._id || examSet.ownerId) === userId;
 
       // ─── Step 8: Admin / Owner → EDIT unconditionally ────────────────────
       if (isAdmin || isOwner) {
@@ -225,15 +222,12 @@ export const requireExamSetAccess = (requiredPermission, options = {}) => {
       const now = new Date();
       const share = await ExamSetShare.findOne(
         {
-          examSetId: examSet._id,             // khóa theo examSetId đúng
-          sharedWithUserId: userId,           // khóa theo currentUser
+          examSetId: examSet._id, // khóa theo examSetId đúng
+          sharedWithUserId: userId, // khóa theo currentUser
           status: EXAM_SET_SHARE_STATUS.ACTIVE,
-          $or: [
-            { expiresAt: null },
-            { expiresAt: { $gt: now } },
-          ],
+          $or: [{ expiresAt: null }, { expiresAt: { $gt: now } }],
         },
-        { _id: 1, permission: 1 }             // projection tối thiểu
+        { _id: 1, permission: 1 } // projection tối thiểu
       );
 
       // Không có share hợp lệ → 403
@@ -263,7 +257,7 @@ export const requireExamSetAccess = (requiredPermission, options = {}) => {
       req.examSetAccess = {
         examSet,
         accessType: "SHARED",
-        permission: share.permission,   // "VIEW" hoặc "EDIT"
+        permission: share.permission, // "VIEW" hoặc "EDIT"
         shareId: share._id,
       };
       // Backward compatibility

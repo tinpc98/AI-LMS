@@ -1,6 +1,11 @@
 import React from "react";
 import { Popover, List, Typography, Badge, Button, Skeleton, Space, Avatar } from "antd";
-import { BellOutlined, VideoCameraOutlined, InfoCircleOutlined, CheckOutlined } from "@ant-design/icons";
+import {
+  BellOutlined,
+  VideoCameraOutlined,
+  InfoCircleOutlined,
+  CheckOutlined,
+} from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import { formatDistanceToNow } from "date-fns";
 import { vi } from "date-fns/locale";
@@ -36,12 +41,23 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
 
   const content = (
     <div style={{ width: 360, maxHeight: 500, overflowY: "auto", overflowX: "hidden" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", padding: "12px 16px", borderBottom: "1px solid #f0f0f0", position: "sticky", top: 0, background: "#fff", zIndex: 2 }}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          padding: "12px 16px",
+          borderBottom: "1px solid #f0f0f0",
+          position: "sticky",
+          top: 0,
+          background: "#fff",
+          zIndex: 2,
+        }}
+      >
         <Text strong>Thông báo</Text>
-        <Button 
-          type="link" 
-          size="small" 
-          onClick={markAllAsRead} 
+        <Button
+          type="link"
+          size="small"
+          onClick={markAllAsRead}
           disabled={unreadCount === 0 || loading}
           icon={<CheckOutlined />}
         >
@@ -76,21 +92,33 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
             >
               <List.Item.Meta
                 avatar={
-                  <Avatar 
-                    icon={item.category === "live" ? <VideoCameraOutlined /> : <InfoCircleOutlined />} 
-                    style={{ backgroundColor: item.category === "live" ? "#52c41a" : "#1890ff" }} 
+                  <Avatar
+                    icon={
+                      item.category === "live" ? <VideoCameraOutlined /> : <InfoCircleOutlined />
+                    }
+                    style={{ backgroundColor: item.category === "live" ? "#52c41a" : "#1890ff" }}
                   />
                 }
                 title={
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                    <Text strong style={{ fontSize: 14 }}>{item.title}</Text>
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "flex-start",
+                    }}
+                  >
+                    <Text strong style={{ fontSize: 14 }}>
+                      {item.title}
+                    </Text>
                     {!item.isRead && <Badge dot color="blue" />}
                   </div>
                 }
                 description={
                   <Space direction="vertical" size={2} style={{ width: "100%" }}>
-                    <Text style={{ fontSize: 13, color: "#595959" }}>{item.description || item.title}</Text>
-                    
+                    <Text style={{ fontSize: 13, color: "#595959" }}>
+                      {item.description || item.title}
+                    </Text>
+
                     {item.className && (
                       <Text type="secondary" style={{ fontSize: 12 }}>
                         Lớp: <Text strong>{item.className}</Text>
@@ -98,13 +126,16 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
                     )}
 
                     <Text type="secondary" style={{ fontSize: 11 }}>
-                      {formatDistanceToNow(new Date(item.createdAt), { addSuffix: true, locale: vi })}
+                      {formatDistanceToNow(new Date(item.createdAt), {
+                        addSuffix: true,
+                        locale: vi,
+                      })}
                     </Text>
-                    
+
                     {item.category === "live" && item.targetRoute && (
-                      <Button 
-                        type="primary" 
-                        size="small" 
+                      <Button
+                        type="primary"
+                        size="small"
                         style={{ marginTop: 8 }}
                         onClick={(e) => {
                           e.stopPropagation();
@@ -122,7 +153,17 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
         />
       )}
 
-      <div style={{ textAlign: "center", padding: "12px", borderTop: "1px solid #f0f0f0", position: "sticky", bottom: 0, background: "#fff", zIndex: 2 }}>
+      <div
+        style={{
+          textAlign: "center",
+          padding: "12px",
+          borderTop: "1px solid #f0f0f0",
+          position: "sticky",
+          bottom: 0,
+          background: "#fff",
+          zIndex: 2,
+        }}
+      >
         <Button type="link" onClick={() => navigate("/student/notifications")}>
           Xem tất cả thông báo
         </Button>
@@ -131,10 +172,10 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
   );
 
   return (
-    <Popover 
-      content={content} 
-      trigger="click" 
-      placement="bottomRight" 
+    <Popover
+      content={content}
+      trigger="click"
+      placement="bottomRight"
       overlayInnerStyle={{ padding: 0 }}
       arrow={false}
     >

@@ -106,7 +106,9 @@ export const ExamDetailDrawer: React.FC<ExamDetailDrawerProps> = React.memo(
             <Descriptions.Item label="Cấu trúc đề thi">
               <Space size={6}>
                 <QuestionCircleOutlined style={{ color: "#fa8c16" }} />
-                <span>{questionCount} câu hỏi ({maxScore} điểm)</span>
+                <span>
+                  {questionCount} câu hỏi ({maxScore} điểm)
+                </span>
               </Space>
             </Descriptions.Item>
 
@@ -122,7 +124,10 @@ export const ExamDetailDrawer: React.FC<ExamDetailDrawerProps> = React.memo(
 
           {/* Quy chế & Mô tả */}
           <div style={{ marginBottom: 20 }}>
-            <Text strong style={{ fontSize: 14, color: "#262626", display: "block", marginBottom: 6 }}>
+            <Text
+              strong
+              style={{ fontSize: 14, color: "#262626", display: "block", marginBottom: 6 }}
+            >
               Mô tả & Quy chế phòng thi:
             </Text>
             <Paragraph
@@ -136,7 +141,8 @@ export const ExamDetailDrawer: React.FC<ExamDetailDrawerProps> = React.memo(
                 border: "1px solid #f0f0f0",
               }}
             >
-              {item.description || "Học sinh vui lòng đảm bảo kết nối mạng ổn định và làm bài nghiêm túc trong suốt thời gian diễn ra bài thi."}
+              {item.description ||
+                "Học sinh vui lòng đảm bảo kết nối mạng ổn định và làm bài nghiêm túc trong suốt thời gian diễn ra bài thi."}
             </Paragraph>
           </div>
 

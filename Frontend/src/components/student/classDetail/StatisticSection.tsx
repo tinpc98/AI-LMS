@@ -71,7 +71,11 @@ export const StatisticSection: React.FC<StatisticSectionProps> = React.memo(
             />
             <div style={{ marginTop: 10 }}>
               <Progress
-                percent={totalAssignments > 0 ? Math.round((completedAssignments / totalAssignments) * 100) : 0}
+                percent={
+                  totalAssignments > 0
+                    ? Math.round((completedAssignments / totalAssignments) * 100)
+                    : 0
+                }
                 size="small"
                 strokeColor="#1890ff"
               />
@@ -91,7 +95,9 @@ export const StatisticSection: React.FC<StatisticSectionProps> = React.memo(
             styles={{ body: { padding: 20 } }}
           >
             <Statistic
-              title={<span style={{ color: "#8c8c8c", fontSize: 13 }}>Bài kiểm tra hoàn thành</span>}
+              title={
+                <span style={{ color: "#8c8c8c", fontSize: 13 }}>Bài kiểm tra hoàn thành</span>
+              }
               value={completedExams}
               suffix={`/ ${totalExams}`}
               prefix={<FormOutlined style={{ color: "#fa8c16", marginRight: 8 }} />}

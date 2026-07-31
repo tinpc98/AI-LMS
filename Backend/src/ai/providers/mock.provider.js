@@ -33,9 +33,7 @@ export class MockAIProvider extends BaseAIProvider {
     }
 
     throw new Error(
-      `Mock AI Provider simulated error: ${
-        this.simulatedErrorCode || "INTERNAL_ERROR"
-      }`
+      `Mock AI Provider simulated error: ${this.simulatedErrorCode || "INTERNAL_ERROR"}`
     );
   }
 
@@ -136,9 +134,7 @@ export class MockAIProvider extends BaseAIProvider {
       lowerPrompt.includes("phân bố loại câu hỏi") &&
       lowerPrompt.includes("phân bố độ khó");
 
-    const isSummaryPrompt =
-      lowerPrompt.includes("summary") ||
-      lowerPrompt.includes("tóm tắt");
+    const isSummaryPrompt = lowerPrompt.includes("summary") || lowerPrompt.includes("tóm tắt");
 
     const isGradingPrompt =
       lowerPrompt.includes("grade") ||
@@ -173,17 +169,9 @@ export class MockAIProvider extends BaseAIProvider {
 
   buildSummaryMock() {
     return {
-      summary:
-        "Đây là bản tóm tắt nội dung bài giảng mẫu từ Mock AI Provider.",
-      keyPoints: [
-        "Điểm chính 1",
-        "Điểm chính 2",
-        "Điểm chính 3",
-      ],
-      suggestedReviewTopics: [
-        "Chủ đề ôn tập 1",
-        "Chủ đề ôn tập 2",
-      ],
+      summary: "Đây là bản tóm tắt nội dung bài giảng mẫu từ Mock AI Provider.",
+      keyPoints: ["Điểm chính 1", "Điểm chính 2", "Điểm chính 3"],
+      suggestedReviewTopics: ["Chủ đề ôn tập 1", "Chủ đề ôn tập 2"],
     };
   }
 
@@ -212,18 +200,9 @@ export class MockAIProvider extends BaseAIProvider {
   }
 
   buildQuestionGenerationMock(prompt) {
-    const supportedTypes = [
-      "multiple_choice",
-      "true_false",
-      "short_answer",
-      "essay",
-    ];
+    const supportedTypes = ["multiple_choice", "true_false", "short_answer", "essay"];
 
-    const supportedDifficulties = [
-      "easy",
-      "medium",
-      "hard",
-    ];
+    const supportedDifficulties = ["easy", "medium", "hard"];
 
     const typeCounts = {
       multiple_choice: 0,
@@ -244,9 +223,7 @@ export class MockAIProvider extends BaseAIProvider {
     for (const originalLine of lines) {
       const line = originalLine.trim().toLowerCase();
 
-      const totalMatch = line.match(
-        /^-\s*tổng số câu hỏi\s*:\s*(\d+)/
-      );
+      const totalMatch = line.match(/^-\s*tổng số câu hỏi\s*:\s*(\d+)/);
 
       if (totalMatch) {
         totalCount = Number(totalMatch[1]);
@@ -254,9 +231,7 @@ export class MockAIProvider extends BaseAIProvider {
       }
 
       for (const type of supportedTypes) {
-        const typePattern = new RegExp(
-          `^-\\s*${type}\\s*:\\s*(\\d+)`
-        );
+        const typePattern = new RegExp(`^-\\s*${type}\\s*:\\s*(\\d+)`);
 
         const typeMatch = line.match(typePattern);
 
@@ -266,28 +241,22 @@ export class MockAIProvider extends BaseAIProvider {
       }
 
       for (const difficulty of supportedDifficulties) {
-        const difficultyPattern = new RegExp(
-          `^-\\s*${difficulty}\\s*:\\s*(\\d+)`
-        );
+        const difficultyPattern = new RegExp(`^-\\s*${difficulty}\\s*:\\s*(\\d+)`);
 
         const difficultyMatch = line.match(difficultyPattern);
 
         if (difficultyMatch) {
-          difficultyCounts[difficulty] = Number(
-            difficultyMatch[1]
-          );
+          difficultyCounts[difficulty] = Number(difficultyMatch[1]);
         }
       }
     }
 
-    const parsedTypeTotal = Object.values(typeCounts).reduce(
+    const parsedTypeTotal = Object.values(typeCounts).reduce((total, count) => total + count, 0);
+
+    const parsedDifficultyTotal = Object.values(difficultyCounts).reduce(
       (total, count) => total + count,
       0
     );
-
-    const parsedDifficultyTotal = Object.values(
-      difficultyCounts
-    ).reduce((total, count) => total + count, 0);
 
     if (!Number.isInteger(totalCount) || totalCount <= 0) {
       totalCount =
@@ -315,9 +284,10 @@ export class MockAIProvider extends BaseAIProvider {
       0
     );
 
-    const normalizedDifficultyTotal = Object.values(
-      difficultyCounts
-    ).reduce((total, count) => total + count, 0);
+    const normalizedDifficultyTotal = Object.values(difficultyCounts).reduce(
+      (total, count) => total + count,
+      0
+    );
 
     /*
      * Không âm thầm tạo output sai distribution.
@@ -341,11 +311,7 @@ export class MockAIProvider extends BaseAIProvider {
     const difficulties = [];
 
     for (const difficulty of supportedDifficulties) {
-      for (
-        let index = 0;
-        index < difficultyCounts[difficulty];
-        index += 1
-      ) {
+      for (let index = 0; index < difficultyCounts[difficulty]; index += 1) {
         difficulties.push(difficulty);
       }
     }
@@ -358,8 +324,7 @@ export class MockAIProvider extends BaseAIProvider {
       const count = typeCounts[type];
 
       for (let index = 0; index < count; index += 1) {
-        const difficulty =
-          difficulties[difficultyIndex] || "medium";
+        const difficulty = difficulties[difficultyIndex] || "medium";
 
         difficultyIndex += 1;
 
@@ -412,16 +377,12 @@ export class MockAIProvider extends BaseAIProvider {
         if (type === "short_answer") {
           question.options = [];
           question.correctAnswer = "Đáp án ngắn mô phỏng";
-          question.acceptedAnswers = [
-            "Đáp án ngắn mô phỏng",
-            "Đáp án tương đương",
-          ];
+          question.acceptedAnswers = ["Đáp án ngắn mô phỏng", "Đáp án tương đương"];
         }
 
         if (type === "essay") {
           question.options = [];
-          question.correctAnswer =
-            "Nội dung tham khảo dành cho giáo viên.";
+          question.correctAnswer = "Nội dung tham khảo dành cho giáo viên.";
 
           question.rubric = [
             {
@@ -445,7 +406,12 @@ export class MockAIProvider extends BaseAIProvider {
     };
   }
 
-  async generateEmbedding({ text, taskType = "RETRIEVAL_DOCUMENT", dimensions = 768, timeoutMs = 30000 }) {
+  async generateEmbedding({
+    text,
+    taskType = "RETRIEVAL_DOCUMENT",
+    dimensions = 768,
+    timeoutMs = 30000,
+  }) {
     const startTime = Date.now();
     await this.waitForDelay();
     this.throwSimulatedErrorIfNeeded();
@@ -457,9 +423,9 @@ export class MockAIProvider extends BaseAIProvider {
     // Deterministic Token-Overlap Embedding (S6-FE-03)
     const normalized = text.normalize("NFC").toLowerCase().trim();
     const tokens = normalized.split(/\s+/);
-    
+
     let vector = new Array(dimensions).fill(0);
-    
+
     // Hash từng token vào vị trí vector ổn định, cộng trọng số
     for (const token of tokens) {
       if (!token) continue;
@@ -467,7 +433,7 @@ export class MockAIProvider extends BaseAIProvider {
       const idx1 = parseInt(hash.slice(0, 4), 16) % dimensions;
       const idx2 = parseInt(hash.slice(4, 8), 16) % dimensions;
       const idx3 = parseInt(hash.slice(8, 12), 16) % dimensions;
-      
+
       vector[idx1] += 1.0;
       vector[idx2] += 0.5;
       vector[idx3] += 0.25;
@@ -476,16 +442,16 @@ export class MockAIProvider extends BaseAIProvider {
     // L2-normalize vector
     let sumSq = 0;
     for (let i = 0; i < dimensions; i++) {
-        sumSq += vector[i] * vector[i];
+      sumSq += vector[i] * vector[i];
     }
     const magnitude = Math.sqrt(sumSq) || 1;
     for (let i = 0; i < dimensions; i++) {
-        vector[i] = vector[i] / magnitude;
+      vector[i] = vector[i] / magnitude;
     }
 
     return {
       embedding: vector,
-      durationMs: Date.now() - startTime
+      durationMs: Date.now() - startTime,
     };
   }
 }

@@ -26,7 +26,15 @@ export const TeacherScheduleWidget: React.FC<TeacherScheduleWidgetProps> = React
   ({ classes = [], loading = false }) => {
     const navigate = useNavigate();
 
-    const daysOfWeekEnglish = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+    const daysOfWeekEnglish = [
+      "Sunday",
+      "Monday",
+      "Tuesday",
+      "Wednesday",
+      "Thursday",
+      "Friday",
+      "Saturday",
+    ];
     const todayEnglish = daysOfWeekEnglish[new Date().getDay()];
 
     const todayClasses = useMemo(() => {
@@ -66,14 +74,28 @@ export const TeacherScheduleWidget: React.FC<TeacherScheduleWidgetProps> = React
                     marginBottom: 8,
                   }}
                 >
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                    }}
+                  >
                     <Text strong style={{ fontSize: 15, color: "#1d39c4" }}>
                       {cls.className}
                     </Text>
                     {cls.classCode && <Tag color="blue">{cls.classCode}</Tag>}
                   </div>
 
-                  <div style={{ marginTop: 6, display: "flex", gap: 16, fontSize: 13, color: "#595959" }}>
+                  <div
+                    style={{
+                      marginTop: 6,
+                      display: "flex",
+                      gap: 16,
+                      fontSize: 13,
+                      color: "#595959",
+                    }}
+                  >
                     <Space size={4}>
                       <ClockCircleOutlined />
                       <span>

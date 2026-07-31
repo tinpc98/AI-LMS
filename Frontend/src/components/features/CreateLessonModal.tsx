@@ -81,9 +81,7 @@ export default function CreateLessonModal({
       if (axios.isAxiosError(error)) {
         setErrorMsg(
           error.response?.data?.message ||
-            (isEditMode
-              ? "Cập nhật bài giảng thất bại."
-              : "Tạo bài giảng thất bại."),
+            (isEditMode ? "Cập nhật bài giảng thất bại." : "Tạo bài giảng thất bại.")
         );
       }
     } finally {
@@ -110,9 +108,7 @@ export default function CreateLessonModal({
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div className="flex flex-col gap-2">
-            <label className="text-sm font-semibold text-gray-700">
-              Tiêu đề bài giảng
-            </label>
+            <label className="text-sm font-semibold text-gray-700">Tiêu đề bài giảng</label>
             <input
               type="text"
               value={title}
@@ -125,9 +121,7 @@ export default function CreateLessonModal({
           </div>
 
           <div className="flex flex-col gap-2">
-            <label className="text-sm font-semibold text-gray-700">
-              Mô tả (không bắt buộc)
-            </label>
+            <label className="text-sm font-semibold text-gray-700">Mô tả (không bắt buộc)</label>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
@@ -137,9 +131,7 @@ export default function CreateLessonModal({
           </div>
 
           <div className="flex flex-col gap-2">
-            <label className="text-sm font-semibold text-gray-700">
-              Link video (YouTube...)
-            </label>
+            <label className="text-sm font-semibold text-gray-700">Link video (YouTube...)</label>
             <input
               type="url"
               value={videoUrl}
@@ -164,9 +156,7 @@ export default function CreateLessonModal({
 
           {isEditMode && lessonData!.attachments.length > 0 && (
             <div className="flex flex-col gap-1">
-              <label className="text-sm font-semibold text-gray-700">
-                Tệp đính kèm hiện có
-              </label>
+              <label className="text-sm font-semibold text-gray-700">Tệp đính kèm hiện có</label>
               <ul className="text-xs text-gray-500 list-disc pl-4">
                 {lessonData!.attachments.map((f) => (
                   <li key={f.publicId}>{f.name}</li>
@@ -185,9 +175,7 @@ export default function CreateLessonModal({
               type="file"
               multiple
               accept=".pdf,.doc,.docx,image/*"
-              onChange={(e) =>
-                setFiles(Array.from(e.target.files ?? []).slice(0, 5))
-              }
+              onChange={(e) => setFiles(Array.from(e.target.files ?? []).slice(0, 5))}
               className="w-full text-sm text-gray-600"
             />
             {files.length > 0 && (
@@ -226,11 +214,7 @@ export default function CreateLessonModal({
               disabled={isSubmitting}
               className="px-5 py-2.5 text-sm font-semibold text-white bg-indigo-600 rounded-xl hover:bg-indigo-700 shadow-sm disabled:bg-indigo-300"
             >
-              {isSubmitting
-                ? "Đang lưu..."
-                : isEditMode
-                  ? "Lưu thay đổi"
-                  : "Tạo bài giảng"}
+              {isSubmitting ? "Đang lưu..." : isEditMode ? "Lưu thay đổi" : "Tạo bài giảng"}
             </button>
           </div>
         </form>

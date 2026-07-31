@@ -158,7 +158,9 @@ export const ExamReport: React.FC = () => {
               value={94.8}
               precision={1}
               suffix="%"
-              prefix={<CheckCircleOutlined className="text-green-500 mr-2 p-2 bg-green-50 rounded-lg" />}
+              prefix={
+                <CheckCircleOutlined className="text-green-500 mr-2 p-2 bg-green-50 rounded-lg" />
+              }
             />
           </Card>
         </Col>
@@ -168,7 +170,9 @@ export const ExamReport: React.FC = () => {
             <Statistic
               title="Phát Hiện Gian Lận (AI Proctor)"
               value={3}
-              prefix={<ExclamationCircleOutlined className="text-red-500 mr-2 p-2 bg-red-50 rounded-lg" />}
+              prefix={
+                <ExclamationCircleOutlined className="text-red-500 mr-2 p-2 bg-red-50 rounded-lg" />
+              }
             />
           </Card>
         </Col>
@@ -177,15 +181,26 @@ export const ExamReport: React.FC = () => {
       {/* Charts */}
       <Row gutter={[16, 16]}>
         <Col xs={24} md={14}>
-          <Card title="Phân Bổ Phổ Điểm Kỳ Thi" className="rounded-xl border border-gray-100 shadow-sm">
+          <Card
+            title="Phân Bổ Phổ Điểm Kỳ Thi"
+            className="rounded-xl border border-gray-100 shadow-sm"
+          >
             <div className="h-72">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={examDistributionData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                <BarChart
+                  data={examDistributionData}
+                  margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                >
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
                   <XAxis dataKey="range" tickLine={false} />
                   <YAxis tickLine={false} axisLine={false} />
                   <Tooltip />
-                  <Bar dataKey="count" name="Số lượng thí sinh" fill="#1677ff" radius={[6, 6, 0, 0]} />
+                  <Bar
+                    dataKey="count"
+                    name="Số lượng thí sinh"
+                    fill="#1677ff"
+                    radius={[6, 6, 0, 0]}
+                  />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -193,7 +208,10 @@ export const ExamReport: React.FC = () => {
         </Col>
 
         <Col xs={24} md={10}>
-          <Card title="Tỷ lệ Xếp loại Học lực qua Kỳ thi" className="rounded-xl border border-gray-100 shadow-sm">
+          <Card
+            title="Tỷ lệ Xếp loại Học lực qua Kỳ thi"
+            className="rounded-xl border border-gray-100 shadow-sm"
+          >
             <div className="h-72">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
@@ -221,13 +239,11 @@ export const ExamReport: React.FC = () => {
       </Row>
 
       {/* Table */}
-      <Card title="Kết Quả Báo Cáo Các Kỳ Thi Mới Nhất" className="rounded-xl border border-gray-100 shadow-sm">
-        <Table
-          columns={columns}
-          dataSource={examList}
-          rowKey="id"
-          pagination={false}
-        />
+      <Card
+        title="Kết Quả Báo Cáo Các Kỳ Thi Mới Nhất"
+        className="rounded-xl border border-gray-100 shadow-sm"
+      >
+        <Table columns={columns} dataSource={examList} rowKey="id" pagination={false} />
       </Card>
     </div>
   );

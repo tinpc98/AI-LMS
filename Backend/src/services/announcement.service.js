@@ -3,7 +3,16 @@ import Announcement from "../models/announcement.model.js";
 import classModel from "../models/class.model.js";
 
 class AnnouncementService {
-  async createAnnouncement({ title, content, scope, classId, courseId, attachments, createdBy, userRole }) {
+  async createAnnouncement({
+    title,
+    content,
+    scope,
+    classId,
+    courseId,
+    attachments,
+    createdBy,
+    userRole,
+  }) {
     const normalizedRole = (userRole || "").toLowerCase();
 
     if (scope === "Class" && classId) {
@@ -14,7 +23,10 @@ class AnnouncementService {
       if (!classExists) {
         throw new Error("Lớp học không tồn tại!");
       }
-      if (normalizedRole === "teacher" && classExists.teacherId?.toString() !== createdBy.toString()) {
+      if (
+        normalizedRole === "teacher" &&
+        classExists.teacherId?.toString() !== createdBy.toString()
+      ) {
         throw new Error("Bạn chỉ có thể đăng thông báo cho các lớp được phân công!");
       }
     }
@@ -36,7 +48,16 @@ class AnnouncementService {
     return await announcement.save();
   }
 
-  async getAnnouncements({ scope, classId, courseId, search, page = 1, limit = 10, userId, userRole }) {
+  async getAnnouncements({
+    scope,
+    classId,
+    courseId,
+    search,
+    page = 1,
+    limit = 10,
+    userId,
+    userRole,
+  }) {
     const query = {};
     const normalizedRole = (userRole || "").toLowerCase();
 
@@ -59,7 +80,11 @@ class AnnouncementService {
     } else if (normalizedRole === "teacher" && !classId && !scope) {
       const myClasses = await classModel.find({ teacherId: userId }).select("_id");
       const classIds = myClasses.map((c) => c._id);
-      query.$or = [{ scope: "System" }, { scope: "Class", classId: { $in: classIds } }, { createdBy: userId }];
+      query.$or = [
+        { scope: "System" },
+        { scope: "Class", classId: { $in: classIds } },
+        { createdBy: userId },
+      ];
     }
 
     if (search) {

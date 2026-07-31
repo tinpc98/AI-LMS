@@ -17,19 +17,31 @@ export const SessionStatusTag: React.FC<SessionStatusTagProps> = React.memo(({ s
   switch (status) {
     case "Live":
       return (
-        <Tag color="error" icon={<VideoCameraOutlined className="animate-pulse" />} style={{ borderRadius: 8, fontWeight: 700 }}>
+        <Tag
+          color="error"
+          icon={<VideoCameraOutlined className="animate-pulse" />}
+          style={{ borderRadius: 8, fontWeight: 700 }}
+        >
           🔴 ĐANG DIỄN RA
         </Tag>
       );
     case "Upcoming":
       return (
-        <Tag color="processing" icon={<ClockCircleOutlined />} style={{ borderRadius: 8, fontWeight: 600 }}>
+        <Tag
+          color="processing"
+          icon={<ClockCircleOutlined />}
+          style={{ borderRadius: 8, fontWeight: 600 }}
+        >
           Sắp diễn ra
         </Tag>
       );
     case "Completed":
       return (
-        <Tag color="success" icon={<CheckCircleOutlined />} style={{ borderRadius: 8, fontWeight: 600 }}>
+        <Tag
+          color="success"
+          icon={<CheckCircleOutlined />}
+          style={{ borderRadius: 8, fontWeight: 600 }}
+        >
           Đã kết thúc
         </Tag>
       );
@@ -41,7 +53,11 @@ export const SessionStatusTag: React.FC<SessionStatusTagProps> = React.memo(({ s
       );
     case "Missed":
       return (
-        <Tag color="red" icon={<CloseCircleOutlined />} style={{ borderRadius: 8, fontWeight: 600 }}>
+        <Tag
+          color="red"
+          icon={<CloseCircleOutlined />}
+          style={{ borderRadius: 8, fontWeight: 600 }}
+        >
           Đã bỏ lỡ
         </Tag>
       );

@@ -36,7 +36,12 @@ export const useAIModels = () => {
       prev.map((model) => {
         if (model.id === id) {
           message.success(`${model.name} is now the default AI model.`);
-          return { ...model, isDefault: true, status: "Active", updatedAt: new Date().toISOString() };
+          return {
+            ...model,
+            isDefault: true,
+            status: "Active",
+            updatedAt: new Date().toISOString(),
+          };
         }
         return { ...model, isDefault: false };
       })
@@ -51,9 +56,7 @@ export const useAIModels = () => {
       updatedAt: new Date().toISOString(),
     };
     if (newModel.isDefault) {
-      setModels((prev) =>
-        prev.map((m) => ({ ...m, isDefault: false })).concat(newModel)
-      );
+      setModels((prev) => prev.map((m) => ({ ...m, isDefault: false })).concat(newModel));
     } else {
       setModels((prev) => [...prev, newModel]);
     }

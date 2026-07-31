@@ -1,12 +1,7 @@
 import type { IAnnouncement } from "../api/announcementApi";
 
 export type AnnouncementTagType =
-  | "Pinned"
-  | "Important"
-  | "Assignment"
-  | "Exam"
-  | "General"
-  | "System";
+  "Pinned" | "Important" | "Assignment" | "Exam" | "General" | "System";
 
 export interface IExtendedAnnouncement extends IAnnouncement {
   isRead?: boolean;

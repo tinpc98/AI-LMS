@@ -1,14 +1,7 @@
 import React from "react";
 import { Card, Typography, Skeleton } from "antd";
 import { motion } from "framer-motion";
-import {
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
-  Tooltip,
-  Legend,
-} from "recharts";
+import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend } from "recharts";
 import type { DashboardResponse } from "../dashboard.types";
 
 const { Title, Text } = Typography;
@@ -24,7 +17,9 @@ interface ClassStatusStatistic {
   color: string;
 }
 
-const transformClassStatusData = (data: DashboardResponse["classStatusChart"] = []): ClassStatusStatistic[] => {
+const transformClassStatusData = (
+  data: DashboardResponse["classStatusChart"] = []
+): ClassStatusStatistic[] => {
   const grouped: Record<string, { value: number; color: string }> = {
     "Sắp mở": { value: 0, color: "#faad14" }, // Orange
     "Đang hoạt động": { value: 0, color: "#52c41a" }, // Green

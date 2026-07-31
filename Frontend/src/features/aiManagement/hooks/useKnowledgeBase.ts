@@ -52,7 +52,9 @@ export const useKnowledgeBase = () => {
     message.success("Document removed from knowledge base.");
   };
 
-  const addDocument = (docData: Omit<KnowledgeDocument, "id" | "createdAt" | "updatedAt" | "chunksCount">) => {
+  const addDocument = (
+    docData: Omit<KnowledgeDocument, "id" | "createdAt" | "updatedAt" | "chunksCount">
+  ) => {
     const newDoc: KnowledgeDocument = {
       ...docData,
       id: `k-${Date.now()}`,

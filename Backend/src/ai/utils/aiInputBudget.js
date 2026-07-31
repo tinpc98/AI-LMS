@@ -12,8 +12,16 @@ function getSafeInt(value, defaultValue, maxCeiling) {
 // Config limits
 export const AI_MAX_QUESTION_COUNT = getSafeInt(process.env.AI_MAX_QUESTION_COUNT, 30, 30);
 export const AI_MAX_INPUT_CHARS = getSafeInt(process.env.AI_MAX_INPUT_CHARS, 60000, 100000);
-export const AI_MAX_ESTIMATED_INPUT_TOKENS = getSafeInt(process.env.AI_MAX_ESTIMATED_INPUT_TOKENS, 20000, 30000);
-export const AI_MAX_GRADING_ANSWER_CHARS = getSafeInt(process.env.AI_MAX_GRADING_ANSWER_CHARS, 12000, 20000);
+export const AI_MAX_ESTIMATED_INPUT_TOKENS = getSafeInt(
+  process.env.AI_MAX_ESTIMATED_INPUT_TOKENS,
+  20000,
+  30000
+);
+export const AI_MAX_GRADING_ANSWER_CHARS = getSafeInt(
+  process.env.AI_MAX_GRADING_ANSWER_CHARS,
+  12000,
+  20000
+);
 
 export class AIInputBudget {
   /**
@@ -21,7 +29,10 @@ export class AIInputBudget {
    */
   static normalizeText(text) {
     if (!text || typeof text !== "string") return "";
-    return text.normalize("NFC").replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, "").trim();
+    return text
+      .normalize("NFC")
+      .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, "")
+      .trim();
   }
 
   /**

@@ -1,11 +1,5 @@
 export type StudentClassStatus =
-  | "Ready"
-  | "Active"
-  | "Completed"
-  | "Paused"
-  | "active"
-  | "completed"
-  | "closed";
+  "Ready" | "Active" | "Completed" | "Paused" | "active" | "completed" | "closed";
 
 export interface ITeacherSummary {
   _id: string;

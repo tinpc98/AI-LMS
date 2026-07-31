@@ -36,31 +36,31 @@ router.post(
 const validateMessageRequest = (req, res, next) => {
   const { sessionId } = req.params;
   let { message } = req.body;
-  
+
   if (!sessionId || !mongoose.Types.ObjectId.isValid(sessionId)) {
-      return res.status(400).json({
-          success: false,
-          code: AIErrorCode.AI_INVALID_INPUT,
-          message: "sessionId bắt buộc và phải là ObjectId hợp lệ."
-      });
+    return res.status(400).json({
+      success: false,
+      code: AIErrorCode.AI_INVALID_INPUT,
+      message: "sessionId bắt buộc và phải là ObjectId hợp lệ.",
+    });
   }
 
   if (message === undefined || typeof message !== "string" || message.trim() === "") {
-      return res.status(400).json({
-          success: false,
-          code: AIErrorCode.AI_INVALID_INPUT,
-          message: "Nội dung tin nhắn không hợp lệ."
-      });
+    return res.status(400).json({
+      success: false,
+      code: AIErrorCode.AI_INVALID_INPUT,
+      message: "Nội dung tin nhắn không hợp lệ.",
+    });
   }
-  
+
   message = message.trim();
   const maxChars = parseInt(process.env.RAG_MAX_QUESTION_CHARS) || 2000;
   if (message.length > maxChars) {
-      return res.status(400).json({
-          success: false,
-          code: AIErrorCode.AI_INVALID_INPUT,
-          message: `Nội dung tin nhắn quá dài (tối đa ${maxChars} ký tự).`
-      });
+    return res.status(400).json({
+      success: false,
+      code: AIErrorCode.AI_INVALID_INPUT,
+      message: `Nội dung tin nhắn quá dài (tối đa ${maxChars} ký tự).`,
+    });
   }
 
   next();
@@ -77,10 +77,6 @@ router.post(
 );
 
 // S6: Get History
-router.get(
-  "/sessions/:sessionId/messages",
-  verifyUser,
-  getHistory
-);
+router.get("/sessions/:sessionId/messages", verifyUser, getHistory);
 
 export default router;

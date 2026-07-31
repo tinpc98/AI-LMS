@@ -1,5 +1,21 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
-import { Drawer, Table, Avatar, Tag, Button, Typography, Space, Spin, Empty, Card, Row, Col, Statistic, Input, Select } from "antd";
+import {
+  Drawer,
+  Table,
+  Avatar,
+  Tag,
+  Button,
+  Typography,
+  Space,
+  Spin,
+  Empty,
+  Card,
+  Row,
+  Col,
+  Statistic,
+  Input,
+  Select,
+} from "antd";
 import type { ColumnsType } from "antd/es/table";
 import {
   FileDoneOutlined,
@@ -62,12 +78,17 @@ export const TeacherExamAttemptsDrawer: React.FC<TeacherExamAttemptsDrawerProps>
     const stats = useMemo(() => {
       const total = attempts.length;
       const gradedCount = attempts.filter((a) => a.status === "GRADED").length;
-      const pendingCount = attempts.filter((a) => a.status === "PARTIALLY_GRADED" || a.status === "SUBMITTED").length;
+      const pendingCount = attempts.filter(
+        (a) => a.status === "PARTIALLY_GRADED" || a.status === "SUBMITTED"
+      ).length;
       const cheatCount = attempts.filter((a) => (a.cheatWarnings || 0) > 0).length;
 
       const scores = attempts.map((a) => Number(a.totalScore || 0));
       const maxScore = scores.length > 0 ? Math.max(...scores) : 0;
-      const avgScore = scores.length > 0 ? parseFloat((scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(1)) : 0;
+      const avgScore =
+        scores.length > 0
+          ? parseFloat((scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(1))
+          : 0;
 
       return { total, gradedCount, pendingCount, cheatCount, maxScore, avgScore };
     }, [attempts]);
@@ -90,14 +111,19 @@ export const TeacherExamAttemptsDrawer: React.FC<TeacherExamAttemptsDrawerProps>
 
       // Filter by status
       if (statusFilter !== "all") {
-        result = result.filter((a) => (a.status || "").toUpperCase() === statusFilter.toUpperCase());
+        result = result.filter(
+          (a) => (a.status || "").toUpperCase() === statusFilter.toUpperCase()
+        );
       }
 
       // Sort
       result.sort((a, b) => {
-        if (sortBy === "score-high") return (Number(b.totalScore) || 0) - (Number(a.totalScore) || 0);
-        if (sortBy === "score-low") return (Number(a.totalScore) || 0) - (Number(b.totalScore) || 0);
-        if (sortBy === "cheats") return (Number(b.cheatWarnings) || 0) - (Number(a.cheatWarnings) || 0);
+        if (sortBy === "score-high")
+          return (Number(b.totalScore) || 0) - (Number(a.totalScore) || 0);
+        if (sortBy === "score-low")
+          return (Number(a.totalScore) || 0) - (Number(b.totalScore) || 0);
+        if (sortBy === "cheats")
+          return (Number(b.cheatWarnings) || 0) - (Number(a.cheatWarnings) || 0);
         // Default: newest
         return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
       });
@@ -182,7 +208,10 @@ export const TeacherExamAttemptsDrawer: React.FC<TeacherExamAttemptsDrawerProps>
         key: "totalScore",
         width: 120,
         render: (score, record) => (
-          <Text strong style={{ color: record.status === "GRADED" ? "#52c41a" : "#1890ff", fontSize: 16 }}>
+          <Text
+            strong
+            style={{ color: record.status === "GRADED" ? "#52c41a" : "#1890ff", fontSize: 16 }}
+          >
             {score !== undefined && score !== null ? score : 0} / 10
           </Text>
         ),
@@ -218,7 +247,12 @@ export const TeacherExamAttemptsDrawer: React.FC<TeacherExamAttemptsDrawerProps>
                 <FileDoneOutlined style={{ color: "#1890ff" }} />
                 <span>Danh sách bài thi & Kết quả: {exam?.title}</span>
               </Space>
-              <Button type="text" icon={<ReloadOutlined spin={loading} />} onClick={fetchAttempts} title="Làm mới" />
+              <Button
+                type="text"
+                icon={<ReloadOutlined spin={loading} />}
+                onClick={fetchAttempts}
+                title="Làm mới"
+              />
             </div>
           }
           placement="right"
@@ -228,31 +262,69 @@ export const TeacherExamAttemptsDrawer: React.FC<TeacherExamAttemptsDrawerProps>
           styles={{ body: { padding: 20 } }}
         >
           {/* 1. Quick Statistics Header */}
-          <Card size="small" style={{ marginBottom: 16, backgroundColor: "#f8f9fa", borderRadius: 12 }}>
+          <Card
+            size="small"
+            style={{ marginBottom: 16, backgroundColor: "#f8f9fa", borderRadius: 12 }}
+          >
             <Row gutter={[12, 12]}>
               <Col xs={12} sm={8} md={4}>
-                <Statistic title={<Text style={{ fontSize: 11 }}>Tổng lượt thi</Text>} value={stats.total} styles={{ content: { fontSize: 18, fontWeight: 700 } }} />
+                <Statistic
+                  title={<Text style={{ fontSize: 11 }}>Tổng lượt thi</Text>}
+                  value={stats.total}
+                  styles={{ content: { fontSize: 18, fontWeight: 700 } }}
+                />
               </Col>
               <Col xs={12} sm={8} md={4}>
-                <Statistic title={<Text style={{ fontSize: 11 }}>🔵 Đã chốt điểm</Text>} value={stats.gradedCount} styles={{ content: { fontSize: 18, fontWeight: 700, color: "#1890ff" } }} />
+                <Statistic
+                  title={<Text style={{ fontSize: 11 }}>🔵 Đã chốt điểm</Text>}
+                  value={stats.gradedCount}
+                  styles={{ content: { fontSize: 18, fontWeight: 700, color: "#1890ff" } }}
+                />
               </Col>
               <Col xs={12} sm={8} md={4}>
-                <Statistic title={<Text style={{ fontSize: 11 }}>🟡 Chờ chấm tự luận</Text>} value={stats.pendingCount} styles={{ content: { fontSize: 18, fontWeight: 700, color: "#faad14" } }} />
+                <Statistic
+                  title={<Text style={{ fontSize: 11 }}>🟡 Chờ chấm tự luận</Text>}
+                  value={stats.pendingCount}
+                  styles={{ content: { fontSize: 18, fontWeight: 700, color: "#faad14" } }}
+                />
               </Col>
               <Col xs={12} sm={8} md={4}>
-                <Statistic title={<Text style={{ fontSize: 11 }}>🚨 Cảnh báo gian lận</Text>} value={stats.cheatCount} styles={{ content: { fontSize: 18, fontWeight: 700, color: "#ff4d4f" } }} />
+                <Statistic
+                  title={<Text style={{ fontSize: 11 }}>🚨 Cảnh báo gian lận</Text>}
+                  value={stats.cheatCount}
+                  styles={{ content: { fontSize: 18, fontWeight: 700, color: "#ff4d4f" } }}
+                />
               </Col>
               <Col xs={12} sm={8} md={4}>
-                <Statistic title={<Text style={{ fontSize: 11 }}>⭐ Điểm trung bình</Text>} value={stats.avgScore} suffix="/10" styles={{ content: { fontSize: 18, fontWeight: 700, color: "#52c41a" } }} />
+                <Statistic
+                  title={<Text style={{ fontSize: 11 }}>⭐ Điểm trung bình</Text>}
+                  value={stats.avgScore}
+                  suffix="/10"
+                  styles={{ content: { fontSize: 18, fontWeight: 700, color: "#52c41a" } }}
+                />
               </Col>
               <Col xs={12} sm={8} md={4}>
-                <Statistic title={<Text style={{ fontSize: 11 }}>🏆 Điểm cao nhất</Text>} value={stats.maxScore} suffix="/10" styles={{ content: { fontSize: 18, fontWeight: 700, color: "#722ed1" } }} />
+                <Statistic
+                  title={<Text style={{ fontSize: 11 }}>🏆 Điểm cao nhất</Text>}
+                  value={stats.maxScore}
+                  suffix="/10"
+                  styles={{ content: { fontSize: 18, fontWeight: 700, color: "#722ed1" } }}
+                />
               </Col>
             </Row>
           </Card>
 
           {/* 2. Toolbar */}
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12, marginBottom: 16 }}>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              flexWrap: "wrap",
+              gap: 12,
+              marginBottom: 16,
+            }}
+          >
             <Space size={12} wrap>
               <Input
                 placeholder="Tìm sinh viên theo tên/email/mã..."
@@ -303,7 +375,14 @@ export const TeacherExamAttemptsDrawer: React.FC<TeacherExamAttemptsDrawerProps>
               pagination={{ pageSize: 10 }}
             />
           ) : (
-            <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={searchQuery || statusFilter !== "all" ? "Không tìm thấy lượt làm bài phù hợp bộ lọc." : "Chưa có học sinh nào nộp bài thi này."} />
+            <Empty
+              image={Empty.PRESENTED_IMAGE_SIMPLE}
+              description={
+                searchQuery || statusFilter !== "all"
+                  ? "Không tìm thấy lượt làm bài phù hợp bộ lọc."
+                  : "Chưa có học sinh nào nộp bài thi này."
+              }
+            />
           )}
         </Drawer>
 

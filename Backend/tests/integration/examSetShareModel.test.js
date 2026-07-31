@@ -3,7 +3,10 @@
 // Khác với tests/unit/*, các test trong tests/integration/* không chạy được nếu thiếu MongoDB.
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from "vitest";
 import mongoose from "mongoose";
-import ExamSetShare, { EXAM_SET_SHARE_PERMISSION, EXAM_SET_SHARE_STATUS } from "../../src/models/examSetShare.model.js";
+import ExamSetShare, {
+  EXAM_SET_SHARE_PERMISSION,
+  EXAM_SET_SHARE_STATUS,
+} from "../../src/models/examSetShare.model.js";
 
 const TEST_URI = process.env.MONGO_TEST_URI || "mongodb://127.0.0.1:27017/ai_lms_test";
 
@@ -215,7 +218,9 @@ describe("ExamSetShare model", () => {
     }
     expect(error).toBeTruthy();
     expect(error.name).toBe("ValidationError");
-    expect(Object.values(error.errors).some((e) => e.message.includes("Cast to date failed"))).toBe(true);
+    expect(Object.values(error.errors).some((e) => e.message.includes("Cast to date failed"))).toBe(
+      true
+    );
   });
 
   it("Fails when note is too long", async () => {
@@ -241,11 +246,23 @@ describe("ExamSetShare model", () => {
     const ownerId = new mongoose.Types.ObjectId();
     const sharedBy = new mongoose.Types.ObjectId();
 
-    await new ExamSetShare({ examSetId, ownerId, sharedWithUserId, permission: EXAM_SET_SHARE_PERMISSION.VIEW, sharedBy }).save();
+    await new ExamSetShare({
+      examSetId,
+      ownerId,
+      sharedWithUserId,
+      permission: EXAM_SET_SHARE_PERMISSION.VIEW,
+      sharedBy,
+    }).save();
 
     let error;
     try {
-      await new ExamSetShare({ examSetId, ownerId, sharedWithUserId, permission: EXAM_SET_SHARE_PERMISSION.EDIT, sharedBy }).save();
+      await new ExamSetShare({
+        examSetId,
+        ownerId,
+        sharedWithUserId,
+        permission: EXAM_SET_SHARE_PERMISSION.EDIT,
+        sharedBy,
+      }).save();
     } catch (err) {
       error = err;
     }
@@ -258,8 +275,20 @@ describe("ExamSetShare model", () => {
     const ownerId = new mongoose.Types.ObjectId();
     const sharedBy = new mongoose.Types.ObjectId();
 
-    await new ExamSetShare({ examSetId, ownerId, sharedWithUserId: new mongoose.Types.ObjectId(), permission: EXAM_SET_SHARE_PERMISSION.VIEW, sharedBy }).save();
-    const second = await new ExamSetShare({ examSetId, ownerId, sharedWithUserId: new mongoose.Types.ObjectId(), permission: EXAM_SET_SHARE_PERMISSION.EDIT, sharedBy }).save();
+    await new ExamSetShare({
+      examSetId,
+      ownerId,
+      sharedWithUserId: new mongoose.Types.ObjectId(),
+      permission: EXAM_SET_SHARE_PERMISSION.VIEW,
+      sharedBy,
+    }).save();
+    const second = await new ExamSetShare({
+      examSetId,
+      ownerId,
+      sharedWithUserId: new mongoose.Types.ObjectId(),
+      permission: EXAM_SET_SHARE_PERMISSION.EDIT,
+      sharedBy,
+    }).save();
     expect(String(second.examSetId)).toBe(String(examSetId));
   });
 
@@ -268,8 +297,20 @@ describe("ExamSetShare model", () => {
     const sharedWithUserId = new mongoose.Types.ObjectId();
     const sharedBy = new mongoose.Types.ObjectId();
 
-    await new ExamSetShare({ examSetId: new mongoose.Types.ObjectId(), ownerId, sharedWithUserId, permission: EXAM_SET_SHARE_PERMISSION.VIEW, sharedBy }).save();
-    const second = await new ExamSetShare({ examSetId: new mongoose.Types.ObjectId(), ownerId, sharedWithUserId, permission: EXAM_SET_SHARE_PERMISSION.EDIT, sharedBy }).save();
+    await new ExamSetShare({
+      examSetId: new mongoose.Types.ObjectId(),
+      ownerId,
+      sharedWithUserId,
+      permission: EXAM_SET_SHARE_PERMISSION.VIEW,
+      sharedBy,
+    }).save();
+    const second = await new ExamSetShare({
+      examSetId: new mongoose.Types.ObjectId(),
+      ownerId,
+      sharedWithUserId,
+      permission: EXAM_SET_SHARE_PERMISSION.EDIT,
+      sharedBy,
+    }).save();
     expect(String(second.sharedWithUserId)).toBe(String(sharedWithUserId));
   });
 

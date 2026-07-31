@@ -7,15 +7,8 @@ interface AITutorSidebarProps {
 }
 
 export function AITutorSidebar({ lessonId }: AITutorSidebarProps) {
-  const {
-    session,
-    messages,
-    isLoading,
-    isTyping,
-    error,
-    initSession,
-    sendMessage,
-  } = useAIChat(lessonId);
+  const { session, messages, isLoading, isTyping, error, initSession, sendMessage } =
+    useAIChat(lessonId);
 
   const [inputText, setInputText] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -69,17 +62,16 @@ export function AITutorSidebar({ lessonId }: AITutorSidebarProps) {
         ) : error ? (
           <div className="text-center text-error mt-4">
             <p className="text-sm">{error}</p>
-            <button
-              onClick={initSession}
-              className="mt-2 text-primary text-xs underline"
-            >
+            <button onClick={initSession} className="mt-2 text-primary text-xs underline">
               Thử lại
             </button>
           </div>
         ) : messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center text-on-surface-variant opacity-60">
             <span className="material-symbols-outlined text-4xl mb-2">forum</span>
-            <p className="text-sm">Hãy đặt câu hỏi cho AI Scholar để được hỗ trợ giải đáp thắc mắc.</p>
+            <p className="text-sm">
+              Hãy đặt câu hỏi cho AI Scholar để được hỗ trợ giải đáp thắc mắc.
+            </p>
           </div>
         ) : (
           messages.map((msg, idx) => (
@@ -109,10 +101,18 @@ export function AITutorSidebar({ lessonId }: AITutorSidebarProps) {
           <div className="self-start flex flex-col max-w-[85%]">
             <div className="px-4 py-3 bg-white border border-outline-variant rounded-2xl rounded-tl-sm shadow-sm flex items-center gap-1">
               <span className="w-2 h-2 bg-slate-400 rounded-full animate-bounce"></span>
-              <span className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: "0.2s" }}></span>
-              <span className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: "0.4s" }}></span>
+              <span
+                className="w-2 h-2 bg-slate-400 rounded-full animate-bounce"
+                style={{ animationDelay: "0.2s" }}
+              ></span>
+              <span
+                className="w-2 h-2 bg-slate-400 rounded-full animate-bounce"
+                style={{ animationDelay: "0.4s" }}
+              ></span>
             </div>
-            <span className="text-[10px] text-on-surface-variant mt-1 px-1">AI Scholar đang trả lời...</span>
+            <span className="text-[10px] text-on-surface-variant mt-1 px-1">
+              AI Scholar đang trả lời...
+            </span>
           </div>
         )}
         <div ref={messagesEndRef} />
@@ -134,7 +134,10 @@ export function AITutorSidebar({ lessonId }: AITutorSidebarProps) {
             onClick={handleSend}
             disabled={!inputText.trim() || isLoading || isTyping}
           >
-            <span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>
+            <span
+              className="material-symbols-outlined text-[20px]"
+              style={{ fontVariationSettings: "'FILL' 1" }}
+            >
               send
             </span>
           </button>

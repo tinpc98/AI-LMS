@@ -18,9 +18,7 @@ export const useAIFeatures = () => {
       prev.map((feat) => {
         if (feat.id === id) {
           const nextState = !feat.enabled;
-          message.success(
-            `Feature "${feat.name}" is now ${nextState ? "Enabled" : "Disabled"}`
-          );
+          message.success(`Feature "${feat.name}" is now ${nextState ? "Enabled" : "Disabled"}`);
           return { ...feat, enabled: nextState };
         }
         return feat;

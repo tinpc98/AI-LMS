@@ -54,7 +54,9 @@ export const TeacherReport: React.FC = () => {
       title: "Học sinh phụ trách",
       dataIndex: "totalStudentsTaught",
       key: "totalStudentsTaught",
-      render: (count: number) => <span className="font-medium text-gray-700">{count} Học sinh</span>,
+      render: (count: number) => (
+        <span className="font-medium text-gray-700">{count} Học sinh</span>
+      ),
     },
     {
       title: "Buổi dạy trực tuyến",
@@ -110,7 +112,9 @@ export const TeacherReport: React.FC = () => {
             <Statistic
               title="Đang Giảng Dạy Đột Phá"
               value={activeTeachers * 10 || 36}
-              prefix={<CheckCircleOutlined className="text-green-500 mr-2 p-2 bg-green-50 rounded-lg" />}
+              prefix={
+                <CheckCircleOutlined className="text-green-500 mr-2 p-2 bg-green-50 rounded-lg" />
+              }
             />
           </Card>
         </Col>
@@ -129,7 +133,10 @@ export const TeacherReport: React.FC = () => {
       </Row>
 
       {/* Table */}
-      <Card title="Báo Cáo Năng Lực & Hiệu Suất Giảng Dạy của Giáo Viên" className="rounded-xl border border-gray-100 shadow-sm">
+      <Card
+        title="Báo Cáo Năng Lực & Hiệu Suất Giảng Dạy của Giáo Viên"
+        className="rounded-xl border border-gray-100 shadow-sm"
+      >
         <Table
           columns={columns}
           dataSource={teacherPerformanceList}

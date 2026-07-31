@@ -28,7 +28,8 @@ export const AIAnalytics: React.FC = () => {
     mockAILogs.reduce((acc, curr) => acc + curr.responseTimeMs, 0) / (mockAILogs.length || 1)
   );
   const successCount = mockAILogs.filter((l) => l.status === "Success").length;
-  const successRate = mockAILogs.length > 0 ? Math.round((successCount / mockAILogs.length) * 100) : 100;
+  const successRate =
+    mockAILogs.length > 0 ? Math.round((successCount / mockAILogs.length) * 100) : 100;
 
   const hourlyUsageData = [
     { hour: "08:00", requests: 45, tokens: 18500 },
@@ -120,7 +121,9 @@ export const AIAnalytics: React.FC = () => {
             <Statistic
               title="Tổng Tokens Đã Tiêu Tốn"
               value={totalTokens * 400 + 152000}
-              prefix={<ThunderboltOutlined className="text-indigo-500 mr-2 p-2 bg-indigo-50 rounded-lg" />}
+              prefix={
+                <ThunderboltOutlined className="text-indigo-500 mr-2 p-2 bg-indigo-50 rounded-lg" />
+              }
             />
           </Card>
         </Col>
@@ -131,7 +134,9 @@ export const AIAnalytics: React.FC = () => {
               title="Độ Trễ Phản Hồi TB (Latency)"
               value={avgLatency || 950}
               suffix="ms"
-              prefix={<ClockCircleOutlined className="text-blue-500 mr-2 p-2 bg-blue-50 rounded-lg" />}
+              prefix={
+                <ClockCircleOutlined className="text-blue-500 mr-2 p-2 bg-blue-50 rounded-lg" />
+              }
             />
           </Card>
         </Col>
@@ -142,14 +147,19 @@ export const AIAnalytics: React.FC = () => {
               title="Tỷ Lệ Xử Lý Thành Công"
               value={successRate}
               suffix="%"
-              prefix={<CheckCircleOutlined className="text-green-500 mr-2 p-2 bg-green-50 rounded-lg" />}
+              prefix={
+                <CheckCircleOutlined className="text-green-500 mr-2 p-2 bg-green-50 rounded-lg" />
+              }
             />
           </Card>
         </Col>
       </Row>
 
       {/* Model status cards */}
-      <Card title="Các Mô Hình AI Đang Hoạt Động (Active AI Models)" className="rounded-xl border border-gray-100 shadow-sm">
+      <Card
+        title="Các Mô Hình AI Đang Hoạt Động (Active AI Models)"
+        className="rounded-xl border border-gray-100 shadow-sm"
+      >
         <Row gutter={[16, 16]}>
           {mockAIModels.map((model) => (
             <Col xs={24} sm={12} md={6} key={model.id}>
@@ -161,8 +171,14 @@ export const AIAnalytics: React.FC = () => {
                   </span>
                   <Tag color={model.isDefault ? "purple" : "blue"}>{model.provider}</Tag>
                 </div>
-                <div className="text-xs text-gray-500 mb-2">Max Token: {model.maxContextTokens.toLocaleString()}</div>
-                <Progress percent={model.status ? 100 : 0} size="small" status={model.status ? "success" : "exception"} />
+                <div className="text-xs text-gray-500 mb-2">
+                  Max Token: {model.maxContextTokens.toLocaleString()}
+                </div>
+                <Progress
+                  percent={model.status ? 100 : 0}
+                  size="small"
+                  status={model.status ? "success" : "exception"}
+                />
               </div>
             </Col>
           ))}
@@ -170,7 +186,10 @@ export const AIAnalytics: React.FC = () => {
       </Card>
 
       {/* Chart */}
-      <Card title="Tần Suất Sử Dụng & Token Tiêu Tốn Trong Ngày" className="rounded-xl border border-gray-100 shadow-sm">
+      <Card
+        title="Tần Suất Sử Dụng & Token Tiêu Tốn Trong Ngày"
+        className="rounded-xl border border-gray-100 shadow-sm"
+      >
         <div className="h-72">
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={hourlyUsageData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
@@ -184,20 +203,25 @@ export const AIAnalytics: React.FC = () => {
               <XAxis dataKey="hour" tickLine={false} />
               <YAxis tickLine={false} axisLine={false} />
               <Tooltip />
-              <Area type="monotone" dataKey="tokens" name="Số Tokens tiêu tốn" stroke="#722ed1" fillOpacity={1} fill="url(#colorTokens)" />
+              <Area
+                type="monotone"
+                dataKey="tokens"
+                name="Số Tokens tiêu tốn"
+                stroke="#722ed1"
+                fillOpacity={1}
+                fill="url(#colorTokens)"
+              />
             </AreaChart>
           </ResponsiveContainer>
         </div>
       </Card>
 
       {/* Logs Table */}
-      <Card title="Nhật Ký Tương Tác AI (AI Log Traces)" className="rounded-xl border border-gray-100 shadow-sm">
-        <Table
-          columns={columns}
-          dataSource={mockAILogs}
-          rowKey="id"
-          pagination={false}
-        />
+      <Card
+        title="Nhật Ký Tương Tác AI (AI Log Traces)"
+        className="rounded-xl border border-gray-100 shadow-sm"
+      >
+        <Table columns={columns} dataSource={mockAILogs} rowKey="id" pagination={false} />
       </Card>
     </div>
   );

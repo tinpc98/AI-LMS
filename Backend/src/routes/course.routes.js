@@ -13,7 +13,6 @@ import { verifyUser, isAdmin } from "../middlewares/auth.middleware.js";
 
 const router = Router();
 
-
 // ===== Static routes =====
 router.get("/trash", verifyUser, isAdmin, getCourseTrash);
 

@@ -1,5 +1,10 @@
 import axiosClient from "../../api/axiosClient";
-import type { AccountRecord, ClassRecord, CourseRecord, TeacherAssignmentFilters } from "./teacherAssignment.types";
+import type {
+  AccountRecord,
+  ClassRecord,
+  CourseRecord,
+  TeacherAssignmentFilters,
+} from "./teacherAssignment.types";
 
 const mapClass = (c: any): ClassRecord => {
   return {
@@ -15,7 +20,7 @@ const mapClass = (c: any): ClassRecord => {
 export const teacherAssignmentService = {
   getClasses: async (filters?: TeacherAssignmentFilters): Promise<ClassRecord[]> => {
     const params: Record<string, any> = { ...filters };
-    
+
     // Map custom status filter to backend isAssigned boolean
     if (params.status === "Assigned") {
       params.isAssigned = true;
@@ -65,4 +70,3 @@ export const teacherAssignmentService = {
     return mapClass(res.data.data);
   },
 };
-

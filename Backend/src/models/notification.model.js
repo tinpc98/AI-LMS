@@ -55,25 +55,34 @@ const notificationSchema = new Schema(
     type: {
       type: String,
       // Đã mở rộng enum để hỗ trợ các sự kiện thực tế mới
-      enum: ["system", "class", "grade", "attendance", "announcement", "exam", "LIVE_SESSION_CREATED", "CLASS_ENROLLED"],
+      enum: [
+        "system",
+        "class",
+        "grade",
+        "attendance",
+        "announcement",
+        "exam",
+        "LIVE_SESSION_CREATED",
+        "CLASS_ENROLLED",
+      ],
       default: "system",
     },
 
     entityType: {
       type: String,
       enum: ["LIVE_SESSION", "CLASS", "EXAM", "ASSIGNMENT", "ANNOUNCEMENT", "SYSTEM", "NONE"],
-      default: "NONE"
+      default: "NONE",
     },
 
     entityId: {
       type: Schema.Types.ObjectId,
-      default: null
+      default: null,
     },
 
     classId: {
       type: Schema.Types.ObjectId,
       ref: "Class",
-      default: null
+      default: null,
     },
 
     // Trạng thái đọc

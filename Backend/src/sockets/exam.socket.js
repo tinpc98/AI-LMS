@@ -56,7 +56,11 @@ export default function socketHandler(io) {
       } catch (error) {
         console.error("[EXAM_SOCKET] JOIN_EXAM_ROOM Error:", error.message);
         if (typeof ack === "function") {
-          ack({ success: false, code: "SOCKET_INTERNAL_ERROR", message: "Lỗi hệ thống khi tham gia phòng thi." });
+          ack({
+            success: false,
+            code: "SOCKET_INTERNAL_ERROR",
+            message: "Lỗi hệ thống khi tham gia phòng thi.",
+          });
         }
       }
     });
@@ -83,7 +87,9 @@ export default function socketHandler(io) {
       if (socket.role !== "student" || !socket.attemptId) return;
 
       if (typeof cheatType !== "string" || !ALLOWED_CHEAT_TYPES.includes(cheatType)) {
-        console.warn(`⚠️ [EXAM_SOCKET] cheatType không hợp lệ từ ${socket.fullName}: ${JSON.stringify(cheatType)}`);
+        console.warn(
+          `⚠️ [EXAM_SOCKET] cheatType không hợp lệ từ ${socket.fullName}: ${JSON.stringify(cheatType)}`
+        );
         return;
       }
 

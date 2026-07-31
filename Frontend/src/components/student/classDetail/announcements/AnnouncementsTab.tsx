@@ -30,10 +30,10 @@ export const AnnouncementsTab: React.FC<AnnouncementsTabProps> = React.memo(
       handleSortChange,
     } = useStudentAnnouncements(rawAnnouncements);
 
-    const { selectedAnnouncement, isDetailOpen, openDetail, closeDetail } = useAnnouncementDetail(markAsRead);
+    const { selectedAnnouncement, isDetailOpen, openDetail, closeDetail } =
+      useAnnouncementDetail(markAsRead);
 
-    const isFiltered =
-      filters.searchQuery.trim() !== "" || filters.filterType !== "all";
+    const isFiltered = filters.searchQuery.trim() !== "" || filters.filterType !== "all";
 
     return (
       <div style={{ padding: "8px 0" }}>

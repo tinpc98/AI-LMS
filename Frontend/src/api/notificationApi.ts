@@ -12,7 +12,9 @@ export const mapNotificationItem = (item: any): INotificationItem => {
     _id: item._id || item.id || `notif-${Date.now()}`,
     title: item.title || "Thông báo",
     description: item.message || item.content || item.description || "",
-    category: (item.type === "LIVE_SESSION_CREATED" ? "live" : (item.type || item.category || "system")) as any,
+    category: (item.type === "LIVE_SESSION_CREATED"
+      ? "live"
+      : item.type || item.category || "system") as any,
     priority: item.priority || "normal",
     isRead: Boolean(item.isRead),
     createdAt: item.createdAt || new Date().toISOString(),
@@ -27,10 +29,10 @@ export const mapNotificationItem = (item: any): INotificationItem => {
 export const notificationApi = {
   // Lấy danh sách tất cả thông báo hệ thống cá nhân
   getNotifications: async (): Promise<INotificationItem[]> => {
-    const response = await axiosClient.get<{ success?: boolean; data?: any[] }>("/api/notifications");
-    const rawList = Array.isArray(response.data)
-      ? response.data
-      : response.data?.data || [];
+    const response = await axiosClient.get<{ success?: boolean; data?: any[] }>(
+      "/api/notifications"
+    );
+    const rawList = Array.isArray(response.data) ? response.data : response.data?.data || [];
 
     return rawList.map(mapNotificationItem);
   },

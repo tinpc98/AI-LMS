@@ -10,9 +10,10 @@ export const errorHandler = (err, req, res, next) => {
   // Với lỗi 500 không xác định (không phải AppError cố ý ném ra), không lộ message nội bộ
   // ra client ở production — tránh rò rỉ chi tiết triển khai (đường dẫn file, tên thư viện,...).
   const isUnexpected = status === 500 && !err.isAppError && !err.isAIError;
-  const message = isUnexpected && isProduction()
-    ? "Đã xảy ra lỗi nội bộ trên Server!"
-    : err.message || "Đã xảy ra lỗi nội bộ trên Server!";
+  const message =
+    isUnexpected && isProduction()
+      ? "Đã xảy ra lỗi nội bộ trên Server!"
+      : err.message || "Đã xảy ra lỗi nội bộ trên Server!";
 
   console.error(
     `🔥 [${req.requestId || "no-request-id"}] ${req.method} ${req.originalUrl} → ${status}:`,

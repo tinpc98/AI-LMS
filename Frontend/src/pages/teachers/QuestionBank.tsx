@@ -125,7 +125,12 @@ export default function QuestionBank() {
       key: "correctAnswer",
       width: 180,
       render: (answer, record) => {
-        if (record.type === "ESSAY") return <Text type="secondary" style={{ fontStyle: "italic", fontSize: 12 }}>Tự luận</Text>;
+        if (record.type === "ESSAY")
+          return (
+            <Text type="secondary" style={{ fontStyle: "italic", fontSize: 12 }}>
+              Tự luận
+            </Text>
+          );
         return answer ? (
           <Text strong style={{ color: "#52c41a", fontSize: 13 }} ellipsis>
             {answer}
@@ -207,7 +212,15 @@ export default function QuestionBank() {
   ];
 
   return (
-    <div style={{ padding: "24px", maxWidth: 1400, margin: "0 auto", backgroundColor: "#f8f9fa", minHeight: "100vh" }}>
+    <div
+      style={{
+        padding: "24px",
+        maxWidth: 1400,
+        margin: "0 auto",
+        backgroundColor: "#f8f9fa",
+        minHeight: "100vh",
+      }}
+    >
       {/* 1. Header Banner */}
       <Card
         style={{
@@ -219,7 +232,15 @@ export default function QuestionBank() {
         }}
         styles={{ body: { padding: "24px 32px" } }}
       >
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 16 }}>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            flexWrap: "wrap",
+            gap: 16,
+          }}
+        >
           <div>
             <Space size={12} align="center">
               <DatabaseOutlined style={{ fontSize: 28, color: "#fff" }} />
@@ -227,8 +248,16 @@ export default function QuestionBank() {
                 Ngân hàng câu hỏi Hệ thống (Question Bank)
               </Title>
             </Space>
-            <Text style={{ color: "rgba(255,255,255,0.85)", display: "block", marginTop: 8, fontSize: 14 }}>
-              Tạo và quản lý kho câu hỏi dùng chung để tái sử dụng cho các bài kiểm tra, kỳ thi Giữa kỳ và Cuối kỳ.
+            <Text
+              style={{
+                color: "rgba(255,255,255,0.85)",
+                display: "block",
+                marginTop: 8,
+                fontSize: 14,
+              }}
+            >
+              Tạo và quản lý kho câu hỏi dùng chung để tái sử dụng cho các bài kiểm tra, kỳ thi Giữa
+              kỳ và Cuối kỳ.
             </Text>
           </div>
 
@@ -258,7 +287,17 @@ export default function QuestionBank() {
           description={error}
           type="error"
           showIcon
-          action={<Button size="small" type="primary" danger icon={<ReloadOutlined />} onClick={fetchQuestions}>Thử lại</Button>}
+          action={
+            <Button
+              size="small"
+              type="primary"
+              danger
+              icon={<ReloadOutlined />}
+              onClick={fetchQuestions}
+            >
+              Thử lại
+            </Button>
+          }
           style={{ borderRadius: 8, marginBottom: 20 }}
         />
       )}
@@ -266,7 +305,15 @@ export default function QuestionBank() {
       {/* 3. Main Content: Toolbar & Table */}
       <Card
         title={
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              flexWrap: "wrap",
+              gap: 12,
+            }}
+          >
             <Space size={12} wrap>
               <Input
                 placeholder="Tìm nội dung hoặc chủ đề..."

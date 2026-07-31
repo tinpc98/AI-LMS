@@ -78,7 +78,9 @@ export const TeacherLiveSessionTab: React.FC<TeacherLiveSessionTabProps> = React
       try {
         const newSession = await createSession();
         if (newSession && newSession.id) {
-          navigate(`/teacher/live/${newSession.id}`, { state: { classId, returnUrl: location.pathname } });
+          navigate(`/teacher/live/${newSession.id}`, {
+            state: { classId, returnUrl: location.pathname },
+          });
         }
       } catch (err) {
         console.error("[TeacherLiveSessionTab] handleStart Error:", err);
@@ -170,7 +172,16 @@ export const TeacherLiveSessionTab: React.FC<TeacherLiveSessionTabProps> = React
             }}
             styles={{ body: { padding: "24px 32px" } }}
           >
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 16, marginBottom: 20 }}>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                flexWrap: "wrap",
+                gap: 16,
+                marginBottom: 20,
+              }}
+            >
               <div>
                 <Space size={12} align="center">
                   <VideoCameraOutlined style={{ fontSize: 28, color: "#fff" }} />
@@ -178,8 +189,16 @@ export const TeacherLiveSessionTab: React.FC<TeacherLiveSessionTabProps> = React
                     Quản lý Phòng học Live: {className}
                   </Title>
                 </Space>
-                <Text style={{ color: "rgba(255,255,255,0.85)", display: "block", marginTop: 4, fontSize: 13 }}>
-                  Khởi tạo buổi học trực tuyến JaaS 8x8, giảng dạy trực tiếp và tương tác với học sinh.
+                <Text
+                  style={{
+                    color: "rgba(255,255,255,0.85)",
+                    display: "block",
+                    marginTop: 4,
+                    fontSize: 13,
+                  }}
+                >
+                  Khởi tạo buổi học trực tuyến JaaS 8x8, giảng dạy trực tiếp và tương tác với học
+                  sinh.
                 </Text>
               </div>
 
@@ -200,29 +219,75 @@ export const TeacherLiveSessionTab: React.FC<TeacherLiveSessionTabProps> = React
 
             <Row gutter={[16, 16]}>
               <Col xs={12} sm={8} md={6}>
-                <div style={{ backgroundColor: "rgba(255,255,255,0.15)", padding: "12px 16px", borderRadius: 12, border: "1px solid rgba(255,255,255,0.25)" }}>
+                <div
+                  style={{
+                    backgroundColor: "rgba(255,255,255,0.15)",
+                    padding: "12px 16px",
+                    borderRadius: 12,
+                    border: "1px solid rgba(255,255,255,0.25)",
+                  }}
+                >
                   <Statistic
-                    title={<Text style={{ color: "rgba(255,255,255,0.85)", fontSize: 12 }}>Trạng thái phòng</Text>}
+                    title={
+                      <Text style={{ color: "rgba(255,255,255,0.85)", fontSize: 12 }}>
+                        Trạng thái phòng
+                      </Text>
+                    }
                     value={isSessionLive ? "ĐANG LIVE" : "SẴN SÀNG"}
-                    styles={{ content: { color: isSessionLive ? "#ffccc7" : "#b7eb8f", fontWeight: 700, fontSize: 18 } }}
+                    styles={{
+                      content: {
+                        color: isSessionLive ? "#ffccc7" : "#b7eb8f",
+                        fontWeight: 700,
+                        fontSize: 18,
+                      },
+                    }}
                   />
                 </div>
               </Col>
 
               <Col xs={12} sm={8} md={6}>
-                <div style={{ backgroundColor: "rgba(255,255,255,0.15)", padding: "12px 16px", borderRadius: 12, border: "1px solid rgba(255,255,255,0.25)" }}>
+                <div
+                  style={{
+                    backgroundColor: "rgba(255,255,255,0.15)",
+                    padding: "12px 16px",
+                    borderRadius: 12,
+                    border: "1px solid rgba(255,255,255,0.25)",
+                  }}
+                >
                   <Statistic
-                    title={<Text style={{ color: "rgba(255,255,255,0.85)", fontSize: 12 }}>Phòng JaaS Room Name</Text>}
+                    title={
+                      <Text style={{ color: "rgba(255,255,255,0.85)", fontSize: 12 }}>
+                        Phòng JaaS Room Name
+                      </Text>
+                    }
                     value={currentRoomName || "Chưa tạo"}
-                    styles={{ content: { color: "#fff", fontWeight: 600, fontSize: 15, fontFamily: "monospace" } }}
+                    styles={{
+                      content: {
+                        color: "#fff",
+                        fontWeight: 600,
+                        fontSize: 15,
+                        fontFamily: "monospace",
+                      },
+                    }}
                   />
                 </div>
               </Col>
 
               <Col xs={12} sm={8} md={6}>
-                <div style={{ backgroundColor: "rgba(255,255,255,0.15)", padding: "12px 16px", borderRadius: 12, border: "1px solid rgba(255,255,255,0.25)" }}>
+                <div
+                  style={{
+                    backgroundColor: "rgba(255,255,255,0.15)",
+                    padding: "12px 16px",
+                    borderRadius: 12,
+                    border: "1px solid rgba(255,255,255,0.25)",
+                  }}
+                >
                   <Statistic
-                    title={<Text style={{ color: "rgba(255,255,255,0.85)", fontSize: 12 }}>Giảng viên chủ trì</Text>}
+                    title={
+                      <Text style={{ color: "rgba(255,255,255,0.85)", fontSize: 12 }}>
+                        Giảng viên chủ trì
+                      </Text>
+                    }
                     value={teacherName}
                     prefix={<UserOutlined style={{ color: "#ffe58f", marginRight: 6 }} />}
                     styles={{ content: { color: "#fff", fontWeight: 600, fontSize: 16 } }}
@@ -231,9 +296,20 @@ export const TeacherLiveSessionTab: React.FC<TeacherLiveSessionTabProps> = React
               </Col>
 
               <Col xs={12} sm={8} md={6}>
-                <div style={{ backgroundColor: "rgba(255,255,255,0.15)", padding: "12px 16px", borderRadius: 12, border: "1px solid rgba(255,255,255,0.25)" }}>
+                <div
+                  style={{
+                    backgroundColor: "rgba(255,255,255,0.15)",
+                    padding: "12px 16px",
+                    borderRadius: 12,
+                    border: "1px solid rgba(255,255,255,0.25)",
+                  }}
+                >
                   <Statistic
-                    title={<Text style={{ color: "rgba(255,255,255,0.85)", fontSize: 12 }}>Nền tảng tích hợp</Text>}
+                    title={
+                      <Text style={{ color: "rgba(255,255,255,0.85)", fontSize: 12 }}>
+                        Nền tảng tích hợp
+                      </Text>
+                    }
                     value="8x8 JaaS (RS256)"
                     styles={{ content: { color: "#fff", fontWeight: 600, fontSize: 16 } }}
                   />
@@ -248,9 +324,25 @@ export const TeacherLiveSessionTab: React.FC<TeacherLiveSessionTabProps> = React
               <Skeleton active paragraph={{ rows: 3 }} />
             ) : isSessionLive ? (
               <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    flexWrap: "wrap",
+                    gap: 12,
+                  }}
+                >
                   <Space size={12} align="center">
-                    <Badge status="processing" color="red" text={<Text strong style={{ color: "#cf1322", fontSize: 16 }}>🔴 BUỔI HỌC TRỰC TUYẾN ĐANG DIỄN RA</Text>} />
+                    <Badge
+                      status="processing"
+                      color="red"
+                      text={
+                        <Text strong style={{ color: "#cf1322", fontSize: 16 }}>
+                          🔴 BUỔI HỌC TRỰC TUYẾN ĐANG DIỄN RA
+                        </Text>
+                      }
+                    />
                     {activeSession?.sessionNumber && (
                       <Tag color="volcano">Buổi số #{activeSession.sessionNumber}</Tag>
                     )}
@@ -266,7 +358,8 @@ export const TeacherLiveSessionTab: React.FC<TeacherLiveSessionTabProps> = React
                 </div>
 
                 <Paragraph style={{ fontSize: 14, color: "#595959", margin: 0 }}>
-                  Buổi học <b>{activeSession?.title}</b> của lớp <b>{className}</b> đang được bật. Học sinh có thể tham gia vào phòng học ngay lúc này.
+                  Buổi học <b>{activeSession?.title}</b> của lớp <b>{className}</b> đang được bật.
+                  Học sinh có thể tham gia vào phòng học ngay lúc này.
                 </Paragraph>
 
                 <div style={{ display: "flex", gap: 16, marginTop: 8, flexWrap: "wrap" }}>
@@ -277,7 +370,13 @@ export const TeacherLiveSessionTab: React.FC<TeacherLiveSessionTabProps> = React
                     icon={<PlayCircleOutlined />}
                     loading={isActionLoading}
                     onClick={handleJoin}
-                    style={{ fontWeight: 700, borderRadius: 8, height: 44, paddingLeft: 24, paddingRight: 24 }}
+                    style={{
+                      fontWeight: 700,
+                      borderRadius: 8,
+                      height: 44,
+                      paddingLeft: 24,
+                      paddingRight: 24,
+                    }}
                   >
                     Tham gia phòng học ngay
                   </Button>
@@ -310,8 +409,12 @@ export const TeacherLiveSessionTab: React.FC<TeacherLiveSessionTabProps> = React
                 <Title level={4} style={{ marginBottom: 8 }}>
                   Bắt đầu buổi học trực tuyến mới cho lớp {className}
                 </Title>
-                <Paragraph type="secondary" style={{ maxWidth: 600, margin: "0 auto 24px", fontSize: 14 }}>
-                  Bấm vào nút bên dưới để tự động tạo phiên học trực tuyến 8x8 JaaS. Hệ thống sẽ phát thông báo thời gian thực tới tất cả học sinh trong lớp.
+                <Paragraph
+                  type="secondary"
+                  style={{ maxWidth: 600, margin: "0 auto 24px", fontSize: 14 }}
+                >
+                  Bấm vào nút bên dưới để tự động tạo phiên học trực tuyến 8x8 JaaS. Hệ thống sẽ
+                  phát thông báo thời gian thực tới tất cả học sinh trong lớp.
                 </Paragraph>
 
                 <Button
@@ -320,7 +423,14 @@ export const TeacherLiveSessionTab: React.FC<TeacherLiveSessionTabProps> = React
                   icon={<VideoCameraOutlined />}
                   loading={isActionLoading}
                   onClick={handleStart}
-                  style={{ fontWeight: 700, borderRadius: 8, height: 48, paddingLeft: 32, paddingRight: 32, fontSize: 16 }}
+                  style={{
+                    fontWeight: 700,
+                    borderRadius: 8,
+                    height: 48,
+                    paddingLeft: 32,
+                    paddingRight: 32,
+                    fontSize: 16,
+                  }}
                 >
                   Bắt đầu phòng LIVE ngay
                 </Button>
@@ -332,9 +442,15 @@ export const TeacherLiveSessionTab: React.FC<TeacherLiveSessionTabProps> = React
           <Card title="📌 Thông tin & Hướng dẫn phòng học Live" style={{ borderRadius: 12 }}>
             <Descriptions bordered column={{ xs: 1, sm: 2, md: 2 }}>
               <Descriptions.Item label="Lớp học">{className}</Descriptions.Item>
-              <Descriptions.Item label="Phân quyền">{teacherName} (Giáo viên chủ trì - Host)</Descriptions.Item>
-              <Descriptions.Item label="Công nghệ Video Call">8x8 JaaS / Jitsi Meet WebRTC</Descriptions.Item>
-              <Descriptions.Item label="Bảo mật Token">RS256 JWT Signed Token (Scoped Room)</Descriptions.Item>
+              <Descriptions.Item label="Phân quyền">
+                {teacherName} (Giáo viên chủ trì - Host)
+              </Descriptions.Item>
+              <Descriptions.Item label="Công nghệ Video Call">
+                8x8 JaaS / Jitsi Meet WebRTC
+              </Descriptions.Item>
+              <Descriptions.Item label="Bảo mật Token">
+                RS256 JWT Signed Token (Scoped Room)
+              </Descriptions.Item>
             </Descriptions>
           </Card>
         </div>

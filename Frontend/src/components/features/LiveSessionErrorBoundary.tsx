@@ -27,7 +27,12 @@ export class LiveSessionErrorBoundary extends Component<Props, State> {
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     // Log an toàn, không chứa thông tin JWT
-    console.error("🔴 [LiveSessionErrorBoundary] Caught UI error:", error.name, error.message, errorInfo.componentStack);
+    console.error(
+      "🔴 [LiveSessionErrorBoundary] Caught UI error:",
+      error.name,
+      error.message,
+      errorInfo.componentStack
+    );
   }
 
   private handleRetry = () => {
@@ -65,10 +70,14 @@ export class LiveSessionErrorBoundary extends Component<Props, State> {
               Phòng học trực tuyến gặp lỗi
             </Title>
             <Paragraph style={{ color: "#595959", maxWidth: 500, margin: "0 auto", fontSize: 14 }}>
-              Đã xảy ra sự cố không mong muốn trong giao diện gọi video. Lỗi này đã được ngắt kết nối an toàn để không ảnh hưởng đến toàn bộ hệ thống.
+              Đã xảy ra sự cố không mong muốn trong giao diện gọi video. Lỗi này đã được ngắt kết
+              nối an toàn để không ảnh hưởng đến toàn bộ hệ thống.
             </Paragraph>
             {this.state.error?.message && (
-              <Text type="secondary" style={{ fontSize: 12, fontFamily: "monospace", display: "block" }}>
+              <Text
+                type="secondary"
+                style={{ fontSize: 12, fontFamily: "monospace", display: "block" }}
+              >
                 Chi tiết: {this.state.error.message}
               </Text>
             )}

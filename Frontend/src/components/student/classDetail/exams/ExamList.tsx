@@ -16,12 +16,7 @@ export const ExamList: React.FC<ExamListProps> = React.memo(
       <Row gutter={[16, 16]}>
         {exams.map((item) => (
           <Col xs={24} sm={12} lg={8} xl={6} key={item._id}>
-            <ExamCard
-              item={item}
-              onDetail={onDetail}
-              onStart={onStart}
-              onReview={onReview}
-            />
+            <ExamCard item={item} onDetail={onDetail} onStart={onStart} onReview={onReview} />
           </Col>
         ))}
       </Row>

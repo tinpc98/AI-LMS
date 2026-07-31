@@ -1,9 +1,16 @@
 import { Form, Input, InputNumber, Modal, Select } from "antd";
-import type { KnowledgeCategory, KnowledgeDocument, KnowledgeFileType, KnowledgeStatus } from "../types/aiManagement.types";
+import type {
+  KnowledgeCategory,
+  KnowledgeDocument,
+  KnowledgeFileType,
+  KnowledgeStatus,
+} from "../types/aiManagement.types";
 
 interface AddKnowledgeModalProps {
   open: boolean;
-  onSubmit: (values: Omit<KnowledgeDocument, "id" | "createdAt" | "updatedAt" | "chunksCount">) => void;
+  onSubmit: (
+    values: Omit<KnowledgeDocument, "id" | "createdAt" | "updatedAt" | "chunksCount">
+  ) => void;
   onCancel: () => void;
 }
 
@@ -43,7 +50,11 @@ const AddKnowledgeModal = ({ open, onSubmit, onCancel }: AddKnowledgeModalProps)
           status: "Pending" as KnowledgeStatus,
         }}
       >
-        <Form.Item name="name" label="Document Title" rules={[{ required: true, message: "Enter document title" }]}>
+        <Form.Item
+          name="name"
+          label="Document Title"
+          rules={[{ required: true, message: "Enter document title" }]}
+        >
           <Input placeholder="e.g. Sách giáo khoa Toán 12 Nâng cao.pdf" />
         </Form.Item>
 

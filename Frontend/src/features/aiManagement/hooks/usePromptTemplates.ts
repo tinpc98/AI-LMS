@@ -56,7 +56,9 @@ export const usePromptTemplates = () => {
 
   const updatePrompt = (id: string, promptData: Partial<PromptTemplate>) => {
     setPrompts((prev) =>
-      prev.map((p) => (p.id === id ? { ...p, ...promptData, updatedAt: new Date().toISOString() } : p))
+      prev.map((p) =>
+        p.id === id ? { ...p, ...promptData, updatedAt: new Date().toISOString() } : p
+      )
     );
     message.success("Prompt updated successfully.");
   };

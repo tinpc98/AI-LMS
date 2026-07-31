@@ -22,8 +22,8 @@ class CronService {
     const result = await classModel.updateMany(
       {
         isDeleted: false,
-        startDate: { $lte: now },                    // Ngày bắt đầu đã đến hoặc qua
-        endDate: { $gt: now },                       // Ngày kết thúc chưa đến (chưa xong)
+        startDate: { $lte: now }, // Ngày bắt đầu đã đến hoặc qua
+        endDate: { $gt: now }, // Ngày kết thúc chưa đến (chưa xong)
         status: { $in: ["Draft", "Ready", "Upcoming"] }, // Các trạng thái cần chuyển sang Ongoing
       },
       {
@@ -45,8 +45,8 @@ class CronService {
     const result = await classModel.updateMany(
       {
         isDeleted: false,
-        endDate: { $lte: now },                      // Ngày kết thúc đã đến hoặc qua
-        status: { $in: ["Ongoing", "Active"] },       // Bao gồm legacy "Active"
+        endDate: { $lte: now }, // Ngày kết thúc đã đến hoặc qua
+        status: { $in: ["Ongoing", "Active"] }, // Bao gồm legacy "Active"
       },
       {
         $set: { status: "Completed" },

@@ -15,7 +15,11 @@ function createExcelBuffer(data) {
 }
 
 // Controller mock request
-const createMockRequest = ({ file, body = {}, user = { id: "507f1f77bcf86cd799439011" } } = {}) => ({
+const createMockRequest = ({
+  file,
+  body = {},
+  user = { id: "507f1f77bcf86cd799439011" },
+} = {}) => ({
   file,
   body,
   user,
@@ -62,7 +66,9 @@ async function runUnitTests() {
     const req = createMockRequest();
     const res = createMockResponse();
     const handler = createImportExcelExamSetHandler({
-      importService: async () => { throw new Error("Should not be called"); }
+      importService: async () => {
+        throw new Error("Should not be called");
+      },
     });
     await handler(req, res);
     assert.strictEqual(res.statusCode, 400);
@@ -77,7 +83,7 @@ async function runUnitTests() {
         const err = new Error("Thiếu folderId");
         err.statusCode = 400;
         throw err;
-      }
+      },
     });
     await handler(req, res);
     assert.strictEqual(res.statusCode, 400);
@@ -91,7 +97,7 @@ async function runUnitTests() {
         const err = new Error("folderId không hợp lệ");
         err.statusCode = 400;
         throw err;
-      }
+      },
     });
     await handler(req, res);
     assert.strictEqual(res.statusCode, 400);
@@ -105,7 +111,7 @@ async function runUnitTests() {
         const err = new Error("Folder không tồn tại");
         err.statusCode = 404;
         throw err;
-      }
+      },
     });
     await handler(req, res);
     assert.strictEqual(res.statusCode, 404);
@@ -119,7 +125,7 @@ async function runUnitTests() {
         const err = new Error("Không có quyền truy cập Folder");
         err.statusCode = 403;
         throw err;
-      }
+      },
     });
     await handler(req, res);
     assert.strictEqual(res.statusCode, 403);
@@ -133,7 +139,7 @@ async function runUnitTests() {
         const err = new Error("File không đúng định dạng Excel");
         err.statusCode = 415;
         throw err;
-      }
+      },
     });
     await handler(req, res);
     assert.strictEqual(res.statusCode, 415);
@@ -147,7 +153,7 @@ async function runUnitTests() {
         const err = new Error("Dòng 2: Thiếu nội dung câu hỏi (content)");
         err.statusCode = 422;
         throw err;
-      }
+      },
     });
     await handler(req, res);
     assert.strictEqual(res.statusCode, 422);
@@ -161,7 +167,7 @@ async function runUnitTests() {
         const err = new Error("Lỗi module cũ");
         err.status = 409;
         throw err;
-      }
+      },
     });
     await handler(req, res);
     assert.strictEqual(res.statusCode, 409);
@@ -171,7 +177,9 @@ async function runUnitTests() {
     const req = createMockRequest({ file: { buffer: Buffer.from("") } });
     const res = createMockResponse();
     const handler = createImportExcelExamSetHandler({
-      importService: async () => { throw new Error("Unexpected error"); }
+      importService: async () => {
+        throw new Error("Unexpected error");
+      },
     });
     await handler(req, res);
     assert.strictEqual(res.statusCode, 500);
@@ -190,9 +198,9 @@ async function runUnitTests() {
           status: "draft",
           questionCount: 31,
           totalPoints: 31,
-          questions: []
+          questions: [],
         };
-      }
+      },
     });
     await handler(req, res);
     assert.strictEqual(res.statusCode, 201);
@@ -211,10 +219,14 @@ async function runUnitTests() {
 
   const setupMocks = () => {
     Folder.findOne = async (query) => {
-      if (query._id === validFolderId) return { _id: validFolderId, ownerId: ownerId, isDeleted: false };
+      if (query._id === validFolderId)
+        return { _id: validFolderId, ownerId: ownerId, isDeleted: false };
       return null;
     };
-    ExamSet.prototype.save = async function() { this._id = "mocked-examset"; return this; };
+    ExamSet.prototype.save = async function () {
+      this._id = "mocked-examset";
+      return this;
+    };
   };
 
   const expectError = async (fn, statusCode) => {
@@ -223,75 +235,151 @@ async function runUnitTests() {
       assert.fail("Should throw an error");
     } catch (e) {
       if (e.name === "AssertionError") throw e;
-      assert.strictEqual(e.statusCode, statusCode, `Expected status code ${statusCode}, got ${e.statusCode}`);
+      assert.strictEqual(
+        e.statusCode,
+        statusCode,
+        `Expected status code ${statusCode}, got ${e.statusCode}`
+      );
     }
   };
 
-  const validBuffer = createExcelBuffer([{ type: "MCQ", content: "A?", options: "1|2", correctAnswer: "1", points: 2, difficulty: "easy" }]);
+  const validBuffer = createExcelBuffer([
+    {
+      type: "MCQ",
+      content: "A?",
+      options: "1|2",
+      correctAnswer: "1",
+      points: 2,
+      difficulty: "easy",
+    },
+  ]);
 
   // Test 1-10
   await runTest("1. File Excel hợp lệ", async () => {
     setupMocks();
     try {
-      const res = await importExcelToExamSet({ fileBuffer: validBuffer, ownerId, folderId: validFolderId, title: "T" });
-          assert.strictEqual(res.questions.length, 1);
+      const res = await importExcelToExamSet({
+        fileBuffer: validBuffer,
+        ownerId,
+        folderId: validFolderId,
+        title: "T",
+      });
+      assert.strictEqual(res.questions.length, 1);
     } finally {
       resetMocks();
     }
   });
-  
+
   await runTest("2. File rỗng", async () => {
     setupMocks();
     try {
       const buf = Buffer.from("");
-          await expectError(() => importExcelToExamSet({ fileBuffer: buf, ownerId, folderId: validFolderId, title: "T" }), 400);
+      await expectError(
+        () =>
+          importExcelToExamSet({ fileBuffer: buf, ownerId, folderId: validFolderId, title: "T" }),
+        400
+      );
     } finally {
       resetMocks();
     }
   });
-  
+
   await runTest("3. Sheet rỗng", async () => {
     setupMocks();
     try {
       const buf = createExcelBuffer([]);
-          await expectError(() => importExcelToExamSet({ fileBuffer: buf, ownerId, folderId: validFolderId, title: "T" }), 400);
+      await expectError(
+        () =>
+          importExcelToExamSet({ fileBuffer: buf, ownerId, folderId: validFolderId, title: "T" }),
+        400
+      );
     } finally {
       resetMocks();
     }
   });
 
   await runTest("4. Thiếu file", async () => {
-    await expectError(() => importExcelToExamSet({ fileBuffer: null, ownerId, folderId: validFolderId, title: "T" }), 400);
+    await expectError(
+      () =>
+        importExcelToExamSet({ fileBuffer: null, ownerId, folderId: validFolderId, title: "T" }),
+      400
+    );
   });
 
   await runTest("5. Thiếu title", async () => {
-    await expectError(() => importExcelToExamSet({ fileBuffer: validBuffer, ownerId, folderId: validFolderId, title: null }), 400);
+    await expectError(
+      () =>
+        importExcelToExamSet({
+          fileBuffer: validBuffer,
+          ownerId,
+          folderId: validFolderId,
+          title: null,
+        }),
+      400
+    );
   });
 
   await runTest("6. Title chỉ có khoảng trắng", async () => {
-    await expectError(() => importExcelToExamSet({ fileBuffer: validBuffer, ownerId, folderId: validFolderId, title: "   " }), 400);
+    await expectError(
+      () =>
+        importExcelToExamSet({
+          fileBuffer: validBuffer,
+          ownerId,
+          folderId: validFolderId,
+          title: "   ",
+        }),
+      400
+    );
   });
 
   await runTest("7. Thiếu folderId", async () => {
-    await expectError(() => importExcelToExamSet({ fileBuffer: validBuffer, ownerId, folderId: "", title: "T" }), 400);
+    await expectError(
+      () => importExcelToExamSet({ fileBuffer: validBuffer, ownerId, folderId: "", title: "T" }),
+      400
+    );
   });
 
   await runTest("8. folderId sai định dạng", async () => {
-    await expectError(() => importExcelToExamSet({ fileBuffer: validBuffer, ownerId, folderId: "abc", title: "T" }), 400);
+    await expectError(
+      () => importExcelToExamSet({ fileBuffer: validBuffer, ownerId, folderId: "abc", title: "T" }),
+      400
+    );
   });
 
   await runTest("9. Folder không tồn tại", async () => {
     setupMocks();
     try {
-      await expectError(() => importExcelToExamSet({ fileBuffer: validBuffer, ownerId, folderId: new mongoose.Types.ObjectId().toString(), title: "T" }), 404);
+      await expectError(
+        () =>
+          importExcelToExamSet({
+            fileBuffer: validBuffer,
+            ownerId,
+            folderId: new mongoose.Types.ObjectId().toString(),
+            title: "T",
+          }),
+        404
+      );
     } finally {
       resetMocks();
     }
   });
 
   await runTest("10. Folder không thuộc owner", async () => {
-    Folder.findOne = async () => ({ _id: validFolderId, ownerId: new mongoose.Types.ObjectId().toString(), isDeleted: false });
-    await expectError(() => importExcelToExamSet({ fileBuffer: validBuffer, ownerId, folderId: validFolderId, title: "T" }), 403);
+    Folder.findOne = async () => ({
+      _id: validFolderId,
+      ownerId: new mongoose.Types.ObjectId().toString(),
+      isDeleted: false,
+    });
+    await expectError(
+      () =>
+        importExcelToExamSet({
+          fileBuffer: validBuffer,
+          ownerId,
+          folderId: validFolderId,
+          title: "T",
+        }),
+      403
+    );
     resetMocks();
   });
 
@@ -299,8 +387,13 @@ async function runUnitTests() {
   await runTest("11. MCQ hợp lệ", async () => {
     setupMocks();
     try {
-      const res = await importExcelToExamSet({ fileBuffer: validBuffer, ownerId, folderId: validFolderId, title: "T" });
-          assert.strictEqual(res.questions[0].type, "multiple_choice");
+      const res = await importExcelToExamSet({
+        fileBuffer: validBuffer,
+        ownerId,
+        folderId: validFolderId,
+        title: "T",
+      });
+      assert.strictEqual(res.questions[0].type, "multiple_choice");
     } finally {
       resetMocks();
     }
@@ -310,8 +403,13 @@ async function runUnitTests() {
     setupMocks();
     try {
       const buf = createExcelBuffer([{ type: "Essay", content: "Viết bài", points: 5 }]);
-          const res = await importExcelToExamSet({ fileBuffer: buf, ownerId, folderId: validFolderId, title: "T" });
-          assert.strictEqual(res.questions[0].type, "essay");
+      const res = await importExcelToExamSet({
+        fileBuffer: buf,
+        ownerId,
+        folderId: validFolderId,
+        title: "T",
+      });
+      assert.strictEqual(res.questions[0].type, "essay");
     } finally {
       resetMocks();
     }
@@ -320,9 +418,16 @@ async function runUnitTests() {
   await runTest("13. True/False hợp lệ", async () => {
     setupMocks();
     try {
-      const buf = createExcelBuffer([{ type: "TRUE_FALSE", content: "A?", options: "True|False", correctAnswer: "TRUE" }]);
-          const res = await importExcelToExamSet({ fileBuffer: buf, ownerId, folderId: validFolderId, title: "T" });
-          assert.strictEqual(res.questions[0].type, "true_false");
+      const buf = createExcelBuffer([
+        { type: "TRUE_FALSE", content: "A?", options: "True|False", correctAnswer: "TRUE" },
+      ]);
+      const res = await importExcelToExamSet({
+        fileBuffer: buf,
+        ownerId,
+        folderId: validFolderId,
+        title: "T",
+      });
+      assert.strictEqual(res.questions[0].type, "true_false");
     } finally {
       resetMocks();
     }
@@ -331,9 +436,16 @@ async function runUnitTests() {
   await runTest("14. Short Answer hợp lệ", async () => {
     setupMocks();
     try {
-      const buf = createExcelBuffer([{ type: "SHORT_ANSWER", content: "A?", correctAnswer: "Ans" }]);
-          const res = await importExcelToExamSet({ fileBuffer: buf, ownerId, folderId: validFolderId, title: "T" });
-          assert.strictEqual(res.questions[0].type, "short_answer");
+      const buf = createExcelBuffer([
+        { type: "SHORT_ANSWER", content: "A?", correctAnswer: "Ans" },
+      ]);
+      const res = await importExcelToExamSet({
+        fileBuffer: buf,
+        ownerId,
+        folderId: validFolderId,
+        title: "T",
+      });
+      assert.strictEqual(res.questions[0].type, "short_answer");
     } finally {
       resetMocks();
     }
@@ -342,8 +454,14 @@ async function runUnitTests() {
   await runTest("15. Options không hợp lệ", async () => {
     setupMocks();
     try {
-      const buf = createExcelBuffer([{ type: "MCQ", content: "A?", options: "1", correctAnswer: "1" }]);
-          await expectError(() => importExcelToExamSet({ fileBuffer: buf, ownerId, folderId: validFolderId, title: "T" }), 422);
+      const buf = createExcelBuffer([
+        { type: "MCQ", content: "A?", options: "1", correctAnswer: "1" },
+      ]);
+      await expectError(
+        () =>
+          importExcelToExamSet({ fileBuffer: buf, ownerId, folderId: validFolderId, title: "T" }),
+        422
+      );
     } finally {
       resetMocks();
     }
@@ -352,8 +470,14 @@ async function runUnitTests() {
   await runTest("16. correctAnswer không khớp option", async () => {
     setupMocks();
     try {
-      const buf = createExcelBuffer([{ type: "MCQ", content: "A?", options: "A|B", correctAnswer: "C" }]);
-          await expectError(() => importExcelToExamSet({ fileBuffer: buf, ownerId, folderId: validFolderId, title: "T" }), 422);
+      const buf = createExcelBuffer([
+        { type: "MCQ", content: "A?", options: "A|B", correctAnswer: "C" },
+      ]);
+      await expectError(
+        () =>
+          importExcelToExamSet({ fileBuffer: buf, ownerId, folderId: validFolderId, title: "T" }),
+        422
+      );
     } finally {
       resetMocks();
     }
@@ -362,9 +486,17 @@ async function runUnitTests() {
   await runTest("17. Câu hỏi trùng nội dung", async () => {
     setupMocks();
     try {
-      const buf = createExcelBuffer([{ type: "Essay", content: "A" }, { type: "Essay", content: "A" }]);
-          const res = await importExcelToExamSet({ fileBuffer: buf, ownerId, folderId: validFolderId, title: "T" });
-          assert.strictEqual(res.questions.length, 1);
+      const buf = createExcelBuffer([
+        { type: "Essay", content: "A" },
+        { type: "Essay", content: "A" },
+      ]);
+      const res = await importExcelToExamSet({
+        fileBuffer: buf,
+        ownerId,
+        folderId: validFolderId,
+        title: "T",
+      });
+      assert.strictEqual(res.questions.length, 1);
     } finally {
       resetMocks();
     }
@@ -373,9 +505,17 @@ async function runUnitTests() {
   await runTest("18. Câu trùng khác chữ hoa/chữ thường", async () => {
     setupMocks();
     try {
-      const buf = createExcelBuffer([{ type: "Essay", content: "hello" }, { type: "Essay", content: "HELLO" }]);
-          const res = await importExcelToExamSet({ fileBuffer: buf, ownerId, folderId: validFolderId, title: "T" });
-          assert.strictEqual(res.questions.length, 1);
+      const buf = createExcelBuffer([
+        { type: "Essay", content: "hello" },
+        { type: "Essay", content: "HELLO" },
+      ]);
+      const res = await importExcelToExamSet({
+        fileBuffer: buf,
+        ownerId,
+        folderId: validFolderId,
+        title: "T",
+      });
+      assert.strictEqual(res.questions.length, 1);
     } finally {
       resetMocks();
     }
@@ -384,9 +524,17 @@ async function runUnitTests() {
   await runTest("19. Câu trùng có khoảng trắng thừa", async () => {
     setupMocks();
     try {
-      const buf = createExcelBuffer([{ type: "Essay", content: "hello world" }, { type: "Essay", content: "hello   world" }]);
-          const res = await importExcelToExamSet({ fileBuffer: buf, ownerId, folderId: validFolderId, title: "T" });
-          assert.strictEqual(res.questions.length, 1);
+      const buf = createExcelBuffer([
+        { type: "Essay", content: "hello world" },
+        { type: "Essay", content: "hello   world" },
+      ]);
+      const res = await importExcelToExamSet({
+        fileBuffer: buf,
+        ownerId,
+        folderId: validFolderId,
+        title: "T",
+      });
+      assert.strictEqual(res.questions.length, 1);
     } finally {
       resetMocks();
     }
@@ -396,8 +544,13 @@ async function runUnitTests() {
     setupMocks();
     try {
       const buf = createExcelBuffer([{ type: "Essay", content: "A", points: "" }]);
-          const res = await importExcelToExamSet({ fileBuffer: buf, ownerId, folderId: validFolderId, title: "T" });
-          assert.strictEqual(res.questions[0].points, 1);
+      const res = await importExcelToExamSet({
+        fileBuffer: buf,
+        ownerId,
+        folderId: validFolderId,
+        title: "T",
+      });
+      assert.strictEqual(res.questions[0].points, 1);
     } finally {
       resetMocks();
     }
@@ -408,7 +561,11 @@ async function runUnitTests() {
     setupMocks();
     try {
       const buf = createExcelBuffer([{ type: "Essay", content: "A", points: -1 }]);
-          await expectError(() => importExcelToExamSet({ fileBuffer: buf, ownerId, folderId: validFolderId, title: "T" }), 422);
+      await expectError(
+        () =>
+          importExcelToExamSet({ fileBuffer: buf, ownerId, folderId: validFolderId, title: "T" }),
+        422
+      );
     } finally {
       resetMocks();
     }
@@ -418,7 +575,11 @@ async function runUnitTests() {
     setupMocks();
     try {
       const buf = createExcelBuffer([{ type: "Essay", content: "A", points: "abc" }]);
-          await expectError(() => importExcelToExamSet({ fileBuffer: buf, ownerId, folderId: validFolderId, title: "T" }), 422);
+      await expectError(
+        () =>
+          importExcelToExamSet({ fileBuffer: buf, ownerId, folderId: validFolderId, title: "T" }),
+        422
+      );
     } finally {
       resetMocks();
     }
@@ -428,8 +589,13 @@ async function runUnitTests() {
     setupMocks();
     try {
       const buf = createExcelBuffer([{ type: "Essay", content: "A", difficulty: "hard" }]);
-          const res = await importExcelToExamSet({ fileBuffer: buf, ownerId, folderId: validFolderId, title: "T" });
-          assert.strictEqual(res.questions[0].difficulty, "hard");
+      const res = await importExcelToExamSet({
+        fileBuffer: buf,
+        ownerId,
+        folderId: validFolderId,
+        title: "T",
+      });
+      assert.strictEqual(res.questions[0].difficulty, "hard");
     } finally {
       resetMocks();
     }
@@ -439,8 +605,13 @@ async function runUnitTests() {
     setupMocks();
     try {
       const buf = createExcelBuffer([{ type: "Essay", content: "A", difficulty: "super hard" }]);
-          const res = await importExcelToExamSet({ fileBuffer: buf, ownerId, folderId: validFolderId, title: "T" });
-          assert.strictEqual(res.questions[0].difficulty, "medium");
+      const res = await importExcelToExamSet({
+        fileBuffer: buf,
+        ownerId,
+        folderId: validFolderId,
+        title: "T",
+      });
+      assert.strictEqual(res.questions[0].difficulty, "medium");
     } finally {
       resetMocks();
     }
@@ -450,7 +621,11 @@ async function runUnitTests() {
     setupMocks();
     try {
       const buf = createExcelBuffer([{ type: "Essay", content: "" }]);
-          await expectError(() => importExcelToExamSet({ fileBuffer: buf, ownerId, folderId: validFolderId, title: "T" }), 422);
+      await expectError(
+        () =>
+          importExcelToExamSet({ fileBuffer: buf, ownerId, folderId: validFolderId, title: "T" }),
+        422
+      );
     } finally {
       resetMocks();
     }
@@ -459,8 +634,13 @@ async function runUnitTests() {
   await runTest("26. Tính đúng questionCount", async () => {
     setupMocks();
     try {
-      const res = await importExcelToExamSet({ fileBuffer: validBuffer, ownerId, folderId: validFolderId, title: "T" });
-          assert.strictEqual(res.questionCount, 1);
+      const res = await importExcelToExamSet({
+        fileBuffer: validBuffer,
+        ownerId,
+        folderId: validFolderId,
+        title: "T",
+      });
+      assert.strictEqual(res.questionCount, 1);
     } finally {
       resetMocks();
     }
@@ -469,8 +649,13 @@ async function runUnitTests() {
   await runTest("27. Tính đúng totalPoints", async () => {
     setupMocks();
     try {
-      const res = await importExcelToExamSet({ fileBuffer: validBuffer, ownerId, folderId: validFolderId, title: "T" });
-          assert.strictEqual(res.totalPoints, 2);
+      const res = await importExcelToExamSet({
+        fileBuffer: validBuffer,
+        ownerId,
+        folderId: validFolderId,
+        title: "T",
+      });
+      assert.strictEqual(res.totalPoints, 2);
     } finally {
       resetMocks();
     }
@@ -479,15 +664,25 @@ async function runUnitTests() {
   await runTest("Import Service không gọi Question Model", async () => {
     const fs = await import("fs");
     const serviceSource = fs.readFileSync("src/services/examSetImport.service.js", "utf8");
-    const hasQuestionModel = serviceSource.includes("Question.create") || 
-                             serviceSource.includes("Question.insertMany") || 
-                             serviceSource.includes("new Question") ||
-                             serviceSource.includes("Question.bulkWrite");
-    assert.strictEqual(hasQuestionModel, false, "Source code của service không được chứa lời gọi Question model");
-    
+    const hasQuestionModel =
+      serviceSource.includes("Question.create") ||
+      serviceSource.includes("Question.insertMany") ||
+      serviceSource.includes("new Question") ||
+      serviceSource.includes("Question.bulkWrite");
+    assert.strictEqual(
+      hasQuestionModel,
+      false,
+      "Source code của service không được chứa lời gọi Question model"
+    );
+
     setupMocks();
     try {
-      const res = await importExcelToExamSet({ fileBuffer: validBuffer, ownerId, folderId: validFolderId, title: "T" });
+      const res = await importExcelToExamSet({
+        fileBuffer: validBuffer,
+        ownerId,
+        folderId: validFolderId,
+        title: "T",
+      });
       assert.strictEqual(res.questions.length > 0, true);
     } finally {
       resetMocks();
@@ -497,8 +692,13 @@ async function runUnitTests() {
   await runTest("29. ownerId lấy từ user đã xác thực", async () => {
     setupMocks();
     try {
-      const res = await importExcelToExamSet({ fileBuffer: validBuffer, ownerId, folderId: validFolderId, title: "T" });
-          assert.strictEqual(String(res.ownerId), ownerId);
+      const res = await importExcelToExamSet({
+        fileBuffer: validBuffer,
+        ownerId,
+        folderId: validFolderId,
+        title: "T",
+      });
+      assert.strictEqual(String(res.ownerId), ownerId);
     } finally {
       resetMocks();
     }
@@ -507,8 +707,13 @@ async function runUnitTests() {
   await runTest("30. status luôn là draft", async () => {
     setupMocks();
     try {
-      const res = await importExcelToExamSet({ fileBuffer: validBuffer, ownerId, folderId: validFolderId, title: "T" });
-          assert.strictEqual(res.status, "draft");
+      const res = await importExcelToExamSet({
+        fileBuffer: validBuffer,
+        ownerId,
+        folderId: validFolderId,
+        title: "T",
+      });
+      assert.strictEqual(res.status, "draft");
     } finally {
       resetMocks();
     }
@@ -517,22 +722,33 @@ async function runUnitTests() {
   console.log("\n--- BẮT ĐẦU TEST MULTER (FIX-04) ---");
   const { excelFileFilter, mapExcelUploadError } = await import("../routes/examSet.routes.js");
   const multer = (await import("multer")).default;
-  
+
   await runTest("Multer: File .xlsx với MIME chuẩn được chấp nhận", () => {
     let cbCalled = false;
-    excelFileFilter({}, { originalname: "test.xlsx", mimetype: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" }, (err, accept) => {
-      cbCalled = true;
-      assert.strictEqual(err, null);
-      assert.strictEqual(accept, true);
-    });
+    excelFileFilter(
+      {},
+      {
+        originalname: "test.xlsx",
+        mimetype: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      },
+      (err, accept) => {
+        cbCalled = true;
+        assert.strictEqual(err, null);
+        assert.strictEqual(accept, true);
+      }
+    );
     assert.strictEqual(cbCalled, true, "Phải gọi cb()");
   });
-  
+
   await runTest("Multer: File .xls với MIME chuẩn được chấp nhận", () => {
-    excelFileFilter({}, { originalname: "test.xls", mimetype: "application/vnd.ms-excel" }, (err, accept) => {
-      assert.strictEqual(err, null);
-      assert.strictEqual(accept, true);
-    });
+    excelFileFilter(
+      {},
+      { originalname: "test.xls", mimetype: "application/vnd.ms-excel" },
+      (err, accept) => {
+        assert.strictEqual(err, null);
+        assert.strictEqual(accept, true);
+      }
+    );
   });
 
   await runTest("Multer: File .txt trả HTTP 415", () => {
@@ -554,12 +770,16 @@ async function runUnitTests() {
   });
 
   await runTest("Multer: MIME Excel nhưng extension .txt trả 415", () => {
-    excelFileFilter({}, { originalname: "test.txt", mimetype: "application/vnd.ms-excel" }, (err, accept) => {
-      assert.ok(err);
-      assert.strictEqual(accept, false);
-      const mapped = mapExcelUploadError(err);
-      assert.strictEqual(mapped.status, 415);
-    });
+    excelFileFilter(
+      {},
+      { originalname: "test.txt", mimetype: "application/vnd.ms-excel" },
+      (err, accept) => {
+        assert.ok(err);
+        assert.strictEqual(accept, false);
+        const mapped = mapExcelUploadError(err);
+        assert.strictEqual(mapped.status, 415);
+      }
+    );
   });
 
   await runTest("Multer: File vượt 5 MB trả HTTP 413", () => {

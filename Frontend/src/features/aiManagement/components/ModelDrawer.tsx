@@ -11,12 +11,20 @@ const ModelDrawer = ({ open, model, onClose }: ModelDrawerProps) => {
   if (!model) return null;
 
   return (
-    <Drawer title="AI Model Specifications" placement="right" width={480} open={open} onClose={onClose}>
+    <Drawer
+      title="AI Model Specifications"
+      placement="right"
+      width={480}
+      open={open}
+      onClose={onClose}
+    >
       <div style={{ marginBottom: 20 }}>
         <Typography.Title level={4} style={{ margin: 0 }}>
           {model.name}
         </Typography.Title>
-        <Typography.Text type="secondary">{model.provider} • Version {model.version}</Typography.Text>
+        <Typography.Text type="secondary">
+          {model.provider} • Version {model.version}
+        </Typography.Text>
         <div style={{ marginTop: 8, display: "flex", gap: 8 }}>
           <Tag color={model.status === "Active" ? "green" : "default"}>{model.status}</Tag>
           <Tag color="geekblue">Priority {model.priority}</Tag>
@@ -30,7 +38,8 @@ const ModelDrawer = ({ open, model, onClose }: ModelDrawerProps) => {
         <Descriptions.Item label="Version">{model.version}</Descriptions.Item>
         <Descriptions.Item label="Priority">Level {model.priority}</Descriptions.Item>
         <Descriptions.Item label="Context Window">
-          {model.maxContextTokens.toLocaleString()} tokens ({(model.maxContextTokens / 1000).toLocaleString()}k)
+          {model.maxContextTokens.toLocaleString()} tokens (
+          {(model.maxContextTokens / 1000).toLocaleString()}k)
         </Descriptions.Item>
         <Descriptions.Item label="Default Status">
           {model.isDefault ? "Primary Default Model" : "Secondary / Specialty Model"}

@@ -44,7 +44,11 @@ const runTests = async () => {
 
   try {
     // 1 & 2. Verify AI Core method Production exists
-    assertEqual("Test 1: executeStructuredAI exists", typeof aiCoreService.executeStructuredAI, "function");
+    assertEqual(
+      "Test 1: executeStructuredAI exists",
+      typeof aiCoreService.executeStructuredAI,
+      "function"
+    );
 
     // VALIDATOR TESTS (Tests 4 - 9)
     const validOutput = {
@@ -52,30 +56,54 @@ const runTests = async () => {
       confidence: 0.9,
       aiFeedback: "Good",
       criterionScores: [{ criterion: "A", scoreEarned: 8.5, maxScore: 10, feedback: "Good" }],
-      warnings: []
+      warnings: [],
     };
 
-    assertEqual("Test 4: Validator accepts valid output", validateGradingOutput(JSON.stringify(validOutput), 10).suggestedScore, 8.5);
+    assertEqual(
+      "Test 4: Validator accepts valid output",
+      validateGradingOutput(JSON.stringify(validOutput), 10).suggestedScore,
+      8.5
+    );
 
-    await assertThrows("Test 5: Validator rejects negative score", async () => {
-      validateGradingOutput(JSON.stringify({ ...validOutput, suggestedScore: -1 }), 10);
-    }, "giới hạn");
+    await assertThrows(
+      "Test 5: Validator rejects negative score",
+      async () => {
+        validateGradingOutput(JSON.stringify({ ...validOutput, suggestedScore: -1 }), 10);
+      },
+      "giới hạn"
+    );
 
-    await assertThrows("Test 6: Validator rejects score > maxScore", async () => {
-      validateGradingOutput(JSON.stringify({ ...validOutput, suggestedScore: 11 }), 10);
-    }, "giới hạn");
+    await assertThrows(
+      "Test 6: Validator rejects score > maxScore",
+      async () => {
+        validateGradingOutput(JSON.stringify({ ...validOutput, suggestedScore: 11 }), 10);
+      },
+      "giới hạn"
+    );
 
-    await assertThrows("Test 7: Validator rejects NaN score", async () => {
-      validateGradingOutput(JSON.stringify({ ...validOutput, suggestedScore: NaN }), 10);
-    }, "hợp lệ");
+    await assertThrows(
+      "Test 7: Validator rejects NaN score",
+      async () => {
+        validateGradingOutput(JSON.stringify({ ...validOutput, suggestedScore: NaN }), 10);
+      },
+      "hợp lệ"
+    );
 
-    await assertThrows("Test 8: Validator rejects Infinity score", async () => {
-      validateGradingOutput(JSON.stringify({ ...validOutput, suggestedScore: Infinity }), 10);
-    }, "hợp lệ");
+    await assertThrows(
+      "Test 8: Validator rejects Infinity score",
+      async () => {
+        validateGradingOutput(JSON.stringify({ ...validOutput, suggestedScore: Infinity }), 10);
+      },
+      "hợp lệ"
+    );
 
-    await assertThrows("Test 9: Validator rejects confidence out of bounds", async () => {
-      validateGradingOutput(JSON.stringify({ ...validOutput, confidence: 1.5 }), 10);
-    }, "khoảng [0, 1]");
+    await assertThrows(
+      "Test 9: Validator rejects confidence out of bounds",
+      async () => {
+        validateGradingOutput(JSON.stringify({ ...validOutput, confidence: 1.5 }), 10);
+      },
+      "khoảng [0, 1]"
+    );
 
     // Logic for dynamic total sync (AI-FIX-04)
     const validOutputMismatched = {
@@ -84,7 +112,11 @@ const runTests = async () => {
       criterionScores: [{ criterion: "A", scoreEarned: 9.0, maxScore: 10, feedback: "Good" }],
     };
     const syncedResult = validateGradingOutput(JSON.stringify(validOutputMismatched), 10);
-    assertEqual("Test: Validator syncs suggestedScore with totalCriterionEarned", syncedResult.suggestedScore, 9.0);
+    assertEqual(
+      "Test: Validator syncs suggestedScore with totalCriterionEarned",
+      syncedResult.suggestedScore,
+      9.0
+    );
 
     // MOCKS
     let mockExamId = new mongoose.Types.ObjectId();
@@ -103,15 +135,15 @@ const runTests = async () => {
           snapshotData: {
             type: "essay",
             content: "Phân tích tác phẩm ABC",
-            rubric: { "Nội dung": 6, "Trình bày": 4 }
-          }
-        }
-      ]
+            rubric: { "Nội dung": 6, "Trình bày": 4 },
+          },
+        },
+      ],
     };
 
     const mockAttempt = {
       _id: mockAttemptId,
-      examId: mockExam, 
+      examId: mockExam,
       studentId: new mongoose.Types.ObjectId(),
       status: "PARTIALLY_GRADED",
       totalScore: 0,
@@ -119,40 +151,46 @@ const runTests = async () => {
         {
           questionId: mockSnapshotQuestionId,
           essayText: "Tác phẩm ABC rất hay...",
-          pointsEarned: 0
-        }
+          pointsEarned: 0,
+        },
       ],
-      save: () => Promise.resolve()
+      save: () => Promise.resolve(),
     };
 
     ExamAttempt.findById = () => ({
-      populate: () => Promise.resolve(mockAttempt)
+      populate: () => Promise.resolve(mockAttempt),
     });
 
     let aiCallCount = 0;
     aiCoreService.executeStructuredAI = async ({ validatorFunc }) => {
       aiCallCount++;
       return {
-        data: validatorFunc(JSON.stringify({
-          suggestedScore: 9.0,
-          confidence: 0.95,
-          aiFeedback: "Bài làm tốt, hiểu rõ trọng tâm.",
-          criterionScores: [
-            { criterion: "Nội dung", scoreEarned: 5.0, maxScore: 6.0, feedback: "Đủ ý" },
-            { criterion: "Trình bày", scoreEarned: 4.0, maxScore: 4.0, feedback: "Khá sạch đẹp" },
-          ],
-          warnings: [],
-        })),
-        usage: { model: "gemini-1.5-flash-mock" }
+        data: validatorFunc(
+          JSON.stringify({
+            suggestedScore: 9.0,
+            confidence: 0.95,
+            aiFeedback: "Bài làm tốt, hiểu rõ trọng tâm.",
+            criterionScores: [
+              { criterion: "Nội dung", scoreEarned: 5.0, maxScore: 6.0, feedback: "Đủ ý" },
+              { criterion: "Trình bày", scoreEarned: 4.0, maxScore: 4.0, feedback: "Khá sạch đẹp" },
+            ],
+            warnings: [],
+          })
+        ),
+        usage: { model: "gemini-1.5-flash-mock" },
       };
     };
 
     let savedSuggestions = [];
-    AIGradingSuggestion.findOne = ({ sourceFingerprint }) => Promise.resolve(savedSuggestions.find(s => s.sourceFingerprint === sourceFingerprint) || null);
-    AIGradingSuggestion.findById = (id) => Promise.resolve(savedSuggestions.find(s => s._id === id) || null);
-    AIGradingSuggestion.prototype.save = function() {
+    AIGradingSuggestion.findOne = ({ sourceFingerprint }) =>
+      Promise.resolve(
+        savedSuggestions.find((s) => s.sourceFingerprint === sourceFingerprint) || null
+      );
+    AIGradingSuggestion.findById = (id) =>
+      Promise.resolve(savedSuggestions.find((s) => s._id === id) || null);
+    AIGradingSuggestion.prototype.save = function () {
       if (!this._id) this._id = new mongoose.Types.ObjectId();
-      const existingIdx = savedSuggestions.findIndex(s => s._id === this._id);
+      const existingIdx = savedSuggestions.findIndex((s) => s._id === this._id);
       if (existingIdx !== -1) savedSuggestions[existingIdx] = this;
       else savedSuggestions.push(this);
       return Promise.resolve();
@@ -162,10 +200,14 @@ const runTests = async () => {
     const suggestion1 = await aiGradingService.generateGradeSuggestion({
       attemptId: mockAttemptId,
       questionId: mockSnapshotQuestionId,
-      teacherId: mockTeacherId
+      teacherId: mockTeacherId,
     });
 
-    assertEqual("Test 10 & 13: Suggestion created with PENDING_REVIEW", suggestion1.status, "PENDING_REVIEW");
+    assertEqual(
+      "Test 10 & 13: Suggestion created with PENDING_REVIEW",
+      suggestion1.status,
+      "PENDING_REVIEW"
+    );
     assertEqual("Test: suggestedScore is 9.0 (synchronized)", suggestion1.suggestedScore, 9.0);
     assertEqual("Test: aiCallCount is 1", aiCallCount, 1);
 
@@ -173,16 +215,26 @@ const runTests = async () => {
     const suggestion2 = await aiGradingService.generateGradeSuggestion({
       attemptId: mockAttemptId,
       questionId: mockSnapshotQuestionId,
-      teacherId: mockTeacherId
+      teacherId: mockTeacherId,
     });
-    assertEqual("Test 15: Idempotency returns existing suggestion", suggestion2._id, suggestion1._id);
+    assertEqual(
+      "Test 15: Idempotency returns existing suggestion",
+      suggestion2._id,
+      suggestion1._id
+    );
     assertEqual("Test 15: Idempotency does not call AI again", aiCallCount, 1);
 
     // Test 14: Fingerprint ổn định khi đổi thứ tự key (Unit test internal check)
     const payload1 = { a: 1, b: 2 };
     const payload2 = { b: 2, a: 1 };
-    const fp1 = crypto.createHash("sha256").update(JSON.stringify(payload1, Object.keys(payload1).sort())).digest("hex");
-    const fp2 = crypto.createHash("sha256").update(JSON.stringify(payload2, Object.keys(payload2).sort())).digest("hex");
+    const fp1 = crypto
+      .createHash("sha256")
+      .update(JSON.stringify(payload1, Object.keys(payload1).sort()))
+      .digest("hex");
+    const fp2 = crypto
+      .createHash("sha256")
+      .update(JSON.stringify(payload2, Object.keys(payload2).sort()))
+      .digest("hex");
     assertEqual("Test 14: Fingerprint ổn định", fp1, fp2);
 
     // CONFIRMATION TESTS (16 - 22)
@@ -193,7 +245,7 @@ const runTests = async () => {
         attemptId: new mongoose.Types.ObjectId(), // Sai ID
         questionId: mockSnapshotQuestionId,
         action: "accept",
-        teacherId: mockTeacherId
+        teacherId: mockTeacherId,
       });
     });
 
@@ -203,7 +255,7 @@ const runTests = async () => {
         attemptId: mockAttemptId,
         questionId: "wrong-uuid", // Sai ID
         action: "accept",
-        teacherId: mockTeacherId
+        teacherId: mockTeacherId,
       });
     });
 
@@ -215,7 +267,7 @@ const runTests = async () => {
         questionId: mockSnapshotQuestionId,
         action: "adjust",
         finalScore: NaN, // Invalid
-        teacherId: mockTeacherId
+        teacherId: mockTeacherId,
       });
     });
 
@@ -226,24 +278,32 @@ const runTests = async () => {
       questionId: mockSnapshotQuestionId,
       action: "accept",
       teacherFeedback: "Feedback",
-      teacherId: mockTeacherId
+      teacherId: mockTeacherId,
     });
-    
+
     assertEqual("Test 16: Accept successful without finalScore", confirmAccept.status, "ACCEPTED");
     assertEqual("Test 23: teacherFeedback saved", confirmAccept.teacherFeedback, "Feedback");
-    assertEqual("Test 22: essayText not mutated", mockAttempt.answers[0].essayText, "Tác phẩm ABC rất hay...");
+    assertEqual(
+      "Test 22: essayText not mutated",
+      mockAttempt.answers[0].essayText,
+      "Tác phẩm ABC rất hay..."
+    );
     assertEqual("Test: pointsEarned updated", mockAttempt.answers[0].pointsEarned, 9.0);
 
     // Test 21: Xác nhận lần hai trả conflict
-    await assertThrows("Test 21: Confirming already confirmed suggestion throws conflict", async () => {
-      await aiGradingService.confirmGradeSuggestion({
-        suggestionId: suggestion1._id,
-        attemptId: mockAttemptId,
-        questionId: mockSnapshotQuestionId,
-        action: "reject",
-        teacherId: mockTeacherId
-      });
-    }, "đã được duyệt");
+    await assertThrows(
+      "Test 21: Confirming already confirmed suggestion throws conflict",
+      async () => {
+        await aiGradingService.confirmGradeSuggestion({
+          suggestionId: suggestion1._id,
+          attemptId: mockAttemptId,
+          questionId: mockSnapshotQuestionId,
+          action: "reject",
+          teacherId: mockTeacherId,
+        });
+      },
+      "đã được duyệt"
+    );
 
     // Test 18: reject không cập nhật điểm (Need a new suggestion for this)
     mockAttempt.answers[0].pointsEarned = 0; // reset
@@ -252,21 +312,24 @@ const runTests = async () => {
       attemptId: mockAttemptId,
       questionId: mockSnapshotQuestionId,
       status: "PENDING_REVIEW",
-      suggestedScore: 5
+      suggestedScore: 5,
     });
     savedSuggestions.push(suggestionReject);
-    
+
     const confirmReject = await aiGradingService.confirmGradeSuggestion({
       suggestionId: suggestionReject._id,
       attemptId: mockAttemptId,
       questionId: mockSnapshotQuestionId,
       action: "reject",
-      teacherId: mockTeacherId
+      teacherId: mockTeacherId,
     });
 
     assertEqual("Test 18: Reject updates status to REJECTED", confirmReject.status, "REJECTED");
-    assertEqual("Test 18: Reject does not update pointsEarned", mockAttempt.answers[0].pointsEarned, 0);
-
+    assertEqual(
+      "Test 18: Reject does not update pointsEarned",
+      mockAttempt.answers[0].pointsEarned,
+      0
+    );
   } catch (error) {
     console.error("❌ FAIL: Threw error unexpectedly", error);
     failed++;

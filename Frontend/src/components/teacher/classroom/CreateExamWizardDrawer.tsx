@@ -67,7 +67,9 @@ export const CreateExamWizardDrawer: React.FC<CreateExamWizardDrawerProps> = Rea
     const [filterDifficulty, setFilterDifficulty] = useState("all");
 
     // Selected questions with points mapping: Array of { questionId, points, details }
-    const [selectedQuestionsMap, setSelectedQuestionsMap] = useState<Record<string, { points: number; details: any }>>({});
+    const [selectedQuestionsMap, setSelectedQuestionsMap] = useState<
+      Record<string, { points: number; details: any }>
+    >({});
 
     // Fetch Question Bank
     const fetchQuestionBank = useCallback(async () => {
@@ -124,7 +126,9 @@ export const CreateExamWizardDrawer: React.FC<CreateExamWizardDrawerProps> = Rea
       if (searchQ.trim()) {
         const q = searchQ.toLowerCase().trim();
         result = result.filter(
-          (item) => (item.content || "").toLowerCase().includes(q) || (item.topic || "").toLowerCase().includes(q)
+          (item) =>
+            (item.content || "").toLowerCase().includes(q) ||
+            (item.topic || "").toLowerCase().includes(q)
         );
       }
 
@@ -166,7 +170,8 @@ export const CreateExamWizardDrawer: React.FC<CreateExamWizardDrawerProps> = Rea
       const newMap: Record<string, { points: number; details: any }> = {};
       selectedQuestionsList.forEach((item, idx) => {
         // adjust last item for exact 10.0 sum
-        const pts = idx === count - 1 ? parseFloat((10 - pointPerQ * (count - 1)).toFixed(2)) : pointPerQ;
+        const pts =
+          idx === count - 1 ? parseFloat((10 - pointPerQ * (count - 1)).toFixed(2)) : pointPerQ;
         newMap[item.questionId] = { points: pts, details: item.details };
       });
 
@@ -183,7 +188,9 @@ export const CreateExamWizardDrawer: React.FC<CreateExamWizardDrawerProps> = Rea
         const payload = {
           title: step1Values.title.trim(),
           duration: Number(step1Values.duration),
-          startTime: step1Values.startTime ? step1Values.startTime.toISOString() : new Date().toISOString(),
+          startTime: step1Values.startTime
+            ? step1Values.startTime.toISOString()
+            : new Date().toISOString(),
           classId,
           maxScore: Number(step1Values.maxScore || 10),
           status,
@@ -195,7 +202,11 @@ export const CreateExamWizardDrawer: React.FC<CreateExamWizardDrawerProps> = Rea
         };
 
         await examApi.createExam(payload);
-        toast.success(status === "PUBLISHED" ? "Xuất bản bài kiểm tra thành công!" : "Lưu bản nháp bài kiểm tra thành công!");
+        toast.success(
+          status === "PUBLISHED"
+            ? "Xuất bản bài kiểm tra thành công!"
+            : "Lưu bản nháp bài kiểm tra thành công!"
+        );
         onClose();
         if (onSaved) onSaved();
       } catch (err: any) {
@@ -212,7 +223,9 @@ export const CreateExamWizardDrawer: React.FC<CreateExamWizardDrawerProps> = Rea
         key: "content",
         render: (_, record) => (
           <div>
-            <Text strong style={{ fontSize: 14 }}>{record.content}</Text>
+            <Text strong style={{ fontSize: 14 }}>
+              {record.content}
+            </Text>
             {record.topic && (
               <Paragraph type="secondary" style={{ margin: "2px 0 0", fontSize: 12 }}>
                 Chủ đề: {record.topic}
@@ -230,7 +243,15 @@ export const CreateExamWizardDrawer: React.FC<CreateExamWizardDrawerProps> = Rea
             <Tag color={record.type === "MCQ" ? "blue" : "purple"}>
               {record.type === "MCQ" ? "Trắc nghiệm" : "Tự luận"}
             </Tag>
-            <Tag color={record.difficulty === "EASY" ? "green" : record.difficulty === "HARD" ? "red" : "orange"}>
+            <Tag
+              color={
+                record.difficulty === "EASY"
+                  ? "green"
+                  : record.difficulty === "HARD"
+                    ? "red"
+                    : "orange"
+              }
+            >
               {record.difficulty === "EASY" ? "Dễ" : record.difficulty === "HARD" ? "Khó" : "Vừa"}
             </Tag>
           </Space>
@@ -292,7 +313,10 @@ export const CreateExamWizardDrawer: React.FC<CreateExamWizardDrawerProps> = Rea
         {/* STEP 1: BASIC INFO & SETTINGS */}
         <div style={{ display: currentStep === 0 ? "block" : "none" }}>
           <Form form={formStep1} layout="vertical">
-            <Card title="📝 Thông tin cơ bản bài kiểm tra" style={{ marginBottom: 20, borderRadius: 12 }}>
+            <Card
+              title="📝 Thông tin cơ bản bài kiểm tra"
+              style={{ marginBottom: 20, borderRadius: 12 }}
+            >
               <Row gutter={16}>
                 <Col span={16}>
                   <Form.Item
@@ -300,13 +324,20 @@ export const CreateExamWizardDrawer: React.FC<CreateExamWizardDrawerProps> = Rea
                     label="Tên bài kiểm tra *"
                     rules={[{ required: true, message: "Vui lòng nhập tên bài kiểm tra!" }]}
                   >
-                    <Input placeholder="Ví dụ: Bài kiểm tra Giữa kỳ môn Lập trình Web" maxLength={150} />
+                    <Input
+                      placeholder="Ví dụ: Bài kiểm tra Giữa kỳ môn Lập trình Web"
+                      maxLength={150}
+                    />
                   </Form.Item>
                 </Col>
 
                 <Col span={8}>
                   <Form.Item label="Lớp học phụ trách">
-                    <Input value={className} disabled style={{ color: "#1890ff", fontWeight: 700 }} />
+                    <Input
+                      value={className}
+                      disabled
+                      style={{ color: "#1890ff", fontWeight: 700 }}
+                    />
                   </Form.Item>
                 </Col>
               </Row>
@@ -336,7 +367,12 @@ export const CreateExamWizardDrawer: React.FC<CreateExamWizardDrawerProps> = Rea
                       { type: "number", min: 1, message: "Thời lượng phải lớn hơn 0 phút!" },
                     ]}
                   >
-                    <InputNumber min={1} max={300} style={{ width: "100%" }} placeholder="Ví dụ: 45 phút" />
+                    <InputNumber
+                      min={1}
+                      max={300}
+                      style={{ width: "100%" }}
+                      placeholder="Ví dụ: 45 phút"
+                    />
                   </Form.Item>
                 </Col>
 
@@ -356,10 +392,19 @@ export const CreateExamWizardDrawer: React.FC<CreateExamWizardDrawerProps> = Rea
               </Form.Item>
             </Card>
 
-            <Card title="⚙️ Cài đặt & Quy định phòng thi" style={{ marginBottom: 24, borderRadius: 12 }}>
+            <Card
+              title="⚙️ Cài đặt & Quy định phòng thi"
+              style={{ marginBottom: 24, borderRadius: 12 }}
+            >
               <Row gutter={[24, 16]}>
                 <Col span={12}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                    }}
+                  >
                     <Text strong>Cho phép học sinh xem đáp án đúng</Text>
                     <Form.Item name="showAnswers" valuePropName="checked" style={{ margin: 0 }}>
                       <Switch />
@@ -368,16 +413,32 @@ export const CreateExamWizardDrawer: React.FC<CreateExamWizardDrawerProps> = Rea
                 </Col>
 
                 <Col span={12}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                    }}
+                  >
                     <Text strong>Tự động đảo thứ tự câu hỏi</Text>
-                    <Form.Item name="shuffleQuestions" valuePropName="checked" style={{ margin: 0 }}>
+                    <Form.Item
+                      name="shuffleQuestions"
+                      valuePropName="checked"
+                      style={{ margin: 0 }}
+                    >
                       <Switch />
                     </Form.Item>
                   </div>
                 </Col>
 
                 <Col span={12}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                    }}
+                  >
                     <Text strong>Tự động đảo thứ tự đáp án</Text>
                     <Form.Item name="shuffleOptions" valuePropName="checked" style={{ margin: 0 }}>
                       <Switch />
@@ -386,9 +447,19 @@ export const CreateExamWizardDrawer: React.FC<CreateExamWizardDrawerProps> = Rea
                 </Col>
 
                 <Col span={12}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                    }}
+                  >
                     <Text strong>Hiển thị điểm số ngay sau khi nộp</Text>
-                    <Form.Item name="showScoreImmediately" valuePropName="checked" style={{ margin: 0 }}>
+                    <Form.Item
+                      name="showScoreImmediately"
+                      valuePropName="checked"
+                      style={{ margin: 0 }}
+                    >
                       <Switch />
                     </Form.Item>
                   </div>
@@ -410,12 +481,23 @@ export const CreateExamWizardDrawer: React.FC<CreateExamWizardDrawerProps> = Rea
           <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
             <Card
               title={
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    flexWrap: "wrap",
+                    gap: 12,
+                  }}
+                >
                   <Space size={12}>
                     <Text strong style={{ fontSize: 15 }}>
                       📚 Ngân hàng câu hỏi hệ thống ({questionsBank.length} câu)
                     </Text>
-                    <Badge count={`${selectedQuestionsList.length} câu chọn`} style={{ backgroundColor: "#52c41a" }} />
+                    <Badge
+                      count={`${selectedQuestionsList.length} câu chọn`}
+                      style={{ backgroundColor: "#52c41a" }}
+                    />
                   </Space>
 
                   <Space size={8}>
@@ -465,10 +547,25 @@ export const CreateExamWizardDrawer: React.FC<CreateExamWizardDrawerProps> = Rea
               {/* Total points alert */}
               <Alert
                 message={
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                    }}
+                  >
                     <span>
-                      Số câu đã chọn: <b>{selectedQuestionsList.length}</b> câu | Tổng điểm hiện tại:{" "}
-                      <b style={{ color: parseFloat(totalSelectedPoints.toFixed(2)) === 10 ? "#52c41a" : "#ff4d4f", fontSize: 16 }}>
+                      Số câu đã chọn: <b>{selectedQuestionsList.length}</b> câu | Tổng điểm hiện
+                      tại:{" "}
+                      <b
+                        style={{
+                          color:
+                            parseFloat(totalSelectedPoints.toFixed(2)) === 10
+                              ? "#52c41a"
+                              : "#ff4d4f",
+                          fontSize: 16,
+                        }}
+                      >
                         {parseFloat(totalSelectedPoints.toFixed(2))} / 10.0 điểm
                       </b>
                     </span>
@@ -525,27 +622,42 @@ export const CreateExamWizardDrawer: React.FC<CreateExamWizardDrawerProps> = Rea
         {/* STEP 3: REVIEW & PUBLISH */}
         {currentStep === 2 && (
           <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-            <Card title="📋 Summary: Kiểm tra thông tin đề thi trước khi xuất bản" style={{ borderRadius: 12 }}>
+            <Card
+              title="📋 Summary: Kiểm tra thông tin đề thi trước khi xuất bản"
+              style={{ borderRadius: 12 }}
+            >
               <Row gutter={[16, 16]}>
                 <Col span={12}>
-                  <Text type="secondary" style={{ fontSize: 12, display: "block" }}>Tên bài kiểm tra</Text>
+                  <Text type="secondary" style={{ fontSize: 12, display: "block" }}>
+                    Tên bài kiểm tra
+                  </Text>
                   <Text strong style={{ fontSize: 16, color: "#1890ff" }}>
                     {formStep1.getFieldValue("title")}
                   </Text>
                 </Col>
 
                 <Col span={6}>
-                  <Text type="secondary" style={{ fontSize: 12, display: "block" }}>Lớp áp dụng</Text>
-                  <Text strong style={{ fontSize: 14 }}>{className}</Text>
+                  <Text type="secondary" style={{ fontSize: 12, display: "block" }}>
+                    Lớp áp dụng
+                  </Text>
+                  <Text strong style={{ fontSize: 14 }}>
+                    {className}
+                  </Text>
                 </Col>
 
                 <Col span={6}>
-                  <Text type="secondary" style={{ fontSize: 12, display: "block" }}>Thời lượng làm bài</Text>
-                  <Text strong style={{ fontSize: 14 }}>{formStep1.getFieldValue("duration")} phút</Text>
+                  <Text type="secondary" style={{ fontSize: 12, display: "block" }}>
+                    Thời lượng làm bài
+                  </Text>
+                  <Text strong style={{ fontSize: 14 }}>
+                    {formStep1.getFieldValue("duration")} phút
+                  </Text>
                 </Col>
 
                 <Col span={12}>
-                  <Text type="secondary" style={{ fontSize: 12, display: "block" }}>Thời gian mở đề</Text>
+                  <Text type="secondary" style={{ fontSize: 12, display: "block" }}>
+                    Thời gian mở đề
+                  </Text>
                   <Text strong style={{ fontSize: 14 }}>
                     {formStep1.getFieldValue("startTime")
                       ? dayjs(formStep1.getFieldValue("startTime")).format("DD/MM/YYYY HH:mm")
@@ -554,15 +666,26 @@ export const CreateExamWizardDrawer: React.FC<CreateExamWizardDrawerProps> = Rea
                 </Col>
 
                 <Col span={6}>
-                  <Text type="secondary" style={{ fontSize: 12, display: "block" }}>Tổng số câu hỏi</Text>
+                  <Text type="secondary" style={{ fontSize: 12, display: "block" }}>
+                    Tổng số câu hỏi
+                  </Text>
                   <Text strong style={{ fontSize: 16, color: "#722ed1" }}>
                     {selectedQuestionsList.length} câu
                   </Text>
                 </Col>
 
                 <Col span={6}>
-                  <Text type="secondary" style={{ fontSize: 12, display: "block" }}>Tổng điểm cộng dồn</Text>
-                  <Text strong style={{ fontSize: 16, color: parseFloat(totalSelectedPoints.toFixed(2)) === 10 ? "#52c41a" : "#ff4d4f" }}>
+                  <Text type="secondary" style={{ fontSize: 12, display: "block" }}>
+                    Tổng điểm cộng dồn
+                  </Text>
+                  <Text
+                    strong
+                    style={{
+                      fontSize: 16,
+                      color:
+                        parseFloat(totalSelectedPoints.toFixed(2)) === 10 ? "#52c41a" : "#ff4d4f",
+                    }}
+                  >
                     {parseFloat(totalSelectedPoints.toFixed(2))} / 10.0 điểm
                   </Text>
                 </Col>
@@ -572,8 +695,21 @@ export const CreateExamWizardDrawer: React.FC<CreateExamWizardDrawerProps> = Rea
             {/* Selected Questions Preview List */}
             <Card title="📑 Danh sách câu hỏi trong đề thi" style={{ borderRadius: 12 }}>
               {selectedQuestionsList.map((item, idx) => (
-                <div key={item.questionId} style={{ padding: "10px 0", borderBottom: idx < selectedQuestionsList.length - 1 ? "1px dashed #f0f0f0" : "none" }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <div
+                  key={item.questionId}
+                  style={{
+                    padding: "10px 0",
+                    borderBottom:
+                      idx < selectedQuestionsList.length - 1 ? "1px dashed #f0f0f0" : "none",
+                  }}
+                >
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                    }}
+                  >
                     <Text strong style={{ fontSize: 14 }}>
                       Câu {idx + 1}: {item.details?.content || "Nội dung câu hỏi"}
                     </Text>

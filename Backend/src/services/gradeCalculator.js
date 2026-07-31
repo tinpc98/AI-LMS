@@ -67,12 +67,14 @@ export const computeWeightedGPA = (catScores, gradingWeight) => {
   let totalWeight = 0;
 
   if (catScores.Attendance.count > 0) {
-    weightedSum += (catScores.Attendance.sum / catScores.Attendance.count) * (weights.attendance / 100);
+    weightedSum +=
+      (catScores.Attendance.sum / catScores.Attendance.count) * (weights.attendance / 100);
     totalWeight += weights.attendance;
   }
 
   if (catScores.Assignment.count > 0) {
-    weightedSum += (catScores.Assignment.sum / catScores.Assignment.count) * (weights.assignment / 100);
+    weightedSum +=
+      (catScores.Assignment.sum / catScores.Assignment.count) * (weights.assignment / 100);
     totalWeight += weights.assignment;
   }
 
@@ -101,7 +103,15 @@ export const computeWeightedGPA = (catScores, gradingWeight) => {
 
 // Tính điểm của MỘT học sinh: gộp manual grades + submissions + exam attempts,
 // rồi tính GPA theo trọng số của lớp.
-export const computeStudentGrade = ({ studentId, user, manualGrades, submissions, attempts, exams, gradingWeight }) => {
+export const computeStudentGrade = ({
+  studentId,
+  user,
+  manualGrades,
+  submissions,
+  attempts,
+  exams,
+  gradingWeight,
+}) => {
   const uId = studentId.toString();
   const gradesMap = {};
   const catScores = emptyCatScores();
@@ -119,7 +129,11 @@ export const computeStudentGrade = ({ studentId, user, manualGrades, submissions
   submissions
     .filter((sub) => sub.studentId.toString() === uId)
     .forEach((sub) => {
-      gradesMap[`assign-${sub.assignmentId}`] = { score: sub.grade, feedback: sub.feedback, rawId: sub._id };
+      gradesMap[`assign-${sub.assignmentId}`] = {
+        score: sub.grade,
+        feedback: sub.feedback,
+        rawId: sub._id,
+      };
       catScores.Assignment.sum += sub.grade;
       catScores.Assignment.count++;
     });
@@ -147,13 +161,30 @@ export const computeStudentGrade = ({ studentId, user, manualGrades, submissions
 };
 
 // Tính toàn bộ ma trận điểm cho một danh sách học sinh (đầu vào đã fetch sẵn từ DB).
-export const calculateGradeMatrix = ({ students, userMap, gradingWeight, manualGrades, assignments, exams, submissions, attempts }) => {
+export const calculateGradeMatrix = ({
+  students,
+  userMap,
+  gradingWeight,
+  manualGrades,
+  assignments,
+  exams,
+  submissions,
+  attempts,
+}) => {
   const gradeItems = buildGradeItems({ gradingWeight, manualGrades, assignments, exams });
 
   const studentGradesList = students.map((s) => {
     const uId = s.studentId.toString();
     const user = userMap.get(uId) || {};
-    return computeStudentGrade({ studentId: s.studentId, user, manualGrades, submissions, attempts, exams, gradingWeight });
+    return computeStudentGrade({
+      studentId: s.studentId,
+      user,
+      manualGrades,
+      submissions,
+      attempts,
+      exams,
+      gradingWeight,
+    });
   });
 
   return {

@@ -7,7 +7,14 @@ import AccountTable from "./AccountTable";
 import AccountToolbar from "./AccountToolbar";
 import DeleteConfirmModal from "./DeleteConfirmModal";
 import { accountService } from "./accountService";
-import type { AccountFilters, AccountFormValues, AccountRecord, AccountRole, AccountStatus, Pagination } from "./account.types";
+import type {
+  AccountFilters,
+  AccountFormValues,
+  AccountRecord,
+  AccountRole,
+  AccountStatus,
+  Pagination,
+} from "./account.types";
 
 const initialFilters: AccountFilters = {
   search: "",
@@ -20,7 +27,12 @@ const initialFilters: AccountFilters = {
 const AccountManagementPage = () => {
   const [activeTab, setActiveTab] = useState("active");
   const [accounts, setAccounts] = useState<AccountRecord[]>([]);
-  const [pagination, setPagination] = useState<Pagination>({ page: 1, limit: 10, total: 0, totalPages: 0 });
+  const [pagination, setPagination] = useState<Pagination>({
+    page: 1,
+    limit: 10,
+    total: 0,
+    totalPages: 0,
+  });
   const [filters, setFilters] = useState<AccountFilters>(initialFilters);
   const [loading, setLoading] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
@@ -30,26 +42,30 @@ const AccountManagementPage = () => {
   const [selectedAccount, setSelectedAccount] = useState<AccountRecord | undefined>();
   const [mode, setMode] = useState<"create" | "edit">("create");
   const formRef = useRef<AccountFormModalHandle | null>(null);
-  
+
   const searchTimeoutRef = useRef<number | null>(null);
 
-  const loadAccounts = useCallback(async (currentFilters = filters) => {
-    setLoading(true);
-    try {
-      const fetchFn = activeTab === "trash" ? accountService.getTrashUsers : accountService.getAccounts;
-      const response = await fetchFn(currentFilters);
-      if (response.success) {
-        setAccounts(response.data);
-        if (response.pagination) {
-          setPagination(response.pagination);
+  const loadAccounts = useCallback(
+    async (currentFilters = filters) => {
+      setLoading(true);
+      try {
+        const fetchFn =
+          activeTab === "trash" ? accountService.getTrashUsers : accountService.getAccounts;
+        const response = await fetchFn(currentFilters);
+        if (response.success) {
+          setAccounts(response.data);
+          if (response.pagination) {
+            setPagination(response.pagination);
+          }
         }
+      } catch {
+        message.error("Failed to load accounts");
+      } finally {
+        setLoading(false);
       }
-    } catch {
-      message.error("Failed to load accounts");
-    } finally {
-      setLoading(false);
-    }
-  }, [activeTab, filters]);
+    },
+    [activeTab, filters]
+  );
 
   useEffect(() => {
     void loadAccounts();
@@ -206,7 +222,9 @@ const AccountManagementPage = () => {
         />
 
         <div style={{ marginTop: 16 }}>
-          <Typography.Text type="secondary">Showing total {pagination.total} account(s)</Typography.Text>
+          <Typography.Text type="secondary">
+            Showing total {pagination.total} account(s)
+          </Typography.Text>
         </div>
 
         <div style={{ marginTop: 16 }}>
@@ -240,7 +258,11 @@ const AccountManagementPage = () => {
         onCancel={() => setModalOpen(false)}
       />
 
-      <AccountDetailDrawer open={detailOpen} account={selectedAccount} onClose={() => setDetailOpen(false)} />
+      <AccountDetailDrawer
+        open={detailOpen}
+        account={selectedAccount}
+        onClose={() => setDetailOpen(false)}
+      />
 
       <DeleteConfirmModal
         open={deleteOpen}

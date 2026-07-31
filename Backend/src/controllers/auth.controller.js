@@ -1,5 +1,10 @@
 import mongoose from "mongoose";
-import { loginService, getUserTrashService, restoreUserService, permanentDeleteUserService } from "../services/auth.service.js";
+import {
+  loginService,
+  getUserTrashService,
+  restoreUserService,
+  permanentDeleteUserService,
+} from "../services/auth.service.js";
 import User from "../models/user.model.js";
 
 export const login = async (req, res) => {
@@ -20,10 +25,7 @@ export const login = async (req, res) => {
     const result = await loginService(email, password);
 
     if (process.env.NODE_ENV === "development") {
-      console.log(
-        "[Auth] Login successful for:",
-        result.user.email || result.user.id
-      );
+      console.log("[Auth] Login successful for:", result.user.email || result.user.id);
     }
 
     return res.status(200).json({
@@ -131,9 +133,7 @@ export const getAllUsers = async (req, res) => {
     const validRoles = ["Admin", "Teacher", "Student"];
 
     if (role) {
-      const normalizedRole =
-        role.charAt(0).toUpperCase() +
-        role.slice(1).toLowerCase();
+      const normalizedRole = role.charAt(0).toUpperCase() + role.slice(1).toLowerCase();
 
       if (validRoles.includes(normalizedRole)) {
         query.role = normalizedRole;
@@ -143,11 +143,7 @@ export const getAllUsers = async (req, res) => {
     const skip = (Number(page) - 1) * Number(limit);
 
     const [users, total] = await Promise.all([
-      User.find(query)
-        .select("-password")
-        .sort({ createdAt: -1 })
-        .skip(skip)
-        .limit(Number(limit)),
+      User.find(query).select("-password").sort({ createdAt: -1 }).skip(skip).limit(Number(limit)),
       User.countDocuments(query),
     ]);
 
@@ -188,7 +184,16 @@ export const getUserById = async (req, res) => {
 
 export const createUser = async (req, res) => {
   try {
-    const { fullName, email, password, role, status, phone, teachingSubjects, availabilitySchedule } = req.body;
+    const {
+      fullName,
+      email,
+      password,
+      role,
+      status,
+      phone,
+      teachingSubjects,
+      availabilitySchedule,
+    } = req.body;
 
     if (!fullName || !email || !password) {
       return res.status(400).json({ message: "Vui lòng nhập đầy đủ fullName, email và password" });
@@ -220,7 +225,9 @@ export const createUser = async (req, res) => {
       data: createdUser,
     });
   } catch (error) {
-    return res.status(400).json({ success: false, message: error.message || "Lỗi khi tạo người dùng" });
+    return res
+      .status(400)
+      .json({ success: false, message: error.message || "Lỗi khi tạo người dùng" });
   }
 };
 
@@ -254,7 +261,9 @@ export const updateUser = async (req, res) => {
       data: updated,
     });
   } catch (error) {
-    return res.status(400).json({ success: false, message: error.message || "Lỗi khi cập nhật người dùng" });
+    return res
+      .status(400)
+      .json({ success: false, message: error.message || "Lỗi khi cập nhật người dùng" });
   }
 };
 
@@ -289,7 +298,9 @@ export const getUserTrash = async (req, res) => {
     });
   } catch (error) {
     const status = error.status || 500;
-    return res.status(status).json({ success: false, message: error.message || "Lỗi khi lấy danh sách thùng rác" });
+    return res
+      .status(status)
+      .json({ success: false, message: error.message || "Lỗi khi lấy danh sách thùng rác" });
   }
 };
 
@@ -309,7 +320,9 @@ export const restoreUser = async (req, res) => {
     });
   } catch (error) {
     const status = error.status || 500;
-    return res.status(status).json({ success: false, message: error.message || "Lỗi khi khôi phục người dùng" });
+    return res
+      .status(status)
+      .json({ success: false, message: error.message || "Lỗi khi khôi phục người dùng" });
   }
 };
 
@@ -324,6 +337,8 @@ export const permanentDeleteUser = async (req, res) => {
     });
   } catch (error) {
     const status = error.status || 500;
-    return res.status(status).json({ success: false, message: error.message || "Lỗi khi xóa vĩnh viễn người dùng" });
+    return res
+      .status(status)
+      .json({ success: false, message: error.message || "Lỗi khi xóa vĩnh viễn người dùng" });
   }
 };

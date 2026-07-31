@@ -35,14 +35,13 @@ route.delete("/:id/resources/:resourceId", verifyUser, isTeacher, RemoveResource
 // Nhóm API quản trị dành riêng cho Admin
 route.post("/", verifyUser, isAdmin, AddNewClass);
 route.put("/:id", verifyUser, isAdmin, updateClassValidation, UpdateClass);
-route.patch("/:id/assign-teacher", verifyUser, isAdmin, AssignTeacher);   // PATCH: chỉ update 2-3 field
+route.patch("/:id/assign-teacher", verifyUser, isAdmin, AssignTeacher); // PATCH: chỉ update 2-3 field
 route.patch("/:id/unassign-teacher", verifyUser, isAdmin, UnassignTeacher); // Gỡ giáo viên
 route.post("/:id/students", verifyUser, isAdmin, AssignStudent);
 route.delete("/:id/students/:studentId", verifyUser, isAdmin, RemoveStudent);
 route.patch("/:id/students/:studentId/status", verifyUser, isTeacher, UpdateStudentStatus); // Admin hoặc Teacher
-route.patch("/:id/delete", verifyUser, isAdmin, DeleteClass);              // PATCH: soft delete (flag update)
+route.patch("/:id/delete", verifyUser, isAdmin, DeleteClass); // PATCH: soft delete (flag update)
 route.patch("/:id/restore", verifyUser, isAdmin, RestoreClass);
 route.delete("/:id/force", verifyUser, isAdmin, PermanentDeleteClass);
 
 export default route;
-

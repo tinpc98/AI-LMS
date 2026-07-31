@@ -5,16 +5,19 @@ import { validationResult } from "express-validator";
 import { AIInputBudget } from "../ai/utils/aiInputBudget.js";
 
 class AIQuestionGenerationController {
-  
   // POST /api/ai/lectures/:lessonId/question-sets/generate
   async generateQuestionSet(req, res) {
     try {
       const lesson = req.aiLesson; // injected by aiLessonAccess middleware
       const user = req.user;
-      
+
       const role = String(user.role || "").toLowerCase();
       if (role === "student") {
-        throw new AIError("Học sinh không có quyền sinh bộ đề", AIErrorCode.AI_FEATURE_DISABLED, 403);
+        throw new AIError(
+          "Học sinh không có quyền sinh bộ đề",
+          AIErrorCode.AI_FEATURE_DISABLED,
+          403
+        );
       }
 
       const questionCount = Number(req.body.questionCount);
@@ -25,27 +28,49 @@ class AIQuestionGenerationController {
 
       const sumTypes = Object.values(questionTypes).reduce((a, b) => a + Number(b), 0);
       if (sumTypes !== questionCount) {
-        throw new AIError(`Tổng số lượng theo loại câu hỏi (${sumTypes}) phải bằng questionCount (${questionCount})`, AIErrorCode.AI_INVALID_INPUT, 400);
+        throw new AIError(
+          `Tổng số lượng theo loại câu hỏi (${sumTypes}) phải bằng questionCount (${questionCount})`,
+          AIErrorCode.AI_INVALID_INPUT,
+          400
+        );
       }
 
-      const sumDifficulty = Object.values(difficultyDistribution).reduce((a, b) => a + Number(b), 0);
+      const sumDifficulty = Object.values(difficultyDistribution).reduce(
+        (a, b) => a + Number(b),
+        0
+      );
       if (sumDifficulty !== questionCount) {
-        throw new AIError(`Tổng số lượng theo độ khó (${sumDifficulty}) phải bằng questionCount (${questionCount})`, AIErrorCode.AI_INVALID_INPUT, 400);
+        throw new AIError(
+          `Tổng số lượng theo độ khó (${sumDifficulty}) phải bằng questionCount (${questionCount})`,
+          AIErrorCode.AI_INVALID_INPUT,
+          400
+        );
       }
 
       const requestConfig = {
         folderId: req.body.folderId,
-        title: String(req.body.title || "").trim().substring(0, 255),
-        description: String(req.body.description || "").trim().substring(0, 2000),
+        title: String(req.body.title || "")
+          .trim()
+          .substring(0, 255),
+        description: String(req.body.description || "")
+          .trim()
+          .substring(0, 2000),
         questionCount: questionCount,
         questionTypes: questionTypes,
         difficultyDistribution: difficultyDistribution,
         defaultPoints: 1,
         language: String(req.body.language || "vi").trim(),
-        instructions: String(req.body.instructions || "").trim().substring(0, 2000)
+        instructions: String(req.body.instructions || "")
+          .trim()
+          .substring(0, 2000),
       };
 
-      const { examSet, sourceWarnings } = await aiQuestionGenerationService.generateQuestionSet(lesson, user.id || user._id, user.role, requestConfig);
+      const { examSet, sourceWarnings } = await aiQuestionGenerationService.generateQuestionSet(
+        lesson,
+        user.id || user._id,
+        user.role,
+        requestConfig
+      );
 
       return res.status(201).json({
         success: true,
@@ -58,8 +83,8 @@ class AIQuestionGenerationController {
           status: examSet.status,
           questionCount: examSet.questions.length, // S3-09 response format
           totalPoints: examSet.totalPoints || examSet.questions.length,
-          sourceWarnings: sourceWarnings
-        }
+          sourceWarnings: sourceWarnings,
+        },
       });
     } catch (error) {
       if (error instanceof AIError) {
@@ -74,7 +99,7 @@ class AIQuestionGenerationController {
       return res.status(500).json({
         success: false,
         code: AIErrorCode.AI_PROVIDER_ERROR,
-        message: `Lỗi hệ thống khi sinh câu hỏi: ${error.message}`
+        message: `Lỗi hệ thống khi sinh câu hỏi: ${error.message}`,
       });
     }
   }

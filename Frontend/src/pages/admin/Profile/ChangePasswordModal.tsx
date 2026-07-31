@@ -65,18 +65,11 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({ open, 
       destroyOnClose
       centered
     >
-      <Form
-        form={form}
-        layout="vertical"
-        className="mt-4"
-        requiredMark="optional"
-      >
+      <Form form={form} layout="vertical" className="mt-4" requiredMark="optional">
         <Form.Item
           name="currentPassword"
           label="Mật khẩu hiện tại"
-          rules={[
-            { required: true, message: "Vui lòng nhập mật khẩu hiện tại" },
-          ]}
+          rules={[{ required: true, message: "Vui lòng nhập mật khẩu hiện tại" }]}
         >
           <Input.Password
             prefix={<LockOutlined className="text-gray-400" />}

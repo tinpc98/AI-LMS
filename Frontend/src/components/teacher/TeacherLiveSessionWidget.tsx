@@ -31,10 +31,20 @@ export const TeacherLiveSessionWidget: React.FC<TeacherLiveSessionWidgetProps> =
         {activeSessions.map((session, index) => (
           <div
             key={session._id || index}
-            style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              flexWrap: "wrap",
+              gap: 12,
+            }}
           >
             <Space size={12}>
-              <Badge status="processing" text="LIVE NOW" style={{ color: "#ff4d4f", fontWeight: 700 }} />
+              <Badge
+                status="processing"
+                text="LIVE NOW"
+                style={{ color: "#ff4d4f", fontWeight: 700 }}
+              />
               <div>
                 <Title level={5} style={{ margin: 0, color: "#cf1322" }}>
                   {session.title || "Phòng học trực tuyến đang diễn ra"}

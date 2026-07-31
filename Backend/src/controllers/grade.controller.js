@@ -5,7 +5,8 @@ import { checkClassTeacherOwnership } from "../middlewares/auth.middleware.js";
 
 export const upsertGrade = async (req, res) => {
   try {
-    const { studentId, classId, courseId, category, score, weight, feedback, aiFeedback } = req.body;
+    const { studentId, classId, courseId, category, score, weight, feedback, aiFeedback } =
+      req.body;
     if (!studentId || !classId || !category || score === undefined) {
       return sendError(res, "Vui lòng truyền đầy đủ studentId, classId, category và score", 400);
     }
@@ -100,7 +101,11 @@ export const getStudentGPA = async (req, res) => {
       targetStudentId = loggedUserId;
     }
 
-    if (!classId || !mongoose.Types.ObjectId.isValid(classId) || !mongoose.Types.ObjectId.isValid(targetStudentId)) {
+    if (
+      !classId ||
+      !mongoose.Types.ObjectId.isValid(classId) ||
+      !mongoose.Types.ObjectId.isValid(targetStudentId)
+    ) {
       return sendError(res, "ID lớp học hoặc ID học sinh không hợp lệ!", 400);
     }
 

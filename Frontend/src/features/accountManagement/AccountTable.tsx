@@ -1,5 +1,12 @@
 import { Avatar, Button, Empty, Table, Tooltip } from "antd";
-import { EyeOutlined, EditOutlined, UnlockOutlined, LockOutlined, KeyOutlined, DeleteOutlined } from "@ant-design/icons";
+import {
+  EyeOutlined,
+  EditOutlined,
+  UnlockOutlined,
+  LockOutlined,
+  KeyOutlined,
+  DeleteOutlined,
+} from "@ant-design/icons";
 import type { AccountRecord } from "./account.types";
 import AccountStatusTag from "./AccountStatusTag";
 import RoleTag from "./RoleTag";
@@ -86,12 +93,21 @@ const AccountTable = ({
             <>
               {onRestore && (
                 <Tooltip title="Restore">
-                  <Button size="small" icon={<UnlockOutlined />} onClick={() => onRestore(record)} />
+                  <Button
+                    size="small"
+                    icon={<UnlockOutlined />}
+                    onClick={() => onRestore(record)}
+                  />
                 </Tooltip>
               )}
               {onPermanentDelete && (
                 <Tooltip title="Permanent Delete">
-                  <Button size="small" danger icon={<DeleteOutlined />} onClick={() => onPermanentDelete(record)} />
+                  <Button
+                    size="small"
+                    danger
+                    icon={<DeleteOutlined />}
+                    onClick={() => onPermanentDelete(record)}
+                  />
                 </Tooltip>
               )}
             </>
@@ -105,17 +121,30 @@ const AccountTable = ({
               </Tooltip>
               {onToggleLock && (
                 <Tooltip title={record.status === "Locked" ? "Unlock" : "Lock"}>
-                  <Button size="small" icon={record.status === "Locked" ? <UnlockOutlined /> : <LockOutlined />} onClick={() => onToggleLock(record)} />
+                  <Button
+                    size="small"
+                    icon={record.status === "Locked" ? <UnlockOutlined /> : <LockOutlined />}
+                    onClick={() => onToggleLock(record)}
+                  />
                 </Tooltip>
               )}
               {onResetPassword && (
                 <Tooltip title="Reset Password">
-                  <Button size="small" icon={<KeyOutlined />} onClick={() => onResetPassword(record)} />
+                  <Button
+                    size="small"
+                    icon={<KeyOutlined />}
+                    onClick={() => onResetPassword(record)}
+                  />
                 </Tooltip>
               )}
               {onDelete && (
                 <Tooltip title="Delete">
-                  <Button size="small" danger icon={<DeleteOutlined />} onClick={() => onDelete(record)} />
+                  <Button
+                    size="small"
+                    danger
+                    icon={<DeleteOutlined />}
+                    onClick={() => onDelete(record)}
+                  />
                 </Tooltip>
               )}
             </>
@@ -134,9 +163,7 @@ const AccountTable = ({
       pagination={pagination}
       onChange={onChange}
       locale={{
-        emptyText: loading ? null : (
-          <Empty description="No accounts found" />
-        ),
+        emptyText: loading ? null : <Empty description="No accounts found" />,
       }}
     />
   );

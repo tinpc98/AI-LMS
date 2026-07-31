@@ -117,7 +117,11 @@ export function useNotifications() {
       else unread++;
 
       if (item.dateGroup === "Hôm nay") todayCount++;
-      if (item.dateGroup === "Hôm nay" || item.dateGroup === "Hôm qua" || item.dateGroup === "7 ngày trước") {
+      if (
+        item.dateGroup === "Hôm nay" ||
+        item.dateGroup === "Hôm qua" ||
+        item.dateGroup === "7 ngày trước"
+      ) {
         thisWeekCount++;
       }
     });
@@ -192,21 +196,24 @@ export function useNotifications() {
   }, [filteredNotifications]);
 
   // Handlers
-  const markAsRead = useCallback(async (id: string) => {
-    const targetItem = notifications.find((n) => n._id === id);
-    if (!targetItem || targetItem.isRead) return; // Không gọi lại API nếu thông báo đã đọc
+  const markAsRead = useCallback(
+    async (id: string) => {
+      const targetItem = notifications.find((n) => n._id === id);
+      if (!targetItem || targetItem.isRead) return; // Không gọi lại API nếu thông báo đã đọc
 
-    try {
-      await notificationApi.markAsRead(id);
-      setNotifications((prev) =>
-        prev.map((item) => (item._id === id ? { ...item, isRead: true } : item))
-      );
-      setUnreadCount((prev) => Math.max(0, prev - 1));
-    } catch (err: any) {
-      console.error("[useNotifications] markAsRead error:", err);
-      toast.error(err.response?.data?.message || "Không thể cập nhật trạng thái thông báo.");
-    }
-  }, [notifications]);
+      try {
+        await notificationApi.markAsRead(id);
+        setNotifications((prev) =>
+          prev.map((item) => (item._id === id ? { ...item, isRead: true } : item))
+        );
+        setUnreadCount((prev) => Math.max(0, prev - 1));
+      } catch (err: any) {
+        console.error("[useNotifications] markAsRead error:", err);
+        toast.error(err.response?.data?.message || "Không thể cập nhật trạng thái thông báo.");
+      }
+    },
+    [notifications]
+  );
 
   const markAllAsRead = useCallback(async () => {
     const hasUnread = notifications.some((n) => !n.isRead);

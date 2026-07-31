@@ -2,11 +2,7 @@ import React, { useEffect, useRef, useState, useCallback } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { JitsiMeeting } from "@jitsi/react-sdk";
 import { Spin, Button, Typography, Space } from "antd";
-import {
-  WarningOutlined,
-  LockOutlined,
-  ArrowLeftOutlined,
-} from "@ant-design/icons";
+import { WarningOutlined, LockOutlined, ArrowLeftOutlined } from "@ant-design/icons";
 import useJaasConference from "../../hooks/useJaasConference";
 import { mapMediaError } from "../../utils/liveSessionError";
 import type { JitsiApiLike } from "../../types/liveSession";
@@ -34,15 +30,8 @@ const LiveSessionPage: React.FC = () => {
   // state passed from TeacherLiveSessionTab or LiveClassTab
   const { classId, returnUrl } = (location.state as any) || {};
 
-  const {
-    conference,
-    status,
-    error,
-    isOpen,
-    openConference,
-    retryConference,
-    closeConference,
-  } = useJaasConference();
+  const { conference, status, error, isOpen, openConference, retryConference, closeConference } =
+    useJaasConference();
 
   const [isSdkReady, setIsSdkReady] = useState<boolean>(false);
   const [loadTimeout, setLoadTimeout] = useState<boolean>(false);
@@ -93,28 +82,25 @@ const LiveSessionPage: React.FC = () => {
   }, [isOpen, isSdkReady, loadTimeout, status]);
 
   // Handle Jitsi API Ready
-  const handleApiReady = useCallback(
-    (api: JitsiApiLike) => {
-      jitsiApiRef.current = api;
-      setIsSdkReady(true);
-      setLoadTimeout(false);
+  const handleApiReady = useCallback((api: JitsiApiLike) => {
+    jitsiApiRef.current = api;
+    setIsSdkReady(true);
+    setLoadTimeout(false);
 
-      if (timeoutTimerRef.current) {
-        clearTimeout(timeoutTimerRef.current);
-        timeoutTimerRef.current = null;
-      }
+    if (timeoutTimerRef.current) {
+      clearTimeout(timeoutTimerRef.current);
+      timeoutTimerRef.current = null;
+    }
 
-      const handleCameraError = (err: any) => {
-        console.warn("⚠️ [Jitsi Event] Media Device Error:", err);
-        const mapped = mapMediaError(err);
-        setMediaError(mapped);
-      };
+    const handleCameraError = (err: any) => {
+      console.warn("⚠️ [Jitsi Event] Media Device Error:", err);
+      const mapped = mapMediaError(err);
+      setMediaError(mapped);
+    };
 
-      api.addEventListener("cameraError" as any, handleCameraError);
-      api.addEventListener("micError" as any, handleCameraError);
-    },
-    []
-  );
+    api.addEventListener("cameraError" as any, handleCameraError);
+    api.addEventListener("micError" as any, handleCameraError);
+  }, []);
 
   const handleReturn = () => {
     closeConference();
@@ -130,15 +116,15 @@ const LiveSessionPage: React.FC = () => {
 
   const hasValidData = Boolean(
     isOpen &&
-      conference &&
-      token &&
-      rawAppId &&
-      rawRoomName &&
-      domain &&
-      status !== "error" &&
-      status !== "closing" &&
-      status !== "closed" &&
-      !loadTimeout
+    conference &&
+    token &&
+    rawAppId &&
+    rawRoomName &&
+    domain &&
+    status !== "error" &&
+    status !== "closing" &&
+    status !== "closed" &&
+    !loadTimeout
   );
 
   return (
@@ -166,7 +152,8 @@ const LiveSessionPage: React.FC = () => {
         <div className="p-8 text-center max-w-lg bg-gray-900 rounded-2xl border border-gray-700 shadow-2xl">
           <WarningOutlined style={{ fontSize: 64, color: "#ff4d4f", marginBottom: 24 }} />
           <Title level={3} style={{ color: "#fff", marginBottom: 12 }}>
-            {error?.title || (loadTimeout ? "Tải phòng học quá thời gian" : "Không thể tải phòng học")}
+            {error?.title ||
+              (loadTimeout ? "Tải phòng học quá thời gian" : "Không thể tải phòng học")}
           </Title>
           <Paragraph style={{ color: "#d9d9d9", fontSize: 16, marginBottom: 32 }}>
             {error?.message ||
@@ -228,7 +215,8 @@ const LiveSessionPage: React.FC = () => {
                 iframeRef.style.width = "100%";
                 iframeRef.style.border = "0";
                 // Important to allow fullscreen in iframe
-                (iframeRef as HTMLIFrameElement).allow = "camera; microphone; display-capture; autoplay; clipboard-write; fullscreen";
+                (iframeRef as HTMLIFrameElement).allow =
+                  "camera; microphone; display-capture; autoplay; clipboard-write; fullscreen";
               }
             }}
             onApiReady={handleApiReady as any}

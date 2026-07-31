@@ -1,6 +1,11 @@
 import React from "react";
 import { Card, Typography, Space, Button, Tag, Popconfirm } from "antd";
-import { PaperClipOutlined, DownloadOutlined, DeleteOutlined, CheckCircleOutlined } from "@ant-design/icons";
+import {
+  PaperClipOutlined,
+  DownloadOutlined,
+  DeleteOutlined,
+  CheckCircleOutlined,
+} from "@ant-design/icons";
 import type { ISubmission } from "../../../../interface/assignmentInterface";
 
 const { Text } = Typography;
@@ -26,7 +31,12 @@ export const AssignmentSubmissionCard: React.FC<AssignmentSubmissionCardProps> =
           </Space>
         }
         size="small"
-        style={{ borderRadius: 12, backgroundColor: "#f6ffed", border: "1px solid #b7eb8f", marginBottom: 16 }}
+        style={{
+          borderRadius: 12,
+          backgroundColor: "#f6ffed",
+          border: "1px solid #b7eb8f",
+          marginBottom: 16,
+        }}
       >
         <div style={{ marginBottom: 12 }}>
           <Text type="secondary" style={{ fontSize: 12, display: "block" }}>

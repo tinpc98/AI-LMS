@@ -85,7 +85,15 @@ const TeacherAssignmentDrawer = ({
         </Descriptions.Item>
 
         <Descriptions.Item label="Learning Mode">
-          <Tag color={classRecord.learningMode === "Offline" ? "cyan" : classRecord.learningMode === "Online" ? "purple" : "geekblue"}>
+          <Tag
+            color={
+              classRecord.learningMode === "Offline"
+                ? "cyan"
+                : classRecord.learningMode === "Online"
+                  ? "purple"
+                  : "geekblue"
+            }
+          >
             {classRecord.learningMode}
           </Tag>
         </Descriptions.Item>

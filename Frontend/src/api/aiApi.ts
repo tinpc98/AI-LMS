@@ -73,9 +73,7 @@ function normalizeAIChatSession(raw: AIChatSessionApi): AIChatSession {
   const id = raw.id ?? raw._id;
 
   if (typeof id !== "string" || !id.trim()) {
-    throw new AIChatContractError(
-      "Create session response does not contain a valid session ID"
-    );
+    throw new AIChatContractError("Create session response does not contain a valid session ID");
   }
 
   return {
@@ -94,20 +92,25 @@ const aiApi = {
   createChatSession: async (lessonId?: string): Promise<AIChatSession> => {
     const payload = lessonId ? { lessonId } : {};
     console.log("[AI Chat] create session payload", payload);
-    const response = await axiosClient.post<CreateChatSessionResponse>("/api/ai/chat/sessions", payload);
+    const response = await axiosClient.post<CreateChatSessionResponse>(
+      "/api/ai/chat/sessions",
+      payload
+    );
     console.log("[AI Chat] create session response", response.data);
-    
+
     // Support nested response.data.data
     const rawSession = response.data?.data ?? (response.data as any);
-    
+
     const normalizedSession = normalizeAIChatSession(rawSession);
     console.log("[AI Chat] normalized session", normalizedSession);
-    
+
     return normalizedSession;
   },
 
   getChatHistory: async (sessionId: string): Promise<IChatMessage[]> => {
-    const response = await axiosClient.get<{ data: { messages: IChatMessageApi[] } }>(`/api/ai/chat/sessions/${sessionId}/messages`);
+    const response = await axiosClient.get<{ data: { messages: IChatMessageApi[] } }>(
+      `/api/ai/chat/sessions/${sessionId}/messages`
+    );
     const rawMessages = response.data?.data?.messages ?? [];
     return rawMessages.map(normalizeChatMessage);
   },
@@ -137,16 +140,25 @@ const aiApi = {
   // ==========================================
   // AI QUESTION GENERATION API
   // ==========================================
-  generateQuestionSet: async (lessonId: string, options: IQuestionGenerationOptions): Promise<any> => {
-    const response = await axiosClient.post(`/api/ai/lectures/${lessonId}/question-sets/generate`, options);
+  generateQuestionSet: async (
+    lessonId: string,
+    options: IQuestionGenerationOptions
+  ): Promise<any> => {
+    const response = await axiosClient.post(
+      `/api/ai/lectures/${lessonId}/question-sets/generate`,
+      options
+    );
     return response.data.data ?? response.data;
   },
 
   // ==========================================
   // AI ESSAY GRADING API
   // ==========================================
-  generateGradeSuggestion: async (attemptId: string, questionId: string): Promise<{ suggestedScore: number, feedback: string }> => {
-    const response = await axiosClient.post<{ data: { suggestedScore: number, feedback: string } }>(
+  generateGradeSuggestion: async (
+    attemptId: string,
+    questionId: string
+  ): Promise<{ suggestedScore: number; feedback: string }> => {
+    const response = await axiosClient.post<{ data: { suggestedScore: number; feedback: string } }>(
       `/api/ai/exam-attempts/${attemptId}/questions/${questionId}/grade-suggestion`
     );
     return response.data.data ?? (response.data as any);

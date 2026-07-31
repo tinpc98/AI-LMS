@@ -20,7 +20,11 @@ afterEach(() => {
 describe("aiVectorRetrieverService.retrieveChunks — validation", () => {
   it("throw AI_INVALID_INPUT nếu queryVector không phải mảng", async () => {
     await expect(
-      aiVectorRetrieverService.retrieveChunks({ queryVector: "not-an-array", classId: CLASS_ID, lessonId: LESSON_ID })
+      aiVectorRetrieverService.retrieveChunks({
+        queryVector: "not-an-array",
+        classId: CLASS_ID,
+        lessonId: LESSON_ID,
+      })
     ).rejects.toMatchObject({ code: AIErrorCode.AI_INVALID_INPUT, status: 400 });
   });
 
@@ -41,7 +45,11 @@ describe("aiVectorRetrieverService.retrieveChunks — mock hook (dùng trong tes
     const fakeResults = [{ chunkId: "c1", excerpt: "nội dung giả" }];
     aiVectorRetrieverService.setMockResults(fakeResults);
 
-    const result = await aiVectorRetrieverService.retrieveChunks({ queryVector: [0.1], classId: CLASS_ID, lessonId: LESSON_ID });
+    const result = await aiVectorRetrieverService.retrieveChunks({
+      queryVector: [0.1],
+      classId: CLASS_ID,
+      lessonId: LESSON_ID,
+    });
 
     expect(result).toBe(fakeResults);
     expect(aggregateSpy).not.toHaveBeenCalled();
@@ -60,7 +68,11 @@ describe("aiVectorRetrieverService.retrieveChunks — lọc theo minScore và to
     }));
     vi.spyOn(AIKnowledgeChunk, "aggregate").mockResolvedValue(rawDocs);
 
-    const result = await aiVectorRetrieverService.retrieveChunks({ queryVector: [0.1], classId: CLASS_ID, lessonId: LESSON_ID });
+    const result = await aiVectorRetrieverService.retrieveChunks({
+      queryVector: [0.1],
+      classId: CLASS_ID,
+      lessonId: LESSON_ID,
+    });
 
     // Chỉ 6 docs đầu có score >= 0.65, nhưng topK mặc định = 5 nên chỉ lấy 5
     expect(result).toHaveLength(5);
@@ -72,13 +84,38 @@ describe("aiVectorRetrieverService.retrieveChunks — lọc theo minScore và to
     process.env.RAG_TOP_K = "2";
     process.env.RAG_MIN_SCORE = "0.8";
     const rawDocs = [
-      { chunkId: "c1", sourceName: "A", sourceType: "lesson_text", lessonId: new mongoose.Types.ObjectId(LESSON_ID), content: "x", score: 0.95 },
-      { chunkId: "c2", sourceName: "B", sourceType: "lesson_text", lessonId: new mongoose.Types.ObjectId(LESSON_ID), content: "y", score: 0.85 },
-      { chunkId: "c3", sourceName: "C", sourceType: "lesson_text", lessonId: new mongoose.Types.ObjectId(LESSON_ID), content: "z", score: 0.7 },
+      {
+        chunkId: "c1",
+        sourceName: "A",
+        sourceType: "lesson_text",
+        lessonId: new mongoose.Types.ObjectId(LESSON_ID),
+        content: "x",
+        score: 0.95,
+      },
+      {
+        chunkId: "c2",
+        sourceName: "B",
+        sourceType: "lesson_text",
+        lessonId: new mongoose.Types.ObjectId(LESSON_ID),
+        content: "y",
+        score: 0.85,
+      },
+      {
+        chunkId: "c3",
+        sourceName: "C",
+        sourceType: "lesson_text",
+        lessonId: new mongoose.Types.ObjectId(LESSON_ID),
+        content: "z",
+        score: 0.7,
+      },
     ];
     vi.spyOn(AIKnowledgeChunk, "aggregate").mockResolvedValue(rawDocs);
 
-    const result = await aiVectorRetrieverService.retrieveChunks({ queryVector: [0.1], classId: CLASS_ID, lessonId: LESSON_ID });
+    const result = await aiVectorRetrieverService.retrieveChunks({
+      queryVector: [0.1],
+      classId: CLASS_ID,
+      lessonId: LESSON_ID,
+    });
 
     expect(result).toHaveLength(2);
     expect(result.map((r) => r.chunkId)).toEqual(["c1", "c2"]);
@@ -86,20 +123,37 @@ describe("aiVectorRetrieverService.retrieveChunks — lọc theo minScore và to
 
   it("không có kết quả nào đạt minScore → trả về mảng rỗng, không throw", async () => {
     vi.spyOn(AIKnowledgeChunk, "aggregate").mockResolvedValue([
-      { chunkId: "c1", sourceName: "A", sourceType: "lesson_text", lessonId: new mongoose.Types.ObjectId(LESSON_ID), content: "x", score: 0.1 },
+      {
+        chunkId: "c1",
+        sourceName: "A",
+        sourceType: "lesson_text",
+        lessonId: new mongoose.Types.ObjectId(LESSON_ID),
+        content: "x",
+        score: 0.1,
+      },
     ]);
 
-    const result = await aiVectorRetrieverService.retrieveChunks({ queryVector: [0.1], classId: CLASS_ID, lessonId: LESSON_ID });
+    const result = await aiVectorRetrieverService.retrieveChunks({
+      queryVector: [0.1],
+      classId: CLASS_ID,
+      lessonId: LESSON_ID,
+    });
     expect(result).toEqual([]);
   });
 });
 
 describe("aiVectorRetrieverService.retrieveChunks — xử lý lỗi Atlas Search", () => {
   it("lỗi có chứa 'index'/'search' → AI_CONFIG_ERROR với thông báo dễ hiểu (chưa cấu hình Atlas Search Index)", async () => {
-    vi.spyOn(AIKnowledgeChunk, "aggregate").mockRejectedValue(new Error("$vectorSearch index not found"));
+    vi.spyOn(AIKnowledgeChunk, "aggregate").mockRejectedValue(
+      new Error("$vectorSearch index not found")
+    );
 
     await expect(
-      aiVectorRetrieverService.retrieveChunks({ queryVector: [0.1], classId: CLASS_ID, lessonId: LESSON_ID })
+      aiVectorRetrieverService.retrieveChunks({
+        queryVector: [0.1],
+        classId: CLASS_ID,
+        lessonId: LESSON_ID,
+      })
     ).rejects.toMatchObject({ code: AIErrorCode.AI_CONFIG_ERROR, status: 500 });
   });
 
@@ -107,7 +161,11 @@ describe("aiVectorRetrieverService.retrieveChunks — xử lý lỗi Atlas Searc
     vi.spyOn(AIKnowledgeChunk, "aggregate").mockRejectedValue(new Error("connection timed out"));
 
     await expect(
-      aiVectorRetrieverService.retrieveChunks({ queryVector: [0.1], classId: CLASS_ID, lessonId: LESSON_ID })
+      aiVectorRetrieverService.retrieveChunks({
+        queryVector: [0.1],
+        classId: CLASS_ID,
+        lessonId: LESSON_ID,
+      })
     ).rejects.toMatchObject({ code: AIErrorCode.AI_PROVIDER_ERROR, status: 500 });
   });
 });

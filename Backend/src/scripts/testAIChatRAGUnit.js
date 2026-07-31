@@ -18,12 +18,12 @@ async function runTest(name, testFn) {
     passed++;
   } catch (err) {
     if (err.message === "NOT COVERED") {
-       console.log(`⚠️ SKIPPED: ${name}`);
-       skipped++;
+      console.log(`⚠️ SKIPPED: ${name}`);
+      skipped++;
     } else {
-       console.log(`❌ FAIL: ${name}`);
-       console.error(err);
-       failed++;
+      console.log(`❌ FAIL: ${name}`);
+      console.error(err);
+      failed++;
     }
   }
 }
@@ -32,43 +32,65 @@ async function runAllTests() {
   console.log("🚀 Bắt đầu chạy Test Unit cho AI Chatbot & RAG (FE Handoff)...");
 
   // Mock Request/Response
-  const mockReq = (body = {}, params = {}, query = {}, user = { id: new mongoose.Types.ObjectId() }) => ({
-    body, params, query, user, aiClass: { _id: new mongoose.Types.ObjectId() }
+  const mockReq = (
+    body = {},
+    params = {},
+    query = {},
+    user = { id: new mongoose.Types.ObjectId() }
+  ) => ({
+    body,
+    params,
+    query,
+    user,
+    aiClass: { _id: new mongoose.Types.ObjectId() },
   });
   const mockRes = () => {
     const res = {};
-    res.status = (code) => { res.statusCode = code; return res; };
-    res.json = (data) => { res.data = data; return res; };
+    res.status = (code) => {
+      res.statusCode = code;
+      return res;
+    };
+    res.json = (data) => {
+      res.data = data;
+      return res;
+    };
     return res;
   };
-  const mockNext = (err) => { if (err) throw err; };
+  const mockNext = (err) => {
+    if (err) throw err;
+  };
 
   // 1-3. lessonId validation
   await runTest("1. lessonId thiếu trả 400", async () => {
     const req = mockReq();
     const res = mockRes();
     try {
-       await checkAIChatLessonAccess(req, res, mockNext);
-       if (res.statusCode !== 400) assert.fail("Phải trả 400");
-    } catch(e) {}
+      await checkAIChatLessonAccess(req, res, mockNext);
+      if (res.statusCode !== 400) assert.fail("Phải trả 400");
+    } catch (e) {}
   });
 
   await runTest("2. lessonId sai ObjectId trả 400", async () => {
     const req = mockReq({ lessonId: "invalid-id" });
     const res = mockRes();
     try {
-       await checkAIChatLessonAccess(req, res, mockNext);
-       if (res.statusCode !== 400) assert.fail("Phải trả 400");
-    } catch(e) {}
+      await checkAIChatLessonAccess(req, res, mockNext);
+      if (res.statusCode !== 400) assert.fail("Phải trả 400");
+    } catch (e) {}
   });
 
   await runTest("3. Invalid lessonId không gọi Lesson.findById", async () => {
     let called = false;
     const originalFind = mongoose.Model.findById;
-    mongoose.Model.findById = () => { called = true; return { lean: () => null }; };
+    mongoose.Model.findById = () => {
+      called = true;
+      return { lean: () => null };
+    };
     const req = mockReq({ lessonId: "invalid-id" });
     const res = mockRes();
-    try { await checkAIChatLessonAccess(req, res, mockNext); } catch(e) {}
+    try {
+      await checkAIChatLessonAccess(req, res, mockNext);
+    } catch (e) {}
     mongoose.Model.findById = originalFind;
     assert.strictEqual(called, false);
   });
@@ -90,7 +112,10 @@ async function runAllTests() {
   });
 
   await runTest("6. title vượt 200 ký tự trả 400", async () => {
-    const req = mockReq({ lessonId: new mongoose.Types.ObjectId().toString(), title: "A".repeat(201) });
+    const req = mockReq({
+      lessonId: new mongoose.Types.ObjectId().toString(),
+      title: "A".repeat(201),
+    });
     const res = mockRes();
     await createSession(req, res, mockNext);
     assert.strictEqual(res.statusCode, 400);
@@ -98,14 +123,20 @@ async function runAllTests() {
 
   // 7-8. message validation
   await runTest("7. message rỗng trả 400", async () => {
-    const req = mockReq({ message: "   " }, { sessionId: new mongoose.Types.ObjectId().toString() });
+    const req = mockReq(
+      { message: "   " },
+      { sessionId: new mongoose.Types.ObjectId().toString() }
+    );
     const res = mockRes();
     await sendMessage(req, res, mockNext);
     assert.strictEqual(res.statusCode, 400);
   });
 
   await runTest("8. message quá dài trả 400", async () => {
-    const req = mockReq({ message: "A".repeat(2500) }, { sessionId: new mongoose.Types.ObjectId().toString() });
+    const req = mockReq(
+      { message: "A".repeat(2500) },
+      { sessionId: new mongoose.Types.ObjectId().toString() }
+    );
     const res = mockRes();
     await sendMessage(req, res, mockNext);
     assert.strictEqual(res.statusCode, 400);
@@ -120,7 +151,11 @@ async function runAllTests() {
   });
 
   await runTest("10. limit lớn hơn 100 trả 400", async () => {
-    const req = mockReq({}, { sessionId: new mongoose.Types.ObjectId().toString() }, { limit: 101 });
+    const req = mockReq(
+      {},
+      { sessionId: new mongoose.Types.ObjectId().toString() },
+      { limit: 101 }
+    );
     const res = mockRes();
     await getHistory(req, res, mockNext);
     assert.strictEqual(res.statusCode, 400);
@@ -135,7 +170,9 @@ async function runAllTests() {
   await runTest("12. Invalid input không gọi AI Core", async () => {
     let called = false;
     const originalService = aiChatService.sendMessage;
-    aiChatService.sendMessage = async () => { called = true; };
+    aiChatService.sendMessage = async () => {
+      called = true;
+    };
     const req = mockReq({ message: "" }, { sessionId: new mongoose.Types.ObjectId().toString() });
     const res = mockRes();
     await sendMessage(req, res, mockNext);
@@ -157,14 +194,23 @@ async function runAllTests() {
 
   // 14-16. Output Safety
   await runTest("14. Citation bịa bị loại", async () => {
-    const validOutput = chatOutputValidator.validate({ answer: "Ok", citationIds: ["c2"], confidence: 0.9 }, [{ chunkId: "c1" }]);
+    const validOutput = chatOutputValidator.validate(
+      { answer: "Ok", citationIds: ["c2"], confidence: 0.9 },
+      [{ chunkId: "c1" }]
+    );
     assert.strictEqual(validOutput.citations.length, 0);
   });
 
   await runTest("15. Không có citation trả đúng safe fallback", async () => {
-    const validOutput = chatOutputValidator.validate({ answer: "Câu trả lời bịa đặt", citationIds: [], confidence: 0.8 }, []);
+    const validOutput = chatOutputValidator.validate(
+      { answer: "Câu trả lời bịa đặt", citationIds: [], confidence: 0.8 },
+      []
+    );
     assert.strictEqual(validOutput.confidence, 0);
-    assert.strictEqual(validOutput.answer, "Tôi chưa tìm thấy thông tin này trong tài liệu bài học.");
+    assert.strictEqual(
+      validOutput.answer,
+      "Tôi chưa tìm thấy thông tin này trong tài liệu bài học."
+    );
   });
 
   await runTest("16. Secret trong answer bị chặn", async () => {
@@ -196,15 +242,25 @@ async function runAllTests() {
   });
 
   await runTest("20. Document/Query embedding tương thích", async () => {
-    const resDoc = await mockProvider.generateEmbedding({ text: "Trí tuệ nhân tạo", taskType: "RETRIEVAL_DOCUMENT", dimensions: 768 });
-    const resQuery = await mockProvider.generateEmbedding({ text: "Trí tuệ nhân tạo", taskType: "RETRIEVAL_QUERY", dimensions: 768 });
-    
+    const resDoc = await mockProvider.generateEmbedding({
+      text: "Trí tuệ nhân tạo",
+      taskType: "RETRIEVAL_DOCUMENT",
+      dimensions: 768,
+    });
+    const resQuery = await mockProvider.generateEmbedding({
+      text: "Trí tuệ nhân tạo",
+      taskType: "RETRIEVAL_QUERY",
+      dimensions: 768,
+    });
+
     // Compute cosine similarity
-    let dot = 0, normA = 0, normB = 0;
-    for(let i = 0; i < 768; i++) {
-        dot += resDoc.embedding[i] * resQuery.embedding[i];
-        normA += resDoc.embedding[i] ** 2;
-        normB += resQuery.embedding[i] ** 2;
+    let dot = 0,
+      normA = 0,
+      normB = 0;
+    for (let i = 0; i < 768; i++) {
+      dot += resDoc.embedding[i] * resQuery.embedding[i];
+      normA += resDoc.embedding[i] ** 2;
+      normB += resQuery.embedding[i] ** 2;
     }
     const similarity = dot / (Math.sqrt(normA) * Math.sqrt(normB));
     assert.ok(similarity > 0.99); // Exactly the same

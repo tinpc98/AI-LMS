@@ -17,7 +17,11 @@ export const AssignmentStatistic: React.FC<AssignmentStatisticProps> = React.mem
   return (
     <Row gutter={[12, 12]} style={{ marginBottom: 24 }}>
       <Col xs={12} sm={8} md={4.8} lg={4.8} style={{ flex: 1 }}>
-        <Card bordered={false} styles={{ body: { padding: "12px 16px" } }} style={{ borderRadius: 12, backgroundColor: "#fafafa" }}>
+        <Card
+          bordered={false}
+          styles={{ body: { padding: "12px 16px" } }}
+          style={{ borderRadius: 12, backgroundColor: "#fafafa" }}
+        >
           <Statistic
             title={<span style={{ fontSize: 11, color: "#8c8c8c" }}>Tổng bài tập</span>}
             value={stats.total}
@@ -28,7 +32,11 @@ export const AssignmentStatistic: React.FC<AssignmentStatisticProps> = React.mem
       </Col>
 
       <Col xs={12} sm={8} md={4.8} lg={4.8} style={{ flex: 1 }}>
-        <Card bordered={false} styles={{ body: { padding: "12px 16px" } }} style={{ borderRadius: 12, backgroundColor: "#fffbe6" }}>
+        <Card
+          bordered={false}
+          styles={{ body: { padding: "12px 16px" } }}
+          style={{ borderRadius: 12, backgroundColor: "#fffbe6" }}
+        >
           <Statistic
             title={<span style={{ fontSize: 11, color: "#8c8c8c" }}>Chưa nộp</span>}
             value={stats.pending}
@@ -39,7 +47,11 @@ export const AssignmentStatistic: React.FC<AssignmentStatisticProps> = React.mem
       </Col>
 
       <Col xs={12} sm={8} md={4.8} lg={4.8} style={{ flex: 1 }}>
-        <Card bordered={false} styles={{ body: { padding: "12px 16px" } }} style={{ borderRadius: 12, backgroundColor: "#f6ffed" }}>
+        <Card
+          bordered={false}
+          styles={{ body: { padding: "12px 16px" } }}
+          style={{ borderRadius: 12, backgroundColor: "#f6ffed" }}
+        >
           <Statistic
             title={<span style={{ fontSize: 11, color: "#8c8c8c" }}>Đã nộp bài</span>}
             value={stats.submitted}
@@ -50,7 +62,11 @@ export const AssignmentStatistic: React.FC<AssignmentStatisticProps> = React.mem
       </Col>
 
       <Col xs={12} sm={8} md={4.8} lg={4.8} style={{ flex: 1 }}>
-        <Card bordered={false} styles={{ body: { padding: "12px 16px" } }} style={{ borderRadius: 12, backgroundColor: "#fff1f0" }}>
+        <Card
+          bordered={false}
+          styles={{ body: { padding: "12px 16px" } }}
+          style={{ borderRadius: 12, backgroundColor: "#fff1f0" }}
+        >
           <Statistic
             title={<span style={{ fontSize: 11, color: "#8c8c8c" }}>Quá hạn / Trễ</span>}
             value={stats.late}
@@ -61,7 +77,11 @@ export const AssignmentStatistic: React.FC<AssignmentStatisticProps> = React.mem
       </Col>
 
       <Col xs={12} sm={8} md={4.8} lg={4.8} style={{ flex: 1 }}>
-        <Card bordered={false} styles={{ body: { padding: "12px 16px" } }} style={{ borderRadius: 12, backgroundColor: "#f9f0ff" }}>
+        <Card
+          bordered={false}
+          styles={{ body: { padding: "12px 16px" } }}
+          style={{ borderRadius: 12, backgroundColor: "#f9f0ff" }}
+        >
           <Statistic
             title={<span style={{ fontSize: 11, color: "#8c8c8c" }}>Điểm trung bình</span>}
             value={stats.averageGrade !== null ? stats.averageGrade : "--"}

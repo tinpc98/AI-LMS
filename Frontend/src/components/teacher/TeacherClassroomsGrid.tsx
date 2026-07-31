@@ -1,6 +1,25 @@
 import React, { useState, useMemo } from "react";
-import { Card, Row, Col, Tag, Badge, Button, Input, Empty, Typography, Space, Tooltip, Pagination } from "antd";
-import { BookOutlined, TeamOutlined, SearchOutlined, ArrowRightOutlined, CheckCircleOutlined } from "@ant-design/icons";
+import {
+  Card,
+  Row,
+  Col,
+  Tag,
+  Badge,
+  Button,
+  Input,
+  Empty,
+  Typography,
+  Space,
+  Tooltip,
+  Pagination,
+} from "antd";
+import {
+  BookOutlined,
+  TeamOutlined,
+  SearchOutlined,
+  ArrowRightOutlined,
+  CheckCircleOutlined,
+} from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 
 const { Title, Text } = Typography;
@@ -9,10 +28,12 @@ interface ClassModel {
   _id: string;
   className: string;
   classCode?: string;
-  courseId?: {
-    courseName?: string;
-    subject?: string;
-  } | string;
+  courseId?:
+    | {
+        courseName?: string;
+        subject?: string;
+      }
+    | string;
   currentStudents?: number;
   maxStudents?: number;
   students?: any[];
@@ -68,13 +89,25 @@ export const TeacherClassroomsGrid: React.FC<TeacherClassroomsGridProps> = React
       <Card
         loading={loading}
         title={
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              flexWrap: "wrap",
+              gap: 12,
+            }}
+          >
             <Space>
               <BookOutlined style={{ color: "#1890ff", fontSize: 20 }} />
               <Title level={4} style={{ margin: 0, fontWeight: 700 }}>
                 Lớp học được phân công
               </Title>
-              <Badge count={classes.length} overflowCount={99} style={{ backgroundColor: "#1890ff" }} />
+              <Badge
+                count={classes.length}
+                overflowCount={99}
+                style={{ backgroundColor: "#1890ff" }}
+              />
             </Space>
 
             <Input
@@ -97,7 +130,8 @@ export const TeacherClassroomsGrid: React.FC<TeacherClassroomsGridProps> = React
           <>
             <Row gutter={[16, 16]}>
               {paginatedClasses.map((cls) => {
-                const studentCount = cls.currentStudents ?? (Array.isArray(cls.students) ? cls.students.length : 0);
+                const studentCount =
+                  cls.currentStudents ?? (Array.isArray(cls.students) ? cls.students.length : 0);
                 const max = cls.maxStudents || 30;
                 const courseName = typeof cls.courseId === "object" ? cls.courseId?.courseName : "";
 
@@ -113,31 +147,66 @@ export const TeacherClassroomsGrid: React.FC<TeacherClassroomsGridProps> = React
                         display: "flex",
                         flexDirection: "column",
                       }}
-                      styles={{ body: { padding: 16, flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between" } }}
+                      styles={{
+                        body: {
+                          padding: 16,
+                          flex: 1,
+                          display: "flex",
+                          flexDirection: "column",
+                          justifyContent: "space-between",
+                        },
+                      }}
                     >
                       <div>
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
-                          <Title level={5} style={{ margin: 0, fontSize: 16, fontWeight: 700 }} ellipsis={{ rows: 2 }}>
+                        <div
+                          style={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "flex-start",
+                            marginBottom: 8,
+                          }}
+                        >
+                          <Title
+                            level={5}
+                            style={{ margin: 0, fontSize: 16, fontWeight: 700 }}
+                            ellipsis={{ rows: 2 }}
+                          >
                             {cls.className}
                           </Title>
                           {getStatusTag(cls.status)}
                         </div>
 
                         {cls.classCode && (
-                          <Tag color="cyan" style={{ marginBottom: 12, borderRadius: 4, fontWeight: 600 }}>
+                          <Tag
+                            color="cyan"
+                            style={{ marginBottom: 12, borderRadius: 4, fontWeight: 600 }}
+                          >
                             {cls.classCode}
                           </Tag>
                         )}
 
                         {courseName && (
-                          <Text type="secondary" style={{ display: "block", fontSize: 13, marginBottom: 12 }} ellipsis>
+                          <Text
+                            type="secondary"
+                            style={{ display: "block", fontSize: 13, marginBottom: 12 }}
+                            ellipsis
+                          >
                             Khóa học: {courseName}
                           </Text>
                         )}
                       </div>
 
-                      <div style={{ marginTop: 12, paddingTop: 12, borderTop: "1px solid #f5f5f5" }}>
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+                      <div
+                        style={{ marginTop: 12, paddingTop: 12, borderTop: "1px solid #f5f5f5" }}
+                      >
+                        <div
+                          style={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                            marginBottom: 12,
+                          }}
+                        >
                           <Space size={6}>
                             <TeamOutlined style={{ color: "#52c41a" }} />
                             <Text style={{ fontSize: 13, color: "#595959" }}>
@@ -180,7 +249,9 @@ export const TeacherClassroomsGrid: React.FC<TeacherClassroomsGridProps> = React
             image={Empty.PRESENTED_IMAGE_SIMPLE}
             description={
               <Text type="secondary">
-                {searchQuery ? "Không tìm thấy lớp học phù hợp với từ khóa!" : "Bạn chưa được phân công quản lý lớp học nào."}
+                {searchQuery
+                  ? "Không tìm thấy lớp học phù hợp với từ khóa!"
+                  : "Bạn chưa được phân công quản lý lớp học nào."}
               </Text>
             }
           />

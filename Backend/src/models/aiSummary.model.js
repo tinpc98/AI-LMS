@@ -32,13 +32,13 @@ const aiSummarySchema = new mongoose.Schema(
       {
         type: String,
         trim: true,
-      }
+      },
     ],
     suggestedReviewTopics: [
       {
         type: String,
         trim: true,
-      }
+      },
     ],
     sourceFingerprint: {
       type: String,
@@ -48,7 +48,7 @@ const aiSummarySchema = new mongoose.Schema(
     sourceWarnings: [
       {
         type: String,
-      }
+      },
     ],
     generatedBy: {
       type: mongoose.Schema.Types.ObjectId,

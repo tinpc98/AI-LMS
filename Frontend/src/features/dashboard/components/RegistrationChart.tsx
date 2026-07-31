@@ -38,7 +38,14 @@ export const RegistrationChart: React.FC<RegistrationChartProps> = ({ data, load
         }}
         styles={{ body: { padding: "24px" } }}
       >
-        <div style={{ marginBottom: "20px", display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+        <div
+          style={{
+            marginBottom: "20px",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "flex-start",
+          }}
+        >
           <div>
             <Title level={4} style={{ margin: 0, fontWeight: 700 }}>
               Thống kê học sinh đăng ký 📈
@@ -68,11 +75,7 @@ export const RegistrationChart: React.FC<RegistrationChartProps> = ({ data, load
                   axisLine={{ stroke: "#e0e0e0" }}
                   tick={{ fill: "#666", fontSize: 12 }}
                 />
-                <YAxis
-                  tickLine={false}
-                  axisLine={false}
-                  tick={{ fill: "#666", fontSize: 12 }}
-                />
+                <YAxis tickLine={false} axisLine={false} tick={{ fill: "#666", fontSize: 12 }} />
                 <Tooltip
                   contentStyle={{
                     backgroundColor: "rgba(255, 255, 255, 0.95)",

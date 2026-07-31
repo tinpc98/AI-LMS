@@ -1,16 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import {
-  Card,
-  Tabs,
-  Tag,
-  Button,
-  Space,
-  Typography,
-  Spin,
-  Alert,
-  Empty,
-} from "antd";
+import { Card, Tabs, Tag, Button, Space, Typography, Spin, Alert, Empty } from "antd";
 import {
   ArrowLeftOutlined,
   BookOutlined,
@@ -155,7 +145,14 @@ export default function ClassroomDetail() {
 
   if (isLoading) {
     return (
-      <div style={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "80vh" }}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          minHeight: "80vh",
+        }}
+      >
         <Spin size="large" tip="Đang nạp dữ liệu chi tiết lớp học..." />
       </div>
     );
@@ -180,8 +177,11 @@ export default function ClassroomDetail() {
   }
 
   const studentList = Array.isArray(classInfo.students) ? classInfo.students : [];
-  const resourceList = Array.isArray((classInfo as any).resources) ? (classInfo as any).resources : [];
-  const teacherName = typeof classInfo.teacherId === "object" ? classInfo.teacherId?.fullName : "Giảng viên";
+  const resourceList = Array.isArray((classInfo as any).resources)
+    ? (classInfo as any).resources
+    : [];
+  const teacherName =
+    typeof classInfo.teacherId === "object" ? classInfo.teacherId?.fullName : "Giảng viên";
 
   const tabItems = [
     {
@@ -334,9 +334,7 @@ export default function ClassroomDetail() {
           <span>Thành tích</span>
         </Space>
       ),
-      children: (
-        <TeacherAnalyticsTab classId={classId!} />
-      ),
+      children: <TeacherAnalyticsTab classId={classId!} />,
     },
     {
       key: "lessons",
@@ -350,7 +348,9 @@ export default function ClassroomDetail() {
         <Card
           title={
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <Title level={5} style={{ margin: 0 }}>📚 Danh sách bài giảng</Title>
+              <Title level={5} style={{ margin: 0 }}>
+                📚 Danh sách bài giảng
+              </Title>
               <Button
                 type="primary"
                 icon={<PlusOutlined />}
@@ -366,35 +366,59 @@ export default function ClassroomDetail() {
           style={{ borderRadius: 12 }}
         >
           {lessons.length > 0 ? (
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 16 }}>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
+                gap: 16,
+              }}
+            >
               {lessons.map((lesson) => (
                 <Card
                   key={lesson._id}
                   hoverable
                   style={{ borderRadius: 10, border: "1px solid #f0f0f0" }}
                   actions={[
-                    <EditOutlined key="edit" title="Sửa" onClick={() => setEditingLesson(lesson)} />,
-                    <span 
-                      key="ai" 
-                      title="Sinh câu hỏi AI" 
+                    <EditOutlined
+                      key="edit"
+                      title="Sửa"
+                      onClick={() => setEditingLesson(lesson)}
+                    />,
+                    <span
+                      key="ai"
+                      title="Sinh câu hỏi AI"
                       onClick={() => setSelectedLessonForAI(lesson._id)}
                       className="text-indigo-600 hover:text-indigo-800 transition-colors cursor-pointer"
                     >
                       <span className="material-symbols-outlined text-[16px]">auto_awesome</span>
                     </span>,
-                    <DeleteOutlined key="delete" title="Xóa" onClick={() => handleDeleteLesson(lesson._id)} style={{ color: "#ff4d4f" }} />,
+                    <DeleteOutlined
+                      key="delete"
+                      title="Xóa"
+                      onClick={() => handleDeleteLesson(lesson._id)}
+                      style={{ color: "#ff4d4f" }}
+                    />,
                   ]}
                 >
                   <Title level={5} style={{ fontSize: 15, marginBottom: 8 }} ellipsis>
                     {lesson.title}
                   </Title>
                   {lesson.description && (
-                    <Paragraph type="secondary" ellipsis={{ rows: 2 }} style={{ fontSize: 13, marginBottom: 12 }}>
+                    <Paragraph
+                      type="secondary"
+                      ellipsis={{ rows: 2 }}
+                      style={{ fontSize: 13, marginBottom: 12 }}
+                    >
                       {lesson.description}
                     </Paragraph>
                   )}
                   {lesson.videoUrl && (
-                    <a href={lesson.videoUrl} target="_blank" rel="noreferrer" style={{ fontSize: 13, display: "block", marginBottom: 6 }}>
+                    <a
+                      href={lesson.videoUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      style={{ fontSize: 13, display: "block", marginBottom: 6 }}
+                    >
                       ▶ Watch Video
                     </a>
                   )}
@@ -402,7 +426,10 @@ export default function ClassroomDetail() {
               ))}
             </div>
           ) : (
-            <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="Chưa có bài giảng nào trong lớp này." />
+            <Empty
+              image={Empty.PRESENTED_IMAGE_SIMPLE}
+              description="Chưa có bài giảng nào trong lớp này."
+            />
           )}
         </Card>
       ),
@@ -410,7 +437,15 @@ export default function ClassroomDetail() {
   ];
 
   return (
-    <div style={{ padding: "24px", maxWidth: 1400, margin: "0 auto", backgroundColor: "#f8f9fa", minHeight: "100vh" }}>
+    <div
+      style={{
+        padding: "24px",
+        maxWidth: 1400,
+        margin: "0 auto",
+        backgroundColor: "#f8f9fa",
+        minHeight: "100vh",
+      }}
+    >
       {/* 1. Header Banner */}
       <Card
         style={{
@@ -422,7 +457,15 @@ export default function ClassroomDetail() {
         }}
         styles={{ body: { padding: "24px 32px" } }}
       >
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 16 }}>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            flexWrap: "wrap",
+            gap: 16,
+          }}
+        >
           <div>
             <Space size={12} align="center">
               <Button
@@ -438,8 +481,16 @@ export default function ClassroomDetail() {
               </Tag>
               <Tag color="green">{classInfo.status || "Đang hoạt động"}</Tag>
             </Space>
-            <Text style={{ color: "rgba(255,255,255,0.85)", display: "block", marginTop: 8, fontSize: 14 }}>
-              Sĩ số: {studentList.length} học sinh | Lịch học: {(classInfo as any).schedule?.days?.join(", ") || "Tự do"}
+            <Text
+              style={{
+                color: "rgba(255,255,255,0.85)",
+                display: "block",
+                marginTop: 8,
+                fontSize: 14,
+              }}
+            >
+              Sĩ số: {studentList.length} học sinh | Lịch học:{" "}
+              {(classInfo as any).schedule?.days?.join(", ") || "Tự do"}
             </Text>
           </div>
 

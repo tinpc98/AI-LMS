@@ -21,9 +21,7 @@ const statCardStyle = {
 };
 
 const AIDashboard = ({ stats, features }: AIDashboardProps) => {
-  const topFeatures = [...features]
-    .sort((a, b) => b.dailyRequests - a.dailyRequests)
-    .slice(0, 5);
+  const topFeatures = [...features].sort((a, b) => b.dailyRequests - a.dailyRequests).slice(0, 5);
 
   const usageBreakdown = [
     { label: "AI Chatbot (Gemini 2.5 Flash)", requests: 6840, percent: 36, color: "#1890ff" },
@@ -161,7 +159,8 @@ const AIDashboard = ({ stats, features }: AIDashboardProps) => {
             bordered={false}
             title={
               <span>
-                <ApiOutlined style={{ marginRight: 8, color: "#1890ff" }} /> AI Request Volume & Distribution
+                <ApiOutlined style={{ marginRight: 8, color: "#1890ff" }} /> AI Request Volume &
+                Distribution
               </span>
             }
           >
@@ -192,7 +191,8 @@ const AIDashboard = ({ stats, features }: AIDashboardProps) => {
             bordered={false}
             title={
               <span>
-                <TrophyOutlined style={{ marginRight: 8, color: "#fa8c16" }} /> Top AI Features Ranking
+                <TrophyOutlined style={{ marginRight: 8, color: "#fa8c16" }} /> Top AI Features
+                Ranking
               </span>
             }
           >
@@ -205,7 +205,8 @@ const AIDashboard = ({ stats, features }: AIDashboardProps) => {
                     avatar={
                       <Avatar
                         style={{
-                          backgroundColor: index === 0 ? "#fadb14" : index === 1 ? "#d9d9d9" : "#d3ad69",
+                          backgroundColor:
+                            index === 0 ? "#fadb14" : index === 1 ? "#d9d9d9" : "#d3ad69",
                           color: index < 3 ? "#000" : "#fff",
                           fontWeight: 600,
                         }}
@@ -214,7 +215,13 @@ const AIDashboard = ({ stats, features }: AIDashboardProps) => {
                       </Avatar>
                     }
                     title={
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                        }}
+                      >
                         <Typography.Text strong>{item.name}</Typography.Text>
                         <Tag color={item.enabled ? "green" : "default"}>
                           {item.enabled ? "Enabled" : "Disabled"}

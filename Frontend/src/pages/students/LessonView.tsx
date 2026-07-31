@@ -98,7 +98,10 @@ const LessonPage = () => {
                   alt="Video thumbnail"
                 />
                 <button className="w-20 h-20 rounded-full bg-primary/90 text-white flex items-center justify-center backdrop-blur hover:scale-110 transition-transform shadow-lg">
-                  <span className="material-symbols-outlined text-4xl" style={{ fontVariationSettings: "'FILL' 1" }}>
+                  <span
+                    className="material-symbols-outlined text-4xl"
+                    style={{ fontVariationSettings: "'FILL' 1" }}
+                  >
                     play_arrow
                   </span>
                 </button>
@@ -119,7 +122,9 @@ const LessonPage = () => {
                   className="flex items-center gap-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 px-4 py-2 rounded-xl text-sm font-bold transition-colors shadow-sm disabled:opacity-50"
                 >
                   {isLoadingSummary ? (
-                    <span className="material-symbols-outlined text-sm animate-spin">progress_activity</span>
+                    <span className="material-symbols-outlined text-sm animate-spin">
+                      progress_activity
+                    </span>
                   ) : (
                     <span className="material-symbols-outlined text-sm">auto_awesome</span>
                   )}
@@ -127,7 +132,8 @@ const LessonPage = () => {
                 </button>
               </div>
               <p className="text-on-surface-variant font-body-md mt-2">
-                Giới thiệu về cách kết hợp các mô hình ngôn ngữ lớn với cơ sở dữ liệu tri thức riêng tư.
+                Giới thiệu về cách kết hợp các mô hình ngôn ngữ lớn với cơ sở dữ liệu tri thức riêng
+                tư.
               </p>
             </div>
 
@@ -163,7 +169,11 @@ const LessonPage = () => {
               <span className="material-symbols-outlined text-primary">auto_awesome</span>
               <h3 className="font-label-md text-label-md font-bold">AI Scholar Tutor</h3>
             </div>
-            <button onClick={initSession} title="Làm mới cuộc trò chuyện" className="text-on-surface-variant hover:text-primary transition-colors">
+            <button
+              onClick={initSession}
+              title="Làm mới cuộc trò chuyện"
+              className="text-on-surface-variant hover:text-primary transition-colors"
+            >
               <span className="material-symbols-outlined text-sm">refresh</span>
             </button>
           </div>
@@ -176,12 +186,16 @@ const LessonPage = () => {
             ) : chatError ? (
               <div className="text-center text-error mt-4">
                 <p className="text-sm">{chatError}</p>
-                <button onClick={initSession} className="mt-2 text-primary text-xs underline">Thử lại</button>
+                <button onClick={initSession} className="mt-2 text-primary text-xs underline">
+                  Thử lại
+                </button>
               </div>
             ) : messages.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full text-center text-on-surface-variant opacity-60">
                 <span className="material-symbols-outlined text-4xl mb-2">forum</span>
-                <p className="text-sm">Hãy đặt câu hỏi về nội dung bài học để AI Scholar giải đáp.</p>
+                <p className="text-sm">
+                  Hãy đặt câu hỏi về nội dung bài học để AI Scholar giải đáp.
+                </p>
               </div>
             ) : (
               messages.map((msg, idx) => (
@@ -206,15 +220,23 @@ const LessonPage = () => {
                 </div>
               ))
             )}
-            
+
             {isTyping && (
               <div className="self-start flex flex-col max-w-[85%]">
                 <div className="px-4 py-3 bg-white border border-outline-variant rounded-2xl rounded-tl-sm shadow-sm flex items-center gap-1">
                   <span className="w-2 h-2 bg-slate-400 rounded-full animate-bounce"></span>
-                  <span className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: "0.2s" }}></span>
-                  <span className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: "0.4s" }}></span>
+                  <span
+                    className="w-2 h-2 bg-slate-400 rounded-full animate-bounce"
+                    style={{ animationDelay: "0.2s" }}
+                  ></span>
+                  <span
+                    className="w-2 h-2 bg-slate-400 rounded-full animate-bounce"
+                    style={{ animationDelay: "0.4s" }}
+                  ></span>
                 </div>
-                <span className="text-[10px] text-on-surface-variant mt-1 px-1">AI Scholar đang trả lời...</span>
+                <span className="text-[10px] text-on-surface-variant mt-1 px-1">
+                  AI Scholar đang trả lời...
+                </span>
               </div>
             )}
             <div ref={messagesEndRef} />
@@ -241,7 +263,10 @@ const LessonPage = () => {
                 onClick={handleSendChat}
                 disabled={!inputText.trim() || isChatLoading || isTyping}
               >
-                <span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>
+                <span
+                  className="material-symbols-outlined text-[20px]"
+                  style={{ fontVariationSettings: "'FILL' 1" }}
+                >
                   send
                 </span>
               </button>
@@ -259,7 +284,9 @@ const LessonPage = () => {
           <div className="bg-white/90 backdrop-blur-lg border border-primary/20 p-4 rounded-xl shadow-2xl flex items-center gap-4">
             <div>
               <p className="text-xs font-bold text-primary uppercase">AI Insight</p>
-              <p className="text-sm text-on-surface">Bài học này có tỷ lệ hoàn thành cao. Hãy theo dõi kỹ phần Demo nhé!</p>
+              <p className="text-sm text-on-surface">
+                Bài học này có tỷ lệ hoàn thành cao. Hãy theo dõi kỹ phần Demo nhé!
+              </p>
             </div>
             <button onClick={() => setIsToastVisible(false)}>
               <span className="material-symbols-outlined text-lg">close</span>

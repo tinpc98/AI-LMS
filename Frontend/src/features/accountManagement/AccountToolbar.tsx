@@ -39,7 +39,9 @@ const AccountToolbar = ({ filters, onFiltersChange, onRefresh, onCreate }: Accou
           style={{ width: "100%" }}
           placeholder="Status"
           value={filters.status}
-          onChange={(value: AccountStatus | "All") => onFiltersChange({ ...filters, status: value })}
+          onChange={(value: AccountStatus | "All") =>
+            onFiltersChange({ ...filters, status: value })
+          }
           options={[
             { label: "All Status", value: "All" },
             { label: "Active", value: "Active" },

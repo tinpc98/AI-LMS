@@ -76,14 +76,19 @@ describe("createAssignment", () => {
   });
 
   it("classId sai định dạng ObjectId trả 400", async () => {
-    const req = makeReq({ body: { title: "BT1", deadline: new Date(), classId: "not-a-valid-id" } });
+    const req = makeReq({
+      body: { title: "BT1", deadline: new Date(), classId: "not-a-valid-id" },
+    });
     const res = makeRes();
     await assignmentController.createAssignment(req, res);
     expect(res.status).toHaveBeenCalledWith(400);
   });
 
   it("Giáo viên không phụ trách lớp bị chặn 403", async () => {
-    vi.spyOn(classModel, "findById").mockResolvedValue({ _id: CLASS_ID, teacherId: OTHER_TEACHER_ID });
+    vi.spyOn(classModel, "findById").mockResolvedValue({
+      _id: CLASS_ID,
+      teacherId: OTHER_TEACHER_ID,
+    });
     const req = makeReq({ body: { title: "BT1", deadline: new Date(), classId: CLASS_ID } });
     const res = makeRes();
     await assignmentController.createAssignment(req, res);
@@ -145,9 +150,15 @@ describe("gradeSubmission", () => {
     vi.spyOn(mongoose, "startSession").mockResolvedValue(mockSession());
     vi.spyOn(Submission, "findById").mockReturnValue(mongooseQuery({ assignmentId: "a1" }));
     vi.spyOn(Assignment, "findById").mockReturnValue(mongooseQuery({ classId: CLASS_ID }));
-    vi.spyOn(classModel, "findById").mockResolvedValue({ _id: CLASS_ID, teacherId: OTHER_TEACHER_ID });
+    vi.spyOn(classModel, "findById").mockResolvedValue({
+      _id: CLASS_ID,
+      teacherId: OTHER_TEACHER_ID,
+    });
 
-    const req = makeReq({ params: { submissionId: "607f1f77bcf86cd799439333" }, body: { grade: 8 } });
+    const req = makeReq({
+      params: { submissionId: "607f1f77bcf86cd799439333" },
+      body: { grade: 8 },
+    });
     const res = makeRes();
     await assignmentController.gradeSubmission(req, res);
     expect(res.status).toHaveBeenCalledWith(403);
@@ -160,7 +171,10 @@ describe("gradeSubmission", () => {
     vi.spyOn(Assignment, "findById").mockReturnValue(mongooseQuery({ classId: CLASS_ID }));
     vi.spyOn(classModel, "findById").mockResolvedValue({ _id: CLASS_ID, teacherId: TEACHER_ID });
 
-    const req = makeReq({ params: { submissionId: "607f1f77bcf86cd799439333" }, body: { grade: 9, feedback: "Tốt" } });
+    const req = makeReq({
+      params: { submissionId: "607f1f77bcf86cd799439333" },
+      body: { grade: 9, feedback: "Tốt" },
+    });
     const res = makeRes();
     await assignmentController.gradeSubmission(req, res);
 
@@ -189,7 +203,10 @@ describe("updateAssignment", () => {
 
   it("Giáo viên không phụ trách lớp bị chặn 403", async () => {
     vi.spyOn(Assignment, "findById").mockResolvedValue({ classId: CLASS_ID });
-    vi.spyOn(classModel, "findById").mockResolvedValue({ _id: CLASS_ID, teacherId: OTHER_TEACHER_ID });
+    vi.spyOn(classModel, "findById").mockResolvedValue({
+      _id: CLASS_ID,
+      teacherId: OTHER_TEACHER_ID,
+    });
     const req = makeReq({ params: { id: "607f1f77bcf86cd799439333" } });
     const res = makeRes();
     await assignmentController.updateAssignment(req, res);
@@ -197,7 +214,12 @@ describe("updateAssignment", () => {
   });
 
   it("Cập nhật thành công, giữ nguyên attachments cũ nếu không upload file mới", async () => {
-    const assignment = { classId: CLASS_ID, title: "Cũ", attachments: [{ name: "a", url: "u", publicId: "p" }], save: vi.fn().mockResolvedValue(true) };
+    const assignment = {
+      classId: CLASS_ID,
+      title: "Cũ",
+      attachments: [{ name: "a", url: "u", publicId: "p" }],
+      save: vi.fn().mockResolvedValue(true),
+    };
     vi.spyOn(Assignment, "findById").mockResolvedValue(assignment);
     vi.spyOn(classModel, "findById").mockResolvedValue({ _id: CLASS_ID, teacherId: TEACHER_ID });
 
@@ -214,7 +236,10 @@ describe("updateAssignment", () => {
 describe("deleteAssignment", () => {
   it("Giáo viên không phụ trách lớp bị chặn 403", async () => {
     vi.spyOn(Assignment, "findById").mockResolvedValue({ classId: CLASS_ID });
-    vi.spyOn(classModel, "findById").mockResolvedValue({ _id: CLASS_ID, teacherId: OTHER_TEACHER_ID });
+    vi.spyOn(classModel, "findById").mockResolvedValue({
+      _id: CLASS_ID,
+      teacherId: OTHER_TEACHER_ID,
+    });
     const req = makeReq({ params: { id: "607f1f77bcf86cd799439333" } });
     const res = makeRes();
     await assignmentController.deleteAssignment(req, res);
@@ -277,7 +302,10 @@ describe("getAssignmentsByClass", () => {
 describe("getSubmissionsByAssignment", () => {
   it("Giáo viên không phụ trách lớp bị chặn 403", async () => {
     vi.spyOn(Assignment, "findById").mockResolvedValue({ classId: CLASS_ID });
-    vi.spyOn(classModel, "findById").mockResolvedValue({ _id: CLASS_ID, teacherId: OTHER_TEACHER_ID });
+    vi.spyOn(classModel, "findById").mockResolvedValue({
+      _id: CLASS_ID,
+      teacherId: OTHER_TEACHER_ID,
+    });
     const req = makeReq({ params: { assignmentId: "607f1f77bcf86cd799439333" } });
     const res = makeRes();
     await assignmentController.getSubmissionsByAssignment(req, res);
@@ -315,15 +343,23 @@ describe("getMySubmission", () => {
 
   it("Không tìm thấy bài nộp trả 404", async () => {
     vi.spyOn(Submission, "findOne").mockReturnValue(mongooseQuery(null));
-    const req = makeReq({ params: { assignmentId: "607f1f77bcf86cd799439333" }, user: { id: STUDENT_ID, role: "Student" } });
+    const req = makeReq({
+      params: { assignmentId: "607f1f77bcf86cd799439333" },
+      user: { id: STUDENT_ID, role: "Student" },
+    });
     const res = makeRes();
     await assignmentController.getMySubmission(req, res);
     expect(res.status).toHaveBeenCalledWith(404);
   });
 
   it("Trả về bài nộp của chính học sinh", async () => {
-    vi.spyOn(Submission, "findOne").mockReturnValue(mongooseQuery({ _id: "s1", studentId: STUDENT_ID }));
-    const req = makeReq({ params: { assignmentId: "607f1f77bcf86cd799439333" }, user: { id: STUDENT_ID, role: "Student" } });
+    vi.spyOn(Submission, "findOne").mockReturnValue(
+      mongooseQuery({ _id: "s1", studentId: STUDENT_ID })
+    );
+    const req = makeReq({
+      params: { assignmentId: "607f1f77bcf86cd799439333" },
+      user: { id: STUDENT_ID, role: "Student" },
+    });
     const res = makeRes();
     await assignmentController.getMySubmission(req, res);
     expect(res.status).toHaveBeenCalledWith(200);
@@ -334,7 +370,10 @@ describe("submitAssignment", () => {
   it("Bài tập không tồn tại hoặc đã xóa trả 404", async () => {
     vi.spyOn(mongoose, "startSession").mockResolvedValue(mockSession());
     vi.spyOn(Assignment, "findById").mockReturnValue(mongooseQuery(null));
-    const req = makeReq({ params: { assignmentId: "607f1f77bcf86cd799439333" }, user: { id: STUDENT_ID, role: "Student" } });
+    const req = makeReq({
+      params: { assignmentId: "607f1f77bcf86cd799439333" },
+      user: { id: STUDENT_ID, role: "Student" },
+    });
     const res = makeRes();
     await assignmentController.submitAssignment(req, res);
     expect(res.status).toHaveBeenCalledWith(404);
@@ -343,11 +382,18 @@ describe("submitAssignment", () => {
   it("Đã được chấm điểm thì chặn nộp lại (409)", async () => {
     vi.spyOn(mongoose, "startSession").mockResolvedValue(mockSession());
     vi.spyOn(Assignment, "findById").mockReturnValue(
-      mongooseQuery({ isDeleted: false, deadline: new Date(Date.now() + 100000), classId: CLASS_ID })
+      mongooseQuery({
+        isDeleted: false,
+        deadline: new Date(Date.now() + 100000),
+        classId: CLASS_ID,
+      })
     );
     vi.spyOn(Submission, "findOne").mockReturnValue(mongooseQuery({ grade: 8, status: "graded" }));
 
-    const req = makeReq({ params: { assignmentId: "607f1f77bcf86cd799439333" }, user: { id: STUDENT_ID, role: "Student" } });
+    const req = makeReq({
+      params: { assignmentId: "607f1f77bcf86cd799439333" },
+      user: { id: STUDENT_ID, role: "Student" },
+    });
     const res = makeRes();
     await assignmentController.submitAssignment(req, res);
     expect(res.status).toHaveBeenCalledWith(409);
@@ -356,11 +402,20 @@ describe("submitAssignment", () => {
   it("Quá hạn deadline khi đã từng nộp (không phải withdrawn) thì chặn (400)", async () => {
     vi.spyOn(mongoose, "startSession").mockResolvedValue(mockSession());
     vi.spyOn(Assignment, "findById").mockReturnValue(
-      mongooseQuery({ isDeleted: false, deadline: new Date(Date.now() - 100000), classId: CLASS_ID })
+      mongooseQuery({
+        isDeleted: false,
+        deadline: new Date(Date.now() - 100000),
+        classId: CLASS_ID,
+      })
     );
-    vi.spyOn(Submission, "findOne").mockReturnValue(mongooseQuery({ grade: null, status: "submitted" }));
+    vi.spyOn(Submission, "findOne").mockReturnValue(
+      mongooseQuery({ grade: null, status: "submitted" })
+    );
 
-    const req = makeReq({ params: { assignmentId: "607f1f77bcf86cd799439333" }, user: { id: STUDENT_ID, role: "Student" } });
+    const req = makeReq({
+      params: { assignmentId: "607f1f77bcf86cd799439333" },
+      user: { id: STUDENT_ID, role: "Student" },
+    });
     const res = makeRes();
     await assignmentController.submitAssignment(req, res);
     expect(res.status).toHaveBeenCalledWith(400);
@@ -369,7 +424,11 @@ describe("submitAssignment", () => {
   it("Nộp bài lần đầu thành công (status 201)", async () => {
     vi.spyOn(mongoose, "startSession").mockResolvedValue(mockSession());
     vi.spyOn(Assignment, "findById").mockReturnValue(
-      mongooseQuery({ isDeleted: false, deadline: new Date(Date.now() + 100000), classId: CLASS_ID })
+      mongooseQuery({
+        isDeleted: false,
+        deadline: new Date(Date.now() + 100000),
+        classId: CLASS_ID,
+      })
     );
     vi.spyOn(Submission, "findOne").mockReturnValue(mongooseQuery(null));
     vi.spyOn(Submission.prototype, "save").mockResolvedValue(true);
@@ -387,7 +446,11 @@ describe("submitAssignment", () => {
   it("Nộp lại bài (resubmit) thành công, xóa file cũ trên Cloudinary", async () => {
     vi.spyOn(mongoose, "startSession").mockResolvedValue(mockSession());
     vi.spyOn(Assignment, "findById").mockReturnValue(
-      mongooseQuery({ isDeleted: false, deadline: new Date(Date.now() + 100000), classId: CLASS_ID })
+      mongooseQuery({
+        isDeleted: false,
+        deadline: new Date(Date.now() + 100000),
+        classId: CLASS_ID,
+      })
     );
     const existingSubmission = {
       grade: null,
@@ -415,28 +478,51 @@ describe("submitAssignment", () => {
 
 describe("cancelSubmission", () => {
   it("Quá hạn deadline thì chặn hủy nộp (400)", async () => {
-    vi.spyOn(Assignment, "findById").mockResolvedValue({ isDeleted: false, deadline: new Date(Date.now() - 100000) });
-    const req = makeReq({ params: { assignmentId: "607f1f77bcf86cd799439333" }, user: { id: STUDENT_ID, role: "Student" } });
+    vi.spyOn(Assignment, "findById").mockResolvedValue({
+      isDeleted: false,
+      deadline: new Date(Date.now() - 100000),
+    });
+    const req = makeReq({
+      params: { assignmentId: "607f1f77bcf86cd799439333" },
+      user: { id: STUDENT_ID, role: "Student" },
+    });
     const res = makeRes();
     await assignmentController.cancelSubmission(req, res);
     expect(res.status).toHaveBeenCalledWith(400);
   });
 
   it("Đã chấm điểm thì chặn hủy nộp (409)", async () => {
-    vi.spyOn(Assignment, "findById").mockResolvedValue({ isDeleted: false, deadline: new Date(Date.now() + 100000) });
+    vi.spyOn(Assignment, "findById").mockResolvedValue({
+      isDeleted: false,
+      deadline: new Date(Date.now() + 100000),
+    });
     vi.spyOn(Submission, "findOne").mockReturnValue(mongooseQuery({ grade: 8, status: "graded" }));
-    const req = makeReq({ params: { assignmentId: "607f1f77bcf86cd799439333" }, user: { id: STUDENT_ID, role: "Student" } });
+    const req = makeReq({
+      params: { assignmentId: "607f1f77bcf86cd799439333" },
+      user: { id: STUDENT_ID, role: "Student" },
+    });
     const res = makeRes();
     await assignmentController.cancelSubmission(req, res);
     expect(res.status).toHaveBeenCalledWith(409);
   });
 
   it("Hủy nộp thành công", async () => {
-    vi.spyOn(Assignment, "findById").mockResolvedValue({ isDeleted: false, deadline: new Date(Date.now() + 100000) });
-    const submission = { grade: null, status: "submitted", attachments: [], save: vi.fn().mockResolvedValue(true) };
+    vi.spyOn(Assignment, "findById").mockResolvedValue({
+      isDeleted: false,
+      deadline: new Date(Date.now() + 100000),
+    });
+    const submission = {
+      grade: null,
+      status: "submitted",
+      attachments: [],
+      save: vi.fn().mockResolvedValue(true),
+    };
     vi.spyOn(Submission, "findOne").mockReturnValue(mongooseQuery(submission));
 
-    const req = makeReq({ params: { assignmentId: "607f1f77bcf86cd799439333" }, user: { id: STUDENT_ID, role: "Student" } });
+    const req = makeReq({
+      params: { assignmentId: "607f1f77bcf86cd799439333" },
+      user: { id: STUDENT_ID, role: "Student" },
+    });
     const res = makeRes();
     await assignmentController.cancelSubmission(req, res);
 

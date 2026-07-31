@@ -45,7 +45,7 @@ class DashboardService {
       courseDistribution,
       recentClasses,
       recentUsers,
-      rawStudentReg
+      rawStudentReg,
     ] = await Promise.all([
       // Tổng người dùng chưa bị xóa mềm (mọi role)
       User.countDocuments({ isDeleted: false }),
@@ -65,10 +65,10 @@ class DashboardService {
       // PART 1: KPI Metrics bổ sung
       // Theo schema của classModel, trạng thái "Ongoing" tương đương với "Active" ở UI
       classModel.countDocuments({ status: "Ongoing", isDeleted: false }),
-      
+
       // Lớp đã được phân công giáo viên
       classModel.countDocuments({ teacherId: { $ne: null }, isDeleted: false }),
-      
+
       // Lớp chưa được phân công giáo viên
       classModel.countDocuments({ teacherId: null, isDeleted: false }),
 
@@ -76,7 +76,7 @@ class DashboardService {
       classModel.aggregate([
         { $match: { isDeleted: false } },
         { $group: { _id: "$status", count: { $sum: 1 } } },
-        { $project: { _id: 0, status: "$_id", count: 1 } }
+        { $project: { _id: 0, status: "$_id", count: 1 } },
       ]),
 
       // PART 3: Course Distribution
@@ -88,8 +88,8 @@ class DashboardService {
             from: "courses", // mongoose auto-pluralizes "Course" to "courses"
             localField: "_id",
             foreignField: "_id",
-            as: "courseInfo"
-          }
+            as: "courseInfo",
+          },
         },
         { $unwind: "$courseInfo" },
         // Lọc bỏ những course đã bị xóa mềm
@@ -100,10 +100,10 @@ class DashboardService {
             courseId: "$_id",
             courseName: "$courseInfo.courseName",
             subject: "$courseInfo.subject",
-            classCount: 1
-          }
+            classCount: 1,
+          },
         },
-        { $sort: { classCount: -1 } }
+        { $sort: { classCount: -1 } },
       ]),
 
       // PART 4: Recent Classes (Lấy 5 lớp mới nhất)
@@ -117,8 +117,8 @@ class DashboardService {
             from: "users",
             localField: "teacherId",
             foreignField: "_id",
-            as: "teacher"
-          }
+            as: "teacher",
+          },
         },
         { $unwind: { path: "$teacher", preserveNullAndEmptyArrays: true } },
         {
@@ -126,14 +126,14 @@ class DashboardService {
             from: "courses",
             localField: "courseId",
             foreignField: "_id",
-            as: "course"
-          }
+            as: "course",
+          },
         },
         { $unwind: { path: "$course", preserveNullAndEmptyArrays: true } },
         {
           $addFields: {
-            studentCount: "$currentStudents"
-          }
+            studentCount: "$currentStudents",
+          },
         },
         {
           $project: {
@@ -145,14 +145,14 @@ class DashboardService {
             createdAt: 1,
             teacher: {
               fullName: 1,
-              email: 1
+              email: 1,
             },
             course: {
-              courseName: 1
+              courseName: 1,
             },
-            studentCount: 1
-          }
-        }
+            studentCount: 1,
+          },
+        },
       ]),
 
       // PART 5: Recent Users (Lấy 5 người dùng mới nhất)
@@ -168,34 +168,47 @@ class DashboardService {
           $match: {
             role: "Student",
             isDeleted: false,
-            createdAt: { $gte: oneYearAgo }
-          }
+            createdAt: { $gte: oneYearAgo },
+          },
         },
         {
           $group: {
             _id: {
               year: { $year: "$createdAt" },
-              month: { $month: "$createdAt" }
+              month: { $month: "$createdAt" },
             },
-            count: { $sum: 1 }
-          }
-        }
-      ])
+            count: { $sum: 1 },
+          },
+        },
+      ]),
     ]);
 
     // PROCESS STUDENT REGISTRATION CHART
-    const monthsName = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const monthsName = [
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
+    ];
     const studentRegistrationChart = [];
-    
+
     for (let i = 11; i >= 0; i--) {
       const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
       const y = d.getFullYear();
       const m = d.getMonth() + 1; // 1-12
-      
-      const found = rawStudentReg.find(item => item._id.year === y && item._id.month === m);
+
+      const found = rawStudentReg.find((item) => item._id.year === y && item._id.month === m);
       studentRegistrationChart.push({
         month: monthsName[m - 1],
-        count: found ? found.count : 0
+        count: found ? found.count : 0,
       });
     }
 
@@ -222,7 +235,7 @@ class DashboardService {
       courseDistribution,
       recentClasses,
       recentUsers,
-      studentRegistrationChart
+      studentRegistrationChart,
     };
   }
 }

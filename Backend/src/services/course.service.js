@@ -9,7 +9,16 @@ class CourseService {
     return await course.save();
   }
 
-  async getCourses({ search, subject, grade, status, page = 1, limit = 10, sort = "createdAt", order = "desc" }) {
+  async getCourses({
+    search,
+    subject,
+    grade,
+    status,
+    page = 1,
+    limit = 10,
+    sort = "createdAt",
+    order = "desc",
+  }) {
     const query = {};
     if (search) {
       const safeSearch = search.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -68,7 +77,16 @@ class CourseService {
   }
 
   async getCourseTrash(queryParams) {
-    const { search, subject, grade, status, page = 1, limit = 10, sort = "deletedAt", order = "desc" } = queryParams;
+    const {
+      search,
+      subject,
+      grade,
+      status,
+      page = 1,
+      limit = 10,
+      sort = "deletedAt",
+      order = "desc",
+    } = queryParams;
     const query = { isDeleted: true };
 
     if (search) {

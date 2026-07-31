@@ -47,11 +47,13 @@ interface ResourceItem {
   description?: string;
   type: "Document" | "Video" | "Link" | "Other" | string;
   url: string;
-  uploadedBy?: {
-    _id?: string;
-    fullName?: string;
-    email?: string;
-  } | string;
+  uploadedBy?:
+    | {
+        _id?: string;
+        fullName?: string;
+        email?: string;
+      }
+    | string;
   uploadedAt?: string;
 }
 
@@ -65,7 +67,14 @@ interface TeacherMaterialsTabProps {
 }
 
 export const TeacherMaterialsTab: React.FC<TeacherMaterialsTabProps> = React.memo(
-  ({ classId, className = "Lớp học", resources = [], teacherName = "Giảng viên", onRefresh, loading = false }) => {
+  ({
+    classId,
+    className = "Lớp học",
+    resources = [],
+    teacherName = "Giảng viên",
+    onRefresh,
+    loading = false,
+  }) => {
     // Toolbar state
     const [searchQuery, setSearchQuery] = useState("");
     const [typeFilter, setTypeFilter] = useState("all");
@@ -82,7 +91,9 @@ export const TeacherMaterialsTab: React.FC<TeacherMaterialsTabProps> = React.mem
       const docs = resources.filter((r) => r.type === "Document").length;
       const videos = resources.filter((r) => r.type === "Video").length;
       const links = resources.filter((r) => r.type === "Link").length;
-      const others = resources.filter((r) => !["Document", "Video", "Link"].includes(r.type)).length;
+      const others = resources.filter(
+        (r) => !["Document", "Video", "Link"].includes(r.type)
+      ).length;
 
       return { total, docs, videos, links, others };
     }, [resources]);
@@ -95,13 +106,16 @@ export const TeacherMaterialsTab: React.FC<TeacherMaterialsTabProps> = React.mem
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase().trim();
         result = result.filter(
-          (r) => r.title.toLowerCase().includes(q) || (r.description || "").toLowerCase().includes(q)
+          (r) =>
+            r.title.toLowerCase().includes(q) || (r.description || "").toLowerCase().includes(q)
         );
       }
 
       // Filter by type
       if (typeFilter !== "all") {
-        result = result.filter((r) => (r.type || "Document").toLowerCase() === typeFilter.toLowerCase());
+        result = result.filter(
+          (r) => (r.type || "Document").toLowerCase() === typeFilter.toLowerCase()
+        );
       }
 
       // Sort
@@ -190,7 +204,11 @@ export const TeacherMaterialsTab: React.FC<TeacherMaterialsTabProps> = React.mem
                 {record.title}
               </Text>
               {record.description && (
-                <Paragraph type="secondary" ellipsis={{ rows: 2 }} style={{ margin: "2px 0 0", fontSize: 12 }}>
+                <Paragraph
+                  type="secondary"
+                  ellipsis={{ rows: 2 }}
+                  style={{ margin: "2px 0 0", fontSize: 12 }}
+                >
                   {record.description}
                 </Paragraph>
               )}
@@ -275,7 +293,16 @@ export const TeacherMaterialsTab: React.FC<TeacherMaterialsTabProps> = React.mem
           }}
           styles={{ body: { padding: "24px 32px" } }}
         >
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 16, marginBottom: 20 }}>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              flexWrap: "wrap",
+              gap: 16,
+              marginBottom: 20,
+            }}
+          >
             <div>
               <Space size={12} align="center">
                 <FolderOpenOutlined style={{ fontSize: 28, color: "#fff" }} />
@@ -283,8 +310,16 @@ export const TeacherMaterialsTab: React.FC<TeacherMaterialsTabProps> = React.mem
                   Kho Tài liệu & Học liệu lớp: {className}
                 </Title>
               </Space>
-              <Text style={{ color: "rgba(255,255,255,0.85)", display: "block", marginTop: 4, fontSize: 13 }}>
-                Đăng tải và chia sẻ các tệp PDF, tài liệu hướng dẫn, video và liên kết bài học cho học sinh trong lớp.
+              <Text
+                style={{
+                  color: "rgba(255,255,255,0.85)",
+                  display: "block",
+                  marginTop: 4,
+                  fontSize: 13,
+                }}
+              >
+                Đăng tải và chia sẻ các tệp PDF, tài liệu hướng dẫn, video và liên kết bài học cho
+                học sinh trong lớp.
               </Text>
             </div>
 
@@ -307,9 +342,20 @@ export const TeacherMaterialsTab: React.FC<TeacherMaterialsTabProps> = React.mem
 
           <Row gutter={[16, 16]}>
             <Col xs={12} sm={8} md={4.8} style={{ flex: 1 }}>
-              <div style={{ backgroundColor: "rgba(255,255,255,0.15)", padding: "12px 16px", borderRadius: 12, border: "1px solid rgba(255,255,255,0.25)" }}>
+              <div
+                style={{
+                  backgroundColor: "rgba(255,255,255,0.15)",
+                  padding: "12px 16px",
+                  borderRadius: 12,
+                  border: "1px solid rgba(255,255,255,0.25)",
+                }}
+              >
                 <Statistic
-                  title={<Text style={{ color: "rgba(255,255,255,0.85)", fontSize: 12 }}>Tổng số tệp</Text>}
+                  title={
+                    <Text style={{ color: "rgba(255,255,255,0.85)", fontSize: 12 }}>
+                      Tổng số tệp
+                    </Text>
+                  }
                   value={stats.total}
                   styles={{ content: { color: "#fff", fontWeight: 700, fontSize: 20 } }}
                 />
@@ -317,9 +363,20 @@ export const TeacherMaterialsTab: React.FC<TeacherMaterialsTabProps> = React.mem
             </Col>
 
             <Col xs={12} sm={8} md={4.8} style={{ flex: 1 }}>
-              <div style={{ backgroundColor: "rgba(255,255,255,0.15)", padding: "12px 16px", borderRadius: 12, border: "1px solid rgba(255,255,255,0.25)" }}>
+              <div
+                style={{
+                  backgroundColor: "rgba(255,255,255,0.15)",
+                  padding: "12px 16px",
+                  borderRadius: 12,
+                  border: "1px solid rgba(255,255,255,0.25)",
+                }}
+              >
                 <Statistic
-                  title={<Text style={{ color: "rgba(255,255,255,0.85)", fontSize: 12 }}>📄 Văn bản / PDF</Text>}
+                  title={
+                    <Text style={{ color: "rgba(255,255,255,0.85)", fontSize: 12 }}>
+                      📄 Văn bản / PDF
+                    </Text>
+                  }
                   value={stats.docs}
                   prefix={<FilePdfOutlined style={{ color: "#ffe58f", marginRight: 6 }} />}
                   styles={{ content: { color: "#fff", fontWeight: 700, fontSize: 20 } }}
@@ -328,9 +385,20 @@ export const TeacherMaterialsTab: React.FC<TeacherMaterialsTabProps> = React.mem
             </Col>
 
             <Col xs={12} sm={8} md={4.8} style={{ flex: 1 }}>
-              <div style={{ backgroundColor: "rgba(255,255,255,0.15)", padding: "12px 16px", borderRadius: 12, border: "1px solid rgba(255,255,255,0.25)" }}>
+              <div
+                style={{
+                  backgroundColor: "rgba(255,255,255,0.15)",
+                  padding: "12px 16px",
+                  borderRadius: 12,
+                  border: "1px solid rgba(255,255,255,0.25)",
+                }}
+              >
                 <Statistic
-                  title={<Text style={{ color: "rgba(255,255,255,0.85)", fontSize: 12 }}>🎥 Video bài giảng</Text>}
+                  title={
+                    <Text style={{ color: "rgba(255,255,255,0.85)", fontSize: 12 }}>
+                      🎥 Video bài giảng
+                    </Text>
+                  }
                   value={stats.videos}
                   prefix={<VideoCameraOutlined style={{ color: "#ff9c6e", marginRight: 6 }} />}
                   styles={{ content: { color: "#fff", fontWeight: 700, fontSize: 20 } }}
@@ -339,9 +407,20 @@ export const TeacherMaterialsTab: React.FC<TeacherMaterialsTabProps> = React.mem
             </Col>
 
             <Col xs={12} sm={8} md={4.8} style={{ flex: 1 }}>
-              <div style={{ backgroundColor: "rgba(255,255,255,0.15)", padding: "12px 16px", borderRadius: 12, border: "1px solid rgba(255,255,255,0.25)" }}>
+              <div
+                style={{
+                  backgroundColor: "rgba(255,255,255,0.15)",
+                  padding: "12px 16px",
+                  borderRadius: 12,
+                  border: "1px solid rgba(255,255,255,0.25)",
+                }}
+              >
                 <Statistic
-                  title={<Text style={{ color: "rgba(255,255,255,0.85)", fontSize: 12 }}>🔗 Liên kết Link</Text>}
+                  title={
+                    <Text style={{ color: "rgba(255,255,255,0.85)", fontSize: 12 }}>
+                      🔗 Liên kết Link
+                    </Text>
+                  }
                   value={stats.links}
                   prefix={<LinkOutlined style={{ color: "#91caff", marginRight: 6 }} />}
                   styles={{ content: { color: "#fff", fontWeight: 700, fontSize: 20 } }}
@@ -350,9 +429,20 @@ export const TeacherMaterialsTab: React.FC<TeacherMaterialsTabProps> = React.mem
             </Col>
 
             <Col xs={12} sm={8} md={4.8} style={{ flex: 1 }}>
-              <div style={{ backgroundColor: "rgba(255,255,255,0.15)", padding: "12px 16px", borderRadius: 12, border: "1px solid rgba(255,255,255,0.25)" }}>
+              <div
+                style={{
+                  backgroundColor: "rgba(255,255,255,0.15)",
+                  padding: "12px 16px",
+                  borderRadius: 12,
+                  border: "1px solid rgba(255,255,255,0.25)",
+                }}
+              >
                 <Statistic
-                  title={<Text style={{ color: "rgba(255,255,255,0.85)", fontSize: 12 }}>📂 Tệp khác</Text>}
+                  title={
+                    <Text style={{ color: "rgba(255,255,255,0.85)", fontSize: 12 }}>
+                      📂 Tệp khác
+                    </Text>
+                  }
                   value={stats.others}
                   styles={{ content: { color: "#fff", fontWeight: 700, fontSize: 20 } }}
                 />
@@ -364,7 +454,15 @@ export const TeacherMaterialsTab: React.FC<TeacherMaterialsTabProps> = React.mem
         {/* 2. Main Content: Toolbar & Table */}
         <Card
           title={
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                flexWrap: "wrap",
+                gap: 12,
+              }}
+            >
               <Space size={12} wrap>
                 <Input
                   placeholder="Tìm tài liệu theo tên..."
@@ -438,7 +536,12 @@ export const TeacherMaterialsTab: React.FC<TeacherMaterialsTabProps> = React.mem
                 }
               >
                 {!searchQuery && typeFilter === "all" && (
-                  <Button type="primary" icon={<PlusOutlined />} onClick={() => setIsAddModalOpen(true)} style={{ borderRadius: 6 }}>
+                  <Button
+                    type="primary"
+                    icon={<PlusOutlined />}
+                    onClick={() => setIsAddModalOpen(true)}
+                    style={{ borderRadius: 6 }}
+                  >
                     Tải tài liệu đầu tiên
                   </Button>
                 )}
@@ -458,7 +561,12 @@ export const TeacherMaterialsTab: React.FC<TeacherMaterialsTabProps> = React.mem
           footer={null}
           destroyOnClose
         >
-          <Form form={form} layout="vertical" onFinish={handleAddResourceSubmit} style={{ marginTop: 16 }}>
+          <Form
+            form={form}
+            layout="vertical"
+            onFinish={handleAddResourceSubmit}
+            style={{ marginTop: 16 }}
+          >
             <Form.Item
               name="title"
               label="Tiêu đề tài liệu"
@@ -483,14 +591,20 @@ export const TeacherMaterialsTab: React.FC<TeacherMaterialsTabProps> = React.mem
               label="Đường dẫn URL tài nguyên"
               rules={[
                 { required: true, message: "Vui lòng nhập đường dẫn URL tài nguyên!" },
-                { type: "url", message: "Vui lòng nhập định dạng URL hợp lệ (http:// hoặc https://)!" },
+                {
+                  type: "url",
+                  message: "Vui lòng nhập định dạng URL hợp lệ (http:// hoặc https://)!",
+                },
               ]}
             >
               <Input placeholder="https://drive.google.com/... hoặc https://youtube.com/..." />
             </Form.Item>
 
             <Form.Item name="description" label="Mô tả / Ghi chú cho học sinh">
-              <Input.TextArea rows={3} placeholder="Nhập ghi chú chi tiết hoặc dặn dò học sinh khi xem tài liệu..." />
+              <Input.TextArea
+                rows={3}
+                placeholder="Nhập ghi chú chi tiết hoặc dặn dò học sinh khi xem tài liệu..."
+              />
             </Form.Item>
 
             <div style={{ display: "flex", justifyContent: "flex-end", gap: 12, marginTop: 24 }}>

@@ -39,11 +39,15 @@ export default function liveSocketHandler(io) {
 
         // Bổ sung Track Participant Join
         if (socket.user.role === "Student") {
-          const activeSession = await LiveSession.findOne({ classId, status: "Live", isDeleted: false });
+          const activeSession = await LiveSession.findOne({
+            classId,
+            status: "Live",
+            isDeleted: false,
+          });
           if (activeSession) {
             socket.liveSessionId = activeSession._id;
             socket.joinTime = new Date();
-            
+
             // Upsert participant
             const participantExists = activeSession.participants.some(
               (p) => p.studentId.toString() === socket.user.id.toString()
@@ -57,22 +61,24 @@ export default function liveSocketHandler(io) {
                     participants: {
                       studentId: socket.user.id,
                       joinTime: socket.joinTime,
-                      status: "Present"
-                    }
-                  }
+                      status: "Present",
+                    },
+                  },
                 }
               );
             }
-            
+
             // Lấy lại đếm số lượng participant hiện tại
-            const updatedSession = await LiveSession.findById(activeSession._id).select("participants").lean();
-            const activeCount = updatedSession.participants.filter(p => !p.leaveTime).length;
-            
+            const updatedSession = await LiveSession.findById(activeSession._id)
+              .select("participants")
+              .lean();
+            const activeCount = updatedSession.participants.filter((p) => !p.leaveTime).length;
+
             // Broadcast realtime
             io.to(roomName).emit("LIVE_PARTICIPANTS_UPDATED", {
               classId,
               sessionId: activeSession._id,
-              activeCount
+              activeCount,
             });
           }
         }
@@ -112,30 +118,39 @@ export default function liveSocketHandler(io) {
         }
 
         // Bổ sung Track Participant Leave
-        if (socket.user && socket.user.role === "Student" && socket.liveSessionId && socket.joinTime) {
+        if (
+          socket.user &&
+          socket.user.role === "Student" &&
+          socket.liveSessionId &&
+          socket.joinTime
+        ) {
           const leaveTime = new Date();
-          const durationSeconds = Math.floor((leaveTime.getTime() - socket.joinTime.getTime()) / 1000);
-          
+          const durationSeconds = Math.floor(
+            (leaveTime.getTime() - socket.joinTime.getTime()) / 1000
+          );
+
           await LiveSession.updateOne(
             { _id: socket.liveSessionId, "participants.studentId": socket.user.id },
             {
               $set: {
-                "participants.$.leaveTime": leaveTime
+                "participants.$.leaveTime": leaveTime,
               },
               $inc: {
-                "participants.$.durationSeconds": durationSeconds
-              }
+                "participants.$.durationSeconds": durationSeconds,
+              },
             }
           );
-          
-          const updatedSession = await LiveSession.findById(socket.liveSessionId).select("participants").lean();
-          const activeCount = updatedSession.participants.filter(p => !p.leaveTime).length;
-          
+
+          const updatedSession = await LiveSession.findById(socket.liveSessionId)
+            .select("participants")
+            .lean();
+          const activeCount = updatedSession.participants.filter((p) => !p.leaveTime).length;
+
           if (classId) {
-             io.to(`room_class_${classId}`).emit("LIVE_PARTICIPANTS_UPDATED", {
+            io.to(`room_class_${classId}`).emit("LIVE_PARTICIPANTS_UPDATED", {
               classId,
               sessionId: socket.liveSessionId,
-              activeCount
+              activeCount,
             });
           }
 
@@ -150,37 +165,50 @@ export default function liveSocketHandler(io) {
       } catch (err) {
         console.error("[LIVE_SOCKET] LEAVE_CLASS_ROOM Error:", err.message);
         if (typeof ack === "function") {
-          ack({ success: false, code: "SOCKET_INTERNAL_ERROR", message: "Lỗi khi rời room lớp học." });
+          ack({
+            success: false,
+            code: "SOCKET_INTERNAL_ERROR",
+            message: "Lỗi khi rời room lớp học.",
+          });
         }
       }
     });
 
     // 3. EVENT: Disconnect
     socket.on("disconnect", async () => {
-      if (socket.user && socket.user.role === "Student" && socket.liveSessionId && socket.joinTime) {
+      if (
+        socket.user &&
+        socket.user.role === "Student" &&
+        socket.liveSessionId &&
+        socket.joinTime
+      ) {
         try {
           const leaveTime = new Date();
-          const durationSeconds = Math.floor((leaveTime.getTime() - socket.joinTime.getTime()) / 1000);
-          
+          const durationSeconds = Math.floor(
+            (leaveTime.getTime() - socket.joinTime.getTime()) / 1000
+          );
+
           await LiveSession.updateOne(
             { _id: socket.liveSessionId, "participants.studentId": socket.user.id },
             {
               $set: {
-                "participants.$.leaveTime": leaveTime
+                "participants.$.leaveTime": leaveTime,
               },
               $inc: {
-                "participants.$.durationSeconds": durationSeconds
-              }
+                "participants.$.durationSeconds": durationSeconds,
+              },
             }
           );
-          
-          const updatedSession = await LiveSession.findById(socket.liveSessionId).select("participants classId").lean();
+
+          const updatedSession = await LiveSession.findById(socket.liveSessionId)
+            .select("participants classId")
+            .lean();
           if (updatedSession) {
-            const activeCount = updatedSession.participants.filter(p => !p.leaveTime).length;
+            const activeCount = updatedSession.participants.filter((p) => !p.leaveTime).length;
             io.to(`room_class_${updatedSession.classId}`).emit("LIVE_PARTICIPANTS_UPDATED", {
               classId: updatedSession.classId,
               sessionId: socket.liveSessionId,
-              activeCount
+              activeCount,
             });
           }
         } catch (error) {

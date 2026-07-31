@@ -47,10 +47,19 @@ const FeatureList = ({
                   flexDirection: "column",
                   justifyContent: "space-between",
                 }}
-                styles={{ body: { padding: 20, display: "flex", flexDirection: "column", height: "100%" } }}
+                styles={{
+                  body: { padding: 20, display: "flex", flexDirection: "column", height: "100%" },
+                }}
               >
                 <div>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "flex-start",
+                      marginBottom: 12,
+                    }}
+                  >
                     <div>
                       <Typography.Title level={5} style={{ margin: 0 }}>
                         {feature.name}
@@ -65,13 +74,19 @@ const FeatureList = ({
                     />
                   </div>
 
-                  <Typography.Paragraph type="secondary" style={{ fontSize: 13, minHeight: 40, marginBottom: 16 }}>
+                  <Typography.Paragraph
+                    type="secondary"
+                    style={{ fontSize: 13, minHeight: 40, marginBottom: 16 }}
+                  >
                     {feature.description}
                   </Typography.Paragraph>
                 </div>
 
                 <div style={{ marginTop: "auto", paddingTop: 12, borderTop: "1px solid #f1f5f9" }}>
-                  <Typography.Text type="secondary" style={{ fontSize: 12, display: "block", marginBottom: 6 }}>
+                  <Typography.Text
+                    type="secondary"
+                    style={{ fontSize: 12, display: "block", marginBottom: 6 }}
+                  >
                     Assigned AI Model:
                   </Typography.Text>
                   <Select
@@ -86,7 +101,14 @@ const FeatureList = ({
                     }))}
                   />
 
-                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: "#64748b" }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      fontSize: 12,
+                      color: "#64748b",
+                    }}
+                  >
                     <span>
                       <ThunderboltOutlined style={{ color: "#1890ff", marginRight: 4 }} />
                       {feature.dailyRequests.toLocaleString()} reqs/day
