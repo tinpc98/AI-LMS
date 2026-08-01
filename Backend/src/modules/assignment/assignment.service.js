@@ -255,7 +255,7 @@ export const getSubmissionsByAssignmentService = async ({
 
 export const getMySubmissionService = async ({ assignmentId, studentId }) => {
   if (!assignmentId || !mongoose.Types.ObjectId.isValid(assignmentId)) {
-    throwError("INVALID_ID", 400);
+    throwError("ID bài tập không hợp lệ!", 400, ErrorCode.INVALID_ID);
   }
 
   const submission = await assignmentRepo.findSubmissionByAssignmentAndStudent(
@@ -263,7 +263,9 @@ export const getMySubmissionService = async ({ assignmentId, studentId }) => {
     studentId
   );
   if (!submission) {
-    throwError("SUBMISSION_NOT_FOUND", 404);
+    // Trước đây tham số thứ nhất là MÃ chứ không phải thông điệp, nên người dùng nhìn thấy
+    // đúng chữ "SUBMISSION_NOT_FOUND" trên giao diện. Mã nay nằm ở đúng chỗ của nó.
+    throwError("Bạn chưa nộp bài tập này.", 404, ErrorCode.SUBMISSION_NOT_FOUND);
   }
   return submission;
 };

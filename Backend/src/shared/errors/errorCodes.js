@@ -68,6 +68,9 @@ export const ErrorCode = {
   AI_QUOTA_EXCEEDED: "AI_QUOTA_EXCEEDED",
   AI_RATE_LIMITED: "AI_RATE_LIMITED",
   AI_FEATURE_DISABLED: "AI_FEATURE_DISABLED",
+  /** Bài giảng chưa có bản tóm tắt — trạng thái BÌNH THƯỜNG, không phải lỗi. Frontend cần
+   *  phân biệt với 404 "không tìm thấy bài giảng" để không hiện thông báo lỗi sai. */
+  AI_SUMMARY_NOT_FOUND: "AI_SUMMARY_NOT_FOUND",
 
   // ── Lớp học ──────────────────────────────────────────────────────────────
   CLASS_NOT_FOUND: "CLASS_NOT_FOUND",

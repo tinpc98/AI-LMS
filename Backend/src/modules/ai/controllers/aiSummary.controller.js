@@ -1,5 +1,6 @@
 import aiSummaryService from "../services/aiSummary.service.js";
 import { AIError, AIErrorCode } from "../aiError.js";
+import { ErrorCode } from "#shared/errors/errorCodes.js";
 
 /**
  * Controller xử lý luồng AI Summary
@@ -61,9 +62,13 @@ class AISummaryController {
       }
 
       if (!summary) {
+        // Mã RIÊNG, không dùng NOT_FOUND chung: "bài giảng chưa có tóm tắt" là trạng thái
+        // bình thường mà Frontend hiển thị bằng nút "Tạo tóm tắt", còn "không tìm thấy bài
+        // giảng" mới là lỗi. Cùng mã 404 nên chỉ errorCode phân biệt được.
         return res.status(404).json({
           success: false,
           code: "NOT_FOUND",
+          errorCode: ErrorCode.AI_SUMMARY_NOT_FOUND,
           message: "Chưa có bản tóm tắt nào khả dụng cho bài giảng này.",
         });
       }

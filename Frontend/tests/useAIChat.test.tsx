@@ -149,3 +149,61 @@ describe("useAIChat — đổi bài học", () => {
     expect(result.current.error).toContain("ngữ cảnh bài học");
   });
 });
+
+describe("useAIChat — phân biệt hai nguyên nhân của cùng mã 429", () => {
+  // Đây là lý do tồn tại của cả cơ chế errorCode. Bản cũ rẽ nhánh theo status nên hai tình
+  // huống dưới đây cho ra CÙNG một câu, trong khi cách xử lý của người dùng khác hẳn:
+  // một bên phải đợi sang mai, một bên chỉ cần đợi mười giây.
+  const loi429 = (errorCode: string) => ({
+    response: { status: 429, data: { errorCode, message: "Too Many Requests" } },
+  });
+
+  it("hết hạn mức NGÀY -> bảo người dùng đợi sang mai", async () => {
+    vi.mocked(aiApi.createChatSession).mockRejectedValue(loi429("AI_QUOTA_EXCEEDED"));
+
+    const { result } = renderHook(() => useAIChat("bai-1"));
+    await act(async () => {
+      await result.current.initSession();
+    });
+
+    expect(result.current.error).toMatch(/ngày mai/);
+  });
+
+  it("gửi quá nhanh -> bảo người dùng đợi một lát, KHÔNG nói hết lượt", async () => {
+    vi.mocked(aiApi.createChatSession).mockRejectedValue(loi429("AI_RATE_LIMIT_EXCEEDED"));
+
+    const { result } = renderHook(() => useAIChat("bai-1"));
+    await act(async () => {
+      await result.current.initSession();
+    });
+
+    expect(result.current.error).toMatch(/đợi một lát/);
+    expect(result.current.error).not.toMatch(/ngày mai/);
+  });
+
+  it("tính năng bị quản trị viên tắt -> nói đúng lý do, không nói hết lượt", async () => {
+    vi.mocked(aiApi.createChatSession).mockRejectedValue({
+      response: { status: 403, data: { errorCode: "AI_FEATURE_DISABLED" } },
+    });
+
+    const { result } = renderHook(() => useAIChat("bai-1"));
+    await act(async () => {
+      await result.current.initSession();
+    });
+
+    expect(result.current.error).toMatch(/tạm khoá/);
+  });
+
+  it("endpoint CHƯA gắn mã vẫn dùng được thông điệp máy chủ — phương án dự phòng", async () => {
+    vi.mocked(aiApi.createChatSession).mockRejectedValue({
+      response: { status: 400, data: { message: "Bài học không hỗ trợ trợ lý AI." } },
+    });
+
+    const { result } = renderHook(() => useAIChat("bai-1"));
+    await act(async () => {
+      await result.current.initSession();
+    });
+
+    expect(result.current.error).toBe("Bài học không hỗ trợ trợ lý AI.");
+  });
+});

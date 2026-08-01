@@ -140,14 +140,21 @@ export function useAIChat(lessonId?: string) {
         setMessages((prev) => {
           return [...prev, response];
         });
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error("[useAIChat] Send message error:", err);
 
+        // Cùng lý do như ở initSession: 429 gộp chung "hết lượt trong ngày" và "gửi quá nhanh".
+        // Bản cũ luôn nói câu đầu, nên người dùng gửi hai tin liền nhau bị báo là đã hết lượt
+        // cả ngày — sai hoàn toàn về cách xử lý (đợi sang mai vs đợi mười giây).
+        const sendCode = getApiErrorCode(err);
         let errorMsg = "Lỗi khi gửi tin nhắn tới AI.";
-        if (getApiErrorStatus(err) === 429) {
-          errorMsg = "Bạn đã sử dụng hết lượt AI hiện tại (Quota exceeded). Vui lòng thử lại sau.";
-        } else if (err.response?.data?.message) {
-          errorMsg = err.response.data.message;
+
+        if (sendCode === "AI_QUOTA_EXCEEDED") {
+          errorMsg = "Bạn đã dùng hết lượt AI trong ngày. Vui lòng thử lại vào ngày mai.";
+        } else if (sendCode === "AI_RATE_LIMIT_EXCEEDED") {
+          errorMsg = "Bạn đang gửi quá nhanh. Vui lòng đợi một lát rồi thử lại.";
+        } else {
+          errorMsg = getApiErrorMessage(err, errorMsg);
         }
 
         toast.error(errorMsg);

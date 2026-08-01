@@ -6,7 +6,11 @@ import { Spin } from "antd";
 import aiApi from "../../../api/aiApi";
 import { useAIChat } from "../../ai/hooks/useAIChat";
 import { toast } from "../../../utils/toast";
-import { getApiErrorMessage, getApiErrorStatus } from "../../../shared/utils/apiError";
+import {
+  getApiErrorCode,
+  getApiErrorMessage,
+  getApiErrorStatus,
+} from "../../../shared/utils/apiError";
 
 const LessonPage = () => {
   const { lessonId } = useParams<{ lessonId: string }>();
@@ -62,8 +66,15 @@ const LessonPage = () => {
         // `any` nên nhánh này vô hình — đọc data.content trên null sẽ nổ ngay tại đây.
         return data?.content || data?.summary || null;
       } catch (err: unknown) {
-        // 404 nghĩa là bài học chưa có tóm tắt — đó là câu trả lời hợp lệ, không phải lỗi.
-        if (getApiErrorStatus(err) === 404) return null;
+        // "Chưa có tóm tắt" là câu trả lời hợp lệ — giao diện hiện nút "Tạo tóm tắt". Nhưng
+        // 404 cũng là mã của "không tìm thấy bài giảng", một lỗi thật cần báo cho người dùng.
+        // Chỉ errorCode phân biệt được hai tình huống đó.
+        const code = getApiErrorCode(err);
+        if (code === "AI_SUMMARY_NOT_FOUND") return null;
+
+        // Endpoint chưa gắn mã thì vẫn dựa vào 404 như trước — phương án dự phòng của giai
+        // đoạn chuyển tiếp, sẽ gỡ khi mọi endpoint đã có errorCode.
+        if (!code && getApiErrorStatus(err) === 404) return null;
         throw err;
       }
     },

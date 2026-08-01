@@ -1,6 +1,6 @@
 import type { IAssignment, ISubmission } from "../interface/assignmentInterface";
 import axiosClient from "./axiosClient";
-import { getApiErrorStatus } from "../shared/utils/apiError";
+import { getApiErrorCode, getApiErrorStatus } from "../shared/utils/apiError";
 
 /**
  * Backend trả bài nộp ở CẢ HAI trường `submission` và `data` — cùng một giá trị, giữ song song
@@ -111,7 +111,11 @@ const assignmentApi = {
       );
       return response.data.submission ?? response.data.data ?? null;
     } catch (err: unknown) {
-      if (getApiErrorStatus(err) === 404) return null; // No submission found
+      // "Chưa nộp bài" là trạng thái BÌNH THƯỜNG, không phải lỗi. Đọc mã thay vì đoán theo
+      // 404 — cùng mã đó còn có thể là "bài tập không tồn tại", một tình huống khác hẳn mà
+      // nơi gọi nên biết. Vẫn nuốt mọi lỗi khác về null để giữ nguyên hành vi cũ.
+      const code = getApiErrorCode(err);
+      if (code === "SUBMISSION_NOT_FOUND" || getApiErrorStatus(err) === 404) return null;
       return null;
     }
   },
