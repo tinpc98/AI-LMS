@@ -7,7 +7,6 @@ import { Course } from "#modules/course";
 import { User } from "#modules/auth";
 import classService from "./class.service.js";
 import { attachStudentProgress } from "./classProgress.service.js";
-import { checkClassTeacherOwnership } from "./class.ownership.js";
 
 // Lấy danh sách lớp học (Hỗ trợ phân trang, tìm kiếm và lọc theo vai trò)
 export const ClassList = asyncHandler(async (req, res) => {
@@ -379,7 +378,7 @@ export const RemoveResource = asyncHandler(async (req, res) => {
       .json({ success: false, message: "ID lớp học hoặc ID tài nguyên không hợp lệ!" });
   }
 
-  const isAuthorized = await checkClassTeacherOwnership(
+  const isAuthorized = await classService.checkClassTeacherOwnership(
     id,
     req.user?.id || req.user?._id,
     req.user?.role

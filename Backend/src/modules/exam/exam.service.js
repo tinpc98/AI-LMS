@@ -82,4 +82,11 @@ const generateExamWithMatrix = async (params) => {
   await newExam.save();
   return newExam;
 };
-export default { generateExamWithMatrix };
+
+const updateExamFields = (exam, updates) => {
+  for (const field of ["title", "duration", "questions", "startTime", "maxScore", "status"]) {
+    if (updates[field] !== undefined) exam[field] = updates[field];
+  }
+};
+
+export default { generateExamWithMatrix, updateExamFields };

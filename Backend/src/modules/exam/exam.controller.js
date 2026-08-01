@@ -157,16 +157,7 @@ export const updateExam = asyncHandler(async (req, res) => {
     return res.status(403).json({ message: "Bạn không có quyền chỉnh sửa đề thi này!" });
   }
 
-  // Whitelist rõ ràng: không cho ghi đè classId/createdBy/isDeleted/các trường AI qua endpoint
-  // này — Object.assign(exam, req.body) trước đây nhận nguyên req.body, cho phép đổi classId
-  // sang lớp giáo viên không dạy mà không có kiểm tra ownership nào trên lớp mới.
-  const { title, duration, questions, startTime, maxScore, status } = req.body;
-  if (title !== undefined) exam.title = title;
-  if (duration !== undefined) exam.duration = duration;
-  if (questions !== undefined) exam.questions = questions;
-  if (startTime !== undefined) exam.startTime = startTime;
-  if (maxScore !== undefined) exam.maxScore = maxScore;
-  if (status !== undefined) exam.status = status;
+  examService.updateExamFields(exam, req.body);
 
   await exam.save();
 

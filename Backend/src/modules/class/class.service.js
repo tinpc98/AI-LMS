@@ -1,10 +1,15 @@
 import mongoose from "mongoose";
+import { checkClassTeacherOwnership } from "./class.ownership.js";
 
 /**
  * Service xử lý các logic tái sử dụng cho Class module.
  * Áp dụng chuẩn DRY và giải quyết vấn đề Fat Controller.
  */
 class ClassService {
+  async checkClassTeacherOwnership(classId, userId, userRole) {
+    return checkClassTeacherOwnership(classId, userId, userRole);
+  }
+
   /**
    * Xây dựng bộ điều kiện query (Query Builder) cho danh sách lớp học.
    * Hỗ trợ search, filter, advanced filters (teacherId, learningMode, dateRange),
