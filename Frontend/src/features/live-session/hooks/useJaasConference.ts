@@ -93,10 +93,22 @@ export function useJaasConference() {
         setStatus("error");
         setIsOpen(false);
 
-        if (normalized.originalStatus === 403) {
-          toast.error("Bạn không có quyền tham gia buổi học trực tuyến này!");
-        } else if (normalized.originalStatus === 409) {
+        // Đọc MÃ thay vì mã HTTP. Module live-session đã có sẵn danh mục LIVE_ERROR_CODES ở
+        // Backend/src/modules/live-session/live.validator.js, và normalizeLiveSessionError đã
+        // đưa nó ra qua trường code — trước đây không ai dùng.
+        //
+        // Vì sao đáng đổi: 403 gộp chung "giáo viên không phụ trách lớp", "học sinh chưa ghi
+        // danh" và "quản trị viên không được phép thao tác" — ba tình huống cần ba câu khác
+        // nhau. 409 cũng gộp "buổi học đã kết thúc" với "đã có buổi học đang diễn ra", trong
+        // đó câu thứ hai bảo người dùng sai hoàn toàn.
+        if (normalized.code === "LIVE_STUDENT_NOT_ENROLLED") {
+          toast.error("Bạn chưa ghi danh vào lớp học này.");
+        } else if (normalized.code === "LIVE_TEACHER_NOT_OWNER") {
+          toast.error("Bạn không phải giáo viên phụ trách lớp học này.");
+        } else if (normalized.code === "LIVE_SESSION_ALREADY_ENDED") {
           toast.error("Buổi học trực tuyến đã kết thúc.");
+        } else if (normalized.code === "LIVE_SESSION_ALREADY_ACTIVE") {
+          toast.error("Lớp đang có một buổi học trực tuyến diễn ra.");
         } else if (normalized.severity === "error") {
           toast.error(normalized.message);
         }

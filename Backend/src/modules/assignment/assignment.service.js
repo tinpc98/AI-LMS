@@ -187,7 +187,14 @@ export const deleteAssignmentService = async ({ id, userId, userRole }) => {
 
 export const getAssignmentByIdService = async (id) => {
   if (!id || !mongoose.Types.ObjectId.isValid(id)) {
-    throwError("Bài tập không tồn tại!", 404);
+    // GIAI ĐOẠN 2: sửa mã HTTP cho đúng bản chất.
+    //
+    // Bản cũ trả 404 "Bài tập không tồn tại" cho một id SAI ĐỊNH DẠNG. Đó là lỗi đầu vào của
+    // client (400), không phải tài nguyên vắng mặt — và thông điệp còn khẳng định sai một sự
+    // thật: hệ thống chưa hề tra cứu gì để biết bài tập có tồn tại hay không.
+    //
+    // Đổi được vì Frontend nay đọc errorCode: nơi nào cần phân biệt đã có INVALID_ID.
+    throwError("ID bài tập không hợp lệ!", 400, ErrorCode.INVALID_ID);
   }
 
   const assignment = await assignmentRepo.findAssignmentByIdPopulated(id);

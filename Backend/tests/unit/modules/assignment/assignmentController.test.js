@@ -276,6 +276,19 @@ describe("deleteAssignment", () => {
 });
 
 describe("getAssignmentById", () => {
+  it("id SAI ĐỊNH DẠNG trả 400, không phải 404 (giai đoạn 2)", async () => {
+    // Bản cũ trả 404 "Bài tập không tồn tại" cho một id sai định dạng — khẳng định sai một sự
+    // thật, vì hệ thống chưa hề tra cứu gì. Nay là 400 kèm errorCode INVALID_ID.
+    const req = makeReq({ params: { id: "khong-phai-objectid" } });
+    const err = await expectErrorStatus(
+      assignmentController.getAssignmentById,
+      req,
+      makeRes(),
+      400
+    );
+    expect(err.errorCode).toBe("INVALID_ID");
+  });
+
   it("Trả 404 nếu không tìm thấy", async () => {
     vi.spyOn(Assignment, "findById").mockReturnValue(mongooseQuery(null));
     const req = makeReq({ params: { id: "607f1f77bcf86cd799439333" } });

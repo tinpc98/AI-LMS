@@ -39,7 +39,16 @@ export function useLiveSessionState({ classId, autoFetchActive = true }: UseLive
     } catch (err: unknown) {
       console.warn("[useLiveSessionState] fetchActiveSession Error:", err);
       const normalized = normalizeLiveSessionError(err);
-      if (normalized.originalStatus === 404) {
+      // "Lớp chưa có buổi học nào đang diễn ra" là trạng thái BÌNH THƯỜNG, không phải lỗi.
+      // Nhưng 404 cũng là mã của "không tìm thấy lớp học" — một lỗi thật. Trước đây cả hai
+      // đều bị nuốt thành activeSession = null, nên lớp không tồn tại trông y hệt lớp chưa
+      // mở buổi học.
+      if (normalized.code === "LIVE_SESSION_NOT_FOUND") {
+        setActiveSession(null);
+      } else if (normalized.code === "LIVE_CLASS_NOT_FOUND") {
+        setError(normalized);
+      } else if (normalized.originalStatus === 404) {
+        // Dự phòng cho endpoint chưa gắn mã — giữ đúng hành vi cũ.
         setActiveSession(null);
       } else {
         setError(normalized);
