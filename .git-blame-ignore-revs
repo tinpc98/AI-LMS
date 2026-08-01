@@ -1,0 +1,12 @@
+# Các commit thuần định dạng — `git blame` nên bỏ qua để vẫn trỏ về tác giả thật của từng dòng.
+#
+# Kích hoạt một lần cho máy của bạn:
+#   git config blame.ignoreRevsFile .git-blame-ignore-revs
+#
+# GitHub tự động đọc file này, không cần cấu hình gì thêm.
+#
+# Chỉ thêm vào đây những commit KHÔNG đổi hành vi (format, đổi thụt lề, xuống dòng).
+# Tuyệt đối không thêm commit có sửa logic — sẽ giấu mất tác giả của thay đổi thật.
+
+# style: format toàn bộ mã nguồn bằng Prettier (455 file, 2026-07-31)
+e0a18d21d25199b9600a38e07cb155bb322e17d6

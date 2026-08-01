@@ -4,6 +4,8 @@
 
 @theme {
   /* ================= MÀU SẮC ================= */
+  --color-success: #15803d;
+  --color-warning: #b45309;
   --color-error: #ba1a1a;
   --color-surface-container-high: #dce9ff;
   --color-secondary: #565e74;

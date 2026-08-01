@@ -1,0 +1,8 @@
+#!/usr/bin/env sh
+# Chỉ format các file đang được stage — KHÔNG format toàn repo.
+# Lý do: baseline đo ngày 2026-07-31 cho thấy 591/599 file lệch chuẩn Prettier.
+# Format hàng loạt sẽ tạo diff khổng lồ và đụng độ nặng với Wave 2-5 (di chuyển file diện rộng).
+#
+# Nếu đang tạo commit CHỈ-DI-CHUYỂN-FILE (Wave 2/3), dùng `git commit --no-verify`
+# để giữ diff thuần rename, đúng yêu cầu §8.1 của kế hoạch refactor.
+npx lint-staged

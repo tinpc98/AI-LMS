@@ -2,6 +2,7 @@
 node_modules/
 
 # Bỏ qua file chứa mật khẩu kết nối database, bảo mật
+# LƯU Ý: .env.example KHÔNG được ignore - đây là template public, phải commit
 .env
 .env.local
 
@@ -11,3 +12,13 @@ npm-debug.log*
 
 # Bỏ qua thư mục cấu hình riêng của VS Code
 .vscode/
+
+keys/
+*.pk
+*.pem
+
+docs/
+
+# Build & test output
+dist/
+coverage/

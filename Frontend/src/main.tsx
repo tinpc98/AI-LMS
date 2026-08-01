@@ -3,11 +3,18 @@ import { createRoot } from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
 import "./index.css";
 import App from "./App.tsx";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import RootErrorBoundary from "./shared/components/RootErrorBoundary.tsx";
+const queryClient = new QueryClient();
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <BrowserRouter>
-      <App />
+      <QueryClientProvider client={queryClient}>
+        <RootErrorBoundary>
+          <App />
+        </RootErrorBoundary>
+      </QueryClientProvider>
     </BrowserRouter>
-  </StrictMode>,
+  </StrictMode>
 );
