@@ -2,7 +2,11 @@ import { useState, useCallback, useRef } from "react";
 import aiApi from "../../../api/aiApi";
 import type { IChatMessage, AIChatSession } from "../../../api/aiApi";
 import { toast } from "../../../utils/toast";
-import { getApiErrorStatus } from "../../../shared/utils/apiError";
+import {
+  getApiErrorCode,
+  getApiErrorMessage,
+  getApiErrorStatus,
+} from "../../../shared/utils/apiError";
 
 export type AIChatInitStatus = "idle" | "initializing" | "ready" | "error";
 
@@ -75,17 +79,30 @@ export function useAIChat(lessonId?: string) {
       initRef.current = null; // reset so user can retry
       setInitStatus("error");
 
+      // ĐỌC MÃ LỖI NGHIỆP VỤ, KHÔNG ĐOÁN THEO MÃ HTTP.
+      //
+      // Bản cũ rẽ nhánh theo status, và nó SAI ở đúng chỗ quan trọng: 429 vừa là "hết hạn mức
+      // trong ngày" vừa là "gửi quá nhanh, đợi vài giây". Người dùng bị nói phải đợi sang mai
+      // trong khi thực ra chỉ cần đợi mười giây. 400 cũng gộp chung thiếu tham số, id sai định
+      // dạng và tính năng bị tắt.
+      //
+      // errorCode phân biệt được. Vẫn giữ nhánh theo status làm phương án dự phòng cho các
+      // endpoint chưa gắn mã — đó là tinh thần chuyển đổi hai giai đoạn.
+      const code = getApiErrorCode(err);
       let errorMsg = "Không thể khởi tạo phiên trò chuyện AI.";
-      if (getApiErrorStatus(err) === 400) {
-        errorMsg = "Không thể mở trợ lý AI trong nội dung hiện tại.";
+
+      if (code === "AI_QUOTA_EXCEEDED") {
+        errorMsg = "Bạn đã dùng hết lượt AI trong ngày. Vui lòng thử lại vào ngày mai.";
+      } else if (code === "AI_RATE_LIMIT_EXCEEDED") {
+        errorMsg = "Bạn đang gửi quá nhanh. Vui lòng đợi một lát rồi thử lại.";
+      } else if (code === "AI_FEATURE_DISABLED") {
+        errorMsg = "Trợ lý AI đang tạm khoá. Vui lòng liên hệ quản trị viên.";
       } else if (getApiErrorStatus(err) === 401) {
         errorMsg = "Phiên đăng nhập đã hết hạn.";
       } else if (getApiErrorStatus(err) === 403) {
         errorMsg = "Bạn không có quyền sử dụng trợ lý AI tại đây.";
-      } else if (getApiErrorStatus(err) === 429) {
-        errorMsg = "Bạn đã sử dụng hết lượt AI hiện tại.";
-      } else if (err.response?.data?.message) {
-        errorMsg = err.response.data.message;
+      } else {
+        errorMsg = getApiErrorMessage(err, errorMsg);
       }
 
       setError(errorMsg);

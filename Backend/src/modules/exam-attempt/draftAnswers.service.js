@@ -14,12 +14,9 @@
 import ExamAttempt from "./examAttempt.model.js";
 import { Exam } from "#modules/exam";
 import { GRACE_PERIOD_MS, resolveAttemptDeadline } from "./attemptDeadline.js";
+import { ErrorCode, createError } from "#shared/errors/errorCodes.js";
 
-const loi = (message, status) => {
-  const error = new Error(message);
-  error.status = status;
-  return error;
-};
+const loi = (message, status, errorCode) => createError(message, status, errorCode);
 
 /**
  * Ghi đè các câu trả lời gửi lên vào phiên làm bài.
@@ -28,17 +25,19 @@ const loi = (message, status) => {
  * chọn, và không được xoá mất những câu đã lưu trước đó.
  */
 export const saveDraftAnswers = async (attemptId, studentId, answers) => {
-  if (!Array.isArray(answers)) throw loi("Dữ liệu bài làm không hợp lệ!", 400);
+  if (!Array.isArray(answers)) {
+    throw loi("Dữ liệu bài làm không hợp lệ!", 400, ErrorCode.VALIDATION_FAILED);
+  }
 
   const attempt = await ExamAttempt.findById(attemptId);
-  if (!attempt) throw loi("Không tìm thấy phiên làm bài thi!", 404);
+  if (!attempt) throw loi("Không tìm thấy phiên làm bài thi!", 404, ErrorCode.ATTEMPT_NOT_FOUND);
 
   if (attempt.studentId?.toString() !== studentId?.toString()) {
-    throw loi("Bạn không có quyền ghi vào bài làm của người khác!", 403);
+    throw loi("Bạn không có quyền ghi vào bài làm của người khác!", 403, ErrorCode.FORBIDDEN);
   }
 
   if (attempt.status !== "IN_PROGRESS") {
-    throw loi("Bài thi đã kết thúc, không thể lưu thêm.", 409);
+    throw loi("Bài thi đã kết thúc, không thể lưu thêm.", 409, ErrorCode.ATTEMPT_ALREADY_FINISHED);
   }
 
   const exam = await Exam.findById(attempt.examId).select("duration").lean();
@@ -47,7 +46,11 @@ export const saveDraftAnswers = async (attemptId, studentId, answers) => {
   // Chặn ghi sau khi đã quá hạn. Không có chốt này thì học sinh vẫn tiếp tục lưu bài trong
   // khoảng thời gian giữa lúc hết giờ và lúc cron chạy — tức là được thi thêm.
   if (deadline && Date.now() > deadline.getTime() + GRACE_PERIOD_MS) {
-    throw loi("Đã hết giờ làm bài, hệ thống không nhận thêm câu trả lời.", 409);
+    throw loi(
+      "Đã hết giờ làm bài, hệ thống không nhận thêm câu trả lời.",
+      409,
+      ErrorCode.ATTEMPT_TIME_OVER
+    );
   }
 
   const theoCauHoi = new Map(

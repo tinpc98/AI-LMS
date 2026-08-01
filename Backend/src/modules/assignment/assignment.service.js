@@ -5,10 +5,14 @@ import mongoose from "mongoose";
 import cloudinary from "../../config/cloudinary.js";
 import { checkClassTeacherOwnership } from "#modules/class";
 import * as assignmentRepo from "./assignment.repository.js";
+import { ErrorCode } from "#shared/errors/errorCodes.js";
 
-const throwError = (message, status) => {
+const throwError = (message, status, errorCode) => {
   const error = new Error(message);
   error.status = status;
+  // errorCode là tuỳ chọn: các lời gọi cũ chưa gắn mã vẫn chạy như trước. Đó là điều kiện để
+  // chuyển đổi theo hai giai đoạn mà không phải sửa hết mọi chỗ cùng lúc.
+  if (errorCode) error.errorCode = errorCode;
   throw error;
 };
 
@@ -275,7 +279,7 @@ export const submitAssignmentService = async ({ assignmentId, content, files, st
 
     const assignment = await assignmentRepo.findAssignmentById(assignmentId, { session });
     if (!assignment || assignment.isDeleted) {
-      throwError("Bài tập không tồn tại hoặc đã bị xóa!", 404);
+      throwError("Bài tập không tồn tại hoặc đã bị xóa!", 404, ErrorCode.ASSIGNMENT_NOT_FOUND);
     }
 
     let submission = await assignmentRepo.findSubmissionByAssignmentAndStudentWithDeleted(
@@ -292,7 +296,11 @@ export const submitAssignmentService = async ({ assignmentId, content, files, st
       ((submission.grade !== null && submission.grade !== undefined) ||
         submission.status === "graded")
     ) {
-      throwError("Bài nộp đã được Giáo viên chấm điểm. Bạn không thể nộp lại bài nữa!", 409);
+      throwError(
+        "Bài nộp đã được Giáo viên chấm điểm. Bạn không thể nộp lại bài nữa!",
+        409,
+        ErrorCode.SUBMISSION_ALREADY_GRADED
+      );
     }
 
     // CHẶN CỨNG BÀI NỘP QUÁ HẠN (chính sách 2A).
@@ -311,7 +319,8 @@ export const submitAssignmentService = async ({ assignmentId, content, files, st
     if (isLate) {
       throwError(
         "Bài tập đã quá hạn nộp. Hệ thống không nhận bài sau thời hạn giáo viên đặt ra.",
-        400
+        400,
+        ErrorCode.ASSIGNMENT_PAST_DEADLINE
       );
     }
 

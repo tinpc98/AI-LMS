@@ -78,6 +78,26 @@ export const errorHandler = (err, req, res, next) => {
     message,
     // err.code của MongoDB là số (vd 11000) — dùng mã chữ đã quy đổi cho client dễ xử lý.
     code: mongo?.code || err.code || "INTERNAL_ERROR",
+    // Mã lỗi nghiệp vụ, LUÔN là chuỗi thuộc danh mục shared/errors/errorCodes.js.
+    //
+    // Tách khỏi `code` vì trường đó bị nhiễm: với lỗi MongoDB, err.code là một SỐ (11000). Một
+    // trường lúc chuỗi lúc số thì Frontend không so sánh chắc chắn được.
+    //
+    // Mục đích: Frontend thôi phải ĐOÁN nguyên nhân từ mã HTTP. Cùng là 429 nhưng hết hạn mức
+    // ngày (phải đợi sang mai) khác hẳn bị chặn tần suất (đợi vài giây) — mã HTTP không phân
+    // biệt được, errorCode thì có.
+    //
+    // Giai đoạn 1: chỉ THÊM trường này, mã HTTP giữ nguyên. Không client nào vỡ.
+    // Thứ tự: errorCode tường minh > mã đã quy đổi từ Mongoose > err.code NẾU là chuỗi.
+    //
+    // Nhánh cuối cho AIError dùng lại được kho mã sẵn có của nó (AI_QUOTA_EXCEEDED,
+    // AI_RATE_LIMIT_EXCEEDED...) mà không phải khai báo lại. Điều kiện "là chuỗi" chính là chỗ
+    // loại bỏ mã số của MongoDB.
+    errorCode:
+      err.errorCode ||
+      mongo?.code ||
+      (typeof err.code === "string" ? err.code : null) ||
+      "INTERNAL_ERROR",
     requestId: req.requestId || null,
   };
 

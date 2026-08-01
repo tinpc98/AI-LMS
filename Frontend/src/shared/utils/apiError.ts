@@ -17,7 +17,7 @@
 interface ApiErrorShape {
   response?: {
     status?: number;
-    data?: { message?: string; code?: string };
+    data?: { message?: string; code?: string; errorCode?: string };
   };
   message?: string;
 }
@@ -52,6 +52,19 @@ export const getApiErrorMessage = (error: unknown, fallback: string): string => 
 export const getApiErrorStatus = (error: unknown): number | undefined =>
   asApiError(error).response?.status;
 
-/** Mã lỗi dạng chữ do backend trả (VALIDATION_ERROR, DUPLICATE_KEY...). */
-export const getApiErrorCode = (error: unknown): string | undefined =>
-  asApiError(error).response?.data?.code;
+/**
+ * Mã lỗi NGHIỆP VỤ do backend trả (ASSIGNMENT_PAST_DEADLINE, AI_QUOTA_EXCEEDED...).
+ *
+ * Ưu tiên trường `errorCode` — nó LUÔN là chuỗi thuộc danh mục ở
+ * Backend/src/shared/errors/errorCodes.js. Trường `code` cũ vẫn đọc làm phương án dự phòng
+ * cho các endpoint chưa gắn mã, nhưng nó bị nhiễm: với lỗi MongoDB, code là một SỐ (11000).
+ *
+ * VÌ SAO NÊN DÙNG THAY CHO getApiErrorStatus: mã HTTP không phân biệt được nguyên nhân. Cùng
+ * là 429 nhưng hết hạn mức NGÀY (phải đợi sang mai) khác hẳn bị chặn tần suất (đợi vài giây),
+ * và người dùng cần được nói đúng.
+ */
+export const getApiErrorCode = (error: unknown): string | undefined => {
+  const data = asApiError(error).response?.data;
+  const code = data?.errorCode ?? data?.code;
+  return typeof code === "string" ? code : undefined;
+};

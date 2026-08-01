@@ -95,3 +95,30 @@ describe("getApiErrorMessage — KHÔNG hiện thông điệp nội bộ của a
     expect(getApiErrorMessage(new Error("Network Error"), "mặc định")).toBe("Network Error");
   });
 });
+
+describe("getApiErrorCode — mã lỗi nghiệp vụ", () => {
+  it("ưu tiên trường errorCode mới", () => {
+    const loi = {
+      response: { status: 429, data: { errorCode: "AI_QUOTA_EXCEEDED", code: "INTERNAL_ERROR" } },
+    };
+    expect(getApiErrorCode(loi)).toBe("AI_QUOTA_EXCEEDED");
+  });
+
+  it("chưa có errorCode thì dùng code cũ — endpoint chưa chuyển vẫn chạy", () => {
+    // Đây là điều kiện để chuyển đổi hai giai đoạn.
+    expect(getApiErrorCode({ response: { data: { code: "VALIDATION_ERROR" } } })).toBe(
+      "VALIDATION_ERROR"
+    );
+  });
+
+  it("BỎ QUA mã số của MongoDB, không trả về 11000", () => {
+    // Chính lý do phải tách khỏi trường `code`. Trả về số sẽ khiến mọi phép so sánh chuỗi ở
+    // nơi gọi âm thầm sai.
+    expect(getApiErrorCode({ response: { data: { code: 11000 } } })).toBeUndefined();
+  });
+
+  it("không phải lỗi từ máy chủ thì trả undefined", () => {
+    expect(getApiErrorCode(new Error("Network Error"))).toBeUndefined();
+    expect(getApiErrorCode(null)).toBeUndefined();
+  });
+});
