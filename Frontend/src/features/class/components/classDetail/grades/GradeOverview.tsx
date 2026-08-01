@@ -71,7 +71,7 @@ export const GradeOverview: React.FC<GradeOverviewProps> = React.memo(({ stats }
                   {stats.assignmentAvg !== null ? `${stats.assignmentAvg} / 10` : "--"}
                 </div>
                 <Progress
-                  percent={stats.assignmentAvg ? stats.assignmentAvg * 10 : 0}
+                  percent={stats.assignmentAvg ? Math.min(100, stats.assignmentAvg * 10) : 0}
                   showInfo={false}
                   size="small"
                   strokeColor="#13c2c2"
@@ -88,7 +88,7 @@ export const GradeOverview: React.FC<GradeOverviewProps> = React.memo(({ stats }
                   {stats.examAvg !== null ? `${stats.examAvg} / 10` : "--"}
                 </div>
                 <Progress
-                  percent={stats.examAvg ? stats.examAvg * 10 : 0}
+                  percent={stats.examAvg ? Math.min(100, stats.examAvg * 10) : 0}
                   showInfo={false}
                   size="small"
                   strokeColor="#faad14"
@@ -102,10 +102,10 @@ export const GradeOverview: React.FC<GradeOverviewProps> = React.memo(({ stats }
                   <CalendarOutlined style={{ color: "#36cfc9", marginRight: 4 }} /> Chuyên cần (10%)
                 </Text>
                 <div style={{ fontSize: 16, fontWeight: 700, color: "#006d75" }}>
-                  {stats.attendanceRate}%
+                  {stats.attendanceRate !== null ? `${stats.attendanceRate}%` : "--"}
                 </div>
                 <Progress
-                  percent={stats.attendanceRate}
+                  percent={stats.attendanceRate !== null ? Math.min(100, stats.attendanceRate) : 0}
                   showInfo={false}
                   size="small"
                   strokeColor="#36cfc9"
@@ -122,7 +122,7 @@ export const GradeOverview: React.FC<GradeOverviewProps> = React.memo(({ stats }
                   {stats.gpa !== null ? `${stats.gpa} / 10` : "--"}
                 </div>
                 <Progress
-                  percent={stats.gpa ? stats.gpa * 10 : 0}
+                  percent={stats.gpa ? Math.min(100, stats.gpa * 10) : 0}
                   showInfo={false}
                   size="small"
                   strokeColor="#722ed1"

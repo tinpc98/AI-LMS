@@ -17,7 +17,7 @@ interface GradeStatisticProps {
 export const GradeStatistic: React.FC<GradeStatisticProps> = React.memo(({ stats }) => {
   return (
     <Row gutter={[12, 12]} style={{ marginBottom: 24 }}>
-      <Col xs={12} sm={8} md={4} lg={4}>
+      <Col xs={12} sm={8} md={8} lg={8}>
         <Card
           bordered={false}
           styles={{ body: { padding: "12px 16px" } }}
@@ -33,7 +33,7 @@ export const GradeStatistic: React.FC<GradeStatisticProps> = React.memo(({ stats
         </Card>
       </Col>
 
-      <Col xs={12} sm={8} md={4} lg={4}>
+      <Col xs={12} sm={8} md={8} lg={8}>
         <Card
           bordered={false}
           styles={{ body: { padding: "12px 16px" } }}
@@ -49,7 +49,7 @@ export const GradeStatistic: React.FC<GradeStatisticProps> = React.memo(({ stats
         </Card>
       </Col>
 
-      <Col xs={12} sm={8} md={4} lg={4}>
+      <Col xs={12} sm={8} md={8} lg={8}>
         <Card
           bordered={false}
           styles={{ body: { padding: "12px 16px" } }}
@@ -64,7 +64,7 @@ export const GradeStatistic: React.FC<GradeStatisticProps> = React.memo(({ stats
         </Card>
       </Col>
 
-      <Col xs={12} sm={8} md={4} lg={4}>
+      <Col xs={12} sm={8} md={8} lg={8}>
         <Card
           bordered={false}
           styles={{ body: { padding: "12px 16px" } }}
@@ -80,7 +80,7 @@ export const GradeStatistic: React.FC<GradeStatisticProps> = React.memo(({ stats
         </Card>
       </Col>
 
-      <Col xs={12} sm={8} md={4} lg={4}>
+      <Col xs={12} sm={8} md={8} lg={8}>
         <Card
           bordered={false}
           styles={{ body: { padding: "12px 16px" } }}
@@ -96,7 +96,7 @@ export const GradeStatistic: React.FC<GradeStatisticProps> = React.memo(({ stats
         </Card>
       </Col>
 
-      <Col xs={12} sm={8} md={4} lg={4}>
+      <Col xs={12} sm={8} md={8} lg={8}>
         <Card
           bordered={false}
           styles={{ body: { padding: "12px 16px" } }}
@@ -104,8 +104,8 @@ export const GradeStatistic: React.FC<GradeStatisticProps> = React.memo(({ stats
         >
           <Statistic
             title={<span style={{ fontSize: 11, color: "#8c8c8c" }}>Chuyên cần</span>}
-            value={stats.attendanceRate}
-            suffix="%"
+            value={stats.attendanceRate !== null ? stats.attendanceRate : "--"}
+            suffix={stats.attendanceRate !== null ? "%" : ""}
             prefix={<CalendarOutlined style={{ color: "#36cfc9", marginRight: 4 }} />}
             valueStyle={{ fontSize: 20, fontWeight: 700, color: "#006d75" }}
           />

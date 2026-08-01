@@ -90,7 +90,11 @@ examSchema.pre("save", function () {
   if (this.questions && this.questions.length > 0) {
     const currentTotal = this.questions.reduce((sum, q) => sum + (q.points || 0), 0);
     if (parseFloat(currentTotal.toFixed(2)) !== 10) {
-      throw new Error(`Tổng điểm của đề thi phải bằng đúng 10. Tổng hiện tại: ${currentTotal}`);
+      const error = new Error(
+        `Tổng điểm của đề thi phải bằng đúng 10. Tổng hiện tại: ${currentTotal}`
+      );
+      error.status = 400;
+      throw error;
     }
   }
 });

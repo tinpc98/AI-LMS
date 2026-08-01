@@ -443,7 +443,9 @@ class NotificationService {
   // Đánh dấu 1 thông báo là đã đọc
   async markAsRead(notificationId, userId) {
     if (!mongoose.Types.ObjectId.isValid(notificationId)) {
-      throw new Error("ID thông báo không hợp lệ!");
+      const error = new Error("ID thông báo không hợp lệ!");
+      error.status = 400;
+      throw error;
     }
     const notif = await Notification.findOneAndUpdate(
       { _id: notificationId, recipientId: userId },
@@ -451,7 +453,9 @@ class NotificationService {
       { new: true }
     );
     if (!notif) {
-      throw new Error("Thông báo không tồn tại hoặc không thuộc quyền sở hữu!");
+      const error = new Error("Thông báo không tồn tại hoặc không thuộc quyền sở hữu!");
+      error.status = 404;
+      throw error;
     }
     return notif;
   }

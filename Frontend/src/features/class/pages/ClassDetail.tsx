@@ -22,6 +22,7 @@ import ExamsTab from "../components/classDetail/exams/ExamsTab";
 import GradesTab from "../components/classDetail/grades/GradesTab";
 import AttendanceTab from "../components/classDetail/attendance/AttendanceTab";
 import AnnouncementsTab from "../components/classDetail/announcements/AnnouncementsTab";
+import LiveClassTab from "../components/classDetail/live/LiveClassTab";
 
 import ClassDiscussionTab from "../components/classDetail/chat/ClassDiscussionTab";
 import ExamLobbyModals from "../components/classDetail/exams/ExamLobbyModals";
@@ -84,7 +85,12 @@ export default function ClassDetail() {
   }, [classId, fetchStudentProgress, fetchClassRanking, fetchMyRank, fetchMyBadges]);
 
   // Sprint 7: Real Analytics
-  const { studentDashboard, fetchStudentDashboard } = useAnalytics(classId);
+  const {
+    studentDashboard,
+    loading: analyticsLoading,
+    error: analyticsError,
+    fetchStudentDashboard,
+  } = useAnalytics(classId);
 
   useEffect(() => {
     if (classId) {
@@ -275,23 +281,38 @@ export default function ClassDetail() {
           {/* TAB 0: TỔNG QUAN */}
           {activeTab === "overview" && (
             <div>
-              <StatisticSection
-                attendanceRate={
-                  studentDashboard?.attendance?.total
-                    ? Math.round(
-                        (studentDashboard.attendance.present / studentDashboard.attendance.total) *
-                          100
-                      )
-                    : 0
-                }
-                completedAssignments={studentDashboard?.assignment?.completed || 0}
-                totalAssignments={assignments.length}
-                completedExams={
-                  exams.filter((e: any) => e.score !== null && e.score !== undefined).length
-                }
-                totalExams={exams.length}
-                overallProgress={studentDashboard?.progress?.averageProgress || 0}
-              />
+              {analyticsError && (
+                <Alert
+                  type="error"
+                  showIcon
+                  message="Không tải được số liệu phân tích học tập"
+                  description={analyticsError}
+                  style={{ marginBottom: 16, borderRadius: 12 }}
+                  action={<a onClick={() => void fetchStudentDashboard()}>Thử lại</a>}
+                />
+              )}
+              {analyticsLoading && !studentDashboard ? (
+                <Skeleton active paragraph={{ rows: 3 }} style={{ marginBottom: 24 }} />
+              ) : (
+                <StatisticSection
+                  attendanceRate={
+                    studentDashboard?.attendance?.total
+                      ? Math.round(
+                          (studentDashboard.attendance.present /
+                            studentDashboard.attendance.total) *
+                            100
+                        )
+                      : 0
+                  }
+                  completedAssignments={studentDashboard?.assignment?.completed || 0}
+                  totalAssignments={assignments.length}
+                  completedExams={
+                    exams.filter((e: any) => e.score !== null && e.score !== undefined).length
+                  }
+                  totalExams={exams.length}
+                  overallProgress={studentDashboard?.progress?.averageProgress || 0}
+                />
+              )}
               <Row gutter={[24, 24]}>
                 <Col xs={24} lg={15} xl={16}>
                   <OverviewCard
@@ -445,7 +466,13 @@ export default function ClassDetail() {
           )}
 
           {/* TAB 8: HỌC TRỰC TUYẾN */}
-          {activeTab === "live" && <Alert type="info" message="Live session is active." />}
+          {activeTab === "live" && (
+            <LiveClassTab
+              classId={classId}
+              classInfo={classInfo}
+              onJoinLiveRoom={handleJoinLiveClass}
+            />
+          )}
 
           {/* TAB 9: THẢO LUẬN LỚP HỌC */}
           {activeTab === "chat" && <ClassDiscussionTab />}

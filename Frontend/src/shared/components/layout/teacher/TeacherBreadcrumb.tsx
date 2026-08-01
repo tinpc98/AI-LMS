@@ -7,7 +7,6 @@ const breadcrumbNameMap: Record<string, string> = {
   "/teacher": "Trang chủ Dashboard",
   "/teacher/classes": "Quản lý lớp học",
   "/teacher/classroom-detail": "Chi tiết lớp học",
-  "/teacher/attendance": "Điểm danh lớp học",
   "/teacher/questionbank": "Ngân hàng câu hỏi",
   "/teacher/examresults": "Kết quả kỳ thi",
   "/teacher/exam-review": "Chấm bài tự luận",

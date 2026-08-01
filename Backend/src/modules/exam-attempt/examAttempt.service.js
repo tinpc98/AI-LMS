@@ -52,6 +52,7 @@ const gradeSubmission = async (attemptId, studentAnswers) => {
 
     // 5. Bắt đầu vòng lặp chấm điểm
     for (const ans of studentAnswers) {
+      if (!ans?.questionId) continue;
       const qIdStr = ans.questionId.toString();
       const questionConfig = dbQuestionsMap.get(qIdStr);
       const allocatedPoints = examPointsMap.get(qIdStr) || 0;
@@ -123,6 +124,7 @@ const gradeEssay = async (attemptId, essayGrades, userId, userRole) => {
 
     // Lặp qua mảng điểm giáo viên gửi lên và cập nhật trực tiếp vào câu trả lời
     for (const grade of essayGrades) {
+      if (!grade?.questionId) continue;
       const qIdStr = grade.questionId.toString();
       const answerIndex = attempt.answers.findIndex((ans) => ans.questionId.toString() === qIdStr);
 

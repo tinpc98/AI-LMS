@@ -1,5 +1,5 @@
 import React from "react";
-import { Card, Typography, Skeleton } from "antd";
+import { Card, Typography, Skeleton, Empty } from "antd";
 import { motion } from "framer-motion";
 import {
   ResponsiveContainer,
@@ -59,6 +59,8 @@ export const AIUsageChart: React.FC<AIUsageChartProps> = ({ data, loading }) => 
 
         {loading ? (
           <Skeleton active paragraph={{ rows: 8 }} />
+        ) : data.length === 0 ? (
+          <Empty description="Chưa có dữ liệu sử dụng AI" style={{ padding: "40px 0" }} />
         ) : (
           <div style={{ width: "100%", height: 300 }}>
             <ResponsiveContainer width="100%" height="100%">

@@ -28,7 +28,10 @@ export const GradeChart: React.FC<GradeChartProps> = React.memo(({ items }) => {
       <Row gutter={[12, 16]} align="bottom" style={{ height: 160, padding: "12px 8px" }}>
         {gradedItems.slice(0, 8).map((item) => {
           const score = item.score || 0;
-          const heightPercent = Math.max(10, Math.round((score / item.maxScore) * 100));
+          const heightPercent = Math.min(
+            100,
+            Math.max(10, Math.round((score / item.maxScore) * 100))
+          );
           const color =
             score >= 8 ? "#52c41a" : score >= 6.5 ? "#1890ff" : score >= 5 ? "#faad14" : "#ff4d4f";
 

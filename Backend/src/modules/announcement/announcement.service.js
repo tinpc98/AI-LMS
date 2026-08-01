@@ -138,36 +138,56 @@ class AnnouncementService {
 
   async updateAnnouncement(id, updateData, userId, userRole) {
     if (!mongoose.Types.ObjectId.isValid(id)) {
-      throw new Error("Thông báo không tồn tại!");
+      const error = new Error("Thông báo không tồn tại!");
+      error.status = 404;
+      throw error;
     }
 
     const announcement = await Announcement.findById(id);
     if (!announcement) {
-      throw new Error("Thông báo không tồn tại!");
+      const error = new Error("Thông báo không tồn tại!");
+      error.status = 404;
+      throw error;
     }
 
     const normalizedRole = (userRole || "").toLowerCase();
     if (normalizedRole !== "admin" && announcement.createdBy?.toString() !== userId.toString()) {
-      throw new Error("Bạn không có quyền chỉnh sửa thông báo này!");
+      const error = new Error("Bạn không có quyền chỉnh sửa thông báo này!");
+      error.status = 403;
+      throw error;
     }
 
-    Object.assign(announcement, updateData);
+    // Whitelist rõ ràng: tránh Object.assign(announcement, updateData) ghi đè createdBy/isDeleted.
+    const { title, content, scope, classId, courseId, attachments } = updateData;
+    if (title !== undefined) announcement.title = title;
+    if (content !== undefined) announcement.content = content;
+    if (scope !== undefined) announcement.scope = scope;
+    if (classId !== undefined) announcement.classId = classId;
+    if (courseId !== undefined) announcement.courseId = courseId;
+    if (attachments !== undefined) announcement.attachments = attachments;
+
     return await announcement.save();
   }
 
   async deleteAnnouncement(id, userId, userRole) {
     if (!mongoose.Types.ObjectId.isValid(id)) {
-      throw new Error("Thông báo không tồn tại!");
+      const error = new Error("Thông báo không tồn tại!");
+      error.status = 404;
+      throw error;
     }
 
     const announcement = await Announcement.findById(id);
     if (!announcement) {
-      throw new Error("Thông báo không tồn tại!");
+      const error = new Error("Thông báo không tồn tại!");
+      error.status = 404;
+      throw error;
     }
 
     const normalizedRole = (userRole || "").toLowerCase();
     if (normalizedRole !== "admin" && announcement.createdBy?.toString() !== userId.toString()) {
-      throw new Error("Bạn không có quyền xóa thông báo này!");
+      const error = new Error("Bạn không có quyền xóa thông báo này!");
+      error.status = 403;
+      throw error;
     }
 
     await announcement.softDelete(userId);

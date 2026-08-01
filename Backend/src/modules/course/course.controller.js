@@ -46,7 +46,7 @@ export const updateCourse = async (req, res) => {
     const result = await courseService.updateCourse(id, req.body);
     return sendSuccess(res, "Cập nhật khóa học thành công", result);
   } catch (error) {
-    return sendError(res, error.message || "Lỗi khi cập nhật khóa học", 400);
+    return sendError(res, error.message || "Lỗi khi cập nhật khóa học", error.status || 500);
   }
 };
 
@@ -57,7 +57,7 @@ export const deleteCourse = async (req, res) => {
     await courseService.deleteCourse(id, userId);
     return sendSuccess(res, "Xóa khóa học thành công");
   } catch (error) {
-    return sendError(res, error.message || "Lỗi khi xóa khóa học", 400);
+    return sendError(res, error.message || "Lỗi khi xóa khóa học", error.status || 500);
   }
 };
 

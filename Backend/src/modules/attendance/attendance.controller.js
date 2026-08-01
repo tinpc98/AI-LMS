@@ -41,7 +41,7 @@ export const updateAttendance = async (req, res) => {
     const result = await attendanceService.updateAttendance(id, { status, note });
     return sendSuccess(res, "Cập nhật điểm danh thành công", result);
   } catch (error) {
-    return sendError(res, error.message || "Lỗi khi cập nhật điểm danh", 500);
+    return sendError(res, error.message || "Lỗi khi cập nhật điểm danh", error.status || 500);
   }
 };
 

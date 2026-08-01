@@ -239,12 +239,16 @@ class AttendanceService {
   // Cập nhật 1 bản ghi điểm danh
   async updateAttendance(id, { status, note }) {
     if (!mongoose.Types.ObjectId.isValid(id)) {
-      throw new Error("ID điểm danh không hợp lệ!");
+      const error = new Error("ID điểm danh không hợp lệ!");
+      error.status = 400;
+      throw error;
     }
 
     const attendance = await Attendance.findById(id);
     if (!attendance) {
-      throw new Error("Bản ghi điểm danh không tồn tại!");
+      const error = new Error("Bản ghi điểm danh không tồn tại!");
+      error.status = 404;
+      throw error;
     }
 
     if (status) attendance.status = status;

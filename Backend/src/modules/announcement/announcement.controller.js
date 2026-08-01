@@ -83,7 +83,7 @@ export const updateAnnouncement = async (req, res) => {
     const result = await announcementService.updateAnnouncement(id, req.body, userId, userRole);
     return sendSuccess(res, "Cập nhật thông báo thành công", result);
   } catch (error) {
-    return sendError(res, error.message || "Lỗi khi cập nhật thông báo", 400);
+    return sendError(res, error.message || "Lỗi khi cập nhật thông báo", error.status || 500);
   }
 };
 
@@ -100,6 +100,6 @@ export const deleteAnnouncement = async (req, res) => {
     await announcementService.deleteAnnouncement(id, userId, userRole);
     return sendSuccess(res, "Xóa thông báo thành công");
   } catch (error) {
-    return sendError(res, error.message || "Lỗi khi xóa thông báo", 400);
+    return sendError(res, error.message || "Lỗi khi xóa thông báo", error.status || 500);
   }
 };

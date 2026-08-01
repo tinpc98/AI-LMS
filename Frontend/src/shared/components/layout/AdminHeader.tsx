@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import {
-  BellOutlined,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
   ProfileOutlined,
@@ -13,6 +12,8 @@ import { useNavigate } from "react-router-dom";
 import Breadcrumbs from "./Breadcrumbs";
 import styles from "./adminLayout.module.css";
 import ChangePasswordModal from "../../../features/profile/components/ChangePasswordModal";
+import { useNotifications } from "../../../features/notification/hooks/useNotifications";
+import { NotificationDropdown } from "./student/NotificationDropdown";
 
 interface AdminHeaderProps {
   collapsed: boolean;
@@ -29,6 +30,7 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({
 }) => {
   const navigate = useNavigate();
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState<boolean>(false);
+  const { notifications, unreadCount, loading, markAsRead, markAllAsRead } = useNotifications();
 
   const handleLogout = () => {
     localStorage.removeItem("accessToken");
@@ -93,7 +95,13 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({
         </div>
 
         <div className={styles.headerActions}>
-          <Button type="text" icon={<BellOutlined />} className={styles.headerButton} />
+          <NotificationDropdown
+            notifications={notifications}
+            unreadCount={unreadCount}
+            loading={loading}
+            markAsRead={markAsRead}
+            markAllAsRead={markAllAsRead}
+          />
 
           <Dropdown
             menu={{

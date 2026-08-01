@@ -104,9 +104,11 @@ export const computeGradeStats = (
   return {
     // Số máy chủ tính được ưu tiên hơn số tính tại máy khách.
     gpa: studentData?.avgGPA || gpa,
-    // TODO: hai giá trị dưới đây là số bịa, backend chưa có API tương ứng.
-    classAvgGpa: gpa ? round1(gpa * 0.95) : 8.2,
-    attendanceRate: 95,
+    // Backend chưa có API tính ĐTB lớp học / chuyên cần so với lớp — trả null (UI hiện "--")
+    // thay vì số suy diễn, để không hiển thị một con số trông như thật nhưng không phản ánh
+    // dữ liệu thực tế nào.
+    classAvgGpa: null,
+    attendanceRate: null,
     gradedCount,
     assignmentAvg: assignCount > 0 ? round1(assignSum / assignCount) : null,
     examAvg: examCount > 0 ? round1(examSum / examCount) : null,

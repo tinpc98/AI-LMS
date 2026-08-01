@@ -7,6 +7,7 @@ import { Course } from "#modules/course";
 import { User } from "#modules/auth";
 import classService from "./class.service.js";
 import { attachStudentProgress } from "./classProgress.service.js";
+import { checkClassTeacherOwnership } from "./class.ownership.js";
 
 // Lấy danh sách lớp học (Hỗ trợ phân trang, tìm kiếm và lọc theo vai trò)
 export const ClassList = asyncHandler(async (req, res) => {

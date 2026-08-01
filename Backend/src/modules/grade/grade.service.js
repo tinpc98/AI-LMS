@@ -24,12 +24,16 @@ class GradeService {
     gradedByRole,
   }) {
     if (!mongoose.Types.ObjectId.isValid(classId)) {
-      throw new Error("ID lớp học không hợp lệ!");
+      const error = new Error("ID lớp học không hợp lệ!");
+      error.status = 400;
+      throw error;
     }
 
     const classExists = await classModel.findById(classId);
     if (!classExists) {
-      throw new Error("Lớp học không tồn tại!");
+      const error = new Error("Lớp học không tồn tại!");
+      error.status = 404;
+      throw error;
     }
 
     const isAuthorized = await checkClassTeacherOwnership(classId, gradedBy, gradedByRole);

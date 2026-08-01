@@ -61,9 +61,38 @@ class CourseService {
   }
 
   async updateCourse(id, data) {
-    const course = await Course.findByIdAndUpdate(id, data, { new: true, runValidators: true });
+    // Whitelist rõ ràng: findByIdAndUpdate(id, data, ...) trước đây nhận nguyên req.body, cho
+    // phép client tự đặt isDeleted/deletedAt/deletedBy/createdBy — bỏ qua hẳn flow soft-delete
+    // chính thức (DELETE /:id) và để lại bản ghi ở trạng thái không nhất quán.
+    const {
+      courseName,
+      subject,
+      grade,
+      description,
+      thumbnail,
+      tuitionFee,
+      durationWeeks,
+      totalLessons,
+      target,
+      status,
+    } = data;
+    const update = {};
+    if (courseName !== undefined) update.courseName = courseName;
+    if (subject !== undefined) update.subject = subject;
+    if (grade !== undefined) update.grade = grade;
+    if (description !== undefined) update.description = description;
+    if (thumbnail !== undefined) update.thumbnail = thumbnail;
+    if (tuitionFee !== undefined) update.tuitionFee = tuitionFee;
+    if (durationWeeks !== undefined) update.durationWeeks = durationWeeks;
+    if (totalLessons !== undefined) update.totalLessons = totalLessons;
+    if (target !== undefined) update.target = target;
+    if (status !== undefined) update.status = status;
+
+    const course = await Course.findByIdAndUpdate(id, update, { new: true, runValidators: true });
     if (!course) {
-      throw new Error("Khóa học không tồn tại!");
+      const error = new Error("Khóa học không tồn tại!");
+      error.status = 404;
+      throw error;
     }
     return course;
   }
@@ -71,7 +100,9 @@ class CourseService {
   async deleteCourse(id, userId = null) {
     const course = await Course.softDelete(id, userId);
     if (!course) {
-      throw new Error("Khóa học không tồn tại!");
+      const error = new Error("Khóa học không tồn tại!");
+      error.status = 404;
+      throw error;
     }
     return true;
   }

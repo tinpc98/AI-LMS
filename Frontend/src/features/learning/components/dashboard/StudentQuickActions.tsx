@@ -1,6 +1,6 @@
 import React from "react";
 import { Card, Row, Col, Typography, Space } from "antd";
-import { RocketOutlined, BookOutlined, FileTextOutlined, TrophyOutlined } from "@ant-design/icons";
+import { RocketOutlined, BookOutlined, FileTextOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 
 const { Text } = Typography;
@@ -32,14 +32,6 @@ export const StudentQuickActions: React.FC = React.memo(() => {
       bgColor: "#fff7e6",
       borderColor: "#ffd591",
       onClick: () => navigate("/student/studentassignment"),
-    },
-    {
-      key: "my-grades",
-      title: "Xem điểm & Hồ sơ",
-      icon: <TrophyOutlined style={{ fontSize: 22, color: "#52c41a" }} />,
-      bgColor: "#f6ffed",
-      borderColor: "#b7eb8f",
-      onClick: () => navigate("/student/profile"),
     },
   ];
 

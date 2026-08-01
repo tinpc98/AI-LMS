@@ -1,21 +1,25 @@
 import { useState, useCallback } from "react";
 import analyticsApi from "../../../api/analyticsApi";
 import type { IStudentAnalytics, ITeacherAnalytics } from "../../../api/analyticsApi";
+import { getApiErrorMessage } from "../../../shared/utils/apiError";
 
 export function useAnalytics(classId?: string) {
   const [studentDashboard, setStudentDashboard] = useState<IStudentAnalytics | null>(null);
   const [teacherDashboard, setTeacherDashboard] = useState<ITeacherAnalytics | null>(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchStudentDashboard = useCallback(async () => {
     if (!classId) return;
     try {
       setLoading(true);
+      setError(null);
       const data = await analyticsApi.getStudentDashboard(classId);
       // Backend sendSuccess wraps data in response.data.data
       setStudentDashboard(data);
-    } catch (error) {
-      console.error(error);
+    } catch (err) {
+      console.error(err);
+      setError(getApiErrorMessage(err, "Không thể tải dữ liệu phân tích học tập."));
     } finally {
       setLoading(false);
     }
@@ -25,10 +29,12 @@ export function useAnalytics(classId?: string) {
     if (!classId) return;
     try {
       setLoading(true);
+      setError(null);
       const data = await analyticsApi.getTeacherDashboard(classId);
       setTeacherDashboard(data);
-    } catch (error) {
-      console.error(error);
+    } catch (err) {
+      console.error(err);
+      setError(getApiErrorMessage(err, "Không thể tải dữ liệu phân tích lớp học."));
     } finally {
       setLoading(false);
     }
@@ -50,6 +56,7 @@ export function useAnalytics(classId?: string) {
     studentDashboard,
     teacherDashboard,
     loading,
+    error,
     fetchStudentDashboard,
     fetchTeacherDashboard,
     downloadReport,

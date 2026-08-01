@@ -1,10 +1,9 @@
-import React from "react";
-import { Layout, Button, Space, Avatar, Dropdown, Badge, Typography, Tag, Tooltip } from "antd";
+import React, { useState } from "react";
+import { Layout, Button, Space, Avatar, Dropdown, Typography, Tag } from "antd";
 import {
   MenuFoldOutlined,
   MenuUnfoldOutlined,
   MenuOutlined,
-  BellOutlined,
   UserOutlined,
   LogoutOutlined,
   SettingOutlined,
@@ -12,6 +11,9 @@ import {
 import type { MenuProps } from "antd";
 import { TeacherBreadcrumb } from "./TeacherBreadcrumb";
 import { useAuth } from "../../../hooks/useAuth";
+import { useNotifications } from "../../../../features/notification/hooks/useNotifications";
+import { NotificationDropdown } from "../student/NotificationDropdown";
+import ChangePasswordModal from "../../../../features/profile/components/ChangePasswordModal";
 
 const { Header } = Layout;
 const { Text } = Typography;
@@ -26,6 +28,8 @@ interface TeacherHeaderProps {
 export const TeacherHeader: React.FC<TeacherHeaderProps> = React.memo(
   ({ collapsed, onToggleCollapse, onToggleMobileDrawer, isMobile }) => {
     const { user, logout } = useAuth();
+    const { notifications, unreadCount, loading, markAsRead, markAllAsRead } = useNotifications();
+    const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
 
     const userMenuItems: MenuProps["items"] = [
       {
@@ -49,6 +53,7 @@ export const TeacherHeader: React.FC<TeacherHeaderProps> = React.memo(
         key: "settings",
         icon: <SettingOutlined />,
         label: "Cài đặt tài khoản",
+        onClick: () => setIsPasswordModalOpen(true),
       },
       {
         key: "logout",
@@ -60,85 +65,89 @@ export const TeacherHeader: React.FC<TeacherHeaderProps> = React.memo(
     ];
 
     return (
-      <Header
-        style={{
-          position: "sticky",
-          top: 0,
-          zIndex: 99,
-          padding: "0 24px",
-          background: "#fff",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          boxShadow: "0 2px 8px rgba(0, 0, 0, 0.06)",
-          borderBottom: "1px solid #f0f0f0",
-          height: 64,
-        }}
-      >
-        {/* Left Side: Collapse Button & Breadcrumb */}
-        <Space size={16} align="center">
-          <Button
-            type="text"
-            icon={
-              isMobile ? (
-                <MenuOutlined style={{ fontSize: 18 }} />
-              ) : collapsed ? (
-                <MenuUnfoldOutlined style={{ fontSize: 18 }} />
-              ) : (
-                <MenuFoldOutlined style={{ fontSize: 18 }} />
-              )
-            }
-            onClick={isMobile ? onToggleMobileDrawer : onToggleCollapse}
-            style={{ fontSize: 16, width: 40, height: 40 }}
-          />
+      <>
+        <Header
+          style={{
+            position: "sticky",
+            top: 0,
+            zIndex: 99,
+            padding: "0 24px",
+            background: "#fff",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            boxShadow: "0 2px 8px rgba(0, 0, 0, 0.06)",
+            borderBottom: "1px solid #f0f0f0",
+            height: 64,
+          }}
+        >
+          {/* Left Side: Collapse Button & Breadcrumb */}
+          <Space size={16} align="center">
+            <Button
+              type="text"
+              icon={
+                isMobile ? (
+                  <MenuOutlined style={{ fontSize: 18 }} />
+                ) : collapsed ? (
+                  <MenuUnfoldOutlined style={{ fontSize: 18 }} />
+                ) : (
+                  <MenuFoldOutlined style={{ fontSize: 18 }} />
+                )
+              }
+              onClick={isMobile ? onToggleMobileDrawer : onToggleCollapse}
+              style={{ fontSize: 16, width: 40, height: 40 }}
+            />
 
-          {!isMobile && <TeacherBreadcrumb />}
-        </Space>
+            {!isMobile && <TeacherBreadcrumb />}
+          </Space>
 
-        {/* Right Side: Notifications & User Dropdown */}
-        <Space size={20} align="center">
-          <Tooltip title="Thông báo">
-            <Badge count={0} size="small">
-              <Button
-                type="text"
-                shape="circle"
-                icon={<BellOutlined style={{ fontSize: 18, color: "#595959" }} />}
-              />
-            </Badge>
-          </Tooltip>
+          {/* Right Side: Notifications & User Dropdown */}
+          <Space size={20} align="center">
+            <NotificationDropdown
+              notifications={notifications}
+              unreadCount={unreadCount}
+              loading={loading}
+              markAsRead={markAsRead}
+              markAllAsRead={markAllAsRead}
+            />
 
-          <Dropdown menu={{ items: userMenuItems }} placement="bottomRight" arrow>
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 10,
-                cursor: "pointer",
-                padding: "4px 8px",
-                borderRadius: 8,
-                transition: "background 0.2s",
-              }}
-              className="user-dropdown-trigger"
-            >
-              <Avatar
-                src={(user as any)?.avatar || undefined}
-                icon={!(user as any)?.avatar ? <UserOutlined /> : undefined}
-                style={{ backgroundColor: "#1890ff", border: "1px solid #e6f7ff" }}
-              />
-              {!isMobile && (
-                <div style={{ textAlign: "left", lineHeight: 1.2 }}>
-                  <Text strong style={{ display: "block", fontSize: 13 }}>
-                    {user?.fullName || "Giảng viên"}
-                  </Text>
-                  <Text type="secondary" style={{ fontSize: 11 }}>
-                    Giảng viên
-                  </Text>
-                </div>
-              )}
-            </div>
-          </Dropdown>
-        </Space>
-      </Header>
+            <Dropdown menu={{ items: userMenuItems }} placement="bottomRight" arrow>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 10,
+                  cursor: "pointer",
+                  padding: "4px 8px",
+                  borderRadius: 8,
+                  transition: "background 0.2s",
+                }}
+                className="user-dropdown-trigger"
+              >
+                <Avatar
+                  src={(user as any)?.avatar || undefined}
+                  icon={!(user as any)?.avatar ? <UserOutlined /> : undefined}
+                  style={{ backgroundColor: "#1890ff", border: "1px solid #e6f7ff" }}
+                />
+                {!isMobile && (
+                  <div style={{ textAlign: "left", lineHeight: 1.2 }}>
+                    <Text strong style={{ display: "block", fontSize: 13 }}>
+                      {user?.fullName || "Giảng viên"}
+                    </Text>
+                    <Text type="secondary" style={{ fontSize: 11 }}>
+                      Giảng viên
+                    </Text>
+                  </div>
+                )}
+              </div>
+            </Dropdown>
+          </Space>
+        </Header>
+        <ChangePasswordModal
+          open={isPasswordModalOpen}
+          onClose={() => setIsPasswordModalOpen(false)}
+        />
+      </>
     );
   }
 );

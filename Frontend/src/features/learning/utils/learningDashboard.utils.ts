@@ -7,25 +7,25 @@ import type {
 } from "../types/learningDashboard.types";
 
 export const calculateAverageGrade = (rawGrades: any[]): number => {
-  if (!Array.isArray(rawGrades) || rawGrades.length === 0) return 8.4;
+  if (!Array.isArray(rawGrades) || rawGrades.length === 0) return 0;
   const total = rawGrades.reduce((acc, curr) => acc + (curr.score || 0), 0);
   return Number((total / rawGrades.length).toFixed(2));
 };
 
 export const calculateAttendanceRate = (attendanceRate?: number): number => {
-  return attendanceRate !== undefined && attendanceRate !== null ? attendanceRate : 92;
+  return attendanceRate !== undefined && attendanceRate !== null ? attendanceRate : 0;
 };
 
 export const calculateCompletionRate = (assignments: AssignmentSummaryItem[]): number => {
-  if (!assignments || assignments.length === 0) return 100;
+  if (!assignments || assignments.length === 0) return 0;
   const submittedCount = assignments.filter((a) => a.status === "SUBMITTED").length;
   return Math.round((submittedCount / assignments.length) * 100);
 };
 
 export const calculateExamPerformanceRate = (exams: ExamSummaryItem[]): number => {
-  if (!exams || exams.length === 0) return 85;
+  if (!exams || exams.length === 0) return 0;
   const completedExams = exams.filter((e) => e.score !== null);
-  if (completedExams.length === 0) return 85;
+  if (completedExams.length === 0) return 0;
   const avgScore =
     completedExams.reduce((acc, curr) => acc + (curr.score || 0), 0) / completedExams.length;
   return Math.round((avgScore / 10) * 100);

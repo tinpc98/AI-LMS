@@ -19,6 +19,9 @@ interface NotificationDropdownProps {
   loading: boolean;
   markAsRead: (id: string) => void;
   markAllAsRead: () => void;
+  /** Đường dẫn trang "Xem tất cả thông báo". Không truyền thì ẩn nút — Teacher/Admin chưa có
+   * trang trung tâm thông báo riêng, hiện nút trỏ tới đó sẽ tạo ra một liên kết chết mới. */
+  viewAllPath?: string;
 }
 
 export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
@@ -27,6 +30,7 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
   loading,
   markAsRead,
   markAllAsRead,
+  viewAllPath,
 }) => {
   const navigate = useNavigate();
 
@@ -153,21 +157,23 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
         />
       )}
 
-      <div
-        style={{
-          textAlign: "center",
-          padding: "12px",
-          borderTop: "1px solid #f0f0f0",
-          position: "sticky",
-          bottom: 0,
-          background: "#fff",
-          zIndex: 2,
-        }}
-      >
-        <Button type="link" onClick={() => navigate("/student/notification")}>
-          Xem tất cả thông báo
-        </Button>
-      </div>
+      {viewAllPath && (
+        <div
+          style={{
+            textAlign: "center",
+            padding: "12px",
+            borderTop: "1px solid #f0f0f0",
+            position: "sticky",
+            bottom: 0,
+            background: "#fff",
+            zIndex: 2,
+          }}
+        >
+          <Button type="link" onClick={() => navigate(viewAllPath)}>
+            Xem tất cả thông báo
+          </Button>
+        </div>
+      )}
     </div>
   );
 

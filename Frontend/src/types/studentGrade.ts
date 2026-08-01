@@ -33,6 +33,6 @@ export interface StudentGradeStats {
   gradedCount: number;
   assignmentAvg: number | null;
   examAvg: number | null;
-  attendanceRate: number; // Percent %
+  attendanceRate: number | null; // Percent % — null nếu chưa có API tính chuyên cần thật
   overallProgress: number; // Percent %
 }

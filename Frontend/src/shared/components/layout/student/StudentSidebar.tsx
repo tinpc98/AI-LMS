@@ -40,14 +40,9 @@ export const StudentSidebar: React.FC<StudentSidebarProps> = React.memo(
           label: <Link to="/student/myclasses">Lớp học của tôi</Link>,
         },
         {
-          key: "/student/notification",
+          key: "/student/notifications",
           icon: <BellOutlined />,
-          label: <Link to="/student/notification">Thông báo</Link>,
-        },
-        {
-          key: "/student/profile",
-          icon: <UserOutlined />,
-          label: <Link to="/student/profile">Hồ sơ</Link>,
+          label: <Link to="/student/notifications">Thông báo</Link>,
         },
       ],
       []
