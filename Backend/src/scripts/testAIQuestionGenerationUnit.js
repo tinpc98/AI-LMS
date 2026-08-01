@@ -1,15 +1,18 @@
 import assert from "assert";
 import crypto from "crypto";
 import mongoose from "mongoose";
-import { validateQuestionGenerationOutput } from "../ai/validators/questionGenerationOutput.validator.js";
-import aiQuestionGenerationService from "../ai/services/aiQuestionGeneration.service.js";
-import aiCoreService from "../ai/services/aiCore.service.js";
-import Folder from "../models/folder.model.js";
-import ExamSet from "../models/examSet.model.js";
-import AISummary from "../models/aiSummary.model.js";
-import lessonContentExtractor from "../ai/services/lessonContentExtractor.service.js";
-import { AIError, AIErrorCode } from "../utils/aiError.js";
-import { validateQuestionGenerationRequest, handleQuestionGenerationValidation } from "../routers/aiQuestion.routes.js";
+import { validateQuestionGenerationOutput } from "#modules/ai/validators/questionGenerationOutput.validator.js";
+import aiQuestionGenerationService from "#modules/ai/services/aiQuestionGeneration.service.js";
+import aiCoreService from "#modules/ai/services/aiCore.service.js";
+import { Folder } from "#modules/folder";
+import ExamSet from "#modules/exam-set/examSet.model.js";
+import AISummary from "#modules/ai/models/aiSummary.model.js";
+import lessonContentExtractor from "#modules/ai/services/lessonContentExtractor.service.js";
+import { AIError, AIErrorCode } from "#modules/ai";
+import {
+  validateQuestionGenerationRequest,
+  handleQuestionGenerationValidation,
+} from "#modules/ai/routes/aiQuestion.routes.js";
 import { validationResult } from "express-validator";
 import fs from "fs";
 
@@ -24,7 +27,7 @@ const fakeRequestConfig = {
   difficultyDistribution: { medium: 2, hard: 1 },
   defaultPoints: 1,
   language: "vi",
-  instructions: ""
+  instructions: "",
 };
 
 async function runUnitTests() {
@@ -74,7 +77,7 @@ async function runUnitTests() {
       return null;
     };
 
-    ExamSet.prototype.save = async function() {
+    ExamSet.prototype.save = async function () {
       saveSpy++;
       this._id = new mongoose.Types.ObjectId();
       return this;
@@ -82,21 +85,54 @@ async function runUnitTests() {
 
     AISummary.findOne = async () => null;
 
-    lessonContentExtractor.extractLessonContent = async () => ({ text: "Nội dung lesson", warnings: [] });
+    lessonContentExtractor.extractLessonContent = async () => ({
+      text: "Nội dung lesson",
+      warnings: [],
+    });
 
     aiCoreService.executeStructuredAI = async (params) => {
       aiCoreSpy++;
       return {
         data: {
           questions: [
-            { type: "multiple_choice", content: "Q1", difficulty: "medium", points: 1, options: [{id:"a",text:"A"},{id:"b",text:"B"}], correctAnswer: "a" },
-            { type: "multiple_choice", content: "Q2", difficulty: "medium", points: 1, options: [{id:"c",text:"C"},{id:"d",text:"D"}], correctAnswer: "d" },
-            { type: "true_false", content: "Q3", difficulty: "hard", points: 1, options: [{id:"t",text:"T"},{id:"f",text:"F"}], correctAnswer: "t" }
+            {
+              type: "multiple_choice",
+              content: "Q1",
+              difficulty: "medium",
+              points: 1,
+              options: [
+                { id: "a", text: "A" },
+                { id: "b", text: "B" },
+              ],
+              correctAnswer: "a",
+            },
+            {
+              type: "multiple_choice",
+              content: "Q2",
+              difficulty: "medium",
+              points: 1,
+              options: [
+                { id: "c", text: "C" },
+                { id: "d", text: "D" },
+              ],
+              correctAnswer: "d",
+            },
+            {
+              type: "true_false",
+              content: "Q3",
+              difficulty: "hard",
+              points: 1,
+              options: [
+                { id: "t", text: "T" },
+                { id: "f", text: "F" },
+              ],
+              correctAnswer: "t",
+            },
           ],
-          warnings: []
+          warnings: [],
         },
         usageId: new mongoose.Types.ObjectId().toString(),
-        usage: { provider: "mock", model: "mock" }
+        usage: { provider: "mock", model: "mock" },
       };
     };
   };
@@ -121,19 +157,22 @@ async function runUnitTests() {
 
   // --- BẮT ĐẦU TEST ROUTER / VALIDATION ---
   console.log("\n--- TEST ROUTER & VALIDATION ---");
-  
+
   await runTest("Router có mergeParams", () => {
-    const routerSource = fs.readFileSync("src/routers/aiQuestion.routes.js", "utf8");
+    const routerSource = fs.readFileSync("src/routes/aiQuestion.routes.js", "utf8");
     assert.ok(routerSource.includes("mergeParams: true"), "Thiếu mergeParams: true");
   });
 
   await runTest("Student bị chặn trước quota", () => {
-    const routerSource = fs.readFileSync("src/routers/aiQuestion.routes.js", "utf8");
-    assert.ok(routerSource.indexOf("isTeacher") < routerSource.indexOf("checkAIQuota"), "isTeacher phải chạy trước checkAIQuota");
+    const routerSource = fs.readFileSync("src/routes/aiQuestion.routes.js", "utf8");
+    assert.ok(
+      routerSource.indexOf("isTeacher") < routerSource.indexOf("checkAIQuota"),
+      "isTeacher phải chạy trước checkAIQuota"
+    );
   });
 
   await runTest("Thiếu token trả 401 (via verifyUser)", () => {
-    const routerSource = fs.readFileSync("src/routers/aiQuestion.routes.js", "utf8");
+    const routerSource = fs.readFileSync("src/routes/aiQuestion.routes.js", "utf8");
     assert.ok(routerSource.includes("verifyUser"), "Thiếu verifyUser");
   });
 
@@ -163,32 +202,52 @@ async function runUnitTests() {
   });
 
   await runTest("Type count âm trả 400", async () => {
-    const result = await validateReq({ ...fakeRequestConfig, questionTypes: { multiple_choice: -1, true_false: 4 } });
+    const result = await validateReq({
+      ...fakeRequestConfig,
+      questionTypes: { multiple_choice: -1, true_false: 4 },
+    });
     assert.strictEqual(result.isEmpty(), false);
   });
 
   await runTest("Type count là chuỗi trả 400", async () => {
-    const result = await validateReq({ ...fakeRequestConfig, questionTypes: { multiple_choice: "2", true_false: 1 } });
+    const result = await validateReq({
+      ...fakeRequestConfig,
+      questionTypes: { multiple_choice: "2", true_false: 1 },
+    });
     assert.strictEqual(result.isEmpty(), false);
   });
 
   await runTest("Tổng type sai trả 400", async () => {
-    const result = await validateReq({ ...fakeRequestConfig, questionCount: 3, questionTypes: { multiple_choice: 1, true_false: 1 } });
+    const result = await validateReq({
+      ...fakeRequestConfig,
+      questionCount: 3,
+      questionTypes: { multiple_choice: 1, true_false: 1 },
+    });
     assert.strictEqual(result.isEmpty(), false);
   });
 
   await runTest("Difficulty chứa key lạ trả 400", async () => {
-    const result = await validateReq({ ...fakeRequestConfig, difficultyDistribution: { extreme: 3 } });
+    const result = await validateReq({
+      ...fakeRequestConfig,
+      difficultyDistribution: { extreme: 3 },
+    });
     assert.strictEqual(result.isEmpty(), false);
   });
 
   await runTest("Difficulty âm trả 400", async () => {
-    const result = await validateReq({ ...fakeRequestConfig, difficultyDistribution: { easy: -1, medium: 4 } });
+    const result = await validateReq({
+      ...fakeRequestConfig,
+      difficultyDistribution: { easy: -1, medium: 4 },
+    });
     assert.strictEqual(result.isEmpty(), false);
   });
 
   await runTest("Tổng difficulty sai trả 400", async () => {
-    const result = await validateReq({ ...fakeRequestConfig, questionCount: 3, difficultyDistribution: { medium: 1, hard: 1 } });
+    const result = await validateReq({
+      ...fakeRequestConfig,
+      questionCount: 3,
+      difficultyDistribution: { medium: 1, hard: 1 },
+    });
     assert.strictEqual(result.isEmpty(), false);
   });
 
@@ -197,10 +256,37 @@ async function runUnitTests() {
   await runTest("Validator: Hợp lệ", () => {
     const aiOutput = {
       questions: [
-        { type: "multiple_choice", content: "Q1", difficulty: "medium", options: [{id:"A",text:"Opt1"},{id:"B",text:"Opt2"}], correctAnswer: "A" },
-        { type: "multiple_choice", content: "Q2", difficulty: "medium", options: [{id:"C",text:"Opt3"},{id:"D",text:"Opt4"}], correctAnswer: "D" },
-        { type: "true_false", content: "Q3", difficulty: "hard", options: [{id:"T",text:"True"},{id:"F",text:"False"}], correctAnswer: "T" }
-      ]
+        {
+          type: "multiple_choice",
+          content: "Q1",
+          difficulty: "medium",
+          options: [
+            { id: "A", text: "Opt1" },
+            { id: "B", text: "Opt2" },
+          ],
+          correctAnswer: "A",
+        },
+        {
+          type: "multiple_choice",
+          content: "Q2",
+          difficulty: "medium",
+          options: [
+            { id: "C", text: "Opt3" },
+            { id: "D", text: "Opt4" },
+          ],
+          correctAnswer: "D",
+        },
+        {
+          type: "true_false",
+          content: "Q3",
+          difficulty: "hard",
+          options: [
+            { id: "T", text: "True" },
+            { id: "F", text: "False" },
+          ],
+          correctAnswer: "T",
+        },
+      ],
     };
     const res = validateQuestionGenerationOutput(aiOutput, fakeRequestConfig);
     assert.strictEqual(res.questions.length, 3);
@@ -249,7 +335,10 @@ async function runUnitTests() {
 
   await runTest("aiSourceFingerprint tồn tại trên ExamSet", async () => {
     const schemaSource = fs.readFileSync("src/models/examSet.model.js", "utf8");
-    assert.ok(schemaSource.includes("aiSourceFingerprint:"), "Thiếu aiSourceFingerprint trong schema");
+    assert.ok(
+      schemaSource.includes("aiSourceFingerprint:"),
+      "Thiếu aiSourceFingerprint trong schema"
+    );
   });
 
   await runTest("Fingerprint ổn định khi object có thứ tự key khác", () => {
@@ -257,24 +346,50 @@ async function runUnitTests() {
       questionCount: 3,
       questionTypes: { true_false: 1, multiple_choice: 2 },
       difficultyDistribution: { hard: 1, medium: 2 },
-      language: "vi", instructions: ""
+      language: "vi",
+      instructions: "",
     };
     const config2 = {
       questionCount: 3,
       questionTypes: { multiple_choice: 2, true_false: 1 },
       difficultyDistribution: { medium: 2, hard: 1 },
-      language: "vi", instructions: ""
+      language: "vi",
+      instructions: "",
     };
-    const hash1 = aiQuestionGenerationService.generateFingerprint({ lessonId: "l1", userId: "u1", folderId: "f1", requestConfig: config1, contentText: "a" });
-    const hash2 = aiQuestionGenerationService.generateFingerprint({ lessonId: "l1", userId: "u1", folderId: "f1", requestConfig: config2, contentText: "a" });
+    const hash1 = aiQuestionGenerationService.generateFingerprint({
+      lessonId: "l1",
+      userId: "u1",
+      folderId: "f1",
+      requestConfig: config1,
+      contentText: "a",
+    });
+    const hash2 = aiQuestionGenerationService.generateFingerprint({
+      lessonId: "l1",
+      userId: "u1",
+      folderId: "f1",
+      requestConfig: config2,
+      contentText: "a",
+    });
     assert.strictEqual(hash1, hash2);
   });
 
   await runTest("Config khác tạo fingerprint khác", () => {
     const config1 = { ...fakeRequestConfig, questionCount: 3 };
     const config2 = { ...fakeRequestConfig, questionCount: 4 };
-    const hash1 = aiQuestionGenerationService.generateFingerprint({ lessonId: "l1", userId: "u1", folderId: "f1", requestConfig: config1, contentText: "a" });
-    const hash2 = aiQuestionGenerationService.generateFingerprint({ lessonId: "l1", userId: "u1", folderId: "f1", requestConfig: config2, contentText: "a" });
+    const hash1 = aiQuestionGenerationService.generateFingerprint({
+      lessonId: "l1",
+      userId: "u1",
+      folderId: "f1",
+      requestConfig: config1,
+      contentText: "a",
+    });
+    const hash2 = aiQuestionGenerationService.generateFingerprint({
+      lessonId: "l1",
+      userId: "u1",
+      folderId: "f1",
+      requestConfig: config2,
+      contentText: "a",
+    });
     assert.notStrictEqual(hash1, hash2);
   });
 
@@ -283,7 +398,7 @@ async function runUnitTests() {
     try {
       const originalGenerateFingerprint = aiQuestionGenerationService.generateFingerprint;
       aiQuestionGenerationService.generateFingerprint = () => "conflict_fingerprint";
-      
+
       try {
         await aiQuestionGenerationService.generateQuestionSet(
           { _id: "lesson123", title: "L1" },
@@ -310,7 +425,7 @@ async function runUnitTests() {
       aiCoreService.executeStructuredAI = async () => {
         throw new AIError("Gemini Time out", AIErrorCode.AI_PROVIDER_ERROR, 504);
       };
-      
+
       try {
         await aiQuestionGenerationService.generateQuestionSet(
           { _id: "lesson123", title: "L1" },
@@ -329,12 +444,20 @@ async function runUnitTests() {
   });
 
   await runTest("Không gọi Question Model", async () => {
-    const serviceSource = fs.readFileSync("src/ai/services/aiQuestionGeneration.service.js", "utf8");
-    const hasQuestionModel = serviceSource.includes("Question.create") || 
-                             serviceSource.includes("Question.insertMany") || 
-                             serviceSource.includes("new Question") ||
-                             serviceSource.includes("Question.bulkWrite");
-    assert.strictEqual(hasQuestionModel, false, "Source code của service không được chứa lời gọi Question model");
+    const serviceSource = fs.readFileSync(
+      "src/ai/services/aiQuestionGeneration.service.js",
+      "utf8"
+    );
+    const hasQuestionModel =
+      serviceSource.includes("Question.create") ||
+      serviceSource.includes("Question.insertMany") ||
+      serviceSource.includes("new Question") ||
+      serviceSource.includes("Question.bulkWrite");
+    assert.strictEqual(
+      hasQuestionModel,
+      false,
+      "Source code của service không được chứa lời gọi Question model"
+    );
   });
 
   await runTest("Mock Provider được sử dụng", async () => {

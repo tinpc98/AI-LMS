@@ -148,4 +148,3 @@ export interface DashboardData {
   todayClasses: TodayClassRecord[];
   activities: any[];
 }
-

@@ -1,0 +1,116 @@
+name: CI
+
+on:
+  push:
+    branches: [main, FixBug]
+  pull_request:
+    branches: [main]
+
+jobs:
+  backend:
+    name: Backend (test:all)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: Backend
+    env:
+      NODE_ENV: test
+      JWT_SECRET: ci-test-secret-not-for-production
+      MONGO_URI: mongodb://127.0.0.1:27017/ai_lms_ci
+      MONGO_TEST_URI: mongodb://127.0.0.1:27017/ai_lms_test
+    services:
+      mongodb:
+        image: mongo:7
+        ports:
+          - 27017:27017
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: Backend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Wait for MongoDB
+        run: |
+          for i in $(seq 1 30); do
+            (echo > /dev/tcp/127.0.0.1/27017) >/dev/null 2>&1 && echo "MongoDB sẵn sàng" && exit 0
+            sleep 1
+          done
+          echo "MongoDB không sẵn sàng sau 30s" && exit 1
+
+      # Rào chắn kiến trúc (kế hoạch refactor §5.2). Hiện chỉ rule `no-circular` để severity
+      # "error" nên bước này CHẶN merge khi có phụ thuộc vòng mới; baseline 2026-07-31 = 0 vòng.
+      # Các rule còn lại (controller→model, model→service, orphan) ở mức "warn" — hiện 16 vi phạm
+      # tồn đọng, sẽ được dọn ở Wave 3/4 rồi mới nâng lên "error".
+      - name: Architecture guardrail (dependency-cruiser)
+        run: npm run depcruise
+
+      # Vitest chạy qua Vite nên resolve module KHÁC Node thật (vd Vite tự tìm index.js
+      # cho import thư mục, Node thì không). Vì vậy test xanh KHÔNG đảm bảo `node main.js`
+      # chạy được — đã xảy ra thật ở Wave 3.2 và lọt qua 6 commit. Bước này boot bằng Node
+      # thật và khẳng định tiến trình dừng đúng ở nhánh fail-fast database.
+      - name: Smoke boot (Node thật, không qua Vite)
+        run: npm run smoke:boot
+
+      # Rào chắn kích thước file (§5.3 / Wave 4.7). Dùng cơ chế RATCHET thay vì ngưỡng
+      # cứng: 9 file đang vượt trần được ghi vào baseline và chỉ đỏ khi chúng phình thêm;
+      # file mới vượt trần thì đỏ ngay. Ngưỡng cứng sẽ làm CI đỏ từ ngày đầu và rồi bị tắt.
+      - name: Giới hạn kích thước file (ratchet)
+        run: npm run check:filesize
+
+      # Rào chắn log (Wave 6). Cùng cơ chế ratchet: 128 lời gọi console còn tồn đọng được
+      # khoá lại, mã mới phải dùng #shared/utils/logger.js. Miễn trừ src/scripts, seed.js và
+      # migrations — ở đó console CHÍNH LÀ giao diện với người chạy lệnh.
+      - name: Rào chắn log (ratchet)
+        run: npm run check:console
+
+      - name: Run unit + integration tests
+        run: npm run test:all
+
+  frontend:
+    name: Frontend (lint + build)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: Frontend
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: Frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Rào chắn lint theo cơ chế RATCHET (§5.9). Trước đây bước này để continue-on-error,
+      # tức là chạy rồi bỏ qua kết quả — vô dụng, vì không ai đọc log của một bước luôn xanh.
+      #
+      # Không bật thẳng ngưỡng 0 được: còn 428 lỗi tồn đọng, 361 trong đó là no-explicit-any,
+      # một khoản nợ riêng không dọn xong trong một PR. CI đỏ từ ngày đầu thì sẽ bị tắt.
+      #
+      # Thay vào đó khoá từng rule ở mức hiện tại: tăng là đỏ, rule đang sạch mà có lỗi mới
+      # cũng đỏ. Cụ thể react-hooks/purity vừa về 0 ở Wave 5 — từ giờ tái phạm là CI chặn.
+      # Cùng chiến lược với check:filesize và depcruise bên Backend.
+      - name: Rào chắn lint (ratchet — CHẶN merge khi có hồi quy)
+        run: npm run lint:budget
+
+      # Lưới an toàn cho việc di chuyển file ở Wave 5. tsc và vite build KHÔNG bắt được
+      # đường dẫn lazy trỏ nhầm sang module khác có tồn tại, cũng không bắt được thiếu
+      # Provider hay guard trả sai nhánh — những thứ hỏng lúc chạy chứ không lúc build.
+      - name: Frontend tests
+        run: npm test
+
+      - name: Typecheck + build
+        run: npm run build

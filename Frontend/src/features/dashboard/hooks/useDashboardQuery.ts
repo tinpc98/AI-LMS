@@ -1,10 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
 import { dashboardService } from "../dashboard.service";
+import { queryKeys } from "../../../shared/api/queryKeys";
 import type { OverviewCardItem } from "../dashboard.types";
 
 export const useDashboardQuery = () => {
   const { data, isLoading, error, refetch } = useQuery({
-    queryKey: ["admin-dashboard"],
+    queryKey: queryKeys.dashboard.admin,
     queryFn: dashboardService.getAdminDashboard,
   });
 
@@ -111,9 +112,9 @@ export const useDashboardQuery = () => {
     recentClasses: data?.recentClasses ?? [],
     recentUsers: data?.recentUsers ?? [],
     // Unsupported mock features return empty arrays
-    registrationChart: (data?.studentRegistrationChart ?? []).map(item => ({
+    registrationChart: (data?.studentRegistrationChart ?? []).map((item) => ({
       month: item.month,
-      students: item.count
+      students: item.count,
     })),
     aiChart: [],
     activities: [],

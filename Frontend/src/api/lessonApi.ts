@@ -14,7 +14,8 @@ export const lessonApi = {
     if (payload.videoUrl) formData.append("videoUrl", payload.videoUrl);
     formData.append("classId", payload.classId);
     if (payload.order !== undefined) formData.append("order", String(payload.order));
-    if (payload.isPublished !== undefined) formData.append("isPublished", String(payload.isPublished));
+    if (payload.isPublished !== undefined)
+      formData.append("isPublished", String(payload.isPublished));
     if (payload.duration !== undefined) formData.append("duration", String(payload.duration));
     payload.files?.forEach((file) => formData.append("files", file));
 
@@ -29,7 +30,8 @@ export const lessonApi = {
     if (payload.description !== undefined) formData.append("description", payload.description);
     if (payload.videoUrl !== undefined) formData.append("videoUrl", payload.videoUrl);
     if (payload.order !== undefined) formData.append("order", String(payload.order));
-    if (payload.isPublished !== undefined) formData.append("isPublished", String(payload.isPublished));
+    if (payload.isPublished !== undefined)
+      formData.append("isPublished", String(payload.isPublished));
     if (payload.duration !== undefined) formData.append("duration", String(payload.duration));
     payload.files?.forEach((file) => formData.append("files", file));
 

@@ -9,6 +9,7 @@ import { ClassStatusChart } from "./components/ClassStatusChart";
 import { AIUsageChart } from "./components/AIUsageChart";
 import { TodayClassesTable } from "./components/TodayClassesTable";
 import { RecentUsersTable } from "./components/RecentUsersTable";
+import { RecentActivities } from "./components/RecentActivities";
 import { QuickAccess } from "./components/QuickAccess";
 
 export const DashboardPage: React.FC = () => {
@@ -23,6 +24,7 @@ export const DashboardPage: React.FC = () => {
     aiChart,
     recentClasses,
     recentUsers,
+    activities,
   } = useDashboardQuery();
 
   return (
@@ -33,13 +35,17 @@ export const DashboardPage: React.FC = () => {
           description={error.message}
           type="error"
           showIcon
-          action={<span style={{ cursor: "pointer", fontWeight: 600 }} onClick={() => refetch()}>Thử lại</span>}
+          action={
+            <span style={{ cursor: "pointer", fontWeight: 600 }} onClick={() => refetch()}>
+              Thử lại
+            </span>
+          }
           style={{ marginBottom: "20px", borderRadius: "12px" }}
         />
       )}
 
       {/* 1. Welcome Header */}
-      <DashboardHeader onRefresh={refetch} loading={loading} />
+      <DashboardHeader onRefresh={() => refetch()} loading={loading} />
 
       {/* 2. Overview Statistic 8 Cards */}
       <StatisticCards cards={overviewCards} loading={loading} />
@@ -68,12 +74,19 @@ export const DashboardPage: React.FC = () => {
       </Row>
 
       {/* 6. Today's Classes Table & Recent Users List */}
-      <Row gutter={[16, 16]}>
+      <Row gutter={[16, 16]} style={{ marginBottom: "24px" }}>
         <Col xs={24} xl={16}>
           <TodayClassesTable classes={recentClasses} loading={loading} />
         </Col>
         <Col xs={24} xl={8}>
           <RecentUsersTable users={recentUsers} loading={loading} />
+        </Col>
+      </Row>
+
+      {/* 7. Recent Activities Timeline */}
+      <Row gutter={[16, 16]}>
+        <Col xs={24}>
+          <RecentActivities activities={activities} loading={loading} />
         </Col>
       </Row>
     </div>

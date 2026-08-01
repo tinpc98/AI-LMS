@@ -1,5 +1,5 @@
-import 'dotenv/config';
-import { GeminiAIProvider } from "../ai/providers/gemini.provider.js";
+import "dotenv/config";
+import { GeminiAIProvider } from "#modules/ai/providers/gemini.provider.js";
 
 const runSmokeTest = async () => {
   if (process.env.RUN_REAL_AI_SMOKE !== "true") {

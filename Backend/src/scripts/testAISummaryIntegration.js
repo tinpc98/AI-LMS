@@ -2,12 +2,12 @@ import mongoose from "mongoose";
 import assert from "assert";
 import dotenv from "dotenv";
 import { connectDB } from "../config/database.js";
-import Class from "../models/class.model.js";
-import Lesson from "../models/lesson.model.js";
-import User from "../models/user.models.js";
-import AISummary from "../models/aiSummary.model.js";
-import AIUsage from "../models/aiUsage.model.js";
-import { checkAILessonAccess } from "../middlewares/aiLessonAccess.middlewares.js";
+import { Class } from "#modules/class";
+import { Lesson } from "#modules/lesson";
+import { User } from "#modules/auth";
+import AISummary from "#modules/ai/models/aiSummary.model.js";
+import AIUsage from "#modules/ai/models/aiUsage.model.js";
+import { checkAILessonAccess } from "#modules/ai/middlewares/aiLessonAccess.middleware.js";
 
 dotenv.config();
 
@@ -17,7 +17,10 @@ async function runIntegrationTests() {
     process.exit(1);
   }
 
-  if (!process.env.MONGO_TEST_URI || !process.env.MONGO_TEST_URI.endsWith("_test?appName=Cluster0")) {
+  if (
+    !process.env.MONGO_TEST_URI ||
+    !process.env.MONGO_TEST_URI.endsWith("_test?appName=Cluster0")
+  ) {
     console.error("❌ Cấu hình MONGO_TEST_URI không an toàn (phải kết thúc bằng _test).");
     process.exit(1);
   }
@@ -47,17 +50,37 @@ async function runIntegrationTests() {
     await User.deleteMany({});
 
     // Tạo dữ liệu giả lập
-    const teacher1 = await User.create({ name: "GV1", email: "gv1@test.com", password: "123", role: "teacher" });
-    const teacher2 = await User.create({ name: "GV2", email: "gv2@test.com", password: "123", role: "teacher" });
-    const student1 = await User.create({ name: "HS1", email: "hs1@test.com", password: "123", role: "student" });
-    const student2 = await User.create({ name: "HS2", email: "hs2@test.com", password: "123", role: "student" });
+    const teacher1 = await User.create({
+      name: "GV1",
+      email: "gv1@test.com",
+      password: "123",
+      role: "teacher",
+    });
+    const teacher2 = await User.create({
+      name: "GV2",
+      email: "gv2@test.com",
+      password: "123",
+      role: "teacher",
+    });
+    const student1 = await User.create({
+      name: "HS1",
+      email: "hs1@test.com",
+      password: "123",
+      role: "student",
+    });
+    const student2 = await User.create({
+      name: "HS2",
+      email: "hs2@test.com",
+      password: "123",
+      role: "student",
+    });
 
     const class1 = await Class.create({
       className: "Lớp 1",
       courseId: new mongoose.Types.ObjectId(),
       meetingRoomId: "123",
       teacherId: teacher1._id,
-      students: [{ studentId: student1._id, status: "Enrolled" }]
+      students: [{ studentId: student1._id, status: "Enrolled" }],
     });
 
     const lesson1 = await Lesson.create({
@@ -75,8 +98,14 @@ async function runIntegrationTests() {
     });
     const mockResponse = () => {
       const res = {};
-      res.status = (code) => { res.statusCode = code; return res; };
-      res.json = (data) => { res.data = data; return res; };
+      res.status = (code) => {
+        res.statusCode = code;
+        return res;
+      };
+      res.json = (data) => {
+        res.data = data;
+        return res;
+      };
       return res;
     };
 
@@ -84,7 +113,9 @@ async function runIntegrationTests() {
       const req = mockRequest(teacher1, lesson1._id);
       const res = mockResponse();
       let nextCalled = false;
-      await checkAILessonAccess(req, res, () => { nextCalled = true; });
+      await checkAILessonAccess(req, res, () => {
+        nextCalled = true;
+      });
       assert.strictEqual(nextCalled, true, "Next phải được gọi");
     });
 
@@ -99,7 +130,9 @@ async function runIntegrationTests() {
       const req = mockRequest(student1, lesson1._id, "GET");
       const res = mockResponse();
       let nextCalled = false;
-      await checkAILessonAccess(req, res, () => { nextCalled = true; });
+      await checkAILessonAccess(req, res, () => {
+        nextCalled = true;
+      });
       assert.strictEqual(nextCalled, true);
     });
 
@@ -116,7 +149,6 @@ async function runIntegrationTests() {
       await checkAILessonAccess(req, res, () => {});
       assert.strictEqual(res.statusCode, 403);
     });
-
   } finally {
     console.log(`\n🏁 Kết quả Integration Test: ${passed} PASS, ${failed} FAIL`);
     await mongoose.disconnect();

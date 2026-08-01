@@ -1,6 +1,6 @@
 import assert from "assert";
-import { GeminiAIProvider } from "../ai/providers/gemini.provider.js";
-import { AIError, AIErrorCode } from "../utils/aiError.js";
+import { GeminiAIProvider } from "#modules/ai/providers/gemini.provider.js";
+import { AIError, AIErrorCode } from "#modules/ai";
 
 let pass = 0;
 let fail = 0;
@@ -23,10 +23,10 @@ async function executeTests() {
   await runTest("1. Lỗi 429 được retry và thành công ở lần thứ 2", async () => {
     const provider = new GeminiAIProvider("mock_key", "gemini-3.5-flash");
     let attempts = 0;
-    
+
     // Mock sleep to be instant
     const originalSleep = provider.sleep;
-    
+
     // Override the core execution logic to simulate failure then success
     provider.ai = {
       models: {
@@ -38,10 +38,10 @@ async function executeTests() {
           return {
             text: "success",
             candidates: [{ finishReason: "STOP" }],
-            usageMetadata: { promptTokenCount: 1, candidatesTokenCount: 1, totalTokenCount: 2 }
+            usageMetadata: { promptTokenCount: 1, candidatesTokenCount: 1, totalTokenCount: 2 },
           };
-        }
-      }
+        },
+      },
     };
 
     const res = await provider.generateText({ prompt: "Hello" });
@@ -53,14 +53,14 @@ async function executeTests() {
   await runTest("2. Lỗi 400 không được retry", async () => {
     const provider = new GeminiAIProvider("mock_key", "gemini-3.5-flash");
     let attempts = 0;
-    
+
     provider.ai = {
       models: {
         generateContent: async () => {
           attempts++;
           throw new Error("400 INVALID_ARGUMENT");
-        }
-      }
+        },
+      },
     };
 
     try {

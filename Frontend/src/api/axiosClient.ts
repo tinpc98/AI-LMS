@@ -1,6 +1,7 @@
 import axios, { AxiosError } from "axios";
 import type { InternalAxiosRequestConfig } from "axios";
 import { toast } from "../utils/toast";
+import { getApiErrorStatus } from "../shared/utils/apiError";
 
 const axiosClient = axios.create({
   baseURL: "http://localhost:5000", // Port của Backend Node.js
@@ -23,7 +24,7 @@ axiosClient.interceptors.request.use(
         console.log(
           "[axios] Request:",
           config.method?.toUpperCase(),
-          (config.baseURL ?? "") + config.url,
+          (config.baseURL ?? "") + config.url
         );
       }
     } catch (e) {
@@ -36,7 +37,7 @@ axiosClient.interceptors.request.use(
       console.log("[axios] Request error:", error.message);
     }
     return Promise.reject(error);
-  },
+  }
 );
 
 // 2. RESPONSE INTERCEPTOR: Quản lý phản hồi và Tự động Logout khi Token hết hạn
@@ -49,18 +50,14 @@ axiosClient.interceptors.response.use(
   },
   (error: AxiosError) => {
     if (import.meta.env.DEV) {
-      console.log(
-        "[axios] Response error:",
-        error.response?.status,
-        error.message,
-      );
+      console.log("[axios] Response error:", getApiErrorStatus(error), error.message);
     }
 
     const requestUrl = error.config?.url || "";
     const isLoginRequest = requestUrl.includes("/api/auth/login");
 
     // Chỉ tự động xử lý hết hạn phiên đăng nhập (401) cho các protected API, KHÔNG can thiệp vào API login
-    if (error.response?.status === 401 && !isLoginRequest) {
+    if (getApiErrorStatus(error) === 401 && !isLoginRequest) {
       const token = localStorage.getItem("accessToken");
       if (token) {
         toast.error(
@@ -70,15 +67,12 @@ axiosClient.interceptors.response.use(
         // Phát sự kiện toàn cục để useAuth tự động logout an toàn qua React Router (0 RELOAD)
         window.dispatchEvent(new Event("unauthorized-logout"));
       }
-    } else if (error.response?.status === 403) {
-      toast.error(
-        "Bạn không có quyền thực hiện thao tác này!",
-        "Từ chối truy cập"
-      );
+    } else if (getApiErrorStatus(error) === 403) {
+      toast.error("Bạn không có quyền thực hiện thao tác này!", "Từ chối truy cập");
     }
 
     return Promise.reject(error);
-  },
+  }
 );
 
 export default axiosClient;

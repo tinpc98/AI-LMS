@@ -1,5 +1,5 @@
 import assert from "assert";
-import lessonContentExtractorService from "../ai/services/lessonContentExtractor.service.js";
+import lessonContentExtractorService from "#modules/ai/services/lessonContentExtractor.service.js";
 
 let pass = 0;
 let fail = 0;
@@ -40,7 +40,7 @@ async function executeTests() {
   await runTest("2. Stream thực tế vượt giới hạn (Dù không có Content-Length)", async () => {
     const streamPayload = new Uint8Array(11 * 1024 * 1024); // 11MB
     let readCalled = false;
-    
+
     global.fetch = async () => ({
       ok: true,
       headers: new Headers(), // No content length
@@ -53,9 +53,9 @@ async function executeTests() {
               return { done: false, value: streamPayload };
             }
             return { done: true };
-          }
-        })
-      }
+          },
+        }),
+      },
     });
 
     try {

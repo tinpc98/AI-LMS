@@ -1,9 +1,13 @@
 import express from "express";
-import ExamRouter from "../routers/exam.routes.js";
+import ExamRouter from "../modules/exam/exam.routes.js";
 
 let found = false;
 ExamRouter.stack.forEach((handler) => {
-  if (handler.route && handler.route.path === '/generate-from-examset' && handler.route.methods.post) {
+  if (
+    handler.route &&
+    handler.route.path === "/generate-from-examset" &&
+    handler.route.methods.post
+  ) {
     found = true;
   }
 });

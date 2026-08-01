@@ -29,7 +29,14 @@ export const RecentUsersTable: React.FC<RecentUsersTableProps> = ({ users, loadi
         }}
         styles={{ body: { padding: "24px" } }}
       >
-        <div style={{ marginBottom: "20px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div
+          style={{
+            marginBottom: "20px",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
           <div>
             <Title level={4} style={{ margin: 0, fontWeight: 700 }}>
               Người dùng mới ⚡
@@ -60,16 +67,38 @@ export const RecentUsersTable: React.FC<RecentUsersTableProps> = ({ users, loadi
                     />
                   }
                   title={
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                      }}
+                    >
                       <Text style={{ fontWeight: 600 }}>{user.fullName}</Text>
-                      <Tag color={user.role === "Teacher" ? "orange" : user.role === "Admin" ? "red" : "blue"}>
+                      <Tag
+                        color={
+                          user.role === "Teacher"
+                            ? "orange"
+                            : user.role === "Admin"
+                              ? "red"
+                              : "blue"
+                        }
+                      >
                         {user.role}
                       </Tag>
                     </div>
                   }
                   description={
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                      <Text type="secondary" style={{ fontSize: "12px" }}>{user.email}</Text>
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                      }}
+                    >
+                      <Text type="secondary" style={{ fontSize: "12px" }}>
+                        {user.email}
+                      </Text>
                       <Text type="secondary" style={{ fontSize: "11px" }}>
                         {new Date(user.createdAt).toLocaleDateString("vi-VN")}
                       </Text>

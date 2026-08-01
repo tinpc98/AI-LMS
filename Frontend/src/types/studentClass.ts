@@ -1,11 +1,5 @@
 export type StudentClassStatus =
-  | "Ready"
-  | "Active"
-  | "Completed"
-  | "Paused"
-  | "active"
-  | "completed"
-  | "closed";
+  "Ready" | "Active" | "Completed" | "Paused" | "active" | "completed" | "closed";
 
 export interface ITeacherSummary {
   _id: string;
@@ -25,7 +19,9 @@ export interface IStudentClass {
   teacher?: ITeacherSummary | null;
   totalStudents?: number;
   maxStudents?: number;
-  progress?: number; // 0 - 100
+  // 0 - 100, hoặc null khi lớp chưa có bài giảng/bài tập nào để tính tiến độ.
+  // null KHÁC 0: null nghĩa là "chưa xác định được", 0 nghĩa là "chưa học gì".
+  progress?: number | null;
   status: StudentClassStatus;
   startDate?: string;
   endDate?: string;

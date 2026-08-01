@@ -23,8 +23,13 @@ export const liveApi = {
     axiosClient.get<ILiveSessionResponse>(`/api/live/sessions/${sessionId}`),
 
   // 4. GET /api/live/classes/:classId/sessions (Lấy Lịch Sử Sessions V2)
-  getLiveSessionHistory: (classId: string, params?: { page?: number; limit?: number; status?: string }) =>
-    axiosClient.get<ILiveSessionHistoryResponse>(`/api/live/classes/${classId}/sessions`, { params }),
+  getLiveSessionHistory: (
+    classId: string,
+    params?: { page?: number; limit?: number; status?: string }
+  ) =>
+    axiosClient.get<ILiveSessionHistoryResponse>(`/api/live/classes/${classId}/sessions`, {
+      params,
+    }),
 
   // 5. POST /api/live/sessions/:sessionId/token (Lấy JWT JaaS Token V2)
   getLiveSessionToken: (sessionId: string) =>
@@ -33,7 +38,6 @@ export const liveApi = {
   // 6. PATCH /api/live/sessions/:sessionId/end (Kết Thúc Session V2)
   endLiveSession: (sessionId: string) =>
     axiosClient.patch<ILiveSessionResponse>(`/api/live/sessions/${sessionId}/end`),
-
 };
 
 export default liveApi;

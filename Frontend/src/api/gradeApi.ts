@@ -1,14 +1,26 @@
 import axiosClient from "./axiosClient";
+import type { UserSummary } from "../types/exam";
+
+/**
+ * Tỉ trọng điểm của lớp. Khớp gradingWeightSchema trong
+ * Backend/src/modules/class/class.model.js — bốn hạng mục, mặc định 10/20/30/40.
+ */
+export interface IGradingWeight {
+  attendance: number;
+  assignment: number;
+  midterm: number;
+  final: number;
+}
 
 export interface IGrade {
   _id?: string;
-  studentId: any;
+  studentId: string | UserSummary;
   classId: string;
   courseId?: string;
   category: "Attendance" | "Assignment" | "Midterm" | "Final" | "Other" | string;
   score: number;
   weight?: number;
-  gradedBy?: any;
+  gradedBy?: string | UserSummary;
   gradedAt?: string;
   feedback?: string;
   aiFeedback?: string;
@@ -27,7 +39,7 @@ export interface IGradeItemDef {
 }
 
 export interface IStudentGradeData {
-  student: any;
+  student: UserSummary;
   grades: Record<string, { score: number; feedback: string; rawId?: string }>;
   avgGPA: number | null;
   totalWeight: number;
@@ -37,7 +49,7 @@ export interface IStudentGradeData {
 export interface IGradeMatrixResponse {
   gradeItems: IGradeItemDef[];
   students: IStudentGradeData[];
-  weights?: any;
+  weights?: IGradingWeight;
 }
 
 export interface StudentGPAResponse {
@@ -54,9 +66,17 @@ export interface StudentGPAResponse {
   detail?: IGrade[];
 }
 
-export const mapGPAResponse = (data: any): StudentGPAResponse => {
+/**
+ * Chuẩn hoá phản hồi GPA.
+ *
+ * Nhận `unknown` chứ không phải `any`: dữ liệu này đến thẳng từ mạng, và cả hàm này tồn tại
+ * CHÍNH VÌ hình dạng của nó không đáng tin (gpa có thể là chuỗi, số, null hoặc vắng mặt).
+ * Dùng `any` ở đây là tự vô hiệu hoá đúng chỗ cần cẩn thận nhất.
+ */
+export const mapGPAResponse = (raw: unknown): StudentGPAResponse => {
+  const data = (raw ?? {}) as Partial<StudentGPAResponse> & { gpa?: unknown };
   const gpaRaw = data?.gpa;
-  const gpa = (gpaRaw === null || gpaRaw === undefined) ? null : Number(gpaRaw);
+  const gpa = gpaRaw === null || gpaRaw === undefined ? null : Number(gpaRaw);
 
   return {
     classId: data?.classId || "",
@@ -71,7 +91,9 @@ export const mapGPAResponse = (data: any): StudentGPAResponse => {
 export const gradeApi = {
   // Lấy bảng điểm của toàn bộ lớp học (Dạng Matrix)
   getGradesByClass: async (classId: string): Promise<IGradeMatrixResponse> => {
-    const response = await axiosClient.get<{ success?: boolean; data: IGradeMatrixResponse }>(`/api/grades/class/${classId}`);
+    const response = await axiosClient.get<{ success?: boolean; data: IGradeMatrixResponse }>(
+      `/api/grades/class/${classId}`
+    );
     return response.data.data ?? response.data;
   },
 
@@ -86,12 +108,18 @@ export const gradeApi = {
     feedback?: string;
     aiFeedback?: string;
   }): Promise<IGrade> => {
-    const response = await axiosClient.post<{ success?: boolean; data: IGrade }>("/api/grades", data);
+    const response = await axiosClient.post<{ success?: boolean; data: IGrade }>(
+      "/api/grades",
+      data
+    );
     return response.data.data ?? response.data;
   },
 
   // Lấy bảng điểm cá nhân của học sinh (Dạng Matrix)
-  getGradesByStudent: async (studentId: string, classId?: string): Promise<IGradeMatrixResponse> => {
+  getGradesByStudent: async (
+    studentId: string,
+    classId?: string
+  ): Promise<IGradeMatrixResponse> => {
     const response = await axiosClient.get<{ success?: boolean; data: IGradeMatrixResponse }>(
       `/api/grades/student/${studentId}${classId ? `?classId=${classId}` : ""}`
     );
@@ -100,11 +128,10 @@ export const gradeApi = {
 
   // Lấy tổng kết GPA môn học của học sinh từ Backend API
   getStudentGPA: async (classId: string, studentId: string = "me"): Promise<StudentGPAResponse> => {
-    const response = await axiosClient.get<{ success?: boolean; data: any }>(
+    const response = await axiosClient.get<{ success?: boolean; data?: unknown }>(
       `/api/grades/gpa/${classId}/${studentId}`
     );
-    const raw = response.data.data ?? response.data;
-    return mapGPAResponse(raw);
+    return mapGPAResponse(response.data.data ?? response.data);
   },
 };
 

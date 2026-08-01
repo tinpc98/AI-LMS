@@ -32,12 +32,14 @@ export interface IAttendanceItem {
   _id: string;
   classId: string | any;
   teacherId: string | any;
-  studentId: {
-    _id: string;
-    fullName?: string;
-    email?: string;
-    avatar?: string;
-  } | string;
+  studentId:
+    | {
+        _id: string;
+        fullName?: string;
+        email?: string;
+        avatar?: string;
+      }
+    | string;
   date: string;
   status: AttendanceStatus;
   note?: string;

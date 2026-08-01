@@ -1,8 +1,8 @@
 import mongoose from "mongoose";
-import ExamAttempt from "../models/examAttempt.model.js";
-import Exam from "../models/exam.model.js";
-import Question from "../models/question.model.js";
-import examAttemptService from "../services/examAttempt.service.js";
+import { ExamAttempt } from "#modules/exam-attempt";
+import { Exam } from "#modules/exam";
+import { Question } from "#modules/question";
+import examAttemptService from "../modules/exam-attempt/examAttempt.service.js";
 
 const runTests = async () => {
   console.log("==========================================");
@@ -29,15 +29,15 @@ const runTests = async () => {
           type: "multiple_choice",
           content: "1 + 1 = ?",
           options: [{ text: "2" }, { text: "3" }],
-          correctAnswer: "2"
-        }
+          correctAnswer: "2",
+        },
       },
       {
         questionId: mockLegacyQuestionId,
         isSnapshot: false,
-        points: 5
-      }
-    ]
+        points: 5,
+      },
+    ],
   };
 
   const mockAttempt = {
@@ -67,33 +67,45 @@ const runTests = async () => {
   // 1. Test gradeSubmission with mixed snapshot & legacy
   try {
     ExamAttempt.findById = () => ({
-      populate: () => Promise.resolve(mockAttempt)
+      populate: () => Promise.resolve(mockAttempt),
     });
 
     Question.find = () => ({
-      lean: () => Promise.resolve([
-        {
-          _id: mockLegacyQuestionId,
-          type: "multiple_choice",
-          content: "2 + 2 = ?",
-          options: [{ text: "4" }, { text: "5" }],
-          correctAnswer: "4"
-        }
-      ])
+      lean: () =>
+        Promise.resolve([
+          {
+            _id: mockLegacyQuestionId,
+            type: "multiple_choice",
+            content: "2 + 2 = ?",
+            options: [{ text: "4" }, { text: "5" }],
+            correctAnswer: "4",
+          },
+        ]),
     });
 
     const studentAnswers = [
       { questionId: mockSnapshotQuestionId, selectedOption: "2" },
-      { questionId: mockLegacyQuestionId, selectedOption: "5" } // Sai
+      { questionId: mockLegacyQuestionId, selectedOption: "5" }, // Sai
     ];
 
-    await examAttemptService.gradeSubmission(mockAttemptId, studentAnswers, mockStudentId.toString());
+    await examAttemptService.gradeSubmission(
+      mockAttemptId,
+      studentAnswers,
+      mockStudentId.toString()
+    );
 
     assertEqual("Test 1: gradeSubmission snapshot (Mixed IDs)", mockAttempt.totalScore, 5);
     assertEqual("Test 2: Status updated to GRADED", mockAttempt.status, "GRADED");
-    assertEqual("Test 3: Answer array contains questionSource snapshot", mockAttempt.answers[0].questionSource, "snapshot");
-    assertEqual("Test 4: Answer array contains questionSource legacy", mockAttempt.answers[1].questionSource, "legacy");
-
+    assertEqual(
+      "Test 3: Answer array contains questionSource snapshot",
+      mockAttempt.answers[0].questionSource,
+      "snapshot"
+    );
+    assertEqual(
+      "Test 4: Answer array contains questionSource legacy",
+      mockAttempt.answers[1].questionSource,
+      "legacy"
+    );
   } catch (error) {
     console.error("❌ FAIL: gradeSubmission threw error", error);
     failed++;

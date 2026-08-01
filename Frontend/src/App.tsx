@@ -3,50 +3,56 @@ import { Route, Routes, useParams, Navigate } from "react-router-dom";
 import { Spin } from "antd";
 import "./App.css";
 
-import ToastContainer from "./components/common/ToastContainer";
-import PublicRoute from "./components/common/PublicRoute";
-import ProtectedRoute from "./components/common/ProtectedRoute";
-import RoleRedirector from "./components/common/RoleRedirector";
+import ToastContainer from "./shared/components/ToastContainer";
+import PublicRoute from "./shared/components/routing/PublicRoute";
+import ProtectedRoute from "./shared/components/routing/ProtectedRoute";
+import RoleRedirector from "./shared/components/routing/RoleRedirector";
 
 // Auth Components (Lazy Loaded)
-const LoginPage = lazy(() => import("./pages/auth/LoginPage"));
+const LoginPage = lazy(() => import("./features/auth/pages/LoginPage"));
 
 // Student Components (Lazy Loaded)
-const HomeLayoutStudent = lazy(() => import("./components/layout/HomeLayoutStudent"));
-const HomePageStudent = lazy(() => import("./pages/students/HomePageStudent"));
-const MyClasses = lazy(() => import("./pages/students/MyClasses"));
-const StudentAssignment = lazy(() => import("./pages/students/StudentAssignment"));
-const ClassDetail = lazy(() => import("./pages/students/ClassDetail"));
-const LessonView = lazy(() => import("./pages/students/LessonView"));
-const NotificationCenterPage = lazy(() => import("./pages/students/NotificationCenterPage"));
-const ExamPage = lazy(() => import("./pages/students/ExamPage"));
+const HomeLayoutStudent = lazy(() => import("./shared/components/layout/HomeLayoutStudent"));
+const HomePageStudent = lazy(() => import("./features/learning/pages/HomePageStudent"));
+const MyClasses = lazy(() => import("./features/class/pages/MyClasses"));
+const StudentAssignment = lazy(() => import("./features/assignment/pages/StudentAssignment"));
+const ClassDetail = lazy(() => import("./features/class/pages/ClassDetail"));
+const LessonView = lazy(() => import("./features/lesson/pages/LessonView"));
+const NotificationCenterPage = lazy(
+  () => import("./features/notification/pages/NotificationCenterPage")
+);
+const ExamPage = lazy(() => import("./features/exam/pages/ExamPage"));
 
 // Teacher Components (Lazy Loaded)
-const HomeLayoutTeacher = lazy(() => import("./components/layout/HomeLayoutTeacher"));
-const HomePageTeacher = lazy(() => import("./pages/teachers/HomePageTeacher"));
-const ClassManagement = lazy(() => import("./pages/teachers/ClassroomManagement"));
-const ClassroomDetail = lazy(() => import("./pages/teachers/ClassroomDetail"));
-const QuestionBank = lazy(() => import("./pages/teachers/QuestionBank"));
-const ExamResults = lazy(() => import("./pages/teachers/ExamResults"));
-const ExamAttemptDetail = lazy(() => import("./pages/teachers/ExamAttemptDetail"));
+const HomeLayoutTeacher = lazy(() => import("./shared/components/layout/HomeLayoutTeacher"));
+const HomePageTeacher = lazy(() => import("./features/dashboard/pages/HomePageTeacher"));
+const ClassManagement = lazy(() => import("./features/class/pages/ClassroomManagement"));
+const ClassroomDetail = lazy(() => import("./features/class/pages/ClassroomDetail"));
+const QuestionBank = lazy(() => import("./features/exam-set/pages/QuestionBank"));
+const ExamResults = lazy(() => import("./features/exam/pages/ExamResults"));
+const ExamAttemptDetail = lazy(() => import("./features/exam/pages/ExamAttemptDetail"));
 
 // Admin Components (Lazy Loaded)
-const AdminLayout = lazy(() => import("./components/layout/AdminLayout"));
+const AdminLayout = lazy(() => import("./shared/components/layout/AdminLayout"));
 const DashboardPage = lazy(() => import("./features/dashboard/DashboardPage"));
-const AccountManagementPage = lazy(() => import("./features/accountManagement/AccountManagementPage"));
-const CourseManagementPage = lazy(() => import("./features/courseManagement/CourseManagementPage"));
-const ClassManagementPage = lazy(() => import("./features/classManagement/ClassManagementPage"));
-const TeacherAssignmentPage = lazy(() => import("./features/teacherAssignment/TeacherAssignmentPage"));
-const AIManagementPage = lazy(() => import("./features/aiManagement/AIManagementPage"));
-const ReportPage = lazy(() => import("./pages/Report/ReportPage"));
-const ProfilePage = lazy(() => import("./pages/admin/Profile/ProfilePage"));
-const AdminPage = lazy(() => import("./pages/admin/AdminPage"));
+const AccountManagementPage = lazy(() => import("./features/account/AccountManagementPage"));
+const CourseManagementPage = lazy(() => import("./features/course/CourseManagementPage"));
+const ClassManagementPage = lazy(() => import("./features/class/ClassManagementPage"));
+const TeacherAssignmentPage = lazy(
+  () => import("./features/teacher-assignment/TeacherAssignmentPage")
+);
+const AIManagementPage = lazy(() => import("./features/ai/AIManagementPage"));
+const ReportPage = lazy(() => import("./features/report/pages/ReportPage"));
+const ProfilePage = lazy(() => import("./features/profile/pages/ProfilePage"));
+const AdminPage = lazy(() => import("./shared/components/PlaceholderPage"));
 
-const LiveSessionLayout = lazy(() => import("./components/layout/LiveSessionLayout"));
-const LiveSessionPage = lazy(() => import("./pages/live/LiveSessionPage"));
+const LiveSessionLayout = lazy(() => import("./shared/components/layout/LiveSessionLayout"));
+const LiveSessionPage = lazy(() => import("./features/live-session/pages/LiveSessionPage"));
 
 const PageLoadingFallback = () => (
-  <div style={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "100vh" }}>
+  <div
+    style={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "100vh" }}
+  >
     <Spin size="large" tip="Đang tải trang..." />
   </div>
 );
@@ -84,7 +90,7 @@ function App() {
               <Route path="lessonview/:lessonId" element={<LessonView />} />
               <Route path="notifications" element={<NotificationCenterPage />} />
             </Route>
-            
+
             {/* Live Session Route cho Student (Full màn hình, không Header/Sidebar) */}
             <Route path="/student/live" element={<LiveSessionLayout />}>
               <Route path=":sessionId" element={<LiveSessionPage />} />
@@ -106,7 +112,7 @@ function App() {
               <Route path="examresults/:examId" element={<ExamResults />} />
               <Route path="exam-review/:attemptId" element={<ExamAttemptDetail />} />
             </Route>
-            
+
             {/* Live Session Route cho Teacher (Full màn hình, không Header/Sidebar) */}
             <Route path="/teacher/live" element={<LiveSessionLayout />}>
               <Route path=":sessionId" element={<LiveSessionPage />} />
@@ -124,12 +130,23 @@ function App() {
               <Route path="ai-management" element={<AIManagementPage />} />
               <Route path="reports" element={<ReportPage />} />
               <Route path="profile" element={<ProfilePage />} />
-              <Route path="system" element={<AdminPage title="System Management" description="Configure system-wide settings." />} />
+              <Route
+                path="system"
+                element={
+                  <AdminPage
+                    title="System Management"
+                    description="Configure system-wide settings."
+                  />
+                }
+              />
             </Route>
           </Route>
 
           {/* ================= 404 NOT FOUND ================= */}
-          <Route path="*" element={<h2 style={{ textAlign: "center", marginTop: 40 }}>Trang không tồn tại!</h2>} />
+          <Route
+            path="*"
+            element={<h2 style={{ textAlign: "center", marginTop: 40 }}>Trang không tồn tại!</h2>}
+          />
         </Routes>
       </Suspense>
     </>

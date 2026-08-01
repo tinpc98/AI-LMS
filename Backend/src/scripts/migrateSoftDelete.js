@@ -2,19 +2,19 @@ import mongoose from "mongoose";
 import dotenv from "dotenv";
 dotenv.config();
 
-import User from "../models/user.models.js";
-import Course from "../models/course.model.js";
-import classModel from "../models/class.model.js";
-import Lesson from "../models/lesson.model.js";
-import Assignment from "../models/assignment.model.js";
-import Submission from "../models/submission.model.js";
-import Question from "../models/question.model.js";
-import Exam from "../models/exam.model.js";
-import ExamAttempt from "../models/examAttempt.model.js";
-import Attendance from "../models/attendance.model.js";
-import Grade from "../models/grade.model.js";
-import Announcement from "../models/announcement.model.js";
-import LiveSession from "../models/liveSession.model.js";
+import { User } from "#modules/auth";
+import { Course } from "#modules/course";
+import { Class as classModel } from "#modules/class";
+import { Lesson } from "#modules/lesson";
+import { Assignment } from "#modules/assignment";
+import { Submission } from "#modules/assignment";
+import { Question } from "#modules/question";
+import { Exam } from "#modules/exam";
+import { ExamAttempt } from "#modules/exam-attempt";
+import { Attendance } from "#modules/attendance";
+import { Grade } from "#modules/grade";
+import { Announcement } from "#modules/announcement";
+import { LiveSession } from "#modules/live-session";
 
 const MONGO_URI = process.env.MONGO_URI || "mongodb://127.0.0.1:27017/tinpc98_AI-LMS";
 
@@ -54,7 +54,9 @@ export async function runSoftDeleteMigration() {
           },
         }
       );
-      console.log(`[Migration] ${name}: Matched ${result.matchedCount}, Modified ${result.modifiedCount}`);
+      console.log(
+        `[Migration] ${name}: Matched ${result.matchedCount}, Modified ${result.modifiedCount}`
+      );
     }
 
     console.log("[Migration] Soft Delete migration completed successfully!");

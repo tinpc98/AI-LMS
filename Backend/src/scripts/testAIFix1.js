@@ -1,5 +1,5 @@
-import { AIInputBudget } from "../ai/utils/aiInputBudget.js";
-import { AIError, AIErrorCode } from "../utils/aiError.js";
+import { AIInputBudget } from "#modules/ai/utils/aiInputBudget.js";
+import { AIError, AIErrorCode } from "#modules/ai";
 import assert from "assert";
 
 let pass = 0;
@@ -42,7 +42,7 @@ runTest("7. Input chars vượt giới hạn bị chặn", () => {
 runTest("8. Estimated token vượt giới hạn bị chặn", () => {
   // Thay vì 95000, ta truyền vào ký tự có độ dài = 59000
   // Nhưng hàm estimate đang tính 1 char = 1 token (trong trường hợp xấu nhất, nếu ta sửa estimateTokens)
-  // Thực tế `AI_MAX_ESTIMATED_INPUT_TOKENS` mặc định là 20000. 
+  // Thực tế `AI_MAX_ESTIMATED_INPUT_TOKENS` mặc định là 20000.
   // 60000 / 3 = 20000. Không thể vượt quá 20000 token nếu không vượt 60000 chars.
   // Do đó, logic budget mặc định bảo vệ cả 2 lớp an toàn.
   assert.ok(true);

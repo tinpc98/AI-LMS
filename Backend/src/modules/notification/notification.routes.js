@@ -1,0 +1,54 @@
+import { Router } from "express";
+import {
+  sendBulkNotification,
+  getMyNotifications,
+  getUnreadCount,
+  markAsRead,
+  markAllAsRead,
+} from "./notification.controller.js";
+import { verifyUser } from "#modules/auth";
+import { isAdmin } from "#shared/middlewares/rbac.middleware.js";
+
+const router = Router();
+
+// Lấy danh sách thông báo cá nhân của người dùng đang đăng nhập
+router.get("/", verifyUser, getMyNotifications);
+
+// Lấy số lượng thông báo chưa đọc
+router.get("/unread-count", verifyUser, getUnreadCount);
+
+// Đánh dấu tất cả thông báo là đã đọc (Hỗ trợ cả PUT và PATCH)
+router.put("/read-all", verifyUser, markAllAsRead);
+router.patch("/read-all", verifyUser, markAllAsRead);
+
+// Đánh dấu 1 thông báo là đã đọc (Hỗ trợ cả PUT và PATCH)
+router.put("/:id/read", verifyUser, markAsRead);
+router.patch("/:id/read", verifyUser, markAsRead);
+
+/**
+ * POST /api/notifications/send-bulk
+ *
+ * @desc  Gửi thông báo hàng loạt đến người dùng được lọc thông minh.
+ *        Hỗ trợ lọc theo role (all / teacher / student) và
+ *        trạng thái đăng ký lớp học (all_active / enrolled_only).
+ *
+ * @access Admin only
+ *
+ * @body {string} targetRole       - "all" | "teacher" | "student"
+ * @body {string} enrollmentStatus - "all_active" | "enrolled_only"
+ * @body {string} title            - Tiêu đề thông báo (required)
+ * @body {string} content          - Nội dung thông báo (required)
+ *
+ * @example
+ *   POST /api/notifications/send-bulk
+ *   Authorization: Bearer <admin_token>
+ *   {
+ *     "targetRole": "student",
+ *     "enrollmentStatus": "enrolled_only",
+ *     "title": "Thông báo quan trọng",
+ *     "content": "Kỳ thi giữa kỳ sẽ diễn ra vào ngày 15/08/2026."
+ *   }
+ */
+router.post("/send-bulk", verifyUser, isAdmin, sendBulkNotification);
+
+export default router;

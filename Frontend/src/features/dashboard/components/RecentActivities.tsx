@@ -10,7 +10,7 @@ import {
 } from "@ant-design/icons";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import type { NotificationRecord } from "../../notifications/notifications.mock";
+import type { NotificationRecord } from "../../notification/notifications.mock";
 
 const { Title, Text } = Typography;
 
@@ -36,10 +36,7 @@ const getActivityIcon = (type: NotificationRecord["type"]) => {
   }
 };
 
-export const RecentActivities: React.FC<RecentActivitiesProps> = ({
-  activities,
-  loading,
-}) => {
+export const RecentActivities: React.FC<RecentActivitiesProps> = ({ activities, loading }) => {
   const navigate = useNavigate();
 
   return (
@@ -59,7 +56,14 @@ export const RecentActivities: React.FC<RecentActivitiesProps> = ({
         }}
         styles={{ body: { padding: "24px" } }}
       >
-        <div style={{ marginBottom: "20px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div
+          style={{
+            marginBottom: "20px",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
           <div>
             <Title level={4} style={{ margin: 0, fontWeight: 700 }}>
               Hoạt động gần đây ⚡
@@ -105,15 +109,22 @@ export const RecentActivities: React.FC<RecentActivitiesProps> = ({
                   }}
                   onClick={() => item.targetUrl && navigate(item.targetUrl)}
                 >
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <Text style={{ fontWeight: 600, color: "#1f1f1f" }}>
-                      {item.title}
-                    </Text>
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                    }}
+                  >
+                    <Text style={{ fontWeight: 600, color: "#1f1f1f" }}>{item.title}</Text>
                     <Tag style={{ fontSize: "11px", borderRadius: "4px", margin: 0 }}>
                       {item.timestamp}
                     </Tag>
                   </div>
-                  <Text type="secondary" style={{ fontSize: "13px", display: "block", marginTop: 4 }}>
+                  <Text
+                    type="secondary"
+                    style={{ fontSize: "13px", display: "block", marginTop: 4 }}
+                  >
                     {item.description}
                   </Text>
                 </div>

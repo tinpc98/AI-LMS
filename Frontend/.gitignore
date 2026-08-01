@@ -25,3 +25,6 @@ dist-ssr
 
 
 docs/
+# Báo cáo tạm của scripts/checkLintBudget.cjs. Script tự xoá sau khi chạy, dòng này chỉ
+# phòng trường hợp nó dừng giữa chừng và bỏ lại file.
+.eslint-budget-report.json

@@ -1,14 +1,7 @@
 import React from "react";
 import { Card, Typography, Skeleton } from "antd";
 import { motion } from "framer-motion";
-import {
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
-  Tooltip,
-  Legend,
-} from "recharts";
+import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend } from "recharts";
 import type { DashboardResponse } from "../dashboard.types";
 
 const { Title, Text } = Typography;
@@ -23,7 +16,9 @@ interface SubjectStatistic {
   total: number;
 }
 
-const groupCoursesBySubject = (data: DashboardResponse["courseDistribution"] = []): SubjectStatistic[] => {
+const groupCoursesBySubject = (
+  data: DashboardResponse["courseDistribution"] = []
+): SubjectStatistic[] => {
   const grouped: Record<string, number> = {};
 
   data.forEach((item) => {
@@ -49,7 +44,16 @@ export const CourseDistributionChart: React.FC<CourseDistributionChartProps> = (
   loading,
 }) => {
   // Define a curated color palette for courses
-  const COLORS = ["#1677ff", "#722ed1", "#fa8c16", "#52c41a", "#eb2f96", "#13c2c2", "#faad14", "#f5222d"];
+  const COLORS = [
+    "#1677ff",
+    "#722ed1",
+    "#fa8c16",
+    "#52c41a",
+    "#eb2f96",
+    "#13c2c2",
+    "#faad14",
+    "#f5222d",
+  ];
 
   const subjectData = groupCoursesBySubject(data);
 

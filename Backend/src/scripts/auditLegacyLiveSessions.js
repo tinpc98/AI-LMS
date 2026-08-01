@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import dotenv from "dotenv";
-import classModel from "../models/class.model.js";
-import LiveSession from "../models/liveSession.model.js";
+import { Class as classModel } from "#modules/class";
+import { LiveSession } from "#modules/live-session";
 
 dotenv.config();
 
@@ -26,7 +26,10 @@ export async function auditLegacyLiveSessions() {
     // 2. Thống kê LiveSessions
     const totalSessions = await LiveSession.countDocuments();
     const sessionsWithRoomName = await LiveSession.countDocuments({ roomName: { $ne: null } });
-    const activeLiveSessions = await LiveSession.countDocuments({ status: "Live", isDeleted: false });
+    const activeLiveSessions = await LiveSession.countDocuments({
+      status: "Live",
+      isDeleted: false,
+    });
 
     // 3. Kiểm tra lớp học bị trùng phiên Live (Multiple Active Live Sessions)
     const activeGroups = await LiveSession.aggregate([

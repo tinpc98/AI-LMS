@@ -1,11 +1,5 @@
 export type NotificationCategory =
-  | "assignment"
-  | "exam"
-  | "grade"
-  | "attendance"
-  | "announcement"
-  | "live"
-  | "system";
+  "assignment" | "exam" | "grade" | "attendance" | "announcement" | "live" | "system";
 
 export type NotificationPriority = "normal" | "high";
 
