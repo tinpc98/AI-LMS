@@ -1,7 +1,8 @@
 import React from "react";
-import { Card, Typography, Timeline } from "antd";
-import { NotificationOutlined } from "@ant-design/icons";
+import { Card, Typography, Tag } from "antd";
+import { BellOutlined, PushpinOutlined } from "@ant-design/icons";
 import type { AnnouncementSummaryItem } from "../types/learningDashboard.types";
+import EmptyState from "../../../shared/components/EmptyState";
 
 const { Text } = Typography;
 
@@ -11,37 +12,132 @@ interface AnnouncementsTimelineWidgetProps {
 
 export const AnnouncementsTimelineWidget: React.FC<AnnouncementsTimelineWidgetProps> = React.memo(
   ({ announcements }) => {
+    const displayed = announcements.slice(0, 4);
+
     return (
       <Card
-        title={
-          <span style={{ fontSize: 15, fontWeight: 700 }}>
-            <NotificationOutlined style={{ color: "#13c2c2", marginRight: 6 }} /> Thông báo mới nhất
-            ({announcements.length})
-          </span>
-        }
-        style={{ borderRadius: 16, border: "1px solid #f0f0f0", marginBottom: 24 }}
-        styles={{ body: { padding: 16 } }}
+      style={{
+        borderRadius: 20,
+        border: "1px solid #f0f0f0",
+        boxShadow: "0 2px 12px rgba(0,0,0,0.05)",
+      }}
+      styles={{ body: { padding: "8px 20px 20px" } }}
       >
         {announcements.length === 0 ? (
-          <Text type="secondary" style={{ fontSize: 13, fontStyle: "italic" }}>
-            Không có thông báo mới.
-          </Text>
+        <EmptyState
+          image={
+            <BellOutlined
+              style={{ fontSize: 28, display: "block", color: "#d1d5db" }}
+            />
+          }
+          description="Không có thông báo mới."
+          style={{ padding: "28px 0", border: "none", backgroundColor: "transparent" }}
+        />
         ) : (
-          <Timeline
-            items={announcements.slice(0, 4).map((item) => ({
-              dot: <NotificationOutlined style={{ color: "#13c2c2", fontSize: 14 }} />,
-              children: (
-                <div>
-                  <Text strong style={{ fontSize: 13, color: "#1f2937", display: "block" }}>
-                    {item.title}
-                  </Text>
-                  <Text type="secondary" style={{ fontSize: 11 }}>
-                    {item.authorName} • {new Date(item.createdAt).toLocaleDateString("vi-VN")}
+          <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+            {displayed.map((item, idx) => (
+              <div
+                key={item.id}
+                style={{
+                  display: "flex",
+                  gap: 12,
+                  alignItems: "flex-start",
+                  padding: "12px 0",
+                  borderBottom:
+                    idx < displayed.length - 1 ? "1px solid #f5f5f5" : "none",
+                }}
+              >
+                {/* Dot */}
+                <div
+                  style={{
+                    width: 32,
+                    height: 32,
+                    borderRadius: 10,
+                    backgroundColor: item.isRead ? "#f5f5f5" : "#e6fffb",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    flexShrink: 0,
+                    marginTop: 1,
+                  }}
+                >
+                  <BellOutlined
+                    style={{
+                      fontSize: 14,
+                      color: item.isRead ? "#8c8c8c" : "#13c2c2",
+                    }}
+                  />
+                </div>
+
+                {/* Content */}
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "flex-start",
+                      gap: 6,
+                      marginBottom: 3,
+                    }}
+                  >
+                    <Text
+                      strong
+                      style={{
+                        fontSize: 13,
+                        color: item.isRead ? "#4b5563" : "#1f2937",
+                        lineHeight: 1.35,
+                        flex: 1,
+                      }}
+                    >
+                      {item.title}
+                    </Text>
+                    {item.isPinned && (
+                      <Tag
+                        color="gold"
+                        icon={<PushpinOutlined />}
+                        style={{ borderRadius: 6, fontSize: 10, flexShrink: 0, lineHeight: "18px" }}
+                      >
+                        Ghim
+                      </Tag>
+                    )}
+                    {!item.isRead && (
+                      <div
+                        style={{
+                          width: 7,
+                          height: 7,
+                          borderRadius: "50%",
+                          backgroundColor: "#13c2c2",
+                          flexShrink: 0,
+                          marginTop: 4,
+                        }}
+                      />
+                    )}
+                  </div>
+                  <Text style={{ fontSize: 11, color: "#9ca3af" }}>
+                    {item.authorName}
+                    <span style={{ margin: "0 4px" }}>•</span>
+                    {new Date(item.createdAt).toLocaleDateString("vi-VN", {
+                      day: "numeric",
+                      month: "numeric",
+                    })}
                   </Text>
                 </div>
-              ),
-            }))}
-          />
+              </div>
+            ))}
+
+            {announcements.length > 4 && (
+              <Text
+                style={{
+                  fontSize: 12,
+                  color: "#13c2c2",
+                  textAlign: "center",
+                  display: "block",
+                  paddingTop: 8,
+                }}
+              >
+                + {announcements.length - 4} thông báo khác
+              </Text>
+            )}
+          </div>
         )}
       </Card>
     );

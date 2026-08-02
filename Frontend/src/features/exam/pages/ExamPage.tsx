@@ -442,22 +442,20 @@ const ExamPageContent = () => {
       {isWarningVisible && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm">
           <div
-            className={`bg-white p-8 rounded-2xl max-w-sm text-center border-2 shadow-2xl transition-colors ${
-              modalType === "warning"
+            className={`bg-white p-8 rounded-2xl max-w-sm text-center border-2 shadow-2xl transition-colors ${modalType === "warning"
                 ? "border-red-500"
                 : modalType === "success"
                   ? "border-green-500"
                   : "border-blue-500"
-            }`}
+              }`}
           >
             <h3
-              className={`text-xl font-bold mb-2 ${
-                modalType === "warning"
+              className={`text-xl font-bold mb-2 ${modalType === "warning"
                   ? "text-red-600"
                   : modalType === "success"
                     ? "text-green-600"
                     : "text-blue-600"
-              }`}
+                }`}
             >
               {modalType === "warning"
                 ? "Cảnh báo vi phạm!"
@@ -469,8 +467,8 @@ const ExamPageContent = () => {
             <p className="mb-6 text-gray-700 font-medium">{warningMessage}</p>
 
             {modalType === "warning" &&
-            !isSubmittingRef.current &&
-            !warningMessage.includes("Đình chỉ thi") ? (
+              !isSubmittingRef.current &&
+              !warningMessage.includes("Đình chỉ thi") ? (
               <button
                 onClick={() => setIsWarningVisible(false)}
                 className="px-6 py-2 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg w-full transition-colors"
@@ -480,9 +478,8 @@ const ExamPageContent = () => {
             ) : (
               <button
                 disabled
-                className={`px-6 py-2 text-white font-bold rounded-lg w-full cursor-not-allowed ${
-                  modalType === "success" ? "bg-green-500" : "bg-gray-400"
-                }`}
+                className={`px-6 py-2 text-white font-bold rounded-lg w-full cursor-not-allowed ${modalType === "success" ? "bg-green-500" : "bg-gray-400"
+                  }`}
               >
                 {modalType === "success" ? "Đang chuyển hướng..." : "Hệ thống đang xử lý..."}
               </button>

@@ -1,14 +1,17 @@
-import React from "react";
-import { Card, Typography, Tag, Space, Alert } from "antd";
+import React, { useState } from "react";
+import { Card, Typography, Tag, Space, Collapse, Button } from "antd";
 import {
   StarOutlined,
   CheckCircleOutlined,
   WarningOutlined,
   CompassOutlined,
+  RobotOutlined,
+  DownOutlined,
 } from "@ant-design/icons";
 import type { LearningInsight } from "../types/learningDashboard.types";
 
 const { Text } = Typography;
+const { Panel } = Collapse;
 
 interface LearningInsightsWidgetProps {
   insight: LearningInsight;
@@ -16,6 +19,8 @@ interface LearningInsightsWidgetProps {
 
 export const LearningInsightsWidget: React.FC<LearningInsightsWidgetProps> = React.memo(
   ({ insight }) => {
+    const [expanded, setExpanded] = useState(false);
+
     const getRiskColor = (level: LearningInsight["riskLevel"]) => {
       switch (level) {
         case "high":
@@ -28,123 +33,217 @@ export const LearningInsightsWidget: React.FC<LearningInsightsWidgetProps> = Rea
       }
     };
 
+    const getRiskLabel = (level: LearningInsight["riskLevel"]) => {
+      switch (level) {
+        case "high":
+          return "Cần chú ý";
+        case "medium":
+          return "Trung bình";
+        default:
+          return "Tốt";
+      }
+    };
+
     const handleAskAI = (prompt: string) => {
       window.dispatchEvent(new CustomEvent("open-ai-chat", { detail: { prompt } }));
     };
 
     return (
       <Card
-        title={
-          <Space align="center">
-            <StarOutlined style={{ color: "#722ed1", fontSize: 18 }} />
-            <span style={{ fontSize: 15, fontWeight: 700, color: "#391085" }}>
-              🤖 AI Learning Insights & Gợi ý lộ trình
-            </span>
-          </Space>
-        }
-        extra={
+        style={{
+          borderRadius: 20,
+          background: "linear-gradient(135deg, #f9f0ff 0%, #ffffff 60%)",
+          border: "1px solid #e9d5f7",
+          marginBottom: 32,
+          boxShadow: "0 2px 12px rgba(114, 46, 209, 0.08)",
+        }}
+        styles={{ body: { padding: "20px 24px" } }}
+      >
+        {/* Header row — tiêu đề được cung cấp bởi SectionHeader bên ngoài */}
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginBottom: 16,
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <div
+              style={{
+                width: 36,
+                height: 36,
+                borderRadius: 10,
+                backgroundColor: "#722ed1",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <RobotOutlined style={{ color: "#fff", fontSize: 18 }} />
+            </div>
+          </div>
           <Tag
             color={getRiskColor(insight.riskLevel)}
             icon={<WarningOutlined />}
-            style={{ borderRadius: 6, fontWeight: 700 }}
+            style={{ borderRadius: 8, fontWeight: 600, fontSize: 12, padding: "2px 10px" }}
           >
-            Rủi ro: {insight.riskLevel.toUpperCase()}
+            {getRiskLabel(insight.riskLevel)}
           </Tag>
-        }
-        style={{
-          borderRadius: 16,
-          background: "linear-gradient(135deg, #f9f0ff 0%, #ffffff 100%)",
-          border: "1px solid #d3ade6",
-          marginBottom: 24,
-        }}
-        styles={{ body: { padding: 18 } }}
-      >
-        {/* Strong & Weak Subjects */}
-        <div style={{ marginBottom: 16 }}>
-          <Text
-            strong
-            style={{ fontSize: 13, color: "#1f2937", display: "block", marginBottom: 6 }}
-          >
-            🌟 Môn học thế mạnh:
-          </Text>
-          <Space size={6} wrap style={{ marginBottom: 10 }}>
-            {insight.strongSubjects.map((s, idx) => (
-              <Tag
-                key={idx}
-                color="green"
-                icon={<CheckCircleOutlined />}
-                style={{ borderRadius: 6 }}
-              >
-                {s}
-              </Tag>
-            ))}
-          </Space>
+        </div>
 
-          <Text
-            strong
-            style={{ fontSize: 13, color: "#1f2937", display: "block", marginBottom: 6 }}
-          >
-            ⚠️ Môn học cần lưu ý cải thiện:
-          </Text>
-          <Space size={6} wrap>
-            {insight.weakSubjects.map((s, idx) => (
-              <Tag key={idx} color="volcano" icon={<WarningOutlined />} style={{ borderRadius: 6 }}>
-                {s}
-              </Tag>
-            ))}
-          </Space>
+        {/* Subjects row */}
+        <div
+          style={{
+            display: "flex",
+            gap: 24,
+            flexWrap: "wrap",
+            backgroundColor: "#fff",
+            borderRadius: 12,
+            padding: "14px 16px",
+            border: "1px solid #f0e6ff",
+            marginBottom: 16,
+          }}
+        >
+          {/* Strong subjects */}
+          <div style={{ flex: 1, minWidth: 140 }}>
+            <Text style={{ fontSize: 12, color: "#8c8c8c", display: "block", marginBottom: 6 }}>
+              🌟 Điểm mạnh
+            </Text>
+            <Space size={6} wrap>
+              {insight.strongSubjects.length === 0 ? (
+                <Text style={{ fontSize: 12, color: "#bfbfbf", fontStyle: "italic" }}>
+                  Chưa có dữ liệu
+                </Text>
+              ) : (
+                insight.strongSubjects.map((s, idx) => (
+                  <Tag
+                    key={idx}
+                    color="green"
+                    icon={<CheckCircleOutlined />}
+                    style={{ borderRadius: 8, fontSize: 12 }}
+                  >
+                    {s}
+                  </Tag>
+                ))
+              )}
+            </Space>
+          </div>
 
-          <div style={{ marginTop: 12 }}>
-            <button
-              onClick={() =>
-                handleAskAI(
-                  `Giải thích vì sao tôi lại yếu môn ${insight.weakSubjects.join(", ")} và cách khắc phục?`
-                )
-              }
-              className="text-xs bg-purple-50 text-purple-600 border border-purple-200 px-3 py-1.5 rounded-lg hover:bg-purple-100 hover:border-purple-300 transition-colors font-medium flex items-center gap-1 cursor-pointer"
-            >
-              <span className="material-symbols-outlined text-[14px]">auto_awesome</span>
-              Hỏi AI cách cải thiện
-            </button>
+          {/* Weak subjects */}
+          <div style={{ flex: 1, minWidth: 140 }}>
+            <Text style={{ fontSize: 12, color: "#8c8c8c", display: "block", marginBottom: 6 }}>
+              ⚠️ Cần cải thiện
+            </Text>
+            <Space size={6} wrap>
+              {insight.weakSubjects.length === 0 ? (
+                <Text style={{ fontSize: 12, color: "#bfbfbf", fontStyle: "italic" }}>
+                  Không có
+                </Text>
+              ) : (
+                insight.weakSubjects.map((s, idx) => (
+                  <Tag key={idx} color="volcano" icon={<WarningOutlined />} style={{ borderRadius: 8, fontSize: 12 }}>
+                    {s}
+                  </Tag>
+                ))
+              )}
+            </Space>
           </div>
         </div>
 
-        {/* Recommended Actions */}
+        {/* Recommendations — collapsible */}
         {insight.recommendedActions.length > 0 && (
-          <Alert
-            message={
-              <Space align="center">
-                <CompassOutlined style={{ color: "#722ed1" }} />
-                <strong>Gợi ý từ AI Study Assistant dành cho bạn:</strong>
-              </Space>
-            }
-            description={
-              <ul style={{ paddingLeft: 18, margin: "6px 0 0 0", fontSize: 12, lineHeight: 1.6 }}>
+          <Collapse
+            ghost
+            activeKey={expanded ? ["rec"] : []}
+            onChange={() => setExpanded(!expanded)}
+            style={{ marginBottom: 0 }}
+          >
+            <Panel
+              key="rec"
+              header={
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <CompassOutlined style={{ color: "#722ed1", fontSize: 14 }} />
+                  <Text style={{ fontSize: 13, color: "#722ed1", fontWeight: 600 }}>
+                    Khuyến nghị từ AI ({insight.recommendedActions.length})
+                  </Text>
+                  <DownOutlined
+                    style={{
+                      fontSize: 11,
+                      color: "#722ed1",
+                      transform: expanded ? "rotate(180deg)" : "rotate(0deg)",
+                      transition: "transform 0.25s ease",
+                    }}
+                  />
+                </div>
+              }
+              showArrow={false}
+              style={{
+                backgroundColor: "rgba(114,46,209,0.04)",
+                borderRadius: 10,
+                border: "1px solid #e9d5f7",
+              }}
+            >
+              <ul
+                style={{
+                  paddingLeft: 16,
+                  margin: "4px 0 8px 0",
+                  fontSize: 13,
+                  lineHeight: 1.8,
+                  color: "#4b5563",
+                }}
+              >
                 {insight.recommendedActions.map((action, idx) => (
                   <li key={idx}>{action}</li>
                 ))}
               </ul>
-            }
-            type="info"
-            style={{
-              borderRadius: 12,
-              backgroundColor: "#ffffff",
-              border: "1px solid #e8d5f5",
-              paddingBottom: 8,
-            }}
-            action={
-              <button
-                onClick={() =>
-                  handleAskAI("Tạo kế hoạch học tập chi tiết dựa trên gợi ý lộ trình này")
-                }
-                className="text-xs bg-white text-purple-600 border border-purple-200 px-3 py-1.5 rounded-lg hover:bg-purple-50 transition-colors font-medium cursor-pointer flex items-center gap-1 mt-2"
-              >
-                <span className="material-symbols-outlined text-[14px]">edit_calendar</span>
-                Lập kế hoạch
-              </button>
-            }
-          />
+            </Panel>
+          </Collapse>
         )}
+
+        {/* Action buttons */}
+        <div style={{ display: "flex", gap: 10, marginTop: 16, flexWrap: "wrap" }}>
+          <Button
+            type="default"
+            size="small"
+            icon={<StarOutlined />}
+            onClick={() => handleAskAI("Xem phân tích chi tiết tiến độ học tập của tôi")}
+            style={{
+              borderRadius: 8,
+              borderColor: "#722ed1",
+              color: "#722ed1",
+              fontWeight: 500,
+              fontSize: 13,
+              height: 34,
+              paddingInline: 14,
+            }}
+          >
+            Xem phân tích
+          </Button>
+          <Button
+            type="primary"
+            size="small"
+            icon={<RobotOutlined />}
+            onClick={() =>
+              handleAskAI(
+                insight.weakSubjects.length > 0
+                  ? `Tôi cần cải thiện môn ${insight.weakSubjects.join(", ")}. Hãy tư vấn lộ trình học tập cho tôi.`
+                  : "Tư vấn lộ trình học tập tối ưu cho tôi"
+              )
+            }
+            style={{
+              borderRadius: 8,
+              background: "#722ed1",
+              borderColor: "#722ed1",
+              fontWeight: 500,
+              fontSize: 13,
+              height: 34,
+              paddingInline: 14,
+            }}
+          >
+            Trao đổi với AI
+          </Button>
+        </div>
       </Card>
     );
   }

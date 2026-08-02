@@ -126,21 +126,29 @@ export const learningDashboardService = {
       unreadAnnouncementsCount,
       overallProgressPercent: Math.round(
         attendance.attendanceRate * 0.3 +
-          assignmentCompletionRate * 0.35 +
-          examPerformanceRate * 0.35
+          (assignmentCompletionRate ?? 0) * 0.35 +
+          (examPerformanceRate ?? 0) * 0.35
       ),
     };
 
-    const classProgress = classList.map((c: any) => ({
-      classId: c._id || c.id || "",
-      className: c.className || c.name || "Lớp học",
-      teacherName: c.teacherId?.fullName || c.teacherName || "Giảng viên",
-      progressPercent: 88,
-      attendanceRate: attendance.attendanceRate,
-      grade: gpa,
-      totalAssignments: 5,
-      completedAssignments: 4,
-    }));
+    // Tính tiến độ nộp bài theo từng lớp dựa trên dữ liệu bài tập đã fetch (topClasses ≤ 5 lớp).
+    // Lớp không có bài tập nào trong phạm vi fetch → progressPercent = null (“Chưa có dữ liệu”).
+    const classProgress = classList.map((c: any) => {
+      const classId = c._id || c.id || "";
+      const classAssignments = assignments.filter((a) => a.classId === classId);
+      const totalAss = classAssignments.length;
+      const completedAss = classAssignments.filter((a) => a.status === "SUBMITTED").length;
+      return {
+        classId,
+        className: c.className || c.name || "Lớp học",
+        teacherName: c.teacherId?.fullName || c.teacherName || "Giảng viên",
+        progressPercent: totalAss > 0 ? Math.round((completedAss / totalAss) * 100) : null,
+        attendanceRate: attendance.attendanceRate,
+        grade: gpa,
+        totalAssignments: totalAss,
+        completedAssignments: completedAss,
+      };
+    });
 
     return {
       overview,

@@ -15,10 +15,10 @@ const defaultState: LearningDashboardState = {
     overallProgressPercent: 0,
   },
   statistics: {
-    gpa: 0,
+    gpa: null,
     attendanceRate: 0,
-    assignmentCompletionRate: 0,
-    examPerformanceRate: 0,
+    assignmentCompletionRate: null,
+    examPerformanceRate: null,
   },
   learningScore: {
     score: 0,

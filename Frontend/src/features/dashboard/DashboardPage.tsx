@@ -1,7 +1,7 @@
 import React from "react";
 import { Row, Col, Alert } from "antd";
 import { useDashboardQuery } from "./hooks/useDashboardQuery";
-import { DashboardHeader } from "./components/DashboardHeader";
+//import { DashboardHeader } from "./components/DashboardHeader";
 import { StatisticCards } from "./components/StatisticCards";
 import { RegistrationChart } from "./components/RegistrationChart";
 import { CourseDistributionChart } from "./components/CourseDistributionChart";
@@ -45,7 +45,7 @@ export const DashboardPage: React.FC = () => {
       )}
 
       {/* 1. Welcome Header */}
-      <DashboardHeader onRefresh={() => refetch()} loading={loading} />
+      {/* <DashboardHeader onRefresh={() => refetch()} loading={loading} /> */}
 
       {/* 2. Overview Statistic 8 Cards */}
       <StatisticCards cards={overviewCards} loading={loading} />

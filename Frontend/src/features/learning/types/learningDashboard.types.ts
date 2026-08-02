@@ -11,10 +11,10 @@ export interface LearningOverview {
 }
 
 export interface LearningStatistics {
-  gpa: number; // Scale 0 - 10
+  gpa: number | null; // Scale 0 - 10; null = chưa có dữ liệu điểm
   attendanceRate: number; // Percent %
-  assignmentCompletionRate: number; // Percent %
-  examPerformanceRate: number; // Percent %
+  assignmentCompletionRate: number | null; // Percent %; null = chưa có bài tập nào
+  examPerformanceRate: number | null; // Percent %; null = chưa có kết quả thi
 }
 
 export interface LearningScore {
@@ -80,9 +80,10 @@ export interface ClassProgressItem {
   classId: string;
   className: string;
   teacherName: string;
-  progressPercent: number;
+  /** null = lớp này không có bài tập nào trong dữ liệu hiện tại */
+  progressPercent: number | null;
   attendanceRate: number;
-  grade: number;
+  grade: number | null;
   totalAssignments: number;
   completedAssignments: number;
 }

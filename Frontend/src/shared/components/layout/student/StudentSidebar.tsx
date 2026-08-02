@@ -74,18 +74,18 @@ export const StudentSidebar: React.FC<StudentSidebarProps> = React.memo(
           }}
         >
           <Avatar
-            size={40}
-            src="https://lh3.googleusercontent.com/aida/AP1WRLvagpzKtenUGkwvil3flrlIoVX_D0iCWi-3VslBm3FkRhANSzVIsUi1Cz99-VHB0rcjFN3qbRILR21PAmzAgTe7Uh4SQbnwzWJmJmNtFxaZM27JkknDwT91s80qhaUAbUGFEPZblkjmK0D-GvCscUXP2Eqt_Bz2L7w_Ww_RrgcvcEz5VGXCtnVL_OXcvU3o0kHJntd54PGRJuaxLXdnR2ejPUqBd6zU44o6yObVmaqPNFfCrz9GD_Ac3VPA"
+            size={50}
+            src="/images/logo1.png"
             style={{ backgroundColor: "#1890ff", flexShrink: 0 }}
           />
           {(!collapsed || isMobile) && (
             <div style={{ minWidth: 0, overflow: "hidden" }}>
               <Title
                 level={5}
-                style={{ color: "#fff", margin: 0, fontSize: 16, fontWeight: 700 }}
+                style={{ color: "#fff", margin: 0, fontSize: 24, fontWeight: 700 }}
                 ellipsis
               >
-                EduPortal AI
+                EduSpace
               </Title>
               <Tag color="blue" style={{ fontSize: 10, margin: 0, borderRadius: 4 }}>
                 Student Portal

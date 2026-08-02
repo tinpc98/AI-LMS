@@ -1,82 +1,150 @@
 import React from "react";
-import { Card, Row, Col, Typography, Space } from "antd";
-import { RocketOutlined, BookOutlined, FileTextOutlined } from "@ant-design/icons";
+import { Row, Col, Typography } from "antd";
+import {
+  RocketOutlined,
+  BookOutlined,
+  FileTextOutlined,
+  CalendarOutlined,
+  BellOutlined,
+} from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 
 const { Text } = Typography;
 
+interface QuickActionItem {
+  key: string;
+  title: string;
+  description: string;
+  icon: React.ReactNode;
+  bgColor: string;
+  borderColor: string;
+  iconColor: string;
+  onClick: () => void;
+}
+
 export const StudentQuickActions: React.FC = React.memo(() => {
   const navigate = useNavigate();
 
-  const actions = [
+  const actions: QuickActionItem[] = [
     {
       key: "enter-class",
       title: "Vào lớp học",
-      icon: <RocketOutlined style={{ fontSize: 22, color: "#1890ff" }} />,
+      description: "Tham gia buổi học ngay",
+      icon: <RocketOutlined style={{ fontSize: 28 }} />,
       bgColor: "#e6f7ff",
       borderColor: "#91d5ff",
-      onClick: () => navigate("/student/myclasses"),
-    },
-    {
-      key: "my-classes",
-      title: "Xem danh sách lớp",
-      icon: <BookOutlined style={{ fontSize: 22, color: "#722ed1" }} />,
-      bgColor: "#f9f0ff",
-      borderColor: "#d3ade6",
+      iconColor: "#1890ff",
       onClick: () => navigate("/student/myclasses"),
     },
     {
       key: "my-assignments",
       title: "Xem bài tập",
-      icon: <FileTextOutlined style={{ fontSize: 22, color: "#fa8c16" }} />,
+      description: "Danh sách bài cần nộp",
+      icon: <FileTextOutlined style={{ fontSize: 28 }} />,
       bgColor: "#fff7e6",
       borderColor: "#ffd591",
+      iconColor: "#fa8c16",
       onClick: () => navigate("/student/studentassignment"),
+    },
+    {
+      key: "my-classes",
+      title: "Danh sách lớp",
+      description: "Tất cả lớp đang học",
+      icon: <BookOutlined style={{ fontSize: 28 }} />,
+      bgColor: "#f9f0ff",
+      borderColor: "#d3ade6",
+      iconColor: "#722ed1",
+      onClick: () => navigate("/student/myclasses"),
+    },
+    {
+      key: "exam-schedule",
+      title: "Lịch thi",
+      description: "Kiểm tra & kỳ thi sắp tới",
+      icon: <CalendarOutlined style={{ fontSize: 28 }} />,
+      bgColor: "#f6ffed",
+      borderColor: "#b7eb8f",
+      iconColor: "#52c41a",
+      onClick: () => navigate("/student/myclasses"),
+    },
+    {
+      key: "notifications",
+      title: "Thông báo",
+      description: "Thông tin từ giảng viên",
+      icon: <BellOutlined style={{ fontSize: 28 }} />,
+      bgColor: "#fff0f6",
+      borderColor: "#ffadd2",
+      iconColor: "#eb2f96",
+      onClick: () => navigate("/student/myclasses"),
     },
   ];
 
   return (
-    <Card
-      title={
-        <Space align="center">
-          <RocketOutlined style={{ color: "#1890ff", fontSize: 18 }} />
-          <span style={{ fontSize: 16, fontWeight: 700 }}>Thao tác nhanh</span>
-        </Space>
-      }
+    <div
       style={{
-        borderRadius: 16,
-        boxShadow: "0 2px 8px rgba(0, 0, 0, 0.04)",
-        marginBottom: 24,
+        borderRadius: 20,
+        boxShadow: "0 2px 12px rgba(0, 0, 0, 0.06)",
+        border: "1px solid #f0f0f0",
+        marginBottom: 32,
+        backgroundColor: "#fff",
+        padding: "20px",
       }}
-      styles={{ body: { padding: 16 } }}
     >
-      <Row gutter={[12, 12]}>
+      <Row gutter={[16, 12]}>
         {actions.map((act) => (
-          <Col xs={12} sm={12} lg={6} key={act.key}>
+          <Col xs={12} sm={8} md={6} lg={24 / actions.length} key={act.key} style={{ minWidth: 120 }}>
             <div
               onClick={act.onClick}
               style={{
                 backgroundColor: act.bgColor,
                 border: `1px solid ${act.borderColor}`,
-                borderRadius: 12,
-                padding: "14px 12px",
+                borderRadius: 16,
+                padding: "18px 16px",
                 display: "flex",
-                alignItems: "center",
-                gap: 12,
+                flexDirection: "column",
+                alignItems: "flex-start",
+                gap: 10,
                 cursor: "pointer",
-                transition: "all 0.2s",
+                transition: "all 0.25s ease",
+                height: "100%",
               }}
-              className="quick-action-card"
+              onMouseEnter={(e) => {
+                (e.currentTarget as HTMLDivElement).style.transform = "translateY(-2px)";
+                (e.currentTarget as HTMLDivElement).style.boxShadow =
+                  "0 6px 20px rgba(0,0,0,0.1)";
+              }}
+              onMouseLeave={(e) => {
+                (e.currentTarget as HTMLDivElement).style.transform = "translateY(0)";
+                (e.currentTarget as HTMLDivElement).style.boxShadow = "none";
+              }}
             >
-              <div style={{ flexShrink: 0 }}>{act.icon}</div>
-              <Text strong style={{ fontSize: 13, color: "#1f2937", lineHeight: 1.2 }}>
-                {act.title}
-              </Text>
+              <div
+                style={{
+                  width: 52,
+                  height: 52,
+                  borderRadius: 14,
+                  backgroundColor: "rgba(255,255,255,0.7)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  color: act.iconColor,
+                  flexShrink: 0,
+                }}
+              >
+                {act.icon}
+              </div>
+              <div>
+                <Text strong style={{ fontSize: 14, color: "#1f2937", display: "block", lineHeight: 1.3 }}>
+                  {act.title}
+                </Text>
+                <Text style={{ fontSize: 12, color: "#6b7280", marginTop: 2, display: "block", lineHeight: 1.4 }}>
+                  {act.description}
+                </Text>
+              </div>
             </div>
           </Col>
         ))}
       </Row>
-    </Card>
+    </div>
   );
 });
 

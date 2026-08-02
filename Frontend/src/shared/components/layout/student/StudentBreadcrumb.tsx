@@ -34,7 +34,7 @@ export const StudentBreadcrumb: React.FC = React.memo(() => {
       const url = `/${pathSnippets.slice(0, index + 1).join("/")}`;
 
       const baseRouteKey = Object.keys(breadcrumbNameMap).find(
-        (key) => key !== "/student" && (url === key || url.startsWith(`${key}/`))
+        (key) => url === key || url.startsWith(`${key}/`)
       );
 
       const title = baseRouteKey ? breadcrumbNameMap[baseRouteKey] : pathSnippets[index];

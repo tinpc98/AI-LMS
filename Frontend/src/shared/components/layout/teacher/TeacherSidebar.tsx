@@ -72,8 +72,8 @@ export const TeacherSidebar: React.FC<TeacherSidebarProps> = React.memo(
           }}
         >
           <Avatar
-            size={40}
-            src="https://lh3.googleusercontent.com/aida-public/AB6AXuCkHipXsG3Jdqn_T1kn-iQLl2Rgp0xI8NBtwkLr3AVXSNtxKGcQtd_vjkQf3Nqy4bvn2cdUDnYhl8CrLatmVuOJEc5Thz15ltoUa3CDz-PJd-0j8e0eg2tskVHGYfd6MxAJBXUBxYSLxZY2TMqb-zZRzRpW7jDDO6GFnwr5QE5Ic2nWHSb7TS-VEM406cwmWV4b0vXD2nI0KEFO8c4sBMI-D2I-NJIt6KIo6522qWXOGZGyfHdA9l2oEGClirojk5JPXdilCbLLyPXS"
+            size={50}
+            src="/images/logo1.png"
             style={{ backgroundColor: "#1890ff", flexShrink: 0 }}
           />
           {(!collapsed || isMobile) && (
@@ -83,7 +83,7 @@ export const TeacherSidebar: React.FC<TeacherSidebarProps> = React.memo(
                 style={{ color: "#fff", margin: 0, fontSize: 16, fontWeight: 700 }}
                 ellipsis
               >
-                EduPortal AI
+                EduSpace
               </Title>
               <Tag color="cyan" style={{ fontSize: 10, margin: 0, borderRadius: 4 }}>
                 Teacher Portal
