@@ -193,11 +193,11 @@ export const AIAnalytics: React.FC = () => {
             <AreaChart data={hourlyUsageData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
               <defs>
                 <linearGradient id="colorTokens" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#722ed1" stopOpacity={0.8} />
-                  <stop offset="95%" stopColor="#722ed1" stopOpacity={0} />
+                  <stop offset="5%" stopColor="var(--color-secondary-icon)" stopOpacity={0.8} />
+                  <stop offset="95%" stopColor="var(--color-secondary-icon)" stopOpacity={0} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--color-border-default)" />
               <XAxis dataKey="hour" tickLine={false} />
               <YAxis tickLine={false} axisLine={false} />
               <Tooltip />
@@ -205,7 +205,7 @@ export const AIAnalytics: React.FC = () => {
                 type="monotone"
                 dataKey="tokens"
                 name="Số Tokens tiêu tốn"
-                stroke="#722ed1"
+                stroke="var(--color-secondary-icon)"
                 fillOpacity={1}
                 fill="url(#colorTokens)"
               />

@@ -132,7 +132,7 @@ export default function QuestionBank() {
             </Text>
           );
         return answer ? (
-          <Text strong style={{ color: "#52c41a", fontSize: 13 }} ellipsis>
+          <Text strong style={{ color: "var(--color-success-base)", fontSize: 13 }} ellipsis>
             {answer}
           </Text>
         ) : (
@@ -217,7 +217,7 @@ export default function QuestionBank() {
         padding: "24px",
         maxWidth: 1400,
         margin: "0 auto",
-        backgroundColor: "#f8f9fa",
+        backgroundColor: "var(--color-bg-page)",
         minHeight: "100vh",
       }}
     >
@@ -225,8 +225,8 @@ export default function QuestionBank() {
       <Card
         style={{
           borderRadius: 16,
-          background: "linear-gradient(135deg, #002140 0%, #003a70 100%)",
-          color: "#fff",
+          background: "linear-gradient(135deg, var(--color-sidebar-bg) 0%, var(--color-sidebar-hover) 100%)",
+          color: "var(--color-surface)",
           marginBottom: 24,
           boxShadow: "0 8px 24px rgba(0, 33, 64, 0.25)",
         }}
@@ -243,8 +243,8 @@ export default function QuestionBank() {
         >
           <div>
             <Space size={12} align="center">
-              <DatabaseOutlined style={{ fontSize: 28, color: "#fff" }} />
-              <Title level={3} style={{ color: "#fff", margin: 0, fontWeight: 700 }}>
+              <DatabaseOutlined style={{ fontSize: 28, color: "var(--color-surface)" }} />
+              <Title level={3} style={{ color: "var(--color-surface)", margin: 0, fontWeight: 700 }}>
                 Ngân hàng câu hỏi Hệ thống (Question Bank)
               </Title>
             </Space>
@@ -268,7 +268,7 @@ export default function QuestionBank() {
             style={{
               backgroundColor: "rgba(255,255,255,0.2)",
               borderColor: "rgba(255,255,255,0.4)",
-              color: "#fff",
+              color: "var(--color-surface)",
               fontWeight: 600,
             }}
           >
@@ -317,7 +317,7 @@ export default function QuestionBank() {
             <Space size={12} wrap>
               <Input
                 placeholder="Tìm nội dung hoặc chủ đề..."
-                prefix={<SearchOutlined style={{ color: "#bfbfbf" }} />}
+                prefix={<SearchOutlined style={{ color: "var(--color-text-disabled)" }} />}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 style={{ width: 250, borderRadius: 8 }}
@@ -362,7 +362,7 @@ export default function QuestionBank() {
 
             <Space size={10} wrap>
               <Upload customRequest={handleCustomImport} showUploadList={false} accept=".xlsx,.xls">
-                <Button type="default" icon={<UploadOutlined style={{ color: "#52c41a" }} />}>
+                <Button type="default" icon={<UploadOutlined style={{ color: "var(--color-success-base)" }} />}>
                   Import Excel
                 </Button>
               </Upload>

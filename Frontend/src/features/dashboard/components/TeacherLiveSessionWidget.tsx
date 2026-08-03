@@ -22,8 +22,8 @@ export const TeacherLiveSessionWidget: React.FC<TeacherLiveSessionWidgetProps> =
         style={{
           borderRadius: 12,
           marginBottom: 24,
-          border: "2px solid #ff4d4f",
-          backgroundColor: "#fff1f0",
+          border: "2px solid var(--color-error-base)",
+          backgroundColor: "var(--color-error-bg)",
           boxShadow: "0 4px 12px rgba(255, 77, 79, 0.15)",
         }}
         styles={{ body: { padding: 16 } }}
@@ -43,13 +43,13 @@ export const TeacherLiveSessionWidget: React.FC<TeacherLiveSessionWidgetProps> =
               <Badge
                 status="processing"
                 text="LIVE NOW"
-                style={{ color: "#ff4d4f", fontWeight: 700 }}
+                style={{ color: "var(--color-error-base)", fontWeight: 700 }}
               />
               <div>
-                <Title level={5} style={{ margin: 0, color: "#cf1322" }}>
+                <Title level={5} style={{ margin: 0, color: "var(--color-error-text)" }}>
                   {session.title || "Phòng học trực tuyến đang diễn ra"}
                 </Title>
-                <Text style={{ fontSize: 13, color: "#8c8c8c" }}>
+                <Text style={{ fontSize: 13, color: "var(--color-text-description)" }}>
                   Mã phòng: <strong>{session.meetingRoomId}</strong>
                 </Text>
               </div>

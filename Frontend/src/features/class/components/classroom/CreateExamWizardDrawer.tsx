@@ -281,7 +281,7 @@ export const CreateExamWizardDrawer: React.FC<CreateExamWizardDrawerProps> = Rea
       <Drawer
         title={
           <Space align="center">
-            <FileDoneOutlined style={{ color: "#1890ff" }} />
+            <FileDoneOutlined style={{ color: "var(--color-action-primary-bg)" }} />
             <span>Tạo bài kiểm tra mới - Lớp: {className}</span>
           </Space>
         }
@@ -329,7 +329,7 @@ export const CreateExamWizardDrawer: React.FC<CreateExamWizardDrawerProps> = Rea
                     <Input
                       value={className}
                       disabled
-                      style={{ color: "#1890ff", fontWeight: 700 }}
+                      style={{ color: "var(--color-action-primary-bg)", fontWeight: 700 }}
                     />
                   </Form.Item>
                 </Col>
@@ -489,7 +489,7 @@ export const CreateExamWizardDrawer: React.FC<CreateExamWizardDrawerProps> = Rea
                     </Text>
                     <Badge
                       count={`${selectedQuestionsList.length} câu chọn`}
-                      style={{ backgroundColor: "#52c41a" }}
+                      style={{ backgroundColor: "var(--color-success-base)" }}
                     />
                   </Space>
 
@@ -506,7 +506,7 @@ export const CreateExamWizardDrawer: React.FC<CreateExamWizardDrawerProps> = Rea
               <div style={{ display: "flex", gap: 12, marginBottom: 16, flexWrap: "wrap" }}>
                 <Input
                   placeholder="Tìm từ khóa câu hỏi..."
-                  prefix={<SearchOutlined style={{ color: "#bfbfbf" }} />}
+                  prefix={<SearchOutlined style={{ color: "var(--color-text-disabled)" }} />}
                   value={searchQ}
                   onChange={(e) => setSearchQ(e.target.value)}
                   style={{ width: 260, borderRadius: 8 }}
@@ -554,8 +554,8 @@ export const CreateExamWizardDrawer: React.FC<CreateExamWizardDrawerProps> = Rea
                         style={{
                           color:
                             parseFloat(totalSelectedPoints.toFixed(2)) === 10
-                              ? "#52c41a"
-                              : "#ff4d4f",
+                              ? "var(--color-success-base)"
+                              : "var(--color-error-base)",
                           fontSize: 16,
                         }}
                       >
@@ -624,7 +624,7 @@ export const CreateExamWizardDrawer: React.FC<CreateExamWizardDrawerProps> = Rea
                   <Text type="secondary" style={{ fontSize: 12, display: "block" }}>
                     Tên bài kiểm tra
                   </Text>
-                  <Text strong style={{ fontSize: 16, color: "#1890ff" }}>
+                  <Text strong style={{ fontSize: 16, color: "var(--color-action-primary-bg)" }}>
                     {formStep1.getFieldValue("title")}
                   </Text>
                 </Col>
@@ -662,7 +662,7 @@ export const CreateExamWizardDrawer: React.FC<CreateExamWizardDrawerProps> = Rea
                   <Text type="secondary" style={{ fontSize: 12, display: "block" }}>
                     Tổng số câu hỏi
                   </Text>
-                  <Text strong style={{ fontSize: 16, color: "#722ed1" }}>
+                  <Text strong style={{ fontSize: 16, color: "var(--color-secondary-icon)" }}>
                     {selectedQuestionsList.length} câu
                   </Text>
                 </Col>
@@ -676,7 +676,7 @@ export const CreateExamWizardDrawer: React.FC<CreateExamWizardDrawerProps> = Rea
                     style={{
                       fontSize: 16,
                       color:
-                        parseFloat(totalSelectedPoints.toFixed(2)) === 10 ? "#52c41a" : "#ff4d4f",
+                        parseFloat(totalSelectedPoints.toFixed(2)) === 10 ? "var(--color-success-base)" : "var(--color-error-base)",
                     }}
                   >
                     {parseFloat(totalSelectedPoints.toFixed(2))} / 10.0 điểm
@@ -693,7 +693,7 @@ export const CreateExamWizardDrawer: React.FC<CreateExamWizardDrawerProps> = Rea
                   style={{
                     padding: "10px 0",
                     borderBottom:
-                      idx < selectedQuestionsList.length - 1 ? "1px dashed #f0f0f0" : "none",
+                      idx < selectedQuestionsList.length - 1 ? "1px dashed var(--color-border-default)" : "none",
                   }}
                 >
                   <div

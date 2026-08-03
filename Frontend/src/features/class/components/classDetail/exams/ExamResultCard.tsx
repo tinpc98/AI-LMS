@@ -33,15 +33,15 @@ export const ExamResultCard: React.FC<ExamResultCardProps> = React.memo(
       <Card
         title={
           <Space align="center">
-            <TrophyOutlined style={{ color: "#722ed1", fontSize: 18 }} />
+            <TrophyOutlined style={{ color: "var(--color-secondary-icon)", fontSize: 18 }} />
             <span style={{ fontSize: 15, fontWeight: 700 }}>Kết quả kiểm tra</span>
           </Space>
         }
         size="small"
         style={{
           borderRadius: 12,
-          backgroundColor: isPassed ? "#f6ffed" : "#fff1f0",
-          border: `1px solid ${isPassed ? "#b7eb8f" : "#ffa39e"}`,
+          backgroundColor: isPassed ? "var(--color-success-bg)" : "var(--color-error-bg)",
+          border: `1px solid ${isPassed ? "var(--color-border-default)" : "var(--color-border-default)"}`,
           marginBottom: 16,
         }}
       >
@@ -51,10 +51,10 @@ export const ExamResultCard: React.FC<ExamResultCardProps> = React.memo(
               type="circle"
               percent={scorePercent}
               width={80}
-              strokeColor={isPassed ? "#52c41a" : "#ff4d4f"}
+              strokeColor={isPassed ? "var(--color-success-base)" : "var(--color-error-base)"}
               format={() => (
                 <span
-                  style={{ fontSize: 16, fontWeight: 700, color: isPassed ? "#389e0d" : "#cf1322" }}
+                  style={{ fontSize: 16, fontWeight: 700, color: isPassed ? "var(--color-success-text)" : "var(--color-error-text)" }}
                 >
                   {score}/{maxScore}
                 </span>

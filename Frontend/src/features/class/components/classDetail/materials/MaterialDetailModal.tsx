@@ -40,7 +40,7 @@ export const MaterialDetailModal: React.FC<MaterialDetailModalProps> = React.mem
         onCancel={onClose}
         title={
           <Space align="center">
-            <InfoCircleOutlined style={{ color: "#1890ff", fontSize: 20 }} />
+            <InfoCircleOutlined style={{ color: "var(--color-action-primary-bg)", fontSize: 20 }} />
             <span style={{ fontSize: 16, fontWeight: 700 }}>Chi tiết tài liệu học tập</span>
           </Space>
         }
@@ -77,7 +77,7 @@ export const MaterialDetailModal: React.FC<MaterialDetailModalProps> = React.mem
             styles={{ label: { width: "30%", fontWeight: 600 } }}
           >
             <Descriptions.Item label="Tên tài liệu">
-              <Text strong style={{ color: "#1f2937" }}>
+              <Text strong style={{ color: "var(--color-text-title)" }}>
                 {item.title}
               </Text>
             </Descriptions.Item>
@@ -90,7 +90,7 @@ export const MaterialDetailModal: React.FC<MaterialDetailModalProps> = React.mem
 
             <Descriptions.Item label="Người đăng">
               <Space size={6}>
-                <UserOutlined style={{ color: "#1890ff" }} />
+                <UserOutlined style={{ color: "var(--color-action-primary-bg)" }} />
                 <span>{uploaderName}</span>
               </Space>
             </Descriptions.Item>

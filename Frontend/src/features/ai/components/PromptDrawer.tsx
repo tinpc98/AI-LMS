@@ -75,7 +75,7 @@ const PromptDrawer = ({ open, prompt, models, onClose }: PromptDrawerProps) => {
         </Descriptions.Item>
       </Descriptions>
 
-      <Card size="small" title="System Prompt" style={{ marginBottom: 16, background: "#f8fafc" }}>
+      <Card size="small" title="System Prompt" style={{ marginBottom: 16, background: "var(--color-bg-page)" }}>
         <Typography.Paragraph
           style={{ margin: 0, fontFamily: "monospace", fontSize: 13, whiteSpace: "pre-wrap" }}
         >
@@ -86,7 +86,7 @@ const PromptDrawer = ({ open, prompt, models, onClose }: PromptDrawerProps) => {
       <Card
         size="small"
         title="User Prompt Template"
-        style={{ marginBottom: 16, background: "#f8fafc" }}
+        style={{ marginBottom: 16, background: "var(--color-bg-page)" }}
       >
         <Typography.Paragraph
           style={{ margin: 0, fontFamily: "monospace", fontSize: 13, whiteSpace: "pre-wrap" }}
@@ -98,7 +98,7 @@ const PromptDrawer = ({ open, prompt, models, onClose }: PromptDrawerProps) => {
       <Card
         size="small"
         title="Live Sample Preview"
-        style={{ marginBottom: 16, background: "#f0fdf4", borderColor: "#bbf7d0" }}
+        style={{ marginBottom: 16, background: "var(--color-success-bg)", borderColor: "var(--color-border-default)" }}
       >
         <Typography.Text
           type="secondary"

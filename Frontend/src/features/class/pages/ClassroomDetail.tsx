@@ -42,6 +42,7 @@ import { TeacherGradebookTab } from "../components/classroom/TeacherGradebookTab
 import { TeacherAnalyticsTab } from "../components/classroom/TeacherAnalyticsTab";
 import { toast } from "../../../utils/toast";
 import { getApiErrorMessage } from "../../../shared/utils/apiError";
+import { useBreadcrumb } from "../../../shared/context/BreadcrumbContext";
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -57,6 +58,22 @@ export default function ClassroomDetail() {
 
   const [isLoading, setIsLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState("");
+
+  const { setBreadcrumbEntity } = useBreadcrumb();
+
+  useEffect(() => {
+    if (isLoading) {
+      setBreadcrumbEntity(null, true);
+    } else if (classInfo) {
+      const title = classInfo.classCode
+        ? `Lớp ${classInfo.classCode} - ${classInfo.className}`
+        : (classInfo.className || "Chi tiết lớp học");
+      setBreadcrumbEntity(title, false);
+    }
+    return () => {
+      setBreadcrumbEntity(null, false);
+    };
+  }, [isLoading, classInfo, setBreadcrumbEntity]);
 
   const [editingLesson, setEditingLesson] = useState<ILesson | null>(null);
   const [selectedLessonForAI, setSelectedLessonForAI] = useState<string | null>(null);
@@ -378,7 +395,7 @@ export default function ClassroomDetail() {
                 <Card
                   key={lesson._id}
                   hoverable
-                  style={{ borderRadius: 10, border: "1px solid #f0f0f0" }}
+                  style={{ borderRadius: 10, border: "1px solid var(--color-border-default)" }}
                   actions={[
                     <EditOutlined
                       key="edit"
@@ -397,7 +414,7 @@ export default function ClassroomDetail() {
                       key="delete"
                       title="Xóa"
                       onClick={() => handleDeleteLesson(lesson._id)}
-                      style={{ color: "#ff4d4f" }}
+                      style={{ color: "var(--color-error-base)" }}
                     />,
                   ]}
                 >
@@ -443,7 +460,7 @@ export default function ClassroomDetail() {
         padding: "24px",
         maxWidth: 1400,
         margin: "0 auto",
-        backgroundColor: "#f8f9fa",
+        backgroundColor: "var(--color-bg-page)",
         minHeight: "100vh",
       }}
     >
@@ -451,8 +468,8 @@ export default function ClassroomDetail() {
       <Card
         style={{
           borderRadius: 16,
-          background: "linear-gradient(135deg, #002140 0%, #003a70 100%)",
-          color: "#fff",
+          background: "linear-gradient(135deg, var(--color-sidebar-bg) 0%, var(--color-sidebar-hover) 100%)",
+          color: "var(--color-surface)",
           marginBottom: 24,
           boxShadow: "0 8px 24px rgba(0, 33, 64, 0.25)",
         }}
@@ -471,10 +488,10 @@ export default function ClassroomDetail() {
             <Space size={12} align="center">
               <Button
                 type="text"
-                icon={<ArrowLeftOutlined style={{ color: "#fff", fontSize: 18 }} />}
+                icon={<ArrowLeftOutlined style={{ color: "var(--color-surface)", fontSize: 18 }} />}
                 onClick={() => navigate("/teacher/classes")}
               />
-              <Title level={3} style={{ color: "#fff", margin: 0, fontWeight: 700 }}>
+              <Title level={3} style={{ color: "var(--color-surface)", margin: 0, fontWeight: 700 }}>
                 {classInfo.className}
               </Title>
               <Tag color="cyan" style={{ fontFamily: "monospace", fontSize: 13 }}>
@@ -498,7 +515,6 @@ export default function ClassroomDetail() {
           <Space size={12}>
             <Button
               type="primary"
-              danger
               icon={<VideoCameraOutlined />}
               loading={isLiveLoading}
               onClick={handleStartLiveSession}

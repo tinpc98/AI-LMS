@@ -22,17 +22,17 @@ interface RecentActivitiesProps {
 const getActivityIcon = (type: NotificationRecord["type"]) => {
   switch (type) {
     case "student_registered":
-      return <UserAddOutlined style={{ color: "#1677ff", fontSize: "16px" }} />;
+      return <UserAddOutlined style={{ color: "var(--color-action-primary-bg)", fontSize: "16px" }} />;
     case "teacher_assigned":
-      return <UserSwitchOutlined style={{ color: "#fa8c16", fontSize: "16px" }} />;
+      return <UserSwitchOutlined style={{ color: "var(--color-warning-base)", fontSize: "16px" }} />;
     case "course_created":
-      return <BookOutlined style={{ color: "#52c41a", fontSize: "16px" }} />;
+      return <BookOutlined style={{ color: "var(--color-success-base)", fontSize: "16px" }} />;
     case "ai_generated":
-      return <RobotOutlined style={{ color: "#eb2f96", fontSize: "16px" }} />;
+      return <RobotOutlined style={{ color: "var(--color-accent-base)", fontSize: "16px" }} />;
     case "live_started":
-      return <VideoCameraOutlined style={{ color: "#f5222d", fontSize: "16px" }} />;
+      return <VideoCameraOutlined style={{ color: "var(--color-error-base)", fontSize: "16px" }} />;
     default:
-      return <BellOutlined style={{ color: "#722ed1", fontSize: "16px" }} />;
+      return <BellOutlined style={{ color: "var(--color-secondary-icon)", fontSize: "16px" }} />;
   }
 };
 
@@ -51,7 +51,7 @@ export const RecentActivities: React.FC<RecentActivitiesProps> = ({ activities, 
         style={{
           borderRadius: "16px",
           boxShadow: "0 4px 20px rgba(0, 0, 0, 0.04)",
-          border: "1px solid #f0f0f0",
+          border: "1px solid var(--color-border-default)",
           height: "100%",
         }}
         styles={{ body: { padding: "24px" } }}
@@ -88,7 +88,7 @@ export const RecentActivities: React.FC<RecentActivitiesProps> = ({ activities, 
                     width: 32,
                     height: 32,
                     borderRadius: "50%",
-                    backgroundColor: "#f5f5f5",
+                    backgroundColor: "var(--color-bg-page)",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
@@ -105,7 +105,7 @@ export const RecentActivities: React.FC<RecentActivitiesProps> = ({ activities, 
                     cursor: item.targetUrl ? "pointer" : "default",
                     padding: "8px 12px",
                     borderRadius: "8px",
-                    transition: "background 0.2s ease",
+                    transition: "background-color var(--duration-fast) var(--ease-out)",
                   }}
                   onClick={() => item.targetUrl && navigate(item.targetUrl)}
                 >
@@ -116,7 +116,7 @@ export const RecentActivities: React.FC<RecentActivitiesProps> = ({ activities, 
                       alignItems: "center",
                     }}
                   >
-                    <Text style={{ fontWeight: 600, color: "#1f1f1f" }}>{item.title}</Text>
+                    <Text style={{ fontWeight: 600, color: "var(--color-text-title)" }}>{item.title}</Text>
                     <Tag style={{ fontSize: "11px", borderRadius: "4px", margin: 0 }}>
                       {item.timestamp}
                     </Tag>

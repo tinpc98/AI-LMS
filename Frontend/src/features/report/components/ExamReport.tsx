@@ -20,7 +20,7 @@ import {
   Legend,
 } from "recharts";
 
-const COLORS = ["#52c41a", "#1677ff", "#faad14", "#ff4d4f"];
+const COLORS = ["var(--color-success-base)", "var(--color-action-primary-bg)", "var(--color-warning-base)", "var(--color-error-base)"];
 
 export const ExamReport: React.FC = () => {
   const examDistributionData = [
@@ -191,14 +191,14 @@ export const ExamReport: React.FC = () => {
                   data={examDistributionData}
                   margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
                 >
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--color-border-default)" />
                   <XAxis dataKey="range" tickLine={false} />
                   <YAxis tickLine={false} axisLine={false} />
                   <Tooltip />
                   <Bar
                     dataKey="count"
                     name="Số lượng thí sinh"
-                    fill="#1677ff"
+                    fill="var(--color-action-primary-bg)"
                     radius={[6, 6, 0, 0]}
                   />
                 </BarChart>

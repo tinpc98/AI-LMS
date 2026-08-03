@@ -19,13 +19,13 @@ export const LiveStatistic: React.FC<LiveStatisticProps> = React.memo(({ stats }
         <Card
           bordered={false}
           styles={{ body: { padding: "12px 16px" } }}
-          style={{ borderRadius: 12, backgroundColor: "#fafafa" }}
+          style={{ borderRadius: 12, backgroundColor: "var(--color-bg-page)" }}
         >
           <Statistic
-            title={<span style={{ fontSize: 11, color: "#8c8c8c" }}>Tổng số buổi Live</span>}
+            title={<span style={{ fontSize: 11, color: "var(--color-text-description)" }}>Tổng số buổi Live</span>}
             value={stats.total}
-            prefix={<VideoCameraOutlined style={{ color: "#1890ff", marginRight: 4 }} />}
-            valueStyle={{ fontSize: 20, fontWeight: 700, color: "#1f2937" }}
+            prefix={<VideoCameraOutlined style={{ color: "var(--color-action-primary-bg)", marginRight: 4 }} />}
+            valueStyle={{ fontSize: 20, fontWeight: 700, color: "var(--color-text-title)" }}
           />
         </Card>
       </Col>
@@ -34,13 +34,13 @@ export const LiveStatistic: React.FC<LiveStatisticProps> = React.memo(({ stats }
         <Card
           bordered={false}
           styles={{ body: { padding: "12px 16px" } }}
-          style={{ borderRadius: 12, backgroundColor: "#f6ffed" }}
+          style={{ borderRadius: 12, backgroundColor: "var(--color-success-bg)" }}
         >
           <Statistic
-            title={<span style={{ fontSize: 11, color: "#8c8c8c" }}>Đã tham gia</span>}
+            title={<span style={{ fontSize: 11, color: "var(--color-text-description)" }}>Đã tham gia</span>}
             value={stats.attended}
-            prefix={<CheckCircleOutlined style={{ color: "#52c41a", marginRight: 4 }} />}
-            valueStyle={{ fontSize: 20, fontWeight: 700, color: "#389e0d" }}
+            prefix={<CheckCircleOutlined style={{ color: "var(--color-success-base)", marginRight: 4 }} />}
+            valueStyle={{ fontSize: 20, fontWeight: 700, color: "var(--color-success-text)" }}
           />
         </Card>
       </Col>
@@ -49,13 +49,13 @@ export const LiveStatistic: React.FC<LiveStatisticProps> = React.memo(({ stats }
         <Card
           bordered={false}
           styles={{ body: { padding: "12px 16px" } }}
-          style={{ borderRadius: 12, backgroundColor: "#fff1f0" }}
+          style={{ borderRadius: 12, backgroundColor: "var(--color-error-bg)" }}
         >
           <Statistic
-            title={<span style={{ fontSize: 11, color: "#8c8c8c" }}>Đã bỏ lỡ</span>}
+            title={<span style={{ fontSize: 11, color: "var(--color-text-description)" }}>Đã bỏ lỡ</span>}
             value={stats.missed}
-            prefix={<CloseCircleOutlined style={{ color: "#ff4d4f", marginRight: 4 }} />}
-            valueStyle={{ fontSize: 20, fontWeight: 700, color: "#cf1322" }}
+            prefix={<CloseCircleOutlined style={{ color: "var(--color-error-base)", marginRight: 4 }} />}
+            valueStyle={{ fontSize: 20, fontWeight: 700, color: "var(--color-error-text)" }}
           />
         </Card>
       </Col>
@@ -64,13 +64,13 @@ export const LiveStatistic: React.FC<LiveStatisticProps> = React.memo(({ stats }
         <Card
           bordered={false}
           styles={{ body: { padding: "12px 16px" } }}
-          style={{ borderRadius: 12, backgroundColor: "#e6f7ff" }}
+          style={{ borderRadius: 12, backgroundColor: "var(--color-bg-primary-tint)" }}
         >
           <Statistic
-            title={<span style={{ fontSize: 11, color: "#8c8c8c" }}>Sắp diễn ra</span>}
+            title={<span style={{ fontSize: 11, color: "var(--color-text-description)" }}>Sắp diễn ra</span>}
             value={stats.upcoming}
-            prefix={<ClockCircleOutlined style={{ color: "#1890ff", marginRight: 4 }} />}
-            valueStyle={{ fontSize: 20, fontWeight: 700, color: "#096dd9" }}
+            prefix={<ClockCircleOutlined style={{ color: "var(--color-action-primary-bg)", marginRight: 4 }} />}
+            valueStyle={{ fontSize: 20, fontWeight: 700, color: "var(--color-action-primary-bg-active)" }}
           />
         </Card>
       </Col>

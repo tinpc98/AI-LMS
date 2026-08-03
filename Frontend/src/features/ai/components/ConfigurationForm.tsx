@@ -38,7 +38,7 @@ const ConfigurationForm = ({ config, models, saving, onSave, onReset }: Configur
       bordered={false}
       title={
         <span>
-          <SettingOutlined style={{ marginRight: 8, color: "#1890ff" }} /> System AI Global
+          <SettingOutlined style={{ marginRight: 8, color: "var(--color-action-primary-bg)" }} /> System AI Global
           Configuration & Limits
         </span>
       }

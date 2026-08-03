@@ -2,6 +2,7 @@ import React from "react";
 import { Card, Progress, Typography, Tag } from "antd";
 import { TrophyOutlined, RiseOutlined } from "@ant-design/icons";
 import type { LearningScore } from "../types/learningDashboard.types";
+import { formatLearningLevel } from "../../../shared/utils/labelFormatters";
 
 const { Text, Title } = Typography;
 
@@ -13,28 +14,28 @@ export const LearningScoreCard: React.FC<LearningScoreCardProps> = React.memo(({
   const getLevelColor = (level: LearningScore["level"]) => {
     switch (level) {
       case "Excellent":
-        return "#52c41a";
+        return "var(--color-success-base)";
       case "Good":
-        return "#1890ff";
+        return "var(--color-action-primary-bg)";
       case "Average":
-        return "#fa8c16";
+        return "var(--color-warning-base)";
       case "Needs Improvement":
       default:
-        return "#ff4d4f";
+        return "var(--color-error-base)";
     }
   };
 
   const getLevelBg = (level: LearningScore["level"]) => {
     switch (level) {
       case "Excellent":
-        return "#f6ffed";
+        return "var(--color-success-bg)";
       case "Good":
-        return "#e6f7ff";
+        return "var(--color-bg-primary-tint)";
       case "Average":
-        return "#fff7e6";
+        return "var(--color-warning-bg)";
       case "Needs Improvement":
       default:
-        return "#fff1f0";
+        return "var(--color-error-bg)";
     }
   };
 
@@ -46,7 +47,7 @@ export const LearningScoreCard: React.FC<LearningScoreCardProps> = React.memo(({
       style={{
         borderRadius: 20,
         boxShadow: "0 2px 12px rgba(0,0,0,0.06)",
-        border: "1px solid #f0f0f0",
+        border: "1px solid var(--color-border-default)",
         height: "100%",
       }}
       styles={{ body: { padding: "24px" } }}
@@ -62,12 +63,12 @@ export const LearningScoreCard: React.FC<LearningScoreCardProps> = React.memo(({
       >
         <div>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
-            <TrophyOutlined style={{ color: "#faad14", fontSize: 18 }} />
-            <Text strong style={{ fontSize: 15, color: "#1f2937" }}>
+            <TrophyOutlined style={{ color: "var(--color-warning-base)", fontSize: 18 }} />
+            <Text strong style={{ fontSize: 15, color: "var(--color-text-title)" }}>
               Năng lực học tập
             </Text>
           </div>
-          <Text style={{ fontSize: 12, color: "#8c8c8c", lineHeight: 1.4 }}>
+          <Text style={{ fontSize: 12, color: "var(--color-text-description)", lineHeight: 1.4 }}>
             Tổng hợp từ GPA, chuyên cần & bài tập
           </Text>
         </div>
@@ -94,7 +95,7 @@ export const LearningScoreCard: React.FC<LearningScoreCardProps> = React.memo(({
               <div style={{ fontSize: 24, fontWeight: 800, color: levelColor, lineHeight: 1 }}>
                 {val}
               </div>
-              <div style={{ fontSize: 10, color: "#8c8c8c", marginTop: 2 }}>/ 100</div>
+              <div style={{ fontSize: 10, color: "var(--color-text-description)", marginTop: 2 }}>/ 100</div>
             </div>
           )}
         />
@@ -112,13 +113,13 @@ export const LearningScoreCard: React.FC<LearningScoreCardProps> = React.memo(({
             }}
           >
             <Title level={4} style={{ margin: 0, color: levelColor, fontWeight: 800, fontSize: 18 }}>
-              {score.level.toUpperCase()}
+              {formatLearningLevel(score.level).toUpperCase()}
             </Title>
           </div>
           <Text
             style={{
               fontSize: 13,
-              color: "#4b5563",
+              color: "var(--color-text-body)",
               display: "block",
               lineHeight: 1.6,
             }}
@@ -131,14 +132,14 @@ export const LearningScoreCard: React.FC<LearningScoreCardProps> = React.memo(({
       {/* Formula note */}
       <div
         style={{
-          backgroundColor: "#fafafa",
+          backgroundColor: "var(--color-bg-page)",
           borderRadius: 10,
           padding: "10px 14px",
-          border: "1px solid #f0f0f0",
+          border: "1px solid var(--color-border-default)",
         }}
       >
-        <Text style={{ fontSize: 12, color: "#8c8c8c", lineHeight: 1.5 }}>
-          📊 <strong style={{ color: "#4b5563" }}>Công thức:</strong> GPA (40%) + Nộp bài (35%) + Chuyên cần (25%)
+        <Text style={{ fontSize: 12, color: "var(--color-text-description)", lineHeight: 1.5 }}>
+          📊 <strong style={{ color: "var(--color-text-body)" }}>Công thức:</strong> GPA (40%) + Nộp bài (35%) + Chuyên cần (25%)
         </Text>
       </div>
     </Card>

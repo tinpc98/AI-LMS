@@ -40,9 +40,9 @@ export const AttendanceDetailDrawer: React.FC<AttendanceDetailDrawerProps> = Rea
         onClose={onClose}
         title={
           <Space align="center">
-            <CalendarOutlined style={{ color: "#1890ff", fontSize: 20 }} />
+            <CalendarOutlined style={{ color: "var(--color-action-primary-bg)", fontSize: 20 }} />
             <div>
-              <Title level={5} style={{ margin: 0, color: "#1f2937" }}>
+              <Title level={5} style={{ margin: 0, color: "var(--color-text-title)" }}>
                 Chi tiết điểm danh buổi học
               </Title>
               <Text type="secondary" style={{ fontSize: 12 }}>
@@ -63,8 +63,8 @@ export const AttendanceDetailDrawer: React.FC<AttendanceDetailDrawerProps> = Rea
           {/* Status Banner */}
           <div
             style={{
-              backgroundColor: "#fafafa",
-              border: "1px solid #f0f0f0",
+              backgroundColor: "var(--color-bg-page)",
+              border: "1px solid var(--color-border-default)",
               borderRadius: 12,
               padding: "16px 20px",
               marginBottom: 20,
@@ -93,7 +93,7 @@ export const AttendanceDetailDrawer: React.FC<AttendanceDetailDrawerProps> = Rea
             bordered
             column={1}
             size="small"
-            styles={{ label: { width: "35%", fontWeight: 600, backgroundColor: "#fafafa" } }}
+            styles={{ label: { width: "35%", fontWeight: 600, backgroundColor: "var(--color-bg-page)" } }}
             style={{ marginBottom: 20 }}
           >
             <Descriptions.Item label="Tên buổi học">{item.sessionTitle}</Descriptions.Item>
@@ -106,7 +106,7 @@ export const AttendanceDetailDrawer: React.FC<AttendanceDetailDrawerProps> = Rea
 
             <Descriptions.Item label="Giảng viên điểm danh">
               <Space size={6}>
-                <UserOutlined style={{ color: "#1890ff" }} />
+                <UserOutlined style={{ color: "var(--color-action-primary-bg)" }} />
                 <span>{item.teacherName || "Giảng viên phụ trách"}</span>
               </Space>
             </Descriptions.Item>
@@ -119,9 +119,9 @@ export const AttendanceDetailDrawer: React.FC<AttendanceDetailDrawerProps> = Rea
             <div>
               <Text
                 strong
-                style={{ fontSize: 14, color: "#262626", display: "block", marginBottom: 6 }}
+                style={{ fontSize: 14, color: "var(--color-text-title)", display: "block", marginBottom: 6 }}
               >
-                <CommentOutlined style={{ color: "#1890ff", marginRight: 6 }} /> Ghi chú của giảng
+                <CommentOutlined style={{ color: "var(--color-action-primary-bg)", marginRight: 6 }} /> Ghi chú của giảng
                 viên:
               </Text>
               <Paragraph
@@ -129,10 +129,10 @@ export const AttendanceDetailDrawer: React.FC<AttendanceDetailDrawerProps> = Rea
                   fontSize: 13,
                   lineHeight: 1.6,
                   margin: 0,
-                  backgroundColor: "#fffbe6",
+                  backgroundColor: "var(--color-warning-bg)",
                   padding: "12px 16px",
                   borderRadius: 10,
-                  border: "1px solid #ffe58f",
+                  border: "1px solid var(--color-warning-bg)",
                 }}
               >
                 {item.note}

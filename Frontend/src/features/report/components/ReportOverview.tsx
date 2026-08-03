@@ -30,7 +30,7 @@ import { mockClasses } from "../../../features/class/class.mock";
 import { mockAILogs } from "../../../features/ai/mock/aiLogs.mock";
 import { mockLiveSessions } from "../../../features/class/liveSessions.mock";
 
-const COLORS = ["#1677ff", "#52c41a", "#faad14", "#ff4d4f", "#722ed1", "#13c2c2"];
+const COLORS = ["var(--color-action-primary-bg)", "var(--color-success-base)", "var(--color-warning-base)", "var(--color-error-base)", "var(--color-secondary-icon)", "var(--color-info-base)"];
 
 export const ReportOverview: React.FC = () => {
   const students = mockUsers.filter((u) => u.role === "Student");
@@ -177,7 +177,7 @@ export const ReportOverview: React.FC = () => {
             <Progress
               percent={fillRate}
               status="active"
-              strokeColor={{ "0%": "#108ee9", "100%": "#87d068" }}
+              strokeColor={{ "0%": "var(--color-action-primary-bg)", "100%": "var(--color-success-base)" }}
             />
           </Card>
         </Col>
@@ -222,15 +222,15 @@ export const ReportOverview: React.FC = () => {
                 >
                   <defs>
                     <linearGradient id="colorStudents" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#1677ff" stopOpacity={0.8} />
-                      <stop offset="95%" stopColor="#1677ff" stopOpacity={0} />
+                      <stop offset="5%" stopColor="var(--color-action-primary-bg)" stopOpacity={0.8} />
+                      <stop offset="95%" stopColor="var(--color-action-primary-bg)" stopOpacity={0} />
                     </linearGradient>
                     <linearGradient id="colorAI" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#722ed1" stopOpacity={0.8} />
-                      <stop offset="95%" stopColor="#722ed1" stopOpacity={0} />
+                      <stop offset="5%" stopColor="var(--color-secondary-icon)" stopOpacity={0.8} />
+                      <stop offset="95%" stopColor="var(--color-secondary-icon)" stopOpacity={0} />
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--color-border-default)" />
                   <XAxis dataKey="month" tickLine={false} />
                   <YAxis tickLine={false} axisLine={false} />
                   <Tooltip />
@@ -239,7 +239,7 @@ export const ReportOverview: React.FC = () => {
                     type="monotone"
                     dataKey="students"
                     name="Học sinh"
-                    stroke="#1677ff"
+                    stroke="var(--color-action-primary-bg)"
                     fillOpacity={1}
                     fill="url(#colorStudents)"
                   />
@@ -247,7 +247,7 @@ export const ReportOverview: React.FC = () => {
                     type="monotone"
                     dataKey="aiUsage"
                     name="Lượt dùng AI"
-                    stroke="#722ed1"
+                    stroke="var(--color-secondary-icon)"
                     fillOpacity={1}
                     fill="url(#colorAI)"
                   />
@@ -297,11 +297,11 @@ export const ReportOverview: React.FC = () => {
             <div className="h-64">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={aiFeatureData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--color-border-default)" />
                   <XAxis dataKey="feature" tickLine={false} />
                   <YAxis tickLine={false} axisLine={false} />
                   <Tooltip />
-                  <Bar dataKey="usage" name="Lượt tương tác" fill="#4f46e5" radius={[6, 6, 0, 0]} />
+                  <Bar dataKey="usage" name="Lượt tương tác" fill="var(--color-secondary-icon)" radius={[6, 6, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>

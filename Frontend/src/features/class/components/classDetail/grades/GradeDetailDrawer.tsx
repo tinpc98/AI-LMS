@@ -38,9 +38,9 @@ export const GradeDetailDrawer: React.FC<GradeDetailDrawerProps> = React.memo(
         onClose={onClose}
         title={
           <Space align="center">
-            <TrophyOutlined style={{ color: "#722ed1", fontSize: 20 }} />
+            <TrophyOutlined style={{ color: "var(--color-secondary-icon)", fontSize: 20 }} />
             <div>
-              <Title level={5} style={{ margin: 0, color: "#1f2937" }}>
+              <Title level={5} style={{ margin: 0, color: "var(--color-text-title)" }}>
                 {item.title}
               </Title>
               <Space size={6} style={{ marginTop: 2 }}>
@@ -62,8 +62,8 @@ export const GradeDetailDrawer: React.FC<GradeDetailDrawerProps> = React.memo(
           {isGraded ? (
             <div
               style={{
-                backgroundColor: "#f9f0ff",
-                border: "1px solid #d3ade6",
+                backgroundColor: "var(--color-secondary-bg)",
+                border: "1px solid var(--color-secondary-border)",
                 borderRadius: 14,
                 padding: "16px 20px",
                 marginBottom: 20,
@@ -76,9 +76,9 @@ export const GradeDetailDrawer: React.FC<GradeDetailDrawerProps> = React.memo(
                 <Text type="secondary" style={{ fontSize: 12, display: "block" }}>
                   Kết quả chấm điểm cá nhân
                 </Text>
-                <Title level={2} style={{ margin: 0, color: "#722ed1", fontWeight: 700 }}>
+                <Title level={2} style={{ margin: 0, color: "var(--color-secondary-icon)", fontWeight: 700 }}>
                   {item.score}{" "}
-                  <span style={{ fontSize: 16, color: "#8c8c8c", fontWeight: 400 }}>
+                  <span style={{ fontSize: 16, color: "var(--color-text-description)", fontWeight: 400 }}>
                     / {item.maxScore} điểm
                   </span>
                 </Title>
@@ -106,7 +106,7 @@ export const GradeDetailDrawer: React.FC<GradeDetailDrawerProps> = React.memo(
             bordered
             column={1}
             size="small"
-            styles={{ label: { width: "35%", fontWeight: 600, backgroundColor: "#fafafa" } }}
+            styles={{ label: { width: "35%", fontWeight: 600, backgroundColor: "var(--color-bg-page)" } }}
             style={{ marginBottom: 20 }}
           >
             <Descriptions.Item label="Tên bài / Đầu điểm">{item.title}</Descriptions.Item>
@@ -117,7 +117,7 @@ export const GradeDetailDrawer: React.FC<GradeDetailDrawerProps> = React.memo(
 
             <Descriptions.Item label="Trọng số tính GPA">
               <Space size={4}>
-                <PercentageOutlined style={{ color: "#1890ff" }} />
+                <PercentageOutlined style={{ color: "var(--color-action-primary-bg)" }} />
                 <span>{item.weight}% điểm môn học</span>
               </Space>
             </Descriptions.Item>
@@ -128,7 +128,7 @@ export const GradeDetailDrawer: React.FC<GradeDetailDrawerProps> = React.memo(
 
             <Descriptions.Item label="Giảng viên chấm bài">
               <Space size={6}>
-                <UserOutlined style={{ color: "#1890ff" }} />
+                <UserOutlined style={{ color: "var(--color-action-primary-bg)" }} />
                 <span>{item.gradedBy || "Giảng viên phụ trách"}</span>
               </Space>
             </Descriptions.Item>
@@ -139,9 +139,9 @@ export const GradeDetailDrawer: React.FC<GradeDetailDrawerProps> = React.memo(
             <div style={{ marginBottom: 20 }}>
               <Text
                 strong
-                style={{ fontSize: 14, color: "#262626", display: "block", marginBottom: 6 }}
+                style={{ fontSize: 14, color: "var(--color-text-title)", display: "block", marginBottom: 6 }}
               >
-                <CommentOutlined style={{ color: "#1890ff", marginRight: 6 }} /> Nhận xét của giảng
+                <CommentOutlined style={{ color: "var(--color-action-primary-bg)", marginRight: 6 }} /> Nhận xét của giảng
                 viên:
               </Text>
               <Paragraph
@@ -149,10 +149,10 @@ export const GradeDetailDrawer: React.FC<GradeDetailDrawerProps> = React.memo(
                   fontSize: 13,
                   lineHeight: 1.6,
                   margin: 0,
-                  backgroundColor: "#fafafa",
+                  backgroundColor: "var(--color-bg-page)",
                   padding: "12px 16px",
                   borderRadius: 10,
-                  border: "1px solid #f0f0f0",
+                  border: "1px solid var(--color-border-default)",
                 }}
               >
                 {item.feedback}
@@ -165,7 +165,7 @@ export const GradeDetailDrawer: React.FC<GradeDetailDrawerProps> = React.memo(
             <div>
               <Text
                 strong
-                style={{ fontSize: 14, color: "#1890ff", display: "block", marginBottom: 6 }}
+                style={{ fontSize: 14, color: "var(--color-action-primary-bg)", display: "block", marginBottom: 6 }}
               >
                 <RobotOutlined style={{ marginRight: 6 }} /> Gợi ý & Phân tích từ AI Assistant:
               </Text>
@@ -174,10 +174,10 @@ export const GradeDetailDrawer: React.FC<GradeDetailDrawerProps> = React.memo(
                   fontSize: 13,
                   lineHeight: 1.6,
                   margin: 0,
-                  backgroundColor: "#e6f7ff",
+                  backgroundColor: "var(--color-bg-primary-tint)",
                   padding: "12px 16px",
                   borderRadius: 10,
-                  border: "1px solid #91caff",
+                  border: "1px solid var(--color-border-primary-tint)",
                 }}
               >
                 {item.aiFeedback}

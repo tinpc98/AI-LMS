@@ -135,19 +135,19 @@ export const CourseReport: React.FC = () => {
         <div className="h-72">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={courseRevenueData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--color-border-default)" />
               <XAxis dataKey="name" tickLine={false} />
               <YAxis
                 yAxisId="left"
                 orientation="left"
-                stroke="#1677ff"
+                stroke="var(--color-action-primary-bg)"
                 tickLine={false}
                 axisLine={false}
               />
               <YAxis
                 yAxisId="right"
                 orientation="right"
-                stroke="#52c41a"
+                stroke="var(--color-success-base)"
                 tickLine={false}
                 axisLine={false}
               />
@@ -156,14 +156,14 @@ export const CourseReport: React.FC = () => {
                 yAxisId="left"
                 dataKey="fee"
                 name="Học phí (VNĐ)"
-                fill="#1677ff"
+                fill="var(--color-action-primary-bg)"
                 radius={[4, 4, 0, 0]}
               />
               <Bar
                 yAxisId="right"
                 dataKey="lessons"
                 name="Số bài học"
-                fill="#52c41a"
+                fill="var(--color-success-base)"
                 radius={[4, 4, 0, 0]}
               />
             </BarChart>

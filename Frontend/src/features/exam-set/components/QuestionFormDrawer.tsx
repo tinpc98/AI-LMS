@@ -103,7 +103,7 @@ export const QuestionFormDrawer: React.FC<QuestionFormDrawerProps> = React.memo(
       <Drawer
         title={
           <Space align="center">
-            <DatabaseOutlined style={{ color: "#1890ff" }} />
+            <DatabaseOutlined style={{ color: "var(--color-action-primary-bg)" }} />
             <span>{isEditing ? "Chỉnh sửa câu hỏi" : "Thêm câu hỏi mới vào Ngân hàng đề"}</span>
           </Space>
         }

@@ -203,7 +203,7 @@ const ClassManagementPage = () => {
         <Typography.Title level={3} style={{ marginBottom: 4 }}>
           Class Management
         </Typography.Title>
-        <Typography.Paragraph style={{ margin: 0, color: "#64748b" }}>
+        <Typography.Paragraph style={{ margin: 0, color: "var(--color-text-description)" }}>
           Manage classes, schedules, enrollment, and teacher assignment for the center.
         </Typography.Paragraph>
       </div>

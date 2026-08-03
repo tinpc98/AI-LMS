@@ -119,7 +119,7 @@ export default function ClassroomManagement() {
         padding: "24px",
         maxWidth: 1400,
         margin: "0 auto",
-        backgroundColor: "#f8f9fa",
+        backgroundColor: "var(--color-bg-page)",
         minHeight: "100vh",
       }}
     >
@@ -173,7 +173,7 @@ export default function ClassroomManagement() {
           {/* Left: Search input */}
           <Input
             placeholder="Tìm kiếm theo tên lớp hoặc mã tham gia..."
-            prefix={<SearchOutlined style={{ color: "#bfbfbf" }} />}
+            prefix={<SearchOutlined style={{ color: "var(--color-text-disabled)" }} />}
             value={searchQuery}
             onChange={(e) => {
               setSearchQuery(e.target.value);

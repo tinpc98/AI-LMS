@@ -48,13 +48,13 @@ export const OverviewCard: React.FC<OverviewCardProps> = ({ item }) => {
         style={{
           borderRadius: "14px",
           boxShadow: "0 4px 16px rgba(0, 0, 0, 0.04)",
-          background: "#ffffff",
+          background: "var(--color-surface)",
           height: "100%",
           display: "flex",
           flexDirection: "column",
           justifyContent: "space-between",
-          border: "1px solid #f0f0f0",
-          transition: "box-shadow 0.3s ease",
+          border: "1px solid var(--color-border-default)",
+          transition: "box-shadow var(--duration-fast) var(--ease-out)",
         }}
         styles={{ body: { padding: "20px" } }}
       >
@@ -97,7 +97,7 @@ export const OverviewCard: React.FC<OverviewCardProps> = ({ item }) => {
               content: {
                 fontSize: "28px",
                 fontWeight: 700,
-                color: "#1f1f1f",
+                color: "var(--color-text-title)",
                 lineHeight: 1.2,
               },
             }}

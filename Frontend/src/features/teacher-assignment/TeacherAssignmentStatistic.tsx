@@ -19,7 +19,7 @@ const TeacherAssignmentStatistic = ({ stats }: TeacherAssignmentStatisticProps) 
           <Statistic
             title="Total Classes"
             value={stats.totalClasses}
-            prefix={<AppstoreOutlined style={{ color: "#3b82f6", marginRight: 8 }} />}
+            prefix={<AppstoreOutlined style={{ color: "var(--color-info-base)", marginRight: 8 }} />}
             valueStyle={{ fontSize: 24, fontWeight: 600 }}
           />
         </Card>
@@ -29,8 +29,8 @@ const TeacherAssignmentStatistic = ({ stats }: TeacherAssignmentStatisticProps) 
           <Statistic
             title="Assigned"
             value={stats.assignedCount}
-            prefix={<CheckCircleOutlined style={{ color: "#10b981", marginRight: 8 }} />}
-            valueStyle={{ fontSize: 24, fontWeight: 600, color: "#10b981" }}
+            prefix={<CheckCircleOutlined style={{ color: "var(--color-success-base)", marginRight: 8 }} />}
+            valueStyle={{ fontSize: 24, fontWeight: 600, color: "var(--color-success-base)" }}
           />
         </Card>
       </Col>
@@ -39,8 +39,8 @@ const TeacherAssignmentStatistic = ({ stats }: TeacherAssignmentStatisticProps) 
           <Statistic
             title="Unassigned"
             value={stats.unassignedCount}
-            prefix={<ExclamationCircleOutlined style={{ color: "#f59e0b", marginRight: 8 }} />}
-            valueStyle={{ fontSize: 24, fontWeight: 600, color: "#f59e0b" }}
+            prefix={<ExclamationCircleOutlined style={{ color: "var(--color-warning-base)", marginRight: 8 }} />}
+            valueStyle={{ fontSize: 24, fontWeight: 600, color: "var(--color-warning-base)" }}
           />
         </Card>
       </Col>
@@ -49,7 +49,7 @@ const TeacherAssignmentStatistic = ({ stats }: TeacherAssignmentStatisticProps) 
           <Statistic
             title="Teaching Teachers"
             value={stats.activeTeachersCount}
-            prefix={<UserOutlined style={{ color: "#6366f1", marginRight: 8 }} />}
+            prefix={<UserOutlined style={{ color: "var(--color-secondary-icon)", marginRight: 8 }} />}
             valueStyle={{ fontSize: 24, fontWeight: 600 }}
           />
         </Card>

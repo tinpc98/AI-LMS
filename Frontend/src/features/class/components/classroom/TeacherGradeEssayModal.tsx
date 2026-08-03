@@ -97,7 +97,7 @@ export const TeacherGradeEssayModal: React.FC<TeacherGradeEssayModalProps> = Rea
       <Modal
         title={
           <Space align="center">
-            <EditOutlined style={{ color: "#1890ff" }} />
+            <EditOutlined style={{ color: "var(--color-action-primary-bg)" }} />
             <span>Chấm điểm & Xem lại bài làm: {studentName}</span>
           </Space>
         }
@@ -114,7 +114,7 @@ export const TeacherGradeEssayModal: React.FC<TeacherGradeEssayModalProps> = Rea
         ) : reviewData ? (
           <div>
             {/* Student & Attempt Header Card */}
-            <Card style={{ marginBottom: 16, backgroundColor: "#f8f9fa", borderRadius: 8 }}>
+            <Card style={{ marginBottom: 16, backgroundColor: "var(--color-bg-page)", borderRadius: 8 }}>
               <div
                 style={{
                   display: "flex",
@@ -128,7 +128,7 @@ export const TeacherGradeEssayModal: React.FC<TeacherGradeEssayModalProps> = Rea
                   <Avatar
                     src={studentObj?.avatar || undefined}
                     icon={!studentObj?.avatar ? <UserOutlined /> : undefined}
-                    style={{ backgroundColor: "#1890ff" }}
+                    style={{ backgroundColor: "var(--color-action-primary-bg)" }}
                   />
                   <div>
                     <Text strong style={{ fontSize: 15, display: "block" }}>
@@ -145,7 +145,7 @@ export const TeacherGradeEssayModal: React.FC<TeacherGradeEssayModalProps> = Rea
                     <Text type="secondary" style={{ fontSize: 11, display: "block" }}>
                       Điểm hiện tại
                     </Text>
-                    <Text strong style={{ color: "#1890ff", fontSize: 18 }}>
+                    <Text strong style={{ color: "var(--color-action-primary-bg)", fontSize: 18 }}>
                       {reviewData.totalScore} / 10
                     </Text>
                   </div>
@@ -168,7 +168,7 @@ export const TeacherGradeEssayModal: React.FC<TeacherGradeEssayModalProps> = Rea
                 essayQuestions.map((ans: any, idx: number) => (
                   <Card
                     key={ans.questionId || idx}
-                    style={{ marginBottom: 16, borderRadius: 8, border: "1px solid #e8e8e8" }}
+                    style={{ marginBottom: 16, borderRadius: 8, border: "1px solid var(--color-border-default)" }}
                   >
                     <div
                       style={{
@@ -187,7 +187,7 @@ export const TeacherGradeEssayModal: React.FC<TeacherGradeEssayModalProps> = Rea
 
                     <div
                       style={{
-                        backgroundColor: "#f0f5ff",
+                        backgroundColor: "var(--color-bg-primary-tint)",
                         padding: 12,
                         borderRadius: 6,
                         marginBottom: 12,
@@ -207,7 +207,7 @@ export const TeacherGradeEssayModal: React.FC<TeacherGradeEssayModalProps> = Rea
                     {ans.correctAnswer && (
                       <div
                         style={{
-                          backgroundColor: "#f6ffed",
+                          backgroundColor: "var(--color-success-bg)",
                           padding: 10,
                           borderRadius: 6,
                           marginBottom: 12,
@@ -219,7 +219,7 @@ export const TeacherGradeEssayModal: React.FC<TeacherGradeEssayModalProps> = Rea
                         >
                           Đáp án gợi ý / Thang điểm:
                         </Text>
-                        <Text style={{ color: "#389e0d", fontSize: 13 }}>{ans.correctAnswer}</Text>
+                        <Text style={{ color: "var(--color-success-text)", fontSize: 13 }}>{ans.correctAnswer}</Text>
                       </div>
                     )}
 

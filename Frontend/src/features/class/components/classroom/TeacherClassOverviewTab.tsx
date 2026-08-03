@@ -1,6 +1,12 @@
 import React from "react";
 import { Card, Descriptions, Tag, Typography, Space, Row, Col, List, Empty } from "antd";
 import { UserOutlined, CalendarOutlined, FileTextOutlined, LinkOutlined } from "@ant-design/icons";
+import {
+  formatClassStatus,
+  formatLearningMode,
+  formatScheduleDays,
+} from "../../../../shared/utils/labelFormatters";
+import { StatusBadge } from "../../../../shared/components/StatusBadge";
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -18,9 +24,7 @@ export const TeacherClassOverviewTab: React.FC<TeacherClassOverviewTabProps> = R
     const courseName = typeof classInfo.courseId === "object" ? classInfo.courseId?.courseName : "";
     const courseSubject = typeof classInfo.courseId === "object" ? classInfo.courseId?.subject : "";
 
-    const scheduleDays = Array.isArray(classInfo.schedule?.days)
-      ? classInfo.schedule.days.join(", ")
-      : "Chưa xếp lịch";
+    const scheduleDays = formatScheduleDays(classInfo.schedule?.days, true);
     const startTime = classInfo.schedule?.startTime || "08:00";
     const endTime = classInfo.schedule?.endTime || "10:00";
 
@@ -46,7 +50,7 @@ export const TeacherClassOverviewTab: React.FC<TeacherClassOverviewTabProps> = R
                 </Tag>
               </Descriptions.Item>
               <Descriptions.Item label="Trạng thái">
-                <Tag color="green">{classInfo.status || "Đang hoạt động"}</Tag>
+                <StatusBadge status={classInfo.status || "Ongoing"} />
               </Descriptions.Item>
               <Descriptions.Item label="Khóa học">{courseName || "Chưa gán"}</Descriptions.Item>
               <Descriptions.Item label="Chủ đề / Môn học">
@@ -54,14 +58,14 @@ export const TeacherClassOverviewTab: React.FC<TeacherClassOverviewTabProps> = R
               </Descriptions.Item>
               <Descriptions.Item label="Lịch học tuần" span={2}>
                 <Space>
-                  <CalendarOutlined style={{ color: "#1890ff" }} />
+                  <CalendarOutlined style={{ color: "var(--color-action-primary-bg)" }} />
                   <span>
                     {scheduleDays} ({startTime} - {endTime})
                   </span>
                 </Space>
               </Descriptions.Item>
               <Descriptions.Item label="Hình thức học">
-                <Tag color="blue">{classInfo.learningMode || "Hybrid"}</Tag>
+                <Tag color="blue">{formatLearningMode(classInfo.learningMode)}</Tag>
               </Descriptions.Item>
               <Descriptions.Item label="Sĩ số">
                 {classInfo.students?.length || 0} / {classInfo.maxStudents || 30} học sinh
@@ -73,7 +77,7 @@ export const TeacherClassOverviewTab: React.FC<TeacherClassOverviewTabProps> = R
                 <Text type="secondary" style={{ display: "block", marginBottom: 6 }}>
                   Mô tả lớp học:
                 </Text>
-                <Paragraph style={{ backgroundColor: "#f9f9f9", padding: 12, borderRadius: 8 }}>
+                <Paragraph style={{ backgroundColor: "var(--color-bg-page)", padding: 12, borderRadius: 8 }}>
                   {classInfo.description}
                 </Paragraph>
               </div>
@@ -101,7 +105,7 @@ export const TeacherClassOverviewTab: React.FC<TeacherClassOverviewTabProps> = R
                     ]}
                   >
                     <List.Item.Meta
-                      avatar={<FileTextOutlined style={{ fontSize: 24, color: "#1890ff" }} />}
+                      avatar={<FileTextOutlined style={{ fontSize: 24, color: "var(--color-action-primary-bg)" }} />}
                       title={res.title || "Tài liệu học tập"}
                       description={res.description || res.url}
                     />
@@ -132,8 +136,8 @@ export const TeacherClassOverviewTab: React.FC<TeacherClassOverviewTabProps> = R
                 style={{
                   fontSize: 32,
                   padding: 10,
-                  backgroundColor: "#e6f7ff",
-                  color: "#1890ff",
+                  backgroundColor: "var(--color-bg-primary-tint)",
+                  color: "var(--color-action-primary-bg)",
                   borderRadius: 8,
                 }}
               />

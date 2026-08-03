@@ -159,12 +159,12 @@ export const ClassReport: React.FC = () => {
         <div className="h-72">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={classFillRateData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--color-border-default)" />
               <XAxis dataKey="name" tickLine={false} />
               <YAxis tickLine={false} axisLine={false} />
               <Tooltip />
-              <Bar dataKey="current" name="Đã đăng ký" fill="#1677ff" radius={[4, 4, 0, 0]} />
-              <Bar dataKey="max" name="Chỉ tiêu tối đa" fill="#e5e7eb" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="current" name="Đã đăng ký" fill="var(--color-action-primary-bg)" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="max" name="Chỉ tiêu tối đa" fill="var(--color-border-default)" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>

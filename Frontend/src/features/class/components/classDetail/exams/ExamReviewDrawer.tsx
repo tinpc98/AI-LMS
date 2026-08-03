@@ -31,9 +31,9 @@ export const ExamReviewDrawer: React.FC<ExamReviewDrawerProps> = React.memo(
         onClose={onClose}
         title={
           <Space align="center">
-            <TrophyOutlined style={{ color: "#722ed1", fontSize: 20 }} />
+            <TrophyOutlined style={{ color: "var(--color-secondary-icon)", fontSize: 20 }} />
             <div>
-              <Title level={5} style={{ margin: 0, color: "#1f2937" }}>
+              <Title level={5} style={{ margin: 0, color: "var(--color-text-title)" }}>
                 Xem lại bài làm & Đáp án
               </Title>
               <Text type="secondary" style={{ fontSize: 12 }}>
@@ -58,7 +58,7 @@ export const ExamReviewDrawer: React.FC<ExamReviewDrawerProps> = React.memo(
 
           <Text
             strong
-            style={{ fontSize: 14, color: "#262626", display: "block", marginBottom: 12 }}
+            style={{ fontSize: 14, color: "var(--color-text-title)", display: "block", marginBottom: 12 }}
           >
             <BookOutlined style={{ marginRight: 6 }} /> Danh sách câu hỏi & Đáp án chi tiết:
           </Text>
@@ -89,14 +89,14 @@ export const ExamReviewDrawer: React.FC<ExamReviewDrawerProps> = React.memo(
                     size="small"
                     style={{
                       borderRadius: 12,
-                      border: `1px solid ${isCorrect ? "#d9f7be" : "#ffccc7"}`,
-                      backgroundColor: isCorrect ? "#fcffe6" : "#fff2f0",
+                      border: `1px solid ${isCorrect ? "var(--color-border-default)" : "var(--color-border-default)"}`,
+                      backgroundColor: isCorrect ? "var(--color-success-bg)" : "var(--color-error-bg)",
                     }}
                   >
                     <div
                       style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}
                     >
-                      <Text strong style={{ fontSize: 13, color: "#1f2937" }}>
+                      <Text strong style={{ fontSize: 13, color: "var(--color-text-title)" }}>
                         Câu {idx + 1}: {questionText}
                       </Text>
                       {isCorrect ? (
@@ -113,7 +113,7 @@ export const ExamReviewDrawer: React.FC<ExamReviewDrawerProps> = React.memo(
                     <div style={{ fontSize: 12, display: "flex", flexDirection: "column", gap: 4 }}>
                       <div>
                         <Text type="secondary">Đáp án bạn chọn: </Text>
-                        <Text strong style={{ color: isCorrect ? "#389e0d" : "#cf1322" }}>
+                        <Text strong style={{ color: isCorrect ? "var(--color-success-text)" : "var(--color-error-text)" }}>
                           {studentAnswer}
                         </Text>
                       </div>
@@ -121,7 +121,7 @@ export const ExamReviewDrawer: React.FC<ExamReviewDrawerProps> = React.memo(
                       {!isCorrect && (
                         <div>
                           <Text type="secondary">Đáp án chính xác: </Text>
-                          <Text strong style={{ color: "#389e0d" }}>
+                          <Text strong style={{ color: "var(--color-success-text)" }}>
                             {correctAnswer}
                           </Text>
                         </div>
@@ -131,10 +131,10 @@ export const ExamReviewDrawer: React.FC<ExamReviewDrawerProps> = React.memo(
                         <div
                           style={{
                             marginTop: 6,
-                            backgroundColor: "#fff",
+                            backgroundColor: "var(--color-surface)",
                             padding: 8,
                             borderRadius: 6,
-                            border: "1px dashed #d9d9d9",
+                            border: "1px dashed var(--color-border-default)",
                           }}
                         >
                           <Text type="secondary" style={{ fontStyle: "italic" }}>

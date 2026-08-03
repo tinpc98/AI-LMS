@@ -21,14 +21,14 @@ export const AttendanceTimeline: React.FC<AttendanceTimelineProps> = React.memo(
     const getTimelineDot = (status: string) => {
       switch (status) {
         case "Present":
-          return <CheckCircleOutlined style={{ fontSize: 16, color: "#52c41a" }} />;
+          return <CheckCircleOutlined style={{ fontSize: 16, color: "var(--color-success-base)" }} />;
         case "Late":
-          return <ClockCircleOutlined style={{ fontSize: 16, color: "#faad14" }} />;
+          return <ClockCircleOutlined style={{ fontSize: 16, color: "var(--color-warning-base)" }} />;
         case "Absent":
-          return <CloseCircleOutlined style={{ fontSize: 16, color: "#ff4d4f" }} />;
+          return <CloseCircleOutlined style={{ fontSize: 16, color: "var(--color-error-base)" }} />;
         case "Excused":
         default:
-          return <InfoCircleOutlined style={{ fontSize: 16, color: "#1890ff" }} />;
+          return <InfoCircleOutlined style={{ fontSize: 16, color: "var(--color-action-primary-bg)" }} />;
       }
     };
 
@@ -42,7 +42,7 @@ export const AttendanceTimeline: React.FC<AttendanceTimelineProps> = React.memo(
         style={{
           borderRadius: 16,
           boxShadow: "0 2px 8px rgba(0,0,0,0.03)",
-          border: "1px solid #f0f0f0",
+          border: "1px solid var(--color-border-default)",
         }}
       >
         <div style={{ padding: "16px 8px" }}>
@@ -68,9 +68,9 @@ export const AttendanceTimeline: React.FC<AttendanceTimelineProps> = React.memo(
                     style={{
                       borderRadius: 12,
                       marginBottom: 12,
-                      backgroundColor: "#fafafa",
-                      border: "1px solid #f0f0f0",
-                      transition: "all 0.2s ease",
+                      backgroundColor: "var(--color-bg-page)",
+                      border: "1px solid var(--color-border-default)",
+                      transition: "var(--transition-fast)",
                     }}
                   >
                     <div
@@ -82,7 +82,7 @@ export const AttendanceTimeline: React.FC<AttendanceTimelineProps> = React.memo(
                       }}
                     >
                       <Space size={8}>
-                        <Text strong style={{ fontSize: 14, color: "#1f2937" }}>
+                        <Text strong style={{ fontSize: 14, color: "var(--color-text-title)" }}>
                           {dateStr}
                         </Text>
                         <Text type="secondary" style={{ fontSize: 12 }}>
@@ -106,10 +106,10 @@ export const AttendanceTimeline: React.FC<AttendanceTimelineProps> = React.memo(
                         style={{
                           fontSize: 12,
                           margin: 0,
-                          backgroundColor: "#fff",
+                          backgroundColor: "var(--color-surface)",
                           padding: "4px 8px",
                           borderRadius: 6,
-                          border: "1px dashed #d9d9d9",
+                          border: "1px dashed var(--color-border-default)",
                         }}
                       >
                         💬 Ghi chú GV: {rec.note}

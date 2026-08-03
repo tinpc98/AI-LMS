@@ -45,14 +45,14 @@ export const CourseDistributionChart: React.FC<CourseDistributionChartProps> = (
 }) => {
   // Define a curated color palette for courses
   const COLORS = [
-    "#1677ff",
-    "#722ed1",
-    "#fa8c16",
-    "#52c41a",
-    "#eb2f96",
-    "#13c2c2",
-    "#faad14",
-    "#f5222d",
+    "var(--color-action-primary-bg)",
+    "var(--color-secondary-icon)",
+    "var(--color-warning-base)",
+    "var(--color-success-base)",
+    "var(--color-accent-base)",
+    "var(--color-info-base)",
+    "var(--color-warning-base)",
+    "var(--color-error-base)",
   ];
 
   const subjectData = groupCoursesBySubject(data);
@@ -76,7 +76,7 @@ export const CourseDistributionChart: React.FC<CourseDistributionChartProps> = (
         style={{
           borderRadius: "16px",
           boxShadow: "0 4px 20px rgba(0, 0, 0, 0.04)",
-          border: "1px solid #f0f0f0",
+          border: "1px solid var(--color-border-default)",
           height: "100%",
         }}
         styles={{ body: { padding: "24px" } }}

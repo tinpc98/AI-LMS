@@ -25,11 +25,11 @@ export const ExamStartModal: React.FC<ExamStartModalProps> = React.memo(
         onOk={() => onConfirm(item._id, item.attempt?._id)}
         okText={item.displayStatus === "In Progress" ? "Tiếp tục làm bài" : "Bắt đầu thi ngay"}
         cancelText="Hủy bỏ"
-        okButtonProps={{ style: { borderRadius: 8, backgroundColor: "#52c41a" } }}
+        okButtonProps={{ style: { borderRadius: 8, backgroundColor: "var(--color-success-base)" } }}
         cancelButtonProps={{ style: { borderRadius: 8 } }}
         title={
           <Space align="center">
-            <PlayCircleOutlined style={{ color: "#52c41a", fontSize: 22 }} />
+            <PlayCircleOutlined style={{ color: "var(--color-success-base)", fontSize: 22 }} />
             <span style={{ fontSize: 16, fontWeight: 700 }}>Xác nhận vào phòng thi</span>
           </Space>
         }
@@ -37,7 +37,7 @@ export const ExamStartModal: React.FC<ExamStartModalProps> = React.memo(
         width={480}
       >
         <div style={{ padding: "12px 0" }}>
-          <Title level={5} style={{ margin: "0 0 8px 0", color: "#1f2937" }}>
+          <Title level={5} style={{ margin: "0 0 8px 0", color: "var(--color-text-title)" }}>
             {item.title}
           </Title>
 

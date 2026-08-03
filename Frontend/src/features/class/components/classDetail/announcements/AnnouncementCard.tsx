@@ -38,10 +38,10 @@ export const AnnouncementCard: React.FC<AnnouncementCardProps> = React.memo(
         style={{
           borderRadius: 16,
           boxShadow: "0 2px 8px rgba(0, 0, 0, 0.03)",
-          border: item.isPinned ? "2px solid #ffbb96" : "1px solid #f0f0f0",
-          backgroundColor: item.isPinned ? "#fff7e6" : "#ffffff",
+          border: item.isPinned ? "2px solid var(--color-border-default)" : "1px solid var(--color-border-default)",
+          backgroundColor: item.isPinned ? "var(--color-warning-bg)" : "var(--color-surface)",
           marginBottom: 16,
-          transition: "all 0.3s ease",
+          transition: "var(--transition-fast)",
         }}
         styles={{ body: { padding: 20 } }}
       >
@@ -55,9 +55,9 @@ export const AnnouncementCard: React.FC<AnnouncementCardProps> = React.memo(
           }}
         >
           <Space size={10} align="center">
-            <Avatar icon={<UserOutlined />} style={{ backgroundColor: "#1890ff" }} />
+            <Avatar icon={<UserOutlined />} style={{ backgroundColor: "var(--color-action-primary-bg)" }} />
             <div>
-              <Text strong style={{ fontSize: 14, color: "#1f2937", display: "block" }}>
+              <Text strong style={{ fontSize: 14, color: "var(--color-text-title)", display: "block" }}>
                 {item.authorName || "Giảng viên"}
               </Text>
               <Text type="secondary" style={{ fontSize: 11 }}>
@@ -72,7 +72,7 @@ export const AnnouncementCard: React.FC<AnnouncementCardProps> = React.memo(
               <Badge
                 status="processing"
                 text={
-                  <span style={{ fontSize: 11, color: "#1890ff", fontWeight: 700 }}>Chưa đọc</span>
+                  <span style={{ fontSize: 11, color: "var(--color-action-primary-bg)", fontWeight: 700 }}>Chưa đọc</span>
                 }
               />
             )}
@@ -90,8 +90,8 @@ export const AnnouncementCard: React.FC<AnnouncementCardProps> = React.memo(
         )}
 
         {/* Title */}
-        <Title level={5} style={{ margin: "0 0 8px 0", color: "#1f2937", lineHeight: 1.4 }}>
-          {item.isPinned && <PushpinOutlined style={{ color: "#fa541c", marginRight: 6 }} />}
+        <Title level={5} style={{ margin: "0 0 8px 0", color: "var(--color-text-title)", lineHeight: 1.4 }}>
+          {item.isPinned && <PushpinOutlined style={{ color: "var(--color-warning-base)", marginRight: 6 }} />}
           {item.title}
         </Title>
 

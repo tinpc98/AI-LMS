@@ -23,8 +23,8 @@ export const CurrentLiveCard: React.FC<CurrentLiveCardProps> = React.memo(
       <Card
         style={{
           borderRadius: 20,
-          background: "linear-gradient(135deg, #096dd9 0%, #003a8c 100%)",
-          color: "#ffffff",
+          background: "linear-gradient(135deg, var(--color-action-primary-bg-active) 0%, var(--color-action-primary-bg-active) 100%)",
+          color: "var(--color-surface)",
           boxShadow: "0 10px 25px rgba(9, 109, 217, 0.3)",
           marginBottom: 24,
           overflow: "hidden",
@@ -43,7 +43,7 @@ export const CurrentLiveCard: React.FC<CurrentLiveCardProps> = React.memo(
               </Space>
             </div>
 
-            <Title level={3} style={{ color: "#ffffff", margin: "0 0 8px 0", fontWeight: 700 }}>
+            <Title level={3} style={{ color: "var(--color-surface)", margin: "0 0 8px 0", fontWeight: 700 }}>
               {session.title}
             </Title>
 
@@ -57,10 +57,10 @@ export const CurrentLiveCard: React.FC<CurrentLiveCardProps> = React.memo(
             <Space size={12} align="center">
               <Avatar
                 icon={<UserOutlined />}
-                style={{ backgroundColor: "#ffffff", color: "#096dd9" }}
+                style={{ backgroundColor: "var(--color-surface)", color: "var(--color-action-primary-bg-active)" }}
               />
               <div>
-                <Text strong style={{ color: "#ffffff", fontSize: 13, display: "block" }}>
+                <Text strong style={{ color: "var(--color-surface)", fontSize: 13, display: "block" }}>
                   {session.teacherName || "Giảng viên phụ trách"}
                 </Text>
                 <Text style={{ color: "rgba(255, 255, 255, 0.75)", fontSize: 11 }}>
@@ -100,8 +100,8 @@ export const CurrentLiveCard: React.FC<CurrentLiveCardProps> = React.memo(
                   width: "100%",
                   height: 48,
                   borderRadius: 12,
-                  backgroundColor: "#52c41a",
-                  borderColor: "#52c41a",
+                  backgroundColor: "var(--color-success-base)",
+                  borderColor: "var(--color-success-base)",
                   fontSize: 16,
                   fontWeight: 700,
                   boxShadow: "0 4px 12px rgba(82, 196, 26, 0.4)",

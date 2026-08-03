@@ -34,7 +34,7 @@ export const AIUsageChart: React.FC<AIUsageChartProps> = ({ data, loading }) => 
         style={{
           borderRadius: "16px",
           boxShadow: "0 4px 20px rgba(0, 0, 0, 0.04)",
-          border: "1px solid #f0f0f0",
+          border: "1px solid var(--color-border-default)",
           height: "100%",
         }}
         styles={{ body: { padding: "24px" } }}
@@ -65,14 +65,14 @@ export const AIUsageChart: React.FC<AIUsageChartProps> = ({ data, loading }) => 
           <div style={{ width: "100%", height: 300 }}>
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={data} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--color-border-default)" />
                 <XAxis
                   dataKey="feature"
                   tickLine={false}
-                  axisLine={{ stroke: "#e0e0e0" }}
-                  tick={{ fill: "#666", fontSize: 12 }}
+                  axisLine={{ stroke: "var(--color-border-default)" }}
+                  tick={{ fill: "var(--color-text-description)", fontSize: 12 }}
                 />
-                <YAxis tickLine={false} axisLine={false} tick={{ fill: "#666", fontSize: 12 }} />
+                <YAxis tickLine={false} axisLine={false} tick={{ fill: "var(--color-text-description)", fontSize: 12 }} />
                 <Tooltip
                   contentStyle={{
                     backgroundColor: "rgba(255, 255, 255, 0.95)",
@@ -82,7 +82,7 @@ export const AIUsageChart: React.FC<AIUsageChartProps> = ({ data, loading }) => 
                     padding: "10px 14px",
                   }}
                   formatter={(value: any) => [`${value} lượt gọi`, "Lượt sử dụng"]}
-                  labelStyle={{ fontWeight: 600, color: "#1f1f1f" }}
+                  labelStyle={{ fontWeight: 600, color: "var(--color-text-title)" }}
                 />
                 <Legend verticalAlign="top" height={36} align="right" />
                 <Bar name="Lượt sử dụng AI" dataKey="count" radius={[8, 8, 0, 0]} barSize={38}>

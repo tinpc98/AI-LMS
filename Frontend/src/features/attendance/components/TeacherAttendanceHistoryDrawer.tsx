@@ -137,11 +137,11 @@ export const TeacherAttendanceHistoryDrawer: React.FC<TeacherAttendanceHistoryDr
             if (session.status === "Closed") {
               return (
                 <Tooltip title="Không điểm danh">
-                  <span style={{ color: "#bfbfbf" }}>X</span>
+                  <span style={{ color: "var(--color-text-disabled)" }}>X</span>
                 </Tooltip>
               );
             }
-            return <span style={{ color: "#f0f0f0" }}>-</span>;
+            return <span style={{ color: "var(--color-border-default)" }}>-</span>;
           },
         });
       });
@@ -226,7 +226,7 @@ export const TeacherAttendanceHistoryDrawer: React.FC<TeacherAttendanceHistoryDr
       <Drawer
         title={
           <Space>
-            <CalendarOutlined style={{ color: "#1890ff" }} />
+            <CalendarOutlined style={{ color: "var(--color-action-primary-bg)" }} />
             <span>Ma trận điểm danh: {className}</span>
           </Space>
         }
@@ -242,7 +242,7 @@ export const TeacherAttendanceHistoryDrawer: React.FC<TeacherAttendanceHistoryDr
             flexWrap: "wrap",
             gap: 12,
             padding: "8px 12px",
-            background: "#f5f5f5",
+            background: "var(--color-bg-page)",
             borderRadius: 8,
           }}
         >

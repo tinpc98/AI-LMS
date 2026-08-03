@@ -32,22 +32,22 @@ export const AnnouncementAttachmentList: React.FC<AnnouncementAttachmentListProp
     const getFileIcon = (name: string, url: string) => {
       const filename = (name || url).toLowerCase();
       if (filename.endsWith(".pdf"))
-        return <FilePdfOutlined style={{ color: "#ff4d4f", fontSize: 18 }} />;
+        return <FilePdfOutlined style={{ color: "var(--color-error-base)", fontSize: 18 }} />;
       if (filename.endsWith(".doc") || filename.endsWith(".docx"))
-        return <FileWordOutlined style={{ color: "#1890ff", fontSize: 18 }} />;
+        return <FileWordOutlined style={{ color: "var(--color-action-primary-bg)", fontSize: 18 }} />;
       if (filename.endsWith(".xls") || filename.endsWith(".xlsx"))
-        return <FileExcelOutlined style={{ color: "#52c41a", fontSize: 18 }} />;
+        return <FileExcelOutlined style={{ color: "var(--color-success-base)", fontSize: 18 }} />;
       if (filename.endsWith(".ppt") || filename.endsWith(".pptx"))
-        return <FilePptOutlined style={{ color: "#fa8c16", fontSize: 18 }} />;
+        return <FilePptOutlined style={{ color: "var(--color-warning-base)", fontSize: 18 }} />;
       if (filename.match(/\.(png|jpe?g|gif|webp)$/))
-        return <FileImageOutlined style={{ color: "#722ed1", fontSize: 18 }} />;
+        return <FileImageOutlined style={{ color: "var(--color-secondary-icon)", fontSize: 18 }} />;
       if (filename.match(/\.(mp4|webm|mkv)$/))
-        return <VideoCameraOutlined style={{ color: "#eb2f96", fontSize: 18 }} />;
+        return <VideoCameraOutlined style={{ color: "var(--color-accent-base)", fontSize: 18 }} />;
       if (filename.endsWith(".zip") || filename.endsWith(".rar"))
-        return <FileZipOutlined style={{ color: "#8c8c8c", fontSize: 18 }} />;
+        return <FileZipOutlined style={{ color: "var(--color-text-description)", fontSize: 18 }} />;
       if (url.startsWith("http"))
-        return <LinkOutlined style={{ color: "#13c2c2", fontSize: 18 }} />;
-      return <PaperClipOutlined style={{ color: "#1890ff", fontSize: 18 }} />;
+        return <LinkOutlined style={{ color: "var(--color-info-base)", fontSize: 18 }} />;
+      return <PaperClipOutlined style={{ color: "var(--color-action-primary-bg)", fontSize: 18 }} />;
     };
 
     return (
@@ -55,13 +55,13 @@ export const AnnouncementAttachmentList: React.FC<AnnouncementAttachmentListProp
         size="small"
         style={{
           borderRadius: 12,
-          backgroundColor: "#fafafa",
-          border: "1px solid #f0f0f0",
+          backgroundColor: "var(--color-bg-page)",
+          border: "1px solid var(--color-border-divider)",
           marginTop: 12,
         }}
         styles={{ body: { padding: "10px 14px" } }}
       >
-        <Text strong style={{ fontSize: 12, color: "#8c8c8c", display: "block", marginBottom: 8 }}>
+        <Text strong style={{ fontSize: 12, color: "var(--color-text-description)", display: "block", marginBottom: 8 }}>
           <PaperClipOutlined style={{ marginRight: 4 }} /> File đính kèm & Liên kết (
           {attachments.length}):
         </Text>
@@ -74,10 +74,10 @@ export const AnnouncementAttachmentList: React.FC<AnnouncementAttachmentListProp
                 display: "flex",
                 justifyContent: "space-between",
                 alignItems: "center",
-                backgroundColor: "#fff",
+                backgroundColor: "var(--color-surface)",
                 padding: "6px 12px",
                 borderRadius: 8,
-                border: "1px solid #e8e8e8",
+                border: "1px solid var(--color-border-default)",
               }}
             >
               <Space size={8}>

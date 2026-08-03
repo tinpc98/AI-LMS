@@ -9,6 +9,7 @@ import {
   ReloadOutlined,
 } from "@ant-design/icons";
 import { useAuth } from "../../../../shared/hooks/useAuth";
+import { tokens } from "../../../../shared/theme/tokens";
 
 const { Title, Text } = Typography;
 
@@ -24,12 +25,12 @@ interface StudentWelcomeBannerProps {
 const kpiCardStyle: React.CSSProperties = {
   backgroundColor: "rgba(255, 255, 255, 0.15)",
   backdropFilter: "blur(8px)",
-  borderRadius: 16,
-  padding: "16px 20px",
+  borderRadius: tokens.radius.md,
+  padding: `${tokens.space[4]}px ${tokens.space[4]}px`,
   display: "flex",
   alignItems: "center",
-  gap: 14,
-  transition: "all 0.25s ease",
+  gap: tokens.space[3],
+  transition: "var(--transition-fast)",
   cursor: "default",
   border: "1px solid rgba(255,255,255,0.2)",
 };
@@ -74,28 +75,28 @@ export const StudentWelcomeBanner: React.FC<StudentWelcomeBannerProps> = React.m
     const kpiItems = [
       {
         key: "classes",
-        icon: <BookOutlined style={{ fontSize: 26, color: "#fff" }} />,
+        icon: <BookOutlined style={{ fontSize: 26, color: tokens.color.text.inverse }} />,
         value: totalClassesCount,
         label: "Lớp học",
         iconBg: "rgba(255,255,255,0.2)",
       },
       {
         key: "assignments",
-        icon: <FileTextOutlined style={{ fontSize: 26, color: "#ffec3d" }} />,
+        icon: <FileTextOutlined style={{ fontSize: 26, color: "var(--color-warning-base)" }} />,
         value: pendingAssignmentsCount,
         label: "Bài tập",
         iconBg: "rgba(255,236,61,0.15)",
       },
       {
         key: "exams",
-        icon: <FormOutlined style={{ fontSize: 26, color: "#ff9c6e" }} />,
+        icon: <FormOutlined style={{ fontSize: 26, color: "var(--color-warning-base)" }} />,
         value: upcomingExamsCount,
         label: "Bài kiểm tra",
         iconBg: "rgba(255,156,110,0.15)",
       },
       {
         key: "announcements",
-        icon: <BellOutlined style={{ fontSize: 26, color: "#95de64" }} />,
+        icon: <BellOutlined style={{ fontSize: 26, color: "var(--color-success-base)" }} />,
         value: unreadAnnouncementsCount,
         label: "Thông báo",
         iconBg: "rgba(149,222,100,0.15)",
@@ -105,11 +106,11 @@ export const StudentWelcomeBanner: React.FC<StudentWelcomeBannerProps> = React.m
     return (
       <div
         style={{
-          borderRadius: 20,
-          background: "linear-gradient(135deg, #1890ff 0%, #003a8c 100%)",
-          padding: "28px 32px",
-          marginBottom: 32,
-          boxShadow: "0 8px 32px rgba(24, 144, 255, 0.3)",
+          borderRadius: tokens.radius.xl,
+          background: tokens.color.gradient.primary,
+          padding: `${tokens.space[5]}px ${tokens.space[6]}px`,
+          marginBottom: tokens.space[6],
+          boxShadow: "0 8px 32px rgba(45, 140, 219, 0.25)",
           position: "relative",
           overflow: "hidden",
         }}
@@ -168,7 +169,7 @@ export const StudentWelcomeBanner: React.FC<StudentWelcomeBannerProps> = React.m
                 </Text>
                 <Title
                   level={3}
-                  style={{ color: "#fff", margin: "0 0 4px 0", fontWeight: 700, lineHeight: 1.2 }}
+                  style={{ color: "var(--color-surface)", margin: "0 0 4px 0", fontWeight: 700, lineHeight: 1.2 }}
                 >
                   {greeting}, {studentName}! 👋
                 </Title>
@@ -205,7 +206,7 @@ export const StudentWelcomeBanner: React.FC<StudentWelcomeBannerProps> = React.m
                           fontSize: 26,
                           fontWeight: 800,
                           lineHeight: 1,
-                          color: "#fff",
+                          color: "var(--color-surface)",
                           letterSpacing: -0.5,
                         }}
                       >
@@ -232,7 +233,7 @@ export const StudentWelcomeBanner: React.FC<StudentWelcomeBannerProps> = React.m
               style={{
                 backgroundColor: "rgba(255,255,255,0.2)",
                 border: "1px solid rgba(255,255,255,0.3)",
-                color: "#fff",
+                color: "var(--color-surface)",
                 borderRadius: 8,
                 backdropFilter: "blur(4px)",
               }}

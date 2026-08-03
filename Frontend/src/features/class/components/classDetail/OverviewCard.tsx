@@ -8,6 +8,8 @@ import {
 } from "@ant-design/icons";
 import ClassStatusTag from "../classes/ClassStatusTag";
 import type { StudentClassStatus } from "../../../../types/studentClass";
+import { formatLearningMode } from "../../../../shared/utils/labelFormatters";
+import { formatSchedule } from "../../../learning/utils/learningDashboard.utils";
 
 const { Paragraph, Text } = Typography;
 
@@ -20,6 +22,11 @@ interface OverviewCardProps {
   maxStudents?: number;
   status?: StudentClassStatus;
   learningMode?: string;
+  schedule?: {
+    days?: string[];
+    startTime?: string;
+    endTime?: string;
+  } | null;
   googleCalendarEventId?: string;
 }
 
@@ -33,6 +40,7 @@ export const OverviewCard: React.FC<OverviewCardProps> = React.memo(
     maxStudents = 40,
     status = "Active",
     learningMode = "Offline",
+    schedule,
     googleCalendarEventId,
   }) => {
     const formattedStartDate = startDate
@@ -55,7 +63,7 @@ export const OverviewCard: React.FC<OverviewCardProps> = React.memo(
       <Card
         title={
           <Space align="center">
-            <InfoCircleOutlined style={{ color: "#1890ff", fontSize: 18 }} />
+            <InfoCircleOutlined style={{ color: "var(--color-action-primary-bg)", fontSize: 18 }} />
             <span style={{ fontSize: 16, fontWeight: 700 }}>Thông tin tổng quan lớp học</span>
           </Space>
         }
@@ -70,7 +78,7 @@ export const OverviewCard: React.FC<OverviewCardProps> = React.memo(
         <div style={{ marginBottom: 20 }}>
           <Text
             strong
-            style={{ fontSize: 14, color: "#262626", display: "block", marginBottom: 6 }}
+            style={{ fontSize: 14, color: "var(--color-text-title)", display: "block", marginBottom: 6 }}
           >
             Mô tả lớp học:
           </Text>
@@ -85,7 +93,7 @@ export const OverviewCard: React.FC<OverviewCardProps> = React.memo(
           column={{ xs: 1, sm: 2, md: 2 }}
           size="middle"
           styles={{
-            label: { backgroundColor: "#fafafa", fontWeight: 600, width: "35%" },
+            label: { backgroundColor: "var(--color-bg-page)", fontWeight: 600, width: "35%" },
           }}
         >
           <Descriptions.Item label="Trạng thái lớp">
@@ -93,23 +101,35 @@ export const OverviewCard: React.FC<OverviewCardProps> = React.memo(
           </Descriptions.Item>
 
           <Descriptions.Item label="Hình thức học">
-            <Tag color="cyan">{learningMode}</Tag>
+            <Tag color="cyan">{formatLearningMode(learningMode)}</Tag>
           </Descriptions.Item>
 
-          <Descriptions.Item label="Sĩ số lớp học">
+          <Descriptions.Item label="Lịch học định kỳ" span={2}>
             <Space size={6}>
-              <TeamOutlined style={{ color: "#8c8c8c" }} />
-              <span>
-                {currentStudents} / {maxStudents} học viên
-              </span>
+              <ClockCircleOutlined style={{ color: "var(--color-text-description)" }} />
+              <span>{formatSchedule(schedule)}</span>
             </Space>
           </Descriptions.Item>
 
-          <Descriptions.Item label="Thời gian diễn ra">
+          <Descriptions.Item label="Ngày bắt đầu">
             <Space size={6}>
-              <ClockCircleOutlined style={{ color: "#8c8c8c" }} />
-              <span>
-                {formattedStartDate} - {formattedEndDate}
+              <CalendarOutlined style={{ color: "var(--color-text-description)" }} />
+              <span style={{ whiteSpace: "nowrap" }}>{formattedStartDate}</span>
+            </Space>
+          </Descriptions.Item>
+
+          <Descriptions.Item label="Ngày kết thúc">
+            <Space size={6}>
+              <CalendarOutlined style={{ color: "var(--color-text-description)" }} />
+              <span style={{ whiteSpace: "nowrap" }}>{formattedEndDate}</span>
+            </Space>
+          </Descriptions.Item>
+
+          <Descriptions.Item label="Sĩ số lớp học" span={2}>
+            <Space size={6}>
+              <TeamOutlined style={{ color: "var(--color-text-description)" }} />
+              <span style={{ whiteSpace: "nowrap" }}>
+                {currentStudents} / {maxStudents} học viên
               </span>
             </Space>
           </Descriptions.Item>
@@ -117,17 +137,17 @@ export const OverviewCard: React.FC<OverviewCardProps> = React.memo(
 
         {/* Calendar Integration */}
         {googleCalendarEventId && (
-          <div style={{ marginTop: 20, paddingTop: 16, borderTop: "1px solid #f0f0f0" }}>
+          <div style={{ marginTop: 20, paddingTop: 16, borderTop: "1px solid var(--color-border-default)" }}>
             <Text
               strong
-              style={{ fontSize: 14, color: "#262626", display: "block", marginBottom: 12 }}
+              style={{ fontSize: 14, color: "var(--color-text-title)", display: "block", marginBottom: 12 }}
             >
               Lịch & Đồng bộ:
             </Text>
             <Space size={12} wrap>
               <Button
                 type="default"
-                icon={<CalendarOutlined style={{ color: "#1890ff" }} />}
+                icon={<CalendarOutlined style={{ color: "var(--color-action-primary-bg)" }} />}
                 style={{ borderRadius: 8 }}
               >
                 Đồng bộ Google Calendar

@@ -249,7 +249,7 @@ export const TeacherGradebookTab: React.FC<TeacherGradebookTabProps> = React.mem
 
         cols.push({
           title: (
-            <Text strong style={{ color: "#1890ff" }}>
+            <Text strong style={{ color: "var(--color-action-primary-bg)" }}>
               {cat}
             </Text>
           ),
@@ -282,13 +282,13 @@ export const TeacherGradebookTab: React.FC<TeacherGradebookTabProps> = React.mem
               <Avatar
                 src={record.avatar || undefined}
                 icon={!record.avatar ? <UserOutlined /> : undefined}
-                style={{ backgroundColor: "#1890ff" }}
+                style={{ backgroundColor: "var(--color-action-primary-bg)" }}
               />
               <div>
                 <Text strong style={{ fontSize: 14, display: "block" }}>
                   {record.name}
                 </Text>
-                <Text style={{ fontSize: 12, fontFamily: "monospace", color: "#8c8c8c" }}>
+                <Text style={{ fontSize: 12, fontFamily: "monospace", color: "var(--color-text-description)" }}>
                   {code}
                 </Text>
               </div>
@@ -364,8 +364,8 @@ export const TeacherGradebookTab: React.FC<TeacherGradebookTabProps> = React.mem
         <Card
           style={{
             borderRadius: 16,
-            background: "linear-gradient(135deg, #002140 0%, #003a70 100%)",
-            color: "#fff",
+            background: "linear-gradient(135deg, var(--color-sidebar-bg) 0%, var(--color-sidebar-hover) 100%)",
+            color: "var(--color-surface)",
             boxShadow: "0 8px 24px rgba(0, 33, 64, 0.25)",
           }}
           styles={{ body: { padding: "24px 32px" } }}
@@ -382,8 +382,8 @@ export const TeacherGradebookTab: React.FC<TeacherGradebookTabProps> = React.mem
           >
             <div>
               <Space size={12} align="center">
-                <TrophyOutlined style={{ fontSize: 28, color: "#fff" }} />
-                <Title level={4} style={{ color: "#fff", margin: 0, fontWeight: 700 }}>
+                <TrophyOutlined style={{ fontSize: 28, color: "var(--color-surface)" }} />
+                <Title level={4} style={{ color: "var(--color-surface)", margin: 0, fontWeight: 700 }}>
                   Bảng điểm Tổng hợp Lớp: {className}
                 </Title>
               </Space>
@@ -407,7 +407,7 @@ export const TeacherGradebookTab: React.FC<TeacherGradebookTabProps> = React.mem
               style={{
                 backgroundColor: "rgba(255,255,255,0.2)",
                 borderColor: "rgba(255,255,255,0.4)",
-                color: "#fff",
+                color: "var(--color-surface)",
                 fontWeight: 600,
               }}
             >
@@ -432,7 +432,7 @@ export const TeacherGradebookTab: React.FC<TeacherGradebookTabProps> = React.mem
                     </Text>
                   }
                   value={stats.avgClassScore}
-                  styles={{ content: { color: "#fff", fontWeight: 700, fontSize: 20 } }}
+                  styles={{ content: { color: "var(--color-surface)", fontWeight: 700, fontSize: 20 } }}
                 />
               </div>
             </Col>
@@ -453,7 +453,7 @@ export const TeacherGradebookTab: React.FC<TeacherGradebookTabProps> = React.mem
                     </Text>
                   }
                   value={stats.maxScore}
-                  styles={{ content: { color: "#b7eb8f", fontWeight: 700, fontSize: 20 } }}
+                  styles={{ content: { color: "var(--color-border-default)", fontWeight: 700, fontSize: 20 } }}
                 />
               </div>
             </Col>
@@ -474,7 +474,7 @@ export const TeacherGradebookTab: React.FC<TeacherGradebookTabProps> = React.mem
                     </Text>
                   }
                   value={stats.minScore}
-                  styles={{ content: { color: "#ffccc7", fontWeight: 700, fontSize: 20 } }}
+                  styles={{ content: { color: "var(--color-border-default)", fontWeight: 700, fontSize: 20 } }}
                 />
               </div>
             </Col>
@@ -500,7 +500,7 @@ export const TeacherGradebookTab: React.FC<TeacherGradebookTabProps> = React.mem
                 </Text>
                 <Progress
                   percent={stats.passRate}
-                  strokeColor="#52c41a"
+                  strokeColor="var(--color-success-base)"
                   showInfo={false}
                   size="small"
                 />
@@ -524,7 +524,7 @@ export const TeacherGradebookTab: React.FC<TeacherGradebookTabProps> = React.mem
                   }
                   value={stats.failedCount}
                   suffix={`/ ${stats.totalStudents} sinh viên`}
-                  styles={{ content: { color: "#fff", fontWeight: 700, fontSize: 18 } }}
+                  styles={{ content: { color: "var(--color-surface)", fontWeight: 700, fontSize: 18 } }}
                 />
               </div>
             </Col>
@@ -568,7 +568,7 @@ export const TeacherGradebookTab: React.FC<TeacherGradebookTabProps> = React.mem
               <Space size={12} wrap>
                 <Input
                   placeholder="Tìm học sinh theo tên/email/mã..."
-                  prefix={<SearchOutlined style={{ color: "#bfbfbf" }} />}
+                  prefix={<SearchOutlined style={{ color: "var(--color-text-disabled)" }} />}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   style={{ width: 250, borderRadius: 8 }}
@@ -605,7 +605,7 @@ export const TeacherGradebookTab: React.FC<TeacherGradebookTabProps> = React.mem
                   <Button
                     type="default"
                     disabled
-                    icon={<FileExcelOutlined style={{ color: "#52c41a" }} />}
+                    icon={<FileExcelOutlined style={{ color: "var(--color-success-base)" }} />}
                   >
                     Export Excel
                   </Button>
@@ -615,7 +615,7 @@ export const TeacherGradebookTab: React.FC<TeacherGradebookTabProps> = React.mem
                   <Button
                     type="default"
                     disabled
-                    icon={<FilePdfOutlined style={{ color: "#ff4d4f" }} />}
+                    icon={<FilePdfOutlined style={{ color: "var(--color-error-base)" }} />}
                   >
                     Export PDF
                   </Button>

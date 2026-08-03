@@ -9,7 +9,7 @@ export const DashboardLoadingSkeleton: React.FC = React.memo(() => {
         style={{
           borderRadius: 20,
           marginBottom: 32,
-          background: "linear-gradient(135deg, #e6f7ff 0%, #bae7ff 100%)",
+          background: "linear-gradient(135deg, var(--color-bg-primary-tint) 0%, var(--color-border-primary-tint) 100%)",
           border: "none",
         }}
         styles={{ body: { padding: "28px 32px" } }}

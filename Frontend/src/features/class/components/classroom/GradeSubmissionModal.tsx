@@ -83,7 +83,7 @@ export const GradeSubmissionModal: React.FC<GradeSubmissionModalProps> = React.m
       <Modal
         title={
           <Space align="center">
-            <EditOutlined style={{ color: "#1890ff" }} />
+            <EditOutlined style={{ color: "var(--color-action-primary-bg)" }} />
             <span>Chấm điểm & Nhận xét bài nộp</span>
           </Space>
         }
@@ -98,7 +98,7 @@ export const GradeSubmissionModal: React.FC<GradeSubmissionModalProps> = React.m
             {/* Student Info Card */}
             <Card
               size="small"
-              style={{ backgroundColor: "#f8f9fa", borderRadius: 8 }}
+              style={{ backgroundColor: "var(--color-bg-page)", borderRadius: 8 }}
               styles={{ body: { padding: 12 } }}
             >
               <div
@@ -114,7 +114,7 @@ export const GradeSubmissionModal: React.FC<GradeSubmissionModalProps> = React.m
                   <Avatar
                     src={(studentObj as any)?.avatar || undefined}
                     icon={!(studentObj as any)?.avatar ? <UserOutlined /> : undefined}
-                    style={{ backgroundColor: "#1890ff" }}
+                    style={{ backgroundColor: "var(--color-action-primary-bg)" }}
                   />
                   <div>
                     <Text strong style={{ fontSize: 14, display: "block" }}>
@@ -139,15 +139,15 @@ export const GradeSubmissionModal: React.FC<GradeSubmissionModalProps> = React.m
             {/* Submission Content & Attachments Box */}
             <div
               style={{
-                border: "1px solid #e8e8e8",
+                border: "1px solid var(--color-border-default)",
                 borderRadius: 8,
                 padding: 16,
-                backgroundColor: "#fff",
+                backgroundColor: "var(--color-surface)",
               }}
             >
               <Text
                 strong
-                style={{ fontSize: 13, color: "#8c8c8c", display: "block", marginBottom: 6 }}
+                style={{ fontSize: 13, color: "var(--color-text-description)", display: "block", marginBottom: 6 }}
               >
                 📌 NỘI DUNG BÀI LÀM CỦA HỌC SINH:
               </Text>
@@ -168,7 +168,7 @@ export const GradeSubmissionModal: React.FC<GradeSubmissionModalProps> = React.m
                 <div>
                   <Text
                     strong
-                    style={{ fontSize: 12, color: "#8c8c8c", display: "block", marginBottom: 6 }}
+                    style={{ fontSize: 12, color: "var(--color-text-description)", display: "block", marginBottom: 6 }}
                   >
                     📎 TỆP ĐÍNH KÈM ({submission.attachments.length}):
                   </Text>
@@ -194,9 +194,9 @@ export const GradeSubmissionModal: React.FC<GradeSubmissionModalProps> = React.m
                   style={{
                     marginTop: 12,
                     paddingTop: 8,
-                    borderTop: "1px dashed #f0f0f0",
+                    borderTop: "1px dashed var(--color-border-default)",
                     fontSize: 12,
-                    color: "#8c8c8c",
+                    color: "var(--color-text-description)",
                   }}
                 >
                   <ClockCircleOutlined style={{ marginRight: 4 }} />
@@ -207,7 +207,7 @@ export const GradeSubmissionModal: React.FC<GradeSubmissionModalProps> = React.m
 
             {/* Previously Graded Info */}
             {(submission as any).gradedAt && (
-              <div style={{ fontSize: 12, color: "#8c8c8c", fontStyle: "italic" }}>
+              <div style={{ fontSize: 12, color: "var(--color-text-description)", fontStyle: "italic" }}>
                 ℹ️ Được chấm bởi <b>{graderName || "Giáo viên"}</b> vào lúc{" "}
                 {new Date((submission as any).gradedAt).toLocaleString("vi-VN")}
               </div>

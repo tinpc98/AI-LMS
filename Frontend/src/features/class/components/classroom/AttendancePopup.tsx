@@ -204,8 +204,8 @@ export const AttendancePopup: React.FC<AttendancePopupProps> = ({
           <Radio.Button
             value="Present"
             style={{
-              backgroundColor: record.status === "Present" ? "#52c41a" : undefined,
-              color: record.status === "Present" ? "#fff" : undefined,
+              backgroundColor: record.status === "Present" ? "var(--color-success-base)" : undefined,
+              color: record.status === "Present" ? "var(--color-surface)" : undefined,
             }}
           >
             Có mặt
@@ -213,8 +213,8 @@ export const AttendancePopup: React.FC<AttendancePopupProps> = ({
           <Radio.Button
             value="Late"
             style={{
-              backgroundColor: record.status === "Late" ? "#faad14" : undefined,
-              color: record.status === "Late" ? "#fff" : undefined,
+              backgroundColor: record.status === "Late" ? "var(--color-warning-base)" : undefined,
+              color: record.status === "Late" ? "var(--color-surface)" : undefined,
             }}
           >
             Đi muộn
@@ -222,8 +222,8 @@ export const AttendancePopup: React.FC<AttendancePopupProps> = ({
           <Radio.Button
             value="Excused"
             style={{
-              backgroundColor: record.status === "Excused" ? "#1890ff" : undefined,
-              color: record.status === "Excused" ? "#fff" : undefined,
+              backgroundColor: record.status === "Excused" ? "var(--color-action-primary-bg)" : undefined,
+              color: record.status === "Excused" ? "var(--color-surface)" : undefined,
             }}
           >
             Có phép
@@ -231,8 +231,8 @@ export const AttendancePopup: React.FC<AttendancePopupProps> = ({
           <Radio.Button
             value="Absent"
             style={{
-              backgroundColor: record.status === "Absent" ? "#ff4d4f" : undefined,
-              color: record.status === "Absent" ? "#fff" : undefined,
+              backgroundColor: record.status === "Absent" ? "var(--color-error-base)" : undefined,
+              color: record.status === "Absent" ? "var(--color-surface)" : undefined,
             }}
           >
             Vắng
@@ -282,17 +282,17 @@ export const AttendancePopup: React.FC<AttendancePopupProps> = ({
             <div
               style={{
                 textAlign: "right",
-                background: "#fff1f0",
+                background: "var(--color-error-bg)",
                 padding: "4px 12px",
                 borderRadius: 6,
-                border: "1px solid #ffccc7",
+                border: "1px solid var(--color-border-default)",
               }}
             >
               <Text type="danger" strong style={{ fontSize: 12, display: "block" }}>
                 THỜI GIAN CÒN LẠI
               </Text>
               <Space size={6}>
-                <ClockCircleOutlined style={{ color: "#ff4d4f" }} />
+                <ClockCircleOutlined style={{ color: "var(--color-error-base)" }} />
                 <Text type="danger" strong style={{ fontSize: 16, fontFamily: "monospace" }}>
                   {activeCountdown}
                 </Text>

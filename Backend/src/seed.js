@@ -72,7 +72,15 @@ const assertSafeToSeed = () => {
 };
 
 // Tạo Model Course tạm thời (do class.model.js dùng ref: "Course")
-const courseSchema = new mongoose.Schema({ title: String, code: String });
+const courseSchema = new mongoose.Schema({
+  courseName: String,
+  subject: String,
+  code: String,
+  title: String,
+  grade: { type: Number, default: 12 },
+  status: { type: String, default: "Published" },
+  description: String,
+});
 const Course = mongoose.models.Course || mongoose.model("Course", courseSchema);
 
 const getRandomItem = (arr) => arr[Math.floor(Math.random() * arr.length)];
@@ -140,12 +148,48 @@ async function seedDatabase() {
     // 3. Tạo 6 Courses (Khóa học)
     console.log("📚 Đang tạo 6 Courses...");
     const coursesData = [
-      { title: "Lập trình Web nâng cao", code: "WEB202" },
-      { title: "Cơ sở dữ liệu NoSQL", code: "DB301" },
-      { title: "Tiếng Anh chuyên ngành", code: "ENG102" },
-      { title: "Trí tuệ nhân tạo", code: "AI401" },
-      { title: "Phát triển ứng dụng Di động", code: "MOB201" },
-      { title: "Kiểm thử phần mềm", code: "TEST302" },
+      {
+        courseName: "Lập trình Web nâng cao",
+        subject: "Lập trình Web",
+        code: "WEB202",
+        title: "Lập trình Web nâng cao",
+        description: "Khóa học chuyên sâu về phát triển ứng dụng Web hiện đại",
+      },
+      {
+        courseName: "Cơ sở dữ liệu NoSQL",
+        subject: "Cơ sở dữ liệu",
+        code: "DB301",
+        title: "Cơ sở dữ liệu NoSQL",
+        description: "Khóa học kiến trúc và tối ưu dữ liệu phi quan hệ với MongoDB",
+      },
+      {
+        courseName: "Tiếng Anh chuyên ngành",
+        subject: "Ngoại ngữ",
+        code: "ENG102",
+        title: "Tiếng Anh chuyên ngành",
+        description: "Khóa học tiếng Anh giao tiếp và tài liệu chuyên ngành CNTT",
+      },
+      {
+        courseName: "Trí tuệ nhân tạo",
+        subject: "Trí tuệ nhân tạo",
+        code: "AI401",
+        title: "Trí tuệ nhân tạo",
+        description: "Khóa học nền tảng học máy và ứng dụng mô hình trí tuệ nhân tạo",
+      },
+      {
+        courseName: "Phát triển ứng dụng Di động",
+        subject: "Lập trình Di động",
+        code: "MOB201",
+        title: "Phát triển ứng dụng Di động",
+        description: "Khóa học xây dựng ứng dụng di động đa nền tảng",
+      },
+      {
+        courseName: "Kiểm thử phần mềm",
+        subject: "Kiểm thử",
+        code: "TEST302",
+        title: "Kiểm thử phần mềm",
+        description: "Khóa học quy trình đảm bảo chất lượng và kiểm thử tự động",
+      },
     ];
     const createdCourses = await Course.insertMany(coursesData);
 

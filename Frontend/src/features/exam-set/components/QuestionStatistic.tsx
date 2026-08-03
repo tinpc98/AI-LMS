@@ -26,8 +26,8 @@ export const QuestionStatistic: React.FC<QuestionStatisticProps> = React.memo(({
     <Card
       style={{
         borderRadius: 16,
-        background: "linear-gradient(135deg, #002140 0%, #003a70 100%)",
-        color: "#fff",
+        background: "linear-gradient(135deg, var(--color-sidebar-bg) 0%, var(--color-sidebar-hover) 100%)",
+        color: "var(--color-surface)",
         boxShadow: "0 8px 24px rgba(0, 33, 64, 0.25)",
         marginBottom: 24,
       }}
@@ -50,8 +50,8 @@ export const QuestionStatistic: React.FC<QuestionStatisticProps> = React.memo(({
                 </Text>
               }
               value={stats.total}
-              prefix={<DatabaseOutlined style={{ color: "#fff", marginRight: 6 }} />}
-              styles={{ content: { color: "#fff", fontWeight: 700, fontSize: 22 } }}
+              prefix={<DatabaseOutlined style={{ color: "var(--color-surface)", marginRight: 6 }} />}
+              styles={{ content: { color: "var(--color-surface)", fontWeight: 700, fontSize: 22 } }}
             />
           </div>
         </Col>
@@ -72,7 +72,7 @@ export const QuestionStatistic: React.FC<QuestionStatisticProps> = React.memo(({
                 </Text>
               }
               value={stats.mcqCount}
-              styles={{ content: { color: "#91caff", fontWeight: 700, fontSize: 20 } }}
+              styles={{ content: { color: "var(--color-border-primary-tint)", fontWeight: 700, fontSize: 20 } }}
             />
           </div>
         </Col>
@@ -93,7 +93,7 @@ export const QuestionStatistic: React.FC<QuestionStatisticProps> = React.memo(({
                 </Text>
               }
               value={stats.essayCount}
-              styles={{ content: { color: "#d3ade6", fontWeight: 700, fontSize: 20 } }}
+              styles={{ content: { color: "var(--color-secondary-border)", fontWeight: 700, fontSize: 20 } }}
             />
           </div>
         </Col>
@@ -123,7 +123,7 @@ export const QuestionStatistic: React.FC<QuestionStatisticProps> = React.memo(({
               success={{
                 percent: stats.total > 0 ? Math.round((stats.mediumCount / stats.total) * 100) : 0,
               }}
-              strokeColor="#b7eb8f"
+              strokeColor="var(--color-border-default)"
               trailColor="rgba(255,255,255,0.2)"
               showInfo={false}
               size="small"

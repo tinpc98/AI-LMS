@@ -184,7 +184,7 @@ const AccountManagementPage = () => {
         <Typography.Title level={3} style={{ marginBottom: 4 }}>
           Account Management
         </Typography.Title>
-        <Typography.Paragraph style={{ margin: 0, color: "#64748b" }}>
+        <Typography.Paragraph style={{ margin: 0, color: "var(--color-text-description)" }}>
           Manage system accounts, roles, and access status for the LMS center.
         </Typography.Paragraph>
       </div>

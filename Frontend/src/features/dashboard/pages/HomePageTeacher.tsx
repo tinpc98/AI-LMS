@@ -2,6 +2,7 @@ import { Row, Col, Alert, Button } from "antd";
 import { ReloadOutlined } from "@ant-design/icons";
 import { useAuth } from "../../../shared/hooks/useAuth";
 import { useTeacherDashboardQuery } from "../hooks/useTeacherDashboardQuery";
+import { tokens } from "../../../shared/theme/tokens";
 
 import { TeacherWelcomeHeader } from "../components/TeacherWelcomeHeader";
 import { TeacherQuickStats } from "../components/TeacherQuickStats";
@@ -12,8 +13,17 @@ import { TeacherAnnouncementsWidget } from "../components/TeacherAnnouncementsWi
 import { TeacherAssignmentsWidget } from "../components/TeacherAssignmentsWidget";
 import { TeacherLiveSessionWidget } from "../components/TeacherLiveSessionWidget";
 
+import { useResponsiveLayout } from "../../../shared/hooks/useResponsiveLayout";
+
 export default function HomePageTeacher() {
   const { user } = useAuth();
+  const { isMobile, isTablet } = useResponsiveLayout();
+
+  const paddingValue = isMobile
+    ? `${tokens.space[4]}px ${tokens.space[3]}px`
+    : isTablet
+      ? `${tokens.space[5]}px ${tokens.space[4]}px`
+      : `${tokens.space[6]}px ${tokens.space[5]}px`;
 
   // Toàn bộ việc lấy & ghép dữ liệu nằm ở hook/service, component chỉ hiển thị.
   const {
@@ -30,11 +40,12 @@ export default function HomePageTeacher() {
   return (
     <div
       style={{
-        padding: "24px",
+        padding: paddingValue,
         maxWidth: 1400,
         margin: "0 auto",
-        backgroundColor: "#f8f9fa",
+        backgroundColor: tokens.color.bg.page,
         minHeight: "100vh",
+        boxSizing: "border-box",
       }}
     >
       {/* 1. Header Section */}
@@ -64,7 +75,7 @@ export default function HomePageTeacher() {
               Thử lại
             </Button>
           }
-          style={{ marginBottom: 24, borderRadius: 8 }}
+          style={{ marginBottom: tokens.space[5], borderRadius: tokens.radius.md }}
         />
       )}
 

@@ -1,0 +1,35 @@
+/**
+ * ResponsiveTable Styling — EduSpace Design System
+ */
+
+.responsive-table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Custom sleek horizontal scrollbar */
+.responsive-table-wrapper::-webkit-scrollbar {
+  height: 6px;
+}
+
+.responsive-table-wrapper::-webkit-scrollbar-track {
+  background: var(--color-bg-page, var(--color-bg-page));
+  border-radius: var(--radius-full, 9999px);
+}
+
+.responsive-table-wrapper::-webkit-scrollbar-thumb {
+  background: var(--color-border-default, var(--color-border-default));
+  border-radius: var(--radius-full, 9999px);
+}
+
+.responsive-table-wrapper::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-disabled, var(--color-text-disabled));
+}
+
+/* Ensure mobile touch targets inside table action columns */
+@media (max-width: 767.98px) {
+  .responsive-table-wrapper .ant-table-cell .ant-btn {
+    min-height: 36px;
+  }
+}

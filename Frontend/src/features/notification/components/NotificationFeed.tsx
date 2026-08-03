@@ -25,12 +25,12 @@ export const NotificationFeed: React.FC<NotificationFeedProps> = React.memo(
           <div key={group.groupTitle}>
             {/* Group Header */}
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
-              <ClockCircleOutlined style={{ color: "#1890ff", fontSize: 14 }} />
+              <ClockCircleOutlined style={{ color: "var(--color-action-primary-bg)", fontSize: 14 }} />
               <Text
                 strong
                 style={{
                   fontSize: 13,
-                  color: "#8c8c8c",
+                  color: "var(--color-text-description)",
                   textTransform: "uppercase",
                   letterSpacing: 0.5,
                 }}

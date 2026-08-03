@@ -22,8 +22,8 @@ const quickAccessItems: QuickAccessItem[] = [
     description: "Quản lý học sinh, giáo viên & phân quyền",
     path: "/admin/accounts",
     iconName: "UserOutlined",
-    color: "#1677ff",
-    bgColor: "#e6f4ff",
+    color: "var(--color-action-primary-bg)",
+    bgColor: "var(--color-bg-primary-tint)",
     badge: "Mới",
   },
   {
@@ -32,8 +32,8 @@ const quickAccessItems: QuickAccessItem[] = [
     description: "Tạo môn học, chương trình luyện thi THPT",
     path: "/admin/courses",
     iconName: "BookOutlined",
-    color: "#13c2c2",
-    bgColor: "#e6fffb",
+    color: "var(--color-info-base)",
+    bgColor: "var(--color-info-bg)",
   },
   {
     key: "classes",
@@ -41,8 +41,8 @@ const quickAccessItems: QuickAccessItem[] = [
     description: "Lịch học, sĩ số, hình thức Online/Offline",
     path: "/admin/classes",
     iconName: "SolutionOutlined",
-    color: "#fa8c16",
-    bgColor: "#fff7e6",
+    color: "var(--color-warning-base)",
+    bgColor: "var(--color-warning-bg)",
   },
   {
     key: "teacher-assignment",
@@ -50,8 +50,8 @@ const quickAccessItems: QuickAccessItem[] = [
     description: "Phân công giảng dạy, kiểm tra trùng lịch",
     path: "/admin/teacher-assignment",
     iconName: "UserSwitchOutlined",
-    color: "#722ed1",
-    bgColor: "#f9f0ff",
+    color: "var(--color-secondary-icon)",
+    bgColor: "var(--color-secondary-bg)",
     badge: "Ưu tiên",
   },
   {
@@ -60,8 +60,8 @@ const quickAccessItems: QuickAccessItem[] = [
     description: "Cấu hình Model AI, Prompt template & RAG",
     path: "/admin/ai-management",
     iconName: "RobotOutlined",
-    color: "#eb2f96",
-    bgColor: "#fff0f6",
+    color: "var(--color-accent-base)",
+    bgColor: "var(--color-accent-bg)",
   },
   {
     key: "reports",
@@ -69,8 +69,8 @@ const quickAccessItems: QuickAccessItem[] = [
     description: "Xem chi tiết doanh thu, học tập & hệ thống",
     path: "/admin/reports",
     iconName: "BarChartOutlined",
-    color: "#52c41a",
-    bgColor: "#f6ffed",
+    color: "var(--color-success-base)",
+    bgColor: "var(--color-success-bg)",
   },
 ];
 
@@ -97,7 +97,7 @@ export const QuickAccess: React.FC = () => {
         style={{
           borderRadius: "16px",
           boxShadow: "0 4px 20px rgba(0, 0, 0, 0.04)",
-          border: "1px solid #f0f0f0",
+          border: "1px solid var(--color-border-default)",
           marginBottom: "24px",
         }}
         styles={{ body: { padding: "24px" } }}
@@ -124,7 +124,7 @@ export const QuickAccess: React.FC = () => {
                   onClick={() => navigate(item.path)}
                   style={{
                     borderRadius: "12px",
-                    border: "1px solid #f0f0f0",
+                    border: "1px solid var(--color-border-default)",
                     height: "100%",
                     display: "flex",
                     flexDirection: "column",

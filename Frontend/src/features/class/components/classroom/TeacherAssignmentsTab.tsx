@@ -171,7 +171,7 @@ export const TeacherAssignmentsTab: React.FC<TeacherAssignmentsTabProps> = React
           return (
             <div>
               <Space size={6}>
-                <ClockCircleOutlined style={{ color: isExpired ? "#ff4d4f" : "#52c41a" }} />
+                <ClockCircleOutlined style={{ color: isExpired ? "var(--color-error-base)" : "var(--color-success-base)" }} />
                 <Text style={{ fontSize: 13 }}>{new Date(deadline).toLocaleString("vi-VN")}</Text>
               </Space>
               <div style={{ marginTop: 2 }}>
@@ -228,8 +228,8 @@ export const TeacherAssignmentsTab: React.FC<TeacherAssignmentsTabProps> = React
         <Card
           style={{
             borderRadius: 16,
-            background: "linear-gradient(135deg, #002140 0%, #003a70 100%)",
-            color: "#fff",
+            background: "linear-gradient(135deg, var(--color-sidebar-bg) 0%, var(--color-sidebar-hover) 100%)",
+            color: "var(--color-surface)",
             boxShadow: "0 8px 24px rgba(0, 33, 64, 0.25)",
           }}
           styles={{ body: { padding: "24px 32px" } }}
@@ -246,8 +246,8 @@ export const TeacherAssignmentsTab: React.FC<TeacherAssignmentsTabProps> = React
           >
             <div>
               <Space size={12} align="center">
-                <FormOutlined style={{ fontSize: 28, color: "#fff" }} />
-                <Title level={4} style={{ color: "#fff", margin: 0, fontWeight: 700 }}>
+                <FormOutlined style={{ fontSize: 28, color: "var(--color-surface)" }} />
+                <Title level={4} style={{ color: "var(--color-surface)", margin: 0, fontWeight: 700 }}>
                   Quản lý Bài tập Lớp: {className}
                 </Title>
               </Space>
@@ -272,7 +272,7 @@ export const TeacherAssignmentsTab: React.FC<TeacherAssignmentsTabProps> = React
                 style={{
                   backgroundColor: "rgba(255,255,255,0.2)",
                   borderColor: "rgba(255,255,255,0.4)",
-                  color: "#fff",
+                  color: "var(--color-surface)",
                   fontWeight: 600,
                 }}
               >
@@ -298,7 +298,7 @@ export const TeacherAssignmentsTab: React.FC<TeacherAssignmentsTabProps> = React
                     </Text>
                   }
                   value={stats.total}
-                  styles={{ content: { color: "#fff", fontWeight: 700, fontSize: 20 } }}
+                  styles={{ content: { color: "var(--color-surface)", fontWeight: 700, fontSize: 20 } }}
                 />
               </div>
             </Col>
@@ -319,8 +319,8 @@ export const TeacherAssignmentsTab: React.FC<TeacherAssignmentsTabProps> = React
                     </Text>
                   }
                   value={stats.openCount}
-                  prefix={<CheckCircleOutlined style={{ color: "#b7eb8f", marginRight: 6 }} />}
-                  styles={{ content: { color: "#fff", fontWeight: 700, fontSize: 20 } }}
+                  prefix={<CheckCircleOutlined style={{ color: "var(--color-border-default)", marginRight: 6 }} />}
+                  styles={{ content: { color: "var(--color-surface)", fontWeight: 700, fontSize: 20 } }}
                 />
               </div>
             </Col>
@@ -342,9 +342,9 @@ export const TeacherAssignmentsTab: React.FC<TeacherAssignmentsTabProps> = React
                   }
                   value={stats.closedCount}
                   prefix={
-                    <ExclamationCircleOutlined style={{ color: "#ff9c6e", marginRight: 6 }} />
+                    <ExclamationCircleOutlined style={{ color: "var(--color-warning-base)", marginRight: 6 }} />
                   }
-                  styles={{ content: { color: "#fff", fontWeight: 700, fontSize: 20 } }}
+                  styles={{ content: { color: "var(--color-surface)", fontWeight: 700, fontSize: 20 } }}
                 />
               </div>
             </Col>
@@ -365,7 +365,7 @@ export const TeacherAssignmentsTab: React.FC<TeacherAssignmentsTabProps> = React
                     </Text>
                   }
                   value={stats.aiGeneratedCount}
-                  styles={{ content: { color: "#fff", fontWeight: 700, fontSize: 20 } }}
+                  styles={{ content: { color: "var(--color-surface)", fontWeight: 700, fontSize: 20 } }}
                 />
               </div>
             </Col>
@@ -387,7 +387,7 @@ export const TeacherAssignmentsTab: React.FC<TeacherAssignmentsTabProps> = React
               <Space size={12} wrap>
                 <Input
                   placeholder="Tìm kiếm bài tập..."
-                  prefix={<SearchOutlined style={{ color: "#bfbfbf" }} />}
+                  prefix={<SearchOutlined style={{ color: "var(--color-text-disabled)" }} />}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   style={{ width: 240, borderRadius: 8 }}

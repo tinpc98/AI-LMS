@@ -20,13 +20,13 @@ export const AnnouncementStatistic: React.FC<AnnouncementStatisticProps> = React
           <Card
             bordered={false}
             styles={{ body: { padding: "12px 16px" } }}
-            style={{ borderRadius: 12, backgroundColor: "#fafafa" }}
+            style={{ borderRadius: 12, backgroundColor: "var(--color-bg-page)" }}
           >
             <Statistic
-              title={<span style={{ fontSize: 11, color: "#8c8c8c" }}>Tổng số thông báo</span>}
+              title={<span style={{ fontSize: 11, color: "var(--color-text-description)" }}>Tổng số thông báo</span>}
               value={stats.total}
-              prefix={<NotificationOutlined style={{ color: "#1890ff", marginRight: 4 }} />}
-              valueStyle={{ fontSize: 20, fontWeight: 700, color: "#1f2937" }}
+              prefix={<NotificationOutlined style={{ color: "var(--color-action-primary-bg)", marginRight: 4 }} />}
+              valueStyle={{ fontSize: 20, fontWeight: 700, color: "var(--color-text-title)" }}
             />
           </Card>
         </Col>
@@ -35,13 +35,13 @@ export const AnnouncementStatistic: React.FC<AnnouncementStatisticProps> = React
           <Card
             bordered={false}
             styles={{ body: { padding: "12px 16px" } }}
-            style={{ borderRadius: 12, backgroundColor: "#e6f7ff" }}
+            style={{ borderRadius: 12, backgroundColor: "var(--color-bg-primary-tint)" }}
           >
             <Statistic
-              title={<span style={{ fontSize: 11, color: "#8c8c8c" }}>Chưa đọc</span>}
+              title={<span style={{ fontSize: 11, color: "var(--color-text-description)" }}>Chưa đọc</span>}
               value={stats.unread}
-              prefix={<BellOutlined style={{ color: "#1890ff", marginRight: 4 }} />}
-              valueStyle={{ fontSize: 20, fontWeight: 700, color: "#096dd9" }}
+              prefix={<BellOutlined style={{ color: "var(--color-action-primary-bg)", marginRight: 4 }} />}
+              valueStyle={{ fontSize: 20, fontWeight: 700, color: "var(--color-action-primary-bg-active)" }}
             />
           </Card>
         </Col>
@@ -50,13 +50,13 @@ export const AnnouncementStatistic: React.FC<AnnouncementStatisticProps> = React
           <Card
             bordered={false}
             styles={{ body: { padding: "12px 16px" } }}
-            style={{ borderRadius: 12, backgroundColor: "#f6ffed" }}
+            style={{ borderRadius: 12, backgroundColor: "var(--color-success-bg)" }}
           >
             <Statistic
-              title={<span style={{ fontSize: 11, color: "#8c8c8c" }}>Đã đọc</span>}
+              title={<span style={{ fontSize: 11, color: "var(--color-text-description)" }}>Đã đọc</span>}
               value={stats.read}
-              prefix={<CheckCircleOutlined style={{ color: "#52c41a", marginRight: 4 }} />}
-              valueStyle={{ fontSize: 20, fontWeight: 700, color: "#389e0d" }}
+              prefix={<CheckCircleOutlined style={{ color: "var(--color-success-base)", marginRight: 4 }} />}
+              valueStyle={{ fontSize: 20, fontWeight: 700, color: "var(--color-success-text)" }}
             />
           </Card>
         </Col>
@@ -65,13 +65,13 @@ export const AnnouncementStatistic: React.FC<AnnouncementStatisticProps> = React
           <Card
             bordered={false}
             styles={{ body: { padding: "12px 16px" } }}
-            style={{ borderRadius: 12, backgroundColor: "#fff2e8" }}
+            style={{ borderRadius: 12, backgroundColor: "var(--color-warning-bg)" }}
           >
             <Statistic
-              title={<span style={{ fontSize: 11, color: "#8c8c8c" }}>Thông báo ghim</span>}
+              title={<span style={{ fontSize: 11, color: "var(--color-text-description)" }}>Thông báo ghim</span>}
               value={stats.pinned}
-              prefix={<PushpinOutlined style={{ color: "#fa541c", marginRight: 4 }} />}
-              valueStyle={{ fontSize: 20, fontWeight: 700, color: "#d4380d" }}
+              prefix={<PushpinOutlined style={{ color: "var(--color-warning-base)", marginRight: 4 }} />}
+              valueStyle={{ fontSize: 20, fontWeight: 700, color: "var(--color-warning-text)" }}
             />
           </Card>
         </Col>

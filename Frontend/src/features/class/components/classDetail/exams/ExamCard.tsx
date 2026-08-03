@@ -46,12 +46,12 @@ export const ExamCard: React.FC<ExamCardProps> = React.memo(
         style={{
           borderRadius: 16,
           boxShadow: "0 2px 8px rgba(0, 0, 0, 0.04)",
-          border: "1px solid #f0f0f0",
+          border: "1px solid var(--color-border-default)",
           height: "100%",
           display: "flex",
           flexDirection: "column",
           justifyContent: "space-between",
-          transition: "all 0.3s ease",
+          transition: "var(--transition-fast)",
         }}
         styles={{
           body: {
@@ -83,7 +83,7 @@ export const ExamCard: React.FC<ExamCardProps> = React.memo(
             strong
             style={{
               fontSize: 16,
-              color: "#1f2937",
+              color: "var(--color-text-title)",
               lineHeight: 1.4,
               marginBottom: 6,
               display: "-webkit-box",
@@ -115,7 +115,7 @@ export const ExamCard: React.FC<ExamCardProps> = React.memo(
         {/* Exam Metadata Grid */}
         <div
           style={{
-            backgroundColor: "#fafafa",
+            backgroundColor: "var(--color-bg-page)",
             borderRadius: 8,
             padding: "8px 12px",
             marginBottom: 14,
@@ -133,7 +133,7 @@ export const ExamCard: React.FC<ExamCardProps> = React.memo(
             <Text type="secondary">
               <ClockCircleOutlined style={{ marginRight: 4 }} /> Ngày/giờ mở thi:
             </Text>
-            <Text strong style={{ color: "#1f2937" }}>
+            <Text strong style={{ color: "var(--color-text-title)" }}>
               {formattedStartTime}
             </Text>
           </div>
@@ -159,8 +159,8 @@ export const ExamCard: React.FC<ExamCardProps> = React.memo(
         {isCompleted && (
           <div
             style={{
-              backgroundColor: "#f9f0ff",
-              border: "1px solid #d3ade6",
+              backgroundColor: "var(--color-secondary-bg)",
+              border: "1px solid var(--color-secondary-border)",
               borderRadius: 8,
               padding: "6px 12px",
               marginBottom: 14,
@@ -169,7 +169,7 @@ export const ExamCard: React.FC<ExamCardProps> = React.memo(
               alignItems: "center",
             }}
           >
-            <Text style={{ fontSize: 12, color: "#531dab", fontWeight: 600 }}>
+            <Text style={{ fontSize: 12, color: "var(--color-secondary-active)", fontWeight: 600 }}>
               <TrophyOutlined style={{ marginRight: 6 }} /> Điểm số bài thi:
             </Text>
             <Tag
@@ -200,7 +200,7 @@ export const ExamCard: React.FC<ExamCardProps> = React.memo(
                 size="small"
                 icon={<PlayCircleOutlined />}
                 onClick={() => onStart(item)}
-                style={{ borderRadius: 6, fontSize: 12, backgroundColor: "#52c41a" }}
+                style={{ borderRadius: 6, fontSize: 12, backgroundColor: "var(--color-success-base)" }}
               >
                 Vào thi
               </Button>
@@ -212,7 +212,7 @@ export const ExamCard: React.FC<ExamCardProps> = React.memo(
                 size="small"
                 icon={<SyncOutlined spin />}
                 onClick={() => onStart(item)}
-                style={{ borderRadius: 6, fontSize: 12, backgroundColor: "#fa8c16" }}
+                style={{ borderRadius: 6, fontSize: 12, backgroundColor: "var(--color-warning-base)" }}
               >
                 Tiếp tục
               </Button>
@@ -224,7 +224,7 @@ export const ExamCard: React.FC<ExamCardProps> = React.memo(
                 size="small"
                 icon={<TrophyOutlined />}
                 onClick={() => onReview(item)}
-                style={{ borderRadius: 6, fontSize: 12, backgroundColor: "#722ed1" }}
+                style={{ borderRadius: 6, fontSize: 12, backgroundColor: "var(--color-secondary-icon)" }}
               >
                 Kết quả
               </Button>

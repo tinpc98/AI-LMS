@@ -128,13 +128,13 @@ export const StudentReport: React.FC = () => {
               data={studentPerformanceData}
               margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
             >
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--color-border-default)" />
               <XAxis dataKey="name" tickLine={false} />
               <YAxis domain={[0, 10]} tickLine={false} axisLine={false} />
               <Tooltip />
-              <Bar dataKey="math" name="Toán học" fill="#1677ff" radius={[4, 4, 0, 0]} />
-              <Bar dataKey="physics" name="Vật lý" fill="#52c41a" radius={[4, 4, 0, 0]} />
-              <Bar dataKey="english" name="Tiếng Anh" fill="#722ed1" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="math" name="Toán học" fill="var(--color-action-primary-bg)" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="physics" name="Vật lý" fill="var(--color-success-base)" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="english" name="Tiếng Anh" fill="var(--color-secondary-icon)" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>

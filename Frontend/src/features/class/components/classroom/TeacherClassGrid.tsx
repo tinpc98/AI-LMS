@@ -9,6 +9,8 @@ import {
   BookOutlined,
 } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
+import { formatLearningMode } from "../../../../shared/utils/labelFormatters";
+import { StatusBadge } from "../../../../shared/components/StatusBadge";
 
 const { Title, Text } = Typography;
 
@@ -45,27 +47,6 @@ export const TeacherClassGrid: React.FC<TeacherClassGridProps> = React.memo(
       setTimeout(() => setCopiedId(null), 2000);
     };
 
-    const getStatusTag = (status?: string) => {
-      switch (status) {
-        case "Ready":
-        case "Active":
-        case "Ongoing":
-        case "active":
-          return <Tag color="success">Đang hoạt động</Tag>;
-        case "Draft":
-        case "Upcoming":
-          return <Tag color="processing">Sắp diễn ra</Tag>;
-        case "Completed":
-        case "completed":
-          return <Tag color="default">Đã kết thúc</Tag>;
-        case "Cancelled":
-        case "closed":
-          return <Tag color="error">Đã đóng</Tag>;
-        default:
-          return <Tag color="blue">{status || "Hoạt động"}</Tag>;
-      }
-    };
-
     return (
       <Row gutter={[20, 20]}>
         {classes.map((cls) => {
@@ -82,7 +63,7 @@ export const TeacherClassGrid: React.FC<TeacherClassGridProps> = React.memo(
                 loading={loading}
                 style={{
                   borderRadius: 14,
-                  border: "1px solid #f0f0f0",
+                  border: "1px solid var(--color-border-default)",
                   boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
                   display: "flex",
                   flexDirection: "column",
@@ -114,7 +95,7 @@ export const TeacherClassGrid: React.FC<TeacherClassGridProps> = React.memo(
                     >
                       {cls.className}
                     </Title>
-                    {getStatusTag(cls.status)}
+                    <StatusBadge status={cls.status} />
                   </div>
 
                   {courseName && (
@@ -131,10 +112,10 @@ export const TeacherClassGrid: React.FC<TeacherClassGridProps> = React.memo(
                   {code && (
                     <div
                       style={{
-                        backgroundColor: "#f0f5ff",
+                        backgroundColor: "var(--color-bg-primary-tint)",
                         padding: "8px 12px",
                         borderRadius: 8,
-                        border: "1px solid #adc6ff",
+                        border: "1px solid var(--color-border-primary-tint)",
                         display: "flex",
                         justifyContent: "space-between",
                         alignItems: "center",
@@ -142,11 +123,11 @@ export const TeacherClassGrid: React.FC<TeacherClassGridProps> = React.memo(
                       }}
                     >
                       <Space size={6}>
-                        <KeyOutlined style={{ color: "#1d39c4" }} />
-                        <Text style={{ fontSize: 12, color: "#595959" }}>Mã tham gia:</Text>
+                        <KeyOutlined style={{ color: "var(--color-action-primary-bg-active)" }} />
+                        <Text style={{ fontSize: 12, color: "var(--color-text-body)" }}>Mã tham gia:</Text>
                         <Text
                           strong
-                          style={{ fontSize: 13, color: "#1d39c4", fontFamily: "monospace" }}
+                          style={{ fontSize: 13, color: "var(--color-action-primary-bg-active)", fontFamily: "monospace" }}
                         >
                           {code}
                         </Text>
@@ -157,7 +138,7 @@ export const TeacherClassGrid: React.FC<TeacherClassGridProps> = React.memo(
                           size="small"
                           icon={
                             copiedId === cls._id ? (
-                              <CheckOutlined style={{ color: "#52c41a" }} />
+                              <CheckOutlined style={{ color: "var(--color-success-base)" }} />
                             ) : (
                               <CopyOutlined />
                             )
@@ -169,7 +150,7 @@ export const TeacherClassGrid: React.FC<TeacherClassGridProps> = React.memo(
                   )}
                 </div>
 
-                <div style={{ paddingTop: 12, borderTop: "1px solid #f5f5f5" }}>
+                <div style={{ paddingTop: 12, borderTop: "1px solid var(--color-bg-page)" }}>
                   <div
                     style={{
                       display: "flex",
@@ -179,12 +160,16 @@ export const TeacherClassGrid: React.FC<TeacherClassGridProps> = React.memo(
                     }}
                   >
                     <Space size={6}>
-                      <TeamOutlined style={{ color: "#52c41a" }} />
-                      <Text style={{ fontSize: 13, color: "#595959" }}>
+                      <TeamOutlined style={{ color: "var(--color-success-base)" }} />
+                      <Text style={{ fontSize: 13, color: "var(--color-text-body)" }}>
                         Sĩ số: <strong>{studentCount}</strong> / {max} học sinh
                       </Text>
                     </Space>
-                    {cls.learningMode && <Tag style={{ margin: 0 }}>{cls.learningMode}</Tag>}
+                    {cls.learningMode && (
+                      <Tag color="cyan" style={{ margin: 0 }}>
+                        {formatLearningMode(cls.learningMode)}
+                      </Tag>
+                    )}
                   </div>
 
                   <Button

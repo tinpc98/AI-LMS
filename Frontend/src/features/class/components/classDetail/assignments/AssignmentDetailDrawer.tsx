@@ -60,9 +60,9 @@ export const AssignmentDetailDrawer: React.FC<AssignmentDetailDrawerProps> = Rea
         onClose={onClose}
         title={
           <Space align="center">
-            <FileTextOutlined style={{ color: "#1890ff", fontSize: 20 }} />
+            <FileTextOutlined style={{ color: "var(--color-action-primary-bg)", fontSize: 20 }} />
             <div>
-              <Title level={5} style={{ margin: 0, color: "#1f2937" }}>
+              <Title level={5} style={{ margin: 0, color: "var(--color-text-title)" }}>
                 {item.title}
               </Title>
               <Space size={6} style={{ marginTop: 2 }}>
@@ -100,11 +100,11 @@ export const AssignmentDetailDrawer: React.FC<AssignmentDetailDrawerProps> = Rea
             bordered
             column={1}
             size="small"
-            styles={{ label: { width: "30%", fontWeight: 600, backgroundColor: "#fafafa" } }}
+            styles={{ label: { width: "30%", fontWeight: 600, backgroundColor: "var(--color-bg-page)" } }}
             style={{ marginBottom: 20 }}
           >
             <Descriptions.Item label="Tiêu đề bài tập">
-              <Text strong style={{ color: "#1f2937" }}>
+              <Text strong style={{ color: "var(--color-text-title)" }}>
                 {item.title}
               </Text>
             </Descriptions.Item>
@@ -115,8 +115,8 @@ export const AssignmentDetailDrawer: React.FC<AssignmentDetailDrawerProps> = Rea
 
             <Descriptions.Item label="Hạn nộp bài (Deadline)">
               <Space size={6}>
-                <ClockCircleOutlined style={{ color: item.isOverdue ? "#cf1322" : "#1890ff" }} />
-                <Text strong style={{ color: item.isOverdue ? "#cf1322" : "#1f2937" }}>
+                <ClockCircleOutlined style={{ color: item.isOverdue ? "var(--color-error-text)" : "var(--color-action-primary-bg)" }} />
+                <Text strong style={{ color: item.isOverdue ? "var(--color-error-text)" : "var(--color-text-title)" }}>
                   {formattedDeadline}
                 </Text>
               </Space>
@@ -124,7 +124,7 @@ export const AssignmentDetailDrawer: React.FC<AssignmentDetailDrawerProps> = Rea
 
             <Descriptions.Item label="Giáo viên ra đề">
               <Space size={6}>
-                <UserOutlined style={{ color: "#1890ff" }} />
+                <UserOutlined style={{ color: "var(--color-action-primary-bg)" }} />
                 <span>{teacherName}</span>
               </Space>
             </Descriptions.Item>
@@ -136,7 +136,7 @@ export const AssignmentDetailDrawer: React.FC<AssignmentDetailDrawerProps> = Rea
           <div style={{ marginBottom: 20 }}>
             <Text
               strong
-              style={{ fontSize: 14, color: "#262626", display: "block", marginBottom: 6 }}
+              style={{ fontSize: 14, color: "var(--color-text-title)", display: "block", marginBottom: 6 }}
             >
               Yêu cầu bài tập:
             </Text>
@@ -145,10 +145,10 @@ export const AssignmentDetailDrawer: React.FC<AssignmentDetailDrawerProps> = Rea
                 fontSize: 13,
                 lineHeight: 1.6,
                 margin: 0,
-                backgroundColor: "#fafafa",
+                backgroundColor: "var(--color-bg-page)",
                 padding: "12px 16px",
                 borderRadius: 10,
-                border: "1px solid #f0f0f0",
+                border: "1px solid var(--color-border-default)",
               }}
             >
               {item.description || "Không có yêu cầu chi tiết thêm cho bài tập này."}
@@ -160,7 +160,7 @@ export const AssignmentDetailDrawer: React.FC<AssignmentDetailDrawerProps> = Rea
             <div style={{ marginBottom: 24 }}>
               <Text
                 strong
-                style={{ fontSize: 14, color: "#262626", display: "block", marginBottom: 8 }}
+                style={{ fontSize: 14, color: "var(--color-text-title)", display: "block", marginBottom: 8 }}
               >
                 <PaperClipOutlined style={{ marginRight: 6 }} /> Tài liệu / Đề bài đính kèm (
                 {item.attachments.length}):
@@ -173,14 +173,14 @@ export const AssignmentDetailDrawer: React.FC<AssignmentDetailDrawerProps> = Rea
                       display: "flex",
                       justifyContent: "space-between",
                       alignItems: "center",
-                      backgroundColor: "#fff",
+                      backgroundColor: "var(--color-surface)",
                       padding: "8px 14px",
                       borderRadius: 8,
-                      border: "1px solid #e8e8e8",
+                      border: "1px solid var(--color-border-default)",
                     }}
                   >
                     <Space size={8}>
-                      <PaperClipOutlined style={{ color: "#1890ff" }} />
+                      <PaperClipOutlined style={{ color: "var(--color-action-primary-bg)" }} />
                       <Text ellipsis style={{ fontSize: 13, maxWidth: 350 }}>
                         {att.name || `File đính kèm ${idx + 1}`}
                       </Text>

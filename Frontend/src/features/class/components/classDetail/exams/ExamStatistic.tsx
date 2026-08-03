@@ -20,13 +20,13 @@ export const ExamStatistic: React.FC<ExamStatisticProps> = React.memo(({ stats }
         <Card
           bordered={false}
           styles={{ body: { padding: "12px 16px" } }}
-          style={{ borderRadius: 12, backgroundColor: "#fafafa" }}
+          style={{ borderRadius: 12, backgroundColor: "var(--color-bg-page)" }}
         >
           <Statistic
-            title={<span style={{ fontSize: 11, color: "#8c8c8c" }}>Tổng bài thi</span>}
+            title={<span style={{ fontSize: 11, color: "var(--color-text-description)" }}>Tổng bài thi</span>}
             value={stats.total}
-            prefix={<FormOutlined style={{ color: "#1890ff", marginRight: 6 }} />}
-            valueStyle={{ fontSize: 20, fontWeight: 700, color: "#1f2937" }}
+            prefix={<FormOutlined style={{ color: "var(--color-action-primary-bg)", marginRight: 6 }} />}
+            valueStyle={{ fontSize: 20, fontWeight: 700, color: "var(--color-text-title)" }}
           />
         </Card>
       </Col>
@@ -35,13 +35,13 @@ export const ExamStatistic: React.FC<ExamStatisticProps> = React.memo(({ stats }
         <Card
           bordered={false}
           styles={{ body: { padding: "12px 16px" } }}
-          style={{ borderRadius: 12, backgroundColor: "#e6f7ff" }}
+          style={{ borderRadius: 12, backgroundColor: "var(--color-bg-primary-tint)" }}
         >
           <Statistic
-            title={<span style={{ fontSize: 11, color: "#8c8c8c" }}>Đang mở thi</span>}
+            title={<span style={{ fontSize: 11, color: "var(--color-text-description)" }}>Đang mở thi</span>}
             value={stats.available}
-            prefix={<PlayCircleOutlined style={{ color: "#1890ff", marginRight: 6 }} />}
-            valueStyle={{ fontSize: 20, fontWeight: 700, color: "#096dd9" }}
+            prefix={<PlayCircleOutlined style={{ color: "var(--color-action-primary-bg)", marginRight: 6 }} />}
+            valueStyle={{ fontSize: 20, fontWeight: 700, color: "var(--color-action-primary-bg-active)" }}
           />
         </Card>
       </Col>
@@ -50,13 +50,13 @@ export const ExamStatistic: React.FC<ExamStatisticProps> = React.memo(({ stats }
         <Card
           bordered={false}
           styles={{ body: { padding: "12px 16px" } }}
-          style={{ borderRadius: 12, backgroundColor: "#fffbe6" }}
+          style={{ borderRadius: 12, backgroundColor: "var(--color-warning-bg)" }}
         >
           <Statistic
-            title={<span style={{ fontSize: 11, color: "#8c8c8c" }}>Đang làm dở dang</span>}
+            title={<span style={{ fontSize: 11, color: "var(--color-text-description)" }}>Đang làm dở dang</span>}
             value={stats.inProgress}
-            prefix={<SyncOutlined style={{ color: "#faad14", marginRight: 6 }} />}
-            valueStyle={{ fontSize: 20, fontWeight: 700, color: "#d48806" }}
+            prefix={<SyncOutlined style={{ color: "var(--color-warning-base)", marginRight: 6 }} />}
+            valueStyle={{ fontSize: 20, fontWeight: 700, color: "var(--color-warning-text)" }}
           />
         </Card>
       </Col>
@@ -65,13 +65,13 @@ export const ExamStatistic: React.FC<ExamStatisticProps> = React.memo(({ stats }
         <Card
           bordered={false}
           styles={{ body: { padding: "12px 16px" } }}
-          style={{ borderRadius: 12, backgroundColor: "#f6ffed" }}
+          style={{ borderRadius: 12, backgroundColor: "var(--color-success-bg)" }}
         >
           <Statistic
-            title={<span style={{ fontSize: 11, color: "#8c8c8c" }}>Đã hoàn thành</span>}
+            title={<span style={{ fontSize: 11, color: "var(--color-text-description)" }}>Đã hoàn thành</span>}
             value={stats.completed}
-            prefix={<CheckCircleOutlined style={{ color: "#52c41a", marginRight: 6 }} />}
-            valueStyle={{ fontSize: 20, fontWeight: 700, color: "#389e0d" }}
+            prefix={<CheckCircleOutlined style={{ color: "var(--color-success-base)", marginRight: 6 }} />}
+            valueStyle={{ fontSize: 20, fontWeight: 700, color: "var(--color-success-text)" }}
           />
         </Card>
       </Col>
@@ -80,14 +80,14 @@ export const ExamStatistic: React.FC<ExamStatisticProps> = React.memo(({ stats }
         <Card
           bordered={false}
           styles={{ body: { padding: "12px 16px" } }}
-          style={{ borderRadius: 12, backgroundColor: "#f9f0ff" }}
+          style={{ borderRadius: 12, backgroundColor: "var(--color-secondary-bg)" }}
         >
           <Statistic
-            title={<span style={{ fontSize: 11, color: "#8c8c8c" }}>Điểm thi trung bình</span>}
+            title={<span style={{ fontSize: 11, color: "var(--color-text-description)" }}>Điểm thi trung bình</span>}
             value={stats.averageScore !== null ? stats.averageScore : "--"}
             suffix={stats.averageScore !== null ? "/ 10" : ""}
-            prefix={<TrophyOutlined style={{ color: "#722ed1", marginRight: 6 }} />}
-            valueStyle={{ fontSize: 20, fontWeight: 700, color: "#531dab" }}
+            prefix={<TrophyOutlined style={{ color: "var(--color-secondary-icon)", marginRight: 6 }} />}
+            valueStyle={{ fontSize: 20, fontWeight: 700, color: "var(--color-secondary-active)" }}
           />
         </Card>
       </Col>

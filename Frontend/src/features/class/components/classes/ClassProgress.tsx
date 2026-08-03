@@ -21,7 +21,7 @@ export const ClassProgress: React.FC<ClassProgressProps> = React.memo(({ percent
         </Text>
         <Text
           strong
-          style={{ fontSize: 12, color: isUnknown ? "#9ca3af" : "#1f2937" }}
+          style={{ fontSize: 12, color: isUnknown ? "var(--color-text-disabled)" : "var(--color-text-title)" }}
           title={isUnknown ? "Lớp chưa có bài giảng hoặc bài tập nào để tính tiến độ" : undefined}
         >
           {isUnknown ? "—" : `${safePercent}%`}
@@ -33,10 +33,10 @@ export const ClassProgress: React.FC<ClassProgressProps> = React.memo(({ percent
         size="small"
         strokeColor={
           isUnknown
-            ? "#e5e7eb"
+            ? "var(--color-border-default)"
             : {
-                "0%": "#108ee9",
-                "100%": "#87d068",
+                "0%": "var(--color-action-primary-bg)",
+                "100%": "var(--color-success-base)",
               }
         }
       />

@@ -81,7 +81,7 @@ export const StudentMyClassesPage: React.FC = () => {
       {loading ? (
         <Row gutter={[20, 20]}>
           {[1, 2, 3, 4, 5, 6, 7, 8].map((key) => (
-            <Col xs={24} sm={12} lg={8} xl={6} key={key}>
+            <Col xs={24} sm={24} md={12} lg={8} xl={6} key={key}>
               <Card style={{ borderRadius: 16, height: 320 }}>
                 <Skeleton active avatar paragraph={{ rows: 5 }} />
               </Card>
@@ -93,7 +93,7 @@ export const StudentMyClassesPage: React.FC = () => {
       ) : (
         <Row gutter={[20, 20]}>
           {filteredClasses.map((item) => (
-            <Col xs={24} sm={12} lg={8} xl={6} key={item._id}>
+            <Col xs={24} sm={24} md={12} lg={8} xl={6} key={item._id}>
               <ClassCard item={item} />
             </Col>
           ))}

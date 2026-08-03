@@ -24,12 +24,12 @@ const AIDashboard = ({ stats, features }: AIDashboardProps) => {
   const topFeatures = [...features].sort((a, b) => b.dailyRequests - a.dailyRequests).slice(0, 5);
 
   const usageBreakdown = [
-    { label: "AI Chatbot (Gemini 2.5 Flash)", requests: 6840, percent: 36, color: "#1890ff" },
-    { label: "AI Homework Assistant (Gemini Pro)", requests: 4300, percent: 23, color: "#52c41a" },
-    { label: "AI Quiz Generator (GPT-4.5)", requests: 3120, percent: 17, color: "#722ed1" },
-    { label: "AI Summary (Gemini 2.5 Pro)", requests: 2150, percent: 11, color: "#fa8c16" },
-    { label: "AI Exam Generator (GPT-4.5)", requests: 1420, percent: 8, color: "#eb2f96" },
-    { label: "AI Essay Evaluation (Claude 3.5)", requests: 980, percent: 5, color: "#13c2c2" },
+    { label: "AI Chatbot (Gemini 2.5 Flash)", requests: 6840, percent: 36, color: "var(--color-action-primary-bg)" },
+    { label: "AI Homework Assistant (Gemini Pro)", requests: 4300, percent: 23, color: "var(--color-success-base)" },
+    { label: "AI Quiz Generator (GPT-4.5)", requests: 3120, percent: 17, color: "var(--color-secondary-icon)" },
+    { label: "AI Summary (Gemini 2.5 Pro)", requests: 2150, percent: 11, color: "var(--color-warning-base)" },
+    { label: "AI Exam Generator (GPT-4.5)", requests: 1420, percent: 8, color: "var(--color-accent-base)" },
+    { label: "AI Essay Evaluation (Claude 3.5)", requests: 980, percent: 5, color: "var(--color-info-base)" },
   ];
 
   return (
@@ -49,7 +49,7 @@ const AIDashboard = ({ stats, features }: AIDashboardProps) => {
             <Statistic
               title="Active AI Models"
               value={`${stats.activeModelsCount}/${stats.totalModelsCount}`}
-              prefix={<RobotOutlined style={{ color: "#1890ff", marginRight: 6 }} />}
+              prefix={<RobotOutlined style={{ color: "var(--color-action-primary-bg)", marginRight: 6 }} />}
               valueStyle={{ fontSize: 22, fontWeight: 600 }}
             />
           </Card>
@@ -68,7 +68,7 @@ const AIDashboard = ({ stats, features }: AIDashboardProps) => {
             <Statistic
               title="Prompt Templates"
               value={stats.promptTemplatesCount}
-              prefix={<FileTextOutlined style={{ color: "#722ed1", marginRight: 6 }} />}
+              prefix={<FileTextOutlined style={{ color: "var(--color-secondary-icon)", marginRight: 6 }} />}
               valueStyle={{ fontSize: 22, fontWeight: 600 }}
             />
           </Card>
@@ -87,7 +87,7 @@ const AIDashboard = ({ stats, features }: AIDashboardProps) => {
             <Statistic
               title="Knowledge Base"
               value={stats.knowledgeDocsCount}
-              prefix={<BookOutlined style={{ color: "#52c41a", marginRight: 6 }} />}
+              prefix={<BookOutlined style={{ color: "var(--color-success-base)", marginRight: 6 }} />}
               suffix="Docs"
               valueStyle={{ fontSize: 22, fontWeight: 600 }}
             />
@@ -107,7 +107,7 @@ const AIDashboard = ({ stats, features }: AIDashboardProps) => {
             <Statistic
               title="Features Enabled"
               value={`${stats.enabledFeaturesCount}/${stats.totalFeaturesCount}`}
-              prefix={<CheckCircleOutlined style={{ color: "#fa8c16", marginRight: 6 }} />}
+              prefix={<CheckCircleOutlined style={{ color: "var(--color-warning-base)", marginRight: 6 }} />}
               valueStyle={{ fontSize: 22, fontWeight: 600 }}
             />
           </Card>
@@ -126,8 +126,8 @@ const AIDashboard = ({ stats, features }: AIDashboardProps) => {
             <Statistic
               title="Requests Today"
               value={stats.todayRequestsCount}
-              prefix={<ThunderboltOutlined style={{ color: "#13c2c2", marginRight: 6 }} />}
-              valueStyle={{ fontSize: 22, fontWeight: 600, color: "#13c2c2" }}
+              prefix={<ThunderboltOutlined style={{ color: "var(--color-info-base)", marginRight: 6 }} />}
+              valueStyle={{ fontSize: 22, fontWeight: 600, color: "var(--color-info-base)" }}
             />
           </Card>
         </Col>
@@ -146,8 +146,8 @@ const AIDashboard = ({ stats, features }: AIDashboardProps) => {
               title="Avg Response Time"
               value={stats.avgResponseTimeMs}
               suffix="ms"
-              prefix={<FieldTimeOutlined style={{ color: "#eb2f96", marginRight: 6 }} />}
-              valueStyle={{ fontSize: 22, fontWeight: 600, color: "#eb2f96" }}
+              prefix={<FieldTimeOutlined style={{ color: "var(--color-accent-base)", marginRight: 6 }} />}
+              valueStyle={{ fontSize: 22, fontWeight: 600, color: "var(--color-accent-base)" }}
             />
           </Card>
         </Col>
@@ -159,7 +159,7 @@ const AIDashboard = ({ stats, features }: AIDashboardProps) => {
             bordered={false}
             title={
               <span>
-                <ApiOutlined style={{ marginRight: 8, color: "#1890ff" }} /> AI Request Volume &
+                <ApiOutlined style={{ marginRight: 8, color: "var(--color-action-primary-bg)" }} /> AI Request Volume &
                 Distribution
               </span>
             }
@@ -191,7 +191,7 @@ const AIDashboard = ({ stats, features }: AIDashboardProps) => {
             bordered={false}
             title={
               <span>
-                <TrophyOutlined style={{ marginRight: 8, color: "#fa8c16" }} /> Top AI Features
+                <TrophyOutlined style={{ marginRight: 8, color: "var(--color-warning-base)" }} /> Top AI Features
                 Ranking
               </span>
             }
@@ -206,8 +206,8 @@ const AIDashboard = ({ stats, features }: AIDashboardProps) => {
                       <Avatar
                         style={{
                           backgroundColor:
-                            index === 0 ? "#fadb14" : index === 1 ? "#d9d9d9" : "#d3ad69",
-                          color: index < 3 ? "#000" : "#fff",
+                            index === 0 ? "var(--color-warning-base)" : index === 1 ? "var(--color-border-default)" : "var(--color-warning-text)",
+                          color: index < 3 ? "#000" : "var(--color-surface)",
                           fontWeight: 600,
                         }}
                       >

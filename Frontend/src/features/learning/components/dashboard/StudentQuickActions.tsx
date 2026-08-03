@@ -8,6 +8,7 @@ import {
   BellOutlined,
 } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
+import { tokens } from "../../../../shared/theme/tokens";
 
 const { Text } = Typography;
 
@@ -31,9 +32,9 @@ export const StudentQuickActions: React.FC = React.memo(() => {
       title: "Vào lớp học",
       description: "Tham gia buổi học ngay",
       icon: <RocketOutlined style={{ fontSize: 28 }} />,
-      bgColor: "#e6f7ff",
-      borderColor: "#91d5ff",
-      iconColor: "#1890ff",
+      bgColor: tokens.color.bg.primaryTint,
+      borderColor: tokens.color.border.primaryTint,
+      iconColor: tokens.color.action.primaryBg,
       onClick: () => navigate("/student/myclasses"),
     },
     {
@@ -41,9 +42,9 @@ export const StudentQuickActions: React.FC = React.memo(() => {
       title: "Xem bài tập",
       description: "Danh sách bài cần nộp",
       icon: <FileTextOutlined style={{ fontSize: 28 }} />,
-      bgColor: "#fff7e6",
-      borderColor: "#ffd591",
-      iconColor: "#fa8c16",
+      bgColor: tokens.color.semantic.warning.bg,
+      borderColor: tokens.color.border.default,
+      iconColor: tokens.color.semantic.warning.base,
       onClick: () => navigate("/student/studentassignment"),
     },
     {
@@ -51,9 +52,9 @@ export const StudentQuickActions: React.FC = React.memo(() => {
       title: "Danh sách lớp",
       description: "Tất cả lớp đang học",
       icon: <BookOutlined style={{ fontSize: 28 }} />,
-      bgColor: "#f9f0ff",
-      borderColor: "#d3ade6",
-      iconColor: "#722ed1",
+      bgColor: tokens.color.bg.secondaryTint,
+      borderColor: tokens.color.border.secondaryTint,
+      iconColor: tokens.color.secondary.icon,
       onClick: () => navigate("/student/myclasses"),
     },
     {
@@ -61,9 +62,9 @@ export const StudentQuickActions: React.FC = React.memo(() => {
       title: "Lịch thi",
       description: "Kiểm tra & kỳ thi sắp tới",
       icon: <CalendarOutlined style={{ fontSize: 28 }} />,
-      bgColor: "#f6ffed",
-      borderColor: "#b7eb8f",
-      iconColor: "#52c41a",
+      bgColor: tokens.color.semantic.success.bg,
+      borderColor: tokens.color.border.default,
+      iconColor: tokens.color.semantic.success.base,
       onClick: () => navigate("/student/myclasses"),
     },
     {
@@ -71,40 +72,40 @@ export const StudentQuickActions: React.FC = React.memo(() => {
       title: "Thông báo",
       description: "Thông tin từ giảng viên",
       icon: <BellOutlined style={{ fontSize: 28 }} />,
-      bgColor: "#fff0f6",
-      borderColor: "#ffadd2",
-      iconColor: "#eb2f96",
-      onClick: () => navigate("/student/myclasses"),
+      bgColor: tokens.color.bg.accentTint,
+      borderColor: tokens.color.border.accentTint,
+      iconColor: tokens.color.accent.base,
+      onClick: () => navigate("/student/notifications"),
     },
   ];
 
   return (
     <div
       style={{
-        borderRadius: 20,
+        borderRadius: tokens.radius.lg,
         boxShadow: "0 2px 12px rgba(0, 0, 0, 0.06)",
-        border: "1px solid #f0f0f0",
-        marginBottom: 32,
-        backgroundColor: "#fff",
-        padding: "20px",
+        border: `1px solid ${tokens.color.border.default}`,
+        marginBottom: tokens.space[6],
+        backgroundColor: tokens.color.bg.surface,
+        padding: tokens.space[5],
       }}
     >
-      <Row gutter={[16, 12]}>
+      <Row gutter={[tokens.space[4], tokens.space[3]]}>
         {actions.map((act) => (
-          <Col xs={12} sm={8} md={6} lg={24 / actions.length} key={act.key} style={{ minWidth: 120 }}>
+          <Col xs={12} sm={8} md={8} lg={8} xl={4.8} key={act.key} style={{ flex: 1, minWidth: 140 }}>
             <div
               onClick={act.onClick}
               style={{
                 backgroundColor: act.bgColor,
                 border: `1px solid ${act.borderColor}`,
-                borderRadius: 16,
-                padding: "18px 16px",
+                borderRadius: tokens.radius.md,
+                padding: `${tokens.space[4]}px ${tokens.space[4]}px`,
                 display: "flex",
                 flexDirection: "column",
                 alignItems: "flex-start",
-                gap: 10,
+                gap: tokens.space[2],
                 cursor: "pointer",
-                transition: "all 0.25s ease",
+                transition: "var(--transition-fast)",
                 height: "100%",
               }}
               onMouseEnter={(e) => {
@@ -119,10 +120,10 @@ export const StudentQuickActions: React.FC = React.memo(() => {
             >
               <div
                 style={{
-                  width: 52,
-                  height: 52,
-                  borderRadius: 14,
-                  backgroundColor: "rgba(255,255,255,0.7)",
+                  width: 48,
+                  height: 48,
+                  borderRadius: tokens.radius.md,
+                  backgroundColor: "rgba(255,255,255,0.85)",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
@@ -133,10 +134,10 @@ export const StudentQuickActions: React.FC = React.memo(() => {
                 {act.icon}
               </div>
               <div>
-                <Text strong style={{ fontSize: 14, color: "#1f2937", display: "block", lineHeight: 1.3 }}>
+                <Text strong style={{ fontSize: 14, color: tokens.color.text.title, display: "block", lineHeight: 1.3 }}>
                   {act.title}
                 </Text>
-                <Text style={{ fontSize: 12, color: "#6b7280", marginTop: 2, display: "block", lineHeight: 1.4 }}>
+                <Text style={{ fontSize: 12, color: tokens.color.text.description, marginTop: tokens.space[1], display: "block", lineHeight: 1.4 }}>
                   {act.description}
                 </Text>
               </div>

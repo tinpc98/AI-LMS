@@ -108,7 +108,7 @@ export const GradeDetailDrawer: React.FC<GradeDetailDrawerProps> = React.memo(
       <Drawer
         title={
           <Space align="center">
-            <TrophyOutlined style={{ color: "#1890ff" }} />
+            <TrophyOutlined style={{ color: "var(--color-action-primary-bg)" }} />
             <span>Chi tiết & Chấm điểm: {studentName}</span>
           </Space>
         }
@@ -123,14 +123,14 @@ export const GradeDetailDrawer: React.FC<GradeDetailDrawerProps> = React.memo(
             {/* Student Info Card */}
             <Card
               size="small"
-              style={{ backgroundColor: "#f8f9fa", borderRadius: 8 }}
+              style={{ backgroundColor: "var(--color-bg-page)", borderRadius: 8 }}
               styles={{ body: { padding: 12 } }}
             >
               <Space size={12}>
                 <Avatar
                   src={student?.avatar || undefined}
                   icon={!student?.avatar ? <UserOutlined /> : undefined}
-                  style={{ backgroundColor: "#1890ff" }}
+                  style={{ backgroundColor: "var(--color-action-primary-bg)" }}
                 />
                 <div>
                   <Text strong style={{ fontSize: 15, display: "block" }}>
@@ -157,7 +157,7 @@ export const GradeDetailDrawer: React.FC<GradeDetailDrawerProps> = React.memo(
                     style={{
                       marginBottom: 14,
                       borderRadius: 8,
-                      border: "1px solid #e8e8e8",
+                      border: "1px solid var(--color-border-default)",
                       opacity: isManual ? 1 : 0.7,
                     }}
                     title={

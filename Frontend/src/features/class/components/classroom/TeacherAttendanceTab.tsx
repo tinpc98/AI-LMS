@@ -149,16 +149,16 @@ export const TeacherAttendanceTab: React.FC<TeacherAttendanceTabProps> = React.m
           const { present, absent, late, excused } = record.stats;
           return (
             <Space size={16} style={{ fontSize: 13 }}>
-              <span style={{ color: "#52c41a" }}>
+              <span style={{ color: "var(--color-success-base)" }}>
                 <CheckCircleOutlined /> {present}
               </span>
-              <span style={{ color: "#faad14" }}>
+              <span style={{ color: "var(--color-warning-base)" }}>
                 <ClockCircleOutlined /> {late}
               </span>
-              <span style={{ color: "#1890ff" }}>
+              <span style={{ color: "var(--color-action-primary-bg)" }}>
                 <InfoCircleOutlined /> {excused}
               </span>
-              <span style={{ color: "#ff4d4f" }}>
+              <span style={{ color: "var(--color-error-base)" }}>
                 <CloseCircleOutlined /> {absent}
               </span>
             </Space>
@@ -194,7 +194,7 @@ export const TeacherAttendanceTab: React.FC<TeacherAttendanceTabProps> = React.m
         key: "time",
         render: (_, record) => (
           <Space>
-            <ClockCircleOutlined style={{ color: "#faad14" }} />
+            <ClockCircleOutlined style={{ color: "var(--color-warning-base)" }} />
             <Text>
               {record.startTime} - {record.endTime}
             </Text>
@@ -214,8 +214,8 @@ export const TeacherAttendanceTab: React.FC<TeacherAttendanceTabProps> = React.m
         <Card
           style={{
             borderRadius: 16,
-            background: "linear-gradient(135deg, #1890ff 0%, #096dd9 100%)",
-            color: "#fff",
+            background: "linear-gradient(135deg, var(--color-action-primary-bg) 0%, var(--color-action-primary-bg-active) 100%)",
+            color: "var(--color-surface)",
             boxShadow: "0 8px 24px rgba(24, 144, 255, 0.25)",
             border: "none",
           }}
@@ -231,7 +231,7 @@ export const TeacherAttendanceTab: React.FC<TeacherAttendanceTabProps> = React.m
             }}
           >
             <div>
-              <Title level={4} style={{ color: "#fff", margin: 0, fontWeight: 700 }}>
+              <Title level={4} style={{ color: "var(--color-surface)", margin: 0, fontWeight: 700 }}>
                 📌 Tổng quan Điểm danh: {className}
               </Title>
               <Text style={{ color: "rgba(255,255,255,0.85)", fontSize: 13 }}>
@@ -245,7 +245,7 @@ export const TeacherAttendanceTab: React.FC<TeacherAttendanceTabProps> = React.m
               style={{
                 backgroundColor: "rgba(255,255,255,0.2)",
                 borderColor: "rgba(255,255,255,0.4)",
-                color: "#fff",
+                color: "var(--color-surface)",
                 fontWeight: 600,
               }}
             >
@@ -283,7 +283,7 @@ export const TeacherAttendanceTab: React.FC<TeacherAttendanceTabProps> = React.m
               <Card
                 style={{
                   borderRadius: 12,
-                  border: "2px solid #52c41a",
+                  border: "2px solid var(--color-success-base)",
                   boxShadow: "0 4px 12px rgba(82, 196, 26, 0.15)",
                 }}
               >
@@ -300,7 +300,7 @@ export const TeacherAttendanceTab: React.FC<TeacherAttendanceTabProps> = React.m
                     <Badge
                       color="green"
                       text={
-                        <Text strong style={{ color: "#52c41a" }}>
+                        <Text strong style={{ color: "var(--color-success-base)" }}>
                           BUỔI HỌC ĐANG DIỄN RA
                         </Text>
                       }
@@ -308,7 +308,7 @@ export const TeacherAttendanceTab: React.FC<TeacherAttendanceTabProps> = React.m
                     <Title level={4} style={{ margin: "8px 0 4px 0" }}>
                       {dayjs(categorized.current.date).format("dddd, DD/MM/YYYY")}
                     </Title>
-                    <Space size="large" style={{ color: "#595959" }}>
+                    <Space size="large" style={{ color: "var(--color-text-body)" }}>
                       <span>
                         <ClockCircleOutlined /> {categorized.current.startTime} -{" "}
                         {categorized.current.endTime}
@@ -333,9 +333,9 @@ export const TeacherAttendanceTab: React.FC<TeacherAttendanceTabProps> = React.m
                       size="large"
                       style={{
                         fontWeight: 600,
-                        background: categorized.current.hasRecords ? "#fff" : "#1890ff",
-                        color: categorized.current.hasRecords ? "#1890ff" : "#fff",
-                        borderColor: "#1890ff",
+                        background: categorized.current.hasRecords ? "var(--color-surface)" : "var(--color-action-primary-bg)",
+                        color: categorized.current.hasRecords ? "var(--color-action-primary-bg)" : "var(--color-surface)",
+                        borderColor: "var(--color-action-primary-bg)",
                       }}
                       icon={<EditOutlined />}
                       onClick={() => handleOpenPopup(categorized.current!)}
@@ -350,7 +350,7 @@ export const TeacherAttendanceTab: React.FC<TeacherAttendanceTabProps> = React.m
             {/* NEXT SESSION */}
             {categorized.next && (
               <Card
-                style={{ borderRadius: 12, borderLeft: "4px solid #1890ff", background: "#f0f5ff" }}
+                style={{ borderRadius: 12, borderLeft: "4px solid var(--color-action-primary-bg)", background: "var(--color-bg-primary-tint)" }}
               >
                 <div
                   style={{

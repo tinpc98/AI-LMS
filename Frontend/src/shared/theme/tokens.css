@@ -1,0 +1,262 @@
+/**
+ * Design System CSS Variables — EduSpace Frontend
+ * 2-Layer Architecture: Palette Layer (Raw) & Semantic Alias Layer (Components)
+ */
+
+:root {
+  /* ==========================================
+     TẦNG 1: PALETTE LAYER (Raw Values)
+     Component KHÔNG dùng trực tiếp tầng này
+     ========================================== */
+
+  /* Primary — Blue */
+  --blue-50: #EDF5FC;
+  --blue-100: #CBE3F6;
+  --blue-500: #2D8CDB;
+  --blue-600: #2075BC;
+  --blue-700: #1E6DAE;
+
+  /* Secondary — Purple (AI, Insight) */
+  --purple-50: #EEEDFD;
+  --purple-100: #D0CCFA;
+  --purple-500: #7A6FF0;
+  --purple-600: #584BEC;
+  --purple-700: #3D31C4;
+
+  /* Accent — Pink */
+  --pink-50: #FCEDF6;
+  --pink-100: #F8CEE6;
+  --pink-500: #E85BAA;
+  --pink-600: #E12D93;
+  --pink-700: #B62075;
+
+  /* Neutral */
+  --slate-50: #F8FAFC;
+  --slate-100: #EEF2F7;
+  --slate-200: #E5E7EB;
+  --slate-400: #94A3B8;
+  --slate-500: #64748B;
+  --slate-600: #475569;
+  --slate-800: #1E293B;
+  --slate-900: #0F172A;
+  --white: #FFFFFF;
+
+  /* Semantic Raw */
+  --green-50: #F0FDF4;
+  --green-500: #22C55E;
+  --green-700: #15803D;
+
+  --amber-50: #FFFBEB;
+  --amber-500: #F59E0B;
+  --amber-700: #B45309;
+
+  --red-50: #FEF2F2;
+  --red-500: #EF4444;
+  --red-700: #B91C1C;
+
+  --sky-50: #EFF6FF;
+  --sky-500: #3B82F6;
+  --sky-700: #1D4ED8;
+
+  /* ==========================================
+     TẦNG 2: SEMANTIC ALIAS LAYER
+     Component CHỈ dùng tầng này
+     ========================================== */
+
+  /* Backgrounds */
+  --color-bg-page: var(--slate-50);
+  --color-surface: var(--white);
+  --color-sidebar-bg: var(--slate-900);
+  --color-sidebar-hover: var(--slate-800);
+  --color-bg-primary-tint: var(--blue-50);
+  --color-bg-secondary-tint: var(--purple-50);
+  --color-bg-accent-tint: var(--pink-50);
+
+  /* Typography Colors */
+  --color-text-title: var(--slate-800);
+  --color-text-body: var(--slate-600);
+  --color-text-description: var(--slate-500);
+  --color-text-disabled: var(--slate-400);
+  --color-text-inverse: var(--white);
+  --color-link: var(--blue-700);
+  --color-link-hover: var(--blue-600);
+
+  /* Action Colors */
+  --color-action-primary-bg: var(--blue-500);
+  --color-action-primary-bg-hover: var(--blue-600);
+  --color-action-primary-bg-active: var(--blue-700);
+  --color-action-primary-text: var(--blue-700);
+  --color-focus-ring: var(--blue-600);
+
+  /* Borders & Dividers */
+  --color-border-default: var(--slate-200);
+  --color-border-divider: var(--slate-100);
+  --color-border-primary-tint: var(--blue-100);
+  --color-border-secondary-tint: var(--purple-100);
+  --color-border-accent-tint: var(--pink-100);
+
+  /* Secondary Module (AI / Insights) */
+  --color-secondary-bg: var(--purple-50);
+  --color-secondary-border: var(--purple-100);
+  --color-secondary-icon: var(--purple-500);
+  --color-secondary-text: var(--purple-600);
+  --color-secondary-active: var(--purple-700);
+
+  /* Accent Module */
+  --color-accent-base: var(--pink-500);
+  --color-accent-bg: var(--pink-50);
+  --color-accent-border: var(--pink-100);
+  --color-accent-dot: var(--pink-500);
+  --color-accent-text: var(--pink-700);
+
+  /* Semantic Status Colors */
+  --color-success-bg: var(--green-50);
+  --color-success-base: var(--green-500);
+  --color-success-text: var(--green-700);
+
+  --color-warning-bg: var(--amber-50);
+  --color-warning-base: var(--amber-500);
+  --color-warning-text: var(--amber-700);
+
+  --color-error-bg: var(--red-50);
+  --color-error-base: var(--red-500);
+  --color-error-text: var(--red-700);
+
+  --color-info-bg: var(--sky-50);
+  --color-info-base: var(--sky-500);
+  --color-info-text: var(--sky-700);
+
+  /* Gradients */
+  --gradient-ai: linear-gradient(90deg, var(--blue-500), var(--purple-500));
+  --gradient-logo: linear-gradient(135deg, var(--blue-500), var(--purple-500));
+
+  /* ==========================================
+     THANG BO GÓC (6 BẬC DUY NHẤT)
+     ========================================== */
+  --radius-none: 0px;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-full: 9999px;
+
+  /* ==========================================
+     THANG KHOẢNG CÁCH (BASE 4PX)
+     ========================================== */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
+
+  /* Spacing Contextual Aliases */
+  --card-padding: var(--space-5);
+  --section-gap: var(--space-6);
+  --page-padding: var(--space-6);
+
+  /* ==========================================
+     BREAKPOINTS CHUẨN ANTD V5
+     ========================================== */
+  --screen-xs: 0px;
+  --screen-sm: 576px;
+  --screen-md: 768px;
+  --screen-lg: 992px;
+  --screen-xl: 1200px;
+  --screen-xxl: 1600px;
+
+  /* ==========================================
+     ANIMATION & TRANSITION TOKENS (GIAI ĐOẠN 3C)
+     ========================================== */
+  --duration-instant: 100ms;
+  --duration-fast: 150ms;
+  --duration-normal: 200ms;
+  --duration-slow: 300ms;
+  --duration-slower: 400ms;
+
+  --ease-out: cubic-bezier(0, 0, 0.2, 1);
+  --ease-in: cubic-bezier(0.4, 0, 1, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+
+  --transition-fast: all var(--duration-fast) var(--ease-out);
+  --transition-normal: all var(--duration-normal) var(--ease-out);
+  --transition-slow: all var(--duration-slow) var(--ease-out);
+  --transition-color: background-color var(--duration-fast) var(--ease-out), border-color var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out);
+  --transition-transform: transform var(--duration-normal) var(--ease-out);
+  --transition-fade: opacity var(--duration-normal) var(--ease-out);
+}
+
+/* ==========================================
+   TẦNG 2 (DARK MODE): SEMANTIC ALIAS LAYER OVERRIDES
+   ========================================== */
+[data-theme="dark"] {
+  /* Backgrounds */
+  --color-bg-page: #0F172A;
+  --color-surface: #1E293B;
+  --color-sidebar-bg: #090D16;
+  --color-sidebar-hover: #1E293B;
+  --color-bg-primary-tint: rgba(45, 140, 219, 0.15);
+  --color-bg-secondary-tint: rgba(122, 111, 240, 0.15);
+  --color-bg-accent-tint: rgba(232, 91, 170, 0.15);
+
+  /* Typography Colors */
+  --color-text-title: #F1F5F9;
+  --color-text-body: #CBD5E1;
+  --color-text-description: #94A3B8;
+  --color-text-disabled: #64748B;
+  --color-text-inverse: #0F172A;
+  --color-link: #60A5FA;
+  --color-link-hover: #93C5FD;
+
+  /* Action Colors */
+  --color-action-primary-bg: #2D8CDB;
+  --color-action-primary-bg-hover: #3B9AE9;
+  --color-action-primary-bg-active: #1E6DAE;
+  --color-action-primary-text: #CBE3F6;
+  --color-focus-ring: #60A5FA;
+
+  /* Borders & Dividers */
+  --color-border-default: #334155;
+  --color-border-divider: #293548;
+  --color-border-primary-tint: #1E4E79;
+  --color-border-secondary-tint: #372F7D;
+  --color-border-accent-tint: #5C2346;
+
+  /* Secondary Module (AI / Insights) */
+  --color-secondary-bg: rgba(122, 111, 240, 0.15);
+  --color-secondary-border: #372F7D;
+  --color-secondary-icon: #D0CCFA;
+  --color-secondary-text: #A59EF6;
+  --color-secondary-active: #EEEDFD;
+
+  /* Accent Module */
+  --color-accent-base: #F472B6;
+  --color-accent-bg: rgba(232, 91, 170, 0.15);
+  --color-accent-border: #5C2346;
+  --color-accent-dot: #F472B6;
+  --color-accent-text: #F8CEE6;
+
+  /* Semantic Status Colors (De-saturated for Dark Mode) */
+  --color-success-bg: rgba(34, 197, 94, 0.15);
+  --color-success-base: #4ADE80;
+  --color-success-text: #86EFAC;
+
+  --color-warning-bg: rgba(245, 158, 11, 0.15);
+  --color-warning-base: #FBBF24;
+  --color-warning-text: #FDE68A;
+
+  --color-error-bg: rgba(239, 68, 68, 0.15);
+  --color-error-base: #F87171;
+  --color-error-text: #FECACA;
+
+  --color-info-bg: rgba(59, 130, 246, 0.15);
+  --color-info-base: #60A5FA;
+  --color-info-text: #BFDBFE;
+
+  /* Gradients */
+  --gradient-ai: linear-gradient(90deg, #2D8CDB, #7A6FF0);
+  --gradient-logo: linear-gradient(135deg, #2D8CDB, #7A6FF0);
+}
+

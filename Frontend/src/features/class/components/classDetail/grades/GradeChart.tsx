@@ -18,7 +18,7 @@ export const GradeChart: React.FC<GradeChartProps> = React.memo(({ items }) => {
     <Card
       title={
         <span style={{ fontSize: 14, fontWeight: 700 }}>
-          <BarChartOutlined style={{ color: "#1890ff", marginRight: 6 }} /> Biểu đồ phân bổ điểm số
+          <BarChartOutlined style={{ color: "var(--color-action-primary-bg)", marginRight: 6 }} /> Biểu đồ phân bổ điểm số
           các đầu điểm
         </span>
       }
@@ -33,7 +33,7 @@ export const GradeChart: React.FC<GradeChartProps> = React.memo(({ items }) => {
             Math.max(10, Math.round((score / item.maxScore) * 100))
           );
           const color =
-            score >= 8 ? "#52c41a" : score >= 6.5 ? "#1890ff" : score >= 5 ? "#faad14" : "#ff4d4f";
+            score >= 8 ? "var(--color-success-base)" : score >= 6.5 ? "var(--color-action-primary-bg)" : score >= 5 ? "var(--color-warning-base)" : "var(--color-error-base)";
 
           return (
             <Col
@@ -64,10 +64,12 @@ export const GradeChart: React.FC<GradeChartProps> = React.memo(({ items }) => {
                     style={{
                       width: "60%",
                       maxWidth: 36,
-                      height: `${heightPercent * 1.1}px`,
+                      height: 110,
                       backgroundColor: color,
                       borderRadius: "6px 6px 0 0",
-                      transition: "height 0.3s ease",
+                      transformOrigin: "bottom",
+                      transform: `scaleY(${Math.max(0.05, heightPercent / 100)})`,
+                      transition: "transform var(--duration-normal) var(--ease-out)",
                     }}
                   />
                 </div>

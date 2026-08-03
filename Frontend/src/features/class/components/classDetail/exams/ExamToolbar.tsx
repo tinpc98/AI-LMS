@@ -19,11 +19,11 @@ export const ExamToolbar: React.FC<ExamToolbarProps> = React.memo(
     return (
       <div
         style={{
-          backgroundColor: "#fff",
+          backgroundColor: "var(--color-surface)",
           padding: "16px 20px",
           borderRadius: 14,
           boxShadow: "0 2px 8px rgba(0, 0, 0, 0.03)",
-          border: "1px solid #f0f0f0",
+          border: "1px solid var(--color-border-default)",
           marginBottom: 24,
         }}
       >
@@ -32,7 +32,7 @@ export const ExamToolbar: React.FC<ExamToolbarProps> = React.memo(
           <Col xs={24} sm={12} md={10} lg={10}>
             <Input
               placeholder="Tìm kiếm bài kiểm tra..."
-              prefix={<SearchOutlined style={{ color: "#bfbfbf" }} />}
+              prefix={<SearchOutlined style={{ color: "var(--color-text-disabled)" }} />}
               allowClear
               value={searchQuery}
               onChange={(e) => onSearchChange(e.target.value)}
@@ -45,7 +45,7 @@ export const ExamToolbar: React.FC<ExamToolbarProps> = React.memo(
             <Space wrap style={{ width: "100%", justifyContent: "flex-end" }}>
               {/* Status Filter */}
               <Space size={6}>
-                <FilterOutlined style={{ color: "#8c8c8c" }} />
+                <FilterOutlined style={{ color: "var(--color-text-description)" }} />
                 <Select
                   value={statusFilter}
                   onChange={onStatusFilterChange}
@@ -62,7 +62,7 @@ export const ExamToolbar: React.FC<ExamToolbarProps> = React.memo(
 
               {/* Sort By */}
               <Space size={6}>
-                <SortAscendingOutlined style={{ color: "#8c8c8c" }} />
+                <SortAscendingOutlined style={{ color: "var(--color-text-description)" }} />
                 <Select
                   value={sortBy}
                   onChange={onSortChange}

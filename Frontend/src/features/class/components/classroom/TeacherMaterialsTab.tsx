@@ -32,6 +32,8 @@ import {
   ExportOutlined,
   ReloadOutlined,
   UserOutlined,
+  WarningOutlined,
+  GlobalOutlined,
 } from "@ant-design/icons";
 
 import { classApi } from "../../../../api/classApi";
@@ -39,6 +41,37 @@ import { toast } from "../../../../utils/toast";
 import { getApiErrorMessage } from "../../../../shared/utils/apiError";
 
 const { Title, Text, Paragraph } = Typography;
+
+/**
+ * Kiểm tra xem một chuỗi có phải là URL hợp lệ với scheme http hoặc https hay không.
+ * Ngăn chặn tuyệt đối các scheme nguy hiểm như javascript:, data:, vbscript:, v.v.
+ */
+export function isValidHttpUrl(urlString?: string): boolean {
+  if (!urlString || typeof urlString !== "string") return false;
+  const trimmed = urlString.trim();
+  if (!trimmed.startsWith("http://") && !trimmed.startsWith("https://")) {
+    return false;
+  }
+  try {
+    const parsed = new URL(trimmed);
+    return parsed.protocol === "http:" || parsed.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Trích xuất hostname rút gọn từ URL hợp lệ (ví dụ: youtube.com, drive.google.com).
+ */
+export function getDomainFromUrl(urlString?: string): string {
+  if (!urlString || !isValidHttpUrl(urlString)) return "";
+  try {
+    const parsed = new URL(urlString.trim());
+    return parsed.hostname.replace(/^www\./, "");
+  } catch {
+    return "";
+  }
+}
 
 interface ResourceItem {
   _id: string;
@@ -83,6 +116,10 @@ export const TeacherMaterialsTab: React.FC<TeacherMaterialsTabProps> = React.mem
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [submitting, setSubmitting] = useState(false);
     const [form] = Form.useForm();
+    const watchedTitle = Form.useWatch("title", form);
+    const isTitleAllDigits = Boolean(
+      watchedTitle && typeof watchedTitle === "string" && /^\d+$/.test(watchedTitle.trim())
+    );
 
     // Statistics breakdown
     const stats = useMemo(() => {
@@ -167,13 +204,13 @@ export const TeacherMaterialsTab: React.FC<TeacherMaterialsTabProps> = React.mem
     const getFileTypeIcon = (type?: string) => {
       switch (type) {
         case "Video":
-          return <VideoCameraOutlined style={{ fontSize: 24, color: "#ff4d4f" }} />;
+          return <VideoCameraOutlined style={{ fontSize: 24, color: "var(--color-error-base)" }} />;
         case "Link":
-          return <LinkOutlined style={{ fontSize: 24, color: "#1890ff" }} />;
+          return <LinkOutlined style={{ fontSize: 24, color: "var(--color-action-primary-bg)" }} />;
         case "Document":
-          return <FilePdfOutlined style={{ fontSize: 24, color: "#fa8c16" }} />;
+          return <FilePdfOutlined style={{ fontSize: 24, color: "var(--color-warning-base)" }} />;
         default:
-          return <FileUnknownOutlined style={{ fontSize: 24, color: "#722ed1" }} />;
+          return <FileUnknownOutlined style={{ fontSize: 24, color: "var(--color-secondary-icon)" }} />;
       }
     };
 
@@ -195,25 +232,92 @@ export const TeacherMaterialsTab: React.FC<TeacherMaterialsTabProps> = React.mem
       {
         title: "Tài liệu",
         key: "title",
-        render: (_, record) => (
-          <Space size={12} align="start">
-            {getFileTypeIcon(record.type)}
-            <div>
-              <Text strong style={{ fontSize: 14, display: "block" }}>
-                {record.title}
-              </Text>
-              {record.description && (
-                <Paragraph
-                  type="secondary"
-                  ellipsis={{ rows: 2 }}
-                  style={{ margin: "2px 0 0", fontSize: 12 }}
-                >
-                  {record.description}
-                </Paragraph>
-              )}
-            </div>
-          </Space>
-        ),
+        render: (_, record) => {
+          const isValidUrl = isValidHttpUrl(record.url);
+          const domain = isValidUrl ? getDomainFromUrl(record.url) : "";
+
+          return (
+            <Space size={12} align="start">
+              {getFileTypeIcon(record.type)}
+              <div style={{ maxWidth: 360 }}>
+                <Text strong style={{ fontSize: 14, display: "block" }}>
+                  {record.title}
+                </Text>
+                {record.description && (
+                  <Paragraph
+                    type="secondary"
+                    ellipsis={{ rows: 2 }}
+                    style={{ margin: "2px 0 4px", fontSize: 12 }}
+                  >
+                    {record.description}
+                  </Paragraph>
+                )}
+
+                {/* URL Source / Domain Info */}
+                {isValidUrl ? (
+                  <Tooltip title={`Mở liên kết: ${record.url}`} placement="topLeft">
+                    <a
+                      href={record.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: 4,
+                        fontSize: 12,
+                        color: "var(--color-action-primary-bg)",
+                        maxWidth: 280,
+                        textDecoration: "none",
+                      }}
+                    >
+                      <GlobalOutlined style={{ fontSize: 11 }} />
+                      <span
+                        style={{
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        {domain || record.url}
+                      </span>
+                      <ExportOutlined style={{ fontSize: 10 }} />
+                    </a>
+                  </Tooltip>
+                ) : (
+                  <Tooltip
+                    title={`Đường dẫn không an toàn hoặc không hợp lệ: "${record.url}". Hệ thống đã vô hiệu hóa liên kết này.`}
+                    placement="topLeft"
+                  >
+                    <span
+                      style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: 4,
+                        fontSize: 12,
+                        color: "var(--color-warning-base)",
+                        backgroundColor: "var(--color-warning-bg)",
+                        padding: "2px 6px",
+                        borderRadius: 4,
+                        maxWidth: 280,
+                      }}
+                    >
+                      <WarningOutlined style={{ fontSize: 11 }} />
+                      <span
+                        style={{
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        {record.url || "(Trống)"} - Không an toàn
+                      </span>
+                    </span>
+                  </Tooltip>
+                )}
+              </div>
+            </Space>
+          );
+        },
       },
       {
         title: "Loại tệp",
@@ -231,7 +335,7 @@ export const TeacherMaterialsTab: React.FC<TeacherMaterialsTabProps> = React.mem
           const uName = typeof uploadedBy === "object" ? uploadedBy?.fullName : teacherName;
           return (
             <Space size={6}>
-              <UserOutlined style={{ color: "#8c8c8c" }} />
+              <UserOutlined style={{ color: "var(--color-text-description)" }} />
               <Text style={{ fontSize: 13 }}>{uName || teacherName}</Text>
             </Space>
           );
@@ -249,34 +353,48 @@ export const TeacherMaterialsTab: React.FC<TeacherMaterialsTabProps> = React.mem
         key: "action",
         width: 160,
         align: "right",
-        render: (_, record) => (
-          <Space size={8}>
-            <Tooltip title="Mở liên kết / Xem tài liệu">
-              <Button
-                type="primary"
-                size="small"
-                icon={<ExportOutlined />}
-                onClick={() => window.open(record.url, "_blank")}
-                style={{ borderRadius: 6 }}
-              >
-                Mở
-              </Button>
-            </Tooltip>
+        render: (_, record) => {
+          const isValidUrl = isValidHttpUrl(record.url);
 
-            <Popconfirm
-              title="Xóa tài liệu này?"
-              description="Hành động này sẽ gỡ tài liệu khỏi lớp học."
-              onConfirm={() => handleDeleteResource(record._id)}
-              okText="Xóa"
-              cancelText="Hủy"
-              okButtonProps={{ danger: true }}
-            >
-              <Tooltip title="Xóa tài liệu">
-                <Button type="text" danger size="small" icon={<DeleteOutlined />} />
-              </Tooltip>
-            </Popconfirm>
-          </Space>
-        ),
+          return (
+            <Space size={8}>
+              {isValidUrl ? (
+                <Tooltip title="Mở liên kết / Xem tài liệu">
+                  <Button
+                    type="primary"
+                    size="small"
+                    icon={<ExportOutlined />}
+                    href={record.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ borderRadius: 6 }}
+                  >
+                    Mở
+                  </Button>
+                </Tooltip>
+              ) : (
+                <Tooltip title="Đường dẫn không hợp lệ hoặc không an toàn (chỉ hỗ trợ http:// hoặc https://)">
+                  <Button disabled size="small" icon={<WarningOutlined />} style={{ borderRadius: 6 }}>
+                    Không hợp lệ
+                  </Button>
+                </Tooltip>
+              )}
+
+              <Popconfirm
+                title="Xóa tài liệu này?"
+                description="Hành động này sẽ gỡ tài liệu khỏi lớp học."
+                onConfirm={() => handleDeleteResource(record._id)}
+                okText="Xóa"
+                cancelText="Hủy"
+                okButtonProps={{ danger: true }}
+              >
+                <Tooltip title="Xóa tài liệu">
+                  <Button type="text" danger size="small" icon={<DeleteOutlined />} />
+                </Tooltip>
+              </Popconfirm>
+            </Space>
+          );
+        },
       },
     ];
 
@@ -286,8 +404,8 @@ export const TeacherMaterialsTab: React.FC<TeacherMaterialsTabProps> = React.mem
         <Card
           style={{
             borderRadius: 16,
-            background: "linear-gradient(135deg, #1890ff 0%, #096dd9 100%)",
-            color: "#fff",
+            background: "linear-gradient(135deg, var(--color-action-primary-bg) 0%, var(--color-action-primary-bg-active) 100%)",
+            color: "var(--color-surface)",
             boxShadow: "0 8px 24px rgba(24, 144, 255, 0.25)",
           }}
           styles={{ body: { padding: "24px 32px" } }}
@@ -304,8 +422,8 @@ export const TeacherMaterialsTab: React.FC<TeacherMaterialsTabProps> = React.mem
           >
             <div>
               <Space size={12} align="center">
-                <FolderOpenOutlined style={{ fontSize: 28, color: "#fff" }} />
-                <Title level={4} style={{ color: "#fff", margin: 0, fontWeight: 700 }}>
+                <FolderOpenOutlined style={{ fontSize: 28, color: "var(--color-surface)" }} />
+                <Title level={4} style={{ color: "var(--color-surface)", margin: 0, fontWeight: 700 }}>
                   Kho Tài liệu & Học liệu lớp: {className}
                 </Title>
               </Space>
@@ -330,7 +448,7 @@ export const TeacherMaterialsTab: React.FC<TeacherMaterialsTabProps> = React.mem
                 style={{
                   backgroundColor: "rgba(255,255,255,0.2)",
                   borderColor: "rgba(255,255,255,0.4)",
-                  color: "#fff",
+                  color: "var(--color-surface)",
                   fontWeight: 600,
                 }}
               >
@@ -356,7 +474,7 @@ export const TeacherMaterialsTab: React.FC<TeacherMaterialsTabProps> = React.mem
                     </Text>
                   }
                   value={stats.total}
-                  styles={{ content: { color: "#fff", fontWeight: 700, fontSize: 20 } }}
+                  styles={{ content: { color: "var(--color-surface)", fontWeight: 700, fontSize: 20 } }}
                 />
               </div>
             </Col>
@@ -377,8 +495,8 @@ export const TeacherMaterialsTab: React.FC<TeacherMaterialsTabProps> = React.mem
                     </Text>
                   }
                   value={stats.docs}
-                  prefix={<FilePdfOutlined style={{ color: "#ffe58f", marginRight: 6 }} />}
-                  styles={{ content: { color: "#fff", fontWeight: 700, fontSize: 20 } }}
+                  prefix={<FilePdfOutlined style={{ color: "var(--color-warning-bg)", marginRight: 6 }} />}
+                  styles={{ content: { color: "var(--color-surface)", fontWeight: 700, fontSize: 20 } }}
                 />
               </div>
             </Col>
@@ -399,8 +517,8 @@ export const TeacherMaterialsTab: React.FC<TeacherMaterialsTabProps> = React.mem
                     </Text>
                   }
                   value={stats.videos}
-                  prefix={<VideoCameraOutlined style={{ color: "#ff9c6e", marginRight: 6 }} />}
-                  styles={{ content: { color: "#fff", fontWeight: 700, fontSize: 20 } }}
+                  prefix={<VideoCameraOutlined style={{ color: "var(--color-warning-base)", marginRight: 6 }} />}
+                  styles={{ content: { color: "var(--color-surface)", fontWeight: 700, fontSize: 20 } }}
                 />
               </div>
             </Col>
@@ -421,8 +539,8 @@ export const TeacherMaterialsTab: React.FC<TeacherMaterialsTabProps> = React.mem
                     </Text>
                   }
                   value={stats.links}
-                  prefix={<LinkOutlined style={{ color: "#91caff", marginRight: 6 }} />}
-                  styles={{ content: { color: "#fff", fontWeight: 700, fontSize: 20 } }}
+                  prefix={<LinkOutlined style={{ color: "var(--color-border-primary-tint)", marginRight: 6 }} />}
+                  styles={{ content: { color: "var(--color-surface)", fontWeight: 700, fontSize: 20 } }}
                 />
               </div>
             </Col>
@@ -443,7 +561,7 @@ export const TeacherMaterialsTab: React.FC<TeacherMaterialsTabProps> = React.mem
                     </Text>
                   }
                   value={stats.others}
-                  styles={{ content: { color: "#fff", fontWeight: 700, fontSize: 20 } }}
+                  styles={{ content: { color: "var(--color-surface)", fontWeight: 700, fontSize: 20 } }}
                 />
               </div>
             </Col>
@@ -465,7 +583,7 @@ export const TeacherMaterialsTab: React.FC<TeacherMaterialsTabProps> = React.mem
               <Space size={12} wrap>
                 <Input
                   placeholder="Tìm tài liệu theo tên..."
-                  prefix={<SearchOutlined style={{ color: "#bfbfbf" }} />}
+                  prefix={<SearchOutlined style={{ color: "var(--color-text-disabled)" }} />}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   style={{ width: 240, borderRadius: 8 }}
@@ -564,14 +682,41 @@ export const TeacherMaterialsTab: React.FC<TeacherMaterialsTabProps> = React.mem
             form={form}
             layout="vertical"
             onFinish={handleAddResourceSubmit}
+            validateTrigger="onBlur"
             style={{ marginTop: 16 }}
           >
             <Form.Item
               name="title"
               label="Tiêu đề tài liệu"
-              rules={[{ required: true, message: "Vui lòng nhập tiêu đề tài liệu!" }]}
+              rules={[
+                { required: true, message: "Vui lòng nhập tiêu đề tài liệu!" },
+                { whitespace: true, message: "Tiêu đề không được chỉ chứa khoảng trắng!" },
+                { min: 3, message: "Tiêu đề tài liệu phải có ít nhất 3 ký tự!" },
+                { max: 200, message: "Tiêu đề tài liệu tối đa 200 ký tự!" },
+              ]}
+              extra={
+                isTitleAllDigits ? (
+                  <span
+                    style={{
+                      color: "var(--color-warning-base)",
+                      fontSize: 12,
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 4,
+                      marginTop: 4,
+                    }}
+                  >
+                    <WarningOutlined />
+                    Tiêu đề chỉ toàn chữ số. Bạn nên bổ sung tên mô tả tài liệu rõ ràng hơn để học sinh dễ nhận biết.
+                  </span>
+                ) : null
+              }
             >
-              <Input placeholder="Ví dụ: Tài liệu ôn tập Chương 1 - Đề cương môn học" />
+              <Input
+                placeholder="Ví dụ: Tài liệu ôn tập Chương 1 - Đề cương môn học"
+                maxLength={200}
+                showCount
+              />
             </Form.Item>
 
             <Form.Item name="type" label="Loại tài nguyên" initialValue="Document">
@@ -591,26 +736,69 @@ export const TeacherMaterialsTab: React.FC<TeacherMaterialsTabProps> = React.mem
               rules={[
                 { required: true, message: "Vui lòng nhập đường dẫn URL tài nguyên!" },
                 {
-                  type: "url",
-                  message: "Vui lòng nhập định dạng URL hợp lệ (http:// hoặc https://)!",
+                  validator: (_, value) => {
+                    if (!value || !value.trim()) return Promise.resolve();
+                    const trimmed = value.trim();
+                    if (!trimmed.startsWith("http://") && !trimmed.startsWith("https://")) {
+                      return Promise.reject(
+                        new Error("URL tài liệu bắt buộc phải bắt đầu bằng http:// hoặc https://")
+                      );
+                    }
+                    try {
+                      new URL(trimmed);
+                      return Promise.resolve();
+                    } catch {
+                      return Promise.reject(
+                        new Error("Định dạng URL không hợp lệ (ví dụ: https://drive.google.com/...)")
+                      );
+                    }
+                  },
                 },
               ]}
             >
               <Input placeholder="https://drive.google.com/... hoặc https://youtube.com/..." />
             </Form.Item>
 
-            <Form.Item name="description" label="Mô tả / Ghi chú cho học sinh">
+            <Form.Item
+              name="description"
+              label="Mô tả / Ghi chú cho học sinh"
+              rules={[{ max: 500, message: "Mô tả tối đa 500 ký tự!" }]}
+            >
               <Input.TextArea
                 rows={3}
                 placeholder="Nhập ghi chú chi tiết hoặc dặn dò học sinh khi xem tài liệu..."
+                maxLength={500}
+                showCount
               />
             </Form.Item>
 
             <div style={{ display: "flex", justifyContent: "flex-end", gap: 12, marginTop: 24 }}>
               <Button onClick={() => setIsAddModalOpen(false)}>Hủy</Button>
-              <Button type="primary" htmlType="submit" loading={submitting}>
-                Lưu tài liệu
-              </Button>
+              <Form.Item noStyle shouldUpdate>
+                {() => {
+                  const hasErrors = form.getFieldsError().some(({ errors }) => errors.length > 0);
+                  const titleVal = form.getFieldValue("title");
+                  const urlVal = form.getFieldValue("url");
+                  const isFormIncomplete =
+                    !titleVal ||
+                    !urlVal ||
+                    typeof titleVal !== "string" ||
+                    typeof urlVal !== "string" ||
+                    !titleVal.trim() ||
+                    !urlVal.trim();
+
+                  return (
+                    <Button
+                      type="primary"
+                      htmlType="submit"
+                      loading={submitting}
+                      disabled={hasErrors || isFormIncomplete}
+                    >
+                      Lưu tài liệu
+                    </Button>
+                  );
+                }}
+              </Form.Item>
             </div>
           </Form>
         </Modal>

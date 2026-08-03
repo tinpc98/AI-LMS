@@ -16,6 +16,11 @@ import { useNotifications } from "../../../../features/notification/hooks/useNot
 import { NotificationDropdown } from "./NotificationDropdown";
 import ChangePasswordModal from "../../../../features/profile/components/ChangePasswordModal";
 
+import { tokens } from "../../../theme/tokens";
+import { CloseOutlined } from "@ant-design/icons";
+import { ThemeToggle } from "../../ThemeToggle";
+import { useTheme } from "../../../context/ThemeContext";
+
 const { Header } = Layout;
 const { Text } = Typography;
 
@@ -31,6 +36,7 @@ export const StudentHeader: React.FC<StudentHeaderProps> = React.memo(
     const { user, logout } = useAuth();
     const { notifications, unreadCount, loading, markAsRead, markAllAsRead } = useNotifications();
     const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+    const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
 
     const userMenuItems: MenuProps["items"] = [
       {
@@ -58,7 +64,7 @@ export const StudentHeader: React.FC<StudentHeaderProps> = React.memo(
       },
       {
         key: "logout",
-        icon: <LogoutOutlined style={{ color: "#ff4d4f" }} />,
+        icon: <LogoutOutlined style={{ color: tokens.color.semantic.error.base }} />,
         danger: true,
         label: "Đăng xuất",
         onClick: logout,
@@ -72,90 +78,152 @@ export const StudentHeader: React.FC<StudentHeaderProps> = React.memo(
             position: "sticky",
             top: 0,
             zIndex: 99,
-            padding: "0 24px",
-            background: "#fff",
+            padding: isMobile ? "0 12px" : "0 24px",
+            background: tokens.color.bg.surface,
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
             boxShadow: "0 2px 8px rgba(0, 0, 0, 0.06)",
-            borderBottom: "1px solid #f0f0f0",
+            borderBottom: `1px solid ${tokens.color.border.default}`,
             height: 64,
           }}
         >
-          {/* Left Side: Collapse Button & Breadcrumb */}
-          <Space size={16} align="center">
-            <Button
-              type="text"
-              icon={
-                isMobile ? (
-                  <MenuOutlined style={{ fontSize: 18 }} />
-                ) : collapsed ? (
-                  <MenuUnfoldOutlined style={{ fontSize: 18 }} />
-                ) : (
-                  <MenuFoldOutlined style={{ fontSize: 18 }} />
-                )
-              }
-              onClick={isMobile ? onToggleMobileDrawer : onToggleCollapse}
-              style={{ fontSize: 16, width: 40, height: 40 }}
-            />
-
-            {!isMobile && <StudentBreadcrumb />}
-          </Space>
-
-          {/* Center/Search Bar (Hidden on Mobile) */}
-          {!isMobile && (
-            <div style={{ flex: 1, maxWidth: 360, margin: "0 24px" }}>
+          {/* Mobile Full-width Search Bar Mode */}
+          {isMobile && mobileSearchOpen ? (
+            <div style={{ display: "flex", alignItems: "center", width: "100%", gap: 8 }}>
               <Input
+                autoFocus
                 placeholder="Tìm kiếm khóa học, bài học, tài liệu..."
-                prefix={<SearchOutlined style={{ color: "#bfbfbf" }} />}
+                prefix={<SearchOutlined style={{ color: tokens.color.text.disabled }} />}
                 allowClear
-                style={{ borderRadius: 20, backgroundColor: "#f5f5f5", border: "none" }}
+                style={{
+                  flex: 1,
+                  borderRadius: tokens.radius.full,
+                  backgroundColor: tokens.color.bg.page,
+                  border: `1px solid ${tokens.color.border.default}`,
+                  height: 44,
+                  fontSize: 16,
+                }}
+              />
+              <Button
+                type="text"
+                icon={<CloseOutlined style={{ fontSize: 18 }} />}
+                onClick={() => setMobileSearchOpen(false)}
+                style={{ width: 44, height: 44, display: "flex", alignItems: "center", justifyContent: "center" }}
+                aria-label="Đóng tìm kiếm"
               />
             </div>
-          )}
-
-          {/* Right Side: Notifications & User Dropdown */}
-          <Space size={20} align="center">
-            <NotificationDropdown
-              notifications={notifications}
-              unreadCount={unreadCount}
-              loading={loading}
-              markAsRead={markAsRead}
-              markAllAsRead={markAllAsRead}
-              viewAllPath="/student/notifications"
-            />
-
-            <Dropdown menu={{ items: userMenuItems }} placement="bottomRight" arrow>
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 10,
-                  cursor: "pointer",
-                  padding: "4px 8px",
-                  borderRadius: 8,
-                  transition: "background 0.2s",
-                }}
-                className="user-dropdown-trigger"
-              >
-                <Avatar
-                  src={(user as any)?.avatar || undefined}
-                  icon={!(user as any)?.avatar ? <UserOutlined /> : undefined}
-                  style={{ backgroundColor: "#1890ff", border: "1px solid #e6f7ff" }}
+          ) : (
+            <>
+              {/* Left Side: Collapse Button & Breadcrumb */}
+              <Space size={isMobile ? 8 : 16} align="center">
+                <Button
+                  type="text"
+                  icon={
+                    isMobile ? (
+                      <MenuOutlined style={{ fontSize: 20 }} />
+                    ) : collapsed ? (
+                      <MenuUnfoldOutlined style={{ fontSize: 20 }} />
+                    ) : (
+                      <MenuFoldOutlined style={{ fontSize: 20 }} />
+                    )
+                  }
+                  onClick={isMobile ? onToggleMobileDrawer : onToggleCollapse}
+                  style={{
+                    fontSize: 18,
+                    width: 44,
+                    height: 44,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                  aria-label="Menu"
                 />
-                {!isMobile && (
-                  <div style={{ textAlign: "left", lineHeight: 1.2 }}>
-                    <Text strong style={{ display: "block", fontSize: 13 }}>
-                      {user?.fullName || "Sinh viên"}
-                    </Text>
-                    <Text type="secondary" style={{ fontSize: 11 }}>
-                      Sinh viên
-                    </Text>
-                  </div>
+
+                {!isMobile && <StudentBreadcrumb />}
+              </Space>
+
+              {/* Center/Search Bar (Desktop / Tablet) */}
+              {!isMobile && (
+                <div style={{ flex: 1, maxWidth: 380, margin: "0 24px" }}>
+                  <Input
+                    placeholder="Tìm kiếm khóa học, bài học, tài liệu..."
+                    prefix={<SearchOutlined style={{ color: tokens.color.text.disabled }} />}
+                    allowClear
+                    style={{
+                      borderRadius: tokens.radius.full,
+                      backgroundColor: tokens.color.bg.page,
+                      border: `1px solid ${tokens.color.border.default}`,
+                      height: 40,
+                    }}
+                  />
+                </div>
+              )}
+
+              {/* Right Side: Search Icon (Mobile), Notifications & User Dropdown */}
+              <Space size={isMobile ? 12 : 20} align="center">
+                {/* Mobile Search Toggle Icon */}
+                {isMobile && (
+                  <Button
+                    type="text"
+                    icon={<SearchOutlined style={{ fontSize: 20 }} />}
+                    onClick={() => setMobileSearchOpen(true)}
+                    style={{
+                      width: 44,
+                      height: 44,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                    aria-label="Mở tìm kiếm"
+                  />
                 )}
-              </div>
-            </Dropdown>
-          </Space>
+
+                <ThemeToggle />
+
+                <NotificationDropdown
+                  notifications={notifications}
+                  unreadCount={unreadCount}
+                  loading={loading}
+                  markAsRead={markAsRead}
+                  markAllAsRead={markAllAsRead}
+                  viewAllPath="/student/notifications"
+                />
+
+                <Dropdown menu={{ items: userMenuItems }} placement="bottomRight" arrow>
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 10,
+                      cursor: "pointer",
+                      padding: "4px 8px",
+                      borderRadius: tokens.radius.md,
+                      minHeight: 44,
+                      transition: "background-color var(--duration-fast) var(--ease-out)",
+                    }}
+                    className="user-dropdown-trigger"
+                  >
+                    <Avatar
+                      src={(user as any)?.avatar || undefined}
+                      icon={!(user as any)?.avatar ? <UserOutlined /> : undefined}
+                      style={{ backgroundColor: tokens.color.action.primaryBg }}
+                    />
+                    {!isMobile && (
+                      <div style={{ textAlign: "left", lineHeight: 1.2 }}>
+                        <Text strong style={{ display: "block", fontSize: 13 }}>
+                          {user?.fullName || "Sinh viên"}
+                        </Text>
+                        <Text type="secondary" style={{ fontSize: 11 }}>
+                          Sinh viên
+                        </Text>
+                      </div>
+                    )}
+                  </div>
+                </Dropdown>
+              </Space>
+            </>
+          )}
         </Header>
         <ChangePasswordModal
           open={isPasswordModalOpen}

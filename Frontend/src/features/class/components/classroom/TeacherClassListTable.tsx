@@ -78,7 +78,7 @@ export const TeacherClassListTable: React.FC<TeacherClassListTableProps> = React
           const name = typeof courseId === "object" ? courseId?.courseName : "-";
           return (
             <Space>
-              <BookOutlined style={{ color: "#1890ff" }} />
+              <BookOutlined style={{ color: "var(--color-action-primary-bg)" }} />
               <span>{name || "Chưa gán khóa học"}</span>
             </Space>
           );
@@ -93,7 +93,7 @@ export const TeacherClassListTable: React.FC<TeacherClassListTableProps> = React
           const max = record.maxStudents || 30;
           return (
             <Space>
-              <TeamOutlined style={{ color: "#52c41a" }} />
+              <TeamOutlined style={{ color: "var(--color-success-base)" }} />
               <span>
                 <strong>{count}</strong> / {max}
               </span>
@@ -133,10 +133,10 @@ export const TeacherClassListTable: React.FC<TeacherClassListTableProps> = React
         loading={loading}
         pagination={false}
         style={{
-          backgroundColor: "#fff",
+          backgroundColor: "var(--color-surface)",
           borderRadius: 12,
           overflow: "hidden",
-          border: "1px solid #f0f0f0",
+          border: "1px solid var(--color-border-default)",
         }}
       />
     );

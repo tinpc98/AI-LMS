@@ -41,21 +41,122 @@ export const formatScheduleText = (day: string, schedule: ClassSchedule): string
   return startTime && endTime ? `${label} · ${startTime} - ${endTime}` : label;
 };
 
+const DAY_TO_NUMBER: Record<string, number> = {
+  Sunday: 0,
+  Monday: 1,
+  Tuesday: 2,
+  Wednesday: 3,
+  Thursday: 4,
+  Friday: 5,
+  Saturday: 6,
+};
+
+export interface NextSessionInfo {
+  dayName: string;
+  dateStr: string;
+  isToday: boolean;
+  isTomorrow: boolean;
+  formattedText: string;
+  timeText: string;
+  allDaysText: string;
+}
+
 /**
- * Một mục "sắp diễn ra" cho mỗi ngày trong lịch học của lớp.
- *
- * KHÔNG đặt scheduledStart và countdownText: chúng đòi hỏi một mốc thời gian cụ thể mà ở đây
- * không có. Để trống thì LiveSessionCard hiện lịch học thay vì một giờ bịa.
+ * Tìm buổi học tiếp theo gần nhất từ ngày giờ hiện tại dựa vào schedule.days và schedule.startTime/endTime
+ */
+export const getNextSessionInfo = (
+  schedule: ClassSchedule | undefined,
+  now: Date = new Date()
+): NextSessionInfo | null => {
+  const days = schedule?.days;
+  if (!Array.isArray(days) || days.length === 0) return null;
+
+  const validDays = days.filter((d) => DAY_TO_NUMBER[d] !== undefined);
+  if (validDays.length === 0) return null;
+
+  const allDaysText = validDays.map(formatDay).join(", ");
+  const currentDayNum = now.getDay();
+  const currentHours = now.getHours();
+  const currentMinutes = now.getMinutes();
+  const currentTimeStr = `${String(currentHours).padStart(2, "0")}:${String(currentMinutes).padStart(2, "0")}`;
+
+  const hasTime = schedule?.startTime && schedule?.endTime;
+  const timeText = hasTime ? `${schedule?.startTime} - ${schedule?.endTime}` : "Thời gian theo thông báo";
+
+  // Tìm trong vòng 7 ngày tới (offset 0 -> 6)
+  for (let offset = 0; offset < 7; offset++) {
+    const candidateDate = new Date(now);
+    candidateDate.setDate(now.getDate() + offset);
+    const candidateDayNum = candidateDate.getDay();
+
+    const matchingDay = validDays.find((d) => DAY_TO_NUMBER[d] === candidateDayNum);
+    if (!matchingDay) continue;
+
+    // Nếu là hôm nay, kiểm tra xem giờ học đã trôi qua chưa
+    if (offset === 0 && schedule?.endTime) {
+      if (currentTimeStr > schedule.endTime) {
+        // Buổi hôm nay đã kết thúc, tìm buổi tiếp theo ở ngày sau
+        continue;
+      }
+    }
+
+    const dayName = formatDay(matchingDay);
+    const d = String(candidateDate.getDate()).padStart(2, "0");
+    const m = String(candidateDate.getMonth() + 1).padStart(2, "0");
+    const dateStr = `${d}/${m}`;
+
+    let formattedText = `${dayName} (${dateStr})`;
+    if (offset === 0) formattedText = `Hôm nay (${dateStr})`;
+    else if (offset === 1) formattedText = `Ngày mai (${dateStr})`;
+
+    return {
+      dayName,
+      dateStr,
+      isToday: offset === 0,
+      isTomorrow: offset === 1,
+      formattedText,
+      timeText,
+      allDaysText,
+    };
+  }
+
+  // Fallback nếu không khớp điều kiện trên
+  const firstDay = validDays[0];
+  return {
+    dayName: formatDay(firstDay),
+    dateStr: "",
+    isToday: false,
+    isTomorrow: false,
+    formattedText: formatDay(firstDay),
+    timeText,
+    allDaysText,
+  };
+};
+
+/**
+ * Một mục "sắp diễn ra" cho mỗi ngày trong lịch học của lớp, sắp xếp theo buổi học gần nhất trước.
  */
 export const buildUpcomingFromSchedule = (
   schedule: ClassSchedule | undefined,
   classId: string | undefined,
-  teacherName: string
+  teacherName: string,
+  now: Date = new Date()
 ): IExtendedLiveSession[] => {
   const days = schedule?.days;
   if (!Array.isArray(days) || days.length === 0) return [];
 
-  return days.map((day, idx) => ({
+  const validDays = days.filter((d) => DAY_TO_NUMBER[d] !== undefined);
+  if (validDays.length === 0) return [];
+
+  // Sắp xếp các ngày theo khoảng cách ngày tới gần nhất từ 'now'
+  const currentDayNum = now.getDay();
+  const sortedDays = [...validDays].sort((a, b) => {
+    let diffA = (DAY_TO_NUMBER[a] - currentDayNum + 7) % 7;
+    let diffB = (DAY_TO_NUMBER[b] - currentDayNum + 7) % 7;
+    return diffA - diffB;
+  });
+
+  return sortedDays.map((day, idx) => ({
     _id: `schedule-${day}`,
     id: `schedule-${day}`,
     classId: classId || "",

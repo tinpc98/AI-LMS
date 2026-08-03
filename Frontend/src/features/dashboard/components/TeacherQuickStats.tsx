@@ -8,6 +8,7 @@ import {
   NotificationOutlined,
 } from "@ant-design/icons";
 import StatCard from "../../../shared/components/StatCard";
+import { tokens } from "../../../shared/theme/tokens";
 
 interface TeacherQuickStatsProps {
   totalClasses: number;
@@ -28,8 +29,8 @@ export const TeacherQuickStats: React.FC<TeacherQuickStatsProps> = React.memo(
     loading = false,
   }) => {
     return (
-      <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
-        <Col xs={24} sm={12} md={8} lg={4.8} style={{ flex: 1 }}>
+      <Row gutter={[tokens.space[4], tokens.space[4]]} style={{ marginBottom: tokens.space[5] }}>
+        <Col xs={12} sm={12} md={12} lg={4.8} style={{ flex: 1, minWidth: 150 }}>
           <StatCard
             loading={loading}
             label="Lớp phụ trách"
@@ -37,11 +38,11 @@ export const TeacherQuickStats: React.FC<TeacherQuickStatsProps> = React.memo(
             suffix="lớp"
             description="Lớp học được Admin phân công"
             icon={<BookOutlined />}
-            accentColor="#1890ff"
+            accentColor={tokens.color.action.primaryBg}
           />
         </Col>
 
-        <Col xs={24} sm={12} md={8} lg={4.8} style={{ flex: 1 }}>
+        <Col xs={12} sm={12} md={12} lg={4.8} style={{ flex: 1, minWidth: 150 }}>
           <StatCard
             loading={loading}
             label="Tổng học sinh"
@@ -49,11 +50,11 @@ export const TeacherQuickStats: React.FC<TeacherQuickStatsProps> = React.memo(
             suffix="học sinh"
             description="Đang tham gia học tập"
             icon={<TeamOutlined />}
-            accentColor="#52c41a"
+            accentColor={tokens.color.semantic.success.base}
           />
         </Col>
 
-        <Col xs={24} sm={12} md={8} lg={4.8} style={{ flex: 1 }}>
+        <Col xs={12} sm={12} md={12} lg={4.8} style={{ flex: 1, minWidth: 150 }}>
           <StatCard
             loading={loading}
             label="Bài nộp cần chấm"
@@ -61,8 +62,8 @@ export const TeacherQuickStats: React.FC<TeacherQuickStatsProps> = React.memo(
             suffix="bài"
             description="Bài làm chờ chấm điểm"
             icon={<FormOutlined />}
-            accentColor="#faad14"
-            valueColor={pendingSubmissionsCount > 0 ? "#d48806" : undefined}
+            accentColor={tokens.color.semantic.warning.base}
+            valueColor={pendingSubmissionsCount > 0 ? tokens.color.semantic.warning.text : undefined}
             badge={
               pendingSubmissionsCount > 0 ? (
                 <Badge count={pendingSubmissionsCount} overflowCount={99} />
@@ -71,29 +72,29 @@ export const TeacherQuickStats: React.FC<TeacherQuickStatsProps> = React.memo(
           />
         </Col>
 
-        <Col xs={24} sm={12} md={8} lg={4.8} style={{ flex: 1 }}>
+        <Col xs={12} sm={12} md={12} lg={4.8} style={{ flex: 1, minWidth: 150 }}>
           <StatCard
             loading={loading}
-            label="Live Session"
+            label="Phòng học trực tuyến"
             value={activeLiveSessionsCount}
             suffix="phòng"
             description="Phòng học trực tuyến đang mở"
             icon={<VideoCameraOutlined />}
-            accentColor="#ff4d4f"
-            valueColor={activeLiveSessionsCount > 0 ? "#ff4d4f" : undefined}
+            accentColor={tokens.color.semantic.error.base}
+            valueColor={activeLiveSessionsCount > 0 ? tokens.color.semantic.error.text : undefined}
             badge={
               activeLiveSessionsCount > 0 ? (
                 <Badge
                   status="processing"
                   text="LIVE"
-                  style={{ color: "#ff4d4f", fontWeight: 700 }}
+                  style={{ color: tokens.color.semantic.error.text, fontWeight: 700 }}
                 />
               ) : undefined
             }
           />
         </Col>
 
-        <Col xs={24} sm={12} md={8} lg={4.8} style={{ flex: 1 }}>
+        <Col xs={12} sm={12} md={12} lg={4.8} style={{ flex: 1, minWidth: 150 }}>
           <StatCard
             loading={loading}
             label="Thông báo"
@@ -101,7 +102,7 @@ export const TeacherQuickStats: React.FC<TeacherQuickStatsProps> = React.memo(
             suffix="tin"
             description="Thông báo trên hệ thống"
             icon={<NotificationOutlined />}
-            accentColor="#722ed1"
+            accentColor={tokens.color.secondary.icon}
           />
         </Col>
       </Row>

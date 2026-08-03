@@ -61,7 +61,7 @@ export const AttendanceReport: React.FC = () => {
       key: "averageAttendanceRate",
       render: (rate: number) => (
         <div className="w-36">
-          <Progress percent={rate} size="small" status="active" strokeColor="#52c41a" />
+          <Progress percent={rate} size="small" status="active" strokeColor="var(--color-success-base)" />
         </div>
       ),
     },
@@ -71,7 +71,7 @@ export const AttendanceReport: React.FC = () => {
       key: "onTimeRate",
       render: (rate: number) => (
         <div className="w-36">
-          <Progress percent={rate} size="small" strokeColor="#1677ff" />
+          <Progress percent={rate} size="small" strokeColor="var(--color-action-primary-bg)" />
         </div>
       ),
     },
@@ -139,11 +139,11 @@ export const AttendanceReport: React.FC = () => {
             >
               <defs>
                 <linearGradient id="colorPresent" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#52c41a" stopOpacity={0.8} />
-                  <stop offset="95%" stopColor="#52c41a" stopOpacity={0} />
+                  <stop offset="5%" stopColor="var(--color-success-base)" stopOpacity={0.8} />
+                  <stop offset="95%" stopColor="var(--color-success-base)" stopOpacity={0} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--color-border-default)" />
               <XAxis dataKey="day" tickLine={false} />
               <YAxis domain={[0, 100]} tickLine={false} axisLine={false} />
               <Tooltip />
@@ -151,7 +151,7 @@ export const AttendanceReport: React.FC = () => {
                 type="monotone"
                 dataKey="present"
                 name="Có mặt (%)"
-                stroke="#52c41a"
+                stroke="var(--color-success-base)"
                 fillOpacity={1}
                 fill="url(#colorPresent)"
               />

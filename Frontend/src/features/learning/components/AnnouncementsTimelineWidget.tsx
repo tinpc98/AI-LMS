@@ -18,7 +18,7 @@ export const AnnouncementsTimelineWidget: React.FC<AnnouncementsTimelineWidgetPr
       <Card
       style={{
         borderRadius: 20,
-        border: "1px solid #f0f0f0",
+        border: "1px solid var(--color-border-default)",
         boxShadow: "0 2px 12px rgba(0,0,0,0.05)",
       }}
       styles={{ body: { padding: "8px 20px 20px" } }}
@@ -27,7 +27,7 @@ export const AnnouncementsTimelineWidget: React.FC<AnnouncementsTimelineWidgetPr
         <EmptyState
           image={
             <BellOutlined
-              style={{ fontSize: 28, display: "block", color: "#d1d5db" }}
+              style={{ fontSize: 28, display: "block", color: "var(--color-border-default)" }}
             />
           }
           description="Không có thông báo mới."
@@ -44,7 +44,7 @@ export const AnnouncementsTimelineWidget: React.FC<AnnouncementsTimelineWidgetPr
                   alignItems: "flex-start",
                   padding: "12px 0",
                   borderBottom:
-                    idx < displayed.length - 1 ? "1px solid #f5f5f5" : "none",
+                    idx < displayed.length - 1 ? "1px solid var(--color-bg-page)" : "none",
                 }}
               >
                 {/* Dot */}
@@ -53,7 +53,7 @@ export const AnnouncementsTimelineWidget: React.FC<AnnouncementsTimelineWidgetPr
                     width: 32,
                     height: 32,
                     borderRadius: 10,
-                    backgroundColor: item.isRead ? "#f5f5f5" : "#e6fffb",
+                    backgroundColor: item.isRead ? "var(--color-bg-page)" : "var(--color-info-bg)",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
@@ -64,7 +64,7 @@ export const AnnouncementsTimelineWidget: React.FC<AnnouncementsTimelineWidgetPr
                   <BellOutlined
                     style={{
                       fontSize: 14,
-                      color: item.isRead ? "#8c8c8c" : "#13c2c2",
+                      color: item.isRead ? "var(--color-text-description)" : "var(--color-info-base)",
                     }}
                   />
                 </div>
@@ -83,7 +83,7 @@ export const AnnouncementsTimelineWidget: React.FC<AnnouncementsTimelineWidgetPr
                       strong
                       style={{
                         fontSize: 13,
-                        color: item.isRead ? "#4b5563" : "#1f2937",
+                        color: item.isRead ? "var(--color-text-body)" : "var(--color-text-title)",
                         lineHeight: 1.35,
                         flex: 1,
                       }}
@@ -105,14 +105,14 @@ export const AnnouncementsTimelineWidget: React.FC<AnnouncementsTimelineWidgetPr
                           width: 7,
                           height: 7,
                           borderRadius: "50%",
-                          backgroundColor: "#13c2c2",
+                          backgroundColor: "var(--color-info-base)",
                           flexShrink: 0,
                           marginTop: 4,
                         }}
                       />
                     )}
                   </div>
-                  <Text style={{ fontSize: 11, color: "#9ca3af" }}>
+                  <Text style={{ fontSize: 11, color: "var(--color-text-disabled)" }}>
                     {item.authorName}
                     <span style={{ margin: "0 4px" }}>•</span>
                     {new Date(item.createdAt).toLocaleDateString("vi-VN", {
@@ -128,7 +128,7 @@ export const AnnouncementsTimelineWidget: React.FC<AnnouncementsTimelineWidgetPr
               <Text
                 style={{
                   fontSize: 12,
-                  color: "#13c2c2",
+                  color: "var(--color-info-base)",
                   textAlign: "center",
                   display: "block",
                   paddingTop: 8,

@@ -50,10 +50,10 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
           display: "flex",
           justifyContent: "space-between",
           padding: "12px 16px",
-          borderBottom: "1px solid #f0f0f0",
+          borderBottom: "1px solid var(--color-border-default)",
           position: "sticky",
           top: 0,
-          background: "#fff",
+          background: "var(--color-surface)",
           zIndex: 2,
         }}
       >
@@ -88,9 +88,9 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
               style={{
                 padding: "12px 16px",
                 cursor: "pointer",
-                background: item.isRead ? "#fff" : "#e6f7ff",
-                borderBottom: "1px solid #f0f0f0",
-                transition: "background 0.3s",
+                background: item.isRead ? "var(--color-surface)" : "var(--color-bg-primary-tint)",
+                borderBottom: "1px solid var(--color-border-default)",
+                transition: "background-color var(--duration-fast) var(--ease-out)",
               }}
               className="notification-item"
             >
@@ -100,7 +100,7 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
                     icon={
                       item.category === "live" ? <VideoCameraOutlined /> : <InfoCircleOutlined />
                     }
-                    style={{ backgroundColor: item.category === "live" ? "#52c41a" : "#1890ff" }}
+                    style={{ backgroundColor: item.category === "live" ? "var(--color-success-base)" : "var(--color-action-primary-bg)" }}
                   />
                 }
                 title={
@@ -119,7 +119,7 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
                 }
                 description={
                   <Space direction="vertical" size={2} style={{ width: "100%" }}>
-                    <Text style={{ fontSize: 13, color: "#595959" }}>
+                    <Text style={{ fontSize: 13, color: "var(--color-text-body)" }}>
                       {item.description || item.title}
                     </Text>
 
@@ -162,10 +162,10 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
           style={{
             textAlign: "center",
             padding: "12px",
-            borderTop: "1px solid #f0f0f0",
+            borderTop: "1px solid var(--color-border-default)",
             position: "sticky",
             bottom: 0,
-            background: "#fff",
+            background: "var(--color-surface)",
             zIndex: 2,
           }}
         >
@@ -189,7 +189,7 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
         <Button
           type="text"
           shape="circle"
-          icon={<BellOutlined style={{ fontSize: 18, color: "#595959" }} />}
+          icon={<BellOutlined style={{ fontSize: 18, color: "var(--color-text-body)" }} />}
         />
       </Badge>
     </Popover>

@@ -1,5 +1,7 @@
 import React from "react";
 import { Card, Statistic, Typography } from "antd";
+import { tokens as staticTokens } from "../theme/tokens";
+import { useTheme } from "../context/ThemeContext";
 
 const { Text } = Typography;
 
@@ -14,7 +16,7 @@ interface StatCardProps {
   description?: string;
   /** Icon hiển thị cùng value (AntD icon element) */
   icon?: React.ReactNode;
-  /** Màu accent cho viền trái và icon, mặc định #1890ff */
+  /** Màu accent cho viền trái và icon, mặc định primary */
   accentColor?: string;
   /** Badge hiển thị cạnh label (số đếm cần hành động, trạng thái LIVE...) */
   badge?: React.ReactNode;
@@ -26,7 +28,7 @@ interface StatCardProps {
 
 /**
  * Stat card dùng chung cho Teacher portal (và các nơi hiển thị số đếm đơn giản).
- * Chuẩn thị giác: viền trái 4px màu accent, nền trắng, Ant Design Statistic.
+ * Chuẩn thị giác: viền trái 4px màu accent, Ant Design Statistic.
  */
 export const StatCard: React.FC<StatCardProps> = React.memo(
   ({
@@ -35,55 +37,61 @@ export const StatCard: React.FC<StatCardProps> = React.memo(
     suffix,
     description,
     icon,
-    accentColor = "#1890ff",
+    accentColor,
     badge,
     valueColor,
     loading = false,
     style,
-  }) => (
-    <Card
-      loading={loading}
-      hoverable
-      style={{
-        borderRadius: 12,
-        borderLeft: `4px solid ${accentColor}`,
-        boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
-        ...style,
-      }}
-      styles={{ body: { padding: "16px 20px" } }}
-    >
-      <Statistic
-        title={
-          badge ? (
-            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+  }) => {
+    const { tokens, isDark } = useTheme();
+    const resolvedAccentColor = accentColor || tokens.color.action.primaryBg;
+
+    return (
+      <Card
+        loading={loading}
+        hoverable
+        style={{
+          borderRadius: tokens.radius.none,
+          borderLeft: `4px solid ${resolvedAccentColor}`,
+          boxShadow: isDark ? "none" : "0 2px 8px rgba(0,0,0,0.06)",
+          transition: "var(--transition-fast)",
+          ...style,
+        }}
+        styles={{ body: { padding: `${tokens.space[4]}px ${tokens.space[5]}px` } }}
+      >
+        <Statistic
+          title={
+            badge ? (
+              <div style={{ display: "flex", alignItems: "center", gap: tokens.space[2] }}>
+                <Text type="secondary" style={{ fontSize: 13 }}>
+                  {label}
+                </Text>
+                {badge}
+              </div>
+            ) : (
               <Text type="secondary" style={{ fontSize: 13 }}>
                 {label}
               </Text>
-              {badge}
-            </div>
-          ) : (
-            <Text type="secondary" style={{ fontSize: 13 }}>
-              {label}
-            </Text>
-          )
-        }
-        value={value}
-        suffix={suffix}
-        prefix={
-          icon ? (
-            <span style={{ marginRight: 8, color: accentColor }}>{icon}</span>
-          ) : undefined
-        }
-        valueStyle={{ fontWeight: 700, fontSize: 24, color: valueColor }}
-      />
+            )
+          }
+          value={value}
+          suffix={suffix}
+          prefix={
+            icon ? (
+              <span style={{ marginRight: tokens.space[2], color: resolvedAccentColor }}>{icon}</span>
+            ) : undefined
+          }
+          valueStyle={{ fontWeight: 700, fontSize: 24, color: valueColor }}
+        />
 
-      {description && (
-        <Text type="secondary" style={{ fontSize: 12 }}>
-          {description}
-        </Text>
-      )}
-    </Card>
-  )
+        {description && (
+          <Text type="secondary" style={{ fontSize: 12 }}>
+            {description}
+          </Text>
+        )}
+      </Card>
+    );
+  }
 );
 
 StatCard.displayName = "StatCard";

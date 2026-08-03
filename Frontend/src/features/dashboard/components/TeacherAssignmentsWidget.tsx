@@ -19,7 +19,7 @@ export const TeacherAssignmentsWidget: React.FC<AssignmentWidgetProps> = React.m
         loading={loading}
         title={
           <Space>
-            <FormOutlined style={{ color: "#faad14" }} />
+            <FormOutlined style={{ color: "var(--color-warning-base)" }} />
             <Title level={4} style={{ margin: 0, fontWeight: 700 }}>
               Bài tập cần chấm điểm
             </Title>
@@ -64,7 +64,7 @@ export const TeacherAssignmentsWidget: React.FC<AssignmentWidgetProps> = React.m
                         {item.deadline && (
                           <Space size={4}>
                             <ClockCircleOutlined
-                              style={{ color: isPastDeadline ? "#ff4d4f" : "#8c8c8c" }}
+                              style={{ color: isPastDeadline ? "var(--color-error-base)" : "var(--color-text-description)" }}
                             />
                             <Text type={isPastDeadline ? "danger" : "secondary"}>
                               Hạn nộp: {new Date(item.deadline).toLocaleString("vi-VN")}

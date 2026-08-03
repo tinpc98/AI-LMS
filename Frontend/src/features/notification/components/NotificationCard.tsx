@@ -39,10 +39,10 @@ export const NotificationCard: React.FC<NotificationCardProps> = React.memo(
         style={{
           borderRadius: 16,
           boxShadow: "0 2px 8px rgba(0, 0, 0, 0.03)",
-          border: isUnread ? "1px solid #91caff" : "1px solid #f0f0f0",
-          backgroundColor: isUnread ? "#e6f7ff" : "#ffffff",
+          border: isUnread ? "1px solid var(--color-border-primary-tint)" : "1px solid var(--color-border-default)",
+          backgroundColor: isUnread ? "var(--color-bg-primary-tint)" : "var(--color-surface)",
           marginBottom: 14,
-          transition: "all 0.3s ease",
+          transition: "var(--transition-fast)",
         }}
         styles={{ body: { padding: "16px 20px" } }}
       >
@@ -82,7 +82,7 @@ export const NotificationCard: React.FC<NotificationCardProps> = React.memo(
             </div>
 
             {/* Title */}
-            <Title level={5} style={{ margin: "0 0 6px 0", color: "#1f2937", lineHeight: 1.4 }}>
+            <Title level={5} style={{ margin: "0 0 6px 0", color: "var(--color-text-title)", lineHeight: 1.4 }}>
               {item.title}
             </Title>
 

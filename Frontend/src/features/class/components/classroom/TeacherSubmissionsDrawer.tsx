@@ -175,13 +175,13 @@ export const TeacherSubmissionsDrawer: React.FC<TeacherSubmissionsDrawerProps> =
               <Avatar
                 src={(studentObj as any)?.avatar || undefined}
                 icon={!(studentObj as any)?.avatar ? <UserOutlined /> : undefined}
-                style={{ backgroundColor: "#1890ff" }}
+                style={{ backgroundColor: "var(--color-action-primary-bg)" }}
               />
               <div>
                 <Text strong style={{ fontSize: 14, display: "block" }}>
                   {studentObj?.fullName || "Học sinh"}
                 </Text>
-                <Text style={{ fontSize: 12, fontFamily: "monospace", color: "#8c8c8c" }}>
+                <Text style={{ fontSize: 12, fontFamily: "monospace", color: "var(--color-text-description)" }}>
                   STU-{code}
                 </Text>
               </div>
@@ -236,7 +236,7 @@ export const TeacherSubmissionsDrawer: React.FC<TeacherSubmissionsDrawerProps> =
           return (
             <div>
               {record.grade !== null && record.grade !== undefined ? (
-                <Text strong style={{ color: "#52c41a", fontSize: 16 }}>
+                <Text strong style={{ color: "var(--color-success-base)", fontSize: 16 }}>
                   {record.grade} / 100
                 </Text>
               ) : (
@@ -290,7 +290,7 @@ export const TeacherSubmissionsDrawer: React.FC<TeacherSubmissionsDrawerProps> =
           title={
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <Space>
-                <FileDoneOutlined style={{ color: "#1890ff" }} />
+                <FileDoneOutlined style={{ color: "var(--color-action-primary-bg)" }} />
                 <span>Danh sách bài nộp: {assignment?.title}</span>
               </Space>
               <Button
@@ -310,7 +310,7 @@ export const TeacherSubmissionsDrawer: React.FC<TeacherSubmissionsDrawerProps> =
           {/* 1. Quick Statistics Cards Header */}
           <Card
             size="small"
-            style={{ marginBottom: 16, backgroundColor: "#f8f9fa", borderRadius: 12 }}
+            style={{ marginBottom: 16, backgroundColor: "var(--color-bg-page)", borderRadius: 12 }}
           >
             <Row gutter={[12, 12]}>
               <Col xs={12} sm={6} md={3}>
@@ -324,21 +324,21 @@ export const TeacherSubmissionsDrawer: React.FC<TeacherSubmissionsDrawerProps> =
                 <Statistic
                   title={<Text style={{ fontSize: 11 }}>🔵 Đã chấm</Text>}
                   value={stats.gradedCount}
-                  styles={{ content: { fontSize: 18, fontWeight: 700, color: "#1890ff" } }}
+                  styles={{ content: { fontSize: 18, fontWeight: 700, color: "var(--color-action-primary-bg)" } }}
                 />
               </Col>
               <Col xs={12} sm={6} md={3}>
                 <Statistic
                   title={<Text style={{ fontSize: 11 }}>🟡 Chưa chấm</Text>}
                   value={stats.ungradedCount}
-                  styles={{ content: { fontSize: 18, fontWeight: 700, color: "#faad14" } }}
+                  styles={{ content: { fontSize: 18, fontWeight: 700, color: "var(--color-warning-base)" } }}
                 />
               </Col>
               <Col xs={12} sm={6} md={3}>
                 <Statistic
                   title={<Text style={{ fontSize: 11 }}>🔴 Nộp trễ</Text>}
                   value={stats.lateCount}
-                  styles={{ content: { fontSize: 18, fontWeight: 700, color: "#ff4d4f" } }}
+                  styles={{ content: { fontSize: 18, fontWeight: 700, color: "var(--color-error-base)" } }}
                 />
               </Col>
               <Col xs={12} sm={6} md={4}>
@@ -346,7 +346,7 @@ export const TeacherSubmissionsDrawer: React.FC<TeacherSubmissionsDrawerProps> =
                   title={<Text style={{ fontSize: 11 }}>⭐ Điểm trung bình</Text>}
                   value={stats.avgScore}
                   suffix="/100"
-                  styles={{ content: { fontSize: 18, fontWeight: 700, color: "#52c41a" } }}
+                  styles={{ content: { fontSize: 18, fontWeight: 700, color: "var(--color-success-base)" } }}
                 />
               </Col>
               <Col xs={12} sm={6} md={4}>
@@ -354,7 +354,7 @@ export const TeacherSubmissionsDrawer: React.FC<TeacherSubmissionsDrawerProps> =
                   title={<Text style={{ fontSize: 11 }}>🏆 Điểm cao nhất</Text>}
                   value={stats.maxScore}
                   suffix="/100"
-                  styles={{ content: { fontSize: 18, fontWeight: 700, color: "#722ed1" } }}
+                  styles={{ content: { fontSize: 18, fontWeight: 700, color: "var(--color-secondary-icon)" } }}
                 />
               </Col>
               <Col xs={12} sm={6} md={4}>
@@ -362,7 +362,7 @@ export const TeacherSubmissionsDrawer: React.FC<TeacherSubmissionsDrawerProps> =
                   title={<Text style={{ fontSize: 11 }}>📉 Điểm thấp nhất</Text>}
                   value={stats.minScore}
                   suffix="/100"
-                  styles={{ content: { fontSize: 18, fontWeight: 700, color: "#fa8c16" } }}
+                  styles={{ content: { fontSize: 18, fontWeight: 700, color: "var(--color-warning-base)" } }}
                 />
               </Col>
             </Row>
@@ -382,7 +382,7 @@ export const TeacherSubmissionsDrawer: React.FC<TeacherSubmissionsDrawerProps> =
             <Space size={12} wrap>
               <Input
                 placeholder="Tìm sinh viên theo tên/email/mã..."
-                prefix={<SearchOutlined style={{ color: "#bfbfbf" }} />}
+                prefix={<SearchOutlined style={{ color: "var(--color-text-disabled)" }} />}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 style={{ width: 240, borderRadius: 8 }}

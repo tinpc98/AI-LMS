@@ -16,14 +16,14 @@ export const UpcomingExamsWidget: React.FC<UpcomingExamsWidgetProps> = React.mem
     <Card
       title={
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <FormOutlined style={{ color: "#722ed1", fontSize: 16 }} />
-          <span style={{ fontSize: 15, fontWeight: 700, color: "#1f2937" }}>Lịch thi sắp tới</span>
+          <FormOutlined style={{ color: "var(--color-secondary-icon)", fontSize: 16 }} />
+          <span style={{ fontSize: 15, fontWeight: 700, color: "var(--color-text-title)" }}>Lịch thi sắp tới</span>
           {exams.length > 0 && (
             <Text
               style={{
                 fontSize: 12,
-                color: "#722ed1",
-                backgroundColor: "#f9f0ff",
+                color: "var(--color-secondary-icon)",
+                backgroundColor: "var(--color-secondary-bg)",
                 borderRadius: 8,
                 padding: "1px 8px",
                 fontWeight: 600,
@@ -36,7 +36,7 @@ export const UpcomingExamsWidget: React.FC<UpcomingExamsWidgetProps> = React.mem
       }
       style={{
         borderRadius: 20,
-        border: "1px solid #f0f0f0",
+        border: "1px solid var(--color-border-default)",
         boxShadow: "0 2px 12px rgba(0,0,0,0.05)",
         height: "100%",
       }}
@@ -47,11 +47,11 @@ export const UpcomingExamsWidget: React.FC<UpcomingExamsWidgetProps> = React.mem
           style={{
             textAlign: "center",
             padding: "32px 0",
-            color: "#bfbfbf",
+            color: "var(--color-text-disabled)",
             fontSize: 13,
           }}
         >
-          <CheckCircleOutlined style={{ fontSize: 28, marginBottom: 10, display: "block", color: "#52c41a" }} />
+          <CheckCircleOutlined style={{ fontSize: 28, marginBottom: 10, display: "block", color: "var(--color-success-base)" }} />
           Không có lịch thi nào sắp tới.
         </div>
       ) : (
@@ -63,11 +63,11 @@ export const UpcomingExamsWidget: React.FC<UpcomingExamsWidgetProps> = React.mem
               <div
                 key={item.id}
                 style={{
-                  backgroundColor: isCompleted ? "#f6ffed" : "#f9f0ff",
-                  border: `1px solid ${isCompleted ? "#d9f7be" : "#e9d5f7"}`,
+                  backgroundColor: isCompleted ? "var(--color-success-bg)" : "var(--color-secondary-bg)",
+                  border: `1px solid ${isCompleted ? "var(--color-border-default)" : "var(--color-secondary-border)"}`,
                   borderRadius: 14,
                   padding: "14px 16px",
-                  transition: "all 0.2s ease",
+                  transition: "var(--transition-fast)",
                 }}
               >
                 <div
@@ -83,7 +83,7 @@ export const UpcomingExamsWidget: React.FC<UpcomingExamsWidgetProps> = React.mem
                     strong
                     style={{
                       fontSize: 13,
-                      color: isCompleted ? "#389e0d" : "#391085",
+                      color: isCompleted ? "var(--color-success-text)" : "var(--color-secondary-active)",
                       lineHeight: 1.3,
                       flex: 1,
                     }}
@@ -99,12 +99,12 @@ export const UpcomingExamsWidget: React.FC<UpcomingExamsWidgetProps> = React.mem
                 </div>
 
                 <div style={{ display: "flex", flexWrap: "wrap", gap: "4px 12px" }}>
-                  <Text style={{ fontSize: 12, color: "#6b7280" }}>
+                  <Text style={{ fontSize: 12, color: "var(--color-text-description)" }}>
                     <ClockCircleOutlined style={{ marginRight: 4, fontSize: 11 }} />
                     {item.className}
                   </Text>
                   {item.score !== null && (
-                    <Text style={{ fontSize: 12, color: "#52c41a", fontWeight: 600 }}>
+                    <Text style={{ fontSize: 12, color: "var(--color-success-base)", fontWeight: 600 }}>
                       Điểm: {item.score} / {item.maxScore}
                     </Text>
                   )}
@@ -117,7 +117,7 @@ export const UpcomingExamsWidget: React.FC<UpcomingExamsWidgetProps> = React.mem
             <Text
               style={{
                 fontSize: 12,
-                color: "#8c8c8c",
+                color: "var(--color-text-description)",
                 textAlign: "center",
                 display: "block",
                 paddingTop: 4,

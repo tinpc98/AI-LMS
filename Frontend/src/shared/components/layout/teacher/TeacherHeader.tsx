@@ -15,6 +15,9 @@ import { useNotifications } from "../../../../features/notification/hooks/useNot
 import { NotificationDropdown } from "../student/NotificationDropdown";
 import ChangePasswordModal from "../../../../features/profile/components/ChangePasswordModal";
 
+import { tokens } from "../../../theme/tokens";
+import { ThemeToggle } from "../../ThemeToggle";
+
 const { Header } = Layout;
 const { Text } = Typography;
 
@@ -57,7 +60,7 @@ export const TeacherHeader: React.FC<TeacherHeaderProps> = React.memo(
       },
       {
         key: "logout",
-        icon: <LogoutOutlined style={{ color: "#ff4d4f" }} />,
+        icon: <LogoutOutlined style={{ color: tokens.color.semantic.error.base }} />,
         danger: true,
         label: "Đăng xuất",
         onClick: logout,
@@ -71,38 +74,48 @@ export const TeacherHeader: React.FC<TeacherHeaderProps> = React.memo(
             position: "sticky",
             top: 0,
             zIndex: 99,
-            padding: "0 24px",
-            background: "#fff",
+            padding: isMobile ? "0 12px" : "0 24px",
+            background: tokens.color.bg.surface,
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
             boxShadow: "0 2px 8px rgba(0, 0, 0, 0.06)",
-            borderBottom: "1px solid #f0f0f0",
+            borderBottom: `1px solid ${tokens.color.border.default}`,
             height: 64,
           }}
         >
           {/* Left Side: Collapse Button & Breadcrumb */}
-          <Space size={16} align="center">
+          <Space size={isMobile ? 8 : 16} align="center">
             <Button
               type="text"
               icon={
                 isMobile ? (
-                  <MenuOutlined style={{ fontSize: 18 }} />
+                  <MenuOutlined style={{ fontSize: 20 }} />
                 ) : collapsed ? (
-                  <MenuUnfoldOutlined style={{ fontSize: 18 }} />
+                  <MenuUnfoldOutlined style={{ fontSize: 20 }} />
                 ) : (
-                  <MenuFoldOutlined style={{ fontSize: 18 }} />
+                  <MenuFoldOutlined style={{ fontSize: 20 }} />
                 )
               }
               onClick={isMobile ? onToggleMobileDrawer : onToggleCollapse}
-              style={{ fontSize: 16, width: 40, height: 40 }}
+              style={{
+                fontSize: 18,
+                width: 44,
+                height: 44,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+              aria-label="Menu"
             />
 
             {!isMobile && <TeacherBreadcrumb />}
           </Space>
 
           {/* Right Side: Notifications & User Dropdown */}
-          <Space size={20} align="center">
+          <Space size={isMobile ? 12 : 20} align="center">
+            <ThemeToggle />
+
             <NotificationDropdown
               notifications={notifications}
               unreadCount={unreadCount}
@@ -119,15 +132,16 @@ export const TeacherHeader: React.FC<TeacherHeaderProps> = React.memo(
                   gap: 10,
                   cursor: "pointer",
                   padding: "4px 8px",
-                  borderRadius: 8,
-                  transition: "background 0.2s",
+                  borderRadius: tokens.radius.md,
+                  minHeight: 44,
+                  transition: "background-color var(--duration-fast) var(--ease-out)",
                 }}
                 className="user-dropdown-trigger"
               >
                 <Avatar
                   src={(user as any)?.avatar || undefined}
                   icon={!(user as any)?.avatar ? <UserOutlined /> : undefined}
-                  style={{ backgroundColor: "#1890ff", border: "1px solid #e6f7ff" }}
+                  style={{ backgroundColor: tokens.color.action.primaryBg }}
                 />
                 {!isMobile && (
                   <div style={{ textAlign: "left", lineHeight: 1.2 }}>

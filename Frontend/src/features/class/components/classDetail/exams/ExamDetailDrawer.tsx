@@ -43,9 +43,9 @@ export const ExamDetailDrawer: React.FC<ExamDetailDrawerProps> = React.memo(
         onClose={onClose}
         title={
           <Space align="center">
-            <FormOutlined style={{ color: "#1890ff", fontSize: 20 }} />
+            <FormOutlined style={{ color: "var(--color-action-primary-bg)", fontSize: 20 }} />
             <div>
-              <Title level={5} style={{ margin: 0, color: "#1f2937" }}>
+              <Title level={5} style={{ margin: 0, color: "var(--color-text-title)" }}>
                 {item.title}
               </Title>
               <Space size={6} style={{ marginTop: 2 }}>
@@ -67,7 +67,7 @@ export const ExamDetailDrawer: React.FC<ExamDetailDrawerProps> = React.memo(
                   onClose();
                   onStart(item);
                 }}
-                style={{ borderRadius: 8, backgroundColor: "#52c41a" }}
+                style={{ borderRadius: 8, backgroundColor: "var(--color-success-base)" }}
               >
                 {item.displayStatus === "In Progress" ? "Tiếp tục bài thi" : "Bắt đầu làm bài"}
               </Button>
@@ -83,11 +83,11 @@ export const ExamDetailDrawer: React.FC<ExamDetailDrawerProps> = React.memo(
             bordered
             column={1}
             size="small"
-            styles={{ label: { width: "35%", fontWeight: 600, backgroundColor: "#fafafa" } }}
+            styles={{ label: { width: "35%", fontWeight: 600, backgroundColor: "var(--color-bg-page)" } }}
             style={{ marginBottom: 20 }}
           >
             <Descriptions.Item label="Tên bài kiểm tra">
-              <Text strong style={{ color: "#1f2937" }}>
+              <Text strong style={{ color: "var(--color-text-title)" }}>
                 {item.title}
               </Text>
             </Descriptions.Item>
@@ -98,14 +98,14 @@ export const ExamDetailDrawer: React.FC<ExamDetailDrawerProps> = React.memo(
 
             <Descriptions.Item label="Thời gian làm bài">
               <Space size={6}>
-                <ClockCircleOutlined style={{ color: "#1890ff" }} />
+                <ClockCircleOutlined style={{ color: "var(--color-action-primary-bg)" }} />
                 <Text strong>{item.duration || 45} phút</Text>
               </Space>
             </Descriptions.Item>
 
             <Descriptions.Item label="Cấu trúc đề thi">
               <Space size={6}>
-                <QuestionCircleOutlined style={{ color: "#fa8c16" }} />
+                <QuestionCircleOutlined style={{ color: "var(--color-warning-base)" }} />
                 <span>
                   {questionCount} câu hỏi ({maxScore} điểm)
                 </span>
@@ -114,7 +114,7 @@ export const ExamDetailDrawer: React.FC<ExamDetailDrawerProps> = React.memo(
 
             <Descriptions.Item label="Điểm đạt (Passing Score)">
               <Space size={6}>
-                <SafetyCertificateOutlined style={{ color: "#52c41a" }} />
+                <SafetyCertificateOutlined style={{ color: "var(--color-success-base)" }} />
                 <span>5.0 / {maxScore} điểm</span>
               </Space>
             </Descriptions.Item>
@@ -126,7 +126,7 @@ export const ExamDetailDrawer: React.FC<ExamDetailDrawerProps> = React.memo(
           <div style={{ marginBottom: 20 }}>
             <Text
               strong
-              style={{ fontSize: 14, color: "#262626", display: "block", marginBottom: 6 }}
+              style={{ fontSize: 14, color: "var(--color-text-title)", display: "block", marginBottom: 6 }}
             >
               Mô tả & Quy chế phòng thi:
             </Text>
@@ -135,10 +135,10 @@ export const ExamDetailDrawer: React.FC<ExamDetailDrawerProps> = React.memo(
                 fontSize: 13,
                 lineHeight: 1.6,
                 margin: 0,
-                backgroundColor: "#fafafa",
+                backgroundColor: "var(--color-bg-page)",
                 padding: "12px 16px",
                 borderRadius: 10,
-                border: "1px solid #f0f0f0",
+                border: "1px solid var(--color-border-default)",
               }}
             >
               {item.description ||

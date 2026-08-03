@@ -23,7 +23,7 @@ export const TodayClassesTable: React.FC<TodayClassesTableProps> = ({ classes, l
       key: "className",
       render: (text, record) => (
         <div>
-          <Text style={{ fontWeight: 600, color: "#1f1f1f", display: "block" }}>{text}</Text>
+          <Text style={{ fontWeight: 600, color: "var(--color-text-title)", display: "block" }}>{text}</Text>
           <Text type="secondary" style={{ fontSize: "12px" }}>
             {record.classCode}
           </Text>
@@ -39,12 +39,12 @@ export const TodayClassesTable: React.FC<TodayClassesTableProps> = ({ classes, l
           <Space size="small">
             <Avatar
               icon={<UserOutlined />}
-              style={{ backgroundColor: teacherName === "Chưa phân công" ? "#faad14" : "#1677ff" }}
+              style={{ backgroundColor: teacherName === "Chưa phân công" ? "var(--color-warning-base)" : "var(--color-action-primary-bg)" }}
             />
             <Text
               style={{
                 fontSize: "13px",
-                color: teacherName === "Chưa phân công" ? "#d48806" : "#262626",
+                color: teacherName === "Chưa phân công" ? "var(--color-warning-text)" : "var(--color-text-title)",
                 fontWeight: teacherName === "Chưa phân công" ? 500 : 400,
               }}
             >
@@ -58,7 +58,7 @@ export const TodayClassesTable: React.FC<TodayClassesTableProps> = ({ classes, l
       title: "Khóa học",
       key: "courseName",
       render: (_, record) => (
-        <Text style={{ fontSize: "13px", color: "#595959" }}>
+        <Text style={{ fontSize: "13px", color: "var(--color-text-body)" }}>
           {record.course?.courseName ?? "N/A"}
         </Text>
       ),
@@ -93,13 +93,13 @@ export const TodayClassesTable: React.FC<TodayClassesTableProps> = ({ classes, l
               <span>
                 {current}/{max}
               </span>
-              <span style={{ color: "#8c8c8c" }}>{percent}%</span>
+              <span style={{ color: "var(--color-text-description)" }}>{percent}%</span>
             </div>
             <Progress
               percent={percent}
               size="small"
               showInfo={false}
-              strokeColor={percent >= 100 ? "#ff4d4f" : "#1677ff"}
+              strokeColor={percent >= 100 ? "var(--color-error-base)" : "var(--color-action-primary-bg)"}
             />
           </div>
         );
@@ -140,7 +140,7 @@ export const TodayClassesTable: React.FC<TodayClassesTableProps> = ({ classes, l
         <Tooltip title="Xem danh sách & chi tiết lớp">
           <Button
             type="text"
-            icon={<EyeOutlined style={{ color: "#1677ff" }} />}
+            icon={<EyeOutlined style={{ color: "var(--color-action-primary-bg)" }} />}
             onClick={() => navigate(`/admin/classes`)}
           />
         </Tooltip>
@@ -159,7 +159,7 @@ export const TodayClassesTable: React.FC<TodayClassesTableProps> = ({ classes, l
         style={{
           borderRadius: "16px",
           boxShadow: "0 4px 20px rgba(0, 0, 0, 0.04)",
-          border: "1px solid #f0f0f0",
+          border: "1px solid var(--color-border-default)",
           marginBottom: "24px",
         }}
         styles={{ body: { padding: "24px" } }}

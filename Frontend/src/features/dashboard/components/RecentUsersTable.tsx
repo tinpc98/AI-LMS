@@ -24,7 +24,7 @@ export const RecentUsersTable: React.FC<RecentUsersTableProps> = ({ users, loadi
         style={{
           borderRadius: "16px",
           boxShadow: "0 4px 20px rgba(0, 0, 0, 0.04)",
-          border: "1px solid #f0f0f0",
+          border: "1px solid var(--color-border-default)",
           height: "100%",
         }}
         styles={{ body: { padding: "24px" } }}
@@ -63,7 +63,7 @@ export const RecentUsersTable: React.FC<RecentUsersTableProps> = ({ users, loadi
                       src={user.avatar}
                       icon={!user.avatar && <UserOutlined />}
                       size="large"
-                      style={{ backgroundColor: "#1677ff" }}
+                      style={{ backgroundColor: "var(--color-action-primary-bg)" }}
                     />
                   }
                   title={

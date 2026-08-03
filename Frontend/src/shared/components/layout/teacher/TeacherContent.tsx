@@ -1,5 +1,6 @@
 import React from "react";
 import { Layout } from "antd";
+import { tokens } from "../../../theme/tokens";
 
 const { Content } = Layout;
 
@@ -14,7 +15,7 @@ export const TeacherContent: React.FC<TeacherContentProps> = React.memo(({ child
         margin: 0,
         padding: 0,
         minHeight: "calc(100vh - 64px)",
-        backgroundColor: "#f5f5f5",
+        backgroundColor: "var(--color-bg-page)",
         overflowX: "hidden",
       }}
     >

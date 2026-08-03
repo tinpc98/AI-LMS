@@ -40,7 +40,7 @@ export const TeacherAnnouncementsWidget: React.FC<TeacherAnnouncementsWidgetProp
         loading={loading}
         title={
           <Space>
-            <NotificationOutlined style={{ color: "#722ed1" }} />
+            <NotificationOutlined style={{ color: "var(--color-secondary-icon)" }} />
             <Title level={4} style={{ margin: 0, fontWeight: 700 }}>
               Thông báo mới nhất
             </Title>
@@ -75,11 +75,11 @@ export const TeacherAnnouncementsWidget: React.FC<TeacherAnnouncementsWidgetProp
                     <div>
                       <Paragraph
                         ellipsis={{ rows: 2 }}
-                        style={{ margin: "4px 0 6px", fontSize: 13, color: "#595959" }}
+                        style={{ margin: "4px 0 6px", fontSize: 13, color: "var(--color-text-body)" }}
                       >
                         {item.content}
                       </Paragraph>
-                      <Space size={12} style={{ fontSize: 12, color: "#8c8c8c" }}>
+                      <Space size={12} style={{ fontSize: 12, color: "var(--color-text-description)" }}>
                         {item.createdBy?.fullName && <span>Bởi: {item.createdBy.fullName}</span>}
                         {item.createdAt && (
                           <Space size={4}>

@@ -41,7 +41,7 @@ const FeatureList = ({
                 bordered
                 style={{
                   height: "100%",
-                  borderColor: feature.enabled ? "#e2e8f0" : "#f1f5f9",
+                  borderColor: feature.enabled ? "var(--color-border-default)" : "var(--color-bg-page)",
                   opacity: feature.enabled ? 1 : 0.75,
                   display: "flex",
                   flexDirection: "column",
@@ -82,7 +82,7 @@ const FeatureList = ({
                   </Typography.Paragraph>
                 </div>
 
-                <div style={{ marginTop: "auto", paddingTop: 12, borderTop: "1px solid #f1f5f9" }}>
+                <div style={{ marginTop: "auto", paddingTop: 12, borderTop: "1px solid var(--color-bg-page)" }}>
                   <Typography.Text
                     type="secondary"
                     style={{ fontSize: 12, display: "block", marginBottom: 6 }}
@@ -106,15 +106,15 @@ const FeatureList = ({
                       display: "flex",
                       justifyContent: "space-between",
                       fontSize: 12,
-                      color: "#64748b",
+                      color: "var(--color-text-description)",
                     }}
                   >
                     <span>
-                      <ThunderboltOutlined style={{ color: "#1890ff", marginRight: 4 }} />
+                      <ThunderboltOutlined style={{ color: "var(--color-action-primary-bg)", marginRight: 4 }} />
                       {feature.dailyRequests.toLocaleString()} reqs/day
                     </span>
                     <span>
-                      <FieldTimeOutlined style={{ color: "#eb2f96", marginRight: 4 }} />
+                      <FieldTimeOutlined style={{ color: "var(--color-accent-base)", marginRight: 4 }} />
                       {feature.avgLatencyMs > 0 ? `${feature.avgLatencyMs}ms` : "—"}
                     </span>
                   </div>

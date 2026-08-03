@@ -7,13 +7,15 @@ import {
   Badge,
   Button,
   Input,
-  Empty,
   Typography,
   Space,
   Pagination,
 } from "antd";
 import { BookOutlined, TeamOutlined, SearchOutlined, ArrowRightOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
+import { StatusBadge } from "../../../shared/components/StatusBadge";
+import { EmptyState } from "../../../shared/components/EmptyState";
+import { tokens } from "../../../shared/theme/tokens";
 
 const { Title, Text } = Typography;
 
@@ -61,21 +63,7 @@ export const TeacherClassroomsGrid: React.FC<TeacherClassroomsGridProps> = React
     }, [filteredClasses, currentPage, pageSize]);
 
     const getStatusTag = (status?: string) => {
-      switch (status) {
-        case "Ready":
-        case "Active":
-        case "Ongoing":
-          return <Tag color="success">Đang hoạt động</Tag>;
-        case "Draft":
-        case "Upcoming":
-          return <Tag color="processing">Sắp diễn ra</Tag>;
-        case "Completed":
-          return <Tag color="default">Đã kết thúc</Tag>;
-        case "Cancelled":
-          return <Tag color="error">Đã hủy</Tag>;
-        default:
-          return <Tag color="blue">{status || "Hoạt động"}</Tag>;
-      }
+      return <StatusBadge status={status || "Hoạt động"} />;
     };
 
     return (
@@ -92,36 +80,40 @@ export const TeacherClassroomsGrid: React.FC<TeacherClassroomsGridProps> = React
             }}
           >
             <Space>
-              <BookOutlined style={{ color: "#1890ff", fontSize: 20 }} />
+              <BookOutlined style={{ color: "var(--color-action-primary-bg)", fontSize: 20 }} />
               <Title level={4} style={{ margin: 0, fontWeight: 700 }}>
                 Lớp học được phân công
               </Title>
               <Badge
                 count={classes.length}
                 overflowCount={99}
-                style={{ backgroundColor: "#1890ff" }}
+                style={{ backgroundColor: "var(--color-action-primary-bg)" }}
               />
             </Space>
 
             <Input
               placeholder="Tìm kiếm theo tên hoặc mã lớp..."
-              prefix={<SearchOutlined style={{ color: "#bfbfbf" }} />}
+              prefix={<SearchOutlined style={{ color: tokens.color.text.description }} />}
               value={searchQuery}
               onChange={(e) => {
                 setSearchQuery(e.target.value);
                 setCurrentPage(1);
               }}
-              style={{ width: 260, borderRadius: 8 }}
+              style={{ flex: 1, minWidth: 200, maxWidth: 320, borderRadius: tokens.radius.md }}
               allowClear
             />
           </div>
         }
-        style={{ borderRadius: 12, marginBottom: 24, boxShadow: "0 2px 8px rgba(0,0,0,0.06)" }}
-        styles={{ body: { padding: 20 } }}
+        style={{
+          borderRadius: tokens.radius.lg,
+          marginBottom: tokens.space[5],
+          boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
+        }}
+        styles={{ body: { padding: tokens.space[5] } }}
       >
         {paginatedClasses.length > 0 ? (
           <>
-            <Row gutter={[16, 16]}>
+            <Row gutter={[tokens.space[4], tokens.space[4]]}>
               {paginatedClasses.map((cls) => {
                 const studentCount =
                   cls.currentStudents ?? (Array.isArray(cls.students) ? cls.students.length : 0);
@@ -129,20 +121,20 @@ export const TeacherClassroomsGrid: React.FC<TeacherClassroomsGridProps> = React
                 const courseName = typeof cls.courseId === "object" ? cls.courseId?.courseName : "";
 
                 return (
-                  <Col xs={24} sm={12} lg={8} key={cls._id}>
+                  <Col xs={24} sm={24} md={12} lg={8} xl={6} key={cls._id}>
                     <Card
                       hoverable
                       style={{
-                        borderRadius: 10,
-                        border: "1px solid #f0f0f0",
-                        transition: "all 0.2s ease",
+                        borderRadius: tokens.radius.md,
+                        border: `1px solid ${tokens.color.border.default}`,
+                        transition: "var(--transition-fast)",
                         height: "100%",
                         display: "flex",
                         flexDirection: "column",
                       }}
                       styles={{
                         body: {
-                          padding: 16,
+                          padding: tokens.space[4],
                           flex: 1,
                           display: "flex",
                           flexDirection: "column",
@@ -157,11 +149,12 @@ export const TeacherClassroomsGrid: React.FC<TeacherClassroomsGridProps> = React
                             justifyContent: "space-between",
                             alignItems: "flex-start",
                             marginBottom: 8,
+                            gap: 8,
                           }}
                         >
                           <Title
                             level={5}
-                            style={{ margin: 0, fontSize: 16, fontWeight: 700 }}
+                            style={{ margin: 0, fontSize: 16, fontWeight: 700, wordBreak: "break-word" }}
                             ellipsis={{ rows: 2 }}
                           >
                             {cls.className}
@@ -190,7 +183,7 @@ export const TeacherClassroomsGrid: React.FC<TeacherClassroomsGridProps> = React
                       </div>
 
                       <div
-                        style={{ marginTop: 12, paddingTop: 12, borderTop: "1px solid #f5f5f5" }}
+                        style={{ marginTop: 12, paddingTop: 12, borderTop: `1px solid ${tokens.color.border.divider}` }}
                       >
                         <div
                           style={{
@@ -201,8 +194,8 @@ export const TeacherClassroomsGrid: React.FC<TeacherClassroomsGridProps> = React
                           }}
                         >
                           <Space size={6}>
-                            <TeamOutlined style={{ color: "#52c41a" }} />
-                            <Text style={{ fontSize: 13, color: "#595959" }}>
+                            <TeamOutlined style={{ color: tokens.color.semantic.success.base }} />
+                            <Text style={{ fontSize: 13, color: tokens.color.text.body }}>
                               Sĩ số: <strong>{studentCount}</strong> / {max}
                             </Text>
                           </Space>
@@ -214,7 +207,7 @@ export const TeacherClassroomsGrid: React.FC<TeacherClassroomsGridProps> = React
                           block
                           icon={<ArrowRightOutlined />}
                           onClick={() => navigate(`/teacher/classroom-detail/${cls._id}`)}
-                          style={{ borderRadius: 6, fontWeight: 600 }}
+                          style={{ borderRadius: tokens.radius.md, fontWeight: 600, minHeight: 44 }}
                         >
                           Vào quản lý lớp
                         </Button>
@@ -238,14 +231,11 @@ export const TeacherClassroomsGrid: React.FC<TeacherClassroomsGridProps> = React
             )}
           </>
         ) : (
-          <Empty
-            image={Empty.PRESENTED_IMAGE_SIMPLE}
+          <EmptyState
             description={
-              <Text type="secondary">
-                {searchQuery
-                  ? "Không tìm thấy lớp học phù hợp với từ khóa!"
-                  : "Bạn chưa được phân công quản lý lớp học nào."}
-              </Text>
+              searchQuery
+                ? "Không tìm thấy lớp học phù hợp với từ khóa!"
+                : "Bạn chưa được phân công quản lý lớp học nào."
             }
           />
         )}

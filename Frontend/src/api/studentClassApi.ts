@@ -77,9 +77,9 @@ export const studentClassApi = {
         className: item.className || item.name || "Lớp học",
         classCode: item.classCode || item.code || `LMS-${(item._id || "").slice(-4).toUpperCase()}`,
         joinCode: item.joinCode,
-        subject: item.subject || item.subjectId?.name || item.courseId?.subject || "Khóa học chính",
-        courseName: item.courseId?.courseName || item.courseName,
-        semester: item.semester || "HK1 (2025-2026)",
+        subject: item.subject || item.subjectId?.name || item.courseId?.subject || item.courseId?.courseName || "",
+        courseName: item.courseId?.courseName || item.courseName || "",
+        semester: item.semester || "",
         teacher: item.teacherId
           ? {
               _id: item.teacherId._id || item.teacherId.id || "",

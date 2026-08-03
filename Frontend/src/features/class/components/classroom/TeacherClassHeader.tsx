@@ -29,8 +29,8 @@ export const TeacherClassHeader: React.FC<TeacherClassHeaderProps> = React.memo(
       <Card
         style={{
           borderRadius: 16,
-          background: "linear-gradient(135deg, #1890ff 0%, #096dd9 100%)",
-          color: "#fff",
+          background: "linear-gradient(135deg, var(--color-action-primary-bg) 0%, var(--color-action-primary-bg-active) 100%)",
+          color: "var(--color-surface)",
           marginBottom: 24,
           boxShadow: "0 8px 24px rgba(24, 144, 255, 0.25)",
         }}
@@ -38,8 +38,8 @@ export const TeacherClassHeader: React.FC<TeacherClassHeaderProps> = React.memo(
       >
         <div style={{ marginBottom: 20 }}>
           <Space align="center">
-            <BookOutlined style={{ fontSize: 28, color: "#fff" }} />
-            <Title level={3} style={{ color: "#fff", margin: 0, fontWeight: 700 }}>
+            <BookOutlined style={{ fontSize: 28, color: "var(--color-surface)" }} />
+            <Title level={3} style={{ color: "var(--color-surface)", margin: 0, fontWeight: 700 }}>
               Quản lý lớp học của tôi
             </Title>
           </Space>
@@ -73,7 +73,7 @@ export const TeacherClassHeader: React.FC<TeacherClassHeaderProps> = React.memo(
                 }
                 value={totalClasses}
                 suffix="lớp"
-                valueStyle={{ color: "#fff", fontWeight: 700, fontSize: 22 }}
+                valueStyle={{ color: "var(--color-surface)", fontWeight: 700, fontSize: 22 }}
                 loading={loading}
               />
             </div>
@@ -97,8 +97,8 @@ export const TeacherClassHeader: React.FC<TeacherClassHeaderProps> = React.memo(
                 }
                 value={activeClasses}
                 suffix="lớp"
-                prefix={<CheckCircleOutlined style={{ color: "#b7eb8f", marginRight: 6 }} />}
-                valueStyle={{ color: "#fff", fontWeight: 700, fontSize: 22 }}
+                prefix={<CheckCircleOutlined style={{ color: "var(--color-border-default)", marginRight: 6 }} />}
+                valueStyle={{ color: "var(--color-surface)", fontWeight: 700, fontSize: 22 }}
                 loading={loading}
               />
             </div>
@@ -122,8 +122,8 @@ export const TeacherClassHeader: React.FC<TeacherClassHeaderProps> = React.memo(
                 }
                 value={completedClasses}
                 suffix="lớp"
-                prefix={<ClockCircleOutlined style={{ color: "#ffe58f", marginRight: 6 }} />}
-                valueStyle={{ color: "#fff", fontWeight: 700, fontSize: 22 }}
+                prefix={<ClockCircleOutlined style={{ color: "var(--color-warning-bg)", marginRight: 6 }} />}
+                valueStyle={{ color: "var(--color-surface)", fontWeight: 700, fontSize: 22 }}
                 loading={loading}
               />
             </div>
@@ -147,8 +147,8 @@ export const TeacherClassHeader: React.FC<TeacherClassHeaderProps> = React.memo(
                 }
                 value={totalStudents}
                 suffix="học sinh"
-                prefix={<TeamOutlined style={{ color: "#e6f7ff", marginRight: 6 }} />}
-                valueStyle={{ color: "#fff", fontWeight: 700, fontSize: 22 }}
+                prefix={<TeamOutlined style={{ color: "var(--color-bg-primary-tint)", marginRight: 6 }} />}
+                valueStyle={{ color: "var(--color-surface)", fontWeight: 700, fontSize: 22 }}
                 loading={loading}
               />
             </div>

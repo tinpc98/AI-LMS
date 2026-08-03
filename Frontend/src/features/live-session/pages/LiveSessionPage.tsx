@@ -165,12 +165,12 @@ const LiveSessionPage: React.FC = () => {
       {/* State 1: Error or Load Timeout */}
       {(status === "error" || loadTimeout || error) && (
         <div className="p-8 text-center max-w-lg bg-gray-900 rounded-2xl border border-gray-700 shadow-2xl">
-          <WarningOutlined style={{ fontSize: 64, color: "#ff4d4f", marginBottom: 24 }} />
-          <Title level={3} style={{ color: "#fff", marginBottom: 12 }}>
+          <WarningOutlined style={{ fontSize: 64, color: "var(--color-error-base)", marginBottom: 24 }} />
+          <Title level={3} style={{ color: "var(--color-surface)", marginBottom: 12 }}>
             {error?.title ||
               (loadTimeout ? "Tải phòng học quá thời gian" : "Không thể tải phòng học")}
           </Title>
-          <Paragraph style={{ color: "#d9d9d9", fontSize: 16, marginBottom: 32 }}>
+          <Paragraph style={{ color: "var(--color-border-default)", fontSize: 16, marginBottom: 32 }}>
             {error?.message ||
               (loadTimeout
                 ? "Kết nối tới máy chủ 8x8 JaaS phản hồi quá chậm. Vui lòng nhấn thử lại."
@@ -199,7 +199,7 @@ const LiveSessionPage: React.FC = () => {
       {hasValidData && !isSdkReady && (
         <div className="absolute inset-0 z-20 bg-[#040404] flex flex-col items-center justify-center text-white">
           <Spin size="large" />
-          <Title level={4} style={{ color: "#fff", marginTop: 24, fontWeight: 500 }}>
+          <Title level={4} style={{ color: "var(--color-surface)", marginTop: 24, fontWeight: 500 }}>
             Đang chuẩn bị phòng học trực tuyến...
           </Title>
           <Text style={{ color: "rgba(255,255,255,0.65)", fontSize: 15 }}>

@@ -82,7 +82,7 @@ const AssignmentRow: React.FC<{
       borderRadius: 14,
       padding: "12px 16px",
       border: `1px solid ${rowBorder}`,
-      transition: "box-shadow 0.2s ease",
+      transition: "box-shadow var(--duration-fast) var(--ease-out)",
     }}
   >
     {/* Title + Tag */}
@@ -95,7 +95,7 @@ const AssignmentRow: React.FC<{
         gap: 8,
       }}
     >
-      <Text strong style={{ fontSize: 13, color: "#1f2937", lineHeight: 1.4, flex: 1 }}>
+      <Text strong style={{ fontSize: 13, color: "var(--color-text-title)", lineHeight: 1.4, flex: 1 }}>
         {item.title}
       </Text>
       <StatusBadge variant={variant} style={{ flexShrink: 0 }} />
@@ -111,9 +111,9 @@ const AssignmentRow: React.FC<{
       }}
     >
       {/* Left: class + due date */}
-      <Text style={{ fontSize: 12, color: "#6b7280", display: "flex", alignItems: "center", gap: 4 }}>
-        <span style={{ color: "#8c8c8c" }}>{item.className}</span>
-        <span style={{ color: "#d1d5db" }}>•</span>
+      <Text style={{ fontSize: 12, color: "var(--color-text-description)", display: "flex", alignItems: "center", gap: 4 }}>
+        <span style={{ color: "var(--color-text-description)" }}>{item.className}</span>
+        <span style={{ color: "var(--color-border-default)" }}>•</span>
         <ClockCircleOutlined style={{ fontSize: 11 }} />
         <span>{formatDueDate(item.dueDate)}</span>
       </Text>
@@ -135,7 +135,7 @@ const AssignmentRow: React.FC<{
             <Button
               type="link"
               size="small"
-              style={{ fontSize: 12, padding: 0, color: "#1890ff", fontWeight: 500 }}
+              style={{ fontSize: 12, padding: 0, color: "var(--color-action-primary-bg)", fontWeight: 500 }}
             >
               Chi tiết →
             </Button>
@@ -163,7 +163,7 @@ const GroupHeader: React.FC<{
     }}
   >
     {icon}
-    <Text strong style={{ fontSize: 13, color: "#374151" }}>
+    <Text strong style={{ fontSize: 13, color: "var(--color-text-body)" }}>
       {title}
     </Text>
     <span
@@ -212,16 +212,16 @@ export const AssignmentOverviewWidget: React.FC<AssignmentOverviewWidgetProps> =
       <Card
         title={
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <FileTextOutlined style={{ color: "#1890ff", fontSize: 16 }} />
-            <span style={{ fontSize: 15, fontWeight: 700, color: "#1f2937" }}>
+            <FileTextOutlined style={{ color: "var(--color-action-primary-bg)", fontSize: 16 }} />
+            <span style={{ fontSize: 15, fontWeight: 700, color: "var(--color-text-title)" }}>
               Bài tập cần làm
             </span>
             {totalActionable > 0 && (
               <Text
                 style={{
                   fontSize: 12,
-                  color: "#8c8c8c",
-                  backgroundColor: "#f5f5f5",
+                  color: "var(--color-text-description)",
+                  backgroundColor: "var(--color-bg-page)",
                   borderRadius: 8,
                   padding: "1px 8px",
                   fontWeight: 500,
@@ -238,7 +238,7 @@ export const AssignmentOverviewWidget: React.FC<AssignmentOverviewWidgetProps> =
               type="link"
               size="small"
               icon={<ArrowRightOutlined />}
-              style={{ fontSize: 13, color: "#1890ff", padding: 0, fontWeight: 500 }}
+              style={{ fontSize: 13, color: "var(--color-action-primary-bg)", padding: 0, fontWeight: 500 }}
             >
               Xem tất cả
             </Button>
@@ -246,7 +246,7 @@ export const AssignmentOverviewWidget: React.FC<AssignmentOverviewWidgetProps> =
         }
         style={{
           borderRadius: 20,
-          border: "1px solid #f0f0f0",
+          border: "1px solid var(--color-border-default)",
           boxShadow: "0 2px 12px rgba(0,0,0,0.05)",
         }}
         styles={{ body: { padding: "8px 20px 20px" } }}
@@ -257,15 +257,15 @@ export const AssignmentOverviewWidget: React.FC<AssignmentOverviewWidgetProps> =
             style={{
               textAlign: "center",
               padding: "28px 0",
-              color: "#6b7280",
+              color: "var(--color-text-description)",
               fontSize: 13,
             }}
           >
             <div style={{ fontSize: 32, marginBottom: 8 }}>🎉</div>
-            <Text strong style={{ fontSize: 14, color: "#374151", display: "block", marginBottom: 4 }}>
+            <Text strong style={{ fontSize: 14, color: "var(--color-text-body)", display: "block", marginBottom: 4 }}>
               Bạn đang rất đúng tiến độ!
             </Text>
-            <Text style={{ fontSize: 12, color: "#9ca3af" }}>
+            <Text style={{ fontSize: 12, color: "var(--color-text-disabled)" }}>
               Không có bài nào quá hạn hay sắp đến hạn trong 7 ngày tới.
             </Text>
           </div>
@@ -275,11 +275,11 @@ export const AssignmentOverviewWidget: React.FC<AssignmentOverviewWidgetProps> =
         {hasOverdue && (
           <div style={{ marginTop: 12, marginBottom: hasUpcoming ? 20 : 0 }}>
             <GroupHeader
-              icon={<ExclamationCircleOutlined style={{ color: "#cf1322", fontSize: 14 }} />}
+              icon={<ExclamationCircleOutlined style={{ color: "var(--color-error-text)", fontSize: 14 }} />}
               title="Quá hạn"
               count={overdue.length}
-              badgeBg="#fff1f0"
-              badgeColor="#cf1322"
+              badgeBg="var(--color-error-bg)"
+              badgeColor="var(--color-error-text)"
             />
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               {overdue.slice(0, MAX_PER_GROUP).map((item) => (
@@ -287,9 +287,9 @@ export const AssignmentOverviewWidget: React.FC<AssignmentOverviewWidgetProps> =
                   key={item.id}
                   item={item}
                   timeLabel={formatOverdue(item.dueDate)}
-                  timeLabelColor="#cf1322"
-                  rowBg="#fff5f5"
-                  rowBorder="#ffa39e"
+                  timeLabelColor="var(--color-error-text)"
+                  rowBg="var(--color-error-bg)"
+                  rowBorder="var(--color-border-default)"
                   variant="overdue"
                 />
               ))}
@@ -318,7 +318,7 @@ export const AssignmentOverviewWidget: React.FC<AssignmentOverviewWidgetProps> =
           <div
             style={{
               height: 1,
-              backgroundColor: "#f3f4f6",
+              backgroundColor: "var(--color-bg-page)",
               margin: "4px 0 16px",
             }}
           />
@@ -328,11 +328,11 @@ export const AssignmentOverviewWidget: React.FC<AssignmentOverviewWidgetProps> =
         {hasUpcoming ? (
           <div style={{ marginTop: hasOverdue ? 0 : 12 }}>
             <GroupHeader
-              icon={<WarningOutlined style={{ color: "#d46b08", fontSize: 14 }} />}
+              icon={<WarningOutlined style={{ color: "var(--color-warning-text)", fontSize: 14 }} />}
               title="Sắp đến hạn"
               count={upcoming.length}
-              badgeBg="#fff7e6"
-              badgeColor="#d46b08"
+              badgeBg="var(--color-warning-bg)"
+              badgeColor="var(--color-warning-text)"
             />
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               {upcoming.slice(0, MAX_PER_GROUP).map((item) => (
@@ -340,9 +340,9 @@ export const AssignmentOverviewWidget: React.FC<AssignmentOverviewWidgetProps> =
                   key={item.id}
                   item={item}
                   timeLabel={formatTimeLeft(item.dueDate)}
-                  timeLabelColor="#d46b08"
-                  rowBg="#fffbf0"
-                  rowBorder="#ffd591"
+                  timeLabelColor="var(--color-warning-text)"
+                  rowBg="var(--color-warning-bg)"
+                  rowBorder="var(--color-border-default)"
                   variant="upcoming"
                 />
               ))}
@@ -359,8 +359,8 @@ export const AssignmentOverviewWidget: React.FC<AssignmentOverviewWidgetProps> =
                       borderRadius: 8,
                       fontSize: 12,
                       fontWeight: 500,
-                      color: "#d46b08",
-                      borderColor: "#ffd591",
+                      color: "var(--color-warning-text)",
+                      borderColor: "var(--color-border-default)",
                     }}
                   >
                     Xem thêm {upcoming.length - MAX_PER_GROUP} bài sắp đến hạn
@@ -376,7 +376,7 @@ export const AssignmentOverviewWidget: React.FC<AssignmentOverviewWidgetProps> =
               style={{
                 textAlign: "center",
                 padding: "12px 0 4px",
-                color: "#9ca3af",
+                color: "var(--color-text-disabled)",
                 fontSize: 12,
               }}
             >

@@ -9,6 +9,9 @@ import { ExamAttempt } from "#modules/exam-attempt";
 import { Assignment } from "#modules/assignment";
 import { Exam } from "#modules/exam";
 
+import { collectProgressTotals } from "#modules/class/classProgress.repository.js";
+import { computeClassProgress } from "#modules/class/classProgressCalculator.js";
+
 class AnalyticsService {
   /**
    * Phân tích dữ liệu học tập cá nhân (Student Dashboard)
@@ -17,27 +20,37 @@ class AnalyticsService {
     const cid = new mongoose.Types.ObjectId(classId);
     const sid = new mongoose.Types.ObjectId(studentId);
 
-    // 1. Tiến độ bài giảng
-    const progressStats = await LessonProgress.aggregate([
-      { $match: { classId: cid, studentId: sid } },
-      {
-        $group: {
-          _id: null,
-          totalProgress: { $sum: "$progress" },
-          totalLearningTime: { $sum: "$totalLearningTime" },
-          completedLessons: { $sum: { $cond: ["$completed", 1, 0] } },
-          totalLessons: { $sum: 1 },
+    // 1. Tiến độ học tập đồng bộ theo chuẩn hệ thống (Hybrid 50/50: Bài giảng + Bài tập)
+    const [progressTotalsMap, progressStats] = await Promise.all([
+      collectProgressTotals(sid, [cid]),
+      LessonProgress.aggregate([
+        { $match: { classId: cid, studentId: sid } },
+        {
+          $group: {
+            _id: null,
+            totalProgress: { $sum: "$progress" },
+            totalLearningTime: { $sum: "$totalLearningTime" },
+            completedLessons: { $sum: { $cond: ["$completed", 1, 0] } },
+            totalLessons: { $sum: 1 },
+          },
         },
-      },
+      ]),
     ]);
+
+    const classTotals = progressTotalsMap[String(classId)] || {
+      totalLessons: 0,
+      lessonProgressSum: 0,
+      totalAssignments: 0,
+      submittedAssignments: 0,
+    };
+    const averageProgress = computeClassProgress(classTotals);
+
     const progress = progressStats[0] || {
       totalProgress: 0,
       totalLearningTime: 0,
       completedLessons: 0,
       totalLessons: 0,
     };
-    const averageProgress =
-      progress.totalLessons > 0 ? (progress.totalProgress / progress.totalLessons).toFixed(2) : 0;
 
     // 2. Điểm danh
     const attendanceStats = await Attendance.aggregate([

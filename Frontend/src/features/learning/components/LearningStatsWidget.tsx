@@ -34,55 +34,55 @@ export const LearningStatsWidget: React.FC<LearningStatsWidgetProps> = React.mem
     const stats: StatItem[] = [
       {
         key: "gpa",
-        icon: <TrophyOutlined style={{ fontSize: 20, color: "#fa8c16" }} />,
+        icon: <TrophyOutlined style={{ fontSize: 20, color: "var(--color-warning-base)" }} />,
         label: "Điểm GPA",
         value:
           statistics.gpa !== null
             ? `${statistics.gpa.toFixed(2)} / 10`
             : "Chưa có dữ liệu",
         percent: statistics.gpa !== null ? Math.round((statistics.gpa / 10) * 100) : 0,
-        strokeColor: "#fa8c16",
-        bgColor: "#fff7e6",
-        textColor: "#d46b08",
+        strokeColor: "var(--color-warning-base)",
+        bgColor: "var(--color-warning-bg)",
+        textColor: "var(--color-warning-text)",
         noData: statistics.gpa === null,
       },
       {
         key: "attendance",
-        icon: <CalendarOutlined style={{ fontSize: 20, color: "#52c41a" }} />,
+        icon: <CalendarOutlined style={{ fontSize: 20, color: "var(--color-success-base)" }} />,
         label: "Chuyên cần",
         value: `${statistics.attendanceRate}%`,
         percent: statistics.attendanceRate,
-        strokeColor: "#52c41a",
-        bgColor: "#f6ffed",
-        textColor: "#389e0d",
+        strokeColor: "var(--color-success-base)",
+        bgColor: "var(--color-success-bg)",
+        textColor: "var(--color-success-text)",
         noData: false,
       },
       {
         key: "assignment",
-        icon: <FileTextOutlined style={{ fontSize: 20, color: "#1890ff" }} />,
+        icon: <FileTextOutlined style={{ fontSize: 20, color: "var(--color-action-primary-bg)" }} />,
         label: "Hoàn thành BT",
         value:
           statistics.assignmentCompletionRate !== null
             ? `${statistics.assignmentCompletionRate}%`
             : "Chưa có dữ liệu",
         percent: statistics.assignmentCompletionRate ?? 0,
-        strokeColor: "#1890ff",
-        bgColor: "#e6f7ff",
-        textColor: "#096dd9",
+        strokeColor: "var(--color-action-primary-bg)",
+        bgColor: "var(--color-bg-primary-tint)",
+        textColor: "var(--color-action-primary-bg-active)",
         noData: statistics.assignmentCompletionRate === null,
       },
       {
         key: "exam",
-        icon: <FormOutlined style={{ fontSize: 20, color: "#722ed1" }} />,
+        icon: <FormOutlined style={{ fontSize: 20, color: "var(--color-secondary-icon)" }} />,
         label: "Kết quả thi",
         value:
           statistics.examPerformanceRate !== null
             ? `${statistics.examPerformanceRate}%`
             : "Chưa có dữ liệu",
         percent: statistics.examPerformanceRate ?? 0,
-        strokeColor: "#722ed1",
-        bgColor: "#f9f0ff",
-        textColor: "#531dab",
+        strokeColor: "var(--color-secondary-icon)",
+        bgColor: "var(--color-secondary-bg)",
+        textColor: "var(--color-secondary-active)",
         noData: statistics.examPerformanceRate === null,
       },
     ];
@@ -96,11 +96,11 @@ export const LearningStatsWidget: React.FC<LearningStatsWidgetProps> = React.mem
               styles={{ body: { padding: "18px 16px" } }}
               style={{
                 borderRadius: 18,
-                backgroundColor: stat.noData ? "#fafafa" : stat.bgColor,
+                backgroundColor: stat.noData ? "var(--color-bg-page)" : stat.bgColor,
                 flex: 1,
                 boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
                 border: "1px solid transparent",
-                transition: "all 0.25s ease",
+                transition: "var(--transition-fast)",
               }}
               onMouseEnter={(e) => {
                 (e.currentTarget as HTMLDivElement).style.transform = "translateY(-2px)";
@@ -113,7 +113,7 @@ export const LearningStatsWidget: React.FC<LearningStatsWidgetProps> = React.mem
             >
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
                 {stat.icon}
-                <Text style={{ fontSize: 12, color: "#6b7280", fontWeight: 500 }}>{stat.label}</Text>
+                <Text style={{ fontSize: 12, color: "var(--color-text-description)", fontWeight: 500 }}>{stat.label}</Text>
               </div>
 
               {/* Giá trị — tuỳ chỉnh theo noData */}
@@ -122,7 +122,7 @@ export const LearningStatsWidget: React.FC<LearningStatsWidgetProps> = React.mem
                   style={{
                     fontSize: 13,
                     fontWeight: 600,
-                    color: "#9ca3af",
+                    color: "var(--color-text-disabled)",
                     lineHeight: 1.3,
                     marginBottom: 10,
                     fontStyle: "italic",
@@ -149,7 +149,7 @@ export const LearningStatsWidget: React.FC<LearningStatsWidgetProps> = React.mem
               <Progress
                 percent={stat.percent}
                 showInfo={false}
-                strokeColor={stat.noData ? "#d9d9d9" : stat.strokeColor}
+                strokeColor={stat.noData ? "var(--color-border-default)" : stat.strokeColor}
                 trailColor="rgba(0,0,0,0.06)"
                 size="small"
               />
@@ -159,7 +159,7 @@ export const LearningStatsWidget: React.FC<LearningStatsWidgetProps> = React.mem
                 <Text
                   style={{
                     fontSize: 11,
-                    color: "#9ca3af",
+                    color: "var(--color-text-disabled)",
                     display: "block",
                     marginTop: 4,
                   }}

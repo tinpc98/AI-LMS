@@ -24,7 +24,7 @@ export const NotificationIcon: React.FC<NotificationIconProps> = React.memo(
           <Avatar
             size={size}
             icon={<FileTextOutlined />}
-            style={{ backgroundColor: "#1890ff", color: "#fff", flexShrink: 0 }}
+            style={{ backgroundColor: "var(--color-action-primary-bg)", color: "var(--color-surface)", flexShrink: 0 }}
           />
         );
       case "exam":
@@ -32,7 +32,7 @@ export const NotificationIcon: React.FC<NotificationIconProps> = React.memo(
           <Avatar
             size={size}
             icon={<FormOutlined />}
-            style={{ backgroundColor: "#722ed1", color: "#fff", flexShrink: 0 }}
+            style={{ backgroundColor: "var(--color-secondary-icon)", color: "var(--color-surface)", flexShrink: 0 }}
           />
         );
       case "grade":
@@ -40,7 +40,7 @@ export const NotificationIcon: React.FC<NotificationIconProps> = React.memo(
           <Avatar
             size={size}
             icon={<BarChartOutlined />}
-            style={{ backgroundColor: "#52c41a", color: "#fff", flexShrink: 0 }}
+            style={{ backgroundColor: "var(--color-success-base)", color: "var(--color-surface)", flexShrink: 0 }}
           />
         );
       case "attendance":
@@ -48,7 +48,7 @@ export const NotificationIcon: React.FC<NotificationIconProps> = React.memo(
           <Avatar
             size={size}
             icon={<CalendarOutlined />}
-            style={{ backgroundColor: "#fa8c16", color: "#fff", flexShrink: 0 }}
+            style={{ backgroundColor: "var(--color-warning-base)", color: "var(--color-surface)", flexShrink: 0 }}
           />
         );
       case "announcement":
@@ -56,7 +56,7 @@ export const NotificationIcon: React.FC<NotificationIconProps> = React.memo(
           <Avatar
             size={size}
             icon={<NotificationOutlined />}
-            style={{ backgroundColor: "#13c2c2", color: "#fff", flexShrink: 0 }}
+            style={{ backgroundColor: "var(--color-info-base)", color: "var(--color-surface)", flexShrink: 0 }}
           />
         );
       case "live":
@@ -64,7 +64,7 @@ export const NotificationIcon: React.FC<NotificationIconProps> = React.memo(
           <Avatar
             size={size}
             icon={<VideoCameraOutlined />}
-            style={{ backgroundColor: "#ff4d4f", color: "#fff", flexShrink: 0 }}
+            style={{ backgroundColor: "var(--color-error-base)", color: "var(--color-surface)", flexShrink: 0 }}
           />
         );
       case "system":
@@ -73,7 +73,7 @@ export const NotificationIcon: React.FC<NotificationIconProps> = React.memo(
           <Avatar
             size={size}
             icon={<SettingOutlined />}
-            style={{ backgroundColor: "#8c8c8c", color: "#fff", flexShrink: 0 }}
+            style={{ backgroundColor: "var(--color-text-description)", color: "var(--color-surface)", flexShrink: 0 }}
           />
         );
     }

@@ -28,12 +28,12 @@ export const ClassCard: React.FC<ClassCardProps> = React.memo(({ item }) => {
       style={{
         borderRadius: 16,
         boxShadow: "0 2px 8px rgba(0, 0, 0, 0.04)",
-        transition: "all 0.3s ease",
+        transition: "var(--transition-fast)",
         height: "100%",
         display: "flex",
         flexDirection: "column",
         justifyContent: "space-between",
-        border: "1px solid #f0f0f0",
+        border: "1px solid var(--color-border-default)",
       }}
       styles={{ body: { padding: 20, display: "flex", flexDirection: "column", height: "100%" } }}
     >
@@ -68,13 +68,13 @@ export const ClassCard: React.FC<ClassCardProps> = React.memo(({ item }) => {
         </Title>
         <Text type="secondary" style={{ fontSize: 12, display: "block", marginBottom: 16 }}>
           <BookOutlined style={{ marginRight: 4 }} />{" "}
-          {item.subject || item.courseName || "Khóa học chính"}
+          {item.subject || item.courseName || "Chưa gán khóa học"}
         </Text>
 
         {/* Teacher Info */}
         <div
           style={{
-            backgroundColor: "#fafafa",
+            backgroundColor: "var(--color-bg-page)",
             borderRadius: 10,
             padding: "10px 12px",
             marginBottom: 16,
@@ -87,13 +87,13 @@ export const ClassCard: React.FC<ClassCardProps> = React.memo(({ item }) => {
             size={32}
             src={item.teacher?.avatar || undefined}
             icon={!item.teacher?.avatar ? <UserOutlined /> : undefined}
-            style={{ backgroundColor: "#1890ff", flexShrink: 0 }}
+            style={{ backgroundColor: "var(--color-action-primary-bg)", flexShrink: 0 }}
           />
           <div style={{ minWidth: 0, overflow: "hidden" }}>
             <Text type="secondary" style={{ fontSize: 11, display: "block", lineHeight: 1.2 }}>
               Giảng viên phụ trách
             </Text>
-            <Text strong style={{ fontSize: 13, color: "#262626" }} ellipsis>
+            <Text strong style={{ fontSize: 13, color: "var(--color-text-title)" }} ellipsis>
               {item.teacher?.fullName || "Chưa phân công"}
             </Text>
           </div>
@@ -110,7 +110,7 @@ export const ClassCard: React.FC<ClassCardProps> = React.memo(({ item }) => {
         >
           <Tooltip title={`Sĩ số lớp: ${item.totalStudents || 0}/${item.maxStudents || 40}`}>
             <Space size={6} align="center">
-              <TeamOutlined style={{ color: "#8c8c8c", fontSize: 14 }} />
+              <TeamOutlined style={{ color: "var(--color-text-description)", fontSize: 14 }} />
               <Text type="secondary" style={{ fontSize: 12 }}>
                 {item.totalStudents || 0} học viên
               </Text>
@@ -119,7 +119,7 @@ export const ClassCard: React.FC<ClassCardProps> = React.memo(({ item }) => {
 
           <Tooltip title={`Ngày khai giảng: ${formattedStartDate}`}>
             <Space size={6} align="center">
-              <CalendarOutlined style={{ color: "#8c8c8c", fontSize: 14 }} />
+              <CalendarOutlined style={{ color: "var(--color-text-description)", fontSize: 14 }} />
               <Text type="secondary" style={{ fontSize: 12 }}>
                 {formattedStartDate}
               </Text>

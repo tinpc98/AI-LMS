@@ -23,7 +23,7 @@ export const HomeLayoutStudent: React.FC = () => {
   } = useResponsiveLayout();
 
   return (
-    <Layout style={{ minHeight: "100vh", backgroundColor: "#f5f5f5" }}>
+    <Layout style={{ minHeight: "100vh", backgroundColor: "var(--color-bg-page)" }}>
       {/* 1. Sidebar Navigation */}
       <StudentSidebar
         collapsed={collapsed}

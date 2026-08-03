@@ -136,7 +136,7 @@ export default function ExamAttemptDetail() {
   ).length;
 
   return (
-    <main className="ml-[280px] pt-16 min-h-screen bg-[#F8F9FA] p-6 md:p-8 font-sans">
+    <main className="ml-[280px] pt-16 min-h-screen bg-[var(--color-bg-page)] p-6 md:p-8 font-sans">
       {/* ========================================== */}
       {/* 1. HEADER CARD (Thông tin tổng quan) */}
       {/* ========================================== */}

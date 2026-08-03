@@ -33,7 +33,7 @@ export const RegistrationChart: React.FC<RegistrationChartProps> = ({ data, load
         style={{
           borderRadius: "16px",
           boxShadow: "0 4px 20px rgba(0, 0, 0, 0.04)",
-          border: "1px solid #f0f0f0",
+          border: "1px solid var(--color-border-default)",
           height: "100%",
         }}
         styles={{ body: { padding: "24px" } }}
@@ -64,18 +64,18 @@ export const RegistrationChart: React.FC<RegistrationChartProps> = ({ data, load
               <LineChart data={data} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
                 <defs>
                   <linearGradient id="colorStudents" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#1677ff" stopOpacity={0.8} />
-                    <stop offset="95%" stopColor="#1677ff" stopOpacity={0} />
+                    <stop offset="5%" stopColor="var(--color-action-primary-bg)" stopOpacity={0.8} />
+                    <stop offset="95%" stopColor="var(--color-action-primary-bg)" stopOpacity={0} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--color-border-default)" />
                 <XAxis
                   dataKey="month"
                   tickLine={false}
-                  axisLine={{ stroke: "#e0e0e0" }}
-                  tick={{ fill: "#666", fontSize: 12 }}
+                  axisLine={{ stroke: "var(--color-border-default)" }}
+                  tick={{ fill: "var(--color-text-description)", fontSize: 12 }}
                 />
-                <YAxis tickLine={false} axisLine={false} tick={{ fill: "#666", fontSize: 12 }} />
+                <YAxis tickLine={false} axisLine={false} tick={{ fill: "var(--color-text-description)", fontSize: 12 }} />
                 <Tooltip
                   contentStyle={{
                     backgroundColor: "rgba(255, 255, 255, 0.95)",
@@ -85,17 +85,17 @@ export const RegistrationChart: React.FC<RegistrationChartProps> = ({ data, load
                     padding: "10px 14px",
                   }}
                   formatter={(value: any) => [`${value} học sinh`, "Học sinh đăng ký"]}
-                  labelStyle={{ fontWeight: 600, color: "#1f1f1f" }}
+                  labelStyle={{ fontWeight: 600, color: "var(--color-text-title)" }}
                 />
                 <Legend verticalAlign="top" height={36} align="right" />
                 <Line
                   name="Số học sinh ghi danh"
                   type="monotone"
                   dataKey="students"
-                  stroke="#1677ff"
+                  stroke="var(--color-action-primary-bg)"
                   strokeWidth={3}
-                  activeDot={{ r: 8, fill: "#1677ff", stroke: "#fff", strokeWidth: 3 }}
-                  dot={{ r: 4, fill: "#1677ff" }}
+                  activeDot={{ r: 8, fill: "var(--color-action-primary-bg)", stroke: "var(--color-surface)", strokeWidth: 3 }}
+                  dot={{ r: 4, fill: "var(--color-action-primary-bg)" }}
                 />
               </LineChart>
             </ResponsiveContainer>

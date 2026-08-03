@@ -62,12 +62,12 @@ export const AssignmentCard: React.FC<AssignmentCardProps> = React.memo(
         style={{
           borderRadius: 16,
           boxShadow: "0 2px 8px rgba(0, 0, 0, 0.04)",
-          border: "1px solid #f0f0f0",
+          border: "1px solid var(--color-border-default)",
           height: "100%",
           display: "flex",
           flexDirection: "column",
           justifyContent: "space-between",
-          transition: "all 0.3s ease",
+          transition: "var(--transition-fast)",
         }}
         styles={{
           body: {
@@ -99,7 +99,7 @@ export const AssignmentCard: React.FC<AssignmentCardProps> = React.memo(
             strong
             style={{
               fontSize: 16,
-              color: "#1f2937",
+              color: "var(--color-text-title)",
               lineHeight: 1.4,
               marginBottom: 6,
               display: "-webkit-box",
@@ -131,7 +131,7 @@ export const AssignmentCard: React.FC<AssignmentCardProps> = React.memo(
         {/* Attachments & Deadline Details */}
         <div
           style={{
-            backgroundColor: "#fafafa",
+            backgroundColor: "var(--color-bg-page)",
             borderRadius: 8,
             padding: "8px 12px",
             marginBottom: 14,
@@ -149,7 +149,7 @@ export const AssignmentCard: React.FC<AssignmentCardProps> = React.memo(
             <Text type="secondary">
               <ClockCircleOutlined style={{ marginRight: 4 }} /> Hạn nộp:
             </Text>
-            <Text strong style={{ color: item.isOverdue ? "#cf1322" : "#1f2937" }}>
+            <Text strong style={{ color: item.isOverdue ? "var(--color-error-text)" : "var(--color-text-title)" }}>
               {formattedDeadline}
             </Text>
           </div>
@@ -173,8 +173,8 @@ export const AssignmentCard: React.FC<AssignmentCardProps> = React.memo(
         {isGraded && (
           <div
             style={{
-              backgroundColor: "#f9f0ff",
-              border: "1px solid #d3ade6",
+              backgroundColor: "var(--color-secondary-bg)",
+              border: "1px solid var(--color-secondary-border)",
               borderRadius: 8,
               padding: "6px 12px",
               marginBottom: 14,
@@ -183,7 +183,7 @@ export const AssignmentCard: React.FC<AssignmentCardProps> = React.memo(
               alignItems: "center",
             }}
           >
-            <Text style={{ fontSize: 12, color: "#531dab", fontWeight: 600 }}>
+            <Text style={{ fontSize: 12, color: "var(--color-secondary-active)", fontWeight: 600 }}>
               <TrophyOutlined style={{ marginRight: 6 }} /> Điểm số đạt được:
             </Text>
             <Tag
@@ -203,11 +203,11 @@ export const AssignmentCard: React.FC<AssignmentCardProps> = React.memo(
               alignItems: "center",
               gap: 8,
               paddingTop: 10,
-              borderTop: "1px dashed #f0f0f0",
+              borderTop: "1px dashed var(--color-border-default)",
               marginBottom: 12,
             }}
           >
-            <Avatar size="small" icon={<UserOutlined />} style={{ backgroundColor: "#1890ff" }} />
+            <Avatar size="small" icon={<UserOutlined />} style={{ backgroundColor: "var(--color-action-primary-bg)" }} />
             <Text type="secondary" style={{ fontSize: 12 }} ellipsis>
               {teacherName}
             </Text>
@@ -231,7 +231,7 @@ export const AssignmentCard: React.FC<AssignmentCardProps> = React.memo(
                 size="small"
                 icon={<TrophyOutlined />}
                 onClick={() => onFeedback(item)}
-                style={{ borderRadius: 6, fontSize: 12, backgroundColor: "#722ed1" }}
+                style={{ borderRadius: 6, fontSize: 12, backgroundColor: "var(--color-secondary-icon)" }}
               >
                 Xem điểm
               </Button>

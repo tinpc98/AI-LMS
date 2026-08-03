@@ -7,6 +7,7 @@ import {
   VideoCameraOutlined,
 } from "@ant-design/icons";
 import EmptyState from "../../../../shared/components/EmptyState";
+import { getNextSessionInfo } from "../../../live-session/upcomingSessions";
 
 const { Text, Title } = Typography;
 
@@ -23,6 +24,7 @@ interface NextSessionCardProps {
 
 export const NextSessionCard: React.FC<NextSessionCardProps> = React.memo(
   ({ schedule, classRoom = "Phòng học Online", isLiveNow = false, onJoinLive }) => {
+    const nextSession = React.useMemo(() => getNextSessionInfo(schedule || undefined), [schedule]);
     const hasDays = schedule?.days && schedule.days.length > 0;
     const hasTime = schedule?.startTime && schedule.endTime;
 
@@ -31,7 +33,7 @@ export const NextSessionCard: React.FC<NextSessionCardProps> = React.memo(
         <Card
           title={
             <Space align="center">
-              <CalendarOutlined style={{ color: "#fa8c16", fontSize: 18 }} />
+              <CalendarOutlined style={{ color: "var(--color-warning-base)", fontSize: 18 }} />
               <span style={{ fontSize: 16, fontWeight: 700 }}>Buổi học tiếp theo</span>
             </Space>
           }
@@ -46,16 +48,27 @@ export const NextSessionCard: React.FC<NextSessionCardProps> = React.memo(
       );
     }
 
-    const daysText = schedule?.days?.join(", ") || "Hàng tuần";
-    const timeText = hasTime
-      ? `${schedule?.startTime} - ${schedule?.endTime}`
-      : "Thời gian sắp diễn ra";
+    const titleText = nextSession?.formattedText || (hasDays ? schedule?.days?.join(", ") : "Lịch học định kỳ");
+    const timeText = nextSession?.timeText || (hasTime ? `${schedule?.startTime} - ${schedule?.endTime}` : "Thời gian sắp diễn ra");
+
+    let tagColor = "processing";
+    let tagLabel = "Buổi sắp tới";
+    if (isLiveNow) {
+      tagColor = "error";
+      tagLabel = "🔴 Đang học trực tuyến";
+    } else if (nextSession?.isToday) {
+      tagColor = "warning";
+      tagLabel = "⚡ Diễn ra hôm nay";
+    } else if (nextSession?.isTomorrow) {
+      tagColor = "cyan";
+      tagLabel = "Ngày mai";
+    }
 
     return (
       <Card
         title={
           <Space align="center">
-            <CalendarOutlined style={{ color: "#fa8c16", fontSize: 18 }} />
+            <CalendarOutlined style={{ color: "var(--color-warning-base)", fontSize: 18 }} />
             <span style={{ fontSize: 16, fontWeight: 700 }}>Buổi học tiếp theo</span>
           </Space>
         }
@@ -68,8 +81,8 @@ export const NextSessionCard: React.FC<NextSessionCardProps> = React.memo(
       >
         <div
           style={{
-            backgroundColor: isLiveNow ? "#fff1f0" : "#e6f7ff",
-            border: `1px solid ${isLiveNow ? "#ffa39e" : "#91d5ff"}`,
+            backgroundColor: isLiveNow ? "var(--color-error-bg)" : "var(--color-bg-primary-tint)",
+            border: `1px solid ${isLiveNow ? "var(--color-border-default)" : "var(--color-border-primary-tint)"}`,
             borderRadius: 12,
             padding: 16,
           }}
@@ -82,8 +95,8 @@ export const NextSessionCard: React.FC<NextSessionCardProps> = React.memo(
               marginBottom: 8,
             }}
           >
-            <Tag color={isLiveNow ? "error" : "processing"} style={{ borderRadius: 8 }}>
-              {isLiveNow ? "🔴 Đang học trực tuyến" : "Lịch học định kỳ"}
+            <Tag color={tagColor} style={{ borderRadius: 8 }}>
+              {tagLabel}
             </Tag>
             <Text type="secondary" style={{ fontSize: 12 }}>
               <EnvironmentOutlined style={{ marginRight: 4 }} />
@@ -91,16 +104,24 @@ export const NextSessionCard: React.FC<NextSessionCardProps> = React.memo(
             </Text>
           </div>
 
-          <Title level={5} style={{ margin: "4px 0", color: "#1f2937" }}>
-            {daysText}
+          <Title level={5} style={{ margin: "4px 0", color: "var(--color-text-title)" }}>
+            {titleText}
           </Title>
 
-          <Space size={8} style={{ marginTop: 4 }}>
-            <ClockCircleOutlined style={{ color: "#595959" }} />
-            <Text strong style={{ fontSize: 14, color: "#1f2937" }}>
+          <Space size={8} style={{ marginTop: 4, display: "flex" }}>
+            <ClockCircleOutlined style={{ color: "var(--color-text-body)" }} />
+            <Text strong style={{ fontSize: 14, color: "var(--color-text-title)" }}>
               {timeText}
             </Text>
           </Space>
+
+          {nextSession?.allDaysText && (
+            <div style={{ marginTop: 6 }}>
+              <Text type="secondary" style={{ fontSize: 12 }}>
+                Lịch tuần: {nextSession.allDaysText}
+              </Text>
+            </div>
+          )}
 
           {isLiveNow && onJoinLive && (
             <div style={{ marginTop: 14 }}>

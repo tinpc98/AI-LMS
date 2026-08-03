@@ -13,7 +13,7 @@ export const AttendanceRateCard: React.FC<AttendanceRateCardProps> = React.memo(
   const rate = stats.presentRate;
 
   // Determine stroke color based on rate
-  let strokeColor = "#52c41a"; // Green >= 95%
+  let strokeColor = "var(--color-success-base)"; // Green >= 95%
   let statusTag = (
     <Tag color="success" icon={<SafetyCertificateOutlined />}>
       Đạt chuẩn chuyên cần
@@ -21,14 +21,14 @@ export const AttendanceRateCard: React.FC<AttendanceRateCardProps> = React.memo(
   );
 
   if (rate < 80) {
-    strokeColor = "#ff4d4f"; // Red < 80%
+    strokeColor = "var(--color-error-base)"; // Red < 80%
     statusTag = (
       <Tag color="error" icon={<WarningOutlined />}>
         Cảnh báo nguy cơ bị cấm thi
       </Tag>
     );
   } else if (rate < 95) {
-    strokeColor = "#faad14"; // Orange 80-94%
+    strokeColor = "var(--color-warning-base)"; // Orange 80-94%
     statusTag = (
       <Tag color="warning" icon={<WarningOutlined />}>
         Cần cải thiện chuyên cần
@@ -41,7 +41,7 @@ export const AttendanceRateCard: React.FC<AttendanceRateCardProps> = React.memo(
       style={{
         borderRadius: 16,
         boxShadow: "0 2px 8px rgba(0,0,0,0.03)",
-        border: "1px solid #f0f0f0",
+        border: "1px solid var(--color-border-default)",
         marginBottom: 24,
       }}
       styles={{ body: { padding: 20 } }}
@@ -52,7 +52,7 @@ export const AttendanceRateCard: React.FC<AttendanceRateCardProps> = React.memo(
           xs={24}
           sm={8}
           md={6}
-          style={{ textAlign: "center", borderRight: "1px dashed #f0f0f0" }}
+          style={{ textAlign: "center", borderRight: "1px dashed var(--color-border-default)" }}
         >
           <Progress
             type="circle"
@@ -65,7 +65,7 @@ export const AttendanceRateCard: React.FC<AttendanceRateCardProps> = React.memo(
                 <span style={{ fontSize: 22, fontWeight: 700, color: strokeColor }}>
                   {percent}%
                 </span>
-                <span style={{ fontSize: 10, color: "#8c8c8c" }}>Chuyên cần</span>
+                <span style={{ fontSize: 10, color: "var(--color-text-description)" }}>Chuyên cần</span>
               </div>
             )}
           />
@@ -75,7 +75,7 @@ export const AttendanceRateCard: React.FC<AttendanceRateCardProps> = React.memo(
         <Col xs={24} sm={16} md={18}>
           <div style={{ marginBottom: 8 }}>
             <Space size={8} align="center">
-              <Title level={5} style={{ margin: 0, color: "#1f2937" }}>
+              <Title level={5} style={{ margin: 0, color: "var(--color-text-title)" }}>
                 Tỷ lệ chuyên cần tích lũy môn học
               </Title>
               {statusTag}

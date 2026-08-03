@@ -5,6 +5,7 @@ import type {
   ExamSummaryItem,
   LearningInsight,
 } from "../types/learningDashboard.types";
+import { formatDayOfWeek } from "../../../shared/utils/labelFormatters";
 
 export const calculateAverageGrade = (rawGrades: any[]): number | null => {
   if (!Array.isArray(rawGrades) || rawGrades.length === 0) return null;
@@ -98,11 +99,14 @@ export const calculateLearningInsights = (
   let riskLevel: LearningInsight["riskLevel"] = "low";
   const recommendedActions: string[] = [];
 
-  if (stats.attendanceRate < 80 || stats.assignmentCompletionRate < 70) {
+  const attendanceRate = stats.attendanceRate ?? 0;
+  const assignmentCompletionRate = stats.assignmentCompletionRate ?? 0;
+
+  if (attendanceRate < 80 || assignmentCompletionRate < 70) {
     riskLevel = "high";
     recommendedActions.push("Liên hệ giảng viên môn học để bù bài chuyên cần.");
     recommendedActions.push("Hoàn thành ngay các bài tập chưa nộp để tránh bị trừ điểm.");
-  } else if (stats.attendanceRate < 90 || stats.assignmentCompletionRate < 85) {
+  } else if (attendanceRate < 90 || assignmentCompletionRate < 85) {
     riskLevel = "medium";
     recommendedActions.push("Đặt nhắc nhở xem lại bài giảng trước các buổi học.");
     recommendedActions.push("Dành thêm 30 phút mỗi ngày luyện đề trắc nghiệm AI.");
@@ -113,10 +117,10 @@ export const calculateLearningInsights = (
 
   return {
     learningScore: score.score,
-    averageGrade: stats.gpa,
-    attendanceRate: stats.attendanceRate,
-    assignmentCompletionRate: stats.assignmentCompletionRate,
-    examPerformanceRate: stats.examPerformanceRate,
+    averageGrade: stats.gpa ?? 0,
+    attendanceRate,
+    assignmentCompletionRate,
+    examPerformanceRate: stats.examPerformanceRate ?? 0,
     weakSubjects: ["Cấu trúc dữ liệu & Giải thuật"],
     strongSubjects: ["Lập trình Web nâng cao", "Thiết kế UI/UX Enterprise"],
     upcomingDeadlines,
@@ -139,12 +143,13 @@ export function formatSchedule(schedule: any): string {
   }
 
   if (typeof schedule === "object") {
-    const daysStr =
-      Array.isArray(schedule.days) && schedule.days.length > 0
-        ? schedule.days.join(", ")
-        : typeof schedule.days === "string"
-          ? schedule.days
-          : "";
+    const rawDays = Array.isArray(schedule.days)
+      ? schedule.days
+      : typeof schedule.days === "string"
+        ? [schedule.days]
+        : [];
+
+    const daysStr = rawDays.map((d: string) => formatDayOfWeek(d, true)).join(", ");
 
     const startTime = schedule.startTime || "";
     const endTime = schedule.endTime || "";

@@ -57,7 +57,7 @@ export const CreateAnnouncementModal: React.FC<CreateAnnouncementModalProps> = R
       <Modal
         title={
           <Space align="center">
-            <NotificationOutlined style={{ color: "#1890ff" }} />
+            <NotificationOutlined style={{ color: "var(--color-action-primary-bg)" }} />
             <span>Đăng thông báo mới cho lớp học</span>
           </Space>
         }

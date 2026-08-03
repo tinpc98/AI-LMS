@@ -7,6 +7,12 @@ import {
   UndoOutlined,
 } from "@ant-design/icons";
 import type { ClassRecord, ClassStatus, Pagination } from "./class.types";
+import {
+  formatClassStatus,
+  formatLearningMode,
+  formatScheduleDays,
+} from "../../shared/utils/labelFormatters";
+import { StatusBadge } from "../../shared/components/StatusBadge";
 
 interface ClassTableProps {
   data: ClassRecord[];
@@ -23,23 +29,6 @@ interface ClassTableProps {
   onRestore?: (record: ClassRecord) => void;
   onForceDelete?: (record: ClassRecord) => void;
 }
-
-const getStatusColor = (status: ClassStatus) => {
-  switch (status) {
-    case "Ongoing":
-    case "Ready":
-      return "green";
-    case "Draft":
-      return "blue";
-    case "Completed":
-      return "default";
-    case "Cancelled":
-    case "Archived":
-      return "red";
-    default:
-      return "default";
-  }
-};
 
 const ClassTable = ({
   data,
@@ -58,7 +47,7 @@ const ClassTable = ({
 }: ClassTableProps) => {
   const columns = [
     {
-      title: "Class Code",
+      title: "Mã lớp",
       dataIndex: "classCode",
       key: "classCode",
       width: 110,
@@ -66,7 +55,7 @@ const ClassTable = ({
       sorter: true,
     },
     {
-      title: "Class Name",
+      title: "Tên lớp học",
       dataIndex: "className",
       key: "className",
       width: 220,
@@ -74,7 +63,7 @@ const ClassTable = ({
       sorter: true,
     },
     {
-      title: "Course",
+      title: "Khóa học",
       dataIndex: "courseId",
       key: "courseId",
       width: 180,
@@ -82,7 +71,7 @@ const ClassTable = ({
       render: (value: string) => courseOptions.find((item) => item.id === value)?.label || value,
     },
     {
-      title: "Teacher",
+      title: "Giảng viên",
       dataIndex: "teacher",
       key: "teacher",
       width: 150,
@@ -91,51 +80,52 @@ const ClassTable = ({
         teacher ? teacher.fullName : "—",
     },
     {
-      title: "Learning Mode",
+      title: "Hình thức",
       dataIndex: "learningMode",
       key: "learningMode",
-      width: 110,
+      width: 120,
       ellipsis: true,
+      render: (mode: string) => <Tag color="blue">{formatLearningMode(mode)}</Tag>,
     },
     {
-      title: "Schedule",
+      title: "Lịch học",
       key: "schedule",
-      width: 180,
+      width: 200,
       ellipsis: true,
       render: (_: unknown, record: ClassRecord) => {
-        const days = record.schedule?.days?.join(", ");
+        const days = formatScheduleDays(record.schedule?.days, true);
         const timeRange = `${record.schedule?.startTime || ""}-${record.schedule?.endTime || ""}`;
-        return `${days || "—"} • ${timeRange !== "-" ? timeRange : "—"}`;
+        return `${days !== "Chưa xếp lịch" ? days : "—"} • ${timeRange !== "-" ? timeRange : "—"}`;
       },
     },
     {
-      title: "Students",
+      title: "Sĩ số",
       key: "students",
       width: 90,
       sorter: true,
-      dataIndex: "maxStudents", // mapping sorter to maxStudents temporarily as currentStudents is not explicitly in whitelist
+      dataIndex: "maxStudents",
       render: (_: unknown, record: ClassRecord) =>
         `${record.currentStudents}/${record.maxStudents}`,
     },
     {
-      title: "Status",
+      title: "Trạng thái",
       dataIndex: "status",
       key: "status",
-      width: 110,
+      width: 120,
       sorter: true,
-      render: (status: ClassStatus) => <Tag color={getStatusColor(status)}>{status}</Tag>,
+      render: (status: ClassStatus) => <StatusBadge status={status} />,
     },
     {
-      title: "Duration",
+      title: "Thời gian",
       key: "duration",
-      width: 140,
+      width: 160,
       sorter: true,
-      dataIndex: "startDate", // used for sorting
+      dataIndex: "startDate",
       render: (_: unknown, record: ClassRecord) =>
         `${new Date(record.startDate).toLocaleDateString("vi-VN")} → ${new Date(record.endDate).toLocaleDateString("vi-VN")}`,
     },
     {
-      title: "Actions",
+      title: "Thao tác",
       key: "actions",
       fixed: "right" as const,
       width: 130,
@@ -143,11 +133,11 @@ const ClassTable = ({
         if (activeTab === "trash") {
           return (
             <div style={{ display: "flex", gap: 6, justifyContent: "flex-end" }}>
-              <Tooltip title="View">
+              <Tooltip title="Xem chi tiết">
                 <Button size="small" icon={<EyeOutlined />} onClick={() => onView(record)} />
               </Tooltip>
               {onRestore && (
-                <Tooltip title="Restore">
+                <Tooltip title="Khôi phục">
                   <Button
                     size="small"
                     type="primary"
@@ -158,7 +148,7 @@ const ClassTable = ({
                 </Tooltip>
               )}
               {onForceDelete && (
-                <Tooltip title="Permanent Delete">
+                <Tooltip title="Xóa vĩnh viễn">
                   <Button
                     size="small"
                     danger
@@ -173,16 +163,16 @@ const ClassTable = ({
 
         return (
           <div style={{ display: "flex", gap: 6, justifyContent: "flex-end" }}>
-            <Tooltip title="View">
+            <Tooltip title="Xem chi tiết">
               <Button size="small" icon={<EyeOutlined />} onClick={() => onView(record)} />
             </Tooltip>
-            <Tooltip title="Edit">
+            <Tooltip title="Chỉnh sửa">
               <Button size="small" icon={<EditOutlined />} onClick={() => onEdit(record)} />
             </Tooltip>
-            <Tooltip title="Change Status">
+            <Tooltip title="Đổi trạng thái">
               <Button size="small" icon={<SyncOutlined />} onClick={() => onChangeStatus(record)} />
             </Tooltip>
-            <Tooltip title="Delete">
+            <Tooltip title="Xóa lớp">
               <Button
                 size="small"
                 danger

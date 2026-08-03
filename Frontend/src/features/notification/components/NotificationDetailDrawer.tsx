@@ -42,7 +42,7 @@ export const NotificationDetailDrawer: React.FC<NotificationDetailDrawerProps> =
           <Space align="center">
             <NotificationIcon category={item.category} size={32} />
             <div>
-              <Title level={5} style={{ margin: 0, color: "#1f2937" }}>
+              <Title level={5} style={{ margin: 0, color: "var(--color-text-title)" }}>
                 Chi tiết thông báo
               </Title>
               <NotificationStatusBadge isRead={item.isRead} priority={item.priority} />
@@ -76,8 +76,8 @@ export const NotificationDetailDrawer: React.FC<NotificationDetailDrawerProps> =
           {/* Header Card */}
           <div
             style={{
-              backgroundColor: "#fafafa",
-              border: "1px solid #f0f0f0",
+              backgroundColor: "var(--color-bg-page)",
+              border: "1px solid var(--color-border-default)",
               borderRadius: 12,
               padding: "16px 20px",
               marginBottom: 20,
@@ -87,9 +87,9 @@ export const NotificationDetailDrawer: React.FC<NotificationDetailDrawerProps> =
             }}
           >
             <Space size={10} align="center">
-              <Avatar icon={<UserOutlined />} style={{ backgroundColor: "#1890ff" }} />
+              <Avatar icon={<UserOutlined />} style={{ backgroundColor: "var(--color-action-primary-bg)" }} />
               <div>
-                <Text strong style={{ fontSize: 14, color: "#1f2937", display: "block" }}>
+                <Text strong style={{ fontSize: 14, color: "var(--color-text-title)", display: "block" }}>
                   {item.senderName || "Hệ thống EduPortal"}
                 </Text>
                 <Text type="secondary" style={{ fontSize: 12 }}>
@@ -106,7 +106,7 @@ export const NotificationDetailDrawer: React.FC<NotificationDetailDrawerProps> =
           </div>
 
           {/* Title */}
-          <Title level={4} style={{ margin: "0 0 16px 0", color: "#1f2937", lineHeight: 1.4 }}>
+          <Title level={4} style={{ margin: "0 0 16px 0", color: "var(--color-text-title)", lineHeight: 1.4 }}>
             {item.title}
           </Title>
 
@@ -116,12 +116,12 @@ export const NotificationDetailDrawer: React.FC<NotificationDetailDrawerProps> =
               style={{
                 fontSize: 14,
                 lineHeight: 1.8,
-                color: "#262626",
+                color: "var(--color-text-title)",
                 whiteSpace: "pre-line",
-                backgroundColor: "#ffffff",
+                backgroundColor: "var(--color-surface)",
                 padding: "16px",
                 borderRadius: 12,
-                border: "1px solid #f0f0f0",
+                border: "1px solid var(--color-border-default)",
                 margin: 0,
               }}
             >
@@ -134,7 +134,7 @@ export const NotificationDetailDrawer: React.FC<NotificationDetailDrawerProps> =
             <div style={{ marginBottom: 20 }}>
               <Text
                 strong
-                style={{ fontSize: 13, color: "#8c8c8c", display: "block", marginBottom: 8 }}
+                style={{ fontSize: 13, color: "var(--color-text-description)", display: "block", marginBottom: 8 }}
               >
                 <PaperClipOutlined style={{ marginRight: 4 }} /> File đính kèm (
                 {item.attachments.length}):
@@ -147,10 +147,10 @@ export const NotificationDetailDrawer: React.FC<NotificationDetailDrawerProps> =
                       display: "flex",
                       justifyContent: "space-between",
                       alignItems: "center",
-                      backgroundColor: "#fafafa",
+                      backgroundColor: "var(--color-bg-page)",
                       padding: "8px 12px",
                       borderRadius: 8,
-                      border: "1px solid #e8e8e8",
+                      border: "1px solid var(--color-border-default)",
                     }}
                   >
                     <Text style={{ fontSize: 13 }}>{att.name}</Text>
@@ -168,7 +168,7 @@ export const NotificationDetailDrawer: React.FC<NotificationDetailDrawerProps> =
             bordered
             column={1}
             size="small"
-            styles={{ label: { width: "35%", fontWeight: 600, backgroundColor: "#fafafa" } }}
+            styles={{ label: { width: "35%", fontWeight: 600, backgroundColor: "var(--color-bg-page)" } }}
           >
             <Descriptions.Item label="Thể loại">{item.category.toUpperCase()}</Descriptions.Item>
             <Descriptions.Item label="Độ ưu tiên">

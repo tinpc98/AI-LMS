@@ -21,7 +21,7 @@ export const AttendanceChart: React.FC<AttendanceChartProps> = React.memo(({ sta
     <Card
       title={
         <span style={{ fontSize: 14, fontWeight: 700 }}>
-          <PieChartOutlined style={{ color: "#1890ff", marginRight: 6 }} /> Biểu đồ tỷ lệ các trạng
+          <PieChartOutlined style={{ color: "var(--color-action-primary-bg)", marginRight: 6 }} /> Biểu đồ tỷ lệ các trạng
           thái điểm danh
         </span>
       }
@@ -37,7 +37,7 @@ export const AttendanceChart: React.FC<AttendanceChartProps> = React.memo(({ sta
             <Progress
               percent={presentPercent}
               showInfo={false}
-              strokeColor="#52c41a"
+              strokeColor="var(--color-success-base)"
               size="small"
             />
           </div>
@@ -48,7 +48,7 @@ export const AttendanceChart: React.FC<AttendanceChartProps> = React.memo(({ sta
             <Text type="secondary" style={{ fontSize: 11 }}>
               Đi muộn: {stats.late} buổi ({latePercent}%)
             </Text>
-            <Progress percent={latePercent} showInfo={false} strokeColor="#faad14" size="small" />
+            <Progress percent={latePercent} showInfo={false} strokeColor="var(--color-warning-base)" size="small" />
           </div>
         </Col>
 
@@ -57,7 +57,7 @@ export const AttendanceChart: React.FC<AttendanceChartProps> = React.memo(({ sta
             <Text type="secondary" style={{ fontSize: 11 }}>
               Vắng mặt: {stats.absent} buổi ({absentPercent}%)
             </Text>
-            <Progress percent={absentPercent} showInfo={false} strokeColor="#ff4d4f" size="small" />
+            <Progress percent={absentPercent} showInfo={false} strokeColor="var(--color-error-base)" size="small" />
           </div>
         </Col>
 
@@ -69,7 +69,7 @@ export const AttendanceChart: React.FC<AttendanceChartProps> = React.memo(({ sta
             <Progress
               percent={excusedPercent}
               showInfo={false}
-              strokeColor="#1890ff"
+              strokeColor="var(--color-action-primary-bg)"
               size="small"
             />
           </div>

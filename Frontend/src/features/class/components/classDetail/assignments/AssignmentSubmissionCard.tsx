@@ -26,15 +26,15 @@ export const AssignmentSubmissionCard: React.FC<AssignmentSubmissionCardProps> =
       <Card
         title={
           <Space align="center">
-            <CheckCircleOutlined style={{ color: "#52c41a", fontSize: 18 }} />
+            <CheckCircleOutlined style={{ color: "var(--color-success-base)", fontSize: 18 }} />
             <span style={{ fontSize: 14, fontWeight: 700 }}>Thông tin bài làm đã nộp</span>
           </Space>
         }
         size="small"
         style={{
           borderRadius: 12,
-          backgroundColor: "#f6ffed",
-          border: "1px solid #b7eb8f",
+          backgroundColor: "var(--color-success-bg)",
+          border: "1px solid var(--color-border-default)",
           marginBottom: 16,
         }}
       >
@@ -59,14 +59,14 @@ export const AssignmentSubmissionCard: React.FC<AssignmentSubmissionCardProps> =
                   display: "flex",
                   justifyContent: "space-between",
                   alignItems: "center",
-                  backgroundColor: "#fff",
+                  backgroundColor: "var(--color-surface)",
                   padding: "6px 12px",
                   borderRadius: 8,
-                  border: "1px solid #d9d9d9",
+                  border: "1px solid var(--color-border-default)",
                 }}
               >
                 <Space size={6}>
-                  <PaperClipOutlined style={{ color: "#1890ff" }} />
+                  <PaperClipOutlined style={{ color: "var(--color-action-primary-bg)" }} />
                   <Text ellipsis style={{ fontSize: 13, maxWidth: 200 }}>
                     {att.name || `Tài liệu đính kèm ${idx + 1}`}
                   </Text>

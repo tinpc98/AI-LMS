@@ -35,12 +35,12 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({ onRefresh, loa
   return (
     <div
       style={{
-        background: "linear-gradient(135deg, #ffffff 0%, #f6f8fc 100%)",
+        background: "linear-gradient(135deg, var(--color-surface) 0%, var(--color-bg-page) 100%)",
         padding: "24px",
         borderRadius: "16px",
         marginBottom: "24px",
         boxShadow: "0 4px 20px rgba(0, 0, 0, 0.03)",
-        border: "1px solid #f0f0f0",
+        border: "1px solid var(--color-border-default)",
       }}
     >
       <Breadcrumb
@@ -70,7 +70,7 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({ onRefresh, loa
       >
         <div>
           <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-            <Title level={2} style={{ margin: 0, fontWeight: 700, color: "#1f1f1f" }}>
+            <Title level={2} style={{ margin: 0, fontWeight: 700, color: "var(--color-text-title)" }}>
               Xin chào Admin 👋
             </Title>
           </div>
@@ -78,7 +78,7 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({ onRefresh, loa
             type="secondary"
             style={{ fontSize: "14px", display: "inline-flex", alignItems: "center", marginTop: 4 }}
           >
-            <CalendarOutlined style={{ marginRight: 6, color: "#1677ff" }} />
+            <CalendarOutlined style={{ marginRight: 6, color: "var(--color-action-primary-bg)" }} />
             {capitalizedDate} — Hệ thống quản lý luyện thi THPT Quốc Gia
           </Text>
         </div>
@@ -97,7 +97,7 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({ onRefresh, loa
 
           <Button
             type="default"
-            icon={<BookOutlined style={{ color: "#1677ff" }} />}
+            icon={<BookOutlined style={{ color: "var(--color-action-primary-bg)" }} />}
             onClick={() => navigate("/admin/courses")}
             style={{ borderRadius: "8px" }}
           >
@@ -106,7 +106,7 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({ onRefresh, loa
 
           <Button
             type="default"
-            icon={<PlusOutlined style={{ color: "#fa8c16" }} />}
+            icon={<PlusOutlined style={{ color: "var(--color-warning-base)" }} />}
             onClick={() => navigate("/admin/classes")}
             style={{ borderRadius: "8px" }}
           >
@@ -119,7 +119,7 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({ onRefresh, loa
             onClick={() => navigate("/admin/teacher-assignment")}
             style={{
               borderRadius: "8px",
-              background: "linear-gradient(135deg, #1677ff 0%, #0958d9 100%)",
+              background: "linear-gradient(135deg, var(--color-action-primary-bg) 0%, var(--color-action-primary-bg-active) 100%)",
               border: "none",
               boxShadow: "0 4px 12px rgba(22, 119, 255, 0.3)",
             }}

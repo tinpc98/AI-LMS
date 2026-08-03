@@ -49,9 +49,9 @@ export const AnnouncementDetailDrawer: React.FC<AnnouncementDetailDrawerProps> =
         onClose={onClose}
         title={
           <Space align="center">
-            <NotificationOutlined style={{ color: "#1890ff", fontSize: 20 }} />
+            <NotificationOutlined style={{ color: "var(--color-action-primary-bg)", fontSize: 20 }} />
             <div>
-              <Title level={5} style={{ margin: 0, color: "#1f2937" }}>
+              <Title level={5} style={{ margin: 0, color: "var(--color-text-title)" }}>
                 Chi tiết thông báo
               </Title>
               <Space size={6} style={{ marginTop: 2 }}>
@@ -72,8 +72,8 @@ export const AnnouncementDetailDrawer: React.FC<AnnouncementDetailDrawerProps> =
           {/* Author & Header Meta */}
           <div
             style={{
-              backgroundColor: "#fafafa",
-              border: "1px solid #f0f0f0",
+              backgroundColor: "var(--color-bg-page)",
+              border: "1px solid var(--color-border-default)",
               borderRadius: 12,
               padding: "14px 18px",
               marginBottom: 20,
@@ -83,9 +83,9 @@ export const AnnouncementDetailDrawer: React.FC<AnnouncementDetailDrawerProps> =
             }}
           >
             <Space size={10} align="center">
-              <Avatar icon={<UserOutlined />} style={{ backgroundColor: "#1890ff" }} />
+              <Avatar icon={<UserOutlined />} style={{ backgroundColor: "var(--color-action-primary-bg)" }} />
               <div>
-                <Text strong style={{ fontSize: 14, color: "#1f2937", display: "block" }}>
+                <Text strong style={{ fontSize: 14, color: "var(--color-text-title)", display: "block" }}>
                   {item.authorName || "Giảng viên"}
                 </Text>
                 <Text type="secondary" style={{ fontSize: 12 }}>
@@ -100,8 +100,8 @@ export const AnnouncementDetailDrawer: React.FC<AnnouncementDetailDrawerProps> =
           </div>
 
           {/* Title */}
-          <Title level={4} style={{ margin: "0 0 16px 0", color: "#1f2937", lineHeight: 1.4 }}>
-            {item.isPinned && <PushpinOutlined style={{ color: "#fa541c", marginRight: 6 }} />}
+          <Title level={4} style={{ margin: "0 0 16px 0", color: "var(--color-text-title)", lineHeight: 1.4 }}>
+            {item.isPinned && <PushpinOutlined style={{ color: "var(--color-warning-base)", marginRight: 6 }} />}
             {item.title}
           </Title>
 
@@ -111,12 +111,12 @@ export const AnnouncementDetailDrawer: React.FC<AnnouncementDetailDrawerProps> =
               style={{
                 fontSize: 14,
                 lineHeight: 1.8,
-                color: "#262626",
+                color: "var(--color-text-title)",
                 whiteSpace: "pre-line",
-                backgroundColor: "#ffffff",
+                backgroundColor: "var(--color-surface)",
                 padding: "16px",
                 borderRadius: 12,
-                border: "1px solid #f0f0f0",
+                border: "1px solid var(--color-border-default)",
                 margin: 0,
               }}
             >

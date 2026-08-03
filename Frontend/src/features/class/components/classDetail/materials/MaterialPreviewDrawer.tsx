@@ -36,9 +36,9 @@ export const MaterialPreviewDrawer: React.FC<MaterialPreviewDrawerProps> = React
         onClose={onClose}
         title={
           <Space align="center">
-            <EyeOutlined style={{ color: "#1890ff", fontSize: 20 }} />
+            <EyeOutlined style={{ color: "var(--color-action-primary-bg)", fontSize: 20 }} />
             <div>
-              <Title level={5} style={{ margin: 0, color: "#1f2937" }}>
+              <Title level={5} style={{ margin: 0, color: "var(--color-text-title)" }}>
                 {item.title}
               </Title>
               <Tag color={meta.color} style={{ borderRadius: 6, marginTop: 2 }}>
@@ -141,7 +141,7 @@ export const MaterialPreviewDrawer: React.FC<MaterialPreviewDrawerProps> = React
                 style={{
                   width: "100%",
                   flex: 1,
-                  border: "1px solid #f0f0f0",
+                  border: "1px solid var(--color-border-default)",
                   borderRadius: 8,
                   minHeight: 500,
                 }}

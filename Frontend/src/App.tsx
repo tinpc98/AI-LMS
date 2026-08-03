@@ -2,6 +2,8 @@ import React, { lazy, Suspense } from "react";
 import { Route, Routes, useParams, Navigate } from "react-router-dom";
 import { Spin } from "antd";
 import "./App.css";
+import { ThemeProvider } from "./shared/context/ThemeContext";
+import { BreadcrumbProvider } from "./shared/context/BreadcrumbContext";
 
 import ToastContainer from "./shared/components/ToastContainer";
 import PublicRoute from "./shared/components/routing/PublicRoute";
@@ -49,6 +51,11 @@ const AdminPage = lazy(() => import("./shared/components/PlaceholderPage"));
 const LiveSessionLayout = lazy(() => import("./shared/components/layout/LiveSessionLayout"));
 const LiveSessionPage = lazy(() => import("./features/live-session/pages/LiveSessionPage"));
 
+// Design System Demo Route (Dev only)
+const DesignSystemDemoPage = lazy(
+  () => import("./features/design-system/DesignSystemDemoPage")
+);
+
 const PageLoadingFallback = () => (
   <div
     style={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "100vh" }}
@@ -65,91 +72,96 @@ const LegacyClassDetailRedirect = () => {
 
 function App() {
   return (
-    <>
-      <ToastContainer />
-      <Suspense fallback={<PageLoadingFallback />}>
-        <Routes>
-          {/* Root Redirector */}
-          <Route path="/" element={<RoleRedirector />} />
+    <ThemeProvider>
+      <BreadcrumbProvider>
+        <ToastContainer />
+        <Suspense fallback={<PageLoadingFallback />}>
+          <Routes>
+            {/* Root Redirector */}
+            <Route path="/" element={<RoleRedirector />} />
 
-          {/* ================= PUBLIC / AUTH ROUTES ================= */}
-          <Route element={<PublicRoute />}>
-            <Route path="/login" element={<LoginPage />} />
-          </Route>
+            {/* Design System Showcase Route */}
+            <Route path="/design-system" element={<DesignSystemDemoPage />} />
 
-          {/* ================= STUDENT PROTECTED ROUTES ================= */}
-          <Route element={<ProtectedRoute allowedRoles={["student"]} />}>
-            {/* Tuyến đường /student làm prefix chính cho Student Module */}
-            <Route path="/student" element={<HomeLayoutStudent />}>
-              <Route index element={<HomePageStudent />} />
-              <Route path="dashboard" element={<HomePageStudent />} />
-              <Route path="myclasses" element={<MyClasses />} />
-              <Route path="studentassignment" element={<StudentAssignment />} />
-              <Route path="classdetail/:classId" element={<ClassDetail />} />
-              <Route path="studentassignment/:assignmentId" element={<StudentAssignment />} />
-              <Route path="lessonview/:lessonId" element={<LessonView />} />
-              <Route path="notifications" element={<NotificationCenterPage />} />
+            {/* ================= PUBLIC / AUTH ROUTES ================= */}
+            <Route element={<PublicRoute />}>
+              <Route path="/login" element={<LoginPage />} />
             </Route>
 
-            {/* Live Session Route cho Student (Full màn hình, không Header/Sidebar) */}
-            <Route path="/student/live" element={<LiveSessionLayout />}>
-              <Route path=":sessionId" element={<LiveSessionPage />} />
+            {/* ================= STUDENT PROTECTED ROUTES ================= */}
+            <Route element={<ProtectedRoute allowedRoles={["student"]} />}>
+              {/* Tuyến đường /student làm prefix chính cho Student Module */}
+              <Route path="/student" element={<HomeLayoutStudent />}>
+                <Route index element={<HomePageStudent />} />
+                <Route path="dashboard" element={<HomePageStudent />} />
+                <Route path="myclasses" element={<MyClasses />} />
+                <Route path="studentassignment" element={<StudentAssignment />} />
+                <Route path="classdetail/:classId" element={<ClassDetail />} />
+                <Route path="studentassignment/:assignmentId" element={<StudentAssignment />} />
+                <Route path="lessonview/:lessonId" element={<LessonView />} />
+                <Route path="notifications" element={<NotificationCenterPage />} />
+              </Route>
+
+              {/* Live Session Route cho Student (Full màn hình, không Header/Sidebar) */}
+              <Route path="/student/live" element={<LiveSessionLayout />}>
+                <Route path=":sessionId" element={<LiveSessionPage />} />
+              </Route>
+
+              {/* Legacy redirect tương thích ngược cho link cũ /classdetail/:classId */}
+              <Route path="/classdetail/:classId" element={<LegacyClassDetailRedirect />} />
+
+              <Route path="/exam/:attemptId" element={<ExamPage />} />
             </Route>
 
-            {/* Legacy redirect tương thích ngược cho link cũ /classdetail/:classId */}
-            <Route path="/classdetail/:classId" element={<LegacyClassDetailRedirect />} />
+            {/* ================= TEACHER PROTECTED ROUTES ================= */}
+            <Route element={<ProtectedRoute allowedRoles={["teacher"]} />}>
+              <Route path="/teacher" element={<HomeLayoutTeacher />}>
+                <Route index element={<HomePageTeacher />} />
+                <Route path="classes" element={<ClassManagement />} />
+                <Route path="classroom-detail/:classId" element={<ClassroomDetail />} />
+                <Route path="questionbank" element={<QuestionBank />} />
+                <Route path="examresults/:examId" element={<ExamResults />} />
+                <Route path="exam-review/:attemptId" element={<ExamAttemptDetail />} />
+              </Route>
 
-            <Route path="/exam/:attemptId" element={<ExamPage />} />
-          </Route>
-
-          {/* ================= TEACHER PROTECTED ROUTES ================= */}
-          <Route element={<ProtectedRoute allowedRoles={["teacher"]} />}>
-            <Route path="/teacher" element={<HomeLayoutTeacher />}>
-              <Route index element={<HomePageTeacher />} />
-              <Route path="classes" element={<ClassManagement />} />
-              <Route path="classroom-detail/:classId" element={<ClassroomDetail />} />
-              <Route path="questionbank" element={<QuestionBank />} />
-              <Route path="examresults/:examId" element={<ExamResults />} />
-              <Route path="exam-review/:attemptId" element={<ExamAttemptDetail />} />
+              {/* Live Session Route cho Teacher (Full màn hình, không Header/Sidebar) */}
+              <Route path="/teacher/live" element={<LiveSessionLayout />}>
+                <Route path=":sessionId" element={<LiveSessionPage />} />
+              </Route>
             </Route>
 
-            {/* Live Session Route cho Teacher (Full màn hình, không Header/Sidebar) */}
-            <Route path="/teacher/live" element={<LiveSessionLayout />}>
-              <Route path=":sessionId" element={<LiveSessionPage />} />
+            {/* ================= ADMIN PROTECTED ROUTES ================= */}
+            <Route element={<ProtectedRoute allowedRoles={["admin"]} />}>
+              <Route path="/admin" element={<AdminLayout />}>
+                <Route index element={<DashboardPage />} />
+                <Route path="accounts" element={<AccountManagementPage />} />
+                <Route path="courses" element={<CourseManagementPage />} />
+                <Route path="classes" element={<ClassManagementPage />} />
+                <Route path="teacher-assignment" element={<TeacherAssignmentPage />} />
+                <Route path="ai-management" element={<AIManagementPage />} />
+                <Route path="reports" element={<ReportPage />} />
+                <Route path="profile" element={<ProfilePage />} />
+                <Route
+                  path="system"
+                  element={
+                    <AdminPage
+                      title="System Management"
+                      description="Configure system-wide settings."
+                    />
+                  }
+                />
+              </Route>
             </Route>
-          </Route>
 
-          {/* ================= ADMIN PROTECTED ROUTES ================= */}
-          <Route element={<ProtectedRoute allowedRoles={["admin"]} />}>
-            <Route path="/admin" element={<AdminLayout />}>
-              <Route index element={<DashboardPage />} />
-              <Route path="accounts" element={<AccountManagementPage />} />
-              <Route path="courses" element={<CourseManagementPage />} />
-              <Route path="classes" element={<ClassManagementPage />} />
-              <Route path="teacher-assignment" element={<TeacherAssignmentPage />} />
-              <Route path="ai-management" element={<AIManagementPage />} />
-              <Route path="reports" element={<ReportPage />} />
-              <Route path="profile" element={<ProfilePage />} />
-              <Route
-                path="system"
-                element={
-                  <AdminPage
-                    title="System Management"
-                    description="Configure system-wide settings."
-                  />
-                }
-              />
-            </Route>
-          </Route>
-
-          {/* ================= 404 NOT FOUND ================= */}
-          <Route
-            path="*"
-            element={<h2 style={{ textAlign: "center", marginTop: 40 }}>Trang không tồn tại!</h2>}
-          />
-        </Routes>
-      </Suspense>
-    </>
+            {/* ================= 404 NOT FOUND ================= */}
+            <Route
+              path="*"
+              element={<h2 style={{ textAlign: "center", marginTop: 40 }}>Trang không tồn tại!</h2>}
+            />
+          </Routes>
+        </Suspense>
+      </BreadcrumbProvider>
+    </ThemeProvider>
   );
 }
 

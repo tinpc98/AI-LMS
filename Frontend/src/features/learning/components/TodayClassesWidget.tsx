@@ -23,15 +23,15 @@ export const TodayClassesWidget: React.FC<TodayClassesWidgetProps> = React.memo(
       <Card
         title={
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <CalendarOutlined style={{ color: "#1890ff", fontSize: 16 }} />
-            <span style={{ fontSize: 15, fontWeight: 700, color: "#1f2937" }}>
+            <CalendarOutlined style={{ color: "var(--color-action-primary-bg)", fontSize: 16 }} />
+            <span style={{ fontSize: 15, fontWeight: 700, color: "var(--color-text-title)" }}>
               Lịch học hôm nay
             </span>
             <Text
               style={{
                 fontSize: 12,
-                color: todayClasses.length > 0 ? "#1890ff" : "#8c8c8c",
-                backgroundColor: todayClasses.length > 0 ? "#e6f7ff" : "#f5f5f5",
+                color: todayClasses.length > 0 ? "var(--color-action-primary-bg)" : "var(--color-text-description)",
+                backgroundColor: todayClasses.length > 0 ? "var(--color-bg-primary-tint)" : "var(--color-bg-page)",
                 borderRadius: 8,
                 padding: "1px 8px",
                 fontWeight: 600,
@@ -43,7 +43,7 @@ export const TodayClassesWidget: React.FC<TodayClassesWidgetProps> = React.memo(
         }
         style={{
           borderRadius: 20,
-          border: "1px solid #f0f0f0",
+          border: "1px solid var(--color-border-default)",
           boxShadow: "0 2px 12px rgba(0,0,0,0.05)",
           height: "100%",
         }}
@@ -54,14 +54,14 @@ export const TodayClassesWidget: React.FC<TodayClassesWidgetProps> = React.memo(
             style={{
               textAlign: "center",
               padding: "32px 0",
-              color: "#bfbfbf",
+              color: "var(--color-text-disabled)",
               fontSize: 13,
             }}
           >
             <CalendarOutlined style={{ fontSize: 28, marginBottom: 10, display: "block" }} />
             Không có buổi học nào hôm nay.
             <br />
-            <Text style={{ fontSize: 12, color: "#d1d5db" }}>Tận dụng thời gian ôn tập nhé!</Text>
+            <Text style={{ fontSize: 12, color: "var(--color-border-default)" }}>Tận dụng thời gian ôn tập nhé!</Text>
           </div>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
@@ -72,8 +72,8 @@ export const TodayClassesWidget: React.FC<TodayClassesWidgetProps> = React.memo(
                 <div
                   key={item.id}
                   style={{
-                    backgroundColor: isLive ? "#fff1f0" : "#fafafa",
-                    border: `1.5px solid ${isLive ? "#ffccc7" : "#f0f0f0"}`,
+                    backgroundColor: isLive ? "var(--color-error-bg)" : "var(--color-bg-page)",
+                    border: `1.5px solid ${isLive ? "var(--color-border-default)" : "var(--color-border-default)"}`,
                     borderRadius: 14,
                     padding: "14px 16px",
                     display: "flex",
@@ -81,7 +81,7 @@ export const TodayClassesWidget: React.FC<TodayClassesWidgetProps> = React.memo(
                     alignItems: "center",
                     gap: 12,
                     flexWrap: "wrap",
-                    transition: "all 0.2s ease",
+                    transition: "var(--transition-fast)",
                     boxShadow: isLive ? "0 2px 12px rgba(255,77,79,0.12)" : "none",
                   }}
                 >
@@ -90,7 +90,7 @@ export const TodayClassesWidget: React.FC<TodayClassesWidgetProps> = React.memo(
                       icon={<UserOutlined />}
                       src={item.teacherAvatar}
                       size={40}
-                      style={{ backgroundColor: isLive ? "#ff4d4f" : "#1890ff", flexShrink: 0 }}
+                      style={{ backgroundColor: isLive ? "var(--color-error-base)" : "var(--color-action-primary-bg)", flexShrink: 0 }}
                     />
                     <div style={{ minWidth: 0 }}>
                       <div
@@ -102,7 +102,7 @@ export const TodayClassesWidget: React.FC<TodayClassesWidgetProps> = React.memo(
                           marginBottom: 3,
                         }}
                       >
-                        <Text strong style={{ fontSize: 14, color: "#1f2937" }}>
+                        <Text strong style={{ fontSize: 14, color: "var(--color-text-title)" }}>
                           {item.className}
                         </Text>
                         {isLive ? (
@@ -119,12 +119,12 @@ export const TodayClassesWidget: React.FC<TodayClassesWidgetProps> = React.memo(
                           </Tag>
                         )}
                       </div>
-                      <Text style={{ fontSize: 12, color: "#6b7280" }}>
+                      <Text style={{ fontSize: 12, color: "var(--color-text-description)" }}>
                         {item.courseName}
-                        <span style={{ margin: "0 5px", color: "#d1d5db" }}>•</span>
+                        <span style={{ margin: "0 5px", color: "var(--color-border-default)" }}>•</span>
                         <ClockCircleOutlined style={{ marginRight: 3, fontSize: 11 }} />
                         {formatSchedule(item.timeSlot)}
-                        <span style={{ margin: "0 5px", color: "#d1d5db" }}>•</span>
+                        <span style={{ margin: "0 5px", color: "var(--color-border-default)" }}>•</span>
                         GV: {item.teacherName}
                       </Text>
                     </div>

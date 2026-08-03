@@ -26,7 +26,7 @@ export const TeacherInformationCard: React.FC<TeacherInformationCardProps> = Rea
         <Card
           title={
             <Space align="center">
-              <UserOutlined style={{ color: "#722ed1", fontSize: 18 }} />
+              <UserOutlined style={{ color: "var(--color-secondary-icon)", fontSize: 18 }} />
               <span style={{ fontSize: 16, fontWeight: 700 }}>Thông tin giảng viên</span>
             </Space>
           }
@@ -53,7 +53,7 @@ export const TeacherInformationCard: React.FC<TeacherInformationCardProps> = Rea
       <Card
         title={
           <Space align="center">
-            <UserOutlined style={{ color: "#722ed1", fontSize: 18 }} />
+            <UserOutlined style={{ color: "var(--color-secondary-icon)", fontSize: 18 }} />
             <span style={{ fontSize: 16, fontWeight: 700 }}>Giảng viên phụ trách</span>
           </Space>
         }
@@ -69,13 +69,13 @@ export const TeacherInformationCard: React.FC<TeacherInformationCardProps> = Rea
             size={72}
             src={teacher.avatar || undefined}
             icon={!teacher.avatar ? <UserOutlined style={{ fontSize: 36 }} /> : undefined}
-            style={{ backgroundColor: "#1890ff", marginBottom: 12, border: "2px solid #e6f7ff" }}
+            style={{ backgroundColor: "var(--color-action-primary-bg)", marginBottom: 12, border: "2px solid var(--color-bg-primary-tint)" }}
           />
-          <Title level={4} style={{ margin: 0, fontWeight: 700, color: "#1f2937" }}>
+          <Title level={4} style={{ margin: 0, fontWeight: 700, color: "var(--color-text-title)" }}>
             {teacher.fullName}
           </Title>
           <Space size={6} style={{ marginTop: 4 }}>
-            <MailOutlined style={{ color: "#8c8c8c", fontSize: 13 }} />
+            <MailOutlined style={{ color: "var(--color-text-description)", fontSize: 13 }} />
             <Text type="secondary" style={{ fontSize: 13 }}>
               {teacher.email || "Chưa cập nhật email"}
             </Text>
@@ -88,7 +88,7 @@ export const TeacherInformationCard: React.FC<TeacherInformationCardProps> = Rea
         <div style={{ marginBottom: 16 }}>
           <Text
             strong
-            style={{ fontSize: 13, color: "#595959", display: "block", marginBottom: 8 }}
+            style={{ fontSize: 13, color: "var(--color-text-body)", display: "block", marginBottom: 8 }}
           >
             <BookOutlined style={{ marginRight: 6 }} /> Chuyên môn giảng dạy:
           </Text>
@@ -106,11 +106,11 @@ export const TeacherInformationCard: React.FC<TeacherInformationCardProps> = Rea
           <div>
             <Text
               strong
-              style={{ fontSize: 13, color: "#595959", display: "block", marginBottom: 8 }}
+              style={{ fontSize: 13, color: "var(--color-text-body)", display: "block", marginBottom: 8 }}
             >
               <ClockCircleOutlined style={{ marginRight: 6 }} /> Khung giờ tiếp sinh viên:
             </Text>
-            <div style={{ backgroundColor: "#fafafa", borderRadius: 8, padding: "8px 12px" }}>
+            <div style={{ backgroundColor: "var(--color-bg-page)", borderRadius: 8, padding: "8px 12px" }}>
               {Object.entries(teacher.availabilitySchedule!).map(([day, info]) => {
                 if (!info?.available) return null;
                 return (

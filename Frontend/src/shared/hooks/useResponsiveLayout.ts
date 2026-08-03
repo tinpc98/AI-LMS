@@ -22,26 +22,45 @@ import { useCallback, useEffect, useState } from "react";
  * sao y hệt nhau của logic này.
  */
 
-const MOBILE_MAX = 768;
-const TABLET_MAX = 1024;
+import { breakpoints } from "../theme/tokens";
+
+export type BreakpointKey = "xs" | "sm" | "md" | "lg" | "xl" | "xxl";
 
 interface LayoutState {
   isMobile: boolean;
+  isTablet: boolean;
+  isDesktop: boolean;
   collapsed: boolean;
+  screen: BreakpointKey;
 }
 
-/** Suy ra bố cục từ bề rộng. Hàm thuần để test được và để dùng lại lúc khởi tạo. */
+export const getScreenKey = (width: number): BreakpointKey => {
+  if (width >= breakpoints.xxl) return "xxl";
+  if (width >= breakpoints.xl) return "xl";
+  if (width >= breakpoints.lg) return "lg";
+  if (width >= breakpoints.md) return "md";
+  if (width >= breakpoints.sm) return "sm";
+  return "xs";
+};
+
+/** Suy ra bố cục từ bề rộng theo chuẩn Ant Design v5 */
 export const resolveLayout = (width: number): LayoutState => {
-  if (width < MOBILE_MAX) return { isMobile: true, collapsed: false };
-  if (width < TABLET_MAX) return { isMobile: false, collapsed: true };
-  return { isMobile: false, collapsed: false };
+  const screen = getScreenKey(width);
+  // Dưới md (< 768px): Mobile view, ẩn Sider, mở Drawer bằng nút hamburger
+  if (width < breakpoints.md) {
+    return { isMobile: true, isTablet: false, isDesktop: false, collapsed: false, screen };
+  }
+  // md (768px - 991px): Tablet view, thu gọn Sider thành icon-only 80px
+  if (width < breakpoints.lg) {
+    return { isMobile: false, isTablet: true, isDesktop: false, collapsed: true, screen };
+  }
+  // lg trở lên (>= 992px): Desktop view, mở rộng Sider 250px
+  return { isMobile: false, isTablet: false, isDesktop: true, collapsed: false, screen };
 };
 
 export const useResponsiveLayout = () => {
-  // Hàm khởi tạo lười: chạy MỘT LẦN trước lần render đầu tiên, nên không có nhịp nào
-  // hiển thị sai bố cục.
   const [layout, setLayout] = useState<LayoutState>(() =>
-    resolveLayout(typeof window === "undefined" ? TABLET_MAX : window.innerWidth)
+    resolveLayout(typeof window === "undefined" ? breakpoints.lg : window.innerWidth)
   );
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -65,7 +84,10 @@ export const useResponsiveLayout = () => {
 
   return {
     isMobile: layout.isMobile,
+    isTablet: layout.isTablet,
+    isDesktop: layout.isDesktop,
     collapsed: layout.collapsed,
+    screen: layout.screen,
     mobileOpen,
     setCollapsed,
     toggleCollapse,

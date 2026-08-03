@@ -132,7 +132,7 @@ const ChangeTeacherModal = ({
     <Modal
       title={
         <span>
-          <SwapOutlined style={{ marginRight: 8, color: "#1890ff" }} /> Change Assigned Teacher
+          <SwapOutlined style={{ marginRight: 8, color: "var(--color-action-primary-bg)" }} /> Change Assigned Teacher
         </span>
       }
       open={open}
@@ -158,7 +158,7 @@ const ChangeTeacherModal = ({
       <Card
         size="small"
         title="Current Teacher"
-        style={{ marginBottom: 16, background: "#f8fafc" }}
+        style={{ marginBottom: 16, background: "var(--color-bg-page)" }}
       >
         {currentTeacher ? (
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>

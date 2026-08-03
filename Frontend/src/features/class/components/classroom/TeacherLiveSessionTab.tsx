@@ -162,13 +162,13 @@ export const TeacherLiveSessionTab: React.FC<TeacherLiveSessionTabProps> = React
             style={{
               borderRadius: 16,
               background: isSessionLive
-                ? "linear-gradient(135deg, #cf1322 0%, #a8071a 100%)"
-                : "linear-gradient(135deg, #002140 0%, #003a70 100%)",
-              color: "#fff",
+                ? "linear-gradient(135deg, var(--color-error-text) 0%, var(--color-error-text) 100%)"
+                : "linear-gradient(135deg, var(--color-sidebar-bg) 0%, var(--color-sidebar-hover) 100%)",
+              color: "var(--color-surface)",
               boxShadow: isSessionLive
                 ? "0 8px 24px rgba(207, 19, 34, 0.35)"
                 : "0 8px 24px rgba(0, 33, 64, 0.25)",
-              transition: "all 0.3s ease",
+              transition: "var(--transition-normal)",
             }}
             styles={{ body: { padding: "24px 32px" } }}
           >
@@ -184,8 +184,8 @@ export const TeacherLiveSessionTab: React.FC<TeacherLiveSessionTabProps> = React
             >
               <div>
                 <Space size={12} align="center">
-                  <VideoCameraOutlined style={{ fontSize: 28, color: "#fff" }} />
-                  <Title level={4} style={{ color: "#fff", margin: 0, fontWeight: 700 }}>
+                  <VideoCameraOutlined style={{ fontSize: 28, color: "var(--color-surface)" }} />
+                  <Title level={4} style={{ color: "var(--color-surface)", margin: 0, fontWeight: 700 }}>
                     Quản lý Phòng học Live: {className}
                   </Title>
                 </Space>
@@ -209,7 +209,7 @@ export const TeacherLiveSessionTab: React.FC<TeacherLiveSessionTabProps> = React
                 style={{
                   backgroundColor: "rgba(255,255,255,0.2)",
                   borderColor: "rgba(255,255,255,0.4)",
-                  color: "#fff",
+                  color: "var(--color-surface)",
                   fontWeight: 600,
                 }}
               >
@@ -236,7 +236,7 @@ export const TeacherLiveSessionTab: React.FC<TeacherLiveSessionTabProps> = React
                     value={isSessionLive ? "ĐANG LIVE" : "SẴN SÀNG"}
                     styles={{
                       content: {
-                        color: isSessionLive ? "#ffccc7" : "#b7eb8f",
+                        color: isSessionLive ? "var(--color-border-default)" : "var(--color-border-default)",
                         fontWeight: 700,
                         fontSize: 18,
                       },
@@ -263,7 +263,7 @@ export const TeacherLiveSessionTab: React.FC<TeacherLiveSessionTabProps> = React
                     value={currentRoomName || "Chưa tạo"}
                     styles={{
                       content: {
-                        color: "#fff",
+                        color: "var(--color-surface)",
                         fontWeight: 600,
                         fontSize: 15,
                         fontFamily: "monospace",
@@ -289,8 +289,8 @@ export const TeacherLiveSessionTab: React.FC<TeacherLiveSessionTabProps> = React
                       </Text>
                     }
                     value={teacherName}
-                    prefix={<UserOutlined style={{ color: "#ffe58f", marginRight: 6 }} />}
-                    styles={{ content: { color: "#fff", fontWeight: 600, fontSize: 16 } }}
+                    prefix={<UserOutlined style={{ color: "var(--color-warning-bg)", marginRight: 6 }} />}
+                    styles={{ content: { color: "var(--color-surface)", fontWeight: 600, fontSize: 16 } }}
                   />
                 </div>
               </Col>
@@ -311,7 +311,7 @@ export const TeacherLiveSessionTab: React.FC<TeacherLiveSessionTabProps> = React
                       </Text>
                     }
                     value="8x8 JaaS (RS256)"
-                    styles={{ content: { color: "#fff", fontWeight: 600, fontSize: 16 } }}
+                    styles={{ content: { color: "var(--color-surface)", fontWeight: 600, fontSize: 16 } }}
                   />
                 </div>
               </Col>
@@ -338,7 +338,7 @@ export const TeacherLiveSessionTab: React.FC<TeacherLiveSessionTabProps> = React
                       status="processing"
                       color="red"
                       text={
-                        <Text strong style={{ color: "#cf1322", fontSize: 16 }}>
+                        <Text strong style={{ color: "var(--color-error-text)", fontSize: 16 }}>
                           🔴 BUỔI HỌC TRỰC TUYẾN ĐANG DIỄN RA
                         </Text>
                       }
@@ -357,7 +357,7 @@ export const TeacherLiveSessionTab: React.FC<TeacherLiveSessionTabProps> = React
                   </Tag>
                 </div>
 
-                <Paragraph style={{ fontSize: 14, color: "#595959", margin: 0 }}>
+                <Paragraph style={{ fontSize: 14, color: "var(--color-text-body)", margin: 0 }}>
                   Buổi học <b>{activeSession?.title}</b> của lớp <b>{className}</b> đang được bật.
                   Học sinh có thể tham gia vào phòng học ngay lúc này.
                 </Paragraph>
@@ -365,7 +365,6 @@ export const TeacherLiveSessionTab: React.FC<TeacherLiveSessionTabProps> = React
                 <div style={{ display: "flex", gap: 16, marginTop: 8, flexWrap: "wrap" }}>
                   <Button
                     type="primary"
-                    danger
                     size="large"
                     icon={<PlayCircleOutlined />}
                     loading={isActionLoading}
@@ -405,7 +404,7 @@ export const TeacherLiveSessionTab: React.FC<TeacherLiveSessionTabProps> = React
               </div>
             ) : (
               <div style={{ textAlign: "center", padding: "20px 0" }}>
-                <VideoCameraOutlined style={{ fontSize: 48, color: "#1890ff", marginBottom: 16 }} />
+                <VideoCameraOutlined style={{ fontSize: 48, color: "var(--color-action-primary-bg)", marginBottom: 16 }} />
                 <Title level={4} style={{ marginBottom: 8 }}>
                   Bắt đầu buổi học trực tuyến mới cho lớp {className}
                 </Title>

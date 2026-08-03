@@ -187,10 +187,20 @@ class LearningRankingService {
 
     const ranking = await Class.aggregate(pipeline);
 
-    // Apply Ranking Position
-    ranking.forEach((r, index) => {
-      r.rank = index + 1;
-    });
+    // Apply Ranking Position với xử lý đồng hạng và totalXP = 0
+    let currentRank = 1;
+    for (let i = 0; i < ranking.length; i++) {
+      const item = ranking[i];
+      if (!item.totalXP || item.totalXP === 0) {
+        // Học sinh chưa có XP nào: chưa có thứ hạng thi đua
+        item.rank = null;
+      } else {
+        if (i > 0 && ranking[i - 1].totalXP && item.totalXP < ranking[i - 1].totalXP) {
+          currentRank = i + 1;
+        }
+        item.rank = currentRank;
+      }
+    }
 
     const totalItems = ranking.length;
     const items = ranking.slice((page - 1) * limit, page * limit);

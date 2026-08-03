@@ -1,6 +1,11 @@
 import React, { useCallback } from "react";
 import { Card, Typography, Space, Button, Badge } from "antd";
-import { VideoCameraOutlined, ClockCircleOutlined, UserOutlined } from "@ant-design/icons";
+import {
+  VideoCameraOutlined,
+  ClockCircleOutlined,
+  UserOutlined,
+  EnvironmentOutlined,
+} from "@ant-design/icons";
 import type { IExtendedLiveSession } from "../../../../types/studentLive";
 import EmptyState from "../../../../shared/components/EmptyState";
 
@@ -10,11 +15,12 @@ interface LiveSessionCardProps {
   currentLiveItem: IExtendedLiveSession | null;
   upcomingSessions: IExtendedLiveSession[];
   pastSessions: IExtendedLiveSession[];
+  classRoom?: string;
   onJoinLive: () => void;
 }
 
 export const LiveSessionCard: React.FC<LiveSessionCardProps> = React.memo(
-  ({ currentLiveItem, upcomingSessions, pastSessions, onJoinLive }) => {
+  ({ currentLiveItem, upcomingSessions, pastSessions, classRoom, onJoinLive }) => {
     // Xác định trạng thái hiển thị
     let displaySession: IExtendedLiveSession | null = null;
     let cardState: "EMPTY" | "ONGOING" | "UPCOMING" | "COMPLETED" = "EMPTY";
@@ -35,7 +41,7 @@ export const LiveSessionCard: React.FC<LiveSessionCardProps> = React.memo(
         <Card
           title={
             <Space align="center">
-              <VideoCameraOutlined style={{ color: "#1890ff", fontSize: 18 }} />
+              <VideoCameraOutlined style={{ color: "var(--color-action-primary-bg)", fontSize: 18 }} />
               <span style={{ fontSize: 16, fontWeight: 700 }}>Buổi học trực tuyến</span>
             </Space>
           }
@@ -70,8 +76,8 @@ export const LiveSessionCard: React.FC<LiveSessionCardProps> = React.memo(
           return (
             <div
               style={{
-                backgroundColor: "#f0f5ff",
-                border: "1px solid #adc6ff",
+                backgroundColor: "var(--color-bg-primary-tint)",
+                border: "1px solid var(--color-border-primary-tint)",
                 borderRadius: 12,
                 padding: 16,
               }}
@@ -86,7 +92,7 @@ export const LiveSessionCard: React.FC<LiveSessionCardProps> = React.memo(
               >
                 <Badge
                   status="processing"
-                  text={<span style={{ color: "#1890ff", fontWeight: 600 }}>Đang diễn ra</span>}
+                  text={<span style={{ color: "var(--color-action-primary-bg)", fontWeight: 600 }}>Đang diễn ra</span>}
                 />
                 <Text type="secondary" style={{ fontSize: 12 }}>
                   <UserOutlined style={{ marginRight: 4 }} />
@@ -94,15 +100,23 @@ export const LiveSessionCard: React.FC<LiveSessionCardProps> = React.memo(
                 </Text>
               </div>
 
-              <Title level={5} style={{ margin: "4px 0", color: "#1f2937", fontSize: 16 }}>
+              <Title level={5} style={{ margin: "4px 0", color: "var(--color-text-title)", fontSize: 16 }}>
                 {displaySession?.title || `Buổi học #${displaySession?.sessionNumber}`}
               </Title>
 
-              <Space size={8} style={{ marginTop: 4 }}>
-                <ClockCircleOutlined style={{ color: "#595959" }} />
-                <Text strong style={{ fontSize: 14, color: "#1f2937" }}>
-                  Bắt đầu: {startTimeStr}
-                </Text>
+              <Space size={8} style={{ marginTop: 4, flexWrap: "wrap" }}>
+                <Space size={4}>
+                  <ClockCircleOutlined style={{ color: "var(--color-text-body)" }} />
+                  <Text strong style={{ fontSize: 14, color: "var(--color-text-title)" }}>
+                    Bắt đầu: {startTimeStr}
+                  </Text>
+                </Space>
+                {classRoom && (
+                  <Text type="secondary" style={{ fontSize: 13 }}>
+                    <EnvironmentOutlined style={{ marginRight: 4 }} />
+                    {classRoom}
+                  </Text>
+                )}
               </Space>
 
               <div style={{ marginTop: 16 }}>
@@ -124,8 +138,8 @@ export const LiveSessionCard: React.FC<LiveSessionCardProps> = React.memo(
           return (
             <div
               style={{
-                backgroundColor: "#f6ffed",
-                border: "1px solid #b7eb8f",
+                backgroundColor: "var(--color-success-bg)",
+                border: "1px solid var(--color-border-default)",
                 borderRadius: 12,
                 padding: 16,
               }}
@@ -140,7 +154,7 @@ export const LiveSessionCard: React.FC<LiveSessionCardProps> = React.memo(
               >
                 <Badge
                   color="green"
-                  text={<span style={{ color: "#52c41a", fontWeight: 600 }}>Sắp diễn ra</span>}
+                  text={<span style={{ color: "var(--color-success-base)", fontWeight: 600 }}>Sắp diễn ra</span>}
                 />
                 <Text type="secondary" style={{ fontSize: 12 }}>
                   <UserOutlined style={{ marginRight: 4 }} />
@@ -148,17 +162,25 @@ export const LiveSessionCard: React.FC<LiveSessionCardProps> = React.memo(
                 </Text>
               </div>
 
-              <Title level={5} style={{ margin: "4px 0", color: "#1f2937", fontSize: 16 }}>
+              <Title level={5} style={{ margin: "4px 0", color: "var(--color-text-title)", fontSize: 16 }}>
                 {displaySession?.title || `Buổi học #${displaySession?.sessionNumber}`}
               </Title>
 
-              <Space size={8} style={{ marginTop: 4 }}>
-                <ClockCircleOutlined style={{ color: "#595959" }} />
-                <Text strong style={{ fontSize: 14, color: "#1f2937" }}>
-                  {/* "Dự kiến" chỉ đúng khi có mốc thời gian thật. Với buổi suy từ lịch lớp
-                      thì nói thẳng đó là lịch học, không hứa một thời điểm cụ thể. */}
-                  {displaySession?.scheduledStart ? `Dự kiến: ${startTimeStr}` : startTimeStr}
-                </Text>
+              <Space size={8} style={{ marginTop: 4, flexWrap: "wrap" }}>
+                <Space size={4}>
+                  <ClockCircleOutlined style={{ color: "var(--color-text-body)" }} />
+                  <Text strong style={{ fontSize: 14, color: "var(--color-text-title)" }}>
+                    {/* "Dự kiến" chỉ đúng khi có mốc thời gian thật. Với buổi suy từ lịch lớp
+                        thì nói thẳng đó là lịch học, không hứa một thời điểm cụ thể. */}
+                    {displaySession?.scheduledStart ? `Dự kiến: ${startTimeStr}` : startTimeStr}
+                  </Text>
+                </Space>
+                {classRoom && (
+                  <Text type="secondary" style={{ fontSize: 13 }}>
+                    <EnvironmentOutlined style={{ marginRight: 4 }} />
+                    {classRoom}
+                  </Text>
+                )}
               </Space>
 
               {displaySession?.countdownText && (
@@ -181,8 +203,8 @@ export const LiveSessionCard: React.FC<LiveSessionCardProps> = React.memo(
           return (
             <div
               style={{
-                backgroundColor: "#f5f5f5",
-                border: "1px solid #d9d9d9",
+                backgroundColor: "var(--color-bg-page)",
+                border: "1px solid var(--color-border-default)",
                 borderRadius: 12,
                 padding: 16,
               }}
@@ -197,7 +219,7 @@ export const LiveSessionCard: React.FC<LiveSessionCardProps> = React.memo(
               >
                 <Badge
                   color="default"
-                  text={<span style={{ color: "#8c8c8c", fontWeight: 600 }}>Đã kết thúc</span>}
+                  text={<span style={{ color: "var(--color-text-description)", fontWeight: 600 }}>Đã kết thúc</span>}
                 />
                 <Text type="secondary" style={{ fontSize: 12 }}>
                   <UserOutlined style={{ marginRight: 4 }} />
@@ -205,7 +227,7 @@ export const LiveSessionCard: React.FC<LiveSessionCardProps> = React.memo(
                 </Text>
               </div>
 
-              <Title level={5} style={{ margin: "4px 0", color: "#1f2937", fontSize: 16 }}>
+              <Title level={5} style={{ margin: "4px 0", color: "var(--color-text-title)", fontSize: 16 }}>
                 {displaySession?.title || `Buổi học #${displaySession?.sessionNumber}`}
               </Title>
 
@@ -225,7 +247,7 @@ export const LiveSessionCard: React.FC<LiveSessionCardProps> = React.memo(
       <Card
         title={
           <Space align="center">
-            <VideoCameraOutlined style={{ color: "#1890ff", fontSize: 18 }} />
+            <VideoCameraOutlined style={{ color: "var(--color-action-primary-bg)", fontSize: 18 }} />
             <span style={{ fontSize: 16, fontWeight: 700 }}>Buổi học trực tuyến</span>
           </Space>
         }

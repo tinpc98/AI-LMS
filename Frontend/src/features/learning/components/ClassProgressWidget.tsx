@@ -22,15 +22,15 @@ export const ClassProgressWidget: React.FC<ClassProgressWidgetProps> = React.mem
       <Card
         title={
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <BookOutlined style={{ color: "#1890ff", fontSize: 16 }} />
-            <span style={{ fontSize: 15, fontWeight: 700, color: "#1f2937" }}>
+            <BookOutlined style={{ color: "var(--color-action-primary-bg)", fontSize: 16 }} />
+            <span style={{ fontSize: 15, fontWeight: 700, color: "var(--color-text-title)" }}>
               Hoàn thành bài tập theo lớp
             </span>
             <Text
               style={{
                 fontSize: 12,
-                color: "#8c8c8c",
-                backgroundColor: "#f5f5f5",
+                color: "var(--color-text-description)",
+                backgroundColor: "var(--color-bg-page)",
                 borderRadius: 8,
                 padding: "1px 8px",
                 fontWeight: 500,
@@ -42,13 +42,13 @@ export const ClassProgressWidget: React.FC<ClassProgressWidgetProps> = React.mem
               title="Tỉ lệ bài đã nộp / tổng số bài có trong hệ thống (≤ 5 lớp đầu tiên). Lớp chưa có dữ liệu hiển thị 'Chưa có dữ liệu'."
               placement="right"
             >
-              <InfoCircleOutlined style={{ fontSize: 13, color: "#9ca3af", cursor: "help" }} />
+              <InfoCircleOutlined style={{ fontSize: 13, color: "var(--color-text-disabled)", cursor: "help" }} />
             </Tooltip>
           </div>
         }
         style={{
           borderRadius: 20,
-          border: "1px solid #f0f0f0",
+          border: "1px solid var(--color-border-default)",
           boxShadow: "0 2px 12px rgba(0,0,0,0.05)",
         }}
         styles={{ body: { padding: "16px 20px 20px" } }}
@@ -58,7 +58,7 @@ export const ClassProgressWidget: React.FC<ClassProgressWidgetProps> = React.mem
             style={{
               textAlign: "center",
               padding: "24px 0",
-              color: "#bfbfbf",
+              color: "var(--color-text-disabled)",
               fontSize: 13,
               fontStyle: "italic",
             }}
@@ -74,14 +74,14 @@ export const ClassProgressWidget: React.FC<ClassProgressWidgetProps> = React.mem
 
                 // Màu thanh phản ánh mức độ hoàn thành
                 const strokeColor = !hasData
-                  ? "#d9d9d9"
+                  ? "var(--color-border-default)"
                   : pct >= 80
-                  ? "#52c41a"
+                  ? "var(--color-success-base)"
                   : pct >= 50
-                  ? "#1890ff"
+                  ? "var(--color-action-primary-bg)"
                   : pct > 0
-                  ? "#fa8c16"
-                  : "#ff4d4f";
+                  ? "var(--color-warning-base)"
+                  : "var(--color-error-base)";
 
                 return (
                   <div key={item.classId}>
@@ -101,13 +101,13 @@ export const ClassProgressWidget: React.FC<ClassProgressWidgetProps> = React.mem
                             width: 22,
                             height: 22,
                             borderRadius: 6,
-                            backgroundColor: "#f0f7ff",
+                            backgroundColor: "var(--color-bg-primary-tint)",
                             display: "flex",
                             alignItems: "center",
                             justifyContent: "center",
                             fontSize: 11,
                             fontWeight: 700,
-                            color: "#1890ff",
+                            color: "var(--color-action-primary-bg)",
                             flexShrink: 0,
                           }}
                         >
@@ -117,7 +117,7 @@ export const ClassProgressWidget: React.FC<ClassProgressWidgetProps> = React.mem
                           strong
                           style={{
                             fontSize: 13,
-                            color: "#1f2937",
+                            color: "var(--color-text-title)",
                             overflow: "hidden",
                             textOverflow: "ellipsis",
                             whiteSpace: "nowrap",
@@ -137,7 +137,7 @@ export const ClassProgressWidget: React.FC<ClassProgressWidgetProps> = React.mem
                           marginLeft: 8,
                         }}
                       >
-                        <Text style={{ fontSize: 11, color: "#9ca3af" }}>
+                        <Text style={{ fontSize: 11, color: "var(--color-text-disabled)" }}>
                           GV: {item.teacherName}
                         </Text>
 
@@ -157,7 +157,7 @@ export const ClassProgressWidget: React.FC<ClassProgressWidgetProps> = React.mem
                             <Text
                               style={{
                                 fontSize: 11,
-                                color: "#9ca3af",
+                                color: "var(--color-text-disabled)",
                                 display: "block",
                                 lineHeight: 1.2,
                                 whiteSpace: "nowrap",
@@ -170,7 +170,7 @@ export const ClassProgressWidget: React.FC<ClassProgressWidgetProps> = React.mem
                           <Text
                             style={{
                               fontSize: 11,
-                              color: "#bfbfbf",
+                              color: "var(--color-text-disabled)",
                               fontStyle: "italic",
                               whiteSpace: "nowrap",
                             }}
@@ -203,14 +203,14 @@ export const ClassProgressWidget: React.FC<ClassProgressWidgetProps> = React.mem
                     <DownOutlined
                       style={{
                         transform: showAll ? "rotate(180deg)" : "rotate(0deg)",
-                        transition: "transform 0.25s ease",
+                        transition: "transform var(--duration-fast) var(--ease-out)",
                         fontSize: 11,
                       }}
                     />
                   }
                   onClick={() => setShowAll(!showAll)}
                   style={{
-                    color: "#1890ff",
+                    color: "var(--color-action-primary-bg)",
                     fontWeight: 500,
                     fontSize: 13,
                     borderRadius: 8,

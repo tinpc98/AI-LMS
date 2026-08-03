@@ -14,6 +14,7 @@ import styles from "./adminLayout.module.css";
 import ChangePasswordModal from "../../../features/profile/components/ChangePasswordModal";
 import { useNotifications } from "../../../features/notification/hooks/useNotifications";
 import { NotificationDropdown } from "./student/NotificationDropdown";
+import { ThemeToggle } from "../ThemeToggle";
 
 interface AdminHeaderProps {
   collapsed: boolean;
@@ -95,6 +96,7 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({
         </div>
 
         <div className={styles.headerActions}>
+          <ThemeToggle />
           <NotificationDropdown
             notifications={notifications}
             unreadCount={unreadCount}
@@ -112,7 +114,7 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({
             trigger={["click"]}
           >
             <Space className={styles.userArea}>
-              <Badge dot color="#52c41a">
+              <Badge dot color="var(--color-success-base)">
                 <Avatar className={styles.avatar}>A</Avatar>
               </Badge>
               <span className={styles.userName}>Admin</span>

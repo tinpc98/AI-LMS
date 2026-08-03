@@ -22,7 +22,7 @@ export const AttendanceTable: React.FC<AttendanceTableProps> = React.memo(
         render: (dateStr: string) => {
           const d = dateStr ? new Date(dateStr) : new Date();
           return (
-            <Text strong style={{ color: "#1f2937", fontSize: 13 }}>
+            <Text strong style={{ color: "var(--color-text-title)", fontSize: 13 }}>
               {d.toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit", year: "numeric" })}
             </Text>
           );
@@ -34,7 +34,7 @@ export const AttendanceTable: React.FC<AttendanceTableProps> = React.memo(
         key: "sessionTitle",
         render: (text: string, record: IExtendedAttendanceRecord) => (
           <Space direction="vertical" size={2}>
-            <Text strong style={{ color: "#1f2937", fontSize: 14 }}>
+            <Text strong style={{ color: "var(--color-text-title)", fontSize: 14 }}>
               {text || "Buổi học môn chuyên ngành"}
             </Text>
             <Text type="secondary" style={{ fontSize: 12 }}>
@@ -51,7 +51,7 @@ export const AttendanceTable: React.FC<AttendanceTableProps> = React.memo(
         width: 170,
         render: (teacherName: string) => (
           <Space size={6}>
-            <UserOutlined style={{ color: "#1890ff" }} />
+            <UserOutlined style={{ color: "var(--color-action-primary-bg)" }} />
             <Text style={{ fontSize: 13 }}>{teacherName || "Giảng viên"}</Text>
           </Space>
         ),
@@ -96,7 +96,7 @@ export const AttendanceTable: React.FC<AttendanceTableProps> = React.memo(
     return (
       <Card
         styles={{ body: { padding: 0 } }}
-        style={{ borderRadius: 16, overflow: "hidden", border: "1px solid #f0f0f0" }}
+        style={{ borderRadius: 16, overflow: "hidden", border: "1px solid var(--color-border-default)" }}
       >
         <Table
           dataSource={records}

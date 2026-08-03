@@ -93,7 +93,7 @@ export const TeacherAnalyticsTab: React.FC<TeacherAnalyticsTabProps> = ({ classI
                 title="Tiến độ học (Trung bình)"
                 value={overview.classAvgProgress}
                 suffix="%"
-                valueStyle={{ color: "#1890ff" }}
+                valueStyle={{ color: "var(--color-action-primary-bg)" }}
               />
             </div>
           </Col>
@@ -103,7 +103,7 @@ export const TeacherAnalyticsTab: React.FC<TeacherAnalyticsTabProps> = ({ classI
                 title="Tỉ lệ điểm danh"
                 value={overview.attendanceRate}
                 suffix="%"
-                valueStyle={{ color: "#52c41a" }}
+                valueStyle={{ color: "var(--color-success-base)" }}
               />
             </div>
           </Col>
@@ -112,7 +112,7 @@ export const TeacherAnalyticsTab: React.FC<TeacherAnalyticsTabProps> = ({ classI
               <Statistic
                 title="Điểm bài tập (Trung bình)"
                 value={overview.assignmentAvgScore}
-                valueStyle={{ color: "#722ed1" }}
+                valueStyle={{ color: "var(--color-secondary-icon)" }}
               />
             </div>
           </Col>
@@ -121,7 +121,7 @@ export const TeacherAnalyticsTab: React.FC<TeacherAnalyticsTabProps> = ({ classI
               <Statistic
                 title="Tổng số học sinh"
                 value={overview.totalStudents}
-                valueStyle={{ color: "#faad14" }}
+                valueStyle={{ color: "var(--color-warning-base)" }}
               />
             </div>
           </Col>

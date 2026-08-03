@@ -49,7 +49,7 @@ export const TeacherScheduleWidget: React.FC<TeacherScheduleWidgetProps> = React
         loading={loading}
         title={
           <Space>
-            <CalendarOutlined style={{ color: "#1890ff" }} />
+            <CalendarOutlined style={{ color: "var(--color-action-primary-bg)" }} />
             <Title level={4} style={{ margin: 0, fontWeight: 700 }}>
               Lịch dạy hôm nay
             </Title>
@@ -62,15 +62,15 @@ export const TeacherScheduleWidget: React.FC<TeacherScheduleWidgetProps> = React
           <Timeline
             mode="left"
             items={todayClasses.map((cls) => ({
-              dot: <ClockCircleOutlined style={{ fontSize: 16, color: "#1890ff" }} />,
+              dot: <ClockCircleOutlined style={{ fontSize: 16, color: "var(--color-action-primary-bg)" }} />,
               color: "blue",
               children: (
                 <div
                   style={{
-                    backgroundColor: "#f0f5ff",
+                    backgroundColor: "var(--color-bg-primary-tint)",
                     padding: "12px 16px",
                     borderRadius: 8,
-                    border: "1px solid #adc6ff",
+                    border: "1px solid var(--color-border-primary-tint)",
                     marginBottom: 8,
                   }}
                 >
@@ -81,7 +81,7 @@ export const TeacherScheduleWidget: React.FC<TeacherScheduleWidgetProps> = React
                       alignItems: "center",
                     }}
                   >
-                    <Text strong style={{ fontSize: 15, color: "#1d39c4" }}>
+                    <Text strong style={{ fontSize: 15, color: "var(--color-action-primary-bg-active)" }}>
                       {cls.className}
                     </Text>
                     {cls.classCode && <Tag color="blue">{cls.classCode}</Tag>}
@@ -93,7 +93,7 @@ export const TeacherScheduleWidget: React.FC<TeacherScheduleWidgetProps> = React
                       display: "flex",
                       gap: 16,
                       fontSize: 13,
-                      color: "#595959",
+                      color: "var(--color-text-body)",
                     }}
                   >
                     <Space size={4}>

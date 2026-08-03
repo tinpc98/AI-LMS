@@ -63,7 +63,7 @@ export const TeacherStudentTableTab: React.FC<TeacherStudentTableTabProps> = Rea
               <Avatar
                 src={avatarUrl || undefined}
                 icon={!avatarUrl ? <UserOutlined /> : undefined}
-                style={{ backgroundColor: "#1890ff" }}
+                style={{ backgroundColor: "var(--color-action-primary-bg)" }}
               />
               <div>
                 <Text strong style={{ fontSize: 14, display: "block" }}>
@@ -126,7 +126,7 @@ export const TeacherStudentTableTab: React.FC<TeacherStudentTableTabProps> = Rea
 
             <Input
               placeholder="Tìm kiếm theo tên hoặc email học sinh..."
-              prefix={<SearchOutlined style={{ color: "#bfbfbf" }} />}
+              prefix={<SearchOutlined style={{ color: "var(--color-text-disabled)" }} />}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               style={{ width: 280, borderRadius: 8 }}

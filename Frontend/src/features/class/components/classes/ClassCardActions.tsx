@@ -30,9 +30,9 @@ export const ClassCardActions: React.FC<ClassCardActionsProps> = React.memo(
           {isLiveActive && (
             <Badge
               status="processing"
-              color="#ff4d4f"
+              color="var(--color-error-base)"
               text={
-                <span style={{ color: "#ff4d4f", fontWeight: 600, fontSize: 12 }}>
+                <span style={{ color: "var(--color-error-base)", fontWeight: 600, fontSize: 12 }}>
                   🔴 Đang trực tuyến
                 </span>
               }

@@ -51,7 +51,7 @@ export const LearningMaterialsTab: React.FC<LearningMaterialsTabProps> = React.m
         {/* 1. Header Banner & Stats Section */}
         <div style={{ marginBottom: 24 }}>
           <div style={{ marginBottom: 16 }}>
-            <Title level={4} style={{ margin: "0 0 4px 0", fontWeight: 700, color: "#1f2937" }}>
+            <Title level={4} style={{ margin: "0 0 4px 0", fontWeight: 700, color: "var(--color-text-title)" }}>
               📚 Tài liệu học tập
             </Title>
             <Text type="secondary" style={{ fontSize: 13 }}>
@@ -65,13 +65,13 @@ export const LearningMaterialsTab: React.FC<LearningMaterialsTabProps> = React.m
               <Card
                 bordered={false}
                 styles={{ body: { padding: "12px 16px" } }}
-                style={{ borderRadius: 12, backgroundColor: "#fafafa" }}
+                style={{ borderRadius: 12, backgroundColor: "var(--color-bg-page)" }}
               >
                 <Statistic
-                  title={<span style={{ fontSize: 11, color: "#8c8c8c" }}>Tổng tài liệu</span>}
+                  title={<span style={{ fontSize: 11, color: "var(--color-text-description)" }}>Tổng tài liệu</span>}
                   value={stats.total}
-                  prefix={<FolderOpenOutlined style={{ color: "#1890ff", marginRight: 6 }} />}
-                  valueStyle={{ fontSize: 20, fontWeight: 700, color: "#1f2937" }}
+                  prefix={<FolderOpenOutlined style={{ color: "var(--color-action-primary-bg)", marginRight: 6 }} />}
+                  valueStyle={{ fontSize: 20, fontWeight: 700, color: "var(--color-text-title)" }}
                 />
               </Card>
             </Col>
@@ -80,13 +80,13 @@ export const LearningMaterialsTab: React.FC<LearningMaterialsTabProps> = React.m
               <Card
                 bordered={false}
                 styles={{ body: { padding: "12px 16px" } }}
-                style={{ borderRadius: 12, backgroundColor: "#fff1f0" }}
+                style={{ borderRadius: 12, backgroundColor: "var(--color-error-bg)" }}
               >
                 <Statistic
-                  title={<span style={{ fontSize: 11, color: "#8c8c8c" }}>File PDF</span>}
+                  title={<span style={{ fontSize: 11, color: "var(--color-text-description)" }}>File PDF</span>}
                   value={stats.pdf}
-                  prefix={<FilePdfOutlined style={{ color: "#ff4d4f", marginRight: 6 }} />}
-                  valueStyle={{ fontSize: 20, fontWeight: 700, color: "#cf1322" }}
+                  prefix={<FilePdfOutlined style={{ color: "var(--color-error-base)", marginRight: 6 }} />}
+                  valueStyle={{ fontSize: 20, fontWeight: 700, color: "var(--color-error-text)" }}
                 />
               </Card>
             </Col>
@@ -95,13 +95,13 @@ export const LearningMaterialsTab: React.FC<LearningMaterialsTabProps> = React.m
               <Card
                 bordered={false}
                 styles={{ body: { padding: "12px 16px" } }}
-                style={{ borderRadius: 12, backgroundColor: "#e6f7ff" }}
+                style={{ borderRadius: 12, backgroundColor: "var(--color-bg-primary-tint)" }}
               >
                 <Statistic
-                  title={<span style={{ fontSize: 11, color: "#8c8c8c" }}>Video bài giảng</span>}
+                  title={<span style={{ fontSize: 11, color: "var(--color-text-description)" }}>Video bài giảng</span>}
                   value={stats.video}
-                  prefix={<VideoCameraOutlined style={{ color: "#1890ff", marginRight: 6 }} />}
-                  valueStyle={{ fontSize: 20, fontWeight: 700, color: "#096dd9" }}
+                  prefix={<VideoCameraOutlined style={{ color: "var(--color-action-primary-bg)", marginRight: 6 }} />}
+                  valueStyle={{ fontSize: 20, fontWeight: 700, color: "var(--color-action-primary-bg-active)" }}
                 />
               </Card>
             </Col>
@@ -110,13 +110,13 @@ export const LearningMaterialsTab: React.FC<LearningMaterialsTabProps> = React.m
               <Card
                 bordered={false}
                 styles={{ body: { padding: "12px 16px" } }}
-                style={{ borderRadius: 12, backgroundColor: "#e6fffb" }}
+                style={{ borderRadius: 12, backgroundColor: "var(--color-info-bg)" }}
               >
                 <Statistic
-                  title={<span style={{ fontSize: 11, color: "#8c8c8c" }}>Web Link</span>}
+                  title={<span style={{ fontSize: 11, color: "var(--color-text-description)" }}>Web Link</span>}
                   value={stats.link}
-                  prefix={<LinkOutlined style={{ color: "#13c2c2", marginRight: 6 }} />}
-                  valueStyle={{ fontSize: 20, fontWeight: 700, color: "#08979c" }}
+                  prefix={<LinkOutlined style={{ color: "var(--color-info-base)", marginRight: 6 }} />}
+                  valueStyle={{ fontSize: 20, fontWeight: 700, color: "var(--color-info-text)" }}
                 />
               </Card>
             </Col>
@@ -125,13 +125,13 @@ export const LearningMaterialsTab: React.FC<LearningMaterialsTabProps> = React.m
               <Card
                 bordered={false}
                 styles={{ body: { padding: "12px 16px" } }}
-                style={{ borderRadius: 12, backgroundColor: "#fff7e6" }}
+                style={{ borderRadius: 12, backgroundColor: "var(--color-warning-bg)" }}
               >
                 <Statistic
-                  title={<span style={{ fontSize: 11, color: "#8c8c8c" }}>Slide / Docx</span>}
+                  title={<span style={{ fontSize: 11, color: "var(--color-text-description)" }}>Slide / Docx</span>}
                   value={stats.slide + stats.other}
-                  prefix={<FilePptOutlined style={{ color: "#fa8c16", marginRight: 6 }} />}
-                  valueStyle={{ fontSize: 20, fontWeight: 700, color: "#d46b08" }}
+                  prefix={<FilePptOutlined style={{ color: "var(--color-warning-base)", marginRight: 6 }} />}
+                  valueStyle={{ fontSize: 20, fontWeight: 700, color: "var(--color-warning-text)" }}
                 />
               </Card>
             </Col>

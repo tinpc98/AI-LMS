@@ -27,7 +27,7 @@ export const TeacherAnnouncementDetailDrawer: React.FC<TeacherAnnouncementDetail
       <Drawer
         title={
           <Space>
-            <NotificationOutlined style={{ color: "#1890ff" }} />
+            <NotificationOutlined style={{ color: "var(--color-action-primary-bg)" }} />
             <span>Chi tiết thông báo - {className}</span>
           </Space>
         }
@@ -43,7 +43,7 @@ export const TeacherAnnouncementDetailDrawer: React.FC<TeacherAnnouncementDetail
             <div>
               <Title
                 level={4}
-                style={{ margin: 0, marginBottom: 8, color: "#1f1f1f", fontWeight: 700 }}
+                style={{ margin: 0, marginBottom: 8, color: "var(--color-text-title)", fontWeight: 700 }}
               >
                 {announcement.title}
               </Title>
@@ -52,7 +52,7 @@ export const TeacherAnnouncementDetailDrawer: React.FC<TeacherAnnouncementDetail
                 <Avatar
                   src={creatorObj?.avatar || undefined}
                   icon={!creatorObj?.avatar ? <UserOutlined /> : undefined}
-                  style={{ backgroundColor: "#1890ff" }}
+                  style={{ backgroundColor: "var(--color-action-primary-bg)" }}
                 />
                 <div>
                   <Text strong style={{ fontSize: 14, display: "block" }}>
@@ -85,7 +85,7 @@ export const TeacherAnnouncementDetailDrawer: React.FC<TeacherAnnouncementDetail
 
             {/* Content Box */}
             <Card
-              style={{ backgroundColor: "#fafafa", borderRadius: 8, marginTop: 8 }}
+              style={{ backgroundColor: "var(--color-bg-page)", borderRadius: 8, marginTop: 8 }}
               styles={{ body: { padding: 16 } }}
             >
               <Paragraph
@@ -94,7 +94,7 @@ export const TeacherAnnouncementDetailDrawer: React.FC<TeacherAnnouncementDetail
                   lineHeight: 1.6,
                   whiteSpace: "pre-wrap",
                   margin: 0,
-                  color: "#262626",
+                  color: "var(--color-text-title)",
                 }}
               >
                 {announcement.content}
@@ -106,7 +106,7 @@ export const TeacherAnnouncementDetailDrawer: React.FC<TeacherAnnouncementDetail
               <div style={{ marginTop: 8 }}>
                 <Text
                   strong
-                  style={{ fontSize: 13, color: "#8c8c8c", display: "block", marginBottom: 8 }}
+                  style={{ fontSize: 13, color: "var(--color-text-description)", display: "block", marginBottom: 8 }}
                 >
                   📎 TỆP ĐÍNH KÈM ({announcement.attachments.length}):
                 </Text>
@@ -122,8 +122,8 @@ export const TeacherAnnouncementDetailDrawer: React.FC<TeacherAnnouncementDetail
                         alignItems: "center",
                         gap: 6,
                         padding: "6px 12px",
-                        backgroundColor: "#e6f7ff",
-                        border: "1px solid #91caff",
+                        backgroundColor: "var(--color-bg-primary-tint)",
+                        border: "1px solid var(--color-border-primary-tint)",
                         borderRadius: 6,
                         fontSize: 13,
                       }}

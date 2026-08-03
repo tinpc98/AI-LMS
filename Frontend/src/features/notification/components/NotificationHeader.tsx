@@ -26,14 +26,14 @@ export const NotificationHeader: React.FC<NotificationHeaderProps> = React.memo(
       >
         <div>
           <Space size={10} align="center">
-            <Title level={3} style={{ margin: 0, fontWeight: 700, color: "#1f2937" }}>
+            <Title level={3} style={{ margin: 0, fontWeight: 700, color: "var(--color-text-title)" }}>
               🔔 Notification Center
             </Title>
             {unreadCount > 0 && (
               <Badge
                 count={unreadCount}
                 overflowCount={99}
-                style={{ backgroundColor: "#1890ff" }}
+                style={{ backgroundColor: "var(--color-action-primary-bg)" }}
               />
             )}
           </Space>

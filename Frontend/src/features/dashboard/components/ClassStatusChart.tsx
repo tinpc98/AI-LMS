@@ -21,10 +21,10 @@ const transformClassStatusData = (
   data: DashboardResponse["classStatusChart"] = []
 ): ClassStatusStatistic[] => {
   const grouped: Record<string, { value: number; color: string }> = {
-    "Sắp mở": { value: 0, color: "#faad14" }, // Orange
-    "Đang hoạt động": { value: 0, color: "#52c41a" }, // Green
-    "Đã xong": { value: 0, color: "#1677ff" }, // Blue
-    "Đã hủy": { value: 0, color: "#ff4d4f" }, // Red
+    "Sắp mở": { value: 0, color: "var(--color-warning-base)" }, // Orange
+    "Đang hoạt động": { value: 0, color: "var(--color-success-base)" }, // Green
+    "Đã xong": { value: 0, color: "var(--color-action-primary-bg)" }, // Blue
+    "Đã hủy": { value: 0, color: "var(--color-error-base)" }, // Red
   };
 
   data.forEach((item) => {
@@ -73,7 +73,7 @@ export const ClassStatusChart: React.FC<ClassStatusChartProps> = ({ data = [], l
         style={{
           borderRadius: "16px",
           boxShadow: "0 4px 20px rgba(0, 0, 0, 0.04)",
-          border: "1px solid #f0f0f0",
+          border: "1px solid var(--color-border-default)",
           height: "100%",
         }}
         styles={{ body: { padding: "24px" } }}
@@ -131,10 +131,10 @@ export const ClassStatusChart: React.FC<ClassStatusChartProps> = ({ data = [], l
                 pointerEvents: "none",
               }}
             >
-              <div style={{ fontSize: "24px", fontWeight: 700, color: "#1f1f1f", lineHeight: 1 }}>
+              <div style={{ fontSize: "24px", fontWeight: 700, color: "var(--color-text-title)", lineHeight: 1 }}>
                 {totalClasses}
               </div>
-              <div style={{ fontSize: "11px", color: "#8c8c8c", marginTop: 4 }}>Tổng số lớp</div>
+              <div style={{ fontSize: "11px", color: "var(--color-text-description)", marginTop: 4 }}>Tổng số lớp</div>
             </div>
           </div>
         )}

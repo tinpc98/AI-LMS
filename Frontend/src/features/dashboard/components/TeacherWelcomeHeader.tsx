@@ -43,8 +43,8 @@ export const TeacherWelcomeHeader: React.FC<TeacherWelcomeHeaderProps> = React.m
       <Card
         style={{
           borderRadius: 16,
-          background: "linear-gradient(135deg, #1890ff 0%, #096dd9 100%)",
-          color: "#fff",
+          background: "linear-gradient(135deg, var(--color-action-primary-bg) 0%, var(--color-action-primary-bg-active) 100%)",
+          color: "var(--color-surface)",
           marginBottom: 24,
           boxShadow: "0 8px 24px rgba(24, 144, 255, 0.25)",
         }}
@@ -65,15 +65,15 @@ export const TeacherWelcomeHeader: React.FC<TeacherWelcomeHeaderProps> = React.m
               src={avatar || undefined}
               icon={!avatar ? <UserOutlined /> : undefined}
               style={{
-                backgroundColor: "#e6f7ff",
-                color: "#1890ff",
-                border: "3px solid #fff",
+                backgroundColor: "var(--color-bg-primary-tint)",
+                color: "var(--color-action-primary-bg)",
+                border: "3px solid var(--color-surface)",
                 boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
               }}
             />
             <div>
               <Space align="center" style={{ marginBottom: 4 }}>
-                <Title level={3} style={{ color: "#fff", margin: 0, fontWeight: 700 }}>
+                <Title level={3} style={{ color: "var(--color-surface)", margin: 0, fontWeight: 700 }}>
                   {greetingText}, {fullName}!
                 </Title>
                 <Tag
@@ -113,7 +113,7 @@ export const TeacherWelcomeHeader: React.FC<TeacherWelcomeHeaderProps> = React.m
                   style={{
                     backgroundColor: "rgba(255, 255, 255, 0.2)",
                     borderColor: "rgba(255, 255, 255, 0.4)",
-                    color: "#fff",
+                    color: "var(--color-surface)",
                     fontWeight: 600,
                     backdropFilter: "blur(4px)",
                   }}

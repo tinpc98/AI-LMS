@@ -146,8 +146,8 @@ export const TeacherAnnouncementsTab: React.FC<TeacherAnnouncementsTabProps> = R
         <Card
           style={{
             borderRadius: 16,
-            background: "linear-gradient(135deg, #1890ff 0%, #096dd9 100%)",
-            color: "#fff",
+            background: "linear-gradient(135deg, var(--color-action-primary-bg) 0%, var(--color-action-primary-bg-active) 100%)",
+            color: "var(--color-surface)",
             boxShadow: "0 8px 24px rgba(24, 144, 255, 0.25)",
           }}
           styles={{ body: { padding: "24px 32px" } }}
@@ -164,8 +164,8 @@ export const TeacherAnnouncementsTab: React.FC<TeacherAnnouncementsTabProps> = R
           >
             <div>
               <Space size={12} align="center">
-                <NotificationOutlined style={{ fontSize: 28, color: "#fff" }} />
-                <Title level={4} style={{ color: "#fff", margin: 0, fontWeight: 700 }}>
+                <NotificationOutlined style={{ fontSize: 28, color: "var(--color-surface)" }} />
+                <Title level={4} style={{ color: "var(--color-surface)", margin: 0, fontWeight: 700 }}>
                   Thông báo Lớp học: {className}
                 </Title>
               </Space>
@@ -188,7 +188,7 @@ export const TeacherAnnouncementsTab: React.FC<TeacherAnnouncementsTabProps> = R
               style={{
                 backgroundColor: "rgba(255,255,255,0.2)",
                 borderColor: "rgba(255,255,255,0.4)",
-                color: "#fff",
+                color: "var(--color-surface)",
                 fontWeight: 600,
               }}
             >
@@ -213,7 +213,7 @@ export const TeacherAnnouncementsTab: React.FC<TeacherAnnouncementsTabProps> = R
                     </Text>
                   }
                   value={stats.total}
-                  styles={{ content: { color: "#fff", fontWeight: 700, fontSize: 20 } }}
+                  styles={{ content: { color: "var(--color-surface)", fontWeight: 700, fontSize: 20 } }}
                 />
               </div>
             </Col>
@@ -234,8 +234,8 @@ export const TeacherAnnouncementsTab: React.FC<TeacherAnnouncementsTabProps> = R
                     </Text>
                   }
                   value={stats.todayCount}
-                  prefix={<CalendarOutlined style={{ color: "#b7eb8f", marginRight: 6 }} />}
-                  styles={{ content: { color: "#fff", fontWeight: 700, fontSize: 20 } }}
+                  prefix={<CalendarOutlined style={{ color: "var(--color-border-default)", marginRight: 6 }} />}
+                  styles={{ content: { color: "var(--color-surface)", fontWeight: 700, fontSize: 20 } }}
                 />
               </div>
             </Col>
@@ -256,7 +256,7 @@ export const TeacherAnnouncementsTab: React.FC<TeacherAnnouncementsTabProps> = R
                     </Text>
                   }
                   value={stats.thisWeekCount}
-                  styles={{ content: { color: "#fff", fontWeight: 700, fontSize: 20 } }}
+                  styles={{ content: { color: "var(--color-surface)", fontWeight: 700, fontSize: 20 } }}
                 />
               </div>
             </Col>
@@ -277,7 +277,7 @@ export const TeacherAnnouncementsTab: React.FC<TeacherAnnouncementsTabProps> = R
                     </Text>
                   }
                   value={stats.thisMonthCount}
-                  styles={{ content: { color: "#fff", fontWeight: 700, fontSize: 20 } }}
+                  styles={{ content: { color: "var(--color-surface)", fontWeight: 700, fontSize: 20 } }}
                 />
               </div>
             </Col>
@@ -321,7 +321,7 @@ export const TeacherAnnouncementsTab: React.FC<TeacherAnnouncementsTabProps> = R
               <Space size={12} wrap>
                 <Input
                   placeholder="Tìm thông báo theo tiêu đề/nội dung..."
-                  prefix={<SearchOutlined style={{ color: "#bfbfbf" }} />}
+                  prefix={<SearchOutlined style={{ color: "var(--color-text-disabled)" }} />}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   style={{ width: 260, borderRadius: 8 }}
@@ -382,7 +382,7 @@ export const TeacherAnnouncementsTab: React.FC<TeacherAnnouncementsTabProps> = R
                   <Card
                     key={item._id}
                     hoverable
-                    style={{ marginBottom: 16, borderRadius: 12, border: "1px solid #f0f0f0" }}
+                    style={{ marginBottom: 16, borderRadius: 12, border: "1px solid var(--color-border-default)" }}
                     styles={{ body: { padding: 20 } }}
                   >
                     <div
@@ -395,17 +395,17 @@ export const TeacherAnnouncementsTab: React.FC<TeacherAnnouncementsTabProps> = R
                       }}
                     >
                       <div>
-                        <Title level={5} style={{ margin: 0, fontSize: 16, color: "#1f1f1f" }}>
+                        <Title level={5} style={{ margin: 0, fontSize: 16, color: "var(--color-text-title)" }}>
                           {item.title}
                         </Title>
 
-                        <Space size={12} style={{ marginTop: 4, fontSize: 12, color: "#8c8c8c" }}>
+                        <Space size={12} style={{ marginTop: 4, fontSize: 12, color: "var(--color-text-description)" }}>
                           <Space size={6}>
                             <Avatar
                               size="small"
                               src={creatorObj?.avatar || undefined}
                               icon={!creatorObj?.avatar ? <UserOutlined /> : undefined}
-                              style={{ backgroundColor: "#1890ff" }}
+                              style={{ backgroundColor: "var(--color-action-primary-bg)" }}
                             />
                             <Text type="secondary" style={{ fontSize: 12 }}>
                               {creatorName}
@@ -454,7 +454,7 @@ export const TeacherAnnouncementsTab: React.FC<TeacherAnnouncementsTabProps> = R
 
                     <Paragraph
                       ellipsis={{ rows: 3 }}
-                      style={{ margin: "8px 0 0", color: "#434343", fontSize: 14 }}
+                      style={{ margin: "8px 0 0", color: "var(--color-text-title)", fontSize: 14 }}
                     >
                       {item.content}
                     </Paragraph>

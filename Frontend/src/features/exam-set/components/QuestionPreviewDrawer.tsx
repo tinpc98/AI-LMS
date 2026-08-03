@@ -20,7 +20,7 @@ export const QuestionPreviewDrawer: React.FC<QuestionPreviewDrawerProps> = React
       <Drawer
         title={
           <Space>
-            <DatabaseOutlined style={{ color: "#1890ff" }} />
+            <DatabaseOutlined style={{ color: "var(--color-action-primary-bg)" }} />
             <span>Chi tiết câu hỏi #{question._id?.slice(-6).toUpperCase()}</span>
           </Space>
         }
@@ -58,14 +58,14 @@ export const QuestionPreviewDrawer: React.FC<QuestionPreviewDrawerProps> = React
           {/* Question Content Box */}
           <Card
             title="📌 Nội dung câu hỏi"
-            style={{ borderRadius: 8, backgroundColor: "#fafafa" }}
+            style={{ borderRadius: 8, backgroundColor: "var(--color-bg-page)" }}
             styles={{ body: { padding: 16 } }}
           >
             <Paragraph
               style={{
                 fontSize: 15,
                 fontWeight: 600,
-                color: "#1f1f1f",
+                color: "var(--color-text-title)",
                 whiteSpace: "pre-wrap",
                 margin: 0,
               }}
@@ -92,8 +92,8 @@ export const QuestionPreviewDrawer: React.FC<QuestionPreviewDrawerProps> = React
                       style={{
                         padding: "10px 14px",
                         borderRadius: 6,
-                        border: isCorrect ? "2px solid #52c41a" : "1px solid #d9d9d9",
-                        backgroundColor: isCorrect ? "#f6ffed" : "#fff",
+                        border: isCorrect ? "2px solid var(--color-success-base)" : "1px solid var(--color-border-default)",
+                        backgroundColor: isCorrect ? "var(--color-success-bg)" : "var(--color-surface)",
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "space-between",
@@ -102,7 +102,7 @@ export const QuestionPreviewDrawer: React.FC<QuestionPreviewDrawerProps> = React
                       <Space size={10}>
                         <Text
                           strong
-                          style={{ color: isCorrect ? "#52c41a" : "#595959", fontSize: 14 }}
+                          style={{ color: isCorrect ? "var(--color-success-base)" : "var(--color-text-body)", fontSize: 14 }}
                         >
                           {label}. {opt}
                         </Text>

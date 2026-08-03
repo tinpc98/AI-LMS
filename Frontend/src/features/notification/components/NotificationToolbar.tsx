@@ -19,11 +19,11 @@ export const NotificationToolbar: React.FC<NotificationToolbarProps> = React.mem
     return (
       <div
         style={{
-          backgroundColor: "#fff",
+          backgroundColor: "var(--color-surface)",
           padding: "16px 20px",
           borderRadius: 14,
           boxShadow: "0 2px 8px rgba(0, 0, 0, 0.03)",
-          border: "1px solid #f0f0f0",
+          border: "1px solid var(--color-border-default)",
           marginBottom: 24,
         }}
       >
@@ -32,7 +32,7 @@ export const NotificationToolbar: React.FC<NotificationToolbarProps> = React.mem
           <Col xs={24} sm={10} md={9} lg={9}>
             <Input
               placeholder="Tìm kiếm tiêu đề, nội dung, tên lớp..."
-              prefix={<SearchOutlined style={{ color: "#bfbfbf" }} />}
+              prefix={<SearchOutlined style={{ color: "var(--color-text-disabled)" }} />}
               allowClear
               value={searchQuery}
               onChange={(e) => onSearchChange(e.target.value)}
@@ -45,7 +45,7 @@ export const NotificationToolbar: React.FC<NotificationToolbarProps> = React.mem
             <Space wrap style={{ width: "100%", justifyContent: "flex-end" }}>
               {/* Category Filter */}
               <Space size={4}>
-                <FilterOutlined style={{ color: "#8c8c8c" }} />
+                <FilterOutlined style={{ color: "var(--color-text-description)" }} />
                 <Select
                   value={category}
                   onChange={onCategoryChange}
@@ -66,7 +66,7 @@ export const NotificationToolbar: React.FC<NotificationToolbarProps> = React.mem
 
               {/* Sort By */}
               <Space size={4}>
-                <SortAscendingOutlined style={{ color: "#8c8c8c" }} />
+                <SortAscendingOutlined style={{ color: "var(--color-text-description)" }} />
                 <Select
                   value={sortBy}
                   onChange={onSortChange}

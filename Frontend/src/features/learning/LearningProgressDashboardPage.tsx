@@ -19,6 +19,7 @@ import LearningInsightsWidget from "./components/LearningInsightsWidget";
 import StudentWelcomeBanner from "./components/dashboard/StudentWelcomeBanner";
 import StudentQuickActions from "./components/dashboard/StudentQuickActions";
 import SectionHeader from "../../shared/components/SectionHeader";
+import { tokens } from "../../shared/theme/tokens";
 
 
 // ─── Dashboard Content ─────────────────────────────────────────────────────────
@@ -43,7 +44,7 @@ const DashboardContent: React.FC = React.memo(() => {
   }
 
   return (
-    <div style={{ paddingBottom: 32 }}>
+    <div style={{ paddingBottom: tokens.space[6] }}>
       {/* Error Alert */}
       {error && (
         <Alert
@@ -51,7 +52,7 @@ const DashboardContent: React.FC = React.memo(() => {
           message="Lỗi tải dữ liệu"
           description={error}
           showIcon
-          style={{ marginBottom: 24, borderRadius: 14 }}
+          style={{ marginBottom: tokens.space[5], borderRadius: tokens.radius.md }}
         />
       )}
 
@@ -80,20 +81,35 @@ const DashboardContent: React.FC = React.memo(() => {
           SECTION 2 — HÔM NAY CẦN LÀM (Most prominent)
           Lịch học | Bài tập sắp hết hạn | Lịch thi
       ═══════════════════════════════════════════════════════ */}
-      <div style={{ marginTop: 24, marginBottom: 32 }}>
+      <div style={{ marginTop: tokens.space[5], marginBottom: tokens.space[6] }}>
         <SectionHeader
           emoji="📌"
           title="Hôm nay cần làm"
           subtitle="Tập trung vào những việc quan trọng nhất hôm nay"
         />
-        <Row gutter={[20, 20]}>
-          <Col xs={24} lg={9}>
+        <Row gutter={[tokens.space[4], tokens.space[4]]}>
+          <Col
+            xs={{ span: 24, order: 2 }}
+            md={{ span: 12, order: 1 }}
+            lg={{ span: 12, order: 1 }}
+            xl={{ span: 9, order: 1 }}
+          >
             <TodayClassesWidget todayClasses={todayClasses} />
           </Col>
-          <Col xs={24} lg={9}>
+          <Col
+            xs={{ span: 24, order: 1 }}
+            md={{ span: 12, order: 2 }}
+            lg={{ span: 12, order: 2 }}
+            xl={{ span: 9, order: 2 }}
+          >
             <AssignmentOverviewWidget assignments={assignments} />
           </Col>
-          <Col xs={24} lg={6}>
+          <Col
+            xs={{ span: 24, order: 3 }}
+            md={{ span: 24, order: 3 }}
+            lg={{ span: 24, order: 3 }}
+            xl={{ span: 6, order: 3 }}
+          >
             <UpcomingExamsWidget exams={exams} />
           </Col>
         </Row>
@@ -103,7 +119,7 @@ const DashboardContent: React.FC = React.memo(() => {
           SECTION 3 — AI LEARNING INSIGHT
           Compact, collapsible recommendations
       ═══════════════════════════════════════════════════════ */}
-      <div style={{ marginBottom: 32 }}>
+      <div style={{ marginBottom: tokens.space[6] }}>
         <SectionHeader
           emoji="🤖"
           title="AI Learning Insights"
@@ -116,7 +132,7 @@ const DashboardContent: React.FC = React.memo(() => {
           SECTION 4 — LEARNING PERFORMANCE
           Score + Stats + Progress (long-term tracking)
       ═══════════════════════════════════════════════════════ */}
-      <div style={{ marginBottom: 32 }}>
+      <div style={{ marginBottom: tokens.space[6] }}>
         <SectionHeader
           emoji="📊"
           title="Thành tích học tập"
@@ -124,11 +140,11 @@ const DashboardContent: React.FC = React.memo(() => {
         />
 
         {/* Row 4a: Score + Stats */}
-        <Row gutter={[20, 20]} style={{ marginBottom: 20 }}>
-          <Col xs={24} lg={10}>
+        <Row gutter={[tokens.space[4], tokens.space[4]]} style={{ marginBottom: tokens.space[4] }}>
+          <Col xs={24} md={10} lg={10} xl={9}>
             <LearningScoreCard score={learningScore} />
           </Col>
-          <Col xs={24} lg={14}>
+          <Col xs={24} md={14} lg={14} xl={15}>
             <LearningStatsWidget statistics={statistics} />
           </Col>
         </Row>
@@ -141,7 +157,7 @@ const DashboardContent: React.FC = React.memo(() => {
           QUICK ACTIONS — Full width
       ═══════════════════════════════════════════════════════ */}
       <Divider
-        style={{ margin: "0 0 24px 0", borderColor: "#f0f0f0" }}
+        style={{ margin: `0 0 ${tokens.space[5]}px 0`, borderColor: tokens.color.border.divider }}
       />
       <div>
         <SectionHeader

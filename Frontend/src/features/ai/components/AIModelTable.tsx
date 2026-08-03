@@ -85,7 +85,7 @@ const AIModelTable = ({
               <Badge
                 status="success"
                 text={
-                  <span style={{ fontSize: 11, color: "#52c41a", fontWeight: 600 }}>Default</span>
+                  <span style={{ fontSize: 11, color: "var(--color-success-base)", fontWeight: 600 }}>Default</span>
                 }
               />
             )}
@@ -153,7 +153,7 @@ const AIModelTable = ({
               <Button
                 size="small"
                 type="dashed"
-                icon={<CheckOutlined style={{ color: "#52c41a" }} />}
+                icon={<CheckOutlined style={{ color: "var(--color-success-base)" }} />}
                 onClick={() => onSetDefault(record.id)}
               />
             </Tooltip>

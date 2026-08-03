@@ -52,8 +52,8 @@ export const LearningInsightsWidget: React.FC<LearningInsightsWidgetProps> = Rea
       <Card
         style={{
           borderRadius: 20,
-          background: "linear-gradient(135deg, #f9f0ff 0%, #ffffff 60%)",
-          border: "1px solid #e9d5f7",
+          background: "linear-gradient(135deg, var(--color-secondary-bg) 0%, var(--color-surface) 60%)",
+          border: "1px solid var(--color-secondary-border)",
           marginBottom: 32,
           boxShadow: "0 2px 12px rgba(114, 46, 209, 0.08)",
         }}
@@ -74,13 +74,13 @@ export const LearningInsightsWidget: React.FC<LearningInsightsWidgetProps> = Rea
                 width: 36,
                 height: 36,
                 borderRadius: 10,
-                backgroundColor: "#722ed1",
+                backgroundColor: "var(--color-secondary-icon)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
               }}
             >
-              <RobotOutlined style={{ color: "#fff", fontSize: 18 }} />
+              <RobotOutlined style={{ color: "var(--color-surface)", fontSize: 18 }} />
             </div>
           </div>
           <Tag
@@ -98,21 +98,21 @@ export const LearningInsightsWidget: React.FC<LearningInsightsWidgetProps> = Rea
             display: "flex",
             gap: 24,
             flexWrap: "wrap",
-            backgroundColor: "#fff",
+            backgroundColor: "var(--color-surface)",
             borderRadius: 12,
             padding: "14px 16px",
-            border: "1px solid #f0e6ff",
+            border: "1px solid var(--color-secondary-bg)",
             marginBottom: 16,
           }}
         >
           {/* Strong subjects */}
           <div style={{ flex: 1, minWidth: 140 }}>
-            <Text style={{ fontSize: 12, color: "#8c8c8c", display: "block", marginBottom: 6 }}>
+            <Text style={{ fontSize: 12, color: "var(--color-text-description)", display: "block", marginBottom: 6 }}>
               🌟 Điểm mạnh
             </Text>
             <Space size={6} wrap>
               {insight.strongSubjects.length === 0 ? (
-                <Text style={{ fontSize: 12, color: "#bfbfbf", fontStyle: "italic" }}>
+                <Text style={{ fontSize: 12, color: "var(--color-text-disabled)", fontStyle: "italic" }}>
                   Chưa có dữ liệu
                 </Text>
               ) : (
@@ -132,12 +132,12 @@ export const LearningInsightsWidget: React.FC<LearningInsightsWidgetProps> = Rea
 
           {/* Weak subjects */}
           <div style={{ flex: 1, minWidth: 140 }}>
-            <Text style={{ fontSize: 12, color: "#8c8c8c", display: "block", marginBottom: 6 }}>
+            <Text style={{ fontSize: 12, color: "var(--color-text-description)", display: "block", marginBottom: 6 }}>
               ⚠️ Cần cải thiện
             </Text>
             <Space size={6} wrap>
               {insight.weakSubjects.length === 0 ? (
-                <Text style={{ fontSize: 12, color: "#bfbfbf", fontStyle: "italic" }}>
+                <Text style={{ fontSize: 12, color: "var(--color-text-disabled)", fontStyle: "italic" }}>
                   Không có
                 </Text>
               ) : (
@@ -163,16 +163,16 @@ export const LearningInsightsWidget: React.FC<LearningInsightsWidgetProps> = Rea
               key="rec"
               header={
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <CompassOutlined style={{ color: "#722ed1", fontSize: 14 }} />
-                  <Text style={{ fontSize: 13, color: "#722ed1", fontWeight: 600 }}>
+                  <CompassOutlined style={{ color: "var(--color-secondary-icon)", fontSize: 14 }} />
+                  <Text style={{ fontSize: 13, color: "var(--color-secondary-icon)", fontWeight: 600 }}>
                     Khuyến nghị từ AI ({insight.recommendedActions.length})
                   </Text>
                   <DownOutlined
                     style={{
                       fontSize: 11,
-                      color: "#722ed1",
+                      color: "var(--color-secondary-icon)",
                       transform: expanded ? "rotate(180deg)" : "rotate(0deg)",
-                      transition: "transform 0.25s ease",
+                      transition: "transform var(--duration-fast) var(--ease-out)",
                     }}
                   />
                 </div>
@@ -181,7 +181,7 @@ export const LearningInsightsWidget: React.FC<LearningInsightsWidgetProps> = Rea
               style={{
                 backgroundColor: "rgba(114,46,209,0.04)",
                 borderRadius: 10,
-                border: "1px solid #e9d5f7",
+                border: "1px solid var(--color-secondary-border)",
               }}
             >
               <ul
@@ -190,7 +190,7 @@ export const LearningInsightsWidget: React.FC<LearningInsightsWidgetProps> = Rea
                   margin: "4px 0 8px 0",
                   fontSize: 13,
                   lineHeight: 1.8,
-                  color: "#4b5563",
+                  color: "var(--color-text-body)",
                 }}
               >
                 {insight.recommendedActions.map((action, idx) => (
@@ -210,8 +210,8 @@ export const LearningInsightsWidget: React.FC<LearningInsightsWidgetProps> = Rea
             onClick={() => handleAskAI("Xem phân tích chi tiết tiến độ học tập của tôi")}
             style={{
               borderRadius: 8,
-              borderColor: "#722ed1",
-              color: "#722ed1",
+              borderColor: "var(--color-secondary-icon)",
+              color: "var(--color-secondary-icon)",
               fontWeight: 500,
               fontSize: 13,
               height: 34,
@@ -233,8 +233,8 @@ export const LearningInsightsWidget: React.FC<LearningInsightsWidgetProps> = Rea
             }
             style={{
               borderRadius: 8,
-              background: "#722ed1",
-              borderColor: "#722ed1",
+              background: "var(--color-secondary-icon)",
+              borderColor: "var(--color-secondary-icon)",
               fontWeight: 500,
               fontSize: 13,
               height: 34,

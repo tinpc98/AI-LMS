@@ -23,15 +23,15 @@ export const AssignmentFeedbackCard: React.FC<AssignmentFeedbackCardProps> = Rea
       <Card
         title={
           <Space align="center">
-            <TrophyOutlined style={{ color: "#722ed1", fontSize: 18 }} />
+            <TrophyOutlined style={{ color: "var(--color-secondary-icon)", fontSize: 18 }} />
             <span style={{ fontSize: 15, fontWeight: 700 }}>Kết quả đánh giá & Phản hồi</span>
           </Space>
         }
         size="small"
         style={{
           borderRadius: 12,
-          backgroundColor: "#f9f0ff",
-          border: "1px solid #d3ade6",
+          backgroundColor: "var(--color-secondary-bg)",
+          border: "1px solid var(--color-secondary-border)",
           marginBottom: 16,
         }}
       >
@@ -44,13 +44,13 @@ export const AssignmentFeedbackCard: React.FC<AssignmentFeedbackCardProps> = Rea
             marginBottom: 12,
           }}
         >
-          <Text strong style={{ fontSize: 13, color: "#531dab" }}>
+          <Text strong style={{ fontSize: 13, color: "var(--color-secondary-active)" }}>
             Điểm số của bạn:
           </Text>
           <div style={{ textAlign: "right" }}>
-            <Title level={3} style={{ margin: 0, color: "#722ed1", fontWeight: 700 }}>
+            <Title level={3} style={{ margin: 0, color: "var(--color-secondary-icon)", fontWeight: 700 }}>
               {submission.grade}{" "}
-              <span style={{ fontSize: 14, color: "#8c8c8c", fontWeight: 400 }}>/ 10</span>
+              <span style={{ fontSize: 14, color: "var(--color-text-description)", fontWeight: 400 }}>/ 10</span>
             </Title>
             <Text type="secondary" style={{ fontSize: 11 }}>
               Chấm ngày: {formattedDate}
@@ -64,9 +64,9 @@ export const AssignmentFeedbackCard: React.FC<AssignmentFeedbackCardProps> = Rea
         <div style={{ marginBottom: 12 }}>
           <Text
             strong
-            style={{ fontSize: 13, color: "#262626", display: "block", marginBottom: 4 }}
+            style={{ fontSize: 13, color: "var(--color-text-title)", display: "block", marginBottom: 4 }}
           >
-            <CommentOutlined style={{ marginRight: 6, color: "#1890ff" }} /> Nhận xét của giảng
+            <CommentOutlined style={{ marginRight: 6, color: "var(--color-action-primary-bg)" }} /> Nhận xét của giảng
             viên:
           </Text>
           <Paragraph
@@ -74,7 +74,7 @@ export const AssignmentFeedbackCard: React.FC<AssignmentFeedbackCardProps> = Rea
             style={{
               fontSize: 13,
               margin: 0,
-              backgroundColor: "#fff",
+              backgroundColor: "var(--color-surface)",
               padding: "8px 12px",
               borderRadius: 8,
             }}
@@ -88,7 +88,7 @@ export const AssignmentFeedbackCard: React.FC<AssignmentFeedbackCardProps> = Rea
           <div>
             <Text
               strong
-              style={{ fontSize: 13, color: "#1890ff", display: "block", marginBottom: 4 }}
+              style={{ fontSize: 13, color: "var(--color-action-primary-bg)", display: "block", marginBottom: 4 }}
             >
               <RobotOutlined style={{ marginRight: 6 }} /> Gợi ý tối ưu từ AI Assistant:
             </Text>
@@ -97,7 +97,7 @@ export const AssignmentFeedbackCard: React.FC<AssignmentFeedbackCardProps> = Rea
               style={{
                 fontSize: 12,
                 margin: 0,
-                backgroundColor: "#e6f7ff",
+                backgroundColor: "var(--color-bg-primary-tint)",
                 padding: "8px 12px",
                 borderRadius: 8,
               }}

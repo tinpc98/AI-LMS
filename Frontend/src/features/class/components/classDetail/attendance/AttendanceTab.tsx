@@ -47,7 +47,7 @@ export const AttendanceTab: React.FC<AttendanceTabProps> = React.memo(({ classId
       {/* 1. Header Banner & Stats Section */}
       <div style={{ marginBottom: 24 }}>
         <div style={{ marginBottom: 16 }}>
-          <Title level={4} style={{ margin: "0 0 4px 0", fontWeight: 700, color: "#1f2937" }}>
+          <Title level={4} style={{ margin: "0 0 4px 0", fontWeight: 700, color: "var(--color-text-title)" }}>
             📅 Lịch sử điểm danh & Chuyên cần
           </Title>
           <Text type="secondary" style={{ fontSize: 13 }}>

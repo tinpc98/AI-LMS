@@ -53,13 +53,13 @@ interface KnowledgeTableProps {
 const getFileIcon = (fileType: KnowledgeFileType) => {
   switch (fileType) {
     case "pdf":
-      return <FilePdfOutlined style={{ color: "#ff4d4f", fontSize: 18 }} />;
+      return <FilePdfOutlined style={{ color: "var(--color-error-base)", fontSize: 18 }} />;
     case "docx":
-      return <FileWordOutlined style={{ color: "#1890ff", fontSize: 18 }} />;
+      return <FileWordOutlined style={{ color: "var(--color-action-primary-bg)", fontSize: 18 }} />;
     case "zip":
-      return <FileZipOutlined style={{ color: "#fa8c16", fontSize: 18 }} />;
+      return <FileZipOutlined style={{ color: "var(--color-warning-base)", fontSize: 18 }} />;
     default:
-      return <FileTextOutlined style={{ color: "#8c8c8c", fontSize: 18 }} />;
+      return <FileTextOutlined style={{ color: "var(--color-text-description)", fontSize: 18 }} />;
   }
 };
 
@@ -195,7 +195,7 @@ const KnowledgeTable = ({
             <Statistic
               title="Total Documents"
               value={stats.total}
-              prefix={<BookOutlined style={{ color: "#1890ff", marginRight: 8 }} />}
+              prefix={<BookOutlined style={{ color: "var(--color-action-primary-bg)", marginRight: 8 }} />}
               valueStyle={{ fontSize: 20, fontWeight: 600 }}
             />
           </Card>
@@ -205,8 +205,8 @@ const KnowledgeTable = ({
             <Statistic
               title="Indexed"
               value={stats.indexed}
-              prefix={<CheckCircleOutlined style={{ color: "#52c41a", marginRight: 8 }} />}
-              valueStyle={{ fontSize: 20, fontWeight: 600, color: "#52c41a" }}
+              prefix={<CheckCircleOutlined style={{ color: "var(--color-success-base)", marginRight: 8 }} />}
+              valueStyle={{ fontSize: 20, fontWeight: 600, color: "var(--color-success-base)" }}
             />
           </Card>
         </Col>
@@ -215,8 +215,8 @@ const KnowledgeTable = ({
             <Statistic
               title="Pending"
               value={stats.pending}
-              prefix={<ClockCircleOutlined style={{ color: "#fa8c16", marginRight: 8 }} />}
-              valueStyle={{ fontSize: 20, fontWeight: 600, color: "#fa8c16" }}
+              prefix={<ClockCircleOutlined style={{ color: "var(--color-warning-base)", marginRight: 8 }} />}
+              valueStyle={{ fontSize: 20, fontWeight: 600, color: "var(--color-warning-base)" }}
             />
           </Card>
         </Col>
@@ -225,8 +225,8 @@ const KnowledgeTable = ({
             <Statistic
               title="Failed"
               value={stats.failed}
-              prefix={<CloseCircleOutlined style={{ color: "#ff4d4f", marginRight: 8 }} />}
-              valueStyle={{ fontSize: 20, fontWeight: 600, color: "#ff4d4f" }}
+              prefix={<CloseCircleOutlined style={{ color: "var(--color-error-base)", marginRight: 8 }} />}
+              valueStyle={{ fontSize: 20, fontWeight: 600, color: "var(--color-error-base)" }}
             />
           </Card>
         </Col>

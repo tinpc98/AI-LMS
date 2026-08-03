@@ -1,61 +1,150 @@
 import React, { useMemo } from "react";
-import { Breadcrumb } from "antd";
+import { Breadcrumb, Skeleton } from "antd";
 import { Link, useLocation } from "react-router-dom";
 import { HomeOutlined } from "@ant-design/icons";
+import { useBreadcrumb } from "../../../context/BreadcrumbContext";
 
-const breadcrumbNameMap: Record<string, string> = {
-  "/student": "Trang chủ Dashboard",
-  "/student/myclasses": "Lớp học của tôi",
-  "/student/classdetail": "Chi tiết lớp học",
-  "/student/studentassignment": "Bài tập sinh viên",
-  "/student/lessonview": "Nội dung bài học",
-  "/student/notifications": "Thông báo",
-};
+interface BreadcrumbItemDef {
+  title?: React.ReactNode;
+  path?: string;
+  isHome?: boolean;
+  isEntity?: boolean;
+}
 
 export const StudentBreadcrumb: React.FC = React.memo(() => {
   const location = useLocation();
+  const { entityTitle, loading } = useBreadcrumb();
 
   const breadcrumbItems = useMemo(() => {
-    const pathSnippets = location.pathname.split("/").filter((i) => i);
+    const pathname = location.pathname.replace(/\/$/, "");
+    const segments = pathname.split("/").filter(Boolean);
 
-    if (pathSnippets.length === 0) {
+    // Mặc định cho trang chủ student
+    if (segments.length <= 1 || pathname === "/student" || pathname === "/student/dashboard") {
       return [
         {
           title: (
-            <Link to="/student">
-              <HomeOutlined /> <span style={{ marginLeft: 4 }}>Trang chủ</span>
+            <Link to="/student" aria-label="Trang chủ" style={{ color: "var(--color-text-description)" }}>
+              <HomeOutlined style={{ fontSize: 16 }} />
             </Link>
           ),
         },
       ];
     }
 
-    const extraItems = pathSnippets.map((_, index) => {
-      const url = `/${pathSnippets.slice(0, index + 1).join("/")}`;
+    const items: BreadcrumbItemDef[] = [{ isHome: true, path: "/student" }];
 
-      const baseRouteKey = Object.keys(breadcrumbNameMap).find(
-        (key) => url === key || url.startsWith(`${key}/`)
-      );
+    // Match theo pattern route
+    if (pathname === "/student/myclasses") {
+      items.push({ title: "Lớp học của tôi" });
+    } else if (pathname.startsWith("/student/classdetail/")) {
+      items.push({ title: "Lớp học của tôi", path: "/student/myclasses" });
+      items.push({ isEntity: true });
+    } else if (pathname === "/student/studentassignment") {
+      items.push({ title: "Bài tập sinh viên" });
+    } else if (pathname.startsWith("/student/studentassignment/")) {
+      items.push({ title: "Bài tập sinh viên", path: "/student/studentassignment" });
+      items.push({ isEntity: true, title: "Chi tiết bài tập" });
+    } else if (pathname.startsWith("/student/lessonview/")) {
+      items.push({ title: "Lớp học của tôi", path: "/student/myclasses" });
+      items.push({ isEntity: true, title: "Nội dung bài học" });
+    } else if (pathname === "/student/notifications") {
+      items.push({ title: "Thông báo" });
+    } else {
+      // Fallback cho các route khác
+      const sectionKey = segments[1];
+      const fallbackTitleMap: Record<string, string> = {
+        myclasses: "Lớp học của tôi",
+        studentassignment: "Bài tập sinh viên",
+        classdetail: "Chi tiết lớp học",
+        notifications: "Thông báo",
+      };
+      items.push({ title: fallbackTitleMap[sectionKey] || sectionKey });
+      if (segments.length > 2) {
+        items.push({ isEntity: true });
+      }
+    }
 
-      const title = baseRouteKey ? breadcrumbNameMap[baseRouteKey] : pathSnippets[index];
-      const isLast = index === pathSnippets.length - 1;
+    return items.map((item, index) => {
+      const isLast = index === items.length - 1;
+
+      if (item.isHome) {
+        return {
+          title: (
+            <Link to="/student" aria-label="Trang chủ" style={{ color: "var(--color-text-description)" }}>
+              <HomeOutlined style={{ fontSize: 16 }} />
+            </Link>
+          ),
+        };
+      }
+
+      if (item.isEntity) {
+        if (loading || !entityTitle) {
+          return {
+            title: (
+              <Skeleton.Input
+                active
+                size="small"
+                style={{ width: 140, height: 16, borderRadius: 4, verticalAlign: "middle" }}
+              />
+            ),
+          };
+        }
+
+        const displayTitle = entityTitle || (typeof item.title === "string" ? item.title : "Chi tiết");
+        return {
+          title: (
+            <span
+              style={{
+                color: "var(--color-text-title)",
+                fontWeight: 600,
+                maxWidth: 240,
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+                display: "inline-block",
+                verticalAlign: "bottom",
+              }}
+              title={displayTitle}
+            >
+              {displayTitle}
+            </span>
+          ),
+        };
+      }
+
+      if (isLast) {
+        return {
+          title: (
+            <span
+              style={{
+                color: "var(--color-text-title)",
+                fontWeight: 600,
+                maxWidth: 240,
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+                display: "inline-block",
+                verticalAlign: "bottom",
+              }}
+            >
+              {item.title}
+            </span>
+          ),
+        };
+      }
 
       return {
-        title: isLast ? title : <Link to={url}>{title}</Link>,
+        title: item.path ? (
+          <Link to={item.path} style={{ color: "var(--color-text-description)" }}>
+            {item.title}
+          </Link>
+        ) : (
+          <span style={{ color: "var(--color-text-description)" }}>{item.title}</span>
+        ),
       };
     });
-
-    return [
-      {
-        title: (
-          <Link to="/student">
-            <HomeOutlined />
-          </Link>
-        ),
-      },
-      ...extraItems,
-    ];
-  }, [location.pathname]);
+  }, [location.pathname, entityTitle, loading]);
 
   return <Breadcrumb items={breadcrumbItems} style={{ margin: 0 }} />;
 });

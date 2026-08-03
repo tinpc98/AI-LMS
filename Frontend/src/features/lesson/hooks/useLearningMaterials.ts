@@ -167,8 +167,8 @@ export function useLearningMaterials(initialResources: ILearningMaterial[] = [])
   }, []);
 
   const handleDownload = useCallback((item: ILearningMaterial) => {
-    if (!item.url) {
-      toast.error("Tài liệu không có đường dẫn hợp lệ.", "Lỗi tải về");
+    if (!item.url || (!item.url.startsWith("http://") && !item.url.startsWith("https://"))) {
+      toast.error("Tài liệu không có đường dẫn URL hợp lệ (chỉ hỗ trợ http/https).", "Lỗi tải về");
       return;
     }
     window.open(item.url, "_blank", "noopener,noreferrer");

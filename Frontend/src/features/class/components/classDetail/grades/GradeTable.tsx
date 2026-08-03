@@ -19,7 +19,7 @@ export const GradeTable: React.FC<GradeTableProps> = React.memo(({ items, onDeta
       key: "title",
       render: (text: string, record: IGradeItem) => (
         <Space direction="vertical" size={2}>
-          <Text strong style={{ color: "#1f2937", fontSize: 14 }}>
+          <Text strong style={{ color: "var(--color-text-title)", fontSize: 14 }}>
             {text}
           </Text>
           {record.feedback && (
@@ -66,7 +66,7 @@ export const GradeTable: React.FC<GradeTableProps> = React.memo(({ items, onDeta
           return <Text type="secondary">-- / {record.maxScore}</Text>;
         }
 
-        const color = score >= 8 ? "#389e0d" : score >= 5 ? "#d48806" : "#cf1322";
+        const color = score >= 8 ? "var(--color-success-text)" : score >= 5 ? "var(--color-warning-text)" : "var(--color-error-text)";
 
         return (
           <Tag
@@ -119,7 +119,7 @@ export const GradeTable: React.FC<GradeTableProps> = React.memo(({ items, onDeta
   return (
     <Card
       styles={{ body: { padding: 0 } }}
-      style={{ borderRadius: 16, overflow: "hidden", border: "1px solid #f0f0f0" }}
+      style={{ borderRadius: 16, overflow: "hidden", border: "1px solid var(--color-border-default)" }}
     >
       <Table
         dataSource={items}

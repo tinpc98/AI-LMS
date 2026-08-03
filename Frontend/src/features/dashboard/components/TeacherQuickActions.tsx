@@ -2,6 +2,7 @@ import React from "react";
 import { Card, Row, Col, Typography } from "antd";
 import { useNavigate } from "react-router-dom";
 import { BookOutlined, DatabaseOutlined } from "@ant-design/icons";
+import { tokens } from "../../../shared/theme/tokens";
 
 const { Title, Text } = Typography;
 
@@ -12,17 +13,17 @@ export const TeacherQuickActions: React.FC = React.memo(() => {
     {
       title: "Lớp học của tôi",
       desc: "Quản lý và xem danh sách lớp học phụ trách",
-      icon: <BookOutlined style={{ fontSize: 24, color: "#1890ff" }} />,
-      color: "#e6f7ff",
-      borderColor: "#91d5ff",
+      icon: <BookOutlined style={{ fontSize: 24, color: tokens.color.action.primaryBg }} />,
+      color: tokens.color.bg.primaryTint,
+      borderColor: tokens.color.border.primaryTint,
       onClick: () => navigate("/teacher/classes"),
     },
     {
       title: "Ngân hàng câu hỏi",
       desc: "Quản lý và tạo bộ câu hỏi thi",
-      icon: <DatabaseOutlined style={{ fontSize: 24, color: "#faad14" }} />,
-      color: "#fffbe6",
-      borderColor: "#ffe58f",
+      icon: <DatabaseOutlined style={{ fontSize: 24, color: tokens.color.semantic.warning.base }} />,
+      color: tokens.color.semantic.warning.bg,
+      borderColor: tokens.color.border.default,
       onClick: () => navigate("/teacher/questionbank"),
     },
   ];
@@ -34,24 +35,24 @@ export const TeacherQuickActions: React.FC = React.memo(() => {
           ⚡ Thao tác nhanh
         </Title>
       }
-      style={{ borderRadius: 12, marginBottom: 24, boxShadow: "0 2px 8px rgba(0,0,0,0.06)" }}
-      styles={{ body: { padding: 20 } }}
+      style={{ borderRadius: tokens.radius.lg, marginBottom: tokens.space[5], boxShadow: "0 2px 8px rgba(0,0,0,0.06)" }}
+      styles={{ body: { padding: tokens.space[5] } }}
     >
-      <Row gutter={[16, 16]}>
+      <Row gutter={[tokens.space[4], tokens.space[4]]}>
         {actions.map((act, index) => (
           <Col xs={24} sm={12} md={6} key={index}>
             <div
               onClick={act.onClick}
               style={{
-                padding: 16,
-                borderRadius: 10,
+                padding: tokens.space[4],
+                borderRadius: tokens.radius.md,
                 backgroundColor: act.color,
                 border: `1px solid ${act.borderColor}`,
                 cursor: "pointer",
-                transition: "all 0.2s ease",
+                transition: "var(--transition-fast)",
                 display: "flex",
                 alignItems: "center",
-                gap: 16,
+                gap: tokens.space[4],
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.transform = "translateY(-2px)";
@@ -66,8 +67,8 @@ export const TeacherQuickActions: React.FC = React.memo(() => {
                 style={{
                   width: 48,
                   height: 48,
-                  borderRadius: 10,
-                  backgroundColor: "#fff",
+                  borderRadius: tokens.radius.md,
+                  backgroundColor: tokens.color.bg.surface,
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
@@ -77,7 +78,7 @@ export const TeacherQuickActions: React.FC = React.memo(() => {
                 {act.icon}
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <Text strong style={{ display: "block", fontSize: 15, marginBottom: 2 }}>
+                <Text strong style={{ display: "block", fontSize: 15, marginBottom: tokens.space[1] }}>
                   {act.title}
                 </Text>
                 <Text type="secondary" style={{ fontSize: 12 }} ellipsis>

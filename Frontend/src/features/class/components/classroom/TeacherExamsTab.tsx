@@ -216,12 +216,12 @@ export const TeacherExamsTab: React.FC<TeacherExamsTabProps> = React.memo(
         render: (_, record) => (
           <div>
             <Space size={6}>
-              <ClockCircleOutlined style={{ color: "#1890ff" }} />
+              <ClockCircleOutlined style={{ color: "var(--color-action-primary-bg)" }} />
               <Text strong style={{ fontSize: 13 }}>
                 {record.duration} phút
               </Text>
             </Space>
-            <div style={{ fontSize: 12, color: "#8c8c8c", marginTop: 2 }}>
+            <div style={{ fontSize: 12, color: "var(--color-text-description)", marginTop: 2 }}>
               Bắt đầu: {new Date(record.startTime).toLocaleString("vi-VN")}
             </div>
           </div>
@@ -240,7 +240,7 @@ export const TeacherExamsTab: React.FC<TeacherExamsTabProps> = React.memo(
         key: "maxScore",
         width: 120,
         render: (score) => (
-          <Text strong style={{ color: "#52c41a" }}>
+          <Text strong style={{ color: "var(--color-success-base)" }}>
             {score || 10} điểm
           </Text>
         ),
@@ -318,8 +318,8 @@ export const TeacherExamsTab: React.FC<TeacherExamsTabProps> = React.memo(
         <Card
           style={{
             borderRadius: 16,
-            background: "linear-gradient(135deg, #1890ff 0%, #096dd9 100%)",
-            color: "#fff",
+            background: "linear-gradient(135deg, var(--color-action-primary-bg) 0%, var(--color-action-primary-bg-active) 100%)",
+            color: "var(--color-surface)",
             boxShadow: "0 8px 24px rgba(24, 144, 255, 0.25)",
           }}
           styles={{ body: { padding: "24px 32px" } }}
@@ -336,8 +336,8 @@ export const TeacherExamsTab: React.FC<TeacherExamsTabProps> = React.memo(
           >
             <div>
               <Space size={12} align="center">
-                <FileDoneOutlined style={{ fontSize: 28, color: "#fff" }} />
-                <Title level={4} style={{ color: "#fff", margin: 0, fontWeight: 700 }}>
+                <FileDoneOutlined style={{ fontSize: 28, color: "var(--color-surface)" }} />
+                <Title level={4} style={{ color: "var(--color-surface)", margin: 0, fontWeight: 700 }}>
                   Quản lý Bài kiểm tra Lớp: {className}
                 </Title>
               </Space>
@@ -360,8 +360,8 @@ export const TeacherExamsTab: React.FC<TeacherExamsTabProps> = React.memo(
                 icon={<PlusOutlined />}
                 onClick={() => setIsCreateWizardOpen(true)}
                 style={{
-                  backgroundColor: "#52c41a",
-                  borderColor: "#52c41a",
+                  backgroundColor: "var(--color-success-base)",
+                  borderColor: "var(--color-success-base)",
                   fontWeight: 700,
                   borderRadius: 8,
                 }}
@@ -376,7 +376,7 @@ export const TeacherExamsTab: React.FC<TeacherExamsTabProps> = React.memo(
                 style={{
                   backgroundColor: "rgba(255,255,255,0.2)",
                   borderColor: "rgba(255,255,255,0.4)",
-                  color: "#fff",
+                  color: "var(--color-surface)",
                   fontWeight: 600,
                 }}
               >
@@ -402,7 +402,7 @@ export const TeacherExamsTab: React.FC<TeacherExamsTabProps> = React.memo(
                     </Text>
                   }
                   value={stats.total}
-                  styles={{ content: { color: "#fff", fontWeight: 700, fontSize: 20 } }}
+                  styles={{ content: { color: "var(--color-surface)", fontWeight: 700, fontSize: 20 } }}
                 />
               </div>
             </Col>
@@ -423,8 +423,8 @@ export const TeacherExamsTab: React.FC<TeacherExamsTabProps> = React.memo(
                     </Text>
                   }
                   value={stats.publishedCount}
-                  prefix={<CheckCircleOutlined style={{ color: "#b7eb8f", marginRight: 6 }} />}
-                  styles={{ content: { color: "#fff", fontWeight: 700, fontSize: 20 } }}
+                  prefix={<CheckCircleOutlined style={{ color: "var(--color-border-default)", marginRight: 6 }} />}
+                  styles={{ content: { color: "var(--color-surface)", fontWeight: 700, fontSize: 20 } }}
                 />
               </div>
             </Col>
@@ -445,7 +445,7 @@ export const TeacherExamsTab: React.FC<TeacherExamsTabProps> = React.memo(
                     </Text>
                   }
                   value={stats.completedCount}
-                  styles={{ content: { color: "#fff", fontWeight: 700, fontSize: 20 } }}
+                  styles={{ content: { color: "var(--color-surface)", fontWeight: 700, fontSize: 20 } }}
                 />
               </div>
             </Col>
@@ -466,8 +466,8 @@ export const TeacherExamsTab: React.FC<TeacherExamsTabProps> = React.memo(
                     </Text>
                   }
                   value={stats.aiCount}
-                  prefix={<RobotOutlined style={{ color: "#ffe58f", marginRight: 6 }} />}
-                  styles={{ content: { color: "#fff", fontWeight: 700, fontSize: 20 } }}
+                  prefix={<RobotOutlined style={{ color: "var(--color-warning-bg)", marginRight: 6 }} />}
+                  styles={{ content: { color: "var(--color-surface)", fontWeight: 700, fontSize: 20 } }}
                 />
               </div>
             </Col>
@@ -511,7 +511,7 @@ export const TeacherExamsTab: React.FC<TeacherExamsTabProps> = React.memo(
               <Space size={12} wrap>
                 <Input
                   placeholder="Tìm tên bài thi..."
-                  prefix={<SearchOutlined style={{ color: "#bfbfbf" }} />}
+                  prefix={<SearchOutlined style={{ color: "var(--color-text-disabled)" }} />}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   style={{ width: 240, borderRadius: 8 }}

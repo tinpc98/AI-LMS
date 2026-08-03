@@ -25,7 +25,7 @@ const DeleteAssignmentModal = ({
     <Modal
       title={
         <span>
-          <ExclamationCircleOutlined style={{ color: "#fa8c16", marginRight: 8 }} /> Remove Teacher
+          <ExclamationCircleOutlined style={{ color: "var(--color-warning-base)", marginRight: 8 }} /> Remove Teacher
           Assignment
         </span>
       }

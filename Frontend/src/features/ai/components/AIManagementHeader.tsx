@@ -6,7 +6,7 @@ const AIManagementHeader = () => {
       <Typography.Title level={3} style={{ marginBottom: 4 }}>
         AI Management
       </Typography.Title>
-      <Typography.Paragraph style={{ margin: 0, color: "#64748b" }}>
+      <Typography.Paragraph style={{ margin: 0, color: "var(--color-text-description)" }}>
         System-wide AI infrastructure governance, prompt repository, knowledge indexing, and rate
         limit configuration.
       </Typography.Paragraph>

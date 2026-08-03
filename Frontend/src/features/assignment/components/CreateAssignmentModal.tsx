@@ -207,7 +207,7 @@ const CreateAssignmentModal = ({
             </button>
             <button
               type="submit"
-              className="flex flex-1 items-center justify-center rounded-xl bg-[#3525cd] px-4 py-2.5 font-bold text-white transition-all hover:bg-primary-container"
+              className="flex flex-1 items-center justify-center rounded-xl bg-[var(--color-action-primary-bg-active)] px-4 py-2.5 font-bold text-white transition-all hover:bg-primary-container"
               disabled={loading}
             >
               {loading ? "Đang tạo bài tập..." : "Giao bài tập"}

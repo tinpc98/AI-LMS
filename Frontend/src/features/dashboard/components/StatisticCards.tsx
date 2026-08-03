@@ -16,10 +16,10 @@ export const StatisticCards: React.FC<StatisticCardsProps> = ({ cards, loading }
           <Col xs={24} sm={12} md={8} lg={6} key={index}>
             <div
               style={{
-                background: "#ffffff",
+                background: "var(--color-surface)",
                 padding: "20px",
                 borderRadius: "14px",
-                border: "1px solid #f0f0f0",
+                border: "1px solid var(--color-border-default)",
               }}
             >
               <Skeleton active paragraph={{ rows: 2 }} />

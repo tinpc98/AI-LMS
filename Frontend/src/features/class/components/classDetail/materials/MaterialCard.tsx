@@ -34,21 +34,21 @@ export function getMaterialTypeMeta(type: string = "", url: string = "") {
 
   if (typeLower.includes("pdf") || urlLower.endsWith(".pdf")) {
     return {
-      icon: <FilePdfOutlined style={{ fontSize: 28, color: "#ff4d4f" }} />,
+      icon: <FilePdfOutlined style={{ fontSize: 28, color: "var(--color-error-base)" }} />,
       color: "red",
       label: "PDF Document",
     };
   }
   if (typeLower.includes("video") || urlLower.includes("youtube") || urlLower.endsWith(".mp4")) {
     return {
-      icon: <VideoCameraOutlined style={{ fontSize: 28, color: "#1890ff" }} />,
+      icon: <VideoCameraOutlined style={{ fontSize: 28, color: "var(--color-action-primary-bg)" }} />,
       color: "blue",
       label: "Video",
     };
   }
   if (typeLower.includes("link") || urlLower.startsWith("http")) {
     return {
-      icon: <LinkOutlined style={{ fontSize: 28, color: "#13c2c2" }} />,
+      icon: <LinkOutlined style={{ fontSize: 28, color: "var(--color-info-base)" }} />,
       color: "cyan",
       label: "Web Link",
     };
@@ -60,34 +60,34 @@ export function getMaterialTypeMeta(type: string = "", url: string = "") {
     urlLower.endsWith(".pptx")
   ) {
     return {
-      icon: <FilePptOutlined style={{ fontSize: 28, color: "#fa8c16" }} />,
+      icon: <FilePptOutlined style={{ fontSize: 28, color: "var(--color-warning-base)" }} />,
       color: "orange",
       label: "Slide / PPT",
     };
   }
   if (typeLower.includes("image") || urlLower.match(/\.(png|jpe?g|gif|webp)$/)) {
     return {
-      icon: <FileImageOutlined style={{ fontSize: 28, color: "#eb2f96" }} />,
+      icon: <FileImageOutlined style={{ fontSize: 28, color: "var(--color-accent-base)" }} />,
       color: "magenta",
       label: "Hình ảnh",
     };
   }
   if (typeLower.includes("zip") || urlLower.endsWith(".zip") || urlLower.endsWith(".rar")) {
     return {
-      icon: <FileZipOutlined style={{ fontSize: 28, color: "#722ed1" }} />,
+      icon: <FileZipOutlined style={{ fontSize: 28, color: "var(--color-secondary-icon)" }} />,
       color: "purple",
       label: "Nén ZIP",
     };
   }
   if (typeLower.includes("document") || urlLower.endsWith(".doc") || urlLower.endsWith(".docx")) {
     return {
-      icon: <FileTextOutlined style={{ fontSize: 28, color: "#2f54eb" }} />,
+      icon: <FileTextOutlined style={{ fontSize: 28, color: "var(--color-action-primary-bg)" }} />,
       color: "geekblue",
       label: "Văn bản Word",
     };
   }
   return {
-    icon: <FileUnknownOutlined style={{ fontSize: 28, color: "#8c8c8c" }} />,
+    icon: <FileUnknownOutlined style={{ fontSize: 28, color: "var(--color-text-description)" }} />,
     color: "default",
     label: type || "Tài liệu",
   };
@@ -119,12 +119,12 @@ export const MaterialCard: React.FC<MaterialCardProps> = React.memo(
         style={{
           borderRadius: 16,
           boxShadow: "0 2px 8px rgba(0, 0, 0, 0.04)",
-          border: "1px solid #f0f0f0",
+          border: "1px solid var(--color-border-default)",
           height: "100%",
           display: "flex",
           flexDirection: "column",
           justifyContent: "space-between",
-          transition: "all 0.3s ease",
+          transition: "var(--transition-fast)",
         }}
         styles={{
           body: {
@@ -146,10 +146,10 @@ export const MaterialCard: React.FC<MaterialCardProps> = React.memo(
         >
           <div
             style={{
-              backgroundColor: "#fafafa",
+              backgroundColor: "var(--color-bg-page)",
               padding: 10,
               borderRadius: 12,
-              border: "1px solid #f0f0f0",
+              border: "1px solid var(--color-border-default)",
             }}
           >
             {meta.icon}
@@ -165,7 +165,7 @@ export const MaterialCard: React.FC<MaterialCardProps> = React.memo(
             strong
             style={{
               fontSize: 15,
-              color: "#1f2937",
+              color: "var(--color-text-title)",
               lineHeight: 1.4,
               marginBottom: 6,
               display: "-webkit-box",
@@ -202,7 +202,7 @@ export const MaterialCard: React.FC<MaterialCardProps> = React.memo(
               justifyContent: "space-between",
               alignItems: "center",
               paddingTop: 12,
-              borderTop: "1px dashed #f0f0f0",
+              borderTop: "1px dashed var(--color-border-default)",
               marginBottom: 14,
             }}
           >
@@ -211,7 +211,7 @@ export const MaterialCard: React.FC<MaterialCardProps> = React.memo(
                 size="small"
                 src={uploaderAvatar}
                 icon={!uploaderAvatar ? <UserOutlined /> : undefined}
-                style={{ backgroundColor: "#1890ff" }}
+                style={{ backgroundColor: "var(--color-action-primary-bg)" }}
               />
               <Text type="secondary" style={{ fontSize: 12, maxWidth: 100 }} ellipsis>
                 {uploaderName}
