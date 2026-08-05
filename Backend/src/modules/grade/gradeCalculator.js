@@ -29,7 +29,7 @@ export const buildGradeItems = ({ gradingWeight, manualGrades, assignments, exam
       _id: `assign-${a._id}`,
       title: a.title,
       category: "Assignment",
-      maxScore: 10,
+      maxScore: a.maxScore || 10,
       weight: gradingWeight?.assignment || 20,
       type: "Assignment",
       sourceId: a._id.toString(),
@@ -110,6 +110,7 @@ export const computeStudentGrade = ({
   submissions,
   attempts,
   exams,
+  assignments,
   gradingWeight,
 }) => {
   const uId = studentId.toString();
@@ -129,12 +130,22 @@ export const computeStudentGrade = ({
   submissions
     .filter((sub) => sub.studentId.toString() === uId)
     .forEach((sub) => {
+      if (sub.grade === null || sub.grade === undefined) return;
+
+      const max = assignments.find((a) => a._id.toString() === sub.assignmentId.toString())?.maxScore || 10;
+      if (max <= 0) {
+        console.warn(`Bỏ qua bài nộp ${sub._id} vì maxScore của bài tập = 0`);
+        return;
+      }
+
+      const normalizedScore = (sub.grade / max) * 10;
+
       gradesMap[`assign-${sub.assignmentId}`] = {
         score: sub.grade,
         feedback: sub.feedback,
         rawId: sub._id,
       };
-      catScores.Assignment.sum += sub.grade;
+      catScores.Assignment.sum += normalizedScore;
       catScores.Assignment.count++;
     });
 
@@ -183,6 +194,7 @@ export const calculateGradeMatrix = ({
       submissions,
       attempts,
       exams,
+      assignments,
       gradingWeight,
     });
   });

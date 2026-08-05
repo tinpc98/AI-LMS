@@ -19,9 +19,7 @@ export const lessonApi = {
     if (payload.duration !== undefined) formData.append("duration", String(payload.duration));
     payload.files?.forEach((file) => formData.append("files", file));
 
-    return axiosClient.post("/api/lessons", formData, {
-      headers: { "Content-Type": "multipart/form-data" },
-    });
+    return axiosClient.post("/api/lessons", formData);
   },
 
   updateLesson: (id: string, payload: Partial<ICreateLessonPayload>) => {
@@ -35,9 +33,7 @@ export const lessonApi = {
     if (payload.duration !== undefined) formData.append("duration", String(payload.duration));
     payload.files?.forEach((file) => formData.append("files", file));
 
-    return axiosClient.put(`/api/lessons/${id}`, formData, {
-      headers: { "Content-Type": "multipart/form-data" },
-    });
+    return axiosClient.put(`/api/lessons/${id}`, formData);
   },
 
   deleteLesson: (id: string) => {

@@ -1,28 +1,4 @@
-// Controller bài tập (§7 — áp asyncHandler cho controller cuối còn dùng try/catch thủ công).
-//
-// TRƯỚC: 11 phương thức, mỗi cái một khối try/catch giống hệt nhau:
-//
-//     catch (error) {
-//       return res.status(error.status || 500)
-//         .json({ message: error.message || "Lỗi server khi ..." });
-//     }
-//
-// ~90 dòng lặp lại, và quan trọng hơn là nó BỎ QUA tầng quy đổi lỗi Mongoose ở errorHandler:
-// dữ liệu gửi lên sai schema (ValidationError) hay ObjectId hỏng (CastError) đều rơi vào
-// `|| 500`, tức là báo "lỗi máy chủ" cho một lỗi hoàn toàn do phía client.
-//
-// SAU: asyncHandler chuyển mọi lỗi sang errorHandler tập trung. Ba thay đổi hành vi, đều theo
-// hướng tốt hơn và đều có test chốt:
-//
-//   1. ValidationError -> 400 VALIDATION_ERROR, CastError -> 400 INVALID_ID,
-//      trùng unique key -> 409 DUPLICATE_KEY. Trước đây tất cả là 500.
-//   2. Thân phản hồi lỗi thêm `success`, `code`, `requestId` (trước chỉ có `message`).
-//      Chỉ THÊM trường, không bỏ trường nào — client cũ đọc `message` vẫn chạy.
-//   3. Ở production, lỗi 500 KHÔNG lường trước không còn lộ error.message ra ngoài. Trước
-//      đây message nội bộ (đường dẫn file, tên thư viện) đi thẳng tới client.
-//
-// Điều KHÔNG đổi: lỗi do service cố ý ném kèm .status vẫn giữ nguyên mã đó — đó là phần lớn
-// các nhánh 400/403/404 của module này.
+// Controller bài tập
 import * as assignmentService from "./assignment.service.js";
 import { asyncHandler } from "#shared/utils/asyncHandler.js";
 
@@ -33,18 +9,31 @@ const assignmentController = {
 
   // 1. Tạo bài tập mới
   createAssignment: asyncHandler(async (req, res) => {
-    const { title, description, deadline, classId, lessonId, isAIGenerated, aiPromptUsed } =
-      req.body;
-    const teacherId = req.user.id || req.user._id;
-
-    const newAssignment = await assignmentService.createAssignmentService({
+    const {
       title,
       description,
+      submissionMode,
+      questions,
       deadline,
       classId,
       lessonId,
       isAIGenerated,
       aiPromptUsed,
+      maxScore,
+    } = req.body || {};
+    const teacherId = req.user.id || req.user._id;
+
+    const newAssignment = await assignmentService.createAssignmentService({
+      title,
+      description,
+      submissionMode,
+      questions,
+      deadline,
+      classId,
+      lessonId,
+      isAIGenerated,
+      aiPromptUsed,
+      maxScore,
       files: req.files,
       teacherId,
       teacherRole: req.user?.role,
@@ -60,7 +49,7 @@ const assignmentController = {
   // 2. Giáo viên chấm điểm và nhận xét
   gradeSubmission: asyncHandler(async (req, res) => {
     const { submissionId } = req.params;
-    const { grade, feedback, aiFeedback } = req.body;
+    const { grade, feedback, aiFeedback } = req.body || {};
     const userId = req.user.id || req.user._id;
 
     const submission = await assignmentService.gradeSubmissionService({
@@ -78,15 +67,18 @@ const assignmentController = {
   // 3. Cập nhật bài tập
   updateAssignment: asyncHandler(async (req, res) => {
     const { id } = req.params;
-    const { title, description, deadline, lessonId } = req.body;
+    const { title, description, submissionMode, questions, deadline, lessonId, maxScore } = req.body || {};
     const userId = req.user.id || req.user._id;
 
     const assignment = await assignmentService.updateAssignmentService({
       id,
       title,
       description,
+      submissionMode,
+      questions,
       deadline,
       lessonId,
+      maxScore,
       files: req.files,
       userId,
       userRole: req.user?.role,
@@ -128,7 +120,7 @@ const assignmentController = {
       limit,
     });
 
-    const responseBody = { assignments, data: assignments }; // Backward compatible
+    const responseBody = { assignments, data: assignments };
     if (pagination) responseBody.pagination = pagination;
     return res.status(200).json(responseBody);
   }),
@@ -153,11 +145,7 @@ const assignmentController = {
   }),
 
   // 8. Lấy chi tiết 1 bài nộp (Đã được xác thực quyền qua canViewSubmission middleware)
-  //
-  // Bản cũ bọc đoạn này trong try/catch, nhưng thân hàm chỉ đọc req.submission — không có gì
-  // để ném. Khối đó là nhiễu thuần tuý, bỏ luôn cùng lúc áp asyncHandler.
   getSubmissionById: asyncHandler(async (req, res) => {
-    // req.submission đã được gán bởi middleware canViewSubmission
     return res
       .status(200)
       .json({ success: true, submission: req.submission, data: req.submission });
@@ -167,8 +155,6 @@ const assignmentController = {
   getMySubmission: asyncHandler(async (req, res) => {
     const { assignmentId } = req.params;
 
-    // 401 này là PHẢN HỒI có chủ đích, không phải nhánh lỗi — giữ nguyên tại chỗ thay vì ném
-    // lên errorHandler, để thân phản hồi không đổi so với trước.
     if (!req.user || (!req.user.id && !req.user._id)) {
       return res.status(401).json({ message: "UNAUTHENTICATED" });
     }
@@ -181,15 +167,42 @@ const assignmentController = {
     return res.status(200).json({ success: true, submission, data: submission });
   }),
 
-  // 10. Học sinh Nộp bài / Nộp lại bài
+  // 10. Học sinh lưu bản nháp (Draft)
+  saveDraft: asyncHandler(async (req, res) => {
+    const { assignmentId } = req.params;
+    const { content, submissionType, linkUrl, answers } = req.body || {};
+    const studentId = req.user.id || req.user._id;
+
+    const { submission, savedAt } = await assignmentService.saveDraftService({
+      assignmentId,
+      content,
+      submissionType,
+      linkUrl,
+      answers,
+      studentId,
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Lưu bản nháp thành công",
+      savedAt,
+      submission,
+      data: submission,
+    });
+  }),
+
+  // 11. Học sinh Nộp bài / Nộp lại bài
   submitAssignment: asyncHandler(async (req, res) => {
     const { assignmentId } = req.params;
-    const { content } = req.body;
+    const { content, submissionType, linkUrl, answers } = req.body || {};
     const studentId = req.user.id || req.user._id;
 
     const { submission, isNew } = await assignmentService.submitAssignmentService({
       assignmentId,
       content,
+      submissionType,
+      linkUrl,
+      answers,
       files: req.files,
       studentId,
     });
@@ -201,7 +214,7 @@ const assignmentController = {
     });
   }),
 
-  // 11. Học sinh Hủy nộp bài
+  // 12. Học sinh Hủy nộp bài
   cancelSubmission: asyncHandler(async (req, res) => {
     const { assignmentId } = req.params;
     const studentId = req.user.id || req.user._id;

@@ -6,6 +6,7 @@
 
 export { default as Class } from "./class.model.js";
 export { checkClassTeacherOwnership } from "./class.ownership.js";
+export { checkClassAccess } from "./class.access.middleware.js";
 
 // LƯU Ý NỢ KỸ THUẬT: verifyClassTeacherAccess (classAuth.helper.js) và
 // checkClassTeacherOwnership (class.ownership.js) làm gần như CÙNG một việc — kiểm tra

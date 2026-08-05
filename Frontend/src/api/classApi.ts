@@ -55,7 +55,6 @@ export const classApi = {
       `/api/classes/${classId}/resources/upload`,
       formData,
       {
-        headers: { "Content-Type": "multipart/form-data" },
         signal,
         onUploadProgress: (evt) => {
           if (onProgress && evt.total) {

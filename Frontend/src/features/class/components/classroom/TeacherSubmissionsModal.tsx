@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import {
-  Drawer,
+  Modal,
   Table,
   Avatar,
   Tag,
@@ -29,28 +29,33 @@ import {
 import assignmentApi from "../../../../api/assignmentApi";
 import type { IAssignment, ISubmission } from "../../../../interface/assignmentInterface";
 import { GradeSubmissionModal } from "./GradeSubmissionModal";
+import {
+  AttachmentViewerModal,
+  isViewableFile,
+  type AttachmentFile,
+} from "../../../../shared/components/AttachmentViewerModal";
 
 const { Text, Paragraph } = Typography;
 
-interface TeacherSubmissionsDrawerProps {
+interface TeacherSubmissionsModalProps {
   open: boolean;
   onClose: () => void;
   assignment: IAssignment | null;
 }
 
-export const TeacherSubmissionsDrawer: React.FC<TeacherSubmissionsDrawerProps> = React.memo(
+export const TeacherSubmissionsModal: React.FC<TeacherSubmissionsModalProps> = React.memo(
   ({ open, onClose, assignment }) => {
     const [submissions, setSubmissions] = useState<ISubmission[]>([]);
-    const [loading, setLoading] = useState(false);
+    const [loading, setLoading] = useState<boolean>(false);
+    const [selectedSubmission, setSelectedSubmission] = useState<ISubmission | null>(null);
+    const [gradeModalOpen, setGradeModalOpen] = useState<boolean>(false);
+    const [viewerFile, setViewerFile] = useState<AttachmentFile | null>(null);
 
     // Toolbar states
     const [searchQuery, setSearchQuery] = useState("");
     const [statusFilter, setStatusFilter] = useState("all");
     const [sortBy, setSortBy] = useState("newest");
 
-    // Selected submission for grading modal
-    const [selectedSubmission, setSelectedSubmission] = useState<ISubmission | null>(null);
-    const [gradeModalOpen, setGradeModalOpen] = useState(false);
 
     const fetchSubmissions = useCallback(async () => {
       if (!assignment?._id) return;
@@ -149,9 +154,15 @@ export const TeacherSubmissionsDrawer: React.FC<TeacherSubmissionsDrawerProps> =
         case "late":
           return <Tag color="warning">🟡 Nộp trễ hạn</Tag>;
         case "submitted":
-          return <Tag color="processing">🟢 Đúng hạn</Tag>;
+          return <Tag color="processing">🟢 Đã nộp</Tag>;
+        case "resubmitted":
+          return <Tag color="processing">🟢 Đã nộp lại</Tag>;
+        case "draft":
+          return <Tag color="default">⚪ Bản nháp</Tag>;
+        case "withdrawn":
+          return <Tag color="error">🔴 Đã hủy nộp</Tag>;
         default:
-          return <Tag color="blue">{status || "Đã nộp"}</Tag>;
+          return <Tag color="blue">{status || "Chưa rõ"}</Tag>;
       }
     };
 
@@ -165,6 +176,7 @@ export const TeacherSubmissionsDrawer: React.FC<TeacherSubmissionsDrawerProps> =
       {
         title: "Học sinh",
         key: "student",
+        width: 250,
         render: (_, record) => {
           const studentObj = typeof record.studentId === "object" ? record.studentId : null;
           const sId = (studentObj?._id || record.studentId || "").toString();
@@ -177,8 +189,8 @@ export const TeacherSubmissionsDrawer: React.FC<TeacherSubmissionsDrawerProps> =
                 icon={!(studentObj as any)?.avatar ? <UserOutlined /> : undefined}
                 style={{ backgroundColor: "var(--color-action-primary-bg)" }}
               />
-              <div>
-                <Text strong style={{ fontSize: 14, display: "block" }}>
+              <div style={{ maxWidth: 150, overflow: "hidden" }}>
+                <Text strong style={{ fontSize: 14, display: "block", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                   {studentObj?.fullName || "Học sinh"}
                 </Text>
                 <Text style={{ fontSize: 12, fontFamily: "monospace", color: "var(--color-text-description)" }}>
@@ -199,30 +211,84 @@ export const TeacherSubmissionsDrawer: React.FC<TeacherSubmissionsDrawerProps> =
       {
         title: "Bài làm & Đính kèm",
         key: "content",
-        render: (_, record) => (
-          <div>
-            {record.content && (
-              <Paragraph ellipsis={{ rows: 2 }} style={{ fontSize: 13, marginBottom: 4 }}>
-                {record.content}
-              </Paragraph>
-            )}
-            {record.attachments && record.attachments.length > 0 && (
-              <Space size={6} wrap style={{ marginTop: 2 }}>
-                {record.attachments.map((att: any, i: number) => (
+        render: (_, record) => {
+          const type = record.submissionType || "file";
+          const answersCount = record.answers?.length || 0;
+
+          // Helper to strip HTML tags for table snippet preview
+          const cleanText = (html?: string) =>
+            html ? html.replace(/<[^>]+>/g, "").trim() : "";
+
+          return (
+            <div>
+              {type === "link" && record.linkUrl && (
+                <div style={{ marginBottom: 4, maxWidth: 300, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                   <a
-                    key={att.publicId || i}
-                    href={att.url}
+                    href={record.linkUrl}
                     target="_blank"
-                    rel="noreferrer"
-                    style={{ fontSize: 12 }}
+                    rel="noopener noreferrer"
+                    style={{ fontSize: 13, color: "#1677ff", fontWeight: 500 }}
                   >
-                    <PaperClipOutlined /> {att.name || "File đính kèm"}
+                    🔗 {record.linkUrl}
                   </a>
-                ))}
-              </Space>
-            )}
-          </div>
-        ),
+                </div>
+              )}
+
+              {type === "direct" && answersCount > 0 && (
+                <div style={{ marginBottom: 4 }}>
+                  <Tag color="orange" style={{ marginBottom: 2 }}>
+                    ✍️ {answersCount} câu trả lời
+                  </Tag>
+                  {record.answers && record.answers[0]?.content && (
+                    <Paragraph
+                      type="secondary"
+                      ellipsis={{ rows: 1 }}
+                      style={{ fontSize: 12, margin: 0 }}
+                    >
+                      {cleanText(record.answers[0].content)}
+                    </Paragraph>
+                  )}
+                </div>
+              )}
+
+              {record.content && (
+                <Paragraph ellipsis={{ rows: 2 }} style={{ fontSize: 13, marginBottom: 4 }}>
+                  {cleanText(record.content)}
+                </Paragraph>
+              )}
+
+              {record.attachments && record.attachments.length > 0 && (
+                <Space size={6} wrap style={{ marginTop: 2 }}>
+                  {record.attachments.map((att: any, i: number) => (
+                    <span
+                      key={att.publicId || i}
+                      style={{
+                        fontSize: 12,
+                        color: isViewableFile(att.name || att.url, att.format) ? "#1677ff" : "var(--color-text-title)",
+                        cursor: "pointer",
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: 4,
+                        textDecoration: "underline",
+                      }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (isViewableFile(att.name || att.url, att.format)) {
+                          setViewerFile(att);
+                        } else {
+                          window.open(att.url, "_blank");
+                        }
+                      }}
+                      title={att.name}
+                    >
+                      <PaperClipOutlined /> {att.name || `Tệp ${i + 1}`}
+                    </span>
+                  ))}
+                </Space>
+              )}
+            </div>
+          );
+        },
       },
       {
         title: "Điểm & Lời phê",
@@ -237,7 +303,7 @@ export const TeacherSubmissionsDrawer: React.FC<TeacherSubmissionsDrawerProps> =
             <div>
               {record.grade !== null && record.grade !== undefined ? (
                 <Text strong style={{ color: "var(--color-success-base)", fontSize: 16 }}>
-                  {record.grade} / 100
+                  {record.grade} / {assignment?.maxScore || 10}
                 </Text>
               ) : (
                 <Text type="secondary" style={{ fontStyle: "italic", fontSize: 12 }}>
@@ -286,26 +352,29 @@ export const TeacherSubmissionsDrawer: React.FC<TeacherSubmissionsDrawerProps> =
 
     return (
       <>
-        <Drawer
+        <Modal
           title={
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <Space>
-                <FileDoneOutlined style={{ color: "var(--color-action-primary-bg)" }} />
-                <span>Danh sách bài nộp: {assignment?.title}</span>
-              </Space>
-              <Button
-                type="text"
-                icon={<ReloadOutlined spin={loading} />}
-                onClick={fetchSubmissions}
-                title="Làm mới"
+            <Space align="center" size={12}>
+              <Avatar
+                style={{ backgroundColor: "var(--color-primary-container)", color: "var(--color-primary-base)" }}
+                icon={<FileDoneOutlined />}
               />
-            </div>
+              <div>
+                <div style={{ fontSize: 18, fontWeight: 700, color: "var(--color-text-title)", lineHeight: 1.2 }}>
+                  Danh sách bài nộp
+                </div>
+                <div style={{ fontSize: 13, color: "var(--color-text-description)", fontWeight: 400, marginTop: 4 }}>
+                  {assignment?.title}
+                </div>
+              </div>
+            </Space>
           }
-          placement="right"
-          width={900}
-          onClose={onClose}
+          width={1000}
+          centered
+          footer={null}
+          onCancel={onClose}
           open={open}
-          styles={{ body: { padding: 20 } }}
+          destroyOnClose
         >
           {/* 1. Quick Statistics Cards Header */}
           <Card
@@ -345,7 +414,7 @@ export const TeacherSubmissionsDrawer: React.FC<TeacherSubmissionsDrawerProps> =
                 <Statistic
                   title={<Text style={{ fontSize: 11 }}>⭐ Điểm trung bình</Text>}
                   value={stats.avgScore}
-                  suffix="/100"
+                  suffix={`/${assignment?.maxScore || 10}`}
                   styles={{ content: { fontSize: 18, fontWeight: 700, color: "var(--color-success-base)" } }}
                 />
               </Col>
@@ -353,7 +422,7 @@ export const TeacherSubmissionsDrawer: React.FC<TeacherSubmissionsDrawerProps> =
                 <Statistic
                   title={<Text style={{ fontSize: 11 }}>🏆 Điểm cao nhất</Text>}
                   value={stats.maxScore}
-                  suffix="/100"
+                  suffix={`/${assignment?.maxScore || 10}`}
                   styles={{ content: { fontSize: 18, fontWeight: 700, color: "var(--color-secondary-icon)" } }}
                 />
               </Col>
@@ -361,7 +430,7 @@ export const TeacherSubmissionsDrawer: React.FC<TeacherSubmissionsDrawerProps> =
                 <Statistic
                   title={<Text style={{ fontSize: 11 }}>📉 Điểm thấp nhất</Text>}
                   value={stats.minScore}
-                  suffix="/100"
+                  suffix={`/${assignment?.maxScore || 10}`}
                   styles={{ content: { fontSize: 18, fontWeight: 700, color: "var(--color-warning-base)" } }}
                 />
               </Col>
@@ -427,6 +496,7 @@ export const TeacherSubmissionsDrawer: React.FC<TeacherSubmissionsDrawerProps> =
               dataSource={filteredSubmissions}
               rowKey={(record, index) => record._id || `sub-${index}`}
               pagination={{ pageSize: 10 }}
+              scroll={{ x: 'max-content' }}
             />
           ) : (
             <Empty
@@ -438,18 +508,26 @@ export const TeacherSubmissionsDrawer: React.FC<TeacherSubmissionsDrawerProps> =
               }
             />
           )}
-        </Drawer>
+        </Modal>
 
         {/* Modal Chấm điểm */}
         <GradeSubmissionModal
           open={gradeModalOpen}
           onClose={() => setGradeModalOpen(false)}
           submission={selectedSubmission}
+          assignment={assignment}
           onGraded={fetchSubmissions}
+        />
+
+        {/* Modal Xem file đính kèm */}
+        <AttachmentViewerModal
+          open={Boolean(viewerFile)}
+          onClose={() => setViewerFile(null)}
+          file={viewerFile}
         />
       </>
     );
   }
 );
 
-TeacherSubmissionsDrawer.displayName = "TeacherSubmissionsDrawer";
+TeacherSubmissionsModal.displayName = "TeacherSubmissionsModal";

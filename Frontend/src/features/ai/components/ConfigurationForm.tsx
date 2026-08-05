@@ -24,6 +24,8 @@ interface ConfigurationFormProps {
 
 const ConfigurationForm = ({ config, models, saving, onSave, onReset }: ConfigurationFormProps) => {
   const [form] = Form.useForm<AIConfiguration>();
+  const temperature = Form.useWatch("temperature", form);
+  const topP = Form.useWatch("topP", form);
 
   useEffect(() => {
     form.setFieldsValue(config);
@@ -72,7 +74,7 @@ const ConfigurationForm = ({ config, models, saving, onSave, onReset }: Configur
                     max={1}
                     step={0.05}
                     onChange={(val) => form.setFieldValue("temperature", val)}
-                    value={Form.useWatch("temperature", form)}
+                    value={temperature}
                   />
                 </Col>
                 <Col span={6}>
@@ -81,7 +83,7 @@ const ConfigurationForm = ({ config, models, saving, onSave, onReset }: Configur
                     max={1}
                     step={0.05}
                     style={{ width: "100%" }}
-                    value={Form.useWatch("temperature", form)}
+                    value={temperature}
                     onChange={(val) => form.setFieldValue("temperature", val ?? 0.7)}
                   />
                 </Col>
@@ -96,7 +98,7 @@ const ConfigurationForm = ({ config, models, saving, onSave, onReset }: Configur
                     max={1}
                     step={0.05}
                     onChange={(val) => form.setFieldValue("topP", val)}
-                    value={Form.useWatch("topP", form)}
+                    value={topP}
                   />
                 </Col>
                 <Col span={6}>
@@ -105,7 +107,7 @@ const ConfigurationForm = ({ config, models, saving, onSave, onReset }: Configur
                     max={1}
                     step={0.05}
                     style={{ width: "100%" }}
-                    value={Form.useWatch("topP", form)}
+                    value={topP}
                     onChange={(val) => form.setFieldValue("topP", val ?? 0.9)}
                   />
                 </Col>

@@ -58,24 +58,21 @@ export const uploadFile = (buffer, originalName, { folder, resourceType = "raw" 
   });
 };
 
-/**
- * Sinh URL đã ký để truy cập file authenticated. URL hết hạn sau `durationSeconds`.
- *
- * Dùng `cloudinary.utils.private_download_url()` — API chính thức cho
- * type: 'authenticated'. Ref: https://cloudinary.com/documentation/authenticated_assets
- *
- * @param {string} publicId
- * @param {Object} options
- * @param {string} [options.resourceType='raw']
- * @param {number} [options.durationSeconds=7200] - Thời gian hiệu lực tính bằng giây (mặc định 2 giờ)
- * @returns {{ signedUrl: string, expiresAt: string }} - expiresAt là ISO 8601
- */
-export const getSignedUrl = (publicId, { resourceType = "raw", durationSeconds = 7200 } = {}) => {
+export const getSignedUrl = (
+  publicId,
+  { resourceType = "raw", storageType = "authenticated", format = "", durationSeconds = 7200 } = {}
+) => {
   const expiresAt = Math.floor(Date.now() / 1000) + durationSeconds;
 
-  const signedUrl = cloudinary.utils.private_download_url(publicId, "", {
+  let fmt = format || "";
+  if (!fmt && publicId && typeof publicId === "string" && publicId.includes(".")) {
+    const ext = publicId.substring(publicId.lastIndexOf(".") + 1).toLowerCase();
+    if (ext) fmt = ext;
+  }
+
+  const signedUrl = cloudinary.utils.private_download_url(publicId, fmt, {
     resource_type: resourceType,
-    type: "authenticated",
+    type: storageType,
     expires_at: expiresAt,
   });
 

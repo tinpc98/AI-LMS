@@ -11,8 +11,6 @@ import {
   FileZipOutlined,
   FileUnknownOutlined,
   EyeOutlined,
-  DownloadOutlined,
-  CopyOutlined,
   InfoCircleOutlined,
   UserOutlined,
 } from "@ant-design/icons";
@@ -26,8 +24,8 @@ interface MaterialCardProps {
   item: ILearningMaterial;
   classId?: string;
   onPreview?: (item: ILearningMaterial) => void;
-  onDownload: (item: ILearningMaterial) => void;
-  onCopyLink: (url: string) => void;
+  onDownload?: (item: ILearningMaterial) => void;
+  onCopyLink?: (url: string) => void;
   onDetail: (item: ILearningMaterial) => void;
 }
 
@@ -95,7 +93,7 @@ export function getMaterialTypeMeta(item: Partial<ILearningMaterial>) {
 }
 
 export const MaterialCard: React.FC<MaterialCardProps> = React.memo(
-  ({ item, classId, onPreview, onDownload, onCopyLink, onDetail }) => {
+  ({ item, classId, onPreview, onDetail }) => {
     const meta = getMaterialTypeMeta(item);
 
     const uploaderName =
@@ -224,12 +222,26 @@ export const MaterialCard: React.FC<MaterialCardProps> = React.memo(
           </div>
 
           {/* Action Buttons Toolbar */}
-          <Space size={6} wrap style={{ width: "100%", justifyContent: "space-between" }}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: 8,
+            }}
+          >
             {classId ? (
               <Link
                 to={`/student/classdetail/${classId}/resource/${item._id}`}
-                className="ant-btn ant-btn-primary ant-btn-sm ant-btn-background-ghost inline-flex items-center gap-1.5"
-                style={{ borderRadius: 6, fontSize: 12, textDecoration: "none" }}
+                className="ant-btn ant-btn-primary ant-btn-sm ant-btn-background-ghost inline-flex items-center justify-center gap-1.5"
+                style={{
+                  flex: 1,
+                  borderRadius: 8,
+                  fontSize: 13,
+                  fontWeight: 500,
+                  height: 32,
+                  textDecoration: "none",
+                }}
               >
                 <EyeOutlined />
                 <span>Xem tài liệu</span>
@@ -241,44 +253,36 @@ export const MaterialCard: React.FC<MaterialCardProps> = React.memo(
                 size="small"
                 icon={<EyeOutlined />}
                 onClick={() => onPreview && onPreview(item)}
-                style={{ borderRadius: 6, fontSize: 12 }}
+                style={{
+                  flex: 1,
+                  borderRadius: 8,
+                  fontSize: 13,
+                  fontWeight: 500,
+                  height: 32,
+                }}
               >
                 Xem tài liệu
               </Button>
-            )}
-
-            <Tooltip title="Tải tài liệu về máy">
-              <Button
-                type="default"
-                size="small"
-                icon={<DownloadOutlined />}
-                onClick={() => onDownload(item)}
-                style={{ borderRadius: 6, fontSize: 12 }}
-              >
-                Tải về
-              </Button>
-            </Tooltip>
-
-            {item.url && (
-              <Tooltip title="Sao chép đường dẫn">
-                <Button
-                  type="text"
-                  size="small"
-                  icon={<CopyOutlined />}
-                  onClick={() => onCopyLink(item.url || "")}
-                />
-              </Tooltip>
             )}
 
             <Tooltip title="Chi tiết tài liệu">
               <Button
                 type="text"
                 size="small"
-                icon={<InfoCircleOutlined />}
+                icon={<InfoCircleOutlined style={{ fontSize: 16 }} />}
                 onClick={() => onDetail(item)}
+                style={{
+                  borderRadius: 8,
+                  width: 32,
+                  height: 32,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  color: "var(--color-text-secondary)",
+                }}
               />
             </Tooltip>
-          </Space>
+          </div>
         </div>
       </Card>
     );

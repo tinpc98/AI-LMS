@@ -13,6 +13,27 @@ const assignmentSchema = new Schema(
       trim: true,
       default: "",
     },
+    maxScore: {
+      type: Number,
+      required: true,
+      default: 10,
+      min: 1,
+      max: 1000,
+    },
+    // Hình thức nộp bài: 'file' | 'link' | 'direct' | 'any'
+    submissionMode: {
+      type: String,
+      enum: ["file", "link", "direct", "any"],
+      default: "file",
+    },
+    // Danh sách câu hỏi cho hình thức 'direct' hoặc 'any'
+    questions: [
+      {
+        order: { type: Number, default: 1 },
+        content: { type: String, required: true }, // HTML đã sanitize
+        required: { type: Boolean, default: true },
+      },
+    ],
     // Đính kèm file đề bài (tận dụng lại cấu trúc Cloudinary)
     attachments: [
       {

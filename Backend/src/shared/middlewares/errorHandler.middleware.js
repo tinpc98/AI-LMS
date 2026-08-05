@@ -101,10 +101,13 @@ export const errorHandler = (err, req, res, next) => {
     requestId: req.requestId || null,
   };
 
-  if (err.details) body.details = err.details;
-  else if (mongo?.details) body.details = mongo.details;
-  if (!isProduction() && err.stack) body.stack = err.stack;
+  if (status === 500) {
+    console.error("=== LỖI 500 GỐC TỪ SERVER ===");
+    console.error(err.stack || err);
+    console.error("===============================");
+  }
 
+  if (!isProduction() && err.stack) body.stack = err.stack;
   res.status(status).json(body);
 };
 

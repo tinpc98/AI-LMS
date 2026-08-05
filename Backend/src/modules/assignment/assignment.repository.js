@@ -16,7 +16,12 @@ export const findAssignmentByIdPopulated = (id) =>
     .lean();
 
 export const findAssignmentsByClass = (classId, { skip, limit }) =>
-  Assignment.find({ classId }).sort({ createdAt: -1 }).skip(skip).limit(limit).lean();
+  Assignment.find({ classId })
+    .populate("teacherId", "fullName email username avatar")
+    .sort({ createdAt: -1 })
+    .skip(skip)
+    .limit(limit)
+    .lean();
 
 export const countAssignmentsByClass = (classId) => Assignment.countDocuments({ classId });
 
@@ -41,8 +46,21 @@ export const findSubmissionByAssignmentAndStudentWithDeleted = (
   return session ? query.session(session) : query;
 };
 
+export const getSubmissionsByTeacher = (teacherId, { skip, limit }) =>
+  Submission.find({ status: { $ne: "draft" } })
+    .populate({
+      path: "assignmentId",
+      match: { teacherId },
+      select: "title classId deadline teacherId",
+      populate: { path: "classId", select: "className classCode" },
+    })
+    .sort({ updatedAt: -1 })
+    .skip(skip)
+    .limit(limit)
+    .lean();
+
 export const findSubmissionsByAssignmentPaginated = (assignmentId, { skip, limit }) =>
-  Submission.find({ assignmentId })
+  Submission.find({ assignmentId, status: { $ne: "draft" } })
     .populate("studentId", "fullName email avatar")
     .populate("gradedBy", "fullName email")
     .sort({ createdAt: -1 })
@@ -51,6 +69,15 @@ export const findSubmissionsByAssignmentPaginated = (assignmentId, { skip, limit
     .lean();
 
 export const countSubmissionsByAssignment = (assignmentId) =>
-  Submission.countDocuments({ assignmentId });
+  Submission.countDocuments({ assignmentId, status: { $ne: "draft" } });
+
+export const countActualSubmissionsByAssignment = (assignmentId) =>
+  Submission.countDocuments({
+    assignmentId,
+    status: { $in: ["submitted", "late", "graded", "resubmitted"] },
+  });
 
 export const createSubmission = (data) => new Submission(data);
+
+export const countSubmissionsByAssignmentAndGrade = (assignmentId) =>
+  Submission.countDocuments({ assignmentId, grade: { $ne: null } });

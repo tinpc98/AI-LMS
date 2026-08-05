@@ -4,9 +4,15 @@ import { Spin, Alert, Button, Modal, Tag, Space } from "antd";
 import { toast } from "../../../utils/toast";
 import { useStudentAssignment } from "../hooks/useStudentAssignment";
 import { AITutorSidebar } from "../components/assignment/AITutorSidebar";
+import {
+  AttachmentViewerModal,
+  isViewableFile,
+  type AttachmentFile,
+} from "../../../shared/components/AttachmentViewerModal";
 
 const StudentAssignmentContent = () => {
   const { assignmentId } = useParams<{ assignmentId: string }>();
+  const [viewerFile, setViewerFile] = useState<AttachmentFile | null>(null);
   const {
     assignment,
     mySubmission,
@@ -186,17 +192,39 @@ const StudentAssignmentContent = () => {
                   <h5 className="font-bold text-sm text-on-surface">
                     Tài liệu đính kèm từ Giảng viên:
                   </h5>
-                  {assignment.attachments.map((att: any, idx: number) => (
-                    <a
-                      key={att.publicId || idx}
-                      href={att.url}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="inline-flex items-center gap-2 text-primary underline text-body-sm mr-4"
-                    >
-                      📎 {att.name || "File đính kèm"}
-                    </a>
-                  ))}
+                  <div className="flex flex-wrap gap-3">
+                    {assignment.attachments.map((att: any, idx: number) => (
+                      <div
+                        key={att.publicId || idx}
+                        className="inline-flex items-center gap-2 bg-surface-container-low px-3 py-1.5 rounded-lg border border-outline-variant text-body-sm"
+                      >
+                        <span
+                          className="text-primary font-medium cursor-pointer hover:underline"
+                          onClick={() => isViewableFile(att.name || att.url, att.format) ? setViewerFile(att) : window.open(att.url, "_blank")}
+                        >
+                          📎 {att.name || `Tệp ${idx + 1}`}
+                        </span>
+                        {isViewableFile(att.name || att.url, att.format) && (
+                          <Button
+                            type="text"
+                            size="small"
+                            onClick={() => setViewerFile(att)}
+                            className="text-xs text-primary h-auto p-1"
+                          >
+                            Xem
+                          </Button>
+                        )}
+                        <a
+                          href={att.url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-xs text-secondary hover:text-primary"
+                        >
+                          Tải về
+                        </a>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
               {mySubmission && mySubmission.attachments && mySubmission.attachments.length > 0 && (
@@ -204,17 +232,37 @@ const StudentAssignmentContent = () => {
                   <h5 className="font-bold text-sm text-on-surface mb-2">
                     Tệp bài làm hiện tại của bạn:
                   </h5>
-                  <div className="space-y-1">
+                  <div className="flex flex-wrap gap-3">
                     {mySubmission.attachments.map((att: any, idx: number) => (
-                      <a
+                      <div
                         key={att.publicId || idx}
-                        href={att.url}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="inline-flex items-center gap-2 text-primary underline text-body-sm mr-4"
+                        className="inline-flex items-center gap-2 bg-surface px-3 py-1.5 rounded-lg border border-outline-variant text-body-sm"
                       >
-                        📄 {att.name || "Tệp bài làm"}
-                      </a>
+                        <span
+                          className="text-primary font-medium cursor-pointer hover:underline"
+                          onClick={() => isViewableFile(att.name || att.url, att.format) ? setViewerFile(att) : window.open(att.url, "_blank")}
+                        >
+                          📄 {att.name || `Tệp ${idx + 1}`}
+                        </span>
+                        {isViewableFile(att.name || att.url, att.format) && (
+                          <Button
+                            type="text"
+                            size="small"
+                            onClick={() => setViewerFile(att)}
+                            className="text-xs text-primary h-auto p-1"
+                          >
+                            Xem
+                          </Button>
+                        )}
+                        <a
+                          href={att.url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-xs text-secondary hover:text-primary"
+                        >
+                          Tải về
+                        </a>
+                      </div>
                     ))}
                   </div>
                 </div>
@@ -359,6 +407,13 @@ const StudentAssignmentContent = () => {
           </div>
         </div>
       </div>
+
+      {/* Modal Xem file đính kèm */}
+      <AttachmentViewerModal
+        open={Boolean(viewerFile)}
+        onClose={() => setViewerFile(null)}
+        file={viewerFile}
+      />
     </main>
   );
 };

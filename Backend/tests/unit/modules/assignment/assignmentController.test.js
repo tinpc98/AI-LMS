@@ -148,7 +148,7 @@ describe("createAssignment", () => {
     expect(res.status).toHaveBeenCalledWith(201);
     const body = res.json.mock.calls[0][0];
     expect(body.assignment.attachments).toHaveLength(1);
-    expect(body.assignment.attachments[0].url).toBe("http://fake/file.pdf");
+    expect(body.assignment.attachments[0].url).toContain("fake_public_id");
   });
 });
 

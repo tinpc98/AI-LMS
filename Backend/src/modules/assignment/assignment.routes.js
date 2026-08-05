@@ -3,6 +3,7 @@ import assignmentController from "./assignment.controller.js";
 import { verifyUser } from "#modules/auth";
 import { isTeacher } from "#shared/middlewares/rbac.middleware.js";
 import { canViewSubmission } from "./submissionAccess.middleware.js";
+import { checkClassAccess } from "#modules/class";
 import upload from "#shared/middlewares/upload.middleware.js";
 
 const router = express.Router();
@@ -14,6 +15,7 @@ router.post(
   verifyUser,
   isTeacher,
   upload.array("files", 5),
+  checkClassAccess,
   assignmentController.createAssignment
 );
 
@@ -22,28 +24,30 @@ router.put(
   "/:id",
   verifyUser,
   isTeacher,
+  checkClassAccess,
   upload.array("files", 5),
   assignmentController.updateAssignment
 );
 
 // Xóa bài tập
-router.delete("/:id", verifyUser, isTeacher, assignmentController.deleteAssignment);
+router.delete("/:id", verifyUser, isTeacher, checkClassAccess, assignmentController.deleteAssignment);
 
 // Chấm điểm bài nộp (Body dạng raw JSON)
 router.put("/grade/:submissionId", verifyUser, isTeacher, assignmentController.gradeSubmission);
 
 // --- Tuyến đường của Học sinh & Chung ---
 // Lấy chi tiết 1 bài tập
-router.get("/:id", verifyUser, assignmentController.getAssignmentById);
+router.get("/:id", verifyUser, checkClassAccess, assignmentController.getAssignmentById);
 
 // Lấy danh sách bài tập theo Lớp học
-router.get("/class/:classId", verifyUser, assignmentController.getAssignmentsByClass);
+router.get("/class/:classId", verifyUser, checkClassAccess, assignmentController.getAssignmentsByClass);
 
 // Giáo viên xem danh sách bài nộp của assignment
 router.get(
   "/submissions/:assignmentId",
   verifyUser,
   isTeacher,
+  checkClassAccess,
   assignmentController.getSubmissionsByAssignment
 );
 
@@ -56,17 +60,22 @@ router.get(
 );
 
 // Học sinh xem bài nộp cá nhân
-router.get("/:assignmentId/my-submission", verifyUser, assignmentController.getMySubmission);
+router.get("/:assignmentId/my-submission", verifyUser, checkClassAccess, assignmentController.getMySubmission);
+
+// Học sinh Lưu bản nháp bài làm (Draft)
+router.post("/draft/:assignmentId", verifyUser, checkClassAccess, assignmentController.saveDraft);
+router.post("/:assignmentId/draft", verifyUser, checkClassAccess, assignmentController.saveDraft);
 
 // Học sinh Nộp bài / Nộp lại bài (Đính kèm max 5 file bài làm)
 router.post(
   "/submit/:assignmentId",
   verifyUser,
+  checkClassAccess,
   upload.array("files", 5),
   assignmentController.submitAssignment
 );
 
 // Học sinh Hủy nộp bài
-router.delete("/submit/:assignmentId", verifyUser, assignmentController.cancelSubmission);
+router.delete("/submit/:assignmentId", verifyUser, checkClassAccess, assignmentController.cancelSubmission);
 
 export default router;

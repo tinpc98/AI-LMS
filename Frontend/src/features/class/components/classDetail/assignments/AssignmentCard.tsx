@@ -7,6 +7,8 @@ import {
   TrophyOutlined,
   UserOutlined,
   PaperClipOutlined,
+  CheckCircleOutlined,
+  EyeOutlined,
 } from "@ant-design/icons";
 import AssignmentStatusTag from "./AssignmentStatusTag";
 import type { IExtendedAssignment } from "../../../../../types/studentAssignment";
@@ -33,14 +35,23 @@ export const AssignmentCard: React.FC<AssignmentCardProps> = React.memo(
         })
       : "Không giới hạn";
 
-    const hasSubmitted =
-      item.status === "Submitted" || item.status === "Late" || item.status === "Graded";
-    const isGraded =
-      item.status === "Graded" &&
-      item.submission?.grade !== null &&
-      item.submission?.grade !== undefined;
+    const teacherName =
+      typeof item.teacherId === "object" && (item.teacherId as any)?.fullName
+        ? (item.teacherId as any).fullName
+        : typeof item.teacherId === "object" && (item.teacherId as any)?.username
+        ? (item.teacherId as any).username
+        : "Giảng viên";
 
-    // Deadline badge indicator
+    // Xử lý trạng thái mới theo đặc tả
+    // Dữ liệu bài nộp
+    const submission = item.submission;
+    
+    // Trạng thái
+    const isDraft = submission?.status === "draft";
+    const isSubmitted = item.status === "Submitted" || item.status === "Late" || item.status === "Graded";
+    const isGraded = item.status === "Graded" && submission?.grade !== null && submission?.grade !== undefined;
+    
+    // Hiển thị Deadline
     let deadlineBadgeColor = "green";
     let deadlineBadgeText = "Còn hạn nộp";
     if (item.isOverdue) {
@@ -50,11 +61,60 @@ export const AssignmentCard: React.FC<AssignmentCardProps> = React.memo(
       deadlineBadgeColor = "orange";
       deadlineBadgeText = `Còn ${item.hoursRemaining} giờ`;
     }
+    
+    let badgeText = "Chưa nộp";
+    let badgeColor = "default";
+    let badgeIcon = <ClockCircleOutlined />;
 
-    const teacherName =
-      typeof item.teacherId === "object" && (item.teacherId as any)?.fullName
-        ? (item.teacherId as any).fullName
-        : "Giảng viên";
+    if (isGraded) {
+      badgeText = `Đã chấm · ${submission?.grade}`;
+      badgeColor = "purple";
+      badgeIcon = <TrophyOutlined />;
+    } else if (isSubmitted) {
+      badgeText = "Đã nộp";
+      badgeColor = "success";
+      badgeIcon = <CheckCircleOutlined />;
+    } else if (isDraft) {
+      badgeText = "Đang làm dở";
+      badgeColor = "processing";
+      badgeIcon = <ClockCircleOutlined />;
+    } else if (item.isOverdue) {
+      badgeText = "Quá hạn chưa nộp";
+      badgeColor = "error";
+      badgeIcon = <InfoCircleOutlined />;
+    }
+
+    let btnText = "";
+    let btnIcon = null;
+    let btnType: "primary" | "default" = "primary";
+    let btnAction = () => {};
+
+    if (isGraded) {
+      btnText = "Xem kết quả";
+      btnIcon = <TrophyOutlined />;
+      btnType = "primary";
+      btnAction = () => onDetail(item);
+    } else if (isSubmitted) {
+      btnText = "Xem bài làm của tôi";
+      btnIcon = <EyeOutlined />;
+      btnType = "default";
+      btnAction = () => onDetail(item);
+    } else if (isDraft && !item.isOverdue) {
+      btnText = "Tiếp tục làm bài";
+      btnIcon = <UploadOutlined />;
+      btnType = "primary";
+      btnAction = () => onSubmit(item);
+    } else if (!isDraft && !item.isOverdue) {
+      btnText = "Nộp bài";
+      btnIcon = <UploadOutlined />;
+      btnType = "primary";
+      btnAction = () => onSubmit(item);
+    } else {
+      btnText = "Xem chi tiết";
+      btnIcon = <InfoCircleOutlined />;
+      btnType = "default";
+      btnAction = () => onDetail(item);
+    }
 
     return (
       <Card
@@ -78,16 +138,25 @@ export const AssignmentCard: React.FC<AssignmentCardProps> = React.memo(
           },
         }}
       >
-        {/* Top Header: Status Tag & Deadline Badge */}
+        {/* Top Header: Status Tag, Mode Tag & Deadline Badge */}
         <div
           style={{
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
             marginBottom: 12,
+            flexWrap: "wrap",
+            gap: 4,
           }}
         >
-          <AssignmentStatusTag status={item.status} />
+          <Space size={4}>
+            <Tag color={badgeColor} icon={badgeIcon} style={{ borderRadius: 8, fontWeight: 600 }}>
+              {badgeText}
+            </Tag>
+            {item.submissionMode === "link" && <Tag color="cyan">🔗 Link</Tag>}
+            {item.submissionMode === "direct" && <Tag color="orange">✍️ Trực tiếp</Tag>}
+            {item.submissionMode === "any" && <Tag color="green">🎯 Tự chọn</Tag>}
+          </Space>
           <Tag color={deadlineBadgeColor} style={{ borderRadius: 6, margin: 0, fontWeight: 600 }}>
             {deadlineBadgeText}
           </Tag>
@@ -214,38 +283,16 @@ export const AssignmentCard: React.FC<AssignmentCardProps> = React.memo(
           </div>
 
           {/* Action Buttons */}
-          <Space size={6} style={{ width: "100%", justifyContent: "space-between" }}>
+          <Space size={6} style={{ width: "100%", justifyContent: "flex-end" }}>
             <Button
-              type="default"
+              type={btnType}
               size="small"
-              icon={<InfoCircleOutlined />}
-              onClick={() => onDetail(item)}
-              style={{ borderRadius: 6, fontSize: 12 }}
+              icon={btnIcon}
+              onClick={btnAction}
+              style={{ borderRadius: 6, fontSize: 12, ...(btnType === "primary" && isGraded ? { backgroundColor: "var(--color-secondary-icon)" } : {}) }}
             >
-              Chi tiết
+              {btnText}
             </Button>
-
-            {isGraded ? (
-              <Button
-                type="primary"
-                size="small"
-                icon={<TrophyOutlined />}
-                onClick={() => onFeedback(item)}
-                style={{ borderRadius: 6, fontSize: 12, backgroundColor: "var(--color-secondary-icon)" }}
-              >
-                Xem điểm
-              </Button>
-            ) : (
-              <Button
-                type={hasSubmitted ? "default" : "primary"}
-                size="small"
-                icon={<UploadOutlined />}
-                onClick={() => onSubmit(item)}
-                style={{ borderRadius: 6, fontSize: 12 }}
-              >
-                {hasSubmitted ? "Cập nhật bài" : "Nộp bài"}
-              </Button>
-            )}
           </Space>
         </div>
       </Card>

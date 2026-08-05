@@ -23,6 +23,31 @@ const submissionSchema = new Schema(
       trim: true,
       default: "",
     },
+    // Hình thức sinh viên chọn để nộp bài
+    submissionType: {
+      type: String,
+      enum: ["file", "link", "direct"],
+      default: null,
+    },
+    // Đường link nộp bài (cho mode 'link')
+    linkUrl: {
+      type: String,
+      trim: true,
+      default: null,
+    },
+    // Danh sách câu trả lời theo câu hỏi (cho mode 'direct')
+    answers: [
+      {
+        questionId: {
+          type: Schema.Types.ObjectId,
+          required: true,
+        },
+        content: {
+          type: String, // HTML đã sanitize
+          default: "",
+        },
+      },
+    ],
     // File bài làm đẩy lên Cloudinary
     attachments: [
       {
@@ -33,7 +58,7 @@ const submissionSchema = new Schema(
     ],
     status: {
       type: String,
-      enum: ["submitted", "late", "graded", "withdrawn", "resubmitted"],
+      enum: ["draft", "submitted", "late", "graded", "withdrawn", "resubmitted"],
       default: "submitted",
     },
     withdrawnAt: {
@@ -44,11 +69,10 @@ const submissionSchema = new Schema(
       type: Date,
       default: null,
     },
-    // Điểm số giữ nguyên
     grade: {
       type: Number,
       min: 0,
-      max: 100,
+      max: 1000,
       default: null,
     },
     // Lời phê của giáo viên

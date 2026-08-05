@@ -2,11 +2,6 @@ import type { IAssignment, ISubmission } from "../interface/assignmentInterface"
 import axiosClient from "./axiosClient";
 import { getApiErrorCode, getApiErrorStatus } from "../shared/utils/apiError";
 
-/**
- * Backend trả bài nộp ở CẢ HAI trường `submission` và `data` — cùng một giá trị, giữ song song
- * để tương thích với client cũ. Khai báo đúng như vậy thay vì ép `as any`: người đọc thấy ngay
- * sự trùng lặp này là có thật ở phía máy chủ, không phải do client đoán mò.
- */
 interface SubmissionEnvelope {
   success?: boolean;
   message?: string;
@@ -42,12 +37,7 @@ const assignmentApi = {
   createAssignment: async (formData: FormData): Promise<IAssignment> => {
     const response = await axiosClient.post<IAssignmentCreateResponse>(
       "/api/assignments",
-      formData,
-      {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      }
+      formData
     );
     return response.data.assignment;
   },
@@ -56,12 +46,7 @@ const assignmentApi = {
   updateAssignment: async (id: string, formData: FormData): Promise<IAssignment> => {
     const response = await axiosClient.put<{ assignment: IAssignment }>(
       `/api/assignments/${id}`,
-      formData,
-      {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      }
+      formData
     );
     return response.data.assignment;
   },
@@ -111,21 +96,34 @@ const assignmentApi = {
       );
       return response.data.submission ?? response.data.data ?? null;
     } catch (err: unknown) {
-      // "Chưa nộp bài" là trạng thái BÌNH THƯỜNG, không phải lỗi. Đọc mã thay vì đoán theo
-      // 404 — cùng mã đó còn có thể là "bài tập không tồn tại", một tình huống khác hẳn mà
-      // nơi gọi nên biết. Vẫn nuốt mọi lỗi khác về null để giữ nguyên hành vi cũ.
       const code = getApiErrorCode(err);
       if (code === "SUBMISSION_NOT_FOUND" || getApiErrorStatus(err) === 404) return null;
       return null;
     }
   },
 
+  // Học sinh lưu bản nháp (Draft)
+  saveDraft: async (
+    assignmentId: string,
+    data: {
+      submissionType?: string;
+      content?: string;
+      linkUrl?: string;
+      answers?: Array<{ questionId: string; content: string }>;
+    }
+  ): Promise<ISubmission> => {
+    const response = await axiosClient.post<SubmissionEnvelope>(
+      `/api/assignments/draft/${assignmentId}`,
+      data
+    );
+    return response.data.submission ?? response.data.data;
+  },
+
   // Học sinh nộp bài / nộp lại bài
   submitAssignment: async (assignmentId: string, formData: FormData): Promise<ISubmission> => {
     const response = await axiosClient.post<SubmissionEnvelope>(
       `/api/assignments/submit/${assignmentId}`,
-      formData,
-      { headers: { "Content-Type": "multipart/form-data" } }
+      formData
     );
     return response.data.submission ?? response.data.data;
   },

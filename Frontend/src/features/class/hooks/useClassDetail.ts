@@ -21,6 +21,7 @@ interface UseClassDetailReturn {
   lessons: ILesson[];
   assignments: IAssignment[];
   submittedAssignmentIds: string[];
+  submissionsMap: Record<string, any>;
   isLoading: boolean;
   errorMsg: string;
   refetch: () => void;
@@ -45,6 +46,7 @@ export const useClassDetail = (classId?: string): UseClassDetailReturn => {
     lessons: data?.lessons ?? [],
     assignments: data?.assignments ?? [],
     submittedAssignmentIds: data?.submittedAssignmentIds ?? [],
+    submissionsMap: data?.submissionsMap ?? {},
     // `isLoading` của React Query là false khi query bị tắt (enabled: false) — đúng với ý
     // "không có gì đang chạy", và cũng là chỗ sửa được bệnh quay vòng vĩnh viễn nói trên.
     isLoading,

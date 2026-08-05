@@ -5,7 +5,7 @@ import AssignmentToolbar from "./AssignmentToolbar";
 import AssignmentList from "./AssignmentList";
 import AssignmentEmptyState from "./AssignmentEmptyState";
 import AssignmentLoadingSkeleton from "./AssignmentLoadingSkeleton";
-import AssignmentDetailDrawer from "./AssignmentDetailDrawer";
+import AssignmentDetailModal from "./AssignmentDetailModal";
 import SubmitAssignmentModal from "../../../../assignment/components/SubmitAssignmentModal";
 import useAssignments from "../../../../assignment/hooks/useAssignments";
 import useAssignmentDetail from "../../../../assignment/hooks/useAssignmentDetail";
@@ -94,13 +94,12 @@ export const AssignmentsTab: React.FC<AssignmentsTabProps> = React.memo(
           />
         )}
 
-        {/* 4. Assignment Detail Drawer */}
-        <AssignmentDetailDrawer
+        {/* 4. Assignment Detail Modal */}
+        <AssignmentDetailModal
           open={isDetailOpen}
           item={selectedAssignment}
           onClose={closeDetail}
           onSubmit={openSubmitModal}
-          onCancelSubmission={handleCancelSubmission}
         />
 
         {/* 5. Submit Assignment Modal */}
@@ -108,6 +107,7 @@ export const AssignmentsTab: React.FC<AssignmentsTabProps> = React.memo(
           isOpen={isSubmitModalOpen}
           onClose={closeSubmitModal}
           assignment={submittingAssignment as any}
+          initialSubmission={submittingAssignment ? submissionsMap[submittingAssignment._id] : undefined}
           onSuccess={(id) => {
             closeSubmitModal();
             if (onRefresh) onRefresh();

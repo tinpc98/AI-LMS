@@ -8,13 +8,14 @@ import assignmentApi from "../../api/assignmentApi";
 import { getCurrentUserId } from "../../shared/utils/authToken";
 import type { IClass } from "../../interface/ClassInterface";
 import type { ILesson } from "../../interface/lessonInterface";
-import type { IAssignment } from "../../interface/assignmentInterface";
+import type { IAssignment, ISubmission } from "../../interface/assignmentInterface";
 
 export interface ClassDetailData {
   classInfo: IClass | null;
   lessons: ILesson[];
   assignments: IAssignment[];
   submittedAssignmentIds: string[];
+  submissionsMap: Record<string, ISubmission>;
 }
 
 /**
@@ -54,22 +55,30 @@ const unwrapAssignments = (res: unknown): IAssignment[] => {
  * không sửa lén ở đây. Ít nhất chúng chạy song song và lỗi lẻ được bỏ qua, nên một bài tập
  * hỏng không kéo sập cả trang.
  */
-const fetchSubmittedIds = async (assignments: IAssignment[]): Promise<string[]> => {
+const fetchSubmissionsData = async (assignments: IAssignment[]): Promise<{ submittedIds: string[], submissionsMap: Record<string, ISubmission> }> => {
   const studentId = getCurrentUserId();
-  if (!studentId || assignments.length === 0) return [];
+  if (!studentId || assignments.length === 0) return { submittedIds: [], submissionsMap: {} };
+
+  const submissionsMap: Record<string, ISubmission> = {};
+  const submittedIds: string[] = [];
 
   const results = await Promise.all(
     assignments.map(async (item) => {
       try {
         const submission = await assignmentApi.getMySubmission(item._id);
-        return submission && submission.status !== "withdrawn" ? item._id : null;
+        if (submission) {
+          submissionsMap[item._id] = submission;
+          if (submission.status !== "withdrawn") {
+            submittedIds.push(item._id);
+          }
+        }
       } catch {
-        return null; // bài tập chưa nộp trả 404 — đó là câu trả lời, không phải sự cố
+        // bài tập chưa nộp trả 404 — đó là câu trả lời, không phải sự cố
       }
     })
   );
 
-  return results.filter((id): id is string => id !== null);
+  return { submittedIds, submissionsMap };
 };
 
 export const fetchClassDetail = async (classId: string): Promise<ClassDetailData> => {
@@ -82,11 +91,13 @@ export const fetchClassDetail = async (classId: string): Promise<ClassDetailData
   ]);
 
   const assignments = unwrapAssignments(assignmentRes);
+  const { submittedIds, submissionsMap } = await fetchSubmissionsData(assignments);
 
   return {
     classInfo: unwrapClass(classRes),
     lessons: selectPublishedLessons(unwrapLessons(lessonRes)),
     assignments,
-    submittedAssignmentIds: await fetchSubmittedIds(assignments),
+    submittedAssignmentIds: submittedIds,
+    submissionsMap,
   };
 };

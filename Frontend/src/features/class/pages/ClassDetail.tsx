@@ -78,7 +78,7 @@ export default function ClassDetail() {
   const [searchQuery] = useState<string>("");
 
   // Custom hook for class details data
-  const { classInfo, lessons, assignments, submittedAssignmentIds, isLoading, errorMsg } =
+  const { classInfo, lessons, assignments, submittedAssignmentIds, submissionsMap, isLoading, errorMsg } =
     useClassDetail(classId);
 
   const { setBreadcrumbEntity } = useBreadcrumb();
@@ -467,6 +467,7 @@ export default function ClassDetail() {
         <AssignmentsTab
           assignments={assignments}
           submittedIds={submittedAssignmentIds}
+          submissionsMap={submissionsMap}
           loading={isLoading}
         />
       ),

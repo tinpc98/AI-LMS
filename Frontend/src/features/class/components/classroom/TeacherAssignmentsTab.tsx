@@ -23,6 +23,7 @@ import {
   SearchOutlined,
   FilterOutlined,
   DeleteOutlined,
+  EditOutlined,
   FileDoneOutlined,
   ClockCircleOutlined,
   PaperClipOutlined,
@@ -35,8 +36,13 @@ import dayjs from "dayjs";
 import assignmentApi from "../../../../api/assignmentApi";
 import { toast } from "../../../../utils/toast";
 import type { IAssignment } from "../../../../interface/assignmentInterface";
-import { TeacherSubmissionsDrawer } from "./TeacherSubmissionsDrawer";
+import { TeacherSubmissionsModal } from "./TeacherSubmissionsModal";
 import CreateAssignmentModal from "../../../assignment/components/CreateAssignmentModal";
+import {
+  AttachmentViewerModal,
+  isViewableFile,
+  type AttachmentFile,
+} from "../../../../shared/components/AttachmentViewerModal";
 import { getApiErrorMessage } from "../../../../shared/utils/apiError";
 
 const { Title, Text, Paragraph } = Typography;
@@ -58,6 +64,8 @@ export const TeacherAssignmentsTab: React.FC<TeacherAssignmentsTabProps> = React
 
     // Modal & Drawer states
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+    const [editingAssignment, setEditingAssignment] = useState<IAssignment | null>(null);
+    const [viewerFile, setViewerFile] = useState<AttachmentFile | null>(null);
     const [selectedAssignment, setSelectedAssignment] = useState<IAssignment | null>(null);
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
@@ -144,22 +152,55 @@ export const TeacherAssignmentsTab: React.FC<TeacherAssignmentsTabProps> = React
               </Paragraph>
             )}
             {record.attachments && record.attachments.length > 0 && (
-              <Space size={8} style={{ marginTop: 6 }}>
+              <Space size={8} wrap style={{ marginTop: 6 }}>
                 {record.attachments.map((att: any, idx: number) => (
-                  <a
+                  <span
                     key={att.publicId || idx}
-                    href={att.url}
-                    target="_blank"
-                    rel="noreferrer"
-                    style={{ fontSize: 12 }}
+                    style={{
+                      fontSize: 12,
+                      color: isViewableFile(att.name || att.url, att.format) ? "#1677ff" : "var(--color-text-title)",
+                      cursor: "pointer",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 4,
+                      textDecoration: "underline",
+                    }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (isViewableFile(att.name || att.url, att.format)) {
+                        setViewerFile(att);
+                      } else {
+                        window.open(att.url, "_blank");
+                      }
+                    }}
+                    title={att.name}
                   >
-                    <PaperClipOutlined /> {att.name || "Tệp đính kèm"}
-                  </a>
+                    <PaperClipOutlined /> {att.name || `Tệp ${idx + 1}`}
+                  </span>
                 ))}
               </Space>
             )}
           </div>
         ),
+      },
+      {
+        title: "Hình thức nộp",
+        key: "submissionMode",
+        width: 150,
+        render: (_, record) => {
+          const mode = record.submissionMode || "file";
+          if (mode === "link") {
+            return <Tag color="cyan">🔗 Dán link</Tag>;
+          }
+          if (mode === "direct") {
+            const qCount = record.questions?.length || 0;
+            return <Tag color="orange">✍️ Trực tiếp ({qCount} câu)</Tag>;
+          }
+          if (mode === "any") {
+            return <Tag color="green">🎯 Tự chọn</Tag>;
+          }
+          return <Tag color="blue">📁 Tệp đính kèm</Tag>;
+        },
       },
       {
         title: "Hạn nộp bài",
@@ -188,7 +229,7 @@ export const TeacherAssignmentsTab: React.FC<TeacherAssignmentsTabProps> = React
       {
         title: "Thao tác",
         key: "action",
-        width: 220,
+        width: 250,
         align: "right",
         render: (_, record) => (
           <Space size={8}>
@@ -202,8 +243,21 @@ export const TeacherAssignmentsTab: React.FC<TeacherAssignmentsTabProps> = React
               }}
               style={{ borderRadius: 6 }}
             >
-              Bài nộp & Chấm điểm
+              Bài nộp
             </Button>
+
+            <Tooltip title="Chỉnh sửa bài tập">
+              <Button
+                type="default"
+                size="small"
+                icon={<EditOutlined />}
+                onClick={() => {
+                  setEditingAssignment(record);
+                  setIsCreateModalOpen(true);
+                }}
+                style={{ borderRadius: 6 }}
+              />
+            </Tooltip>
 
             <Popconfirm
               title="Xóa bài tập này?"
@@ -469,8 +523,8 @@ export const TeacherAssignmentsTab: React.FC<TeacherAssignmentsTabProps> = React
           )}
         </Card>
 
-        {/* 3. Submissions Drawer & Create Assignment Modal */}
-        <TeacherSubmissionsDrawer
+        {/* 3. Submissions Modal & Create Assignment Modal */}
+        <TeacherSubmissionsModal
           open={isDrawerOpen}
           onClose={() => setIsDrawerOpen(false)}
           assignment={selectedAssignment}
@@ -478,12 +532,25 @@ export const TeacherAssignmentsTab: React.FC<TeacherAssignmentsTabProps> = React
 
         <CreateAssignmentModal
           isOpen={isCreateModalOpen}
-          onClose={() => setIsCreateModalOpen(false)}
+          initialAssignment={editingAssignment}
+          hasGradedSubmissions={editingAssignment?.hasGradedSubmissions}
+          onClose={() => {
+            setIsCreateModalOpen(false);
+            setEditingAssignment(null);
+          }}
           classId={classId}
           onCreated={() => {
             setIsCreateModalOpen(false);
+            setEditingAssignment(null);
             if (onRefresh) onRefresh();
           }}
+        />
+
+        {/* Modal Xem trước file đính kèm */}
+        <AttachmentViewerModal
+          open={Boolean(viewerFile)}
+          onClose={() => setViewerFile(null)}
+          file={viewerFile}
         />
       </div>
     );
