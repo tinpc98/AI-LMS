@@ -6,6 +6,7 @@ import {
   VideoCameraOutlined,
   LinkOutlined,
   FilePptOutlined,
+  FileExcelOutlined,
   FileImageOutlined,
   FileZipOutlined,
   FileUnknownOutlined,
@@ -16,86 +17,86 @@ import {
   UserOutlined,
 } from "@ant-design/icons";
 import type { ILearningMaterial } from "../../../../../types/learningMaterial";
+import { classifyResource } from "../../../../lesson/utils/resourceUtils";
+import { Link } from "react-router-dom";
 
 const { Text, Paragraph } = Typography;
 
 interface MaterialCardProps {
   item: ILearningMaterial;
-  onPreview: (item: ILearningMaterial) => void;
+  classId?: string;
+  onPreview?: (item: ILearningMaterial) => void;
   onDownload: (item: ILearningMaterial) => void;
   onCopyLink: (url: string) => void;
   onDetail: (item: ILearningMaterial) => void;
 }
 
 // Helper to determine file icon, color, and badge label
-export function getMaterialTypeMeta(type: string = "", url: string = "") {
-  const typeLower = (type || "").toLowerCase();
-  const urlLower = (url || "").toLowerCase();
+export function getMaterialTypeMeta(item: Partial<ILearningMaterial>) {
+  const meta = classifyResource(item);
 
-  if (typeLower.includes("pdf") || urlLower.endsWith(".pdf")) {
-    return {
-      icon: <FilePdfOutlined style={{ fontSize: 28, color: "var(--color-error-base)" }} />,
-      color: "red",
-      label: "PDF Document",
-    };
+  switch (meta.kind) {
+    case "pdf":
+      return {
+        icon: <FilePdfOutlined style={{ fontSize: 28, color: "var(--color-error-base)" }} />,
+        color: "red",
+        label: meta.label,
+      };
+    case "video":
+    case "youtube":
+      return {
+        icon: <VideoCameraOutlined style={{ fontSize: 28, color: "var(--color-action-primary-bg)" }} />,
+        color: "blue",
+        label: meta.label,
+      };
+    case "link":
+      return {
+        icon: <LinkOutlined style={{ fontSize: 28, color: "var(--color-info-base)" }} />,
+        color: "cyan",
+        label: meta.label,
+      };
+    case "slide":
+      return {
+        icon: <FilePptOutlined style={{ fontSize: 28, color: "var(--color-warning-base)" }} />,
+        color: "orange",
+        label: meta.label,
+      };
+    case "excel":
+      return {
+        icon: <FileExcelOutlined style={{ fontSize: 28, color: "var(--color-success-base, #10b981)" }} />,
+        color: "green",
+        label: meta.label,
+      };
+    case "image":
+      return {
+        icon: <FileImageOutlined style={{ fontSize: 28, color: "var(--color-accent-base)" }} />,
+        color: "magenta",
+        label: meta.label,
+      };
+    case "zip":
+      return {
+        icon: <FileZipOutlined style={{ fontSize: 28, color: "var(--color-secondary-icon)" }} />,
+        color: "purple",
+        label: meta.label,
+      };
+    case "docx":
+      return {
+        icon: <FileTextOutlined style={{ fontSize: 28, color: "var(--color-action-primary-bg)" }} />,
+        color: "geekblue",
+        label: meta.label,
+      };
+    default:
+      return {
+        icon: <FileUnknownOutlined style={{ fontSize: 28, color: "var(--color-text-description)" }} />,
+        color: "default",
+        label: meta.label,
+      };
   }
-  if (typeLower.includes("video") || urlLower.includes("youtube") || urlLower.endsWith(".mp4")) {
-    return {
-      icon: <VideoCameraOutlined style={{ fontSize: 28, color: "var(--color-action-primary-bg)" }} />,
-      color: "blue",
-      label: "Video",
-    };
-  }
-  if (typeLower.includes("link") || urlLower.startsWith("http")) {
-    return {
-      icon: <LinkOutlined style={{ fontSize: 28, color: "var(--color-info-base)" }} />,
-      color: "cyan",
-      label: "Web Link",
-    };
-  }
-  if (
-    typeLower.includes("slide") ||
-    typeLower.includes("powerpoint") ||
-    urlLower.endsWith(".ppt") ||
-    urlLower.endsWith(".pptx")
-  ) {
-    return {
-      icon: <FilePptOutlined style={{ fontSize: 28, color: "var(--color-warning-base)" }} />,
-      color: "orange",
-      label: "Slide / PPT",
-    };
-  }
-  if (typeLower.includes("image") || urlLower.match(/\.(png|jpe?g|gif|webp)$/)) {
-    return {
-      icon: <FileImageOutlined style={{ fontSize: 28, color: "var(--color-accent-base)" }} />,
-      color: "magenta",
-      label: "Hình ảnh",
-    };
-  }
-  if (typeLower.includes("zip") || urlLower.endsWith(".zip") || urlLower.endsWith(".rar")) {
-    return {
-      icon: <FileZipOutlined style={{ fontSize: 28, color: "var(--color-secondary-icon)" }} />,
-      color: "purple",
-      label: "Nén ZIP",
-    };
-  }
-  if (typeLower.includes("document") || urlLower.endsWith(".doc") || urlLower.endsWith(".docx")) {
-    return {
-      icon: <FileTextOutlined style={{ fontSize: 28, color: "var(--color-action-primary-bg)" }} />,
-      color: "geekblue",
-      label: "Văn bản Word",
-    };
-  }
-  return {
-    icon: <FileUnknownOutlined style={{ fontSize: 28, color: "var(--color-text-description)" }} />,
-    color: "default",
-    label: type || "Tài liệu",
-  };
 }
 
 export const MaterialCard: React.FC<MaterialCardProps> = React.memo(
-  ({ item, onPreview, onDownload, onCopyLink, onDetail }) => {
-    const meta = getMaterialTypeMeta(item.type, item.url);
+  ({ item, classId, onPreview, onDownload, onCopyLink, onDetail }) => {
+    const meta = getMaterialTypeMeta(item);
 
     const uploaderName =
       typeof item.uploadedBy === "object" && item.uploadedBy?.fullName
@@ -224,16 +225,27 @@ export const MaterialCard: React.FC<MaterialCardProps> = React.memo(
 
           {/* Action Buttons Toolbar */}
           <Space size={6} wrap style={{ width: "100%", justifyContent: "space-between" }}>
-            <Button
-              type="primary"
-              ghost
-              size="small"
-              icon={<EyeOutlined />}
-              onClick={() => onPreview(item)}
-              style={{ borderRadius: 6, fontSize: 12 }}
-            >
-              Xem trước
-            </Button>
+            {classId ? (
+              <Link
+                to={`/student/classdetail/${classId}/resource/${item._id}`}
+                className="ant-btn ant-btn-primary ant-btn-sm ant-btn-background-ghost inline-flex items-center gap-1.5"
+                style={{ borderRadius: 6, fontSize: 12, textDecoration: "none" }}
+              >
+                <EyeOutlined />
+                <span>Xem tài liệu</span>
+              </Link>
+            ) : (
+              <Button
+                type="primary"
+                ghost
+                size="small"
+                icon={<EyeOutlined />}
+                onClick={() => onPreview && onPreview(item)}
+                style={{ borderRadius: 6, fontSize: 12 }}
+              >
+                Xem tài liệu
+              </Button>
+            )}
 
             <Tooltip title="Tải tài liệu về máy">
               <Button
@@ -247,14 +259,16 @@ export const MaterialCard: React.FC<MaterialCardProps> = React.memo(
               </Button>
             </Tooltip>
 
-            <Tooltip title="Sao chép đường dẫn">
-              <Button
-                type="text"
-                size="small"
-                icon={<CopyOutlined />}
-                onClick={() => onCopyLink(item.url)}
-              />
-            </Tooltip>
+            {item.url && (
+              <Tooltip title="Sao chép đường dẫn">
+                <Button
+                  type="text"
+                  size="small"
+                  icon={<CopyOutlined />}
+                  onClick={() => onCopyLink(item.url || "")}
+                />
+              </Tooltip>
+            )}
 
             <Tooltip title="Chi tiết tài liệu">
               <Button

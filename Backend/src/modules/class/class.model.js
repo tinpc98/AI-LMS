@@ -60,10 +60,45 @@ const resourceSchema = new Schema(
       enum: ["Document", "Video", "Link", "Other"],
       default: "Document",
     },
+    // url dùng cho liên kết ngoài (YouTube, website). null khi là file upload.
     url: {
       type: String,
-      required: [true, "URL tài nguyên là bắt buộc"],
       trim: true,
+      default: null,
+    },
+    // --- Các field cho file upload lên Cloudinary ---
+    // publicId Cloudinary. null khi là liên kết ngoài.
+    publicId: {
+      type: String,
+      trim: true,
+      default: null,
+    },
+    // 'authenticated' — bắt buộc URL ký. null với liên kết ngoài.
+    storageType: {
+      type: String,
+      default: null,
+    },
+    // 'raw' hoặc 'image'. null với liên kết ngoài.
+    resourceType: {
+      type: String,
+      default: null,
+    },
+    // Định dạng file: 'pdf', 'docx', 'pptx'... null với liên kết ngoài.
+    format: {
+      type: String,
+      default: null,
+    },
+    // Dung lượng tính bằng bytes, phục vụ tính quota lớp. 0 với liên kết ngoài.
+    bytes: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    // Tên file gốc khi người dùng tải về.
+    originalFilename: {
+      type: String,
+      trim: true,
+      default: null,
     },
     uploadedBy: {
       type: Schema.Types.ObjectId,

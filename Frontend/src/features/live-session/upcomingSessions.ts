@@ -139,8 +139,7 @@ export const getNextSessionInfo = (
 export const buildUpcomingFromSchedule = (
   schedule: ClassSchedule | undefined,
   classId: string | undefined,
-  teacherName: string,
-  now: Date = new Date()
+  teacherName: string
 ): IExtendedLiveSession[] => {
   const days = schedule?.days;
   if (!Array.isArray(days) || days.length === 0) return [];
@@ -148,15 +147,7 @@ export const buildUpcomingFromSchedule = (
   const validDays = days.filter((d) => DAY_TO_NUMBER[d] !== undefined);
   if (validDays.length === 0) return [];
 
-  // Sắp xếp các ngày theo khoảng cách ngày tới gần nhất từ 'now'
-  const currentDayNum = now.getDay();
-  const sortedDays = [...validDays].sort((a, b) => {
-    let diffA = (DAY_TO_NUMBER[a] - currentDayNum + 7) % 7;
-    let diffB = (DAY_TO_NUMBER[b] - currentDayNum + 7) % 7;
-    return diffA - diffB;
-  });
-
-  return sortedDays.map((day, idx) => ({
+  return validDays.map((day, idx) => ({
     _id: `schedule-${day}`,
     id: `schedule-${day}`,
     classId: classId || "",

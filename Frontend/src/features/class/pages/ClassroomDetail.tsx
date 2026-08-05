@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { Card, Tabs, Tag, Button, Space, Typography, Spin, Alert, Empty } from "antd";
+import { useParams, useNavigate, Link } from "react-router-dom";
+import { Card, Tabs, Tag, Button, Space, Typography, Spin, Alert, Empty, Tooltip } from "antd";
 import {
   ArrowLeftOutlined,
   BookOutlined,
@@ -16,6 +16,8 @@ import {
   PlusOutlined,
   EditOutlined,
   DeleteOutlined,
+  PlayCircleOutlined,
+  EyeOutlined,
 } from "@ant-design/icons";
 
 import assignmentApi from "../../../api/assignmentApi";
@@ -397,6 +399,11 @@ export default function ClassroomDetail() {
                   hoverable
                   style={{ borderRadius: 10, border: "1px solid var(--color-border-default)" }}
                   actions={[
+                    <Tooltip key="view" title="Xem bài giảng">
+                      <Link to={`/teacher/classroom-detail/${classId}/lecture/${lesson._id}`}>
+                        <EyeOutlined style={{ color: "var(--color-action-primary-bg)" }} />
+                      </Link>
+                    </Tooltip>,
                     <EditOutlined
                       key="edit"
                       title="Sửa"
@@ -418,9 +425,23 @@ export default function ClassroomDetail() {
                     />,
                   ]}
                 >
-                  <Title level={5} style={{ fontSize: 15, marginBottom: 8 }} ellipsis>
-                    {lesson.title}
-                  </Title>
+                  <Link
+                    to={`/teacher/classroom-detail/${classId}/lecture/${lesson._id}`}
+                    className="hover:underline block"
+                  >
+                    <Title
+                      level={5}
+                      style={{
+                        fontSize: 15,
+                        marginBottom: 8,
+                        color: "var(--color-action-primary-bg)",
+                        cursor: "pointer",
+                      }}
+                      ellipsis
+                    >
+                      {lesson.title}
+                    </Title>
+                  </Link>
                   {lesson.description && (
                     <Paragraph
                       type="secondary"
@@ -430,16 +451,20 @@ export default function ClassroomDetail() {
                       {lesson.description}
                     </Paragraph>
                   )}
-                  {lesson.videoUrl && (
-                    <a
-                      href={lesson.videoUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      style={{ fontSize: 13, display: "block", marginBottom: 6 }}
-                    >
-                      ▶ Watch Video
-                    </a>
-                  )}
+                  <Link
+                    to={`/teacher/classroom-detail/${classId}/lecture/${lesson._id}`}
+                    style={{
+                      fontSize: 13,
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 6,
+                      marginBottom: 6,
+                      color: "var(--color-action-primary-bg)",
+                      fontWeight: 500,
+                    }}
+                  >
+                    <PlayCircleOutlined /> Xem bài giảng
+                  </Link>
                 </Card>
               ))}
             </div>

@@ -20,12 +20,12 @@ afterEach(() => setWidth(originalWidth));
 
 describe("resolveLayout — hàm thuần suy bố cục từ bề rộng", () => {
   it.each([
-    [375, { isMobile: true, collapsed: false }], // điện thoại
-    [767, { isMobile: true, collapsed: false }], // ngay dưới ngưỡng
-    [768, { isMobile: false, collapsed: true }], // máy tính bảng: thu gọn sidebar
-    [1023, { isMobile: false, collapsed: true }],
-    [1024, { isMobile: false, collapsed: false }], // desktop
-    [1920, { isMobile: false, collapsed: false }],
+    [375, { isMobile: true, isTablet: false, isDesktop: false, collapsed: false, screen: "xs" }], // điện thoại
+    [767, { isMobile: true, isTablet: false, isDesktop: false, collapsed: false, screen: "sm" }], // ngay dưới ngưỡng
+    [768, { isMobile: false, isTablet: true, isDesktop: false, collapsed: true, screen: "md" }], // máy tính bảng: thu gọn sidebar
+    [1023, { isMobile: false, isTablet: false, isDesktop: true, collapsed: false, screen: "lg" }],
+    [1024, { isMobile: false, isTablet: false, isDesktop: true, collapsed: false, screen: "lg" }], // desktop
+    [1920, { isMobile: false, isTablet: false, isDesktop: true, collapsed: false, screen: "xxl" }],
   ])("bề rộng %ipx", (width, expected) => {
     expect(resolveLayout(width)).toEqual(expected);
   });

@@ -43,6 +43,11 @@ import type { ExamPopupState } from "../components/classDetail/exams/ExamLobbyMo
 import { useJitsiLiveSession } from "../../live-session/hooks/useJitsiLiveSession";
 import { useStudentLive } from "../../live-session/hooks/useStudentLive";
 import { useLearningAnalytics } from "../../report/hooks/useLearningAnalytics";
+import {
+  sortLessons,
+  formatLessonDisplayTitle,
+  cleanLessonTitle,
+} from "../../lesson/utils/lessonHelper";
 import { useAnalytics } from "../../report/hooks/useAnalytics";
 import { useBreadcrumb } from "../../../shared/context/BreadcrumbContext";
 import { getApiErrorMessage } from "../../../shared/utils/apiError";
@@ -253,7 +258,8 @@ export default function ClassDetail() {
     );
   }
 
-  const filteredLessons = lessons.filter(
+  const sortedLessons = sortLessons(lessons);
+  const filteredLessons = sortedLessons.filter(
     (l) =>
       l.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (l.description && l.description.toLowerCase().includes(searchQuery.toLowerCase()))
@@ -353,6 +359,7 @@ export default function ClassDetail() {
       ),
       children: (
         <LearningMaterialsTab
+          classId={classId}
           resources={resourceList}
           loading={isLoading}
         />
@@ -382,56 +389,68 @@ export default function ClassDetail() {
               <p className="text-sm">Giảng viên chưa đăng tải giáo trình nào cho lớp này.</p>
             </div>
           ) : (
-            filteredLessons.map((lesson) => (
-              <div
-                key={lesson._id}
-                className="group flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-white border border-outline-variant rounded-xl hover:border-primary/30 transition-all hover:shadow-md gap-4"
-              >
-                <div className="flex items-center space-x-4 min-w-0">
-                  <div className="w-12 h-12 bg-surface-container-low rounded-lg flex items-center justify-center text-primary group-hover:bg-primary-container group-hover:text-on-primary-container transition-colors flex-shrink-0">
-                    <span
-                      className="material-symbols-outlined text-2xl"
-                      style={{ fontVariationSettings: "'FILL' 1" }}
-                    >
-                      {lesson.videoUrl ? "play_circle" : "picture_as_pdf"}
-                    </span>
-                  </div>
-                  <div className="min-w-0">
-                    <h4 className="font-semibold text-on-surface text-sm sm:text-base truncate">
-                      {lesson.title}
-                    </h4>
-                    <p className="text-xs text-secondary line-clamp-1 mt-0.5">
-                      {lesson.description || "Không có mô tả chi tiết cho bài học này."}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center justify-end space-x-2 flex-shrink-0">
-                  {lesson.videoUrl && (
-                    <a
-                      href={lesson.videoUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="px-4 py-2 text-xs font-bold text-primary bg-primary-container/20 hover:bg-primary hover:text-white rounded-lg transition-colors"
-                    >
-                      Xem video
-                    </a>
-                  )}
-                  {lesson.attachments &&
-                    lesson.attachments.map((file) => (
-                      <a
-                        key={file.publicId}
-                        href={file.url}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="p-2 text-secondary hover:bg-surface-container-high rounded-lg transition-colors"
-                        title={file.name}
+            filteredLessons.map((lesson) => {
+              const lessonIndex = sortedLessons.findIndex((x) => x._id === lesson._id);
+              const displayTitle = formatLessonDisplayTitle(
+                lessonIndex >= 0 ? lessonIndex : 0,
+                lesson.title
+              );
+
+              return (
+                <div
+                  key={lesson._id}
+                  className="group flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-white border border-outline-variant rounded-xl hover:border-primary/30 transition-all hover:shadow-md gap-4"
+                >
+                  <div className="flex items-center space-x-4 min-w-0">
+                    <div className="w-12 h-12 bg-surface-container-low rounded-lg flex items-center justify-center text-primary group-hover:bg-primary-container group-hover:text-on-primary-container transition-colors flex-shrink-0">
+                      <span
+                        className="material-symbols-outlined text-2xl"
+                        style={{ fontVariationSettings: "'FILL' 1" }}
                       >
-                        <span className="material-symbols-outlined text-xl">download</span>
-                      </a>
-                    ))}
+                        {lesson.videoUrl ? "play_circle" : "picture_as_pdf"}
+                      </span>
+                    </div>
+                    <div className="min-w-0">
+                      <h4 className="font-semibold text-on-surface text-sm sm:text-base truncate">
+                        {displayTitle}
+                      </h4>
+                      <p className="text-xs text-secondary line-clamp-1 mt-0.5">
+                        {lesson.description || "Không có mô tả chi tiết cho bài học này."}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-end space-x-2 flex-shrink-0">
+                    {lesson.videoUrl && (
+                      <Link
+                        to={`/student/classdetail/${classId}/lecture/${lesson._id}`}
+                        className="px-4 py-2 text-xs font-bold text-primary bg-primary-container/20 hover:bg-primary hover:text-white rounded-lg transition-colors inline-flex items-center gap-1.5"
+                      >
+                        <span
+                          className="material-symbols-outlined text-sm"
+                          style={{ fontVariationSettings: "'FILL' 1" }}
+                        >
+                          play_circle
+                        </span>
+                        Xem video
+                      </Link>
+                    )}
+                    {lesson.attachments &&
+                      lesson.attachments.map((file) => (
+                        <a
+                          key={file.publicId}
+                          href={file.url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="p-2 text-secondary hover:bg-surface-container-high rounded-lg transition-colors"
+                          title={file.name}
+                        >
+                          <span className="material-symbols-outlined text-xl">download</span>
+                        </a>
+                      ))}
+                  </div>
                 </div>
-              </div>
-            ))
+              );
+            })
           )}
         </div>
       ),

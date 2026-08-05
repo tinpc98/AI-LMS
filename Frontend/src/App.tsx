@@ -20,6 +20,8 @@ const MyClasses = lazy(() => import("./features/class/pages/MyClasses"));
 const StudentAssignment = lazy(() => import("./features/assignment/pages/StudentAssignment"));
 const ClassDetail = lazy(() => import("./features/class/pages/ClassDetail"));
 const LessonView = lazy(() => import("./features/lesson/pages/LessonView"));
+const LectureViewPage = lazy(() => import("./features/lesson/pages/LectureViewPage"));
+const ResourceViewPage = lazy(() => import("./features/lesson/pages/ResourceViewPage"));
 const NotificationCenterPage = lazy(
   () => import("./features/notification/pages/NotificationCenterPage")
 );
@@ -97,6 +99,14 @@ function App() {
                 <Route path="myclasses" element={<MyClasses />} />
                 <Route path="studentassignment" element={<StudentAssignment />} />
                 <Route path="classdetail/:classId" element={<ClassDetail />} />
+                <Route
+                  path="classdetail/:classId/lecture/:lectureId"
+                  element={<LectureViewPage />}
+                />
+                <Route
+                  path="classdetail/:classId/resource/:resourceId"
+                  element={<ResourceViewPage />}
+                />
                 <Route path="studentassignment/:assignmentId" element={<StudentAssignment />} />
                 <Route path="lessonview/:lessonId" element={<LessonView />} />
                 <Route path="notifications" element={<NotificationCenterPage />} />
@@ -119,6 +129,14 @@ function App() {
                 <Route index element={<HomePageTeacher />} />
                 <Route path="classes" element={<ClassManagement />} />
                 <Route path="classroom-detail/:classId" element={<ClassroomDetail />} />
+                <Route
+                  path="classroom-detail/:classId/lecture/:lectureId"
+                  element={<LectureViewPage />}
+                />
+                <Route
+                  path="classroom-detail/:classId/resource/:resourceId"
+                  element={<ResourceViewPage />}
+                />
                 <Route path="questionbank" element={<QuestionBank />} />
                 <Route path="examresults/:examId" element={<ExamResults />} />
                 <Route path="exam-review/:attemptId" element={<ExamAttemptDetail />} />

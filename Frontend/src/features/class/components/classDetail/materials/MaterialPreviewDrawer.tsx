@@ -3,6 +3,8 @@ import { Drawer, Button, Typography, Space, Alert, Tag } from "antd";
 import { DownloadOutlined, EyeOutlined, ExportOutlined } from "@ant-design/icons";
 import type { ILearningMaterial } from "../../../../../types/learningMaterial";
 import { getMaterialTypeMeta } from "./MaterialCard";
+import { isYouTubeUrl } from "../../../../../shared/utils/youtube";
+import { YouTubeLessonPlayer } from "../../../../lesson/components/YouTubeLessonPlayer";
 
 const { Text, Title } = Typography;
 
@@ -17,18 +19,22 @@ export const MaterialPreviewDrawer: React.FC<MaterialPreviewDrawerProps> = React
   ({ open, item, onClose, onDownload }) => {
     if (!item) return null;
 
-    const meta = getMaterialTypeMeta(item.type, item.url);
+    const meta = getMaterialTypeMeta(item);
     const urlLower = (item.url || "").toLowerCase();
     const typeLower = (item.type || "").toLowerCase();
 
     // Determine preview mode
     const isPdf = typeLower.includes("pdf") || urlLower.endsWith(".pdf");
     const isImage = typeLower.includes("image") || urlLower.match(/\.(png|jpe?g|gif|webp)$/);
-    const isVideo =
-      typeLower.includes("video") || urlLower.endsWith(".mp4") || urlLower.endsWith(".webm");
+    const isYouTube = isYouTubeUrl(item.url);
+    const isDirectVideo =
+      urlLower.endsWith(".mp4") ||
+      urlLower.endsWith(".webm") ||
+      urlLower.endsWith(".mov") ||
+      (!isYouTube && typeLower.includes("video"));
     const isLink = typeLower.includes("link") || urlLower.startsWith("http");
 
-    const canPreview = isPdf || isImage || isVideo || isLink;
+    const canPreview = isPdf || isImage || isYouTube || isDirectVideo || isLink;
 
     return (
       <Drawer
@@ -93,7 +99,19 @@ export const MaterialPreviewDrawer: React.FC<MaterialPreviewDrawerProps> = React
                 }}
               />
             </div>
-          ) : isVideo ? (
+          ) : isYouTube ? (
+            <div
+              style={{
+                flex: 1,
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "center",
+                padding: "16px 0",
+              }}
+            >
+              <YouTubeLessonPlayer videoUrl={item.url} lessonTitle={item.title} />
+            </div>
+          ) : isDirectVideo ? (
             <div
               style={{
                 flex: 1,

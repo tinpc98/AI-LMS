@@ -23,7 +23,13 @@ export interface ILearningMaterial {
   title: string;
   description?: string;
   type: MaterialType | string;
-  url: string;
+  url?: string;
+  publicId?: string;
+  storageType?: string;
+  resourceType?: string;
+  format?: string;
+  bytes?: number;
+  originalFilename?: string;
   uploadedBy?: IUploaderInfo | string;
   uploadedAt?: string;
   size?: string;

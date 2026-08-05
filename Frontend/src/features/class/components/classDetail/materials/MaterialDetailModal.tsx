@@ -23,7 +23,7 @@ export const MaterialDetailModal: React.FC<MaterialDetailModalProps> = React.mem
   ({ open, item, onClose, onDownload, onCopyLink }) => {
     if (!item) return null;
 
-    const meta = getMaterialTypeMeta(item.type, item.url);
+    const meta = getMaterialTypeMeta(item);
 
     const uploaderName =
       typeof item.uploadedBy === "object" && item.uploadedBy?.fullName
@@ -48,14 +48,18 @@ export const MaterialDetailModal: React.FC<MaterialDetailModalProps> = React.mem
           <Button key="close" onClick={onClose} style={{ borderRadius: 8 }}>
             Đóng
           </Button>,
-          <Button
-            key="copy"
-            icon={<CopyOutlined />}
-            onClick={() => onCopyLink(item.url)}
-            style={{ borderRadius: 8 }}
-          >
-            Sao chép link
-          </Button>,
+          ...(item.url
+            ? [
+                <Button
+                  key="copy"
+                  icon={<CopyOutlined />}
+                  onClick={() => onCopyLink(item.url || "")}
+                  style={{ borderRadius: 8 }}
+                >
+                  Sao chép link
+                </Button>,
+              ]
+            : []),
           <Button
             key="download"
             type="primary"

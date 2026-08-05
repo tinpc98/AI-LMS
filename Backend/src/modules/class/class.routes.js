@@ -15,10 +15,16 @@ import {
   ClassTrashList,
   RestoreClass,
   PermanentDeleteClass,
+  UploadResource,
+  GetResourceAccessUrl,
 } from "./class.controller.js";
 import { verifyUser } from "#modules/auth";
 import { isAdmin, isTeacher } from "#shared/middlewares/rbac.middleware.js";
 import { updateClassValidation } from "./class.validator.js";
+import {
+  resourceUpload,
+  validateMagicBytes,
+} from "#shared/middlewares/resourceUpload.middleware.js";
 
 const route = Router();
 
@@ -30,8 +36,14 @@ route.get("/", verifyUser, ClassList);
 route.get("/:id", verifyUser, ClassListById);
 
 // Quản lý tài nguyên bài học của lớp (Giáo viên hoặc Admin)
+// QUAN TRọNG: /:id/resources/upload phải đặt TRƯỚC /:id/resources/:resourceId
+// để Express không nhầm 'upload' là resourceId.
+route.post("/:id/resources/upload", verifyUser, isTeacher, resourceUpload.single("file"), validateMagicBytes, UploadResource);
 route.post("/:id/resources", verifyUser, isTeacher, AddResource);
 route.delete("/:id/resources/:resourceId", verifyUser, isTeacher, RemoveResource);
+
+// Lấy URL đã ký để truy cập tài nguyên (Student Enrolled, Teacher, Admin)
+route.get("/:classId/resources/:resourceId/access", verifyUser, GetResourceAccessUrl);
 
 // Nhóm API quản trị dành riêng cho Admin
 route.post("/", verifyUser, isAdmin, AddNewClass);

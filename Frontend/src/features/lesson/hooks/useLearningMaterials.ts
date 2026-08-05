@@ -1,5 +1,6 @@
 import { useState, useMemo, useCallback } from "react";
 import { toast } from "../../../utils/toast";
+import { classifyResource } from "../utils/resourceUtils";
 import type {
   ILearningMaterial,
   MaterialFilterOptions,
@@ -31,27 +32,15 @@ export function useLearningMaterials(initialResources: ILearningMaterial[] = [])
     let other = 0;
 
     initialResources.forEach((item) => {
-      const typeLower = (item.type || "").toLowerCase();
-      const urlLower = (item.url || "").toLowerCase();
-
-      if (typeLower.includes("pdf") || urlLower.endsWith(".pdf")) {
+      const meta = classifyResource(item);
+      if (meta.kind === "pdf") {
         pdf++;
-      } else if (
-        typeLower.includes("video") ||
-        urlLower.includes("youtube") ||
-        urlLower.endsWith(".mp4") ||
-        urlLower.endsWith(".webm")
-      ) {
+      } else if (meta.kind === "video" || meta.kind === "youtube") {
         video++;
-      } else if (typeLower.includes("link") || urlLower.startsWith("http")) {
-        link++;
-      } else if (
-        typeLower.includes("slide") ||
-        typeLower.includes("powerpoint") ||
-        urlLower.endsWith(".ppt") ||
-        urlLower.endsWith(".pptx")
-      ) {
+      } else if (meta.kind === "slide") {
         slide++;
+      } else if (meta.kind === "link") {
+        link++;
       } else {
         other++;
       }
@@ -76,30 +65,13 @@ export function useLearningMaterials(initialResources: ILearningMaterial[] = [])
     if (filters.typeFilter !== "all") {
       const targetType = filters.typeFilter.toLowerCase();
       result = result.filter((m) => {
-        const typeLower = (m.type || "").toLowerCase();
-        const urlLower = (m.url || "").toLowerCase();
-
-        if (targetType === "pdf") return typeLower.includes("pdf") || urlLower.endsWith(".pdf");
-        if (targetType === "video")
-          return (
-            typeLower.includes("video") || urlLower.includes("youtube") || urlLower.endsWith(".mp4")
-          );
-        if (targetType === "link") return typeLower.includes("link") || urlLower.startsWith("http");
-        if (targetType === "slide")
-          return (
-            typeLower.includes("slide") ||
-            typeLower.includes("powerpoint") ||
-            urlLower.endsWith(".ppt") ||
-            urlLower.endsWith(".pptx")
-          );
-        if (targetType === "document")
-          return (
-            typeLower.includes("document") ||
-            urlLower.endsWith(".doc") ||
-            urlLower.endsWith(".docx")
-          );
-
-        return typeLower === targetType;
+        const meta = classifyResource(m);
+        if (targetType === "pdf") return meta.kind === "pdf";
+        if (targetType === "video") return meta.kind === "video" || meta.kind === "youtube";
+        if (targetType === "link") return meta.kind === "link";
+        if (targetType === "slide") return meta.kind === "slide";
+        if (targetType === "document") return meta.kind === "docx" || meta.kind === "pdf";
+        return meta.kind === targetType || (m.type || "").toLowerCase() === targetType;
       });
     }
 

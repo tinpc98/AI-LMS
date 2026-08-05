@@ -181,16 +181,40 @@ body {
   outline-offset: 2px !important;
 }
 
-/* ================= ACCESSIBILITY: PREFERS-REDUCED-MOTION ================= */
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
-  }
+/* ================= FIX LỖI HAI KHUNG (DOUBLE BORDER) ANT DESIGN VỚI TAILWIND FORMS ================= */
+.ant-input-affix-wrapper > input.ant-input,
+.ant-input-affix-wrapper input,
+.ant-select-selection-search-input,
+.ant-picker-input > input,
+.ant-input-number-input-wrap > input,
+.ant-input-number-input {
+  border: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+  background: transparent !important;
+  padding: 0 !important;
+  --tw-ring-color: transparent !important;
+  --tw-ring-shadow: none !important;
+  --tw-shadow: 0 0 #0000 !important;
+}
+
+.ant-input-affix-wrapper > input.ant-input:focus,
+.ant-input-affix-wrapper input:focus,
+.ant-select-selection-search-input:focus,
+.ant-picker-input > input:focus,
+.ant-input-number-input-wrap > input:focus,
+.ant-input-number-input:focus {
+  border: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+  --tw-ring-color: transparent !important;
+  --tw-ring-shadow: none !important;
+  --tw-shadow: 0 0 #0000 !important;
+}
+
+.ant-input:not(.ant-input-affix-wrapper input) {
+  --tw-ring-shadow: 0 0 #0000;
+  --tw-shadow: 0 0 #0000;
 }
 
 

@@ -11,7 +11,6 @@ import MaterialToolbar from "./MaterialToolbar";
 import MaterialList from "./MaterialList";
 import MaterialEmptyState from "./MaterialEmptyState";
 import MaterialLoadingSkeleton from "./MaterialLoadingSkeleton";
-import MaterialPreviewDrawer from "./MaterialPreviewDrawer";
 import MaterialDetailModal from "./MaterialDetailModal";
 import useLearningMaterials from "../../../../lesson/hooks/useLearningMaterials";
 import type { ILearningMaterial } from "../../../../../types/learningMaterial";
@@ -19,12 +18,13 @@ import type { ILearningMaterial } from "../../../../../types/learningMaterial";
 const { Title, Text } = Typography;
 
 interface LearningMaterialsTabProps {
+  classId?: string;
   resources?: ILearningMaterial[];
   loading?: boolean;
 }
 
 export const LearningMaterialsTab: React.FC<LearningMaterialsTabProps> = React.memo(
-  ({ resources = [], loading = false }) => {
+  ({ classId, resources = [], loading = false }) => {
     const {
       filters,
       stats,
@@ -32,10 +32,6 @@ export const LearningMaterialsTab: React.FC<LearningMaterialsTabProps> = React.m
       handleSearchChange,
       handleTypeChange,
       handleSortChange,
-      previewItem,
-      isPreviewOpen,
-      openPreview,
-      closePreview,
       detailItem,
       isDetailOpen,
       openDetail,
@@ -162,22 +158,14 @@ export const LearningMaterialsTab: React.FC<LearningMaterialsTabProps> = React.m
         ) : (
           <MaterialList
             materials={filteredMaterials}
-            onPreview={openPreview}
+            classId={classId}
             onDownload={handleDownload}
             onCopyLink={handleCopyLink}
             onDetail={openDetail}
           />
         )}
 
-        {/* 4. Preview Drawer */}
-        <MaterialPreviewDrawer
-          open={isPreviewOpen}
-          item={previewItem}
-          onClose={closePreview}
-          onDownload={handleDownload}
-        />
-
-        {/* 5. Detail Modal */}
+        {/* 4. Detail Modal */}
         <MaterialDetailModal
           open={isDetailOpen}
           item={detailItem}

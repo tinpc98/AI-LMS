@@ -39,3 +39,14 @@ global.fetch = vi.fn(() => {
     "Test đã gọi fetch() thật. Hãy mock lớp API tương ứng thay vì để request thoát ra ngoài."
   );
 }) as unknown as typeof fetch;
+
+// Mock DOMMatrix và Path2D cho môi trường jsdom khi nạp thư viện canvas/PDF
+if (typeof (globalThis as any).DOMMatrix === "undefined") {
+  (globalThis as any).DOMMatrix = class DOMMatrix {
+    a = 1; b = 0; c = 0; d = 1; e = 0; f = 0;
+  };
+}
+if (typeof (globalThis as any).Path2D === "undefined") {
+  (globalThis as any).Path2D = class Path2D {};
+}
+

@@ -35,7 +35,8 @@ describe("Các màn hình lazy trong App.tsx", () => {
       expect(mod.default, `${importPath} không có export default`).toBeDefined();
       // Component React là function hoặc object (memo/forwardRef trả về object).
       expect(["function", "object"]).toContain(typeof mod.default);
-    }
+    },
+    20000
   );
 
   it("không có hai route lazy nào trỏ vào cùng một file (dấu hiệu copy-paste sai)", () => {

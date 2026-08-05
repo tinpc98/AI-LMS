@@ -1,4 +1,5 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useRef, useCallback } from "react";
+import { Link } from "react-router-dom";
 import {
   Card,
   Row,
@@ -17,13 +18,23 @@ import {
   Empty,
   Skeleton,
   Tooltip,
+  Radio,
+  Progress,
+  Alert,
+  Upload,
 } from "antd";
 import type { ColumnsType } from "antd/es/table";
+import type { RcFile } from "antd/es/upload";
 import {
   FilePdfOutlined,
   VideoCameraOutlined,
   LinkOutlined,
   FileUnknownOutlined,
+  FileWordOutlined,
+  FileExcelOutlined,
+  FilePptOutlined,
+  FileImageOutlined,
+  FileZipOutlined,
   PlusOutlined,
   SearchOutlined,
   FilterOutlined,
@@ -34,11 +45,18 @@ import {
   UserOutlined,
   WarningOutlined,
   GlobalOutlined,
+  EyeOutlined,
+  CloudUploadOutlined,
+  InboxOutlined,
+  FileOutlined,
+  CloseCircleOutlined,
 } from "@ant-design/icons";
 
 import { classApi } from "../../../../api/classApi";
 import { toast } from "../../../../utils/toast";
 import { getApiErrorMessage } from "../../../../shared/utils/apiError";
+import { classifyResource } from "../../../lesson/utils/resourceUtils";
+import type { ILearningMaterial } from "../../../../types/learningMaterial";
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -78,7 +96,13 @@ interface ResourceItem {
   title: string;
   description?: string;
   type: "Document" | "Video" | "Link" | "Other" | string;
-  url: string;
+  url?: string;
+  publicId?: string;
+  storageType?: string;
+  resourceType?: string;
+  format?: string;
+  bytes?: number;
+  originalFilename?: string;
   uploadedBy?:
     | {
         _id?: string;
@@ -112,16 +136,22 @@ export const TeacherMaterialsTab: React.FC<TeacherMaterialsTabProps> = React.mem
     const [typeFilter, setTypeFilter] = useState("all");
     const [sortBy, setSortBy] = useState("newest");
 
-    // Modal state
+    // Modal & Upload state
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+    const [uploadMode, setUploadMode] = useState<"file" | "link">("file");
+    const [selectedFile, setSelectedFile] = useState<File | null>(null);
+    const [uploadProgress, setUploadProgress] = useState<number>(0);
     const [submitting, setSubmitting] = useState(false);
+    const abortControllerRef = useRef<AbortController | null>(null);
+
     const [form] = Form.useForm();
     const watchedTitle = Form.useWatch("title", form);
     const isTitleAllDigits = Boolean(
       watchedTitle && typeof watchedTitle === "string" && /^\d+$/.test(watchedTitle.trim())
     );
 
-    // Statistics breakdown
+    // Statistics breakdown & Quota calculation (Hạn mức 2 GB)
+    const CLASS_STORAGE_LIMIT_BYTES = 2 * 1024 * 1024 * 1024;
     const stats = useMemo(() => {
       const total = resources.length;
       const docs = resources.filter((r) => r.type === "Document").length;
@@ -130,8 +160,11 @@ export const TeacherMaterialsTab: React.FC<TeacherMaterialsTabProps> = React.mem
       const others = resources.filter(
         (r) => !["Document", "Video", "Link"].includes(r.type)
       ).length;
+      const totalBytes = resources.reduce((sum, r) => sum + (r.bytes || 0), 0);
+      const usedMB = (totalBytes / (1024 * 1024)).toFixed(1);
+      const usedPercent = Math.min(100, (totalBytes / CLASS_STORAGE_LIMIT_BYTES) * 100);
 
-      return { total, docs, videos, links, others };
+      return { total, docs, videos, links, others, totalBytes, usedMB, usedPercent };
     }, [resources]);
 
     // Filter & Sort materials
@@ -165,8 +198,108 @@ export const TeacherMaterialsTab: React.FC<TeacherMaterialsTabProps> = React.mem
       return result;
     }, [resources, searchQuery, typeFilter, sortBy]);
 
-    // Handle add new resource
-    const handleAddResourceSubmit = async (values: any) => {
+    // Helper kiểm tra và chọn file từ máy
+    const handleBeforeUpload = useCallback(
+      (file: RcFile) => {
+        const isLt50M = file.size / 1024 / 1024 <= 50;
+        if (!isLt50M) {
+          toast.error("Dung lượng file vượt quá giới hạn 50 MB! Vui lòng chọn file nhỏ hơn.");
+          return Upload.LIST_IGNORE;
+        }
+
+        const fileName = file.name || "";
+        const ext = fileName.substring(fileName.lastIndexOf(".")).toLowerCase();
+        const allowedExts = [
+          ".pdf",
+          ".docx",
+          ".doc",
+          ".pptx",
+          ".ppt",
+          ".xlsx",
+          ".xls",
+          ".png",
+          ".jpg",
+          ".jpeg",
+          ".webp",
+          ".gif",
+        ];
+        if (!allowedExts.includes(ext)) {
+          toast.error(
+            "Định dạng file không được hỗ trợ. Vui lòng chọn file PDF, Word, PowerPoint, Excel hoặc ảnh."
+          );
+          return Upload.LIST_IGNORE;
+        }
+
+        setSelectedFile(file);
+
+        // Tự động điền tiêu đề nếu ô tiêu đề đang trống
+        const currentTitle = form.getFieldValue("title");
+        if (!currentTitle || !currentTitle.trim()) {
+          const rawName = fileName.substring(0, fileName.lastIndexOf(".")) || fileName;
+          form.setFieldsValue({ title: rawName });
+        }
+
+        // Gợi ý loại tài nguyên phù hợp
+        if ([".pdf", ".docx", ".doc", ".pptx", ".ppt", ".xlsx", ".xls"].includes(ext)) {
+          form.setFieldsValue({ type: "Document" });
+        } else if ([".png", ".jpg", ".jpeg", ".webp", ".gif"].includes(ext)) {
+          form.setFieldsValue({ type: "Other" });
+        }
+
+        return false; // Chặn antd tự động upload
+      },
+      [form]
+    );
+
+    // Xử lý gửi Form: Upload file lên Cloudinary
+    const handleFileUploadSubmit = async (values: any) => {
+      if (!classId || !selectedFile) {
+        toast.error("Vui lòng chọn file tài liệu cần tải lên!");
+        return;
+      }
+      setSubmitting(true);
+      setUploadProgress(0);
+      const controller = new AbortController();
+      abortControllerRef.current = controller;
+
+      try {
+        const formData = new FormData();
+        formData.append("file", selectedFile);
+        formData.append("title", values.title.trim());
+        if (values.description?.trim()) {
+          formData.append("description", values.description.trim());
+        }
+        formData.append("type", values.type || "Document");
+
+        const res = await classApi.uploadResource(
+          classId,
+          formData,
+          (percent) => {
+            setUploadProgress(percent);
+          },
+          controller.signal
+        );
+
+        toast.success("Tải tài liệu lên lớp học thành công!");
+        if (res.data?.warning) {
+          toast.warning(res.data.warning);
+        }
+        handleCloseModal();
+        if (onRefresh) onRefresh();
+      } catch (err: any) {
+        if (err?.name === "CanceledError" || err?.code === "ERR_CANCELED") {
+          toast.info("Đã hủy quá trình tải tài liệu.");
+        } else {
+          toast.error(getApiErrorMessage(err, "Lỗi khi tải tài liệu lên!"));
+        }
+      } finally {
+        setSubmitting(false);
+        abortControllerRef.current = null;
+      }
+    };
+
+    // Xử lý gửi Form: Thêm liên kết ngoài (Dán URL)
+    const handleAddLinkResourceSubmit = async (values: any) => {
       if (!classId) return;
       setSubmitting(true);
       try {
@@ -177,9 +310,8 @@ export const TeacherMaterialsTab: React.FC<TeacherMaterialsTabProps> = React.mem
           url: values.url.trim(),
         });
 
-        toast.success("Thêm tài liệu học tập mới thành công!");
-        setIsAddModalOpen(false);
-        form.resetFields();
+        toast.success("Thêm liên kết tài liệu mới thành công!");
+        handleCloseModal();
         if (onRefresh) onRefresh();
       } catch (err: unknown) {
         toast.error(getApiErrorMessage(err, "Lỗi khi thêm tài liệu!"));
@@ -188,7 +320,20 @@ export const TeacherMaterialsTab: React.FC<TeacherMaterialsTabProps> = React.mem
       }
     };
 
-    // Handle delete resource
+    // Đóng và reset modal
+    const handleCloseModal = () => {
+      if (submitting && abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+      setIsAddModalOpen(false);
+      form.resetFields();
+      setSelectedFile(null);
+      setUploadProgress(0);
+      setSubmitting(false);
+      setUploadMode("file");
+    };
+
+    // Xóa tài liệu khỏi lớp học
     const handleDeleteResource = async (resourceId: string) => {
       if (!classId || !resourceId) return;
       try {
@@ -201,30 +346,54 @@ export const TeacherMaterialsTab: React.FC<TeacherMaterialsTabProps> = React.mem
     };
 
     // Helper: File Type Icon
-    const getFileTypeIcon = (type?: string) => {
-      switch (type) {
-        case "Video":
+    const getFileTypeIcon = (record: ResourceItem) => {
+      const meta = classifyResource(record);
+      switch (meta.kind) {
+        case "youtube":
+        case "video":
           return <VideoCameraOutlined style={{ fontSize: 24, color: "var(--color-error-base)" }} />;
-        case "Link":
+        case "pdf":
+          return <FilePdfOutlined style={{ fontSize: 24, color: "var(--color-error-base)" }} />;
+        case "docx":
+          return <FileWordOutlined style={{ fontSize: 24, color: "var(--color-action-primary-bg, #1677ff)" }} />;
+        case "excel":
+          return <FileExcelOutlined style={{ fontSize: 24, color: "var(--color-success-base, #10b981)" }} />;
+        case "slide":
+          return <FilePptOutlined style={{ fontSize: 24, color: "var(--color-warning-base)" }} />;
+        case "image":
+          return <FileImageOutlined style={{ fontSize: 24, color: "var(--color-action-primary-bg)" }} />;
+        case "zip":
+          return <FileZipOutlined style={{ fontSize: 24, color: "var(--color-secondary-icon)" }} />;
+        case "link":
           return <LinkOutlined style={{ fontSize: 24, color: "var(--color-action-primary-bg)" }} />;
-        case "Document":
-          return <FilePdfOutlined style={{ fontSize: 24, color: "var(--color-warning-base)" }} />;
         default:
           return <FileUnknownOutlined style={{ fontSize: 24, color: "var(--color-secondary-icon)" }} />;
       }
     };
 
     // Helper: File Type Tag
-    const getTypeTag = (type?: string) => {
-      switch (type) {
-        case "Video":
-          return <Tag color="error">Video bài giảng</Tag>;
-        case "Link":
-          return <Tag color="processing">Liên kết Website</Tag>;
-        case "Document":
-          return <Tag color="warning">Tài liệu / PDF</Tag>;
+    const getTypeTag = (record: ResourceItem) => {
+      const meta = classifyResource(record);
+      switch (meta.kind) {
+        case "youtube":
+        case "video":
+          return <Tag color="error">{meta.label}</Tag>;
+        case "pdf":
+          return <Tag color="red">{meta.label}</Tag>;
+        case "docx":
+          return <Tag color="geekblue">{meta.label}</Tag>;
+        case "excel":
+          return <Tag color="green">{meta.label}</Tag>;
+        case "slide":
+          return <Tag color="orange">{meta.label}</Tag>;
+        case "image":
+          return <Tag color="cyan">{meta.label}</Tag>;
+        case "zip":
+          return <Tag color="purple">{meta.label}</Tag>;
+        case "link":
+          return <Tag color="processing">{meta.label}</Tag>;
         default:
-          return <Tag color="purple">{type || "Khác"}</Tag>;
+          return <Tag color="default">{meta.label}</Tag>;
       }
     };
 
@@ -233,16 +402,26 @@ export const TeacherMaterialsTab: React.FC<TeacherMaterialsTabProps> = React.mem
         title: "Tài liệu",
         key: "title",
         render: (_, record) => {
+          const isUploaded = Boolean(record.publicId);
           const isValidUrl = isValidHttpUrl(record.url);
           const domain = isValidUrl ? getDomainFromUrl(record.url) : "";
 
           return (
             <Space size={12} align="start">
-              {getFileTypeIcon(record.type)}
+              {getFileTypeIcon(record)}
               <div style={{ maxWidth: 360 }}>
-                <Text strong style={{ fontSize: 14, display: "block" }}>
+                <Link
+                  to={`/teacher/classroom-detail/${classId}/resource/${record._id}`}
+                  style={{
+                    fontSize: 14,
+                    fontWeight: 600,
+                    color: "var(--color-action-primary-bg, #1677ff)",
+                    display: "block",
+                  }}
+                  className="hover:underline"
+                >
                   {record.title}
-                </Text>
+                </Link>
                 {record.description && (
                   <Paragraph
                     type="secondary"
@@ -253,9 +432,24 @@ export const TeacherMaterialsTab: React.FC<TeacherMaterialsTabProps> = React.mem
                   </Paragraph>
                 )}
 
-                {/* URL Source / Domain Info */}
-                {isValidUrl ? (
-                  <Tooltip title={`Mở liên kết: ${record.url}`} placement="topLeft">
+                {/* Storage badge hoặc URL Source */}
+                {isUploaded ? (
+                  <Space size={6} wrap style={{ marginTop: 2 }}>
+                    <Tag
+                      color="blue"
+                      icon={<CloudUploadOutlined />}
+                      style={{ fontSize: 11, borderRadius: 4 }}
+                    >
+                      Lưu trữ riêng tư {record.bytes ? `(${(record.bytes / 1024 / 1024).toFixed(1)} MB)` : ""}
+                    </Tag>
+                    {record.originalFilename && (
+                      <Text type="secondary" style={{ fontSize: 11 }}>
+                        • {record.originalFilename}
+                      </Text>
+                    )}
+                  </Space>
+                ) : isValidUrl ? (
+                  <Tooltip title={`Mở liên kết gốc: ${record.url}`} placement="topLeft">
                     <a
                       href={record.url}
                       target="_blank"
@@ -321,10 +515,9 @@ export const TeacherMaterialsTab: React.FC<TeacherMaterialsTabProps> = React.mem
       },
       {
         title: "Loại tệp",
-        dataIndex: "type",
         key: "type",
         width: 140,
-        render: (type) => getTypeTag(type),
+        render: (_, record) => getTypeTag(record),
       },
       {
         title: "Người đăng",
@@ -354,31 +547,20 @@ export const TeacherMaterialsTab: React.FC<TeacherMaterialsTabProps> = React.mem
         width: 160,
         align: "right",
         render: (_, record) => {
-          const isValidUrl = isValidHttpUrl(record.url);
-
           return (
             <Space size={8}>
-              {isValidUrl ? (
-                <Tooltip title="Mở liên kết / Xem tài liệu">
+              <Tooltip title="Xem tài liệu trực tiếp (PDF, Word, Video YouTube, Link)">
+                <Link to={`/teacher/classroom-detail/${classId}/resource/${record._id}`}>
                   <Button
                     type="primary"
                     size="small"
-                    icon={<ExportOutlined />}
-                    href={record.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                    icon={<EyeOutlined />}
                     style={{ borderRadius: 6 }}
                   >
-                    Mở
+                    Xem
                   </Button>
-                </Tooltip>
-              ) : (
-                <Tooltip title="Đường dẫn không hợp lệ hoặc không an toàn (chỉ hỗ trợ http:// hoặc https://)">
-                  <Button disabled size="small" icon={<WarningOutlined />} style={{ borderRadius: 6 }}>
-                    Không hợp lệ
-                  </Button>
-                </Tooltip>
-              )}
+                </Link>
+              </Tooltip>
 
               <Popconfirm
                 title="Xóa tài liệu này?"
@@ -669,21 +851,133 @@ export const TeacherMaterialsTab: React.FC<TeacherMaterialsTabProps> = React.mem
 
         {/* 3. Modal Thêm Tài nguyên mới */}
         <Modal
-          title="Tải lên / Thêm tài liệu mới cho lớp học"
+          title="Thêm tài liệu học tập mới cho lớp học"
           open={isAddModalOpen}
-          onCancel={() => {
-            setIsAddModalOpen(false);
-            form.resetFields();
-          }}
+          onCancel={handleCloseModal}
           footer={null}
           destroyOnClose
+          width={580}
         >
+          {/* Mode Switcher */}
+          <div style={{ marginTop: 8, marginBottom: 20 }}>
+            <Radio.Group
+              value={uploadMode}
+              onChange={(e) => {
+                setUploadMode(e.target.value);
+                form.resetFields();
+                setSelectedFile(null);
+                setUploadProgress(0);
+              }}
+              buttonStyle="solid"
+              style={{ width: "100%", display: "flex" }}
+              disabled={submitting}
+            >
+              <Radio.Button value="file" style={{ flex: 1, textAlign: "center" }}>
+                <CloudUploadOutlined style={{ marginRight: 6 }} />
+                Tải file từ máy (Khuyến nghị)
+              </Radio.Button>
+              <Radio.Button value="link" style={{ flex: 1, textAlign: "center" }}>
+                <LinkOutlined style={{ marginRight: 6 }} />
+                Dán liên kết URL
+              </Radio.Button>
+            </Radio.Group>
+          </div>
+
+          {/* Form Content */}
+          {uploadMode === "file" && (
+            <div style={{ marginBottom: 16 }}>
+              {!selectedFile ? (
+                <Upload.Dragger
+                  name="file"
+                  multiple={false}
+                  showUploadList={false}
+                  beforeUpload={handleBeforeUpload}
+                  accept=".pdf,.docx,.doc,.pptx,.ppt,.xlsx,.xls,.png,.jpg,.jpeg,.webp,.gif"
+                  disabled={submitting}
+                  style={{
+                    padding: "20px 0",
+                    borderRadius: 12,
+                    border: "2px dashed var(--color-action-primary-bg, #1677ff)",
+                    backgroundColor: "#f8fafc",
+                  }}
+                >
+                  <p className="ant-upload-drag-icon" style={{ marginBottom: 8 }}>
+                    <InboxOutlined style={{ fontSize: 40, color: "var(--color-action-primary-bg, #1677ff)" }} />
+                  </p>
+                  <p className="ant-upload-text" style={{ fontSize: 14, fontWeight: 600, margin: "0 0 4px" }}>
+                    Kéo thả file vào đây hoặc bấm để chọn tệp từ máy
+                  </p>
+                  <p className="ant-upload-hint" style={{ fontSize: 12, color: "var(--color-text-secondary)", margin: 0 }}>
+                    Hỗ trợ PDF, Word (.docx), PowerPoint (.pptx), Excel, Ảnh (Tối đa 50 MB)
+                  </p>
+                </Upload.Dragger>
+              ) : (
+                <Card
+                  size="small"
+                  style={{
+                    backgroundColor: "#f0fdf4",
+                    borderColor: "#86efac",
+                    borderRadius: 10,
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                    <Space size={12}>
+                      <FileOutlined style={{ fontSize: 26, color: "#16a34a" }} />
+                      <div>
+                        <Text strong style={{ fontSize: 13, display: "block" }}>
+                          {selectedFile.name}
+                        </Text>
+                        <Text type="secondary" style={{ fontSize: 12 }}>
+                          {(selectedFile.size / (1024 * 1024)).toFixed(2)} MB • File đã sẵn sàng tải lên
+                        </Text>
+                      </div>
+                    </Space>
+                    {!submitting && (
+                      <Button
+                        type="text"
+                        danger
+                        icon={<CloseCircleOutlined />}
+                        onClick={() => {
+                          setSelectedFile(null);
+                          form.setFieldsValue({ title: "" });
+                        }}
+                        size="small"
+                      >
+                        Đổi file
+                      </Button>
+                    )}
+                  </div>
+                </Card>
+              )}
+            </div>
+          )}
+
+          {/* Progress Bar khi đang upload */}
+          {submitting && uploadMode === "file" && (
+            <div
+              style={{
+                marginBottom: 16,
+                padding: "12px 16px",
+                backgroundColor: "#eff6ff",
+                borderRadius: 8,
+                border: "1px solid #bfdbfe",
+              }}
+            >
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
+                <Text strong style={{ fontSize: 12, color: "#1e40af" }}>
+                  Đang tải file lên Cloudinary an toàn...
+                </Text>
+                <Text style={{ fontSize: 12, color: "#1e40af", fontWeight: 700 }}>{uploadProgress}%</Text>
+              </div>
+              <Progress percent={uploadProgress} status="active" strokeColor="var(--color-action-primary-bg, #1677ff)" />
+            </div>
+          )}
+
           <Form
             form={form}
             layout="vertical"
-            onFinish={handleAddResourceSubmit}
+            onFinish={uploadMode === "file" ? handleFileUploadSubmit : handleAddLinkResourceSubmit}
             validateTrigger="onBlur"
-            style={{ marginTop: 16 }}
           >
             <Form.Item
               name="title"
@@ -716,48 +1010,52 @@ export const TeacherMaterialsTab: React.FC<TeacherMaterialsTabProps> = React.mem
                 placeholder="Ví dụ: Tài liệu ôn tập Chương 1 - Đề cương môn học"
                 maxLength={200}
                 showCount
+                disabled={submitting}
               />
             </Form.Item>
 
             <Form.Item name="type" label="Loại tài nguyên" initialValue="Document">
               <Select
+                disabled={submitting}
                 options={[
-                  { value: "Document", label: "Văn bản / Tài liệu PDF" },
+                  { value: "Document", label: "Văn bản / Tài liệu PDF / Word" },
                   { value: "Video", label: "Video bài giảng" },
                   { value: "Link", label: "Liên kết trang web (Link)" },
-                  { value: "Other", label: "Tệp đính kèm khác" },
+                  { value: "Other", label: "Tệp đính kèm khác (Slide, Excel, Ảnh)" },
                 ]}
               />
             </Form.Item>
 
-            <Form.Item
-              name="url"
-              label="Đường dẫn URL tài nguyên"
-              rules={[
-                { required: true, message: "Vui lòng nhập đường dẫn URL tài nguyên!" },
-                {
-                  validator: (_, value) => {
-                    if (!value || !value.trim()) return Promise.resolve();
-                    const trimmed = value.trim();
-                    if (!trimmed.startsWith("http://") && !trimmed.startsWith("https://")) {
-                      return Promise.reject(
-                        new Error("URL tài liệu bắt buộc phải bắt đầu bằng http:// hoặc https://")
-                      );
-                    }
-                    try {
-                      new URL(trimmed);
-                      return Promise.resolve();
-                    } catch {
-                      return Promise.reject(
-                        new Error("Định dạng URL không hợp lệ (ví dụ: https://drive.google.com/...)")
-                      );
-                    }
+            {uploadMode === "link" && (
+              <Form.Item
+                name="url"
+                label="Đường dẫn URL tài nguyên"
+                rules={[
+                  { required: true, message: "Vui lòng nhập đường dẫn URL tài nguyên!" },
+                  {
+                    validator: (_, value) => {
+                      if (!value || !value.trim()) return Promise.resolve();
+                      const trimmed = value.trim();
+                      if (!trimmed.startsWith("http://") && !trimmed.startsWith("https://")) {
+                        return Promise.reject(
+                          new Error("URL tài liệu bắt buộc phải bắt đầu bằng http:// hoặc https://")
+                        );
+                      }
+                      try {
+                        new URL(trimmed);
+                        return Promise.resolve();
+                      } catch {
+                        return Promise.reject(
+                          new Error("Định dạng URL không hợp lệ (ví dụ: https://drive.google.com/...)")
+                        );
+                      }
+                    },
                   },
-                },
-              ]}
-            >
-              <Input placeholder="https://drive.google.com/... hoặc https://youtube.com/..." />
-            </Form.Item>
+                ]}
+              >
+                <Input placeholder="https://drive.google.com/... hoặc https://youtube.com/..." disabled={submitting} />
+              </Form.Item>
+            )}
 
             <Form.Item
               name="description"
@@ -769,32 +1067,33 @@ export const TeacherMaterialsTab: React.FC<TeacherMaterialsTabProps> = React.mem
                 placeholder="Nhập ghi chú chi tiết hoặc dặn dò học sinh khi xem tài liệu..."
                 maxLength={500}
                 showCount
+                disabled={submitting}
               />
             </Form.Item>
 
             <div style={{ display: "flex", justifyContent: "flex-end", gap: 12, marginTop: 24 }}>
-              <Button onClick={() => setIsAddModalOpen(false)}>Hủy</Button>
+              <Button onClick={handleCloseModal} disabled={submitting}>
+                {submitting ? "Hủy tải lên" : "Hủy"}
+              </Button>
               <Form.Item noStyle shouldUpdate>
                 {() => {
                   const hasErrors = form.getFieldsError().some(({ errors }) => errors.length > 0);
                   const titleVal = form.getFieldValue("title");
                   const urlVal = form.getFieldValue("url");
-                  const isFormIncomplete =
-                    !titleVal ||
-                    !urlVal ||
-                    typeof titleVal !== "string" ||
-                    typeof urlVal !== "string" ||
-                    !titleVal.trim() ||
-                    !urlVal.trim();
+                  const isFileIncomplete =
+                    uploadMode === "file" && (!selectedFile || !titleVal || !titleVal.trim());
+                  const isLinkIncomplete =
+                    uploadMode === "link" &&
+                    (!titleVal || !urlVal || !titleVal.trim() || !urlVal.trim());
 
                   return (
                     <Button
                       type="primary"
                       htmlType="submit"
                       loading={submitting}
-                      disabled={hasErrors || isFormIncomplete}
+                      disabled={hasErrors || (uploadMode === "file" ? isFileIncomplete : isLinkIncomplete)}
                     >
-                      Lưu tài liệu
+                      {uploadMode === "file" ? "Tải lên & Lưu" : "Lưu liên kết"}
                     </Button>
                   );
                 }}
@@ -808,3 +1107,4 @@ export const TeacherMaterialsTab: React.FC<TeacherMaterialsTabProps> = React.mem
 );
 
 TeacherMaterialsTab.displayName = "TeacherMaterialsTab";
+

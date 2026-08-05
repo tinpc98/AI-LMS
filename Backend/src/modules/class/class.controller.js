@@ -7,6 +7,11 @@ import { Course } from "#modules/course";
 import { User } from "#modules/auth";
 import classService from "./class.service.js";
 import { attachStudentProgress } from "./classProgress.service.js";
+import storageService from "#shared/services/storage.service.js";
+import {
+  CLASS_STORAGE_LIMIT_BYTES,
+  QUOTA_WARNING_THRESHOLD,
+} from "#shared/middlewares/resourceUpload.middleware.js";
 
 // Lấy danh sách lớp học (Hỗ trợ phân trang, tìm kiếm và lọc theo vai trò)
 export const ClassList = asyncHandler(async (req, res) => {
@@ -394,6 +399,25 @@ export const RemoveResource = asyncHandler(async (req, res) => {
     return res.status(404).json({ success: false, message: "Lớp học không tồn tại" });
   }
 
+  const resource = targetClass.resources.find(
+    (r) => r._id && r._id.toString() === resourceId.toString()
+  );
+
+  // Nếu là file upload (có publicId), xóa trên Cloudinary trước.
+  // Thất bại Cloudinary: ghi log, vẫn xóa DB — không chặn người dùng vì lỗi ngoài.
+  if (resource?.publicId) {
+    const deleted = await storageService.deleteFile(resource.publicId, {
+      resourceType: resource.resourceType || "raw",
+      storageType: resource.storageType || "authenticated",
+    });
+    if (!deleted) {
+      console.error(
+        `[RemoveResource] Xóa file Cloudinary thất bại. publicId: "${resource.publicId}" ` +
+          `(classId: ${id}, resourceId: ${resourceId}) — cần dọn dẹp thủ công.`
+      );
+    }
+  }
+
   targetClass.resources = targetClass.resources.filter(
     (r) => r._id && r._id.toString() !== resourceId.toString()
   );
@@ -591,5 +615,199 @@ export const UpdateStudentStatus = asyncHandler(async (req, res) => {
     success: true,
     message: `Cập nhật trạng thái học sinh thành "${status}" thành công`,
     data: updatedStudent,
+  });
+});
+
+//=====================================================================================
+// Upload tài liệu lên Cloudinary (Dành cho Teacher/Admin phụ trách lớp)
+// POST /api/classes/:id/resources/upload
+export const UploadResource = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { title, description, type } = req.body;
+
+  if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+    return res.status(400).json({ success: false, message: "ID lớp học không hợp lệ!" });
+  }
+
+  // req.file đã được multer + validateMagicBytes xác nhận hợp lệ trước khi vào đây.
+  if (!req.file) {
+    return res.status(400).json({ success: false, message: "Chưa có file được tải lên." });
+  }
+
+  if (!title || !title.trim()) {
+    return res.status(400).json({ success: false, message: "Tiêu đề tài liệu là bắt buộc." });
+  }
+
+  // Kiểm tra quyền: phải là giáo viên phụ trách LỚP NÀY hoặc admin
+  const userId = req.user?.id || req.user?._id;
+  const isAuthorized = await classService.checkClassTeacherOwnership(id, userId, req.user?.role);
+  if (!isAuthorized) {
+    return res
+      .status(403)
+      .json({ success: false, message: "Bạn không có quyền tải tài liệu lên lớp học này!" });
+  }
+
+  const targetClass = await classRepo.findClassById(id);
+  if (!targetClass) {
+    return res.status(404).json({ success: false, message: "Lớp học không tồn tại." });
+  }
+
+  // Kiểm tra hạn mức lớp
+  const currentUsage = targetClass.resources.reduce((sum, r) => sum + (r.bytes || 0), 0);
+  const newFileSize = req.file.size;
+  const projectedUsage = currentUsage + newFileSize;
+
+  if (projectedUsage > CLASS_STORAGE_LIMIT_BYTES) {
+    const usedMB = (currentUsage / (1024 * 1024)).toFixed(1);
+    const limitMB = (CLASS_STORAGE_LIMIT_BYTES / (1024 * 1024 * 1024)).toFixed(0);
+    const availableMB = ((CLASS_STORAGE_LIMIT_BYTES - currentUsage) / (1024 * 1024)).toFixed(1);
+    return res.status(400).json({
+      success: false,
+      message: `Lớp đã vượt quá hạn mức lưu trữ. Đã dùng: ${usedMB} MB / ${limitMB} GB. Còn trống: ${availableMB} MB.`,
+      storageUsed: currentUsage,
+      storageLimit: CLASS_STORAGE_LIMIT_BYTES,
+    });
+  }
+
+  // Upload lên Cloudinary
+  const uploadResult = await storageService.uploadFile(
+    req.file.buffer,
+    req.file.originalname,
+    {
+      folder: `eduspace/classes/${id}`,
+      resourceType: "raw",
+    }
+  );
+
+  // Xác định loại tài nguyên dựa trên type do client gửi hoặc MIME đã phát hiện
+  const validTypes = ["Document", "Video", "Link", "Other"];
+  const detectedExt = req.file.detectedExt || "";
+  const nameExt =
+    req.file.originalname && req.file.originalname.includes(".")
+      ? req.file.originalname.split(".").pop().toLowerCase()
+      : "";
+  const resolvedFormat = (detectedExt || nameExt || uploadResult.format || "").toLowerCase() || null;
+
+  let resourceTypeLabel = "Document";
+  if (validTypes.includes(type)) {
+    resourceTypeLabel = type;
+  } else if (["jpg", "jpeg", "png", "webp", "gif"].includes(resolvedFormat || "")) {
+    resourceTypeLabel = "Other";
+  }
+
+  const newResource = {
+    title: title.trim(),
+    description: description?.trim() || "",
+    type: resourceTypeLabel,
+    url: null,               // Không có URL ngoài, dùng publicId
+    publicId: uploadResult.publicId,
+    storageType: "authenticated",
+    resourceType: uploadResult.resourceType,
+    format: resolvedFormat,
+    bytes: uploadResult.bytes,
+    originalFilename: req.file.originalname,
+    uploadedBy: userId,
+    uploadedAt: new Date(),
+  };
+
+  targetClass.resources.push(newResource);
+  await targetClass.save();
+
+  // Tính quota sau upload
+  const usageAfter = projectedUsage;
+  const isNearQuota = usageAfter / CLASS_STORAGE_LIMIT_BYTES >= QUOTA_WARNING_THRESHOLD;
+
+  const response = {
+    success: true,
+    message: "Tải tài liệu lên thành công!",
+    data: targetClass.resources[targetClass.resources.length - 1],
+    storageUsed: usageAfter,
+    storageLimit: CLASS_STORAGE_LIMIT_BYTES,
+  };
+
+  if (isNearQuota) {
+    response.warning = `Lớp đã dùng ${((usageAfter / CLASS_STORAGE_LIMIT_BYTES) * 100).toFixed(1)}% dung lượng. Vui lòng xóa bớt tài liệu cũ để tránh hết quota.`;
+  }
+
+  return res.status(201).json(response);
+});
+
+//=====================================================================================
+// Lấy URL đã ký để xem tài liệu (Student Enrolled, Teacher phụ trách, Admin)
+// GET /api/classes/:classId/resources/:resourceId/access
+export const GetResourceAccessUrl = asyncHandler(async (req, res) => {
+  const { classId, resourceId } = req.params;
+
+  if (!classId || !mongoose.Types.ObjectId.isValid(classId)) {
+    return res.status(400).json({ success: false, message: "ID lớp học không hợp lệ!" });
+  }
+  if (!resourceId || !mongoose.Types.ObjectId.isValid(resourceId)) {
+    return res.status(400).json({ success: false, message: "ID tài nguyên không hợp lệ!" });
+  }
+
+  // Quan trọng: tìm lớp từ classId do client gửi, rồi XÁC NHẬN resource thật sự thuộc lớp đó.
+  // Nếu không làm bước này, sinh viên có thể gửi classId của lớp mình + resourceId của lớp khác.
+  const targetClass = await classRepo.findClassById(classId);
+  if (!targetClass) {
+    return res.status(404).json({ success: false, message: "Lớp học không tồn tại." });
+  }
+
+  const resource = targetClass.resources.find(
+    (r) => r._id && r._id.toString() === resourceId.toString()
+  );
+
+  if (!resource) {
+    return res.status(404).json({
+      success: false,
+      message: "Tài nguyên không tồn tại trong lớp học này.",
+    });
+  }
+
+  // Nếu là liên kết ngoài (không có publicId), trả thẳng URL — không cần ký
+  if (!resource.publicId) {
+    return res.status(200).json({
+      success: true,
+      data: {
+        signedUrl: resource.url,
+        expiresAt: null,
+        isExternal: true,
+      },
+    });
+  }
+
+  // Kiểm tra quyền
+  const userId = (req.user?.id || req.user?._id || "").toString();
+  const userRole = (req.user?.role || "").toLowerCase();
+
+  let isAuthorized = false;
+
+  if (userRole === "admin") {
+    isAuthorized = true;
+  } else if (userRole === "teacher") {
+    isAuthorized = targetClass.teacherId?.toString() === userId;
+  } else if (userRole === "student") {
+    // Chỉ sinh viên có trạng thái Enrolled mới được xem
+    const studentEntry = (targetClass.students || []).find(
+      (s) => s.studentId && s.studentId.toString() === userId
+    );
+    isAuthorized = studentEntry?.status === "Enrolled";
+  }
+
+  if (!isAuthorized) {
+    return res.status(403).json({
+      success: false,
+      message: "Bạn không có quyền xem tài nguyên này.",
+    });
+  }
+
+  // Sinh URL đã ký, hiệu lực 2 giờ
+  const { signedUrl, expiresAt } = storageService.getSignedUrl(resource.publicId, {
+    resourceType: resource.resourceType || "raw",
+    durationSeconds: 7200,
+  });
+
+  return res.status(200).json({
+    success: true,
+    data: { signedUrl, expiresAt, isExternal: false },
   });
 });
