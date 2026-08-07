@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
-import { resolveAttemptDeadline } from "./attemptDeadline.js";
+import crypto from "crypto";
+import { resolveAttemptDeadline, isSubmissionRejected } from "./attemptDeadline.js";
 import { buildAttemptStats } from "./attemptStats.js";
 import { logger } from "#shared/utils/logger.js";
 import examAttemptService from "./examAttempt.service.js";
@@ -71,13 +72,16 @@ export const startExam = asyncHandler(async (req, res) => {
   if (exam.startTime && new Date() < new Date(exam.startTime)) {
     return res.status(403).json({
       success: false,
+      errorCode: "NOT_STARTED",
       message: "Kỳ thi chưa tới giờ bắt đầu!",
+      startTime: exam.startTime,
     });
   }
 
   const existingAttempt = await ExamAttempt.findOne({
     examId,
     studentId,
+    isDeleted: false,
   });
 
   if (existingAttempt) {
@@ -95,9 +99,69 @@ export const startExam = asyncHandler(async (req, res) => {
     }
 
     if (existingAttempt.status === "IN_PROGRESS") {
+      const { takeover, sessionToken: oldToken, tabId } = req.body;
+      const isAlive =
+        existingAttempt.lastHeartbeat && Date.now() - existingAttempt.lastHeartbeat.getTime() < 60000;
+      
+      // Kịch bản Cùng token
+      if (oldToken && oldToken === existingAttempt.sessionToken) {
+        // Cùng tabId -> Tải lại trang (F5) hoặc vô tình gọi lại API
+        if (tabId && tabId === existingAttempt.activeTabId) {
+          existingAttempt.lastHeartbeat = new Date();
+          await existingAttempt.save();
+          return res.status(200).json({
+            success: true,
+            message: "Tiếp tục bài thi hiện tại.",
+            data: existingAttempt,
+          });
+        }
+        
+        // Khác tabId, phiên cũ ĐÃ CHẾT -> Chính chủ vào lại sau khi sập tab/rớt mạng (KHÔNG HỎI TAKEOVER)
+        if (!isAlive) {
+          existingAttempt.activeTabId = tabId;
+          existingAttempt.lastHeartbeat = new Date();
+          await existingAttempt.save();
+          return res.status(200).json({
+            success: true,
+            message: "Khôi phục phiên làm bài (tab mới).",
+            data: existingAttempt,
+          });
+        }
+
+        // Khác tabId, phiên cũ CÒN SỐNG -> Mở 2 tab song song -> Hỏi takeover
+        if (isAlive && !takeover) {
+          return res.status(409).json({
+            success: false,
+            errorCode: "SESSION_ACTIVE",
+            message: "Hệ thống phát hiện phiên làm bài đang mở hoặc chưa được đóng đúng cách. Bấm Tiếp tục để kết nối lại.",
+          });
+        }
+      } else {
+        // Kịch bản Khác token (Thiết bị khác hoàn toàn) -> Hỏi takeover
+        if (isAlive && !takeover) {
+          return res.status(409).json({
+            success: false,
+            errorCode: "SESSION_ACTIVE",
+            message: "Bài thi này đang được làm ở thiết bị khác. Tiếp tục ở đây sẽ ngắt kết nối thiết bị kia.",
+          });
+        }
+      }
+
+      // Takeover hoặc session đã chết (và khác token)
+      existingAttempt.sessionToken = crypto.randomBytes(16).toString("hex");
+      existingAttempt.activeTabId = tabId;
+      existingAttempt.lastHeartbeat = new Date();
+      existingAttempt.takeoverCount += 1;
+      existingAttempt.deviceLogs.push({
+        ip: req.ip,
+        userAgent: req.headers["user-agent"],
+        takeoverTime: new Date(),
+      });
+      await existingAttempt.save();
+
       return res.status(200).json({
         success: true,
-        message: "Học sinh đang làm dở, chuyển tiếp vào phòng thi.",
+        message: takeover ? "Đã tiếp quản phiên thi từ thiết bị khác." : "Học sinh đang làm dở, chuyển tiếp vào phòng thi.",
         data: existingAttempt,
       });
     }
@@ -108,9 +172,34 @@ export const startExam = asyncHandler(async (req, res) => {
     studentId,
     status: "IN_PROGRESS",
     startTime: new Date(),
+    sessionToken: crypto.randomBytes(16).toString("hex"),
+    activeTabId: req.body.tabId,
+    lastHeartbeat: new Date(),
+    deviceLogs: [
+      {
+        ip: req.ip,
+        userAgent: req.headers["user-agent"],
+        takeoverTime: new Date(),
+      },
+    ],
   });
 
-  await newAttempt.save();
+  try {
+    await newAttempt.save();
+  } catch (error) {
+    if (error.code === 11000) {
+      // Bị lỗi trùng lặp (Race condition) -> Trả về bản ghi đang tồn tại thay vì ném lỗi
+      const existing = await ExamAttempt.findOne({ examId, studentId, isDeleted: false });
+      if (existing) {
+        return res.status(200).json({
+          success: true,
+          message: "Lượt thi đã được tạo trước đó.",
+          data: existing,
+        });
+      }
+    }
+    throw error;
+  }
 
   return res.status(201).json({
     success: true,
@@ -201,18 +290,21 @@ export const getExamAttemptDetail = asyncHandler(async (req, res) => {
     data: {
       _id: attempt._id,
       status: attempt.status,
+      answersVersion: attempt.answersVersion || 0,
       examInfo: {
         title: exam.title,
         duration: exam.duration,
         startTime: exam.startTime,
         classId: exam.classId,
       },
-      // Hạn nộp TUYỆT ĐỐI của chính lượt thi này (Wave 7+).
-      //
-      // Trước đây trường này không được trả về, nên đồng hồ đếm ngược ở Frontend tự tính hạn
-      // rồi lưu vào localStorage — xoá localStorage là có đồng hồ mới, trọn thời gian.
-      // useExamTimer vốn đã có sẵn tham số nhận mốc này, chỉ là chưa ai gửi.
+      // Hạn nộp TUYỆT ĐỐI của chính lượt thi này.
+      // Frontend dùng để khóa đồng hồ vào mốc này thay vì tự tính.
       endTime: resolveAttemptDeadline(attempt.startTime, exam.duration),
+      // Giờ máy chủ tại thời điểm trả response.
+      // Frontend dùng để tính offset = serverTime - Date.now(), sau đó
+      // tính lại remaining = (endTime - (Date.now() + offset)) để bù sai lệch.
+      serverTime: new Date().toISOString(),
+      cheatWarnings: attempt.cheatWarnings || 0,
       questions: formattedQuestions,
     },
   });
@@ -227,6 +319,8 @@ export const submitExam = asyncHandler(async (req, res) => {
   const userId = req.user?.id || req.user?._id;
   const userRole = String(req.user?.role || "").toLowerCase();
 
+  const sessionToken = req.headers["x-session-token"];
+
   if (!attemptId || !mongoose.Types.ObjectId.isValid(attemptId)) {
     return res.status(400).json({
       success: false,
@@ -234,15 +328,7 @@ export const submitExam = asyncHandler(async (req, res) => {
     });
   }
 
-  if (!Array.isArray(answers)) {
-    return res.status(400).json({
-      success: false,
-      message: "Dữ liệu bài làm không hợp lệ!",
-    });
-  }
-
   const attempt = await ExamAttempt.findById(attemptId);
-
   if (!attempt) {
     return res.status(404).json({
       success: false,
@@ -250,10 +336,35 @@ export const submitExam = asyncHandler(async (req, res) => {
     });
   }
 
+  // Session token matching
+  if (userRole === "student" && attempt.sessionToken && sessionToken !== attempt.sessionToken) {
+    return res.status(403).json({
+      success: false,
+      errorCode: "SESSION_MISMATCH",
+      message: "Bài thi này đang được làm ở thiết bị khác. Không thể nộp bài từ đây.",
+    });
+  }
+
   if (userRole === "student" && attempt.studentId?.toString() !== userId?.toString()) {
     return res.status(403).json({
       success: false,
       message: "Bạn không có quyền nộp bài thi của người khác!",
+    });
+  }
+
+  if (attempt.status !== "IN_PROGRESS") {
+    return res.status(400).json({
+      success: false,
+      message: "Bài thi này đã được nộp hoặc đã chốt điểm trước đó!",
+    });
+  }
+
+  const exam = await Exam.findById(attempt.examId).select("duration startTime").lean();
+  const rejection = isSubmissionRejected(attempt, exam);
+  if (rejection.rejected) {
+    return res.status(403).json({
+      success: false,
+      message: rejection.message,
     });
   }
 
@@ -305,12 +416,27 @@ export const getAttemptForReview = asyncHandler(async (req, res) => {
 
   const userId = (req.user.id || req.user._id || "").toString();
   const userRole = (req.user.role || "").toLowerCase();
-  const isAuthorized = await checkClassTeacherOwnership(exam.classId, userId, userRole);
-  if (!isAuthorized) {
-    return res.status(403).json({
-      success: false,
-      message: "Bạn không có quyền xem bài làm của lớp học này!",
-    });
+  
+  let hideAnswers = false;
+  if (userRole === "student") {
+    if (attempt.studentId._id.toString() !== userId) {
+      return res.status(403).json({
+        success: false,
+        message: "Bạn không có quyền xem chi tiết bài thi của người khác!",
+      });
+    }
+    const examEndTime = new Date(new Date(exam.startTime).getTime() + exam.duration * 60000);
+    if (new Date() < examEndTime) {
+      hideAnswers = true;
+    }
+  } else {
+    const isAuthorized = await checkClassTeacherOwnership(exam.classId, userId, userRole);
+    if (!isAuthorized) {
+      return res.status(403).json({
+        success: false,
+        message: "Bạn không có quyền xem bài làm của lớp học này!",
+      });
+    }
   }
 
   const { resolveExamQuestions } = await import("./examQuestionResolver.js");
@@ -328,14 +454,16 @@ export const getAttemptForReview = asyncHandler(async (req, res) => {
       duration: exam.duration,
     },
     status: attempt.status,
-    totalScore: attempt.totalScore,
+    totalScore: hideAnswers ? undefined : attempt.totalScore,
+    isHideAnswers: hideAnswers,
     submittedAt: attempt.endTime,
     cheatWarnings: attempt.cheatWarnings || 0,
+    cheatLogs: attempt.cheatLogs || [],
     // Nộp muộn: giáo viên cần thấy điều này TRƯỚC khi chấm, không phải sau.
     isLate: attempt.isLate || false,
     lateBySeconds: attempt.lateBySeconds || 0,
 
-    answersDetail: validAnswers.map((answer) => {
+    answersDetail: hideAnswers ? [] : validAnswers.map((answer) => {
       const questionId = answer.questionId.toString();
       const questionInfo = questionMap.get(questionId);
 
@@ -471,6 +599,7 @@ export const getAttemptsByExam = asyncHandler(async (req, res) => {
 export const recordCheatWarning = asyncHandler(async (req, res) => {
   const attemptId = req.params.id;
   const { cheatType } = req.body;
+  const sessionToken = req.headers["x-session-token"];
 
   if (!attemptId || !mongoose.Types.ObjectId.isValid(attemptId)) {
     return res.status(400).json({
@@ -488,31 +617,86 @@ export const recordCheatWarning = asyncHandler(async (req, res) => {
     });
   }
 
+  if (attempt.sessionToken && sessionToken !== attempt.sessionToken) {
+    return res.status(403).json({ success: false, message: "Thiết bị không hợp lệ." });
+  }
+
   const validCheatTypes = [
-    "switch_tab",
-    "lose_focus",
-    "multiple_faces",
-    "no_face",
-    "unauthorized_device",
-    "suspicious_audio",
+    "TAB_SWITCH",
+    "FULLSCREEN_EXIT",
+    "COPY_PASTE",
+    "MULTIPLE_FACES"
   ];
 
-  const normalizedCheatType = validCheatTypes.includes(cheatType) ? cheatType : "switch_tab";
+  const normalizedCheatType = validCheatTypes.includes(cheatType) ? cheatType : "TAB_SWITCH";
 
-  attempt.cheatWarnings = (attempt.cheatWarnings || 0) + 1;
+  const updatedAttempt = await ExamAttempt.findOneAndUpdate(
+    { _id: attemptId, status: "IN_PROGRESS" },
+    {
+      $inc: { cheatWarnings: 1 },
+      $push: { cheatLogs: { timestamp: new Date(), cheatType: normalizedCheatType } }
+    },
+    { new: true }
+  );
 
-  if (!Array.isArray(attempt.cheatLogs)) attempt.cheatLogs = [];
-  attempt.cheatLogs.push({ timestamp: new Date(), cheatType: normalizedCheatType });
-
-  await attempt.save();
+  if (!updatedAttempt) {
+    // Nếu status không phải IN_PROGRESS (đã nộp), hoặc bị xoá
+    return res.status(400).json({ success: false, message: "Bài thi không trong trạng thái làm bài hoặc đã được nộp." });
+  }
 
   logger.warn(
-    `🚨 Đã ghi nhận gian lận (${normalizedCheatType}) cho attempt ${attemptId}. Tổng số lần: ${attempt.cheatWarnings}`
+    `🚨 Đã ghi nhận gian lận (${normalizedCheatType}) cho attempt ${attemptId}. Tổng số lần: ${updatedAttempt.cheatWarnings}`
   );
+
+  if (updatedAttempt.cheatWarnings >= 5) {
+    const { default: examAttemptService } = await import("./examAttempt.service.js");
+    await examAttemptService.gradeSubmission(attemptId, updatedAttempt.answers || [], true);
+    
+    return res.status(403).json({
+      success: false,
+      errorCode: "CHEAT_THRESHOLD_REACHED",
+      message: "Bài thi đã được tự động nộp do vi phạm quá 5 lần.",
+      cheatWarnings: updatedAttempt.cheatWarnings,
+    });
+  }
 
   return res.status(200).json({
     success: true,
     message: "Đã ghi nhận cảnh báo gian lận",
-    cheatWarnings: attempt.cheatWarnings,
+    cheatWarnings: updatedAttempt.cheatWarnings,
   });
+});
+
+// =======================================================
+// 8. API CHO HỌC SINH: Heartbeat
+// =======================================================
+export const heartbeat = asyncHandler(async (req, res) => {
+  const attemptId = req.params.id;
+  const sessionToken = req.headers["x-session-token"];
+
+  if (!attemptId || !mongoose.Types.ObjectId.isValid(attemptId)) {
+    return res.status(400).json({ success: false, message: "ID bài thi không hợp lệ!" });
+  }
+
+  const attempt = await ExamAttempt.findById(attemptId);
+  if (!attempt) {
+    return res.status(404).json({ success: false, message: "Không tìm thấy phiên làm bài thi!" });
+  }
+
+  if (attempt.status !== "IN_PROGRESS") {
+    return res.status(400).json({ success: false, message: "Bài thi đã kết thúc." });
+  }
+
+  if (attempt.sessionToken && sessionToken !== attempt.sessionToken) {
+    return res.status(403).json({
+      success: false,
+      errorCode: "SESSION_MISMATCH",
+      message: "Bài thi này đang được làm ở thiết bị khác.",
+    });
+  }
+
+  attempt.lastHeartbeat = new Date();
+  await attempt.save();
+
+  return res.status(200).json({ success: true });
 });

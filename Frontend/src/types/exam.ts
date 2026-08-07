@@ -92,6 +92,7 @@ export interface IExamAttempt {
   endTime?: string;
   cheatCount?: number;
   cheatWarnings?: number;
+  cheatLogs?: Array<{ cheatType: string; timestamp: string }>;
   /** Nộp quá hạn (Wave 7+). Hệ thống vẫn nhận bài, nhưng ghi lại để giáo viên thấy. */
   isLate?: boolean;
   /** Số giây vượt hạn, ĐÃ trừ ân hạn 2 phút. */
@@ -132,8 +133,10 @@ export interface IAttemptReview {
   totalScore?: number;
   submittedAt?: string;
   cheatWarnings: number;
+  cheatLogs?: Array<{ cheatType: string; timestamp: string }>;
   isLate: boolean;
   lateBySeconds: number;
+  isHideAnswers?: boolean;
   answersDetail: IAttemptAnswerDetail[];
 }
 

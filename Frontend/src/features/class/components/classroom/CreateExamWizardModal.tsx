@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import {
-  Drawer,
+  Modal,
+  Popover,
   Steps,
   Form,
   Input,
@@ -29,6 +30,7 @@ import {
   SearchOutlined,
   RocketOutlined,
   SaveOutlined,
+  CloseOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
 
@@ -38,7 +40,7 @@ import { toast } from "../../../../utils/toast";
 
 const { Text, Paragraph } = Typography;
 
-interface CreateExamWizardDrawerProps {
+interface CreateExamWizardModalProps {
   open: boolean;
   onClose: () => void;
   classId: string;
@@ -46,7 +48,7 @@ interface CreateExamWizardDrawerProps {
   onSaved?: () => void;
 }
 
-export const CreateExamWizardDrawer: React.FC<CreateExamWizardDrawerProps> = React.memo(
+export const CreateExamWizardModal: React.FC<CreateExamWizardModalProps> = React.memo(
   ({ open, onClose, classId, className = "Lớp học", onSaved }) => {
     const [currentStep, setCurrentStep] = useState(0);
     const [formStep1] = Form.useForm();
@@ -277,20 +279,35 @@ export const CreateExamWizardDrawer: React.FC<CreateExamWizardDrawerProps> = Rea
       },
     ];
 
+    const handleClose = () => {
+      if (selectedQuestionsList.length > 0 || formStep1.getFieldValue("title")) {
+        Modal.confirm({
+          title: "Xác nhận đóng",
+          content: "Bạn đang có thay đổi chưa lưu. Bạn có chắc chắn muốn đóng và hủy bỏ mọi thay đổi?",
+          okText: "Đóng",
+          cancelText: "Tiếp tục soạn",
+          onOk: onClose,
+        });
+      } else {
+        onClose();
+      }
+    };
+
     return (
-      <Drawer
+      <Modal
         title={
           <Space align="center">
             <FileDoneOutlined style={{ color: "var(--color-action-primary-bg)" }} />
             <span>Tạo bài kiểm tra mới - Lớp: {className}</span>
           </Space>
         }
-        placement="right"
-        width={920}
-        onClose={onClose}
+        centered
+        width={1000}
+        onCancel={handleClose}
         open={open}
         destroyOnClose
-        styles={{ body: { padding: "24px 32px" } }}
+        footer={null}
+        styles={{ body: { maxHeight: "calc(100vh - 200px)", overflowY: "auto", padding: "16px 24px" } }}
       >
         {/* Wizard Steps Navigation */}
         <Steps
@@ -487,10 +504,55 @@ export const CreateExamWizardDrawer: React.FC<CreateExamWizardDrawerProps> = Rea
                     <Text strong style={{ fontSize: 15 }}>
                       📚 Ngân hàng câu hỏi hệ thống ({questionsBank.length} câu)
                     </Text>
-                    <Badge
-                      count={`${selectedQuestionsList.length} câu chọn`}
-                      style={{ backgroundColor: "var(--color-success-base)" }}
-                    />
+                    <Popover
+                      title="Danh sách câu đã chọn"
+                      content={
+                        selectedQuestionsList.length === 0 ? (
+                          <Text type="secondary">Chưa chọn câu nào</Text>
+                        ) : (
+                          <div style={{ maxHeight: 300, overflowY: "auto", paddingRight: 8, minWidth: 280 }}>
+                            {selectedQuestionsList.map((item, idx) => (
+                              <div
+                                key={item.questionId}
+                                style={{
+                                  display: "flex",
+                                  justifyContent: "space-between",
+                                  alignItems: "center",
+                                  padding: "8px 0",
+                                  borderBottom: "1px solid #f0f0f0",
+                                }}
+                              >
+                                <Text
+                                  ellipsis
+                                  style={{ maxWidth: 220 }}
+                                  title={item.details?.content}
+                                >
+                                  Câu {idx + 1}: {item.details?.content}
+                                </Text>
+                                <Button
+                                  type="text"
+                                  danger
+                                  icon={<CloseOutlined />}
+                                  size="small"
+                                  onClick={() => {
+                                    const newMap = { ...selectedQuestionsMap };
+                                    delete newMap[item.questionId];
+                                    setSelectedQuestionsMap(newMap);
+                                  }}
+                                />
+                              </div>
+                            ))}
+                          </div>
+                        )
+                      }
+                      trigger="click"
+                      placement="bottomLeft"
+                    >
+                      <Badge
+                        count={`${selectedQuestionsList.length} câu chọn`}
+                        style={{ backgroundColor: "var(--color-success-base)", cursor: "pointer" }}
+                      />
+                    </Popover>
                   </Space>
 
                   <Space size={8}>
@@ -517,6 +579,7 @@ export const CreateExamWizardDrawer: React.FC<CreateExamWizardDrawerProps> = Rea
                   value={filterType}
                   onChange={(val) => setFilterType(val)}
                   style={{ width: 150 }}
+                  getPopupContainer={(triggerNode) => triggerNode.parentNode}
                   options={[
                     { value: "all", label: "Tất cả loại" },
                     { value: "MCQ", label: "Trắc nghiệm" },
@@ -528,6 +591,7 @@ export const CreateExamWizardDrawer: React.FC<CreateExamWizardDrawerProps> = Rea
                   value={filterDifficulty}
                   onChange={(val) => setFilterDifficulty(val)}
                   style={{ width: 140 }}
+                  getPopupContainer={(triggerNode) => triggerNode.parentNode}
                   options={[
                     { value: "all", label: "Tất cả độ khó" },
                     { value: "EASY", label: "Dễ" },
@@ -585,11 +649,19 @@ export const CreateExamWizardDrawer: React.FC<CreateExamWizardDrawerProps> = Rea
                   rowKey="_id"
                   rowSelection={{
                     selectedRowKeys: Object.keys(selectedQuestionsMap),
-                    onChange: (selectedRowKeys, selectedRows) => {
+                    preserveSelectedRowKeys: true,
+                    onChange: (selectedRowKeys) => {
                       const newMap: Record<string, { points: number; details: any }> = {};
-                      selectedRows.forEach((row) => {
-                        const existing = selectedQuestionsMap[row._id];
-                        newMap[row._id] = existing || { points: 1, details: row };
+                      selectedRowKeys.forEach((key) => {
+                        const qId = key.toString();
+                        if (selectedQuestionsMap[qId]) {
+                          newMap[qId] = selectedQuestionsMap[qId];
+                        } else {
+                          const row = questionsBank.find((q) => q._id === qId);
+                          if (row) {
+                            newMap[qId] = { points: 1, details: row };
+                          }
+                        }
                       });
                       setSelectedQuestionsMap(newMap);
                     },
@@ -739,9 +811,9 @@ export const CreateExamWizardDrawer: React.FC<CreateExamWizardDrawerProps> = Rea
             </div>
           </div>
         )}
-      </Drawer>
+      </Modal>
     );
   }
 );
 
-CreateExamWizardDrawer.displayName = "CreateExamWizardDrawer";
+CreateExamWizardModal.displayName = "CreateExamWizardModal";

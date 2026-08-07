@@ -10,11 +10,13 @@ interface QuestionPreviewDrawerProps {
   question: any | null;
 }
 
+import { getQuestionTypeLabel, isChoiceQuestion } from "../../../shared/utils/questionTypeUtils";
+
 export const QuestionPreviewDrawer: React.FC<QuestionPreviewDrawerProps> = React.memo(
   ({ open, onClose, question }) => {
     if (!question) return null;
 
-    const isMCQ = question.type === "MCQ";
+    const isChoice = isChoiceQuestion(question.type);
 
     return (
       <Drawer
@@ -33,8 +35,8 @@ export const QuestionPreviewDrawer: React.FC<QuestionPreviewDrawerProps> = React
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
           {/* Tags Header */}
           <Space size={8} wrap>
-            <Tag color={isMCQ ? "blue" : "purple"}>
-              {isMCQ ? "🔵 Trắc nghiệm (MCQ)" : "🟣 Tự luận (ESSAY)"}
+            <Tag color={isChoice ? "blue" : "purple"}>
+              {isChoice ? "🔵 " : "🟣 "} {getQuestionTypeLabel(question.type)}
             </Tag>
             <Tag
               color={
@@ -74,8 +76,8 @@ export const QuestionPreviewDrawer: React.FC<QuestionPreviewDrawerProps> = React
             </Paragraph>
           </Card>
 
-          {/* MCQ Options List */}
-          {isMCQ && question.options && question.options.length > 0 && (
+          {/* Options List */}
+          {isChoice && question.options && question.options.length > 0 && (
             <Card
               title="🎯 Các phương án lựa chọn"
               style={{ borderRadius: 8 }}

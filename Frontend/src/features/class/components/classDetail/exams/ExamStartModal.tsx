@@ -53,7 +53,7 @@ export const ExamStartModal: React.FC<ExamStartModalProps> = React.memo(
           </Space>
 
           <Alert
-            message="Lưu ý quan trọng trước khi làm bài"
+            title="Lưu ý quan trọng trước khi làm bài"
             description="Đồng hồ đếm ngược sẽ bắt đầu ngay khi bạn nhấn Bắt đầu. Đảm bảo kết nối internet ổn định trong quá trình làm bài."
             type="info"
             showIcon

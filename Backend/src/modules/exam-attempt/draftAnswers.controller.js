@@ -22,11 +22,14 @@ export const saveDraft = asyncHandler(async (req, res) => {
     return res.status(400).json({ success: false, message: "ID bài thi không hợp lệ!" });
   }
 
-  const result = await saveDraftAnswers(attemptId, studentId, req.body?.answers);
+  const clientVersion = req.body?.answersVersion;
+  const sessionToken = req.headers["x-session-token"];
+
+  const result = await saveDraftAnswers(attemptId, studentId, req.body?.answers, clientVersion, sessionToken);
 
   return res.status(200).json({
     success: true,
     message: "Đã lưu bài làm",
-    data: { savedCount: result.saved, deadline: result.deadline },
+    data: { savedCount: result.saved, deadline: result.deadline, newVersion: result.answersVersion },
   });
 });

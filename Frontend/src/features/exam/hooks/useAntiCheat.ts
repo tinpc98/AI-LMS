@@ -1,9 +1,8 @@
 import { useEffect, useRef } from "react";
 
-export type AntiCheatCallback = (reason: string, currentViolations: number) => void;
+export type AntiCheatCallback = (reason: string) => void;
 
 const useAntiCheat = (onCheatDetected: AntiCheatCallback) => {
-  const warningCount = useRef(0);
   const lastTriggerTime = useRef(0);
 
   // Giữ callback trong ref và đăng ký listener MỘT LẦN.
@@ -29,8 +28,7 @@ const useAntiCheat = (onCheatDetected: AntiCheatCallback) => {
       }
 
       lastTriggerTime.current = now;
-      warningCount.current += 1;
-      callbackRef.current(reason, warningCount.current);
+      callbackRef.current(reason);
     };
 
     const handleContextMenu = (e: MouseEvent) => e.preventDefault();

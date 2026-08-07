@@ -4,6 +4,7 @@ import axiosClient from "../../../api/axiosClient";
 import aiApi from "../../../api/aiApi";
 import { toast } from "../../../utils/toast";
 import { getApiErrorMessage } from "../../../shared/utils/apiError";
+import { isEssayQuestion, isChoiceQuestion, isShortAnswerQuestion, getQuestionTypeLabel } from "../../../shared/utils/questionTypeUtils";
 
 export default function ExamAttemptDetail() {
   const { attemptId } = useParams();
@@ -127,12 +128,11 @@ export default function ExamAttemptDetail() {
     );
   }
 
-  // Tính toán thống kê nhanh
   const correctCount = reviewData.answersDetail.filter(
-    (a: any) => a.pointsEarned > 0 && a.type !== "ESSAY"
+    (a: any) => a.pointsEarned > 0 && !isEssayQuestion(a.type)
   ).length;
   const wrongCount = reviewData.answersDetail.filter(
-    (a: any) => a.pointsEarned === 0 && a.type !== "ESSAY"
+    (a: any) => a.pointsEarned === 0 && !isEssayQuestion(a.type)
   ).length;
 
   return (
@@ -223,11 +223,12 @@ export default function ExamAttemptDetail() {
                   <h4 className="font-bold text-gray-800 text-base">
                     Câu {idx + 1}:{" "}
                     <span className="font-normal text-gray-600">
-                      {ans.type === "ESSAY" ? "Tự luận" : "Trắc nghiệm"}
+                      {getQuestionTypeLabel(ans.type)}
                     </span>
                   </h4>
 
-                  {ans.type === "ESSAY" ? (
+                {/* Khu vực nhập điểm — chỉ hiện với tự luận */}
+                {isEssayQuestion(ans.type) ? (
                     <div className="flex items-center gap-2 flex-wrap">
                       <div className="flex items-center gap-2 bg-yellow-50 border border-yellow-200 px-3 py-1.5 rounded-lg">
                         <span className="text-sm font-medium text-yellow-700">
@@ -275,22 +276,26 @@ export default function ExamAttemptDetail() {
 
                 <p className="text-gray-800 font-medium mb-5">{ans.questionContent}</p>
 
-                {ans.type !== "ESSAY" && (
+                {/* Block MCQ (Lựa chọn) */}
+                {isChoiceQuestion(ans.type) && (
                   <div className="space-y-3">
                     {ans.options && ans.options.length > 0 ? (
                       ans.options.map((opt: any, i: number) => {
-                        const optText = typeof opt === "string" ? opt : opt.text;
+                        const optText = typeof opt === "string" ? opt : (opt.text ?? "");
+                        const optValue = typeof opt === "string" ? opt : (opt.id ?? optText);
 
                         const letterKey = String.fromCharCode(65 + i);
                         const studentAns = String(ans.studentAnswer || "").trim();
 
                         const isStudentChoice =
+                          studentAns === optValue.trim() ||
                           studentAns === optText.trim() ||
                           studentAns === letterKey ||
                           studentAns === String(i) ||
                           studentAns === `Option ${i}`;
 
                         const isCorrectAnswer =
+                          ans.correctAnswer?.trim() === optValue.trim() ||
                           ans.correctAnswer?.trim() === optText.trim() ||
                           ans.correctAnswer?.trim() === letterKey;
 
@@ -333,11 +338,12 @@ export default function ExamAttemptDetail() {
                   </div>
                 )}
 
-                {ans.type === "ESSAY" && (
+                {/* Block tự luẫn hoặc điền từ: hiện câu trả lời của học sinh */}
+                {(isEssayQuestion(ans.type) || isShortAnswerQuestion(ans.type)) && (
                   <>
                     <div className="bg-blue-50/50 border border-blue-100 p-5 rounded-xl mt-4">
                       <p className="text-xs font-bold uppercase tracking-wider text-blue-500 mb-2">
-                        Bài làm của học sinh:
+                        {isShortAnswerQuestion(ans.type) ? "Đáp án của học sinh:" : "Bài làm của học sinh:"}
                       </p>
                       <p className="text-gray-800 whitespace-pre-wrap">
                         {ans.studentAnswer || (
@@ -346,6 +352,12 @@ export default function ExamAttemptDetail() {
                           </span>
                         )}
                       </p>
+                      {/* Hiện đáp án đúng cho câu điền từ sau khi chấm */}
+                      {isShortAnswerQuestion(ans.type) && ans.correctAnswer && (
+                        <p className="text-xs font-bold uppercase tracking-wider text-green-600 mt-3">
+                          Đáp án đúng: <span className="normal-case font-normal">{ans.correctAnswer}</span>
+                        </p>
+                      )}
                     </div>
                     {aiFeedbacks[ans.questionId] && (
                       <div className="bg-indigo-50 border border-indigo-100 p-5 rounded-xl mt-4">

@@ -8,18 +8,21 @@ export function useExamResult() {
   const [reviewData, setReviewData] = useState<any | null>(null);
   const [isReviewOpen, setIsReviewOpen] = useState(false);
   const [loadingReview, setLoadingReview] = useState(false);
+  const [errorReview, setErrorReview] = useState<string | null>(null);
 
   const openReview = useCallback(async (item: IExtendedExam) => {
     setSelectedExam(item);
     setIsReviewOpen(true);
+    setErrorReview(null);
 
     if (item.attempt?._id) {
       try {
         setLoadingReview(true);
         const data = await examApi.getAttemptForReview(item.attempt._id);
         setReviewData(data);
-      } catch (error) {
+      } catch (error: any) {
         console.error("Lỗi khi tải kết quả thi:", error);
+        setErrorReview(error?.response?.data?.message || "Không thể tải chi tiết kết quả bài thi.");
         toast.error("Không thể tải chi tiết kết quả bài thi.", "Lỗi tải bài làm");
       } finally {
         setLoadingReview(false);
@@ -31,6 +34,7 @@ export function useExamResult() {
     setIsReviewOpen(false);
     setSelectedExam(null);
     setReviewData(null);
+    setErrorReview(null);
   }, []);
 
   return {
@@ -38,6 +42,7 @@ export function useExamResult() {
     reviewData,
     isReviewOpen,
     loadingReview,
+    errorReview,
     openReview,
     closeReview,
   };

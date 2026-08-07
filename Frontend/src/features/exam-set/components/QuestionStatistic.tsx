@@ -8,11 +8,13 @@ interface QuestionStatisticProps {
   questions: any[];
 }
 
+import { isChoiceQuestion } from "../../../shared/utils/questionTypeUtils";
+
 export const QuestionStatistic: React.FC<QuestionStatisticProps> = React.memo(({ questions }) => {
   const stats = useMemo(() => {
     const total = questions.length;
-    const mcqCount = questions.filter((q) => q.type === "MCQ").length;
-    const essayCount = questions.filter((q) => q.type === "ESSAY").length;
+    const mcqCount = questions.filter((q) => isChoiceQuestion(q.type)).length;
+    const essayCount = questions.filter((q) => !isChoiceQuestion(q.type)).length;
     const easyCount = questions.filter((q) => q.difficulty === "EASY").length;
     const mediumCount = questions.filter((q) => q.difficulty === "MEDIUM").length;
     const hardCount = questions.filter((q) => q.difficulty === "HARD").length;
@@ -68,7 +70,7 @@ export const QuestionStatistic: React.FC<QuestionStatisticProps> = React.memo(({
             <Statistic
               title={
                 <Text style={{ color: "rgba(255,255,255,0.85)", fontSize: 12 }}>
-                  🔵 Trắc nghiệm (MCQ)
+                  🔵 Trắc nghiệm
                 </Text>
               }
               value={stats.mcqCount}
@@ -89,7 +91,7 @@ export const QuestionStatistic: React.FC<QuestionStatisticProps> = React.memo(({
             <Statistic
               title={
                 <Text style={{ color: "rgba(255,255,255,0.85)", fontSize: 12 }}>
-                  🟣 Tự luận (ESSAY)
+                  🟣 Khác (Tự luận/Điền từ)
                 </Text>
               }
               value={stats.essayCount}

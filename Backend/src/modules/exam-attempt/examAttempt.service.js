@@ -1,12 +1,14 @@
 import mongoose from "mongoose";
+import { ErrorCode, createError } from "#shared/errors/errorCodes.js";
+import { normalizeQuestionType } from "#shared/utils/questionTypeUtils.js";
 import { evaluateLateness } from "./attemptDeadline.js";
 import ExamAttempt from "./examAttempt.model.js";
 import { Exam } from "#modules/exam";
 import { Question } from "#modules/question";
-import { compareAnswers } from "./answerScoring.js";
+import { compareAnswers, compareShortAnswer } from "./answerScoring.js";
 import { checkClassTeacherOwnership } from "#modules/class";
 
-const gradeSubmission = async (attemptId, studentAnswers) => {
+const gradeSubmission = async (attemptId, studentAnswers, isCheat = false) => {
   const session = await mongoose.startSession();
   session.startTransaction();
   try {
@@ -39,29 +41,32 @@ const gradeSubmission = async (attemptId, studentAnswers) => {
     // 3. Tạo một Map để tra cứu nhanh số điểm phân bổ cho từng câu hỏi trong Đề thi này
     const examPointsMap = new Map(exam.questions.map((q) => [q.questionId.toString(), q.points]));
 
-    // 4. Lấy danh sách chi tiết các Câu hỏi từ DB
-    const questionIds = exam.questions.map((q) => q.questionId);
-    const dbQuestions = await Question.find({ _id: { $in: questionIds } })
-      .session(session)
-      .lean();
-    const dbQuestionsMap = new Map(dbQuestions.map((q) => [q._id.toString(), q]));
+    // 4. Lấy danh sách chi tiết các Câu hỏi từ DB (đã chuẩn hóa qua resolver)
+    const { resolveExamQuestions } = await import("./examQuestionResolver.js");
+    const dbQuestionsMap = await resolveExamQuestions(exam);
 
     let totalScore = 0;
     let hasEssay = false;
     const processedAnswers = [];
 
-    // 5. Bắt đầu vòng lặp chấm điểm
+    // 5. [Đã gỡ bỏ normalizeQuestionType nội bộ, dùng hàm chung từ shared/utils]
+
+    // 6. Bắt đầu vòng lặp chấm điểm
     for (const ans of studentAnswers) {
       if (!ans?.questionId) continue;
       const qIdStr = ans.questionId.toString();
       const questionConfig = dbQuestionsMap.get(qIdStr);
       const allocatedPoints = examPointsMap.get(qIdStr) || 0;
 
-      if (!questionConfig) continue;
+      if (!questionConfig) {
+        console.error(`[gradeSubmission] Không tìm thấy config cho câu hỏi ${qIdStr} trong đề ${exam._id}`);
+        continue;
+      }
 
+      const normalizedType = normalizeQuestionType(questionConfig.type);
       let pointsEarned = 0;
 
-      if (questionConfig.type === "MCQ") {
+      if (normalizedType === "CHOICE" || normalizedType === "TRUE_FALSE") {
         const isCorrect = compareAnswers(questionConfig.correctAnswer, ans.selectedOption);
 
         if (isCorrect) {
@@ -71,20 +76,59 @@ const gradeSubmission = async (attemptId, studentAnswers) => {
 
         processedAnswers.push({
           questionId: questionConfig._id,
+          questionSource: questionConfig.source || "legacy",
           selectedOption: ans.selectedOption,
           pointsEarned: Number(pointsEarned.toFixed(2)),
         });
-      } else if (questionConfig.type === "ESSAY") {
+      } else if (normalizedType === "SHORT_ANSWER") {
+        const isCorrect = compareShortAnswer(
+          questionConfig.correctAnswer,
+          questionConfig.acceptedAnswers,
+          ans.essayText || ans.selectedOption,
+          questionConfig.caseSensitive
+        );
+
+        if (isCorrect) {
+          pointsEarned = allocatedPoints;
+          totalScore += pointsEarned;
+        }
+
+        processedAnswers.push({
+          questionId: questionConfig._id,
+          questionSource: questionConfig.source || "legacy",
+          essayText: ans.essayText || ans.selectedOption,
+          pointsEarned: Number(pointsEarned.toFixed(2)),
+        });
+      } else if (normalizedType === "ESSAY") {
         hasEssay = true;
         processedAnswers.push({
           questionId: questionConfig._id,
+          questionSource: questionConfig.source || "legacy",
           essayText: ans.essayText,
           pointsEarned: 0, // Tạm thời 0 điểm, đợi GV chấm
+        });
+      } else {
+        console.error(`[gradeSubmission] BÁO ĐỘNG LỖI CHẤM ĐIỂM: Loại câu hỏi không xác định: '${questionConfig.type}' (câu ${qIdStr}, attempt: ${attemptId}). Lượt thi này cần được GV xem lại.`);
+        hasEssay = true; // Ép trạng thái thành PARTIALLY_GRADED để GV phải xem
+        processedAnswers.push({
+          questionId: questionConfig._id,
+          questionSource: questionConfig.source || "legacy",
+          essayText: ans.essayText || ans.selectedOption,
+          pointsEarned: 0,
+          needsReview: true,
         });
       }
     }
 
     // 6. Cập nhật trạng thái và lưu kết quả (An toàn chống NaN)
+    if (isCheat) {
+      totalScore = 0;
+      processedAnswers.forEach((ans) => {
+        ans.pointsEarned = 0;
+      });
+      hasEssay = false; // Phạt thì không cần chờ chấm tự luận nữa, chốt luôn
+    }
+
     attempt.answers = processedAnswers;
     attempt.totalScore = Number(totalScore.toFixed(2));
     attempt.status = hasEssay ? "PARTIALLY_GRADED" : "GRADED";

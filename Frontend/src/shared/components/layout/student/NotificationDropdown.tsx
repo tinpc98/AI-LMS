@@ -182,7 +182,7 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
       content={content}
       trigger="click"
       placement="bottomRight"
-      overlayInnerStyle={{ padding: 0 }}
+      styles={{ container: { padding: 0 } }}
       arrow={false}
     >
       <Badge count={unreadCount} size="small" overflowCount={99}>

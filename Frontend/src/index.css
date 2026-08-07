@@ -217,4 +217,34 @@ body {
   --tw-shadow: 0 0 #0000;
 }
 
-
+/* ================= FIX TÌNH TRẠNG MẤT MÀU NỀN CỦA NÚT DO TAILWIND FORMS ================= */
+/* Forms plugin có [type='button'] (0,1,0) ghi đè utility classes (0,1,0) của Tailwind.
+   Tăng specificity bằng cách thêm selector tag `button` (0,1,1) để lấy lại màu nền. */
+button.ant-btn-primary {
+  background-color: var(--color-primary);
+  color: #fff;
+}
+button.ant-btn-primary:hover {
+  background-color: var(--color-primary-hover);
+}
+button.bg-primary {
+  background-color: var(--color-primary);
+}
+button.bg-red-500 {
+  background-color: var(--color-error);
+}
+button.bg-red-600 {
+  background-color: #dc2626;
+}
+button.bg-green-600 {
+  background-color: #16a34a;
+}
+button.bg-green-500 {
+  background-color: var(--color-success);
+}
+button.bg-gray-200 {
+  background-color: #e5e7eb;
+}
+button.bg-gray-300 {
+  background-color: #d1d5db;
+}

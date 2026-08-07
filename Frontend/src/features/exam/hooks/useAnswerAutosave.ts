@@ -34,7 +34,10 @@ export interface DraftAnswer {
  */
 export const useAnswerAutosave = (
   attemptId: string | undefined,
-  buildAnswers: () => DraftAnswer[]
+  buildAnswers: () => DraftAnswer[],
+  answersVersionRef: React.MutableRefObject<number>,
+  sessionToken: string | null,
+  isLoaded: boolean
 ) => {
   const buildRef = useRef(buildAnswers);
   useEffect(() => {
@@ -43,32 +46,75 @@ export const useAnswerAutosave = (
 
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const dangGuiRef = useRef(false);
+  const needsAnotherSaveRef = useRef(false);
 
   const guiNgay = useCallback(async () => {
-    if (!attemptId || dangGuiRef.current) return;
+    if (!attemptId || !isLoaded) return;
+    
+    if (dangGuiRef.current) {
+      needsAnotherSaveRef.current = true;
+      return;
+    }
 
     const answers = buildRef.current();
     if (answers.length === 0) return;
 
     dangGuiRef.current = true;
+    needsAnotherSaveRef.current = false;
+    
     try {
-      await axiosClient.patch(`/api/exam-attempts/${attemptId}/answers`, { answers });
-    } catch {
-      // Lưu tạm thất bại KHÔNG được làm gián đoạn việc thi. localStorage vẫn giữ bài, và lần
-      // gõ tiếp theo sẽ thử lại. Hiện lỗi ở đây chỉ khiến học sinh hoảng giữa giờ thi.
+      const payload = { answers, answersVersion: answersVersionRef.current };
+      const config = sessionToken ? { headers: { "x-session-token": sessionToken } } : {};
+      const res = await axiosClient.patch(`/api/exam-attempts/${attemptId}/answers`, payload, config);
+      if (res.data?.data?.newVersion !== undefined) {
+        answersVersionRef.current = res.data.data.newVersion;
+      }
+    } catch (err: any) {
+      if (err?.response?.data?.errorCode === "VERSION_MISMATCH") {
+        try {
+          // Xử lý 409 êm: GET lại version mới
+          const getRes = await axiosClient.get(`/api/exam-attempts/${attemptId}`);
+          const data = getRes.data.data || getRes.data;
+          if (data && data.answersVersion !== undefined) {
+            answersVersionRef.current = data.answersVersion;
+            // Retry lại 1 lần duy nhất bằng cách gọi trực tiếp API
+            const retryPayload = { answers, answersVersion: answersVersionRef.current };
+            const config = sessionToken ? { headers: { "x-session-token": sessionToken } } : {};
+            const retryRes = await axiosClient.patch(`/api/exam-attempts/${attemptId}/answers`, retryPayload, config);
+            if (retryRes.data?.data?.newVersion !== undefined) {
+              answersVersionRef.current = retryRes.data.data.newVersion;
+            }
+          }
+        } catch (retryErr) {
+          // Chỉ báo người dùng nếu lần retry cũng thất bại bằng Modal antd
+          import("antd").then(({ Modal }) => {
+            Modal.warning({
+              title: "Lỗi đồng bộ bài làm",
+              content: "Bài làm đã được cập nhật ở thiết bị hoặc tab khác. Vui lòng tải lại trang để đồng bộ và tiếp tục.",
+              okText: "Tải lại trang",
+              onOk: () => window.location.reload()
+            });
+          });
+        }
+      }
+      // Các lỗi khác (mất mạng) thì kệ để localStorage làm điểm tựa
     } finally {
       dangGuiRef.current = false;
+      if (needsAnotherSaveRef.current) {
+        // Gọi lại để lưu những thay đổi mới phát sinh trong lúc đang PATCH
+        void guiNgay();
+      }
     }
-  }, [attemptId]);
+  }, [attemptId, answersVersionRef, sessionToken, isLoaded]);
 
   /** Gọi mỗi khi câu trả lời đổi. Gom các lần gọi liên tiếp trong 1,5 giây. */
   const luuTam = useCallback(() => {
-    if (!attemptId) return;
+    if (!attemptId || !isLoaded) return;
     if (timerRef.current) clearTimeout(timerRef.current);
     timerRef.current = setTimeout(() => void guiNgay(), DEBOUNCE_MS);
-  }, [attemptId, guiNgay]);
+  }, [attemptId, guiNgay, isLoaded]);
 
-  // Đẩy nốt khi rời trang. Không có bước này thì phần đang chờ trong hàng đợi chống dội sẽ mất.
+  // Đẩy nốt khi rời trang. 
   useEffect(() => {
     const handleUnload = () => void guiNgay();
     window.addEventListener("beforeunload", handleUnload);
@@ -76,9 +122,11 @@ export const useAnswerAutosave = (
     return () => {
       window.removeEventListener("beforeunload", handleUnload);
       if (timerRef.current) clearTimeout(timerRef.current);
-      void guiNgay();
+      if (isLoaded) {
+        void guiNgay();
+      }
     };
-  }, [guiNgay]);
+  }, [guiNgay, isLoaded]);
 
   return { luuTam, guiNgay };
 };

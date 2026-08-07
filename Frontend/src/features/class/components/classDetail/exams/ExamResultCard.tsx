@@ -13,16 +13,17 @@ const { Text } = Typography;
 interface ExamResultCardProps {
   attempt?: IExamAttempt | null;
   maxScore?: number;
+  isSuspended?: boolean;
 }
 
 export const ExamResultCard: React.FC<ExamResultCardProps> = React.memo(
-  ({ attempt, maxScore = 10 }) => {
+  ({ attempt, maxScore = 10, isSuspended = false }) => {
     if (!attempt || attempt.totalScore === undefined || attempt.totalScore === null) {
       return null;
     }
 
     const score = attempt.totalScore;
-    const isPassed = score >= 5.0;
+    const isPassed = score >= 5.0 && !isSuspended;
     const scorePercent = Math.round((score / maxScore) * 100);
 
     const formattedDate = attempt.createdAt
@@ -87,7 +88,18 @@ export const ExamResultCard: React.FC<ExamResultCardProps> = React.memo(
                 )}
               </div>
 
-              <Text type="secondary" style={{ fontSize: 12 }}>
+              {isSuspended && (
+                <div style={{ marginTop: 4, padding: "8px 12px", backgroundColor: "var(--color-error-bg)", border: "1px solid var(--color-error-base)", borderRadius: 6 }}>
+                  <Text strong style={{ color: "var(--color-error-text)", fontSize: 13, display: "block" }}>
+                    ⚠ Bài thi bị chốt do vi phạm quy chế 5 lần.
+                  </Text>
+                  <Text style={{ color: "var(--color-error-text)", fontSize: 12 }}>
+                    Kết quả được ghi nhận 0 điểm theo quy định.
+                  </Text>
+                </div>
+              )}
+
+              <Text type="secondary" style={{ fontSize: 12, marginTop: isSuspended ? 4 : 0 }}>
                 <ClockCircleOutlined style={{ marginRight: 4 }} /> Ngày nộp bài: {formattedDate}
               </Text>
             </Space>

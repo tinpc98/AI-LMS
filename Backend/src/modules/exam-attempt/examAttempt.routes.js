@@ -7,6 +7,7 @@ import {
   getExamAttemptDetail,
   getAttemptsByExam,
   recordCheatWarning,
+  heartbeat,
 } from "./examAttempt.controller.js";
 import { saveDraft } from "./draftAnswers.controller.js";
 import { verifyUser } from "#modules/auth";
@@ -18,6 +19,7 @@ const router = express.Router();
 router.post("/start", verifyUser, startExam);
 router.post("/:id/submit", verifyUser, submitExam);
 router.get("/:id", verifyUser, getExamAttemptDetail);
+router.post("/:id/heartbeat", verifyUser, heartbeat);
 router.post("/:id/warning", verifyUser, recordCheatWarning);
 // Lưu tạm bài làm. PATCH vì đây là cập nhật MỘT PHẦN — máy khách gửi từng câu khi học sinh
 // chọn, không gửi lại toàn bộ bài.
@@ -25,7 +27,7 @@ router.patch("/:id/answers", verifyUser, saveDraft);
 
 // --- Tuyến đường dành cho Giáo viên / Admin ---
 router.put("/:id/grade-essay", verifyUser, isTeacher, gradeEssaySubmit);
-router.get("/:id/review", verifyUser, isTeacher, getAttemptForReview);
+router.get("/:id/review", verifyUser, getAttemptForReview);
 router.get("/exam/:examId", verifyUser, isTeacher, getAttemptsByExam);
 
 export default router;

@@ -113,9 +113,10 @@ export const errorHandler = (err, req, res, next) => {
 
 // 404 cho các route không khớp router nào — tách riêng khỏi errorHandler (không phải lỗi runtime).
 export const notFoundHandler = (req, res) => {
+  console.error(`🔥 [${req.requestId || "no-request-id"}] 404 Not Found: ${req.method} ${req.originalUrl}`);
   res.status(404).json({
     success: false,
-    message: "Đường dẫn API này không tồn tại trên hệ thống!",
+    message: "Không thực hiện được thao tác. Vui lòng thử lại hoặc liên hệ quản trị viên.",
     code: "ROUTE_NOT_FOUND",
     requestId: req.requestId || null,
   });

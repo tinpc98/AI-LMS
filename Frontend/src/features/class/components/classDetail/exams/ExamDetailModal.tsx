@@ -1,5 +1,5 @@
 import React from "react";
-import { Drawer, Button, Typography, Space, Descriptions, Alert } from "antd";
+import { Modal, Button, Typography, Space, Descriptions, Alert } from "antd";
 import {
   FormOutlined,
   ClockCircleOutlined,
@@ -12,14 +12,14 @@ import type { IExtendedExam } from "../../../../../types/studentExam";
 
 const { Text, Paragraph, Title } = Typography;
 
-interface ExamDetailDrawerProps {
+interface ExamDetailModalProps {
   open: boolean;
   item: IExtendedExam | null;
   onClose: () => void;
   onStart: (item: IExtendedExam) => void;
 }
 
-export const ExamDetailDrawer: React.FC<ExamDetailDrawerProps> = React.memo(
+export const ExamDetailModal: React.FC<ExamDetailModalProps> = React.memo(
   ({ open, item, onClose, onStart }) => {
     if (!item) return null;
 
@@ -38,9 +38,9 @@ export const ExamDetailDrawer: React.FC<ExamDetailDrawerProps> = React.memo(
     const isAvailable = item.displayStatus === "Available" || item.displayStatus === "In Progress";
 
     return (
-      <Drawer
+      <Modal
         open={open}
-        onClose={onClose}
+        onCancel={onClose}
         title={
           <Space align="center">
             <FormOutlined style={{ color: "var(--color-action-primary-bg)", fontSize: 20 }} />
@@ -54,8 +54,8 @@ export const ExamDetailDrawer: React.FC<ExamDetailDrawerProps> = React.memo(
             </div>
           </Space>
         }
-        extra={
-          <Space>
+        footer={
+          <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
             <Button onClick={onClose} style={{ borderRadius: 8 }}>
               Đóng
             </Button>
@@ -72,10 +72,12 @@ export const ExamDetailDrawer: React.FC<ExamDetailDrawerProps> = React.memo(
                 {item.displayStatus === "In Progress" ? "Tiếp tục bài thi" : "Bắt đầu làm bài"}
               </Button>
             )}
-          </Space>
+          </div>
         }
-        width={640}
+        width={850}
+        centered
         destroyOnClose
+        styles={{ body: { maxHeight: "75vh", overflowY: "auto", paddingRight: 8, paddingTop: 16 } }}
       >
         <div style={{ padding: "8px 0" }}>
           {/* Exam Parameters Descriptions */}
@@ -128,7 +130,7 @@ export const ExamDetailDrawer: React.FC<ExamDetailDrawerProps> = React.memo(
               strong
               style={{ fontSize: 14, color: "var(--color-text-title)", display: "block", marginBottom: 6 }}
             >
-              Mô tả & Quy chế phòng thi:
+              Mô tả:
             </Text>
             <Paragraph
               style={{
@@ -149,17 +151,24 @@ export const ExamDetailDrawer: React.FC<ExamDetailDrawerProps> = React.memo(
           {/* Exam Rules Alert Notice */}
           <Alert
             message="Quy định làm bài thi trực tuyến"
-            description="Hệ thống tự động giám sát thời gian và lượt làm bài. Khi hết thời gian thi, hệ thống sẽ tự động thu bài của bạn."
+            description={
+              <ul style={{ margin: 0, paddingLeft: 20 }}>
+                <li>Hệ thống tự động thu bài khi hết thời gian.</li>
+                <li>Bài thi yêu cầu chế độ toàn màn hình.</li>
+                <li>Rời khỏi cửa sổ thi sẽ bị ghi nhận vi phạm.</li>
+                <li><strong>Vi phạm đủ 5 lần:</strong> hệ thống tự nộp bài, kết quả 0 điểm.</li>
+              </ul>
+            }
             type="warning"
             showIcon
             style={{ borderRadius: 10 }}
           />
         </div>
-      </Drawer>
+      </Modal>
     );
   }
 );
 
-ExamDetailDrawer.displayName = "ExamDetailDrawer";
+ExamDetailModal.displayName = "ExamDetailModal";
 
-export default ExamDetailDrawer;
+export default ExamDetailModal;

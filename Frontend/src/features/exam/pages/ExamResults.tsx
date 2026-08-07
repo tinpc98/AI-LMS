@@ -51,43 +51,43 @@ export default function ExamResults() {
   const getStatusConfig = (status: any) => {
     const configs: Record<string, any> = {
       GRADED: {
-        label: "Graded",
+        label: "Đã chấm",
         containerColor: "bg-white border-gray-200 hover:border-primary/30",
         badgeColor: "bg-green-100 text-green-700 border-green-200",
         icon: "verified_user",
-        iconText: "Clean",
+        iconText: "Đã chốt",
         iconColor: "text-green-700 bg-green-100 border-green-200",
         scoreColor: "text-primary",
       },
-      PENDING: {
-        label: "Pending",
+      SUBMITTED: {
+        label: "Đã nộp",
         containerColor: "bg-white border-gray-200 hover:border-primary/30",
-        badgeColor: "bg-gray-100 text-gray-600 border-gray-200",
-        icon: "timer",
-        iconText: "Waiting",
-        iconColor: "text-gray-600 bg-gray-100 border-gray-200",
+        badgeColor: "bg-blue-100 text-blue-700 border-blue-200",
+        icon: "task_alt",
+        iconText: "Đã nộp",
+        iconColor: "text-blue-700 bg-blue-100 border-blue-200",
         scoreColor: "text-gray-400",
       },
-      ALERT: {
-        label: "Alert",
-        containerColor: "bg-red-50/30 border-red-200 hover:border-red-400",
-        badgeColor: "bg-red-100 text-red-700 border-red-200",
-        icon: "warning",
-        iconText: "Alert",
-        iconColor: "text-white bg-red-500 shadow-sm shadow-red-200 animate-pulse",
-        scoreColor: "text-red-600",
-      },
-      REVIEW: {
-        label: "Review",
+      PARTIALLY_GRADED: {
+        label: "Chờ chấm TL",
         containerColor: "bg-yellow-50/30 border-yellow-200 hover:border-yellow-400",
         badgeColor: "bg-yellow-100 text-yellow-700 border-yellow-200",
-        icon: "error_outline",
-        iconText: "Warning",
+        icon: "rate_review",
+        iconText: "Chờ chấm",
         iconColor: "text-yellow-700 bg-yellow-100 border-yellow-200",
         scoreColor: "text-yellow-600",
       },
+      IN_PROGRESS: {
+        label: "Đang làm",
+        containerColor: "bg-gray-50/30 border-gray-200 hover:border-gray-400",
+        badgeColor: "bg-gray-100 text-gray-600 border-gray-200",
+        icon: "timer",
+        iconText: "Đang làm",
+        iconColor: "text-gray-600 bg-gray-100 border-gray-200",
+        scoreColor: "text-gray-400",
+      },
     };
-    return configs[status] || configs.PENDING;
+    return configs[status] ?? configs.IN_PROGRESS;
   };
 
   return (
@@ -116,10 +116,11 @@ export default function ExamResults() {
 
             <div className="flex flex-wrap items-center gap-3">
               <select className="bg-white border border-gray-300 text-gray-700 rounded-xl text-sm px-4 py-2.5 outline-none shadow-sm cursor-pointer">
-                <option>Tất cả Trạng thái</option>
-                <option>Đã chấm (Graded)</option>
-                <option>Chờ xử lý (Pending)</option>
-                <option>Cảnh báo (Alert)</option>
+                <option value="">Tất cả Trạng thái</option>
+                <option value="GRADED">Đã chấm</option>
+                <option value="SUBMITTED">Đã nộp (chờ chấm)</option>
+                <option value="PARTIALLY_GRADED">Chờ chấm tự luận</option>
+                <option value="IN_PROGRESS">Đang làm bài</option>
               </select>
               <button className="bg-primary text-white font-bold text-sm py-2.5 px-6 rounded-xl shadow-md hover:bg-primary/90 transition-all flex items-center gap-2">
                 <span className="material-symbols-outlined text-[18px]">download</span>

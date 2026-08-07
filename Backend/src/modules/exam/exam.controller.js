@@ -227,7 +227,29 @@ export const getExamsByClass = asyncHandler(async (req, res) => {
   }
   const exams = await query.sort({ createdAt: -1 }).lean();
 
-  const data = userRole === "student" ? exams.map(redactExamAnswersForStudent) : exams;
+  let data = userRole === "student" ? exams.map(redactExamAnswersForStudent) : exams;
+
+  // A3: Đính kèm attempt mới nhất của học sinh vào mỗi đề thi
+  if (userRole === "student" && exams.length > 0) {
+    const ExamAttempt = mongoose.model("ExamAttempt");
+    const examIds = exams.map((e) => e._id);
+    const attempts = await ExamAttempt.find({
+      studentId: userId,
+      examId: { $in: examIds },
+      isDeleted: false,
+    }).lean();
+
+    data = data.map((exam) => {
+      const examAttempts = attempts.filter((a) => a.examId.toString() === exam._id.toString());
+      if (examAttempts.length > 0) {
+        examAttempts.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+        exam.attempt = examAttempts[0];
+      } else {
+        exam.attempt = null;
+      }
+      return exam;
+    });
+  }
 
   return res.status(200).json({
     success: true,
@@ -296,7 +318,7 @@ export const getExamById = asyncHandler(async (req, res) => {
     return res.status(404).json({ message: "Kỳ thi không tồn tại hoặc ID không hợp lệ!" });
   }
 
-  const exam = await Exam.findById(examId).populate("questions.questionId").lean();
+  const exam = await Exam.findById(examId).lean();
 
   if (!exam) {
     return res.status(404).json({ message: "Không tìm thấy kỳ thi!" });
@@ -321,30 +343,52 @@ export const getExamById = asyncHandler(async (req, res) => {
     }
   }
 
-  // Polyfill for AI Exam Generation snapshot data
+  // Polyfill for AI Exam Generation snapshot data and Legacy Questions
   if (exam.questions && exam.questions.length > 0) {
+    const { resolveExamQuestions } = await import("../exam-attempt/examQuestionResolver.js");
+    const questionMap = await resolveExamQuestions(exam);
+
     exam.questions = exam.questions.map((q) => {
-      let questionData = q.isSnapshot && q.snapshotData ? q.snapshotData : q.questionId;
+      const qIdStr = (q.questionId?._id || q.questionId || "").toString();
+      let questionData = questionMap.get(qIdStr);
+
+      if (!questionData) {
+        console.error("[getExamById] Không tìm thấy câu hỏi (resolveQuestion thất bại)", { examId, questionId: qIdStr });
+        questionData = {
+          _id: qIdStr,
+          type: "UNKNOWN",
+          content: "[Lỗi: Dữ liệu câu hỏi bị mất hoặc không hợp lệ]",
+          options: []
+        };
+      }
 
       // S4-FIX-01: Redact answers for student
-      if (userRole === "student" && questionData) {
-        const safeData = { ...questionData };
-        delete safeData.correctAnswer;
-        delete safeData.acceptedAnswers;
-        delete safeData.suggestedAnswer;
-        delete safeData.rubric;
-        delete safeData.explanation;
-        delete safeData.feedbackCorrect;
-        delete safeData.feedbackIncorrect;
-        if (Array.isArray(safeData.options)) {
-          safeData.options = safeData.options.map((opt) => {
-            if (typeof opt === "string") return opt;
-            const safeOpt = { ...opt };
-            delete safeOpt.isCorrect;
-            return safeOpt;
-          });
+      if (userRole === "student") {
+        if (typeof questionData !== "object" || questionData === null) {
+            console.error("[getExamById] questionData không hợp lệ", { examId, questionId: qIdStr });
+        } else {
+            const safeData = { ...questionData };
+            delete safeData.correctAnswer;
+            delete safeData.acceptedAnswers;
+            delete safeData.suggestedAnswer;
+            delete safeData.rubric;
+            delete safeData.explanation;
+            delete safeData.feedbackCorrect;
+            delete safeData.feedbackIncorrect;
+            if (Array.isArray(safeData.options)) {
+              safeData.options = safeData.options.map((opt) => {
+                if (typeof opt === "string") return opt;
+                if (typeof opt !== "object" || opt === null) return opt;
+                const safeOpt = { ...opt };
+                delete safeOpt.isCorrect;
+                return safeOpt;
+              });
+            }
+            questionData = safeData;
         }
-        questionData = safeData;
+      } else if (typeof questionData !== "object" || questionData === null) {
+          console.error("[getExamById] questionData không hợp lệ", { examId, questionId: qIdStr });
+          questionData = { _id: qIdStr, type: "UNKNOWN", content: "[Lỗi tải câu hỏi]" };
       }
 
       return {

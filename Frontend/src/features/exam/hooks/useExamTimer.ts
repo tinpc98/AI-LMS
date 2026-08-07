@@ -5,21 +5,23 @@ import { useState, useEffect, useRef } from "react";
  *
  * MỐC KẾT THÚC LẤY TỪ MÁY CHỦ KHI CÓ (Wave 7+).
  *
- * Trước đây tham số examEndTime tồn tại nhưng KHÔNG được dùng — và backend cũng chưa từng gửi
- * trường đó. Mã chết ở cả hai phía. Hệ quả: hạn nộp chỉ tồn tại trong localStorage của học
- * sinh, xoá đi là có đồng hồ mới trọn thời gian.
- *
- * Nay endpoint chi tiết lượt thi trả về endTime tuyệt đối (tính từ lúc học sinh bấm bắt đầu),
- * và hook ưu tiên giá trị đó. localStorage tụt xuống vai trò dự phòng cho trường hợp máy chủ
- * chưa kịp trả — không còn là nguồn sự thật.
+ * OFFSET ĐỒNG HỒ (Wave 8+):
+ * Backend trả về `serverTime` trong response chi tiết lượt thi. Frontend tính:
+ *   offset = serverTime - Date.now()
+ * Mọi phép tính thời gian sau đó dùng (Date.now() + offset) thay vì Date.now().
+ * Điều này bù sai lệch nếu đồng hồ máy học sinh lệch vài phút so với server.
  */
 const useExamTimer = (
   durationInSeconds: number | null,
   examId?: string,
   onTimeUp?: () => void,
-  examEndTime?: string | null
+  examEndTime?: string | null,
+  serverTimeOffset = 0  // ms; dương = client chậm hơn server
 ) => {
   const storageKey = `exam_endTime_${examId || "default"}`;
+
+  /** Đồng hồ chuẩn: Date.now() đã hiệu chỉnh theo offset server. */
+  const now = () => Date.now() + serverTimeOffset;
 
   /** Mốc kết thúc do máy chủ cấp, tính bằng mili-giây. null nếu chưa có hoặc không hợp lệ. */
   const serverEndTime = (() => {
@@ -38,7 +40,7 @@ const useExamTimer = (
     const known =
       serverEndTime ?? (examId ? Number(localStorage.getItem(storageKey)) || null : null);
     if (!known) return durationInSeconds;
-    return Math.max(0, Math.round((known - Date.now()) / 1000));
+    return Math.max(0, Math.round((known - now()) / 1000));
   });
 
   useEffect(() => {
@@ -54,7 +56,7 @@ const useExamTimer = (
       localStorage.setItem(storageKey, String(endTime));
     } else {
       const saved = Number(localStorage.getItem(storageKey));
-      endTime = saved || Date.now() + durationInSeconds * 1000;
+      endTime = saved || now() + durationInSeconds * 1000;
       localStorage.setItem(storageKey, String(endTime));
     }
 
@@ -64,16 +66,9 @@ const useExamTimer = (
      * BUG ĐÃ SỬA (Wave 7): bản cũ gọi clearInterval(interval) ngay trong thân hàm này, trong
      * khi `interval` được khai báo bằng const Ở DƯỚI. Lần gọi đầu tiên — chạy TRƯỚC setInterval
      * — vì thế rơi vào vùng chết tạm thời và ném ReferenceError.
-     *
-     * Nghĩa là: học sinh mở trang thi sau khi đã hết giờ thì hook SẬP, và thay vì thấy "hết
-     * giờ" họ thấy màn hình lỗi của ExamErrorBoundary. Nhánh này chỉ chạy khi thời gian đã
-     * hết ngay lúc vào trang nên không lộ ra khi bấm thử bình thường.
-     *
-     * Cách sửa cũng gỡ luôn một vấn đề thứ hai: bản cũ vẫn khởi động setInterval kể cả khi đã
-     * hết giờ, để lại một bộ đếm chạy vô ích mỗi giây.
      */
     const updateTimer = (): boolean => {
-      const remainingSeconds = Math.round((endTime - Date.now()) / 1000);
+      const remainingSeconds = Math.round((endTime - now()) / 1000);
 
       if (remainingSeconds > 0) {
         setTimeLeft(remainingSeconds);
@@ -94,7 +89,7 @@ const useExamTimer = (
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [durationInSeconds, examId, storageKey, serverEndTime]);
+  }, [durationInSeconds, examId, storageKey, serverEndTime, serverTimeOffset]);
 
   const formattedTime = (): string => {
     if (timeLeft === null || timeLeft === undefined) return "00:00";

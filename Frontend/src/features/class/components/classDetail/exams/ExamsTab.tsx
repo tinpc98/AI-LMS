@@ -5,9 +5,10 @@ import ExamToolbar from "./ExamToolbar";
 import ExamList from "./ExamList";
 import ExamEmptyState from "./ExamEmptyState";
 import ExamLoadingSkeleton from "./ExamLoadingSkeleton";
-import ExamDetailDrawer from "./ExamDetailDrawer";
+import ExamDetailModal from "./ExamDetailModal";
 import ExamStartModal from "./ExamStartModal";
-import ExamReviewDrawer from "./ExamReviewDrawer";
+import ExamReviewModal from "./ExamReviewModal";
+import WaitingScreen from "./WaitingScreen";
 import useStudentExams from "../../../../exam/hooks/useStudentExams";
 import useExamDetail from "../../../../exam/hooks/useExamDetail";
 import useExamResult from "../../../../exam/hooks/useExamResult";
@@ -42,6 +43,8 @@ export const ExamsTab: React.FC<ExamsTabProps> = React.memo(
       openStartModal,
       closeStartModal,
       handleConfirmStart,
+      waitingExamData,
+      setWaitingExamData,
     } = useExamDetail();
 
     const {
@@ -49,6 +52,7 @@ export const ExamsTab: React.FC<ExamsTabProps> = React.memo(
       reviewData,
       isReviewOpen,
       loadingReview,
+      errorReview,
       openReview,
       closeReview,
     } = useExamResult();
@@ -103,7 +107,7 @@ export const ExamsTab: React.FC<ExamsTabProps> = React.memo(
         )}
 
         {/* 4. Exam Detail Drawer (Rules & Specs) */}
-        <ExamDetailDrawer
+        <ExamDetailModal
           open={isDetailOpen}
           item={selectedExam}
           onClose={closeDetail}
@@ -119,12 +123,28 @@ export const ExamsTab: React.FC<ExamsTabProps> = React.memo(
         />
 
         {/* 6. Exam Review Drawer */}
-        <ExamReviewDrawer
+        <ExamReviewModal
           open={isReviewOpen}
           item={reviewExam}
           reviewData={reviewData}
           loading={loadingReview}
+          error={errorReview}
           onClose={closeReview}
+        />
+
+        {/* 7. Waiting Screen for early start */}
+        <WaitingScreen
+          waitingExamData={waitingExamData}
+          onClose={() => setWaitingExamData(null)}
+          onRetry={() => {
+            if (waitingExamData) {
+              const exam = exams.find(e => e._id === waitingExamData.examId);
+              if (exam) {
+                setWaitingExamData(null);
+                handleConfirmStart(exam._id);
+              }
+            }
+          }}
         />
       </div>
     );

@@ -13,9 +13,9 @@ export const buildCorsOptions = () => {
       if (allowedOrigins.includes(origin)) return cb(null, true);
       return cb(new Error("Origin không được phép bởi CORS"));
     },
-    methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     credentials: true,
-    allowedHeaders: ["Content-Type", "Authorization"],
+    allowedHeaders: ["Content-Type", "Authorization", "x-session-token"],
   };
 };
 

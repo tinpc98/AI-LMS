@@ -22,6 +22,12 @@ const MINUTE_MS = 60 * 1000;
 export const GRACE_PERIOD_MS = 2 * MINUTE_MS;
 
 /**
+ * Dung sai nộp muộn tối đa cho phép.
+ * Nếu vượt quá khoảng này, bài nộp bị từ chối thay vì chỉ bị đánh dấu nộp muộn.
+ */
+export const LATE_SUBMISSION_TOLERANCE_MS = 60 * 1000;
+
+/**
  * Thời điểm học sinh này phải nộp xong, tính từ lúc HỌ bắt đầu làm bài.
  *
  * Tính theo attempt.startTime chứ không phải exam.startTime: mỗi học sinh bấm bắt đầu ở thời
@@ -57,4 +63,30 @@ export const evaluateLateness = (
     lateBySeconds: overdueMs > 0 ? Math.round(overdueMs / 1000) : 0,
     deadline,
   };
+};
+
+/**
+ * Kiểm tra xem bài nộp có bị từ chối do quá hạn hay không.
+ *
+ * @param {Object} attempt - Phiên làm bài.
+ * @param {Object} exam - Thông tin đề thi.
+ * @param {Date} submittedAt - Thời điểm nộp bài (mặc định là hiện tại).
+ * @returns {Object} { rejected: boolean, message: string }
+ */
+export const isSubmissionRejected = (attempt, exam, submittedAt = new Date()) => {
+  if (!attempt.startTime || !exam.duration) return { rejected: false };
+
+  // Sử dụng startTime + duration (theo như quyết định của user)
+  const deadline = resolveAttemptDeadline(attempt.startTime, exam.duration);
+  if (!deadline) return { rejected: false };
+
+  const diffMs = new Date(submittedAt).getTime() - deadline.getTime();
+  if (diffMs > LATE_SUBMISSION_TOLERANCE_MS) {
+    return {
+      rejected: true,
+      message: "Đã quá hạn nộp bài. Hệ thống không chấp nhận bài nộp muộn."
+    };
+  }
+
+  return { rejected: false };
 };

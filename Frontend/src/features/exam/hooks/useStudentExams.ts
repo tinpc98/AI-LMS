@@ -22,7 +22,7 @@ export function useStudentExams(
     const now = new Date().getTime();
 
     return initialExams.map((exam) => {
-      const attempt = attemptsMap[exam._id] || null;
+      const attempt = attemptsMap[exam._id] || (exam as any).attempt || null;
       let status: StudentExamStatus = "Upcoming";
 
       const startTime = new Date(exam.startTime).getTime();

@@ -41,8 +41,8 @@ import examApi from "../../../../api/examApi";
 import examSetApi from "../../../../api/examSetApi";
 import type { IExam } from "../../../../api/examApi";
 import { toast } from "../../../../utils/toast";
-import { TeacherExamAttemptsDrawer } from "./TeacherExamAttemptsDrawer";
-import { CreateExamWizardDrawer } from "./CreateExamWizardDrawer";
+import { TeacherExamAttemptsModal } from "./TeacherExamAttemptsModal";
+import { CreateExamWizardModal } from "./CreateExamWizardModal";
 import { getApiErrorMessage } from "../../../../shared/utils/apiError";
 
 const { Title, Text, Paragraph } = Typography;
@@ -595,14 +595,14 @@ export const TeacherExamsTab: React.FC<TeacherExamsTabProps> = React.memo(
         </Card>
 
         {/* 3. Attempts Drawer */}
-        <TeacherExamAttemptsDrawer
+        <TeacherExamAttemptsModal
           open={isAttemptsDrawerOpen}
           onClose={() => setIsAttemptsDrawerOpen(false)}
           exam={selectedExam}
         />
 
         {/* 4. Create Exam Wizard Drawer */}
-        <CreateExamWizardDrawer
+        <CreateExamWizardModal
           open={isCreateWizardOpen}
           onClose={() => setIsCreateWizardOpen(false)}
           classId={classId}

@@ -62,7 +62,7 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({ open, 
       confirmLoading={loading}
       okText="Lưu mật khẩu"
       cancelText="Hủy"
-      destroyOnClose
+      destroyOnHidden
       centered
     >
       <Form form={form} layout="vertical" className="mt-4" requiredMark="optional">

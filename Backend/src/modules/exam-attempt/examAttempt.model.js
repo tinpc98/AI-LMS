@@ -57,6 +57,33 @@ const examAttemptSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    answersVersion: {
+      type: Number,
+      default: 0,
+    },
+    sessionToken: {
+      type: String,
+    },
+    activeTabId: {
+      type: String,
+    },
+    lastHeartbeat: {
+      type: Date,
+    },
+    takeoverCount: {
+      type: Number,
+      default: 0,
+    },
+    deviceLogs: [
+      {
+        ip: String,
+        userAgent: String,
+        takeoverTime: {
+          type: Date,
+          default: Date.now,
+        },
+      },
+    ],
 
     // ── Ghi nhận nộp muộn (Wave 7+) ──────────────────────────────────────────
     //
@@ -81,5 +108,14 @@ const examAttemptSchema = new mongoose.Schema(
 );
 
 examAttemptSchema.plugin(softDeletePlugin);
+
+// Index chống tạo 2 bản ghi cho cùng 1 sinh viên trong 1 đề thi (ngoại trừ khi đã xóa mềm)
+examAttemptSchema.index(
+  { examId: 1, studentId: 1 },
+  { 
+    unique: true, 
+    partialFilterExpression: { isDeleted: false } 
+  }
+);
 
 export default mongoose.model("ExamAttempt", examAttemptSchema);

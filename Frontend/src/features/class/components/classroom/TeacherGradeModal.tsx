@@ -11,22 +11,46 @@ import {
   Spin,
   Card,
   Alert,
+  Divider,
 } from "antd";
-import { CheckCircleOutlined, UserOutlined, EditOutlined, AlertOutlined } from "@ant-design/icons";
+import {
+  CheckCircleOutlined,
+  UserOutlined,
+  EditOutlined,
+  SafetyCertificateOutlined,
+  BookOutlined,
+} from "@ant-design/icons";
 import examApi from "../../../../api/examApi";
 import { toast } from "../../../../utils/toast";
 import { getApiErrorMessage } from "../../../../shared/utils/apiError";
+import ExamResultCard from "../classDetail/exams/ExamResultCard";
+import ExamQuestionReviewList from "../classDetail/exams/ExamQuestionReviewList";
 
 const { Text, Title, Paragraph } = Typography;
 
-interface TeacherGradeEssayModalProps {
+interface TeacherGradeModalProps {
   open: boolean;
   onClose: () => void;
   attemptId: string | null;
   onGraded?: () => void;
 }
 
-export const TeacherGradeEssayModal: React.FC<TeacherGradeEssayModalProps> = React.memo(
+const mapCheatType = (type: string) => {
+  switch (type) {
+    case "TAB_SWITCH":
+      return "Rời khỏi màn hình bài thi";
+    case "FULLSCREEN_EXIT":
+      return "Thoát chế độ toàn màn hình";
+    case "COPY_PASTE":
+      return "Sao chép/Dán nội dung";
+    case "MULTIPLE_FACES":
+      return "Phát hiện nhiều khuôn mặt";
+    default:
+      return type;
+  }
+};
+
+export const TeacherGradeModal: React.FC<TeacherGradeModalProps> = React.memo(
   ({ open, onClose, attemptId, onGraded }) => {
     const [reviewData, setReviewData] = useState<any | null>(null);
     const [loading, setLoading] = useState(false);
@@ -77,11 +101,11 @@ export const TeacherGradeEssayModal: React.FC<TeacherGradeEssayModalProps> = Rea
           }));
 
         await examApi.gradeEssay(attemptId, essayGrades);
-        toast.success("Chấm điểm bài thi tự luận thành công!");
+        toast.success("Đã chốt điểm bài thi thành công!");
         onClose();
         if (onGraded) onGraded();
       } catch (err: unknown) {
-        toast.error(getApiErrorMessage(err, "Lỗi khi lưu kết quả chấm điểm!"));
+        toast.error(getApiErrorMessage(err, "Lỗi khi chốt điểm bài thi!"));
       } finally {
         setSubmitting(false);
       }
@@ -92,6 +116,23 @@ export const TeacherGradeEssayModal: React.FC<TeacherGradeEssayModalProps> = Rea
     const essayQuestions = (reviewData?.answersDetail || []).filter(
       (ans: any) => ans.type === "ESSAY" || ans.type === "Essay"
     );
+    const allQuestions = reviewData?.answersDetail || [];
+
+    const isSuspended = (reviewData?.cheatWarnings || 0) >= 5;
+
+    // Phân tích cheat logs
+    const cheatLogs = reviewData?.cheatLogs || [];
+    const cheatSummary: Record<string, number> = {};
+    cheatLogs.forEach((log: any) => {
+      const mapped = mapCheatType(log.cheatType);
+      cheatSummary[mapped] = (cheatSummary[mapped] || 0) + 1;
+    });
+
+    const isGraded = reviewData?.status === "GRADED";
+    let submitButtonText = essayQuestions.length > 0 ? "Lưu kết quả chấm" : "Xác nhận chốt điểm";
+    if (isGraded) {
+      submitButtonText = "Xác nhận điểm";
+    }
 
     return (
       <Modal
@@ -104,16 +145,18 @@ export const TeacherGradeEssayModal: React.FC<TeacherGradeEssayModalProps> = Rea
         open={open}
         onCancel={onClose}
         footer={null}
-        width={800}
+        width={900}
+        centered
         destroyOnClose
+        styles={{ body: { maxHeight: "75vh", overflowY: "auto", paddingRight: 8, paddingTop: 16 } }}
       >
         {loading ? (
           <div style={{ textAlign: "center", padding: 40 }}>
             <Spin tip="Đang tải dữ liệu bài làm của sinh viên..." />
           </div>
         ) : reviewData ? (
-          <div>
-            {/* Student & Attempt Header Card */}
+          <Form form={form} layout="vertical" onFinish={handleSubmit}>
+            {/* Student Info Card */}
             <Card style={{ marginBottom: 16, backgroundColor: "var(--color-bg-page)", borderRadius: 8 }}>
               <div
                 style={{
@@ -139,33 +182,70 @@ export const TeacherGradeEssayModal: React.FC<TeacherGradeEssayModalProps> = Rea
                     </Text>
                   </div>
                 </Space>
-
-                <Space size={12}>
-                  <div>
-                    <Text type="secondary" style={{ fontSize: 11, display: "block" }}>
-                      Điểm hiện tại
-                    </Text>
-                    <Text strong style={{ color: "var(--color-action-primary-bg)", fontSize: 18 }}>
-                      {reviewData.totalScore} / 10
-                    </Text>
-                  </div>
-                  {reviewData.cheatWarnings > 0 && (
-                    <Tag color="error" icon={<AlertOutlined />}>
-                      Cảnh báo: {reviewData.cheatWarnings} lần
-                    </Tag>
-                  )}
-                </Space>
               </div>
             </Card>
 
-            {/* Essay Form / Questions List */}
-            <Form form={form} layout="vertical" onFinish={handleSubmit}>
-              <Title level={5} style={{ fontSize: 15, marginBottom: 12 }}>
-                📝 Danh sách câu hỏi tự luận ({essayQuestions.length} câu)
-              </Title>
+            {/* Kết quả Card (dùng chung ExamResultCard) */}
+            <div style={{ marginBottom: 16 }}>
+              <ExamResultCard
+                attempt={{
+                  ...reviewData,
+                  totalScore: reviewData.totalScore,
+                  createdAt: reviewData.submittedAt
+                }}
+                maxScore={10}
+                isSuspended={isSuspended}
+              />
+            </div>
 
-              {essayQuestions.length > 0 ? (
-                essayQuestions.map((ans: any, idx: number) => (
+            {/* Khối Giám sát bài thi */}
+            <Card
+              size="small"
+              title={
+                <Space>
+                  <SafetyCertificateOutlined style={{ color: "var(--color-primary-base)" }} />
+                  <Text strong>Giám sát bài thi</Text>
+                </Space>
+              }
+              style={{ marginBottom: 16, borderRadius: 12, border: "1px solid var(--color-border-default)" }}
+            >
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {reviewData?.cheatWarnings > 0 ? (
+                  <>
+                    <Text>
+                      Số lần vi phạm: <Text strong style={{ color: "var(--color-error-text)" }}>{reviewData.cheatWarnings}/5</Text>
+                    </Text>
+                    {Object.keys(cheatSummary).length > 0 && (
+                      <div style={{ display: "flex", flexDirection: "column" }}>
+                        <Text type="secondary">Chi tiết:</Text>
+                        <ul style={{ margin: "4px 0 0 20px", padding: 0 }}>
+                          {Object.entries(cheatSummary).map(([key, count]) => (
+                            <li key={key}>
+                              <Text>{key} ({count} lần)</Text>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <Space>
+                    <CheckCircleOutlined style={{ color: "var(--color-success-base)" }} />
+                    <Text strong style={{ color: "var(--color-success-text)" }}>Không phát hiện vi phạm</Text>
+                  </Space>
+                )}
+              </div>
+            </Card>
+
+            <Divider style={{ margin: "20px 0" }} />
+
+            {/* Essay Questions List */}
+            {essayQuestions.length > 0 && (
+              <>
+                <Title level={5} style={{ fontSize: 15, marginBottom: 12 }}>
+                  📝 Danh sách câu hỏi tự luận cần chấm ({essayQuestions.length} câu)
+                </Title>
+                {essayQuestions.map((ans: any, idx: number) => (
                   <Card
                     key={ans.questionId || idx}
                     style={{ marginBottom: 16, borderRadius: 8, border: "1px solid var(--color-border-default)" }}
@@ -246,32 +326,36 @@ export const TeacherGradeEssayModal: React.FC<TeacherGradeEssayModalProps> = Rea
                       />
                     </Form.Item>
                   </Card>
-                ))
-              ) : (
-                <Alert
-                  message="Bài thi này 100% trắc nghiệm!"
-                  description="Hệ thống đã tự động chấm điểm xong cho toàn bộ câu hỏi trắc nghiệm."
-                  type="info"
-                  showIcon
-                  style={{ marginBottom: 20 }}
-                />
-              )}
+                ))}
+                <Divider style={{ margin: "20px 0" }} />
+              </>
+            )}
 
-              <div style={{ display: "flex", justifyContent: "flex-end", gap: 12, marginTop: 20 }}>
-                <Button onClick={onClose}>Hủy</Button>
-                {essayQuestions.length > 0 && (
-                  <Button
-                    type="primary"
-                    htmlType="submit"
-                    loading={submitting}
-                    icon={<CheckCircleOutlined />}
-                  >
-                    Lưu kết quả chấm tự luận
-                  </Button>
-                )}
-              </div>
-            </Form>
-          </div>
+            {/* All Questions Review */}
+            <Text
+              strong
+              style={{ fontSize: 15, color: "var(--color-text-title)", display: "block", marginBottom: 12 }}
+            >
+              <BookOutlined style={{ marginRight: 6 }} /> Danh sách toàn bộ câu hỏi & Đáp án:
+            </Text>
+
+            <ExamQuestionReviewList
+              questionsList={allQuestions}
+              studentAnswerLabel="Đáp án học sinh chọn"
+            />
+
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: 12, marginTop: 20 }}>
+              <Button onClick={onClose}>Hủy</Button>
+              <Button
+                type="primary"
+                htmlType="submit"
+                loading={submitting}
+                icon={<CheckCircleOutlined />}
+              >
+                {submitButtonText}
+              </Button>
+            </div>
+          </Form>
         ) : (
           <Alert message="Không tìm thấy bài làm để xem lại." type="warning" showIcon />
         )}
@@ -280,4 +364,6 @@ export const TeacherGradeEssayModal: React.FC<TeacherGradeEssayModalProps> = Rea
   }
 );
 
-TeacherGradeEssayModal.displayName = "TeacherGradeEssayModal";
+TeacherGradeModal.displayName = "TeacherGradeModal";
+
+export default TeacherGradeModal;

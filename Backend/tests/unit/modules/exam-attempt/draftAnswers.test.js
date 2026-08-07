@@ -14,6 +14,9 @@ vi.mock("#modules/exam-attempt/examAttempt.model.js", () => ({
 vi.mock("#modules/exam", () => ({
   Exam: { findById: (...a) => examFindById(...a) },
 }));
+vi.mock("#modules/exam-attempt/examAttempt.service.js", () => ({
+  default: { gradeSubmission: vi.fn().mockResolvedValue({}) },
+}));
 
 const { saveDraftAnswers } = await import("#modules/exam-attempt/draftAnswers.service.js");
 

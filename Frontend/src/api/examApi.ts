@@ -56,7 +56,7 @@ export const examApi = {
     matrix: Array<{ topic: string; difficulty?: string; count: number }>;
   }): Promise<IExam> => {
     const response = await axiosClient.post<ApiEnvelope<IExam>>(
-      "/api/exams/auto-generate",
+      "/api/exams/generate-auto",
       matrixData
     );
     return response.data.data;
@@ -119,7 +119,7 @@ export const examApi = {
     attemptId: string,
     essayGrades: Array<{ questionId: string; pointsEarned: number }>
   ): Promise<IExamAttempt> => {
-    const response = await axiosClient.post<ApiEnvelope<IExamAttempt>>(
+    const response = await axiosClient.put<ApiEnvelope<IExamAttempt>>(
       `/api/exam-attempts/${attemptId}/grade-essay`,
       { essayGrades }
     );
