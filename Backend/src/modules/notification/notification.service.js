@@ -230,6 +230,87 @@ class NotificationService {
   // ──────────────────────────────────────────────
 
   /**
+   * Tạo thông báo khi Teacher đăng một Announcement mới cho lớp và emit qua Socket
+   */
+  async notifyClassAnnouncementCreated({ announcement, classInfo, teacherInfo, io }) {
+    if (!announcement || !classInfo) return;
+
+    try {
+      // 1. Chỉ lấy những Student đang thực sự enroll hợp lệ trong lớp
+      const activeStudents = (classInfo.students || []).filter(
+        (s) => s.status === "Enrolled" && s.studentId
+      );
+
+      if (activeStudents.length === 0) return;
+
+      const actorId = typeof teacherInfo === "object" ? teacherInfo._id : teacherInfo;
+
+      // 2. Chuẩn bị bulkWrite ops với upsert
+      const bulkOps = activeStudents.map((s) => {
+        const recipientId = typeof s.studentId === "object" ? s.studentId._id : s.studentId;
+
+        return {
+          updateOne: {
+            // Điều kiện filter để upsert (phải khớp với unique compound index: recipientId, type, entityId)
+            filter: {
+              recipientId: new mongoose.Types.ObjectId(recipientId),
+              type: "announcement",
+              entityId: new mongoose.Types.ObjectId(announcement._id),
+            },
+            update: {
+              $setOnInsert: {
+                recipientId: new mongoose.Types.ObjectId(recipientId),
+                actorId: actorId ? new mongoose.Types.ObjectId(actorId) : null,
+                senderId: actorId ? new mongoose.Types.ObjectId(actorId) : null, // legacy
+                title: "Thông báo lớp học mới",
+                message: `Giảng viên vừa đăng thông báo mới trong lớp ${classInfo.className || "của bạn"}`,
+                content: `Giảng viên vừa đăng thông báo mới trong lớp ${classInfo.className || "của bạn"}`, // legacy
+                type: "announcement",
+                entityType: "ANNOUNCEMENT",
+                entityId: new mongoose.Types.ObjectId(announcement._id),
+                classId: new mongoose.Types.ObjectId(classInfo._id),
+                actionUrl: `/student/class/${classInfo._id}?tab=announcements`,
+                link: `/student/class/${classInfo._id}?tab=announcements`, // legacy
+                metadata: {
+                  className: classInfo.className,
+                  teacherName: teacherInfo?.fullName || "Giảng viên",
+                  announcementTitle: announcement.title,
+                },
+                isRead: false,
+                readAt: null,
+              },
+            },
+            upsert: true,
+          },
+        };
+      });
+
+      // 3. Thực thi bulkWrite
+      const result = await Notification.bulkWrite(bulkOps, { ordered: false });
+
+      // 4. Emit socket.io cho từng user
+      if (result.upsertedCount > 0 && io) {
+        const upsertedIds = Object.values(result.upsertedIds);
+        const newNotifications = await Notification.find({ _id: { $in: upsertedIds } })
+          .populate("actorId senderId", "fullName email avatar")
+          .lean();
+
+        newNotifications.forEach((notif) => {
+          io.to(`user:${notif.recipientId}`).emit("notification:new", notif);
+        });
+
+        console.log(
+          `✅ [NotificationService] Đã tạo và emit ${result.upsertedCount} thông báo Announcement.`
+        );
+      }
+    } catch (error) {
+      console.error("❌ [NotificationService] notifyClassAnnouncementCreated Error:", error);
+    }
+  }
+
+  // ──────────────────────────────────────────────
+
+  /**
    * Tạo thông báo khi Teacher bắt đầu Live Session và emit qua Socket
    * Hàm này sử dụng bulkWrite upsert để ngăn chặn việc tạo trùng lặp
    */

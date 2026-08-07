@@ -1,6 +1,8 @@
 import mongoose from "mongoose";
 import announcementService from "./announcement.service.js";
 import { sendSuccess, sendError } from "#shared/utils/response.js";
+import notificationService from "#modules/notification/notification.service.js";
+import { Class as classModel } from "#modules/class/index.js";
 
 export const createAnnouncement = async (req, res) => {
   try {
@@ -26,6 +28,23 @@ export const createAnnouncement = async (req, res) => {
       createdBy,
       userRole,
     });
+
+    // Tạo notification realtime cho toàn bộ sinh viên trong lớp
+    if (scope === "Class" && classId) {
+      const classInfo = await classModel.findById(classId).populate("teacherId", "fullName email avatar").lean();
+      if (classInfo) {
+        const io = req.app.get("io");
+        // Không await để không block response
+        notificationService.notifyClassAnnouncementCreated({
+          announcement: result,
+          classInfo: classInfo,
+          teacherInfo: classInfo.teacherId,
+          io: io,
+        }).catch(err => {
+          console.error("[AnnouncementController] Lỗi khi tạo notification:", err);
+        });
+      }
+    }
 
     return sendSuccess(res, "Tạo thông báo thành công", result, null, 201);
   } catch (error) {
