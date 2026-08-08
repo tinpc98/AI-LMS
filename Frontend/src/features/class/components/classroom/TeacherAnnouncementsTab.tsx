@@ -35,7 +35,7 @@ import dayjs from "dayjs";
 import announcementApi from "../../../../api/announcementApi";
 import type { IAnnouncement } from "../../../../api/announcementApi";
 import { toast } from "../../../../utils/toast";
-import { TeacherAnnouncementDetailDrawer } from "./TeacherAnnouncementDetailDrawer";
+import SharedAnnouncementDetailModal from "../../../announcement/components/SharedAnnouncementDetailModal";
 import { CreateAnnouncementModal } from "./CreateAnnouncementModal";
 import { getApiErrorMessage } from "../../../../shared/utils/apiError";
 
@@ -508,10 +508,10 @@ export const TeacherAnnouncementsTab: React.FC<TeacherAnnouncementsTabProps> = R
         </Card>
 
         {/* Modal & Drawer */}
-        <TeacherAnnouncementDetailDrawer
+        <SharedAnnouncementDetailModal
           open={isDetailDrawerOpen}
           onClose={() => setIsDetailDrawerOpen(false)}
-          announcement={selectedAnnouncement}
+          item={selectedAnnouncement}
           className={className}
         />
 

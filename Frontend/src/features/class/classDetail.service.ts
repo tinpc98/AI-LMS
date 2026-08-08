@@ -5,6 +5,7 @@
 import { classApi } from "../../api/classApi";
 import { lessonApi } from "../../api/lessonApi";
 import assignmentApi from "../../api/assignmentApi";
+import announcementApi from "../../api/announcementApi";
 import { getCurrentUserId } from "../../shared/utils/authToken";
 import type { IClass } from "../../interface/ClassInterface";
 import type { ILesson } from "../../interface/lessonInterface";
@@ -84,17 +85,23 @@ const fetchSubmissionsData = async (assignments: IAssignment[]): Promise<{ submi
 export const fetchClassDetail = async (classId: string): Promise<ClassDetailData> => {
   // Bài giảng và bài tập hỏng thì vẫn hiện được phần còn lại của trang; riêng thông tin lớp
   // hỏng thì không còn gì để hiện, nên để lỗi nổi lên cho React Query bắt.
-  const [classRes, lessonRes, assignmentRes] = await Promise.all([
+  const [classRes, lessonRes, assignmentRes, announcementsRes] = await Promise.all([
     classApi.getClassById(classId),
     lessonApi.getLessonsByClass(classId).catch(() => ({ data: { lessons: [] } })),
     assignmentApi.getAssignmentsByClass(classId).catch(() => []),
+    announcementApi.getAnnouncementsByClass(classId).catch(() => []),
   ]);
 
   const assignments = unwrapAssignments(assignmentRes);
   const { submittedIds, submissionsMap } = await fetchSubmissionsData(assignments);
 
+  const classInfo = unwrapClass(classRes);
+  if (classInfo) {
+    (classInfo as any).announcements = announcementsRes;
+  }
+
   return {
-    classInfo: unwrapClass(classRes),
+    classInfo,
     lessons: selectPublishedLessons(unwrapLessons(lessonRes)),
     assignments,
     submittedAssignmentIds: submittedIds,

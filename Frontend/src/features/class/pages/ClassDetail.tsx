@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { getCurrentUserId } from "../../../shared/utils/authToken";
-import { useParams, Link, useNavigate } from "react-router-dom";
+import { useParams, Link, useNavigate, useSearchParams } from "react-router-dom";
 import axiosClient from "../../../api/axiosClient";
 import type { IExam } from "../../../interface/examInterface";
 import { toast } from "../../../utils/toast";
@@ -74,7 +74,14 @@ const getAvatarColor = (name: string) => {
 export default function ClassDetail() {
   const { classId } = useParams<{ classId: string }>();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<string>("overview");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [activeTab, setActiveTab] = useState<string>(searchParams.get("tab") || "overview");
+
+  // Sync tab with URL
+  const handleTabChange = (key: string) => {
+    setActiveTab(key);
+    setSearchParams({ tab: key }, { replace: true });
+  };
   const [searchQuery] = useState<string>("");
 
   // Custom hook for class details data
@@ -573,7 +580,7 @@ export default function ClassDetail() {
       >
         <Tabs
           activeKey={activeTab}
-          onChange={setActiveTab}
+          onChange={handleTabChange}
           items={tabItems}
           size="large"
           tabBarStyle={{

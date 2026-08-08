@@ -88,6 +88,11 @@ export function useStudentAnnouncements(rawAnnouncements: IAnnouncement[] = []) 
     setReadIds((prev) => new Set([...prev, id]));
   }, []);
 
+  const markAllAsRead = useCallback(() => {
+    const allIds = rawAnnouncements.map(a => a._id);
+    setReadIds(new Set(allIds));
+  }, [rawAnnouncements]);
+
   // Filter & Sort
   const filteredAnnouncements = useMemo(() => {
     let result = [...extendedAnnouncements];
@@ -185,6 +190,7 @@ export function useStudentAnnouncements(rawAnnouncements: IAnnouncement[] = []) 
     filteredAnnouncements,
     groupedAnnouncements,
     markAsRead,
+    markAllAsRead,
     handleSearchChange,
     handleFilterTypeChange,
     handleSortChange,

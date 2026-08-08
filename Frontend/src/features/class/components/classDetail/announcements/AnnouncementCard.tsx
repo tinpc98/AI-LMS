@@ -1,24 +1,30 @@
-import React from "react";
-import { Card, Avatar, Typography, Space, Badge, Alert, Button } from "antd";
+import React, { useState, useRef, useEffect } from "react";
+import { Card, Avatar, Typography, Space, Button, Tag } from "antd";
 import {
   UserOutlined,
   ClockCircleOutlined,
-  ArrowRightOutlined,
   PushpinOutlined,
+  GlobalOutlined,
+  DownOutlined,
+  UpOutlined,
+  PaperClipOutlined,
 } from "@ant-design/icons";
-import AnnouncementTag from "./AnnouncementTag";
-import AnnouncementAttachmentList from "./AnnouncementAttachmentList";
 import type { IExtendedAnnouncement } from "../../../../../types/studentAnnouncement";
 
-const { Text, Paragraph, Title } = Typography;
+const { Text, Title } = Typography;
 
 interface AnnouncementCardProps {
   item: IExtendedAnnouncement;
   onDetail: (item: IExtendedAnnouncement) => void;
+  onMarkAsRead: (id: string) => void;
 }
 
 export const AnnouncementCard: React.FC<AnnouncementCardProps> = React.memo(
-  ({ item, onDetail }) => {
+  ({ item, onDetail, onMarkAsRead }) => {
+    const [isExpanded, setIsExpanded] = useState(false);
+    const [isTextTruncated, setIsTextTruncated] = useState(false);
+    const textRef = useRef<HTMLDivElement>(null);
+
     const formattedDate = item.createdAt
       ? new Date(item.createdAt).toLocaleString("vi-VN", {
           day: "2-digit",
@@ -30,34 +36,62 @@ export const AnnouncementCard: React.FC<AnnouncementCardProps> = React.memo(
       : "Vừa đăng";
 
     const isUnread = !item.isRead;
+    const hasAttachments = item.attachments && item.attachments.length > 0;
+
+    // Check if text is naturally truncated
+    useEffect(() => {
+      if (textRef.current) {
+        if (textRef.current.scrollHeight > textRef.current.clientHeight) {
+          setIsTextTruncated(true);
+        }
+      }
+    }, [item.content]);
+
+    const handleCardClick = () => {
+      if (isUnread) {
+        onMarkAsRead(item._id);
+      }
+    };
 
     return (
       <Card
         hoverable
-        onClick={() => onDetail(item)}
+        onClick={handleCardClick}
         style={{
           borderRadius: 16,
           boxShadow: "0 2px 8px rgba(0, 0, 0, 0.03)",
-          border: item.isPinned ? "2px solid var(--color-border-default)" : "1px solid var(--color-border-default)",
-          backgroundColor: item.isPinned ? "var(--color-warning-bg)" : "var(--color-surface)",
+          border: item.isPinned
+            ? "2px solid var(--color-warning-border, #ffe58f)"
+            : "1px solid var(--color-border-default)",
+          borderLeft: isUnread
+            ? "4px solid var(--color-action-primary-bg)"
+            : item.isPinned
+            ? "2px solid var(--color-warning-border, #ffe58f)"
+            : "1px solid var(--color-border-default)",
+          backgroundColor: item.isPinned
+            ? "var(--color-warning-bg)"
+            : isUnread
+            ? "var(--color-bg-page)"
+            : "var(--color-surface)",
           marginBottom: 16,
           transition: "var(--transition-fast)",
+          opacity: isUnread ? 1 : 0.85,
         }}
-        styles={{ body: { padding: 20 } }}
+        styles={{ body: { padding: "16px 20px" } }}
       >
-        {/* Header: Teacher Avatar, Author Name, Time & Unread Badge */}
+        {/* Header: Teacher Avatar, Author Name, Time & Scope Badge */}
         <div
           style={{
             display: "flex",
             justifyContent: "space-between",
-            alignItems: "center",
+            alignItems: "flex-start",
             marginBottom: 12,
           }}
         >
-          <Space size={10} align="center">
-            <Avatar icon={<UserOutlined />} style={{ backgroundColor: "var(--color-action-primary-bg)" }} />
+          <Space size={10} align="center" style={{ opacity: 0.7 }}>
+            <Avatar size={28} icon={<UserOutlined />} style={{ backgroundColor: "var(--color-action-primary-bg)" }} />
             <div>
-              <Text strong style={{ fontSize: 14, color: "var(--color-text-title)", display: "block" }}>
+              <Text strong style={{ fontSize: 13, color: "var(--color-text-title)", display: "block" }}>
                 {item.authorName || "Giảng viên"}
               </Text>
               <Text type="secondary" style={{ fontSize: 11 }}>
@@ -66,67 +100,86 @@ export const AnnouncementCard: React.FC<AnnouncementCardProps> = React.memo(
             </div>
           </Space>
 
-          <Space size={8} align="center">
-            <AnnouncementTag type={item.tagType} />
-            {isUnread && (
-              <Badge
-                status="processing"
-                text={
-                  <span style={{ fontSize: 11, color: "var(--color-action-primary-bg)", fontWeight: 700 }}>Chưa đọc</span>
-                }
-              />
-            )}
-          </Space>
+          <Tag color="blue" icon={<GlobalOutlined />} style={{ margin: 0, borderRadius: 12 }}>
+            {item.scope === "System" ? "Toàn hệ thống" : "Lớp học"}
+          </Tag>
         </div>
 
-        {/* Important Alert Notice if Marked as Important */}
-        {item.isImportant && !item.isPinned && (
-          <Alert
-            message="Thông báo quan trọng từ giảng viên"
-            type="warning"
-            showIcon
-            style={{ borderRadius: 8, marginBottom: 12, padding: "6px 12px" }}
-          />
-        )}
-
         {/* Title */}
-        <Title level={5} style={{ margin: "0 0 8px 0", color: "var(--color-text-title)", lineHeight: 1.4 }}>
+        <Title
+          level={5}
+          style={{
+            margin: "0 0 8px 0",
+            color: "var(--color-text-title)",
+            lineHeight: 1.4,
+            fontWeight: isUnread ? 800 : 600,
+          }}
+        >
           {item.isPinned && <PushpinOutlined style={{ color: "var(--color-warning-base)", marginRight: 6 }} />}
           {item.title}
         </Title>
 
-        {/* Short Snippet Paragraph */}
-        <Paragraph
-          type="secondary"
+        {/* Content Paragraph */}
+        <div
+          ref={textRef}
           style={{
-            fontSize: 13,
+            fontSize: 14,
             lineHeight: 1.6,
+            color: "var(--color-text-title)",
             margin: "0 0 12px 0",
-            display: "-webkit-box",
-            WebkitLineClamp: 3,
+            display: isExpanded ? "block" : "-webkit-box",
+            WebkitLineClamp: isExpanded ? undefined : 3,
             WebkitBoxOrient: "vertical",
             overflow: "hidden",
+            whiteSpace: "pre-wrap",
           }}
         >
           {item.content}
-        </Paragraph>
+        </div>
 
-        {/* Attachments Preview if any */}
-        {item.attachments && item.attachments.length > 0 && (
-          <AnnouncementAttachmentList attachments={item.attachments} />
-        )}
-
-        {/* Footer Read More link */}
-        <div style={{ marginTop: 12, textAlign: "right" }}>
+        {/* Expand/Collapse Text Button */}
+        {isTextTruncated && (
           <Button
             type="link"
             size="small"
-            icon={<ArrowRightOutlined />}
-            style={{ padding: 0, fontWeight: 600 }}
+            style={{ padding: 0, marginTop: -4, marginBottom: 12, fontSize: 13 }}
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsExpanded(!isExpanded);
+              if (isUnread) onMarkAsRead(item._id);
+            }}
           >
-            Xem chi tiết thông báo
+            {isExpanded ? (
+              <>
+                Thu gọn <UpOutlined />
+              </>
+            ) : (
+              <>
+                Xem thêm <DownOutlined />
+              </>
+            )}
           </Button>
-        </div>
+        )}
+
+        {/* Attachments (only preview limited amount or just a button to view) */}
+        {hasAttachments && (
+          <div style={{ marginTop: 8, display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
+            <Button
+              size="small"
+              icon={<PaperClipOutlined />}
+              onClick={(e) => {
+                e.stopPropagation();
+                onDetail(item);
+                if (isUnread) onMarkAsRead(item._id);
+              }}
+            >
+              Xem đính kèm ({item.attachments!.length})
+            </Button>
+            <Text type="secondary" style={{ fontSize: 12 }}>
+              Nhấn để xem chi tiết đính kèm
+            </Text>
+          </div>
+        )}
       </Card>
     );
   }

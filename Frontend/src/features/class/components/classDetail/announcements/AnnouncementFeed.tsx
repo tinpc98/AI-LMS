@@ -14,10 +14,11 @@ interface AnnouncementFeedGroup {
 interface AnnouncementFeedProps {
   groups: AnnouncementFeedGroup[];
   onDetail: (item: IExtendedAnnouncement) => void;
+  onMarkAsRead: (id: string) => void;
 }
 
 export const AnnouncementFeed: React.FC<AnnouncementFeedProps> = React.memo(
-  ({ groups, onDetail }) => {
+  ({ groups, onDetail, onMarkAsRead }) => {
     return (
       <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
         {groups.map((group) => (
@@ -32,6 +33,7 @@ export const AnnouncementFeed: React.FC<AnnouncementFeedProps> = React.memo(
                   color: "var(--color-text-description)",
                   textTransform: "uppercase",
                   letterSpacing: 0.5,
+                  whiteSpace: "nowrap",
                 }}
               >
                 {group.groupTitle} ({group.items.length})
@@ -42,7 +44,7 @@ export const AnnouncementFeed: React.FC<AnnouncementFeedProps> = React.memo(
             {/* Feed Cards List */}
             <div>
               {group.items.map((item) => (
-                <AnnouncementCard key={item._id} item={item} onDetail={onDetail} />
+                <AnnouncementCard key={item._id} item={item} onDetail={onDetail} onMarkAsRead={onMarkAsRead} />
               ))}
             </div>
           </div>

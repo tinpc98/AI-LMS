@@ -1,6 +1,6 @@
 import React from "react";
 import { Input, Select, Row, Col, Space } from "antd";
-import { SearchOutlined, FilterOutlined, SortAscendingOutlined } from "@ant-design/icons";
+import { SearchOutlined, SortAscendingOutlined } from "@ant-design/icons";
 import type { StudentAnnouncementFilterOptions } from "../../../../../types/studentAnnouncement";
 
 const { Option } = Select;
@@ -15,7 +15,7 @@ interface AnnouncementToolbarProps {
 }
 
 export const AnnouncementToolbar: React.FC<AnnouncementToolbarProps> = React.memo(
-  ({ searchQuery, filterType, sortBy, onSearchChange, onFilterTypeChange, onSortChange }) => {
+  ({ searchQuery, sortBy, onSearchChange, onSortChange }) => {
     return (
       <div
         style={{
@@ -24,7 +24,7 @@ export const AnnouncementToolbar: React.FC<AnnouncementToolbarProps> = React.mem
           borderRadius: 14,
           boxShadow: "0 2px 8px rgba(0, 0, 0, 0.03)",
           border: "1px solid var(--color-border-default)",
-          marginBottom: 24,
+          marginBottom: 16,
         }}
       >
         <Row gutter={[16, 12]} align="middle" justify="space-between">
@@ -40,27 +40,9 @@ export const AnnouncementToolbar: React.FC<AnnouncementToolbarProps> = React.mem
             />
           </Col>
 
-          {/* Filters & Sort Select Dropdowns */}
+          {/* Sort By Dropdown */}
           <Col xs={24} sm={14} md={15} lg={15}>
             <Space wrap style={{ width: "100%", justifyContent: "flex-end" }}>
-              {/* Category Filter */}
-              <Space size={4}>
-                <FilterOutlined style={{ color: "var(--color-text-description)" }} />
-                <Select
-                  value={filterType}
-                  onChange={onFilterTypeChange}
-                  style={{ width: 160, borderRadius: 8 }}
-                >
-                  <Option value="all">Tất cả thông báo</Option>
-                  <Option value="unread">Chưa đọc</Option>
-                  <Option value="read">Đã đọc</Option>
-                  <Option value="pinned">Đã ghim 📌</Option>
-                  <Option value="this_week">Tuần này</Option>
-                  <Option value="this_month">Tháng này</Option>
-                </Select>
-              </Space>
-
-              {/* Sort By */}
               <Space size={4}>
                 <SortAscendingOutlined style={{ color: "var(--color-text-description)" }} />
                 <Select

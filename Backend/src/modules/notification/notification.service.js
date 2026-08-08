@@ -269,8 +269,8 @@ class NotificationService {
                 entityType: "ANNOUNCEMENT",
                 entityId: new mongoose.Types.ObjectId(announcement._id),
                 classId: new mongoose.Types.ObjectId(classInfo._id),
-                actionUrl: `/student/class/${classInfo._id}?tab=announcements`,
-                link: `/student/class/${classInfo._id}?tab=announcements`, // legacy
+                actionUrl: `/student/classdetail/${classInfo._id}?tab=announcements`,
+                link: `/student/classdetail/${classInfo._id}?tab=announcements`, // legacy
                 metadata: {
                   className: classInfo.className,
                   teacherName: teacherInfo?.fullName || "Giảng viên",
@@ -432,8 +432,8 @@ class NotificationService {
                 entityType: "LIVE_SESSION",
                 entityId: new mongoose.Types.ObjectId(session._id),
                 classId: new mongoose.Types.ObjectId(session.classId),
-                actionUrl: `/student/classes/${session.classId}`,
-                link: `/student/classes/${session.classId}`,
+                actionUrl: `/student/classdetail/${session.classId}?tab=live`,
+                link: `/student/classdetail/${session.classId}?tab=live`,
                 metadata: {
                   className: classInfo.className,
                   sessionNumber: session.sessionNumber,
