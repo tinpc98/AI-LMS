@@ -611,6 +611,23 @@ export const UpdateStudentStatus = asyncHandler(async (req, res) => {
   const updatedStudent = updatedClass.students.find(
     (s) => s.studentId && s.studentId.toString() === studentId
   );
+
+  // Xử lý đá khỏi phòng chat nếu học sinh bị đổi sang Dropped hoặc Transferred
+  const io = req.app.get("io");
+  if (io && ["Dropped", "Transferred"].includes(status)) {
+    const roomName = `chat_class_${id}`;
+    io.in(roomName).fetchSockets().then(socketsInRoom => {
+      for (const s of socketsInRoom) {
+        if (s.user && s.user.id === studentId) {
+          s.leave(roomName);
+          if (s.chatRooms) {
+            s.chatRooms.delete(roomName);
+          }
+        }
+      }
+    }).catch(err => console.error("[UpdateStudentStatus] Lỗi kick socket:", err));
+  }
+
   return res.status(200).json({
     success: true,
     message: `Cập nhật trạng thái học sinh thành "${status}" thành công`,

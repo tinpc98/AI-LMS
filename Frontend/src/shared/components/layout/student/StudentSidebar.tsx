@@ -1,5 +1,5 @@
 import React, { useMemo } from "react";
-import { Layout, Menu, Drawer, Typography, Tag, Avatar, Space, Button } from "antd";
+import { Layout, Menu, Drawer, Typography, Tag, Avatar, Space, Button, Badge } from "antd";
 import { Link, useLocation } from "react-router-dom";
 import {
   DashboardOutlined,
@@ -7,8 +7,10 @@ import {
   BellOutlined,
   UserOutlined,
   LogoutOutlined,
+  MessageOutlined,
 } from "@ant-design/icons";
 import { useAuth } from "../../../hooks/useAuth";
+import { useMessagesStore } from "../../../../features/chat/store/useMessagesStore";
 import { tokens as staticTokens } from "../../../theme/tokens";
 import { useTheme } from "../../../context/ThemeContext";
 
@@ -28,6 +30,13 @@ export const StudentSidebar: React.FC<StudentSidebarProps> = React.memo(
     const location = useLocation();
     const { user, logout } = useAuth();
     const { tokens, isDark } = useTheme();
+    const { totalUnread, fetchSummary, initialized } = useMessagesStore();
+
+    React.useEffect(() => {
+      if (!initialized) {
+        fetchSummary();
+      }
+    }, [initialized, fetchSummary]);
 
     // Menu Items - Only 5 items as strictly required
     const menuItems = useMemo(
@@ -47,8 +56,17 @@ export const StudentSidebar: React.FC<StudentSidebarProps> = React.memo(
           icon: <BellOutlined />,
           label: <Link to="/student/notifications">Thông báo</Link>,
         },
+        {
+          key: "/student/messages",
+          icon: (
+            <Badge count={totalUnread} size="small" offset={[2, 0]}>
+              <MessageOutlined />
+            </Badge>
+          ),
+          label: <Link to="/student/messages">Tin nhắn</Link>,
+        },
       ],
-      []
+      [totalUnread]
     );
 
     // Dynamic active key detection

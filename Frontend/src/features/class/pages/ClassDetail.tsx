@@ -37,7 +37,7 @@ import AttendanceTab from "../components/classDetail/attendance/AttendanceTab";
 import AnnouncementsTab from "../components/classDetail/announcements/AnnouncementsTab";
 import LiveClassTab from "../components/classDetail/live/LiveClassTab";
 
-import ClassDiscussionTab from "../components/classDetail/chat/ClassDiscussionTab";
+import { ClassDiscussionTab } from "../components/classDetail/chat/ClassDiscussionTab";
 import ExamLobbyModals from "../components/classDetail/exams/ExamLobbyModals";
 import type { ExamPopupState } from "../components/classDetail/exams/ExamLobbyModals";
 import { useJitsiLiveSession } from "../../live-session/hooks/useJitsiLiveSession";
@@ -548,7 +548,7 @@ export default function ClassDetail() {
           <span>Thảo luận</span>
         </Space>
       ),
-      children: <ClassDiscussionTab />,
+      children: <ClassDiscussionTab key={classId} classId={classId!} isTeacher={false} />,
     },
   ];
 

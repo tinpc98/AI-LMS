@@ -25,6 +25,7 @@ const ResourceViewPage = lazy(() => import("./features/lesson/pages/ResourceView
 const NotificationCenterPage = lazy(
   () => import("./features/notification/pages/NotificationCenterPage")
 );
+const MessagesPage = lazy(() => import("./features/chat/pages/MessagesPage"));
 const ExamPage = lazy(() => import("./features/exam/pages/ExamPage"));
 
 // Teacher Components (Lazy Loaded)
@@ -110,6 +111,8 @@ function App() {
                 <Route path="studentassignment/:assignmentId" element={<StudentAssignment />} />
                 <Route path="lessonview/:lessonId" element={<LessonView />} />
                 <Route path="notifications" element={<NotificationCenterPage />} />
+                <Route path="messages" element={<MessagesPage />} />
+                <Route path="messages/:classId" element={<MessagesPage />} />
               </Route>
 
               {/* Live Session Route cho Student (Full màn hình, không Header/Sidebar) */}
@@ -140,6 +143,8 @@ function App() {
                 <Route path="questionbank" element={<QuestionBank />} />
                 <Route path="examresults/:examId" element={<ExamResults />} />
                 <Route path="exam-review/:attemptId" element={<ExamAttemptDetail />} />
+                <Route path="messages" element={<MessagesPage />} />
+                <Route path="messages/:classId" element={<MessagesPage />} />
               </Route>
 
               {/* Live Session Route cho Teacher (Full màn hình, không Header/Sidebar) */}

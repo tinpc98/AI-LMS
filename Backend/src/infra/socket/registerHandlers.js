@@ -17,6 +17,8 @@ import socketAuthMiddleware from "./socketAuth.middleware.js";
 import examSocketHandler from "#modules/exam-attempt/exam.socket.js";
 import liveSocketHandler from "#modules/live-session/live.socket.js";
 import notificationSocketHandler from "#modules/notification/notification.socket.js";
+import chatSocketHandler from "#modules/chat/chat.socket.js";
+
 
 export const registerSocketHandlers = (io) => {
   // Xác thực JWT handshake cho MỌI kết nối Socket.io, đăng ký tường minh ở đây thay vì
@@ -27,6 +29,8 @@ export const registerSocketHandlers = (io) => {
   examSocketHandler(io);
   liveSocketHandler(io);
   notificationSocketHandler(io);
+  chatSocketHandler(io);
+
 };
 
 export default registerSocketHandlers;

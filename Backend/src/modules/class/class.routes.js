@@ -25,6 +25,8 @@ import {
   resourceUpload,
   validateMagicBytes,
 } from "#shared/middlewares/resourceUpload.middleware.js";
+import chatRoutes from "../chat/chat.routes.js";
+
 
 const route = Router();
 
@@ -44,6 +46,10 @@ route.delete("/:id/resources/:resourceId", verifyUser, isTeacher, RemoveResource
 
 // Lấy URL đã ký để truy cập tài nguyên (Student Enrolled, Teacher, Admin)
 route.get("/:classId/resources/:resourceId/access", verifyUser, GetResourceAccessUrl);
+
+// Chat & Thảo luận lớp học
+route.use("/:classId/messages", chatRoutes);
+
 
 // Nhóm API quản trị dành riêng cho Admin
 route.post("/", verifyUser, isAdmin, AddNewClass);

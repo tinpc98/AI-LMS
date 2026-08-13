@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useParams, useNavigate, Link } from "react-router-dom";
+import { useParams, useNavigate, Link, useSearchParams } from "react-router-dom";
 import { Card, Tabs, Tag, Button, Space, Typography, Spin, Alert, Empty, Tooltip } from "antd";
 import {
   ArrowLeftOutlined,
@@ -18,6 +18,7 @@ import {
   DeleteOutlined,
   PlayCircleOutlined,
   EyeOutlined,
+  MessageOutlined,
 } from "@ant-design/icons";
 
 import assignmentApi from "../../../api/assignmentApi";
@@ -42,6 +43,7 @@ import { TeacherAnnouncementsTab } from "../components/classroom/TeacherAnnounce
 import { TeacherLiveSessionTab } from "../components/classroom/TeacherLiveSessionTab";
 import { TeacherGradebookTab } from "../components/classroom/TeacherGradebookTab";
 import { TeacherAnalyticsTab } from "../components/classroom/TeacherAnalyticsTab";
+import { ClassDiscussionTab } from "../components/classDetail/chat/ClassDiscussionTab";
 import { toast } from "../../../utils/toast";
 import { getApiErrorMessage } from "../../../shared/utils/apiError";
 import { useBreadcrumb } from "../../../shared/context/BreadcrumbContext";
@@ -51,6 +53,7 @@ const { Title, Text, Paragraph } = Typography;
 export default function ClassroomDetail() {
   const { classId } = useParams<{ classId: string }>();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const isMounted = useRef(false);
 
   // States
@@ -79,7 +82,13 @@ export default function ClassroomDetail() {
 
   const [editingLesson, setEditingLesson] = useState<ILesson | null>(null);
   const [selectedLessonForAI, setSelectedLessonForAI] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState("overview");
+  const [activeTab, setActiveTab] = useState(searchParams.get("tab") || "overview");
+
+  const handleTabChange = (key: string) => {
+    setActiveTab(key);
+    setSearchParams({ tab: key }, { replace: true });
+  };
+
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Live Session Hook
@@ -310,6 +319,16 @@ export default function ClassroomDetail() {
           loading={isLoading}
         />
       ),
+    },
+    {
+      key: "chat",
+      label: (
+        <Space>
+          <MessageOutlined />
+          <span>Thảo luận</span>
+        </Space>
+      ),
+      children: <ClassDiscussionTab key={classId} classId={classId!} isTeacher={true} />,
     },
     {
       key: "live",
@@ -554,7 +573,7 @@ export default function ClassroomDetail() {
       {/* 2. Tabs Navigation Content */}
       <Tabs
         activeKey={activeTab}
-        onChange={(key) => setActiveTab(key)}
+        onChange={handleTabChange}
         items={tabItems}
         type="card"
       />

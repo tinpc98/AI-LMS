@@ -13,10 +13,17 @@ export const AIChatWidget: React.FC = () => {
   const match = location.pathname.match(/\/lessonview\/([a-f0-9]{24})/i);
   const lessonIdFromUrl = match ? match[1] : undefined;
 
-  // Disable in exam attempts to prevent cheating
+  // Hide AI widget in exams, chat tab (to avoid overlapping send button), and assignment screen (overlaps fixed footer)
   const isExamAttempt =
-    location.pathname.includes("/student/exam-attempt/") ||
-    location.pathname.includes("/student/exam/");
+    location.pathname.includes("/exam/") ||
+    location.pathname.includes("/exam-attempt/") ||
+    location.pathname.includes("/exam-review/");
+  
+  const isChatTab = location.search.includes("tab=chat");
+  const isAssignmentScreen = location.pathname.includes("/studentassignment");
+  const isMessagesPage = location.pathname.includes("/messages");
+
+  const shouldHideWidget = isExamAttempt || isChatTab || isAssignmentScreen || isMessagesPage;
 
   const { session, messages, isLoading, isTyping, error, initStatus, initSession, sendMessage } =
     useAIChat(lessonIdFromUrl);
@@ -43,7 +50,7 @@ export const AIChatWidget: React.FC = () => {
     return () => window.removeEventListener("open-ai-chat", handleOpenChat);
   }, []);
 
-  if (isExamAttempt) return null;
+  if (shouldHideWidget) return null;
 
   const handleSend = () => {
     if (inputText.trim() && !isTyping && initStatus === "ready") {

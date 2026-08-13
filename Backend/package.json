@@ -75,6 +75,8 @@
     "#modules/badge/*": "./src/modules/badge/*",
     "#modules/class": "./src/modules/class/index.js",
     "#modules/class/*": "./src/modules/class/*",
+    "#modules/chat": "./src/modules/chat/index.js",
+    "#modules/chat/*": "./src/modules/chat/*",
     "#modules/course": "./src/modules/course/index.js",
     "#modules/course/*": "./src/modules/course/*",
     "#modules/exam": "./src/modules/exam/index.js",

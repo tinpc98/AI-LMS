@@ -27,6 +27,7 @@ import examRoutes from "#modules/exam/exam.routes.js";
 import examAttemptRoutes from "#modules/exam-attempt/examAttempt.routes.js";
 import questionRoutes from "#modules/question/question.routes.js";
 import announcementRoutes from "#modules/announcement/announcement.routes.js";
+import chatGlobalRoutes from "#modules/chat/chatGlobal.routes.js";
 import courseRoutes from "#modules/course/course.routes.js";
 import folderRoutes from "#modules/folder/folder.routes.js";
 import notificationRoutes from "#modules/notification/notification.routes.js";
@@ -57,6 +58,7 @@ router.use("/assignments", assignmentRoutes);
 router.use("/attendances", attendanceRoutes);
 router.use("/grades", gradeRoutes);
 router.use("/announcements", announcementRoutes);
+router.use("/messages", chatGlobalRoutes);
 router.use("/notifications", notificationRoutes);
 router.use("/folders", folderRoutes);
 

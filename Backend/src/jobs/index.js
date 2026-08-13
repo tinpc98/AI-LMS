@@ -3,6 +3,7 @@ import cronService from "./cron.service.js";
 import { runAIPendingRecovery } from "./aiPendingRecovery.job.js";
 import { runExamAutoClose } from "./examLifecycle.job.js";
 import { runExamAttemptAutoSubmit } from "./examAttemptAutoSubmit.job.js";
+import { runChatCleanup } from "./chatCleanup.job.js";
 
 /**
  * initCronJobs – Khởi tạo và đăng ký tất cả các cron job của hệ thống.
@@ -173,4 +174,27 @@ export const initCronJobs = (runImmediately = false) => {
     { scheduled: true, timezone: "Asia/Ho_Chi_Minh" }
   );
   console.log("[CRON] 📅 Đã đăng ký job: Exam Attempt Auto-Submit (lịch: mỗi phút)");
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // JOB 5: Dọn dẹp tin nhắn chat đã bị xóa mềm (Hard delete và xóa Cloudinary)
+  // Lịch: Lúc 03:00 sáng, Chủ Nhật hàng tuần.
+  // ──────────────────────────────────────────────────────────────────────────
+  cron.schedule(
+    "0 3 * * 0",
+    async () => {
+      try {
+        const { deleted, failedFiles } = await runChatCleanup();
+        if (deleted > 0) {
+          console.log(`[CRON] 🗑️ Chat Cleanup: Đã xóa vĩnh viễn ${deleted} tin nhắn chat cũ.`);
+        }
+        if (failedFiles > 0) {
+          console.warn(`[CRON] ⚠️ Chat Cleanup: Có ${failedFiles} file đính kèm lỗi khi xóa trên Cloudinary.`);
+        }
+      } catch (error) {
+        console.error("[CRON ERROR] ❌ Chat Cleanup Failed:", error);
+      }
+    },
+    { scheduled: true, timezone: "Asia/Ho_Chi_Minh" }
+  );
+  console.log("[CRON] 📅 Đã đăng ký job: Chat Cleanup (lịch: 03:00 Chủ Nhật hàng tuần)");
 };
