@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Row, Col, Card, Table, Tag, Avatar, Statistic, Spin, Alert } from "antd";
-import { TeamOutlined, StarOutlined, CheckCircleOutlined } from "@ant-design/icons";
+import { TeamOutlined, CheckCircleOutlined } from "@ant-design/icons";
 import { accountService } from "../../../features/account/accountService";
 import type { AccountRecord } from "../../../features/account/account.types";
 
@@ -13,7 +13,13 @@ export const TeacherReport: React.FC = () => {
     const fetchTeachers = async () => {
       try {
         setLoading(true);
-        const res = await accountService.getAccounts({ role: "Teacher", page: 1, limit: 100, search: "", status: "All" });
+        const res = await accountService.getAccounts({
+          role: "Teacher",
+          page: 1,
+          limit: 100,
+          search: "",
+          status: "All",
+        });
         if (res.success && res.data) {
           setTeachers(res.data);
         }
@@ -67,40 +73,33 @@ export const TeacherReport: React.FC = () => {
     <div className="space-y-6">
       {/* Stats Header */}
       <Row gutter={[16, 16]}>
-        <Col xs={24} sm={8}>
+        <Col xs={24} sm={12}>
           <Card className="rounded-xl border border-gray-100 shadow-sm">
             <Statistic
-              title="Tổng Số Giảng Viên & Trợ Giảng"
-              value={teachers.length * 10 || 42}
+              title="Tổng Số Giảng Viên"
+              value={teachers.length}
               prefix={<TeamOutlined className="text-purple-500 mr-2 p-2 bg-purple-50 rounded-lg" />}
             />
           </Card>
         </Col>
 
-        <Col xs={24} sm={8}>
+        <Col xs={24} sm={12}>
           <Card className="rounded-xl border border-gray-100 shadow-sm">
             <Statistic
-              title="Đang Giảng Dạy Đột Phá"
-              value={activeTeachers * 10 || 36}
+              title="Đang Công Tác"
+              value={activeTeachers}
               prefix={
                 <CheckCircleOutlined className="text-green-500 mr-2 p-2 bg-green-50 rounded-lg" />
               }
             />
           </Card>
         </Col>
-
-        <Col xs={24} sm={8}>
-          <Card className="rounded-xl border border-gray-100 shadow-sm">
-            <Statistic
-              title="Điểm Đánh Giá Giảng Dạy TB"
-              value={4.85}
-              precision={2}
-              suffix="/ 5.0"
-              prefix={<StarOutlined className="text-amber-500 mr-2 p-2 bg-amber-50 rounded-lg" />}
-            />
-          </Card>
-        </Col>
       </Row>
+      {/*
+        Đã bỏ card "Điểm Đánh Giá Giảng Dạy TB": hệ thống hiện chưa có cơ chế đánh giá/rating
+        giáo viên nào (không model, không API), giá trị 4.85 cũ là số cố định không có nguồn
+        dữ liệu thật. Chỉ thêm lại khi có model Rating/Feedback thật.
+      */}
 
       {/* Table */}
       <Card title="Danh sách Giáo viên" className="rounded-xl shadow-sm border border-gray-100">

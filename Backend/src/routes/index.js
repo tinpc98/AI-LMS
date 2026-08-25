@@ -44,11 +44,13 @@ import paymentRoutes from "#modules/payment/payment.routes.js";
 import teacherAttendanceRoutes from "#modules/teacherAttendance/teacherAttendance.routes.js";
 import payrollRoutes from "#modules/payroll/payroll.routes.js";
 import performanceRoutes from "#modules/performance/performance.routes.js";
+import learnerNeedRoutes from "#modules/learnerNeed/learnerNeed.routes.js";
 
 // Tầng đọc tổng hợp — KHÔNG phải module nghiệp vụ. Xem src/reporting/README.md.
 import analyticsRoutes from "../reporting/analytics.routes.js";
 import dashboardRoutes from "../reporting/dashboard.routes.js";
 import reportRoutes from "../reporting/report.routes.js";
+import contributionRoutes from "../reporting/contribution.routes.js";
 import { validatePagination } from "#shared/middlewares/pagination.middleware.js";
 
 const router = express.Router();
@@ -67,6 +69,7 @@ router.use("/sessions", classSessionRoutes);
 
 router.use("/classes", classRoutes);
 router.use("/subjects", subjectRoutes);
+router.use("/learner-needs", learnerNeedRoutes);
 router.use("/courses", courseRoutes);
 router.use("/enrollments", enrollmentRoutes);
 router.use("/class-enrollments", classEnrollmentRoutes);
@@ -93,6 +96,7 @@ router.use("/reports", reportRoutes);
 router.use("/learning", lessonProgressRoutes);
 router.use("/learning", badgeRoutes);
 router.use("/analytics", analyticsRoutes);
+router.use("/contribution", contributionRoutes);
 
 // ── Thi trực tuyến & lớp học trực tuyến ─────────────────────────────────────
 router.use("/questions", questionRoutes);

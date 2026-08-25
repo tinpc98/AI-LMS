@@ -20,6 +20,17 @@ const lessonProgressSchema = new Schema(
       type: Date,
       default: null,
     },
+    // Tiến độ granular 0-100 của MỘT bài giảng (vd: % video đã xem). Hiện phía frontend
+    // chỉ gửi completed=true/false (chưa có UI theo dõi % dở dang), nên controller quy đổi
+    // completed -> 100/0. Field tồn tại sẵn để khi có tracking granular thật (video watch %,
+    // scroll %...) chỉ cần gửi progress trực tiếp, không cần đổi lại schema/công thức tính
+    // tiến độ lớp học (xem classProgressCalculator.js).
+    progress: {
+      type: Number,
+      default: 0,
+      min: 0,
+      max: 100,
+    },
   },
   { timestamps: true }
 );

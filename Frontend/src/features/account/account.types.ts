@@ -1,3 +1,5 @@
+import type { AvailabilitySchedule } from "../../interface/userInterface";
+
 export type AccountRole = "Admin" | "Teacher" | "Student";
 export type AccountStatus = "Active" | "Inactive" | "Locked" | "Expired";
 
@@ -13,6 +15,9 @@ export interface AccountRecord {
   deletedAt?: string;
   createdAt: string;
   updatedAt: string;
+  // Chỉ có ý nghĩa khi role === "Teacher", xem Backend/src/modules/auth/user.model.js
+  teachingSubjects?: string[];
+  availabilitySchedule?: AvailabilitySchedule | null;
 }
 
 export interface AccountFilters {

@@ -5,8 +5,8 @@ import envConfig from "../config/env";
 export interface IStudentAnalytics {
   progress: {
     averageProgress: number;
-    totalLearningTime: number;
     completedLessons: number;
+    totalLessons: number;
   };
   attendance: {
     present: number;

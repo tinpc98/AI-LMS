@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import { Class } from "#modules/class";
+import { Class, resolveClassContentIds } from "#modules/class";
 import { LessonProgress } from "#modules/lesson";
 import LearningActivity from "./learningActivity.model.js";
 import { Attendance } from "#modules/attendance";
@@ -15,10 +15,15 @@ class LearningRankingService {
     const sid = new mongoose.Types.ObjectId(studentId);
 
     // Điểm bài giảng (Lesson Progress)
-    const progressXP = await LessonProgress.aggregate([
-      { $match: { classId: cid, studentId: sid } },
-      { $group: { _id: null, totalProgress: { $sum: "$progress" } } },
-    ]);
+    // Lesson thuộc courseId (qua Topic), không có field classId trực tiếp, nên phải resolve
+    // danh sách lessonId của lớp trước khi match LessonProgress theo lessonId.
+    const { lessonIds } = (await resolveClassContentIds([cid]))[String(cid)] || { lessonIds: [] };
+    const progressXP = lessonIds.length
+      ? await LessonProgress.aggregate([
+          { $match: { studentId: sid, lessonId: { $in: lessonIds } } },
+          { $group: { _id: null, totalProgress: { $sum: "$progress" } } },
+        ])
+      : [];
     const lessonXP = progressXP.length ? progressXP[0].totalProgress : 0;
 
     // Điểm danh (Attendance) - 10 XP mỗi lần có mặt
@@ -54,6 +59,10 @@ class LearningRankingService {
     const page = Math.max(1, parseInt(queryOptions.page || 1, 10));
     const limit = Math.min(100, Math.max(1, parseInt(queryOptions.limit || 20, 10)));
 
+    // Lesson thuộc courseId (qua Topic), không có field classId trực tiếp, nên phải resolve
+    // danh sách lessonId của lớp trước khi đưa vào $lookup bên dưới.
+    const { lessonIds } = (await resolveClassContentIds([cid]))[String(cid)] || { lessonIds: [] };
+
     // Aggregation pipeline tối ưu từ ClassEnrollment
     const pipeline = [
       { $match: { classId: cid, status: "ACTIVE" } },
@@ -66,7 +75,9 @@ class LearningRankingService {
           pipeline: [
             {
               $match: {
-                $expr: { $and: [{ $eq: ["$classId", cid] }, { $eq: ["$studentId", "$$sid"] }] },
+                $expr: {
+                  $and: [{ $in: ["$lessonId", lessonIds] }, { $eq: ["$studentId", "$$sid"] }],
+                },
               },
             },
             { $group: { _id: null, totalProgress: { $sum: "$progress" } } },

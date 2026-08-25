@@ -8,6 +8,10 @@ export { default as Class } from "./class.model.js";
 export { checkClassTeacherOwnership } from "./class.ownership.js";
 export { checkClassAccess } from "./class.access.middleware.js";
 
+// modules/badge (learningRanking.service.js) gọi để lấy đúng danh sách bài giảng/bài tập
+// của một lớp (qua Class.courseId -> Topic -> Lesson/Assignment) khi tính điểm XP.
+export { resolveClassContentIds } from "./classProgress.repository.js";
+
 // LƯU Ý NỢ KỸ THUẬT: verifyClassTeacherAccess (classAuth.helper.js) và
 // checkClassTeacherOwnership (class.ownership.js) làm gần như CÙNG một việc — kiểm tra
 // giáo viên có phụ trách lớp hay không — chỉ khác cách báo lỗi (ném exception vs trả

@@ -44,7 +44,7 @@ export const TeacherInformationCard: React.FC<TeacherInformationCardProps> = Rea
     const subjects =
       teacher.teachingSubjects && teacher.teachingSubjects.length > 0
         ? teacher.teachingSubjects
-        : ["Công nghệ thông tin", "Khoa học máy tính"];
+        : [];
 
     const hasSchedule =
       teacher.availabilitySchedule && Object.keys(teacher.availabilitySchedule).length > 0;
@@ -69,7 +69,11 @@ export const TeacherInformationCard: React.FC<TeacherInformationCardProps> = Rea
             size={72}
             src={teacher.avatar || undefined}
             icon={!teacher.avatar ? <UserOutlined style={{ fontSize: 36 }} /> : undefined}
-            style={{ backgroundColor: "var(--color-action-primary-bg)", marginBottom: 12, border: "2px solid var(--color-bg-primary-tint)" }}
+            style={{
+              backgroundColor: "var(--color-action-primary-bg)",
+              marginBottom: 12,
+              border: "2px solid var(--color-bg-primary-tint)",
+            }}
           />
           <Title level={4} style={{ margin: 0, fontWeight: 700, color: "var(--color-text-title)" }}>
             {teacher.fullName}
@@ -88,17 +92,28 @@ export const TeacherInformationCard: React.FC<TeacherInformationCardProps> = Rea
         <div style={{ marginBottom: 16 }}>
           <Text
             strong
-            style={{ fontSize: 13, color: "var(--color-text-body)", display: "block", marginBottom: 8 }}
+            style={{
+              fontSize: 13,
+              color: "var(--color-text-body)",
+              display: "block",
+              marginBottom: 8,
+            }}
           >
             <BookOutlined style={{ marginRight: 6 }} /> Chuyên môn giảng dạy:
           </Text>
-          <Space wrap size={[6, 6]}>
-            {subjects.map((sub, index) => (
-              <Tag color="purple" key={index} style={{ borderRadius: 8 }}>
-                {sub}
-              </Tag>
-            ))}
-          </Space>
+          {subjects.length > 0 ? (
+            <Space wrap size={[6, 6]}>
+              {subjects.map((sub, index) => (
+                <Tag color="purple" key={index} style={{ borderRadius: 8 }}>
+                  {sub}
+                </Tag>
+              ))}
+            </Space>
+          ) : (
+            <Text type="secondary" style={{ fontSize: 12 }}>
+              Giảng viên chưa cập nhật chuyên môn giảng dạy.
+            </Text>
+          )}
         </div>
 
         {/* Availability Schedule */}
@@ -106,11 +121,22 @@ export const TeacherInformationCard: React.FC<TeacherInformationCardProps> = Rea
           <div>
             <Text
               strong
-              style={{ fontSize: 13, color: "var(--color-text-body)", display: "block", marginBottom: 8 }}
+              style={{
+                fontSize: 13,
+                color: "var(--color-text-body)",
+                display: "block",
+                marginBottom: 8,
+              }}
             >
               <ClockCircleOutlined style={{ marginRight: 6 }} /> Khung giờ tiếp sinh viên:
             </Text>
-            <div style={{ backgroundColor: "var(--color-bg-page)", borderRadius: 8, padding: "8px 12px" }}>
+            <div
+              style={{
+                backgroundColor: "var(--color-bg-page)",
+                borderRadius: 8,
+                padding: "8px 12px",
+              }}
+            >
               {Object.entries(teacher.availabilitySchedule!).map(([day, info]) => {
                 if (!info?.available) return null;
                 return (

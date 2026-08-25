@@ -113,6 +113,10 @@
     "#modules/payroll/*": "./src/modules/payroll/*",
     "#modules/performance": "./src/modules/performance/index.js",
     "#modules/performance/*": "./src/modules/performance/*",
+    "#modules/topic": "./src/modules/topic/index.js",
+    "#modules/topic/*": "./src/modules/topic/*",
+    "#modules/learnerNeed": "./src/modules/learnerNeed/index.js",
+    "#modules/learnerNeed/*": "./src/modules/learnerNeed/*",
     "#shared/*": "./src/shared/*"
   }
 }

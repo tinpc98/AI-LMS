@@ -1,4 +1,5 @@
 import {
+  AimOutlined,
   ApartmentOutlined,
   BarChartOutlined,
   BookOutlined,
@@ -43,6 +44,12 @@ const adminMenuItems: AdminMenuItem[] = [
     label: "Teacher Assignment",
     path: "/admin/teacher-assignment",
     icon: <TeamOutlined />,
+  },
+  {
+    key: "learner-needs",
+    label: "Nhu cầu học tập",
+    path: "/admin/learner-needs",
+    icon: <AimOutlined />,
   },
   { key: "ai", label: "AI Management", path: "/admin/ai-management", icon: <RobotOutlined /> },
   { key: "reports", label: "Reports", path: "/admin/reports", icon: <BarChartOutlined /> },

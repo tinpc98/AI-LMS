@@ -24,7 +24,10 @@ class TeacherAttendanceService {
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit)
-        .populate("sessionId", "title sessionNumber scheduledStartAt scheduledEndAt status onlineMeeting")
+        .populate(
+          "sessionId",
+          "title sessionNumber scheduledStartAt scheduledEndAt status onlineMeeting"
+        )
         .populate("classId", "name code mode")
         .lean(),
       TeacherAttendance.countDocuments(filter),
@@ -91,7 +94,10 @@ class TeacherAttendanceService {
       throw new Error("ID điểm danh không hợp lệ");
     }
 
-    const attendance = await TeacherAttendance.findOne({ _id: attendanceId, isDeleted: false }).populate("sessionId");
+    const attendance = await TeacherAttendance.findOne({
+      _id: attendanceId,
+      isDeleted: false,
+    }).populate("sessionId");
     if (!attendance) {
       throw new Error("Không tìm thấy dữ liệu điểm danh");
     }
@@ -121,18 +127,28 @@ class TeacherAttendanceService {
     const sessionEndTime = session.actualEndAt || session.scheduledEndAt;
     const now = new Date();
     const hoursDiff = (now.getTime() - sessionEndTime.getTime()) / (1000 * 60 * 60);
-    
+
     if (hoursDiff > 24) {
       // Auto lock if over 24 hours
       attendance.lockedAt = now;
       await attendance.save();
-      throw new Error("Đã quá 24h kể từ khi buổi học kết thúc, không thể tự xác nhận (Vui lòng liên hệ Admin)");
+      throw new Error(
+        "Đã quá 24h kể từ khi buổi học kết thúc, không thể tự xác nhận (Vui lòng liên hệ Admin)"
+      );
     }
 
     attendance.status = "CONFIRMED";
     attendance.confirmedAt = now;
     attendance.confirmedBy = teacherId;
-    
+
+    // Ghi nhận giờ dạy thực tế của buổi học — dùng thời gian actual nếu có (buổi đã điểm
+    // danh qua Live Session), fallback về lịch đã định. checkedInAt/checkedOutAt tồn tại sẵn
+    // trong schema từ trước nhưng chưa từng được ghi giá trị ở đâu (xem gap analysis
+    // EduSpace, mục R08 — "đo lường đóng góp"); đây là nơi hợp lý nhất để ghi, vì xác nhận
+    // điểm danh là thời điểm giáo viên tự khẳng định "tôi đã dạy buổi này".
+    attendance.checkedInAt = session.actualStartAt || session.scheduledStartAt;
+    attendance.checkedOutAt = session.actualEndAt || session.scheduledEndAt;
+
     await attendance.save();
     return attendance;
   }
@@ -145,7 +161,7 @@ class TeacherAttendanceService {
       throw new Error("ID điểm danh không hợp lệ");
     }
 
-    const attendance = await TeacherAttendance.findById(attendanceId);
+    const attendance = await TeacherAttendance.findById(attendanceId).populate("sessionId");
     if (!attendance || attendance.isDeleted) {
       throw new Error("Không tìm thấy dữ liệu điểm danh");
     }
@@ -162,7 +178,18 @@ class TeacherAttendanceService {
     attendance.note = `[Admin Override]: ${payload.note}`;
     attendance.confirmedAt = new Date();
     attendance.confirmedBy = adminId;
-    
+
+    // Cùng logic ghi giờ dạy như confirmAttendance() — override thành CONFIRMED cũng phải
+    // để lại giờ dạy thật, còn override thành PENDING/ABSENT thì không có giờ nào để tính.
+    if (payload.status === "CONFIRMED") {
+      const session = attendance.sessionId;
+      attendance.checkedInAt = session?.actualStartAt || session?.scheduledStartAt || null;
+      attendance.checkedOutAt = session?.actualEndAt || session?.scheduledEndAt || null;
+    } else {
+      attendance.checkedInAt = null;
+      attendance.checkedOutAt = null;
+    }
+
     // Optionally unlock it if admin is fixing it
     if (payload.unlock) {
       attendance.lockedAt = null;

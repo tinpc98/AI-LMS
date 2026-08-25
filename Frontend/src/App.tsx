@@ -38,8 +38,12 @@ const QuestionBank = lazy(() => import("./features/exam-set/pages/QuestionBank")
 const ExamResults = lazy(() => import("./features/exam/pages/ExamResults"));
 const ExamAttemptDetail = lazy(() => import("./features/exam/pages/ExamAttemptDetail"));
 const TeacherGlobalExamsPage = lazy(() => import("./features/exam/pages/TeacherGlobalExamsPage"));
-const LectureDetailTeacherPage = lazy(() => import("./features/lesson/pages/LectureDetailTeacherPage"));
-const TeacherAttendancePage = lazy(() => import("./features/teacher-attendance/TeacherAttendancePage"));
+const LectureDetailTeacherPage = lazy(
+  () => import("./features/lesson/pages/LectureDetailTeacherPage")
+);
+const TeacherAttendancePage = lazy(
+  () => import("./features/teacher-attendance/TeacherAttendancePage")
+);
 const TeacherPayrollPage = lazy(() => import("./features/payroll/TeacherPayrollPage"));
 const AdminPayrollPage = lazy(() => import("./features/admin/payroll/AdminPayrollPage"));
 
@@ -56,9 +60,15 @@ const TeacherAssignmentPage = lazy(
 const AIManagementPage = lazy(() => import("./features/ai/AIManagementPage"));
 const ReportPage = lazy(() => import("./features/report/pages/ReportPage"));
 const ProfilePage = lazy(() => import("./features/profile/pages/ProfilePage"));
+const LearnerNeedPage = lazy(() => import("./features/learner-need/pages/LearnerNeedPage"));
+const LearnerNeedBrowsePage = lazy(
+  () => import("./features/learner-need/pages/LearnerNeedBrowsePage")
+);
 const PlaceholderPage = lazy(() => import("./shared/components/PlaceholderPage"));
 const MyEnrollmentsPage = lazy(() => import("./features/enrollment/MyEnrollmentsPage"));
-const EnrollmentManagementPage = lazy(() => import("./features/enrollment/EnrollmentManagementPage"));
+const EnrollmentManagementPage = lazy(
+  () => import("./features/enrollment/EnrollmentManagementPage")
+);
 const MyPaymentsPage = lazy(() => import("./features/payment/MyPaymentsPage"));
 const PaymentManagementPage = lazy(() => import("./features/payment/PaymentManagementPage"));
 const PaymentDetailPage = lazy(() => import("./features/payment/PaymentDetailPage"));
@@ -67,9 +77,7 @@ const LiveSessionLayout = lazy(() => import("./shared/components/layout/LiveSess
 const LiveSessionPage = lazy(() => import("./features/live-session/pages/LiveSessionPage"));
 
 // Design System Demo Route (Dev only)
-const DesignSystemDemoPage = lazy(
-  () => import("./features/design-system/DesignSystemDemoPage")
-);
+const DesignSystemDemoPage = lazy(() => import("./features/design-system/DesignSystemDemoPage"));
 
 const PageLoadingFallback = () => (
   <div
@@ -129,6 +137,8 @@ function App() {
                 <Route path="enrollments" element={<MyEnrollmentsPage />} />
                 <Route path="tuition" element={<MyPaymentsPage />} />
                 <Route path="tuition/:id" element={<PaymentDetailPage />} />
+                <Route path="profile" element={<ProfilePage />} />
+                <Route path="learner-needs" element={<LearnerNeedPage />} />
               </Route>
 
               {/* Live Session Route cho Student (Full màn hình, không Header/Sidebar) */}
@@ -162,15 +172,11 @@ function App() {
                 <Route path="notifications" element={<NotificationCenterPage />} />
                 <Route path="messages" element={<MessagesPage />} />
                 <Route path="messages/:classId" element={<MessagesPage />} />
-                <Route 
-                  path="exams" 
-                  element={<TeacherGlobalExamsPage />} 
-                />
-                <Route 
-                  path="payroll" 
-                  element={<TeacherPayrollPage />} 
-                />
+                <Route path="exams" element={<TeacherGlobalExamsPage />} />
+                <Route path="payroll" element={<TeacherPayrollPage />} />
                 <Route path="attendance" element={<TeacherAttendancePage />} />
+                <Route path="profile" element={<ProfilePage />} />
+                <Route path="learner-needs" element={<LearnerNeedBrowsePage />} />
               </Route>
 
               {/* Live Session Route cho Teacher (Full màn hình, không Header/Sidebar) */}
@@ -188,6 +194,7 @@ function App() {
                 <Route path="courses" element={<CourseManagementPage />} />
                 <Route path="classes" element={<ClassManagementPage />} />
                 <Route path="teacher-assignment" element={<TeacherAssignmentPage />} />
+                <Route path="learner-needs" element={<LearnerNeedBrowsePage />} />
                 <Route path="ai-management" element={<AIManagementPage />} />
                 <Route path="reports" element={<ReportPage />} />
                 <Route path="enrollments" element={<EnrollmentManagementPage />} />

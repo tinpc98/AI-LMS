@@ -11,6 +11,7 @@ import {
   MessageOutlined,
   NotificationOutlined,
   DollarOutlined,
+  AimOutlined,
 } from "@ant-design/icons";
 import { useAuth } from "../../../hooks/useAuth";
 import { useMessagesStore } from "../../../../features/chat/store/useMessagesStore";
@@ -83,6 +84,16 @@ export const TeacherSidebar: React.FC<TeacherSidebarProps> = React.memo(
           icon: <DollarOutlined />,
           label: <Link to="/teacher/payroll">Bảng lương</Link>,
         },
+        {
+          key: "/teacher/learner-needs",
+          icon: <AimOutlined />,
+          label: <Link to="/teacher/learner-needs">Nhu cầu học tập</Link>,
+        },
+        {
+          key: "/teacher/profile",
+          icon: <UserOutlined />,
+          label: <Link to="/teacher/profile">Hồ sơ cá nhân</Link>,
+        },
       ],
       [totalUnread]
     );
@@ -119,7 +130,12 @@ export const TeacherSidebar: React.FC<TeacherSidebarProps> = React.memo(
             <div style={{ minWidth: 0, overflow: "hidden" }}>
               <Title
                 level={5}
-                style={{ color: tokens.color.text.inverse, margin: 0, fontSize: 16, fontWeight: 700 }}
+                style={{
+                  color: tokens.color.text.inverse,
+                  margin: 0,
+                  fontSize: 16,
+                  fontWeight: 700,
+                }}
                 ellipsis
               >
                 EduSpace
@@ -160,7 +176,11 @@ export const TeacherSidebar: React.FC<TeacherSidebarProps> = React.memo(
                   style={{ backgroundColor: tokens.color.action.primaryBg }}
                 />
                 <div style={{ minWidth: 0, overflow: "hidden" }}>
-                  <Text strong style={{ color: tokens.color.text.inverse, display: "block", fontSize: 13 }} ellipsis>
+                  <Text
+                    strong
+                    style={{ color: tokens.color.text.inverse, display: "block", fontSize: 13 }}
+                    ellipsis
+                  >
                     {user?.fullName || "Giảng viên"}
                   </Text>
                   <Text style={{ color: "rgba(255,255,255,0.65)", fontSize: 11 }} ellipsis>

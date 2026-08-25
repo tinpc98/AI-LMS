@@ -17,6 +17,7 @@ export const FEATURE_FLAG_MAP = {
   grading: "grading",
   chatbot: "chatbot",
   "knowledge-index": "knowledgeIndex",
+  recommendation: "recommendation",
 };
 
 class AIUsageService {
