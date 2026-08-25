@@ -1,12 +1,5 @@
 import React, { useState } from "react";
-import {
-  Modal,
-  Form,
-  InputNumber,
-  DatePicker,
-  Select,
-  message,
-} from "antd";
+import { Modal, Form, InputNumber, DatePicker, Select, message } from "antd";
 import dayjs from "dayjs";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { payrollApi } from "../../../api/payrollApi";
@@ -47,7 +40,8 @@ const PayrollConfigModal: React.FC<Props> = ({ open, onClose }) => {
     queryKey: ["users", "teachers"],
     queryFn: async (): Promise<TeacherOption[]> => {
       const res = await axiosClient.get<{ data: TeacherOption[] }>("/users", {
-        params: { role: "Teacher", limit: 1000 },
+        // limit tối đa validatePagination cho phép là 100
+        params: { role: "Teacher", limit: 100 },
       });
       return res.data.data ?? [];
     },
@@ -55,8 +49,7 @@ const PayrollConfigModal: React.FC<Props> = ({ open, onClose }) => {
   });
 
   const createMutation = useMutation({
-    mutationFn: (payload: CreatePayrollConfigPayload) =>
-      payrollApi.createPayrollConfig(payload),
+    mutationFn: (payload: CreatePayrollConfigPayload) => payrollApi.createPayrollConfig(payload),
     onSuccess: () => {
       message.success("Tạo cấu hình lương thành công!");
       queryClient.invalidateQueries({ queryKey: ["payrollConfigs"] });
@@ -65,8 +58,8 @@ const PayrollConfigModal: React.FC<Props> = ({ open, onClose }) => {
     },
     onError: (error: unknown) => {
       const msg =
-        (error as { response?: { data?: { message?: string } } })?.response?.data
-          ?.message ?? "Tạo cấu hình lương thất bại";
+        (error as { response?: { data?: { message?: string } } })?.response?.data?.message ??
+        "Tạo cấu hình lương thất bại";
       message.error(msg);
     },
   });
@@ -80,9 +73,7 @@ const PayrollConfigModal: React.FC<Props> = ({ open, onClose }) => {
         type: values.type,
         amount: values.amount,
         effectiveFrom: values.effectiveFrom.startOf("day").toISOString(),
-        effectiveTo: values.effectiveTo
-          ? values.effectiveTo.endOf("day").toISOString()
-          : undefined,
+        effectiveTo: values.effectiveTo ? values.effectiveTo.endOf("day").toISOString() : undefined,
         status: values.status ?? "ACTIVE",
       };
       await createMutation.mutateAsync(payload);

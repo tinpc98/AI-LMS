@@ -1,5 +1,4 @@
 import cron from "node-cron";
-import cronService from "./cron.service.js";
 import { runAIPendingRecovery } from "./aiPendingRecovery.job.js";
 import { runExamAutoClose } from "./examLifecycle.job.js";
 import { runExamAttemptAutoSubmit } from "./examAttemptAutoSubmit.job.js";
@@ -20,61 +19,21 @@ import { runStudentExpiryCheck } from "./userLifecycle.job.js";
  */
 export const initCronJobs = (runImmediately = false) => {
   // ──────────────────────────────────────────────────────────────────────────
-  // JOB 1: Tự động cập nhật trạng thái vòng đời lớp học
+  // JOB 1: Tự động cập nhật trạng thái vòng đời lớp học — TẠM TẮT, ĐANG HỎNG.
   //
-  // Lịch: Mỗi ngày lúc 00:00:00 (nửa đêm)
-  // Timezone: Asia/Ho_Chi_Minh (GMT+7)
+  // cron.service.js (runClassStatusUpdate/activateOngoingClasses/completeExpiredClasses)
+  // lọc/set theo enum trạng thái CŨ (Draft/Ready/Upcoming/Ongoing/Active/Completed),
+  // nhưng Class.status hiện tại (class.model.js) chỉ có DRAFT/OPEN/FULL/CLOSED/ARCHIVED —
+  // không còn "Ongoing"/"Completed" nào cả, và so sánh chuỗi lại phân biệt hoa/thường.
+  // Kết quả: filter $in không bao giờ khớp document nào — job này chạy mỗi đêm từ trước
+  // tới giờ nhưng CHƯA TỪNG cập nhật một lớp học nào (no-op câm lặng, không log lỗi vì
+  // updateMany() khớp 0 document vẫn "thành công").
   //
-  // Luồng xử lý:
-  //   Draft/Ready/Upcoming  → Ongoing  (nếu startDate đã qua, endDate chưa qua)
-  //   Ongoing/Active        → Completed (nếu endDate đã qua)
+  // Không tự sửa mapping ở đây: enum mới không có trạng thái nào tương đương "Ongoing",
+  // nên cần người nắm nghiệp vụ xác nhận đúng ánh xạ trước khi cho cron này ghi dữ liệu
+  // hàng loạt trở lại — đoán sai sẽ âm thầm đổi trạng thái nhiều lớp học mỗi đêm.
+  // Tắt hẳn việc đăng ký job (không xoá cron.service.js) cho tới khi có mapping đúng.
   // ──────────────────────────────────────────────────────────────────────────
-  cron.schedule(
-    "0 0 * * *",
-    async () => {
-      console.log("[CRON] ⏰ Bắt đầu job: Cập nhật trạng thái lớp học tự động...");
-
-      try {
-        const summary = await cronService.runClassStatusUpdate();
-
-        console.log(
-          `[CRON] ✅ Automated class status update executed successfully.` +
-            ` Activated → Ongoing: ${summary.activatedToOngoing} |` +
-            ` Completed: ${summary.completedExpired} |` +
-            ` Total modified: ${summary.totalModified} documents.`
-        );
-      } catch (error) {
-        // Log chi tiết lỗi nhưng KHÔNG throw hoặc process.exit()
-        // để cron scheduler tiếp tục chạy các lần sau.
-        console.error("[CRON ERROR] ❌ Class Status Update Failed:", error);
-      }
-    },
-    {
-      scheduled: true,
-      timezone: "Asia/Ho_Chi_Minh",
-    }
-  );
-
-  console.log("[CRON] 📅 Đã đăng ký job: Class Status Update (lịch: 00:00 hàng ngày | GMT+7)");
-
-  // ── Chạy ngay lập tức nếu được yêu cầu (VD: sau khi deploy) ──────────────
-  if (runImmediately) {
-    console.log("[CRON] 🔄 runImmediately=true — Thực thi ngay lần đầu khi khởi động...");
-
-    cronService
-      .runClassStatusUpdate()
-      .then((summary) => {
-        console.log(
-          `[CRON] ✅ Initial run complete.` +
-            ` Activated → Ongoing: ${summary.activatedToOngoing} |` +
-            ` Completed: ${summary.completedExpired} |` +
-            ` Total modified: ${summary.totalModified} documents.`
-        );
-      })
-      .catch((error) => {
-        console.error("[CRON ERROR] ❌ Initial Class Status Update Failed:", error);
-      });
-  }
 
   // ──────────────────────────────────────────────────────────────────────────
   // JOB 2: Tự động dọn dẹp AI Usage bị kẹt (Pending Recovery)
@@ -189,7 +148,9 @@ export const initCronJobs = (runImmediately = false) => {
           console.log(`[CRON] 🗑️ Chat Cleanup: Đã xóa vĩnh viễn ${deleted} tin nhắn chat cũ.`);
         }
         if (failedFiles > 0) {
-          console.warn(`[CRON] ⚠️ Chat Cleanup: Có ${failedFiles} file đính kèm lỗi khi xóa trên Cloudinary.`);
+          console.warn(
+            `[CRON] ⚠️ Chat Cleanup: Có ${failedFiles} file đính kèm lỗi khi xóa trên Cloudinary.`
+          );
         }
       } catch (error) {
         console.error("[CRON ERROR] ❌ Chat Cleanup Failed:", error);
@@ -209,7 +170,9 @@ export const initCronJobs = (runImmediately = false) => {
       try {
         const { expiredCount } = await runStudentExpiryCheck();
         if (expiredCount > 0) {
-          console.log(`[CRON] 🛑 Student Expiry: Đã vô hiệu hóa ${expiredCount} học sinh hết hạn 15 ngày.`);
+          console.log(
+            `[CRON] 🛑 Student Expiry: Đã vô hiệu hóa ${expiredCount} học sinh hết hạn 15 ngày.`
+          );
         }
       } catch (error) {
         console.error("[CRON ERROR] ❌ Student Expiry Check Failed:", error);

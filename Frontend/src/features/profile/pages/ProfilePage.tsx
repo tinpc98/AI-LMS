@@ -119,11 +119,9 @@ export const ProfilePage: React.FC = () => {
         setProfileUser(fetched);
         setTeachingSubjects(fetched.teachingSubjects || []);
         setAvailabilitySchedule(fetched.availabilitySchedule || {});
-        form.setFieldsValue({
-          fullName: fetched.fullName,
-          phone: fetched.phone,
-          avatar: fetched.avatar,
-        });
+        // Không gọi form.setFieldsValue ở đây: <Form> chưa từng render lúc này (component
+        // đang ở nhánh loading/Spin), gọi vào sẽ chỉ gây cảnh báo "not connected to any Form
+        // element". initialValues bên dưới đã tự lấy đúng dữ liệu khi Form render lần đầu.
       } catch (error) {
         console.error("Không tải được hồ sơ cá nhân:", error);
         message.error("Không tải được hồ sơ cá nhân. Vui lòng thử tải lại trang.");
@@ -363,11 +361,8 @@ export const ProfilePage: React.FC = () => {
                 <Col xs={24} sm={12}>
                   <Form.Item
                     name="phone"
-                    label="Số điện thoại"
-                    rules={[
-                      { required: true, message: "Vui lòng nhập số điện thoại" },
-                      { pattern: /^[0-9+ ]{9,15}$/, message: "Số điện thoại không hợp lệ" },
-                    ]}
+                    label="Số điện thoại (optional)"
+                    rules={[{ pattern: /^[0-9+ ]{9,15}$/, message: "Số điện thoại không hợp lệ" }]}
                   >
                     <Input
                       prefix={<PhoneOutlined className="text-gray-400" />}

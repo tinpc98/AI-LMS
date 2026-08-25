@@ -11,7 +11,7 @@ const mapClass = (c: any): ClassRecord => {
     learningMode: c.mode ? (c.mode === "ONLINE" ? "Online" : "Offline") : c.learningMode,
     maxStudents: c.capacity || c.maxStudents,
     currentStudents: c.activeCount ?? 0,
-    students: c.students || [], 
+    students: c.students || [],
     status: c.status,
     id: c._id || c.id,
     courseId: c.courseId?._id || c.courseId,
@@ -26,9 +26,14 @@ const mapPayload = (payload: ClassFormValues): any => {
   return {
     name: payload.className,
     code: payload.classCode,
-    courseId: typeof payload.courseId === "object" ? (payload.courseId as any)._id : payload.courseId,
+    courseId:
+      typeof payload.courseId === "object" ? (payload.courseId as any)._id : payload.courseId,
     level: payload.level,
-    teacherId: payload.teacherId ? (typeof payload.teacherId === "object" ? (payload.teacherId as any)._id : payload.teacherId) : null,
+    teacherId: payload.teacherId
+      ? typeof payload.teacherId === "object"
+        ? (payload.teacherId as any)._id
+        : payload.teacherId
+      : null,
     mode: payload.learningMode?.toUpperCase(),
     capacity: Number(payload.maxStudents),
     status: payload.status,
@@ -58,12 +63,13 @@ export const classService = {
   },
 
   async getCourseOptions() {
-    const res = await axiosClient.get("/courses", { params: { limit: 1000 } });
+    // limit tối đa validatePagination cho phép là 100 (Backend/src/shared/middlewares/pagination.middleware.js)
+    const res = await axiosClient.get("/courses", { params: { limit: 100 } });
     return res.data.data.map((c: any) => ({ id: c._id, label: c.name }));
   },
 
   async getTeacherOptions() {
-    const res = await axiosClient.get("/users", { params: { role: "teacher", limit: 1000 } });
+    const res = await axiosClient.get("/users", { params: { role: "teacher", limit: 100 } });
     return res.data.data.map((u: any) => ({ id: u._id, label: u.fullName }));
   },
 
