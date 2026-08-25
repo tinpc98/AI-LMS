@@ -171,6 +171,7 @@ export const TeacherAttendancePage: React.FC = () => {
           dataSource={data?.data || []}
           rowKey="_id"
           loading={isLoading}
+          scroll={{ x: "max-content" }}
           pagination={{
             current: pagination.page,
             pageSize: pagination.limit,

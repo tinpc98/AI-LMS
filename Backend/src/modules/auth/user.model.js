@@ -7,7 +7,11 @@ const dayAvailabilitySchema = new Schema(
   {
     startTime: { type: String, trim: true, default: "08:00" },
     endTime: { type: String, trim: true, default: "17:00" },
-    available: { type: Boolean, default: true },
+    // default false (không phải true): khi cập nhật lịch rảnh chỉ gửi một phần (vd chỉ bật
+    // Thứ 2/Thứ 3), Mongoose cast object thiếu field theo schema này cho từng ngày còn lại —
+    // default cũ là true khiến MỌI ngày không đụng tới đều bị lưu thành "available: true",
+    // xoá sạch ý nghĩa của việc chọn lọc ngày rảnh (đã xác nhận bằng dữ liệu thật trong DB).
+    available: { type: Boolean, default: false },
   },
   { _id: false }
 );
@@ -108,10 +112,7 @@ const userSchema = new Schema(
 );
 
 // Indexes phục vụ tìm kiếm nhanh theo Email, Role và Status
-userSchema.index(
-  { email: 1 },
-  { unique: true, partialFilterExpression: { isDeleted: false } }
-);
+userSchema.index({ email: 1 }, { unique: true, partialFilterExpression: { isDeleted: false } });
 userSchema.index({ role: 1 });
 userSchema.index({ status: 1 });
 

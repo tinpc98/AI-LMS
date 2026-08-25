@@ -1,16 +1,6 @@
 import React, { useState } from "react";
 import { Tabs, Card, Typography, Breadcrumb, message, Alert } from "antd";
-import {
-  BarChartOutlined,
-  UserOutlined,
-  BookOutlined,
-  TeamOutlined,
-  AppstoreOutlined,
-  CheckSquareOutlined,
-  FileTextOutlined,
-  RobotOutlined,
-  HomeOutlined,
-} from "@ant-design/icons";
+import { BarChartOutlined, UserOutlined, TeamOutlined, HomeOutlined } from "@ant-design/icons";
 import { ReportFilter } from "../components/ReportFilter";
 import type { FilterValues } from "../components/ReportFilter";
 import { ReportOverview } from "../components/ReportOverview";

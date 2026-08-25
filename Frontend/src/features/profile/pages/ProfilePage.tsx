@@ -232,9 +232,9 @@ export const ProfilePage: React.FC = () => {
           >
             {!profileUser.avatar && firstLetter}
           </Avatar>
-          <div>
-            <div className="flex items-center gap-3">
-              <Title level={3} className="!mb-0 font-bold text-gray-800">
+          <div className="min-w-0">
+            <div className="flex items-center gap-3 flex-wrap">
+              <Title level={3} className="!mb-0 font-bold text-gray-800 break-words">
                 {profileUser.fullName}
               </Title>
               <Tag color="purple" className="rounded-full px-3 font-medium">

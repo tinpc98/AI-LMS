@@ -8,7 +8,10 @@ const dayAvailabilitySchema = new Schema(
   {
     startTime: { type: String, trim: true, default: "08:00" },
     endTime: { type: String, trim: true, default: "17:00" },
-    available: { type: Boolean, default: true },
+    // default false — xem giải thích đầy đủ ở dayAvailabilitySchema trong auth/user.model.js
+    // (bug thật đã xác nhận bằng dữ liệu thật: default true khiến mọi ngày không đụng tới
+    // vẫn bị lưu thành "available: true" khi cập nhật một phần).
+    available: { type: Boolean, default: false },
   },
   { _id: false }
 );

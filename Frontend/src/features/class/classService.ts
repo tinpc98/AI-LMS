@@ -1,7 +1,5 @@
 import axiosClient from "../../api/axiosClient";
 import type { ApiResponse, ClassFilters, ClassFormValues, ClassRecord } from "./class.types";
-import { mockCourses } from "../course/course.mock";
-import { mockUsers } from "../account/account.mock";
 
 const mapClass = (c: any): ClassRecord => {
   return {
