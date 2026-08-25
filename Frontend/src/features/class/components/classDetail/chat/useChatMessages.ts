@@ -18,7 +18,7 @@ export function useChatMessages(classId: string) {
     try {
       isFetchingRef.current = true;
       setLoading(true);
-      const res = await api.get(`/api/classes/${classId}/messages?limit=50`);
+      const res = await api.get(`/classes/${classId}/messages?limit=50`);
       if (res.data.success) {
         setMessages(res.data.data);
         setNextCursor(res.data.nextCursor);
@@ -36,7 +36,7 @@ export function useChatMessages(classId: string) {
     if (!classId || !nextCursor || loadingMore) return;
     try {
       setLoadingMore(true);
-      const res = await api.get(`/api/classes/${classId}/messages?limit=50&cursor=${nextCursor}`);
+      const res = await api.get(`/classes/${classId}/messages?limit=50&cursor=${nextCursor}`);
       if (res.data.success) {
         setMessages(prev => [...res.data.data, ...prev]);
         setNextCursor(res.data.nextCursor);
@@ -83,7 +83,7 @@ export function useChatMessages(classId: string) {
     }
 
     try {
-      const res = await api.post(`/api/classes/${classId}/messages`, {
+      const res = await api.post(`/classes/${classId}/messages`, {
         content,
         type: newMsg.type,
         attachments
@@ -101,7 +101,7 @@ export function useChatMessages(classId: string) {
   // Sửa tin nhắn
   const editMessage = useCallback(async (messageId: string, newContent: string) => {
     try {
-      const res = await api.patch(`/api/classes/${classId}/messages/${messageId}`, { content: newContent });
+      const res = await api.patch(`/classes/${classId}/messages/${messageId}`, { content: newContent });
       if (res.data.success) {
         setMessages(prev => prev.map(m => m._id === messageId ? { ...res.data.data, status: "sent" } : m));
       }
@@ -115,7 +115,7 @@ export function useChatMessages(classId: string) {
     // Cập nhật lạc quan
     setMessages(prev => prev.map(m => m._id === messageId ? { ...m, isDeleted: true } : m));
     try {
-      await api.delete(`/api/classes/${classId}/messages/${messageId}`);
+      await api.delete(`/classes/${classId}/messages/${messageId}`);
     } catch (err: any) {
       toast.error(err.response?.data?.message || "Lỗi khi xóa tin nhắn");
       // Hoàn tác nếu lỗi thì phải gọi lại API lịch sử, tạm thời để đơn giản có thể bỏ qua hoàn tác
@@ -153,7 +153,7 @@ export function useChatMessages(classId: string) {
     }));
 
     try {
-      await api.put(`/api/classes/${classId}/messages/${messageId}/reactions`, { emoji });
+      await api.put(`/classes/${classId}/messages/${messageId}/reactions`, { emoji });
     } catch (err: any) {
       toast.error(err.response?.data?.message || "Lỗi cập nhật cảm xúc");
     }
@@ -166,7 +166,7 @@ export function useChatMessages(classId: string) {
     if (!lastMsg) return;
     
     try {
-      await api.post(`/api/classes/${classId}/messages/read`, { lastReadMessageId: lastMsg._id });
+      await api.post(`/classes/${classId}/messages/read`, { lastReadMessageId: lastMsg._id });
     } catch (err) {
       console.warn("Failed to mark as read");
     }

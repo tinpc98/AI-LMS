@@ -15,12 +15,7 @@ import { ReportFilter } from "../components/ReportFilter";
 import type { FilterValues } from "../components/ReportFilter";
 import { ReportOverview } from "../components/ReportOverview";
 import { StudentReport } from "../components/StudentReport";
-import { CourseReport } from "../components/CourseReport";
 import { TeacherReport } from "../components/TeacherReport";
-import { ClassReport } from "../components/ClassReport";
-import { AttendanceReport } from "../components/AttendanceReport";
-import { ExamReport } from "../components/ExamReport";
-import { AIAnalytics } from "../components/AIAnalytics";
 
 const { Title, Paragraph } = Typography;
 
@@ -61,15 +56,6 @@ export const ReportPage: React.FC = () => {
       children: <StudentReport />,
     },
     {
-      key: "courses",
-      label: (
-        <span className="flex items-center gap-2">
-          <BookOutlined /> Khóa Học
-        </span>
-      ),
-      children: <CourseReport />,
-    },
-    {
       key: "teachers",
       label: (
         <span className="flex items-center gap-2">
@@ -77,42 +63,6 @@ export const ReportPage: React.FC = () => {
         </span>
       ),
       children: <TeacherReport />,
-    },
-    {
-      key: "classes",
-      label: (
-        <span className="flex items-center gap-2">
-          <AppstoreOutlined /> Lớp Học
-        </span>
-      ),
-      children: <ClassReport />,
-    },
-    {
-      key: "attendance",
-      label: (
-        <span className="flex items-center gap-2">
-          <CheckSquareOutlined /> Điểm Danh
-        </span>
-      ),
-      children: <AttendanceReport />,
-    },
-    {
-      key: "exams",
-      label: (
-        <span className="flex items-center gap-2">
-          <FileTextOutlined /> Kỳ Thi
-        </span>
-      ),
-      children: <ExamReport />,
-    },
-    {
-      key: "ai",
-      label: (
-        <span className="flex items-center gap-2">
-          <RobotOutlined /> Phân Tích AI
-        </span>
-      ),
-      children: <AIAnalytics />,
     },
   ];
 
@@ -145,21 +95,6 @@ export const ReportPage: React.FC = () => {
           </div>
         </div>
       </div>
-
-      {/* Cảnh báo dữ liệu minh hoạ.
-          docs/reviews/16-mock-data-inventory.md xếp module này mức RỦI RO CAO: 7 component
-          chạy 100% bằng dữ liệu mẫu nhưng route vẫn sống, không có dấu hiệu nào phân biệt với
-          báo cáo thật. Tài liệu đó khuyến nghị gắn banner như biện pháp tạm thời — đến giờ
-          chưa ai làm, nên làm luôn ở đây.
-          Thiệt hại thật không phải là mã xấu, mà là ai đó ra quyết định dựa trên số bịa. */}
-      <Alert
-        type="warning"
-        showIcon
-        banner
-        message="Dữ liệu minh hoạ — chưa nối hệ thống thật"
-        description="Toàn bộ số liệu trong các báo cáo dưới đây là dữ liệu mẫu dùng để trình bày giao diện. Không dùng để ra quyết định."
-        style={{ marginBottom: 16, borderRadius: 8 }}
-      />
 
       {/* Global Filter Bar */}
       <ReportFilter

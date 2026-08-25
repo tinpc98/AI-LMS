@@ -1,23 +1,24 @@
 import React from "react";
 import { Modal, Typography } from "antd";
-import { SubmissionDetailView, type ISubmissionDetail } from "./SubmissionDetailView";
+import { AttemptDetailView } from "./AttemptDetailView";
+import type { IAssignmentAttempt } from "../../../interface/assignmentInterface";
 
 const { Text } = Typography;
 
 interface StudentSubmissionModalProps {
   open: boolean;
   onClose: () => void;
-  submission: ISubmissionDetail | null;
+  attempt: IAssignmentAttempt | null;
   assignmentTitle?: string;
 }
 
 export const StudentSubmissionModal: React.FC<StudentSubmissionModalProps> = ({
   open,
   onClose,
-  submission,
+  attempt,
   assignmentTitle,
 }) => {
-  if (!submission) return null;
+  if (!attempt) return null;
 
   return (
     <Modal
@@ -40,7 +41,7 @@ export const StudentSubmissionModal: React.FC<StudentSubmissionModalProps> = ({
       destroyOnClose
     >
       <div style={{ paddingTop: 16 }}>
-        <SubmissionDetailView submission={submission} />
+        <AttemptDetailView attempt={attempt} />
       </div>
     </Modal>
   );

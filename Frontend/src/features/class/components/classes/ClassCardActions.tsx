@@ -1,20 +1,47 @@
 import React from "react";
-import { Button, Space, Badge } from "antd";
-import { VideoCameraOutlined, RightOutlined } from "@ant-design/icons";
+import { Button, Space, Badge, Modal } from "antd";
+import { VideoCameraOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
-import type { StudentClassStatus } from "../../../../types/studentClass";
+import type { IStudentClass } from "../../../../types/studentClass";
 
 interface ClassCardActionsProps {
-  classId: string;
-  status: StudentClassStatus;
-  isLiveActive?: boolean;
+  item: IStudentClass;
 }
 
 export const ClassCardActions: React.FC<ClassCardActionsProps> = React.memo(
-  ({ classId, status, isLiveActive = false }) => {
+  ({ item }) => {
     const navigate = useNavigate();
 
-    const isActive = status === "Active" || status === "active";
+    const isActive = item.status === "Active" || item.status === "active";
+    const isLiveActive = item.isLiveActive || false;
+    const isOnline = item.mode === "ONLINE";
+    const isOffline = item.mode === "OFFLINE";
+
+    const handleEnterLiveClass = (e: React.MouseEvent) => {
+      e.stopPropagation(); // Ngăn sự kiện click lan ra thẻ Card (tránh redirect về chi tiết lớp)
+
+      if (isLiveActive || (item as any).liveRoom?.isActive) {
+        const link = (item as any).meetLink || `/student/live/${item._id}`;
+        if (link.startsWith("http")) {
+          window.open(link, "_blank");
+        } else {
+          navigate(link);
+        }
+      } else {
+        Modal.warning({
+          title: "Phòng học chưa mở",
+          content: "Giáo viên chưa mở phòng học. Vui lòng chờ trong giây lát rồi thử lại!",
+          okText: "Xem chi tiết lớp",
+          cancelText: "Đóng",
+          closable: true,
+          okCancel: true,
+          onOk: () => {
+            navigate(`/student/classdetail/${item._id}`);
+          },
+          centered: true,
+        });
+      }
+    };
 
     return (
       <div
@@ -41,27 +68,18 @@ export const ClassCardActions: React.FC<ClassCardActionsProps> = React.memo(
         </div>
 
         <Space size={8}>
-          {isActive && (
+          {isActive && isOnline && (
             <Button
               type="primary"
               danger={isLiveActive}
-              icon={isLiveActive ? <VideoCameraOutlined /> : undefined}
+              icon={<VideoCameraOutlined />}
               size="small"
-              onClick={() => navigate(`/student/classdetail/${classId}`)}
+              onClick={handleEnterLiveClass}
               style={{ borderRadius: 8 }}
             >
-              Vào lớp
+              Vào học ngay
             </Button>
           )}
-
-          <Button
-            type="default"
-            size="small"
-            onClick={() => navigate(`/student/classdetail/${classId}`)}
-            style={{ borderRadius: 8 }}
-          >
-            Chi tiết lớp <RightOutlined style={{ fontSize: 10 }} />
-          </Button>
         </Space>
       </div>
     );

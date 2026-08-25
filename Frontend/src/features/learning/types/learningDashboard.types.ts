@@ -120,4 +120,5 @@ export interface LearningDashboardState {
   learningInsight: LearningInsight;
   loading: boolean;
   error: string | null;
+  rawClasses?: any[];
 }

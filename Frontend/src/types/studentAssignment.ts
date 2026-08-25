@@ -1,25 +1,23 @@
-import type { IAssignment, ISubmission } from "../interface/assignmentInterface";
+import type { IAssignment, IAssignmentAttempt } from "../interface/assignmentInterface";
 
-export type StudentAssignmentStatus = "Pending" | "Submitted" | "Late" | "Graded" | "Missing";
+export type StudentAssignmentStatus = "Pending" | "In_Progress" | "Submitted" | "Graded";
 
-export interface IExtendedAssignment extends IAssignment {
-  submission?: ISubmission | null;
+export interface IExtendedAssignment extends Omit<IAssignment, "status"> {
+  attempt?: IAssignmentAttempt | null;
   status: StudentAssignmentStatus;
-  isOverdue?: boolean;
-  hoursRemaining?: number;
 }
 
 export interface StudentAssignmentFilterOptions {
   searchQuery: string;
-  statusFilter: "all" | "pending" | "submitted" | "late" | "graded";
-  sortBy: "deadline_asc" | "deadline_desc" | "newest" | "name_asc";
+  statusFilter: "all" | "pending" | "in_progress" | "submitted" | "graded";
+  sortBy: "newest" | "name_asc";
 }
 
 export interface StudentAssignmentStats {
   total: number;
   pending: number;
+  in_progress: number;
   submitted: number;
-  late: number;
   graded: number;
   averageGrade: number | null;
 }

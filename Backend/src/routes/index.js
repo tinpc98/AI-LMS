@@ -21,6 +21,7 @@ import userRoutes from "#modules/auth/user.routes.js";
 import classRoutes from "#modules/class/class.routes.js";
 import lessonRoutes from "#modules/lesson/lesson.routes.js";
 import assignmentRoutes from "#modules/assignment/assignment.routes.js";
+import assignmentAttemptRoutes from "#modules/assignment/assignmentAttempt.routes.js";
 import attendanceRoutes from "#modules/attendance/attendance.routes.js";
 import gradeRoutes from "#modules/grade/grade.routes.js";
 import examRoutes from "#modules/exam/exam.routes.js";
@@ -36,13 +37,22 @@ import lessonProgressRoutes from "#modules/lesson/lessonProgress.routes.js";
 import badgeRoutes from "#modules/badge/badge.routes.js";
 import aiRoutes from "#modules/ai/ai.routes.js";
 import examSetRoutes from "#modules/exam-set/examSet.routes.js";
+import enrollmentRoutes from "#modules/enrollment/enrollment.routes.js";
+import subjectRoutes from "#modules/subject/subject.routes.js";
+import classEnrollmentRoutes from "#modules/classEnrollment/classEnrollment.routes.js";
+import paymentRoutes from "#modules/payment/payment.routes.js";
+import teacherAttendanceRoutes from "#modules/teacherAttendance/teacherAttendance.routes.js";
+import payrollRoutes from "#modules/payroll/payroll.routes.js";
+import performanceRoutes from "#modules/performance/performance.routes.js";
 
 // Tầng đọc tổng hợp — KHÔNG phải module nghiệp vụ. Xem src/reporting/README.md.
 import analyticsRoutes from "../reporting/analytics.routes.js";
 import dashboardRoutes from "../reporting/dashboard.routes.js";
 import reportRoutes from "../reporting/report.routes.js";
+import { validatePagination } from "#shared/middlewares/pagination.middleware.js";
 
 const router = express.Router();
+router.use(validatePagination);
 
 // ── Người dùng & xác thực ────────────────────────────────────────────────────
 // /auth  = đăng nhập + hồ sơ của chính mình (login, me)
@@ -51,16 +61,28 @@ router.use("/auth", authRoutes);
 router.use("/users", userRoutes);
 
 // ── Lớp học & nội dung giảng dạy ────────────────────────────────────────────
+import classSessionRoutes from "#modules/classSession/classSession.routes.js";
+router.use("/classes/:classId/sessions", classSessionRoutes);
+router.use("/sessions", classSessionRoutes);
+
 router.use("/classes", classRoutes);
+router.use("/subjects", subjectRoutes);
 router.use("/courses", courseRoutes);
+router.use("/enrollments", enrollmentRoutes);
+router.use("/class-enrollments", classEnrollmentRoutes);
+router.use("/payments", paymentRoutes);
+router.use("/teacher-attendance", teacherAttendanceRoutes);
+router.use("/payrolls", payrollRoutes);
 router.use("/lessons", lessonRoutes);
 router.use("/assignments", assignmentRoutes);
+router.use("/assignment-attempts", assignmentAttemptRoutes);
 router.use("/attendances", attendanceRoutes);
 router.use("/grades", gradeRoutes);
 router.use("/announcements", announcementRoutes);
 router.use("/messages", chatGlobalRoutes);
 router.use("/notifications", notificationRoutes);
 router.use("/folders", folderRoutes);
+router.use("/performance", performanceRoutes);
 
 // ── Thống kê & báo cáo ───────────────────────────────────────────────────────
 router.use("/dashboard", dashboardRoutes);

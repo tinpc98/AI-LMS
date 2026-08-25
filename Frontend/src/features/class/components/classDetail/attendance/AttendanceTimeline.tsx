@@ -20,13 +20,13 @@ export const AttendanceTimeline: React.FC<AttendanceTimelineProps> = React.memo(
   ({ records, onDetail }) => {
     const getTimelineDot = (status: string) => {
       switch (status) {
-        case "Present":
+        case "PRESENT":
           return <CheckCircleOutlined style={{ fontSize: 16, color: "var(--color-success-base)" }} />;
-        case "Late":
+        case "LATE":
           return <ClockCircleOutlined style={{ fontSize: 16, color: "var(--color-warning-base)" }} />;
-        case "Absent":
+        case "ABSENT":
           return <CloseCircleOutlined style={{ fontSize: 16, color: "var(--color-error-base)" }} />;
-        case "Excused":
+        case "EXCUSED":
         default:
           return <InfoCircleOutlined style={{ fontSize: 16, color: "var(--color-action-primary-bg)" }} />;
       }

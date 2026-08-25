@@ -30,7 +30,9 @@ import {
   groupByDate,
 } from "../notification.logic";
 
-const SOCKET_URL = import.meta.env.VITE_API_URL?.replace("/api", "") || "http://localhost:5000";
+import envConfig from "../../../config/env";
+
+const SOCKET_URL = envConfig.socketUrl;
 
 // Socket dùng chung cho mọi nơi gọi hook: mở một kết nối, đếm số người đăng ký, người cuối
 // cùng rời đi thì đóng.

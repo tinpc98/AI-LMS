@@ -2,12 +2,14 @@ import mongoose from "mongoose";
 import Grade from "./grade.model.js";
 import { Class as classModel } from "#modules/class";
 import { Assignment } from "#modules/assignment";
-import { Submission } from "#modules/assignment";
+import { AssignmentAttempt } from "#modules/assignment";
 import { Exam } from "#modules/exam";
 import { ExamAttempt } from "#modules/exam-attempt";
 import { User } from "#modules/auth";
 import { checkClassTeacherOwnership } from "#modules/class";
 import { calculateGradeMatrix } from "./gradeCalculator.js";
+import { ClassEnrollment } from "#modules/classEnrollment/index.js";
+import Topic from "../topic/topic.model.js";
 
 class GradeService {
   // Tạo mới hoặc Cập nhật điểm số của học sinh theo cột điểm (Manual Grades)
@@ -69,9 +71,8 @@ class GradeService {
     }
 
     // 1. Fetch Students
-    let students = classExists.students
-      .filter((s) => s.status === "Enrolled")
-      .map((s) => ({ studentId: s.studentId, status: s.status }));
+    const activeEnrollments = await ClassEnrollment.find({ classId, status: "ACTIVE" }).lean();
+    let students = activeEnrollments.map((en) => ({ studentId: en.studentId, status: "Enrolled" }));
 
     if (targetStudentId) {
       students = students.filter((s) => s.studentId.toString() === targetStudentId.toString());
@@ -85,20 +86,25 @@ class GradeService {
     const userMap = new Map(users.map((u) => [u._id.toString(), u]));
 
     // 2. Fetch Source Records
-    const assignments = await Assignment.find({ classId, isDeleted: false }, "_id title").lean();
+    // Fix Assignment Resolution: Assignments belong to topics
+    const topics = await Topic.find({ courseId: classExists.courseId }).select("_id").lean();
+    const topicIds = topics.map((t) => t._id);
+    const assignments = await Assignment.find(
+      { topicId: { $in: topicIds }, isDeleted: false },
+      "_id title"
+    ).lean();
+
     const exams = await Exam.find(
       { classId, isDeleted: false },
       "_id title maxScore status"
     ).lean();
     const manualGrades = await Grade.find({ classId }).lean();
 
-    // Nếu có targetStudentId, giới hạn Submissions và ExamAttempts
     const assignmentIds = assignments.map((a) => a._id);
-    const submissions = await Submission.find({
+    const submissions = await AssignmentAttempt.find({
       assignmentId: { $in: assignmentIds },
       studentId: { $in: studentIds },
-      isDeleted: false,
-      grade: { $ne: null },
+      score: { $ne: null },
     }).lean();
 
     const examIds = exams.map((e) => e._id);

@@ -110,7 +110,7 @@ const LessonPage = () => {
       <main className="w-full h-screen flex flex-col md:flex-row">
         {/* Left Section: Video Player & Summary */}
         <section className="w-full md:w-[70%] h-full overflow-y-auto custom-scrollbar bg-surface-container-lowest border-r border-outline-variant p-8 pb-24">
-          <div className="max-w-4xl mx-auto space-y-6">
+          <div className="w-full px-4 md:px-8 xl:px-12 mx-auto space-y-6">
             <div className="relative aspect-video rounded-xl overflow-hidden bg-on-background shadow-lg group">
               <div className="absolute inset-0 flex items-center justify-center">
                 <img

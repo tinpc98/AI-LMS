@@ -3,6 +3,7 @@ import mongoose from "mongoose";
 import { Class as classModel } from "#modules/class";
 import { Grade } from "#modules/grade";
 import { Attendance } from "#modules/attendance";
+import ClassEnrollment from "../modules/classEnrollment/classEnrollment.model.js";
 
 // ─────────────────────────────────────────────
 // SHARED HELPER – Tạo style chuẩn cho workbook
@@ -97,7 +98,6 @@ export const buildGradesExcel = async (classId) => {
   // 1. Lấy thông tin lớp (bao gồm danh sách học sinh đã enroll)
   const targetClass = await classModel
     .findById(classId)
-    .populate("students.studentId", "fullName email")
     .populate("courseId", "courseName")
     .lean();
 
@@ -105,10 +105,14 @@ export const buildGradesExcel = async (classId) => {
     throw new Error("Lớp học không tồn tại!");
   }
 
-  // 2. Lọc chỉ lấy học sinh hợp lệ (không bị xóa mềm, có thông tin)
-  const enrolledStudents = (targetClass.students || [])
-    .filter((s) => s.studentId && !s.studentId.isDeleted)
-    .map((s) => s.studentId);
+  // 2. Lấy danh sách học sinh từ ClassEnrollment
+  const enrollments = await ClassEnrollment.find({ classId, status: "ACTIVE" })
+    .populate("studentId", "fullName email isDeleted")
+    .lean();
+
+  const enrolledStudents = enrollments
+    .map(e => e.studentId)
+    .filter(s => s && !s.isDeleted);
 
   // 3. Lấy tất cả bản ghi điểm của cả lớp – 1 query duy nhất, sau đó nhóm theo studentId
   const allGrades = await Grade.find({ classId, isDeleted: false }).lean();
@@ -249,9 +253,10 @@ export const buildGradesExcel = async (classId) => {
  */
 export const buildAttendanceExcel = async (classId) => {
   // 1. Lấy thông tin lớp và học sinh song song với việc lấy điểm danh
-  const [targetClass, allRecords] = await Promise.all([
-    classModel.findById(classId).populate("students.studentId", "fullName email").lean(),
+  const [targetClass, allRecords, enrollments] = await Promise.all([
+    classModel.findById(classId).lean(),
     Attendance.find({ classId, isDeleted: false }).lean(),
+    ClassEnrollment.find({ classId, status: "ACTIVE" }).populate("studentId", "fullName email isDeleted").lean()
   ]);
 
   if (!targetClass) {
@@ -259,9 +264,9 @@ export const buildAttendanceExcel = async (classId) => {
   }
 
   // 2. Danh sách học sinh đã enroll
-  const enrolledStudents = (targetClass.students || [])
-    .filter((s) => s.studentId && !s.studentId.isDeleted)
-    .map((s) => s.studentId);
+  const enrolledStudents = enrollments
+    .map(e => e.studentId)
+    .filter(s => s && !s.isDeleted);
 
   // 3. Nhóm bản ghi điểm danh theo studentId để tra cứu O(1)
   const attendanceMap = {};

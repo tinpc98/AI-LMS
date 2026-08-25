@@ -1,5 +1,7 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Card, Form, Select, DatePicker, Button, Space } from "antd";
+import { subjectService } from "../../../features/subject/subjectService";
+import type { Subject } from "../../../features/subject/subject.types";
 import { ReloadOutlined, ExportOutlined } from "@ant-design/icons";
 
 const { RangePicker } = DatePicker;
@@ -23,6 +25,13 @@ export const ReportFilter: React.FC<ReportFilterProps> = ({
   onExport,
 }) => {
   const [form] = Form.useForm();
+  const [subjects, setSubjects] = useState<Subject[]>([]);
+
+  useEffect(() => {
+    subjectService.getSubjects({ status: "ACTIVE", limit: 100 })
+      .then(res => setSubjects(res.data || []))
+      .catch(() => {});
+  }, []);
 
   const handleValuesChange = (_: any, allValues: FilterValues) => {
     if (onFilterChange) {
@@ -55,10 +64,9 @@ export const ReportFilter: React.FC<ReportFilterProps> = ({
               allowClear
               className="rounded-lg"
             >
-              <Select.Option value="Mathematics">Toán học</Select.Option>
-              <Select.Option value="Physics">Vật lý</Select.Option>
-              <Select.Option value="English">Tiếng Anh</Select.Option>
-              <Select.Option value="Chemistry">Hóa học</Select.Option>
+              {subjects.map(s => (
+                <Select.Option key={s._id} value={s._id}>{s.name}</Select.Option>
+              ))}
             </Select>
           </Form.Item>
 

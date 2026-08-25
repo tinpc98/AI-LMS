@@ -9,7 +9,7 @@ import { User } from "#modules/auth";
 import { Class } from "#modules/class";
 import { Lesson } from "#modules/lesson";
 import { Assignment } from "#modules/assignment";
-import { Submission } from "#modules/assignment";
+import { AssignmentAttempt } from "#modules/assignment";
 import { Question } from "#modules/question";
 import { Exam } from "#modules/exam";
 import { ExamAttempt } from "#modules/exam-attempt";
@@ -102,7 +102,7 @@ async function seedDatabase() {
       Class.deleteMany({}),
       Lesson.deleteMany({}),
       Assignment.deleteMany({}),
-      Submission.deleteMany({}),
+      AssignmentAttempt.deleteMany({}),
       Question.deleteMany({}),
       Exam.deleteMany({}),
       ExamAttempt.deleteMany({}),
@@ -235,7 +235,6 @@ async function seedDatabase() {
         teacherId: classTeacher._id,
         assignedBy: admin._id,
         assignedAt: new Date(),
-        students: studentObjects,
         meetingRoomId: `ROOM_JITSI_${1000 + i}`,
         googleMeetLink: `https://meet.google.com/abc-defg-${1000 + i}`,
         googleCalendarEventId: `cal_event_${1000 + i}`,
@@ -264,12 +263,38 @@ async function seedDatabase() {
         startDate: faker.date.past(),
         endDate: faker.date.future(),
         maxStudents: 30,
+        activeCount: rawStudents.length, // Cập nhật activeCount chính xác
         description: `Lớp học chuyên sâu môn ${randomCourse.title}`,
         isEnrollmentOpen: true,
         status: "Ongoing", // enum hợp lệ của class.model: Draft/Ready/Ongoing/Completed/Cancelled/Archived
+        _tempStudentsForEnrollment: rawStudents // lưu tạm để tạo ClassEnrollment sau
       });
     }
     const createdClasses = await Class.insertMany(classesData);
+
+    // Bổ sung: Tạo ClassEnrollment chuẩn thay cho mảng legacy Class.students
+    console.log("🏫 Đang tạo ClassEnrollments chuẩn...");
+    const mongoose = (await import("mongoose")).default;
+    const ClassEnrollment = (await import("#modules/classEnrollment/classEnrollment.model.js")).default;
+    await ClassEnrollment.deleteMany({});
+    
+    const enrollmentsData = [];
+    for (const cls of createdClasses) {
+      const clsData = classesData.find(c => c.classCode === cls.classCode);
+      if (clsData && clsData._tempStudentsForEnrollment) {
+        for (const s of clsData._tempStudentsForEnrollment) {
+          enrollmentsData.push({
+            enrollmentId: new mongoose.Types.ObjectId(), // mock enrollment
+            studentId: s._id,
+            classId: cls._id,
+            status: "ACTIVE",
+            createdBy: admin._id,
+          });
+        }
+      }
+    }
+    await ClassEnrollment.insertMany(enrollmentsData);
+
     // 5. Tạo 40 Lessons
     console.log("📖 Đang tạo 40 Lessons...");
     const lessonsData = [];
@@ -320,8 +345,8 @@ async function seedDatabase() {
     }
     const createdAssignments = await Assignment.insertMany(assignmentsData);
 
-    // 7. Tạo 180 Submissions
-    console.log("📤 Đang tạo 180 Submissions...");
+    // 7. Tạo 180 AssignmentAttempts
+    console.log("📤 Đang tạo 180 AssignmentAttempts...");
     const submissionsData = [];
     const submissionPairs = new Set();
 
@@ -359,7 +384,7 @@ async function seedDatabase() {
         });
       }
     }
-    await Submission.insertMany(submissionsData);
+    await AssignmentAttempt.insertMany(submissionsData);
 
     // 8. Tạo 300 Questions
     console.log("❓ Đang tạo 300 Questions...");

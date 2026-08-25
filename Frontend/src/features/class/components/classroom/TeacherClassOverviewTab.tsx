@@ -68,7 +68,7 @@ export const TeacherClassOverviewTab: React.FC<TeacherClassOverviewTabProps> = R
                 <Tag color="blue">{formatLearningMode(classInfo.learningMode)}</Tag>
               </Descriptions.Item>
               <Descriptions.Item label="Sĩ số">
-                {classInfo.students?.length || 0} / {classInfo.maxStudents || 30} học sinh
+                {classInfo.currentStudents ?? 0} / {classInfo.maxStudents || 30} học sinh
               </Descriptions.Item>
             </Descriptions>
 

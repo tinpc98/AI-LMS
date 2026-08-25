@@ -140,6 +140,10 @@ export const getAllUsers = async (req, res) => {
       }
     }
 
+    if (status && status !== "All") {
+      query.status = status;
+    }
+
     const skip = (Number(page) - 1) * Number(limit);
 
     const [users, total] = await Promise.all([
@@ -213,6 +217,7 @@ export const createUser = async (req, res) => {
       phone: phone || "",
       teachingSubjects: teachingSubjects || [],
       availabilitySchedule: availabilitySchedule || null,
+      accountActivatedAt: new Date(), // Set activation time when created by Admin
     });
 
     await newUser.save();

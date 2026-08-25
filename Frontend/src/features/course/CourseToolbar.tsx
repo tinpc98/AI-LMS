@@ -1,6 +1,9 @@
 import { Button, Col, Input, Row, Select } from "antd";
 import { ReloadOutlined, PlusOutlined } from "@ant-design/icons";
-import type { CourseFilters, CourseStatus, CourseSubject } from "./course.types";
+import { useState, useEffect } from "react";
+import { subjectService } from "../subject/subjectService";
+import type { Subject } from "../subject/subject.types";
+import type { CourseFilters, CourseStatus } from "./course.types";
 
 interface CourseToolbarProps {
   filters: CourseFilters;
@@ -10,6 +13,14 @@ interface CourseToolbarProps {
 }
 
 const CourseToolbar = ({ filters, onFiltersChange, onRefresh, onCreate }: CourseToolbarProps) => {
+  const [subjects, setSubjects] = useState<Subject[]>([]);
+
+  useEffect(() => {
+    subjectService.getSubjects({ status: "ACTIVE", limit: 100 })
+      .then((res) => setSubjects(res.data || []))
+      .catch(() => {});
+  }, []);
+
   return (
     <Row gutter={[12, 12]} align="middle">
       <Col xs={24} md={8}>
@@ -24,17 +35,13 @@ const CourseToolbar = ({ filters, onFiltersChange, onRefresh, onCreate }: Course
         <Select
           style={{ width: "100%" }}
           placeholder="Subject"
-          value={filters.subject}
-          onChange={(value: CourseSubject | "All") =>
-            onFiltersChange({ ...filters, subject: value })
+          value={filters.subjectId}
+          onChange={(value: string) =>
+            onFiltersChange({ ...filters, subjectId: value })
           }
           options={[
             { label: "All Subjects", value: "All" },
-            { label: "Mathematics", value: "Mathematics" },
-            { label: "Physics", value: "Physics" },
-            { label: "Chemistry", value: "Chemistry" },
-            { label: "English", value: "English" },
-            { label: "Literature", value: "Literature" },
+            ...subjects.map(s => ({ label: s.name, value: s._id }))
           ]}
         />
       </Col>

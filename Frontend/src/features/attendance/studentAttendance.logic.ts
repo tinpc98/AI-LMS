@@ -25,7 +25,7 @@ export const DEFAULT_ATTENDANCE_FILTERS: StudentAttendanceFilterOptions = {
  * tắc nghiệp vụ có thật chứ không phải nhầm lẫn, nên đặt tên hằng số rõ ràng thay vì để số
  * trần trong công thức.
  */
-const WEIGHT = { Present: 1, Late: 0.7, Excused: 0.9, Absent: 0 } as const;
+const WEIGHT = { PRESENT: 1, LATE: 0.7, EXCUSED: 0.9, ABSENT: 0, DRAFT: 0 } as const;
 
 /** Dưới các mốc này thì học sinh bị cảnh báo chuyên cần. */
 const WARNING_THRESHOLD = { critical: 50, low: 80 } as const;
@@ -55,14 +55,14 @@ export const extendRecords = (records: IAttendanceItem[]): IExtendedAttendanceRe
 export const computeAttendanceStats = (
   records: IExtendedAttendanceRecord[]
 ): StudentAttendanceStats => {
-  const count = { Present: 0, Late: 0, Absent: 0, Excused: 0 };
+  const count = { PRESENT: 0, LATE: 0, ABSENT: 0, EXCUSED: 0, DRAFT: 0 };
   for (const item of records) {
     if (item.status in count) count[item.status as keyof typeof count] += 1;
   }
 
   const total = records.length;
   const weighted =
-    count.Present * WEIGHT.Present + count.Late * WEIGHT.Late + count.Excused * WEIGHT.Excused;
+    count.PRESENT * WEIGHT.PRESENT + count.LATE * WEIGHT.LATE + count.EXCUSED * WEIGHT.EXCUSED;
 
   // Chưa có buổi nào thì coi như 100%: học sinh mới vào lớp không đáng bị cảnh báo.
   const presentRate = total > 0 ? Math.round((weighted / total) * 100) : 100;
@@ -73,10 +73,10 @@ export const computeAttendanceStats = (
 
   return {
     total,
-    present: count.Present,
-    late: count.Late,
-    absent: count.Absent,
-    excused: count.Excused,
+    present: count.PRESENT,
+    late: count.LATE,
+    absent: count.ABSENT,
+    excused: count.EXCUSED,
     presentRate,
     warningLevel,
   };

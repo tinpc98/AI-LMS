@@ -65,7 +65,7 @@ export const useAnswerAutosave = (
     try {
       const payload = { answers, answersVersion: answersVersionRef.current };
       const config = sessionToken ? { headers: { "x-session-token": sessionToken } } : {};
-      const res = await axiosClient.patch(`/api/exam-attempts/${attemptId}/answers`, payload, config);
+      const res = await axiosClient.patch(`/exam-attempts/${attemptId}/answers`, payload, config);
       if (res.data?.data?.newVersion !== undefined) {
         answersVersionRef.current = res.data.data.newVersion;
       }
@@ -73,14 +73,14 @@ export const useAnswerAutosave = (
       if (err?.response?.data?.errorCode === "VERSION_MISMATCH") {
         try {
           // Xử lý 409 êm: GET lại version mới
-          const getRes = await axiosClient.get(`/api/exam-attempts/${attemptId}`);
+          const getRes = await axiosClient.get(`/exam-attempts/${attemptId}`);
           const data = getRes.data.data || getRes.data;
           if (data && data.answersVersion !== undefined) {
             answersVersionRef.current = data.answersVersion;
             // Retry lại 1 lần duy nhất bằng cách gọi trực tiếp API
             const retryPayload = { answers, answersVersion: answersVersionRef.current };
             const config = sessionToken ? { headers: { "x-session-token": sessionToken } } : {};
-            const retryRes = await axiosClient.patch(`/api/exam-attempts/${attemptId}/answers`, retryPayload, config);
+            const retryRes = await axiosClient.patch(`/exam-attempts/${attemptId}/answers`, retryPayload, config);
             if (retryRes.data?.data?.newVersion !== undefined) {
               answersVersionRef.current = retryRes.data.data.newVersion;
             }

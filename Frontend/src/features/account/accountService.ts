@@ -19,37 +19,37 @@ export const accountService = {
     if (params.status === "All") delete params.status;
     if (!params.search) delete params.search;
 
-    const response = await axiosClient.get("/api/users", { params });
+    const response = await axiosClient.get("/users", { params });
     return { ...response.data, data: response.data.data.map(mapUser) };
   },
 
   async getAccountById(id: string): Promise<ApiResponse<AccountRecord>> {
-    const response = await axiosClient.get(`/api/users/${id}`);
+    const response = await axiosClient.get(`/users/${id}`);
     return { ...response.data, data: mapUser(response.data.data) };
   },
 
   async createAccount(payload: AccountFormValues): Promise<ApiResponse<AccountRecord>> {
-    const response = await axiosClient.post("/api/users", payload);
+    const response = await axiosClient.post("/users", payload);
     return { ...response.data, data: mapUser(response.data.data) };
   },
 
   async updateAccount(id: string, payload: AccountFormValues): Promise<ApiResponse<AccountRecord>> {
-    const response = await axiosClient.put(`/api/users/${id}`, payload);
+    const response = await axiosClient.put(`/users/${id}`, payload);
     return { ...response.data, data: mapUser(response.data.data) };
   },
 
   async updateStatus(id: string, status: "Active" | "Locked"): Promise<ApiResponse<AccountRecord>> {
-    const response = await axiosClient.put(`/api/users/${id}`, { status });
+    const response = await axiosClient.put(`/users/${id}`, { status });
     return { ...response.data, data: mapUser(response.data.data) };
   },
 
   async resetPassword(id: string): Promise<void> {
     // Assuming backend has a reset password endpoint, or use update if none
-    await axiosClient.put(`/api/users/${id}`, { password: "defaultPassword123!" });
+    await axiosClient.put(`/users/${id}`, { password: "defaultPassword123!" });
   },
 
   async deleteAccount(id: string): Promise<ApiResponse<void>> {
-    const response = await axiosClient.delete(`/api/users/${id}`);
+    const response = await axiosClient.delete(`/users/${id}`);
     return response.data;
   },
 
@@ -59,17 +59,17 @@ export const accountService = {
     if (params.status === "All") delete params.status;
     if (!params.search) delete params.search;
 
-    const response = await axiosClient.get("/api/users/trash", { params });
+    const response = await axiosClient.get("/users/trash", { params });
     return { ...response.data, data: response.data.data.map(mapUser) };
   },
 
   async restoreUser(id: string): Promise<ApiResponse<AccountRecord>> {
-    const response = await axiosClient.patch(`/api/users/${id}/restore`);
+    const response = await axiosClient.patch(`/users/${id}/restore`);
     return { ...response.data, data: mapUser(response.data.data) };
   },
 
   async permanentDeleteUser(id: string): Promise<ApiResponse<void>> {
-    const response = await axiosClient.delete(`/api/users/${id}/force`);
+    const response = await axiosClient.delete(`/users/${id}/force`);
     return response.data;
   },
 };

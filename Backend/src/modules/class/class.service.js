@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import { checkClassTeacherOwnership } from "./class.ownership.js";
+import ClassEnrollment from "../classEnrollment/classEnrollment.model.js";
 
 /**
  * Service xử lý các logic tái sử dụng cho Class module.
@@ -21,7 +22,7 @@ class ClassService {
    * @param {String} userId - ID của user
    * @returns {Object} - { finalQuery, skip, limitNum, pageNum, sortOption }
    */
-  buildClassQueryOptions(query, isTrash = false, userRole = "", userId = "") {
+  async buildClassQueryOptions(query, isTrash = false, userRole = "", userId = "") {
     const {
       search,
       courseId,
@@ -41,7 +42,9 @@ class ClassService {
     if (userRole === "teacher") {
       filterConditions.push({ teacherId: userId });
     } else if (userRole === "student") {
-      filterConditions.push({ "students.studentId": userId });
+      const enrollments = await ClassEnrollment.find({ studentId: userId, status: "ACTIVE" }).select("classId");
+      const classIds = enrollments.map(e => e.classId);
+      filterConditions.push({ _id: { $in: classIds } });
     }
     // Vai trò 'admin' sẽ xem được toàn bộ danh sách lớp học
 
@@ -49,7 +52,7 @@ class ClassService {
     if (search && search.trim() !== "") {
       const searchRegex = new RegExp(search.trim(), "i");
       filterConditions.push({
-        $or: [{ className: searchRegex }, { classCode: searchRegex }],
+        $or: [{ name: searchRegex }, { code: searchRegex }],
       });
     }
 
@@ -68,9 +71,9 @@ class ClassService {
       filterConditions.push({ teacherId });
     }
 
-    // 6. Lọc nâng cao: Hình thức học
-    if (learningMode && ["Offline", "Online", "Hybrid"].includes(learningMode)) {
-      filterConditions.push({ learningMode });
+    // 6. Lọc nâng cao: Hình thức học (mode)
+    if (query.mode && ["OFFLINE", "ONLINE"].includes(query.mode)) {
+      filterConditions.push({ mode: query.mode });
     }
 
     // 7. Lọc nâng cao: Date Range (startDate & endDate)
@@ -101,16 +104,16 @@ class ClassService {
     const limitNum = Math.max(1, Number(limit) || 10);
     const skip = (pageNum - 1) * limitNum;
 
-    // Xử lý Sorting (Hỗ trợ Ant Design Table format: sortField & sortOrder = 'ascend' | 'descend')
+    // Xử lý Sorting
     const { sortField, sortOrder } = query;
     const SORT_WHITELIST = [
       "createdAt",
-      "className",
+      "name",
       "startDate",
       "endDate",
-      "maxStudents",
+      "capacity",
       "status",
-      "classCode",
+      "code",
     ];
     let sortOption = { createdAt: -1 }; // Mặc định
 

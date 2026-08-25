@@ -1,140 +1,102 @@
-import type { IAssignment, ISubmission } from "../interface/assignmentInterface";
+import type { IAssignment, IAssignmentAttempt, IAttemptAnswer } from "../interface/assignmentInterface";
 import axiosClient from "./axiosClient";
-import { getApiErrorCode, getApiErrorStatus } from "../shared/utils/apiError";
 
-interface SubmissionEnvelope {
-  success?: boolean;
-  message?: string;
-  submission?: ISubmission;
-  data: ISubmission;
-}
-
-interface IAssignmentListResponse {
-  assignments: IAssignment[];
-}
-
-interface IAssignmentCreateResponse {
-  message: string;
-  assignment: IAssignment;
+interface IAssignmentCreatePayload {
+  topicId: string;
+  title: string;
+  description?: string;
+  instructions?: any[];
+  questions: Array<{ questionId: string; order: number; points: number }>;
+  status: "DRAFT" | "PUBLISHED";
 }
 
 const assignmentApi = {
-  // Lấy danh sách bài tập của lớp
+  // Lấy danh sách bài tập của lớp (Không hỗ trợ trong BE hiện tại, giả định gọi qua course/topic API hoặc cần cập nhật)
+  // Tạm thời giữ mock hoặc fetch topic
   getAssignmentsByClass: async (classId: string): Promise<IAssignment[]> => {
-    const response = await axiosClient.get<IAssignmentListResponse>(
-      `/api/assignments/class/${classId}`
+    return [];
+  },
+  
+  // Tạo bài tập mới
+  createAssignment: async (payload: IAssignmentCreatePayload): Promise<IAssignment> => {
+    const response = await axiosClient.post<{ message: string; assignment: IAssignment }>(
+      "/assignments",
+      payload
     );
-    return response.data.assignments ?? [];
+    return response.data.assignment;
   },
 
-  // Lấy chi tiết 1 bài tập
+  // Publish bài tập
+  publishAssignment: async (id: string): Promise<IAssignment> => {
+    const response = await axiosClient.patch<{ message: string; assignment: IAssignment }>(
+      `/assignments/${id}/publish`
+    );
+    return response.data.assignment;
+  },
+
+  // Lấy chi tiết bài tập
   getAssignmentById: async (id: string): Promise<IAssignment> => {
-    const response = await axiosClient.get<{ assignment: IAssignment }>(`/api/assignments/${id}`);
+    const response = await axiosClient.get<{ assignment: IAssignment }>(`/assignments/${id}`);
     return response.data.assignment;
   },
 
-  // Tạo bài tập mới (multipart/form-data)
-  createAssignment: async (formData: FormData): Promise<IAssignment> => {
-    const response = await axiosClient.post<IAssignmentCreateResponse>(
-      "/api/assignments",
-      formData
+  // Start attempt (Học sinh)
+  startAttempt: async (assignmentId: string): Promise<IAssignmentAttempt> => {
+    const response = await axiosClient.post<{ message: string; attempt: IAssignmentAttempt }>(
+      `/assignments/${assignmentId}/attempts`
     );
-    return response.data.assignment;
+    return response.data.attempt;
   },
 
-  // Cập nhật bài tập (multipart/form-data)
-  updateAssignment: async (id: string, formData: FormData): Promise<IAssignment> => {
-    const response = await axiosClient.put<{ assignment: IAssignment }>(
-      `/api/assignments/${id}`,
-      formData
+  // Lấy history attempts của học sinh
+  getAttemptHistory: async (assignmentId: string): Promise<IAssignmentAttempt[]> => {
+    const response = await axiosClient.get<{ attempts: IAssignmentAttempt[] }>(
+      `/assignments/${assignmentId}/attempts`
     );
-    return response.data.assignment;
+    return response.data.attempts ?? [];
   },
 
-  // Xóa bài tập
-  deleteAssignment: async (id: string): Promise<void> => {
-    await axiosClient.delete(`/api/assignments/${id}`);
-  },
-
-  // Giáo viên xem danh sách bài nộp của bài tập
-  getSubmissionsByAssignment: async (assignmentId: string): Promise<ISubmission[]> => {
-    const response = await axiosClient.get<{ submissions: ISubmission[] }>(
-      `/api/assignments/submissions/${assignmentId}`
+  // Lấy chi tiết attempt
+  getAttemptById: async (attemptId: string): Promise<IAssignmentAttempt> => {
+    const response = await axiosClient.get<{ attempt: IAssignmentAttempt }>(
+      `/assignments/attempts/${attemptId}`
     );
-    return response.data.submissions ?? [];
+    return response.data.attempt;
   },
 
-  // Giáo viên chấm điểm bài nộp
-  gradeSubmission: async (
-    submissionId: string,
-    data: { grade: number; feedback?: string; aiFeedback?: string }
-  ): Promise<ISubmission> => {
-    const response = await axiosClient.put<{ submission: ISubmission }>(
-      `/api/assignments/grade/${submissionId}`,
-      data
+  // Lưu câu trả lời (Học sinh)
+  saveAnswer: async (attemptId: string, questionId: string, answer: IAttemptAnswer): Promise<IAssignmentAttempt> => {
+    const response = await axiosClient.patch<{ message: string; attempt: IAssignmentAttempt }>(
+      `/assignments/attempts/${attemptId}/questions/${questionId}`,
+      answer
     );
-    return response.data.submission;
+    return response.data.attempt;
   },
 
-  // Xem chi tiết 1 bài nộp cụ thể (đã được xác thực quyền)
-  getSubmissionById: async (submissionId: string): Promise<ISubmission | null> => {
-    try {
-      const response = await axiosClient.get<SubmissionEnvelope>(
-        `/api/assignments/submissions/detail/${submissionId}`
-      );
-      return response.data.submission ?? response.data.data ?? null;
-    } catch {
-      return null;
-    }
-  },
-
-  // Học sinh xem bài nộp cá nhân
-  getMySubmission: async (assignmentId: string): Promise<ISubmission | null> => {
-    try {
-      const response = await axiosClient.get<SubmissionEnvelope>(
-        `/api/assignments/${assignmentId}/my-submission`
-      );
-      return response.data.submission ?? response.data.data ?? null;
-    } catch (err: unknown) {
-      const code = getApiErrorCode(err);
-      if (code === "SUBMISSION_NOT_FOUND" || getApiErrorStatus(err) === 404) return null;
-      return null;
-    }
-  },
-
-  // Học sinh lưu bản nháp (Draft)
-  saveDraft: async (
-    assignmentId: string,
-    data: {
-      submissionType?: string;
-      content?: string;
-      linkUrl?: string;
-      answers?: Array<{ questionId: string; content: string }>;
-    }
-  ): Promise<ISubmission> => {
-    const response = await axiosClient.post<SubmissionEnvelope>(
-      `/api/assignments/draft/${assignmentId}`,
-      data
+  // Nộp bài (Học sinh)
+  submitAttempt: async (attemptId: string): Promise<IAssignmentAttempt> => {
+    const response = await axiosClient.post<{ message: string; attempt: IAssignmentAttempt }>(
+      `/assignments/attempts/${attemptId}/submit`
     );
-    return response.data.submission ?? response.data.data;
+    return response.data.attempt;
   },
 
-  // Học sinh nộp bài / nộp lại bài
-  submitAssignment: async (assignmentId: string, formData: FormData): Promise<ISubmission> => {
-    const response = await axiosClient.post<SubmissionEnvelope>(
-      `/api/assignments/submit/${assignmentId}`,
-      formData
+  // Lấy danh sách attempts cho giáo viên
+  getAttemptsForTeacher: async (assignmentId: string): Promise<IAssignmentAttempt[]> => {
+    const response = await axiosClient.get<{ attempts: IAssignmentAttempt[] }>(
+      `/assignments/${assignmentId}/teacher-attempts`
     );
-    return response.data.submission ?? response.data.data;
+    return response.data.attempts ?? [];
   },
 
-  // Học sinh hủy nộp bài
-  cancelSubmission: async (assignmentId: string): Promise<ISubmission> => {
-    const response = await axiosClient.delete<SubmissionEnvelope>(
-      `/api/assignments/submit/${assignmentId}`
+  // Giáo viên chấm điểm essay
+  gradeEssay: async (attemptId: string, questionId: string, score: number, feedback?: string): Promise<IAssignmentAttempt> => {
+    const response = await axiosClient.patch<{ message: string; attempt: IAssignmentAttempt }>(
+      `/assignments/attempts/${attemptId}/questions/${questionId}/grade`,
+      { score, feedback }
     );
-    return response.data.submission ?? response.data.data;
-  },
+    return response.data.attempt;
+  }
 };
 
 export default assignmentApi;

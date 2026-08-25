@@ -14,7 +14,7 @@ export const useTeacherDashboardQuery = () => {
   const classes = data?.classes ?? [];
 
   const totalStudentsCount = classes.reduce((sum: number, c: any) => {
-    const studentCount = c.currentStudents ?? (Array.isArray(c.students) ? c.students.length : 0);
+    const studentCount = c.currentStudents ?? 0;
     return sum + studentCount;
   }, 0);
 

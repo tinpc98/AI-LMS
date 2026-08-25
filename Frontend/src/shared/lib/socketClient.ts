@@ -1,9 +1,11 @@
 import { io, Socket } from "socket.io-client";
 
+import envConfig from "../../config/env";
+
 let socketInstance: Socket | null = null;
 
 const getSocketUrl = (): string => {
-  return import.meta.env.VITE_SOCKET_URL || "http://localhost:5000";
+  return envConfig.socketUrl;
 };
 
 const getAccessToken = (): string | null => {

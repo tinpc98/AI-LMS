@@ -1,214 +1,320 @@
-import mongoose from "mongoose";
-import { ErrorCode, createError } from "#shared/errors/errorCodes.js";
-import { normalizeQuestionType } from "#shared/utils/questionTypeUtils.js";
-import { evaluateLateness } from "./attemptDeadline.js";
+import crypto from "crypto";
+import Exam from "../exam/exam.model.js";
 import ExamAttempt from "./examAttempt.model.js";
-import { Exam } from "#modules/exam";
-import { Question } from "#modules/question";
-import { compareAnswers, compareShortAnswer } from "./answerScoring.js";
-import { checkClassTeacherOwnership } from "#modules/class";
+import Question from "../question/question.model.js";
+import { ClassEnrollment } from "#modules/classEnrollment";
+import { compareAnswers } from "./answerScoring.js";
 
-const gradeSubmission = async (attemptId, studentAnswers, isCheat = false) => {
-  const session = await mongoose.startSession();
-  session.startTransaction();
+// Hàm shuffle mảng (Fisher-Yates)
+const shuffleArray = (array) => {
+  const arr = [...array];
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+};
+
+/**
+ * Bulk-fetch Questions và dựng Map { questionId_string -> Question }.
+ * Tránh N+1 query.
+ */
+const buildQuestionMap = async (questionIds) => {
+  const validIds = questionIds.filter((id) => id);
+  if (validIds.length === 0) return new Map();
+  const questions = await Question.find({ _id: { $in: validIds } }).lean();
+  return new Map(questions.map((q) => [q._id.toString(), q]));
+};
+
+/**
+ * Bắt đầu thi: tạo ExamAttempt mới.
+ *
+ * Security:
+ *   1. Exam phải PUBLISHED và trong cửa sổ startAt/endAt.
+ *   2. Student phải enrolled vào exam.classId.
+ *   3. attemptsAllowed chưa đạt.
+ *   4. Không có IN_PROGRESS attempt khác.
+ *   5. Unique index chặn race condition tạo duplicate.
+ */
+export const startExamService = async (examId, studentId) => {
+  const exam = await Exam.findById(examId).populate("questions.questionId");
+  if (!exam) throw new Error("Exam not found");
+  if (exam.status !== "PUBLISHED") throw new Error("Exam is not published");
+
+  const now = new Date();
+  if (exam.startAt && now < exam.startAt) {
+    const err = new Error("Exam has not started yet");
+    err.code = "EXAM_NOT_STARTED";
+    err.startAt = exam.startAt;
+    throw err;
+  }
+  if (exam.endAt && now > exam.endAt) throw new Error("Exam has already ended");
+
+  // Kiểm tra enrollment: student phải thuộc classId của exam
+  if (exam.classId) {
+    const enrollment = await ClassEnrollment.findOne({
+      studentId,
+      classId: exam.classId,
+      status: "ACTIVE",
+    });
+    if (!enrollment) {
+      throw new Error("Bạn không được đăng ký vào lớp học của kỳ thi này");
+    }
+  }
+
+  // Đếm số lần thi (không tính deleted)
+  const attemptCount = await ExamAttempt.countDocuments({ examId, studentId, isDeleted: { $ne: true } });
+  if (attemptCount >= exam.attemptsAllowed) {
+    throw new Error("You have reached the maximum number of attempts allowed");
+  }
+
+  // Kiểm tra IN_PROGRESS
+  const inProgress = await ExamAttempt.findOne({ examId, studentId, status: "IN_PROGRESS" });
+  if (inProgress) {
+    // Cho phép resume nếu là cùng attempt
+    return {
+      attemptId: inProgress._id,
+      sessionToken: inProgress.sessionToken,
+      startedAt: inProgress.startedAt,
+      expiresAt: inProgress.expiresAt,
+      questions: inProgress.questions,
+      isResume: true,
+    };
+  }
+
+  let attemptQuestions = [];
+
+  for (const eq of exam.questions) {
+    const q = eq.questionId;
+    if (!q) continue;
+
+    let optionsSnapshot =
+      q.options?.map((opt) => ({
+        id: opt.id,
+        content: opt.content,
+        order: opt.order,
+      })) || [];
+
+    if (exam.shuffleOptions) {
+      optionsSnapshot = shuffleArray(optionsSnapshot);
+    }
+
+    attemptQuestions.push({
+      questionId: q._id,
+      order: eq.order,
+      points: eq.points,
+      questionSnapshot: {
+        type: q.type,
+        content: q.content,
+        options: optionsSnapshot,
+      },
+    });
+  }
+
+  if (exam.shuffleQuestions) {
+    attemptQuestions = shuffleArray(attemptQuestions);
+  }
+
+  const sessionToken = crypto.randomBytes(32).toString("hex");
+  const expiresAt = new Date(now.getTime() + exam.duration * 60000);
+
+  let newAttempt;
   try {
-    // 1. Tìm phiên làm bài và populate thông tin Đề thi để lấy cấu trúc điểm số
-    const attempt = await ExamAttempt.findById(attemptId).populate("examId").session(session);
-    if (!attempt) {
-      throw new Error("Không tìm thấy phiên làm bài thi này!");
+    newAttempt = new ExamAttempt({
+      examId,
+      studentId,
+      attemptNumber: attemptCount + 1,
+      status: "IN_PROGRESS",
+      questions: attemptQuestions,
+      startedAt: now,
+      expiresAt,
+      sessionToken,
+    });
+    await newAttempt.save();
+  } catch (err) {
+    if (err.code === 11000) {
+      // Unique constraint — race condition
+      throw new Error("Bạn đã có phiên làm bài đang tiến hành. Vui lòng tải lại trang.");
     }
-    if (attempt.status !== "IN_PROGRESS") {
-      throw new Error("Bài thi này đã được nộp hoặc đã chốt điểm trước đó!");
+    throw err;
+  }
+
+  return {
+    attemptId: newAttempt._id,
+    sessionToken: newAttempt.sessionToken,
+    startedAt: newAttempt.startedAt,
+    expiresAt: newAttempt.expiresAt,
+    questions: newAttempt.questions,
+  };
+};
+
+export const saveExamAnswerService = async (attemptId, sessionToken, studentId, questionId, answerData) => {
+  const attempt = await ExamAttempt.findById(attemptId);
+  if (!attempt) throw new Error("Attempt not found");
+  if (attempt.studentId.toString() !== studentId.toString()) throw new Error("Forbidden");
+  if (attempt.sessionToken !== sessionToken) throw new Error("Invalid session token");
+  if (attempt.status !== "IN_PROGRESS") throw new Error("Attempt is no longer in progress");
+
+  if (new Date() > attempt.expiresAt) {
+    throw new Error("Attempt has expired");
+  }
+
+  const aq = attempt.questions.find((q) => q.questionId.toString() === questionId);
+  if (!aq) throw new Error("Question not found in attempt");
+
+  aq.answer = answerData;
+  await attempt.save();
+  return attempt;
+};
+
+/**
+ * Nộp bài và chấm điểm.
+ *
+ * MCQ: bulk-fetch Questions → answerScoring.compareAnswers → auto grade
+ * Essay: isCorrect = null, score = 0 → PARTIALLY_GRADED
+ *
+ * Sau khi GRADED: trigger Performance Engine (async, idempotent).
+ */
+export const submitExamService = async (attemptId, sessionToken, studentId) => {
+  // Atomic state transition to prevent concurrent double-submissions
+  const attempt = await ExamAttempt.findOneAndUpdate(
+    { _id: attemptId, studentId, sessionToken, status: "IN_PROGRESS" },
+    { status: "SUBMITTED" },
+    { new: true }
+  );
+
+  if (!attempt) {
+    // Check specific reasons for better error messages
+    const checkAttempt = await ExamAttempt.findById(attemptId);
+    if (!checkAttempt) throw new Error("Attempt not found");
+    if (checkAttempt.studentId.toString() !== studentId.toString()) throw new Error("Forbidden");
+    if (checkAttempt.sessionToken !== sessionToken) throw new Error("Invalid session token");
+    if (checkAttempt.status !== "IN_PROGRESS") throw new Error("Attempt is no longer in progress");
+    throw new Error("Cannot submit attempt due to concurrency error");
+  }
+
+  await _gradeAttempt(attempt);
+  return attempt;
+};
+
+/**
+ * Chấm bài — dùng chung cho submitExamService và gradeSubmission (auto-submit).
+ * Bulk-fetch Questions, tránh N+1.
+ */
+const _gradeAttempt = async (attempt) => {
+  const questionIds = attempt.questions.map((aq) => aq.questionId);
+  const questionMap = await buildQuestionMap(questionIds);
+
+  let totalScore = 0;
+  let hasManual = false;
+
+  for (const aq of attempt.questions) {
+    const q = questionMap.get(aq.questionId.toString());
+    if (!q) continue;
+
+    const qType = (q.type || "").toUpperCase();
+    if (qType === "MCQ" || qType === "MULTIPLE_CHOICE") {
+      const selectedIds = aq.answer?.selectedOptionIds || [];
+      const correctIds = q.options.filter((o) => o.isCorrect).map((o) => o.id);
+
+      // Dùng answerScoring.js để normalize + compare
+      const isCorrect = compareAnswers(correctIds, selectedIds);
+
+      aq.isCorrect = isCorrect;
+      aq.score = isCorrect ? aq.points : 0;
+      totalScore += aq.score;
+    } else {
+      // ESSAY / SHORT_ANSWER → manual grade
+      aq.isCorrect = null;
+      aq.score = 0;
+      hasManual = true;
     }
+  }
 
-    const exam = attempt.examId;
+  attempt.score = totalScore;
+  attempt.status = hasManual ? "PARTIALLY_GRADED" : "GRADED";
+  attempt.submittedAt = new Date();
 
-    // 2. Kiểm tra thời gian làm bài.
-    //
-    // Bản cũ chỉ kẹp lại endTime khi vượt hạn rồi chấm bình thường — bài nộp muộn đi qua hệ
-    // thống không để lại dấu vết nào. Nay vẫn CHẤP NHẬN bài nộp (từ chối là quyết định về
-    // chính sách thi cử, không phải quyết định của mã), nhưng GHI LẠI sự việc để giáo viên
-    // nhìn thấy và tự xử lý.
-    const now = new Date();
-    const lateness = evaluateLateness(attempt.startTime, exam.duration, now);
+  if (attempt.submittedAt > attempt.expiresAt) {
+    attempt.isLate = true;
+    attempt.lateBySeconds = Math.floor(
+      (attempt.submittedAt.getTime() - attempt.expiresAt.getTime()) / 1000
+    );
+  }
 
-    attempt.isLate = lateness.isLate;
-    attempt.lateBySeconds = lateness.lateBySeconds;
-    // Quá hạn thì ghi nhận mốc kết thúc là hạn nộp, không phải lúc bấm nộp — để thời gian làm
-    // bài trong báo cáo phản ánh khoảng được phép, còn phần vượt nằm ở lateBySeconds.
-    attempt.endTime = lateness.isLate ? lateness.deadline : now;
+  await attempt.save();
 
-    // 3. Tạo một Map để tra cứu nhanh số điểm phân bổ cho từng câu hỏi trong Đề thi này
-    const examPointsMap = new Map(exam.questions.map((q) => [q.questionId.toString(), q.points]));
-
-    // 4. Lấy danh sách chi tiết các Câu hỏi từ DB (đã chuẩn hóa qua resolver)
-    const { resolveExamQuestions } = await import("./examQuestionResolver.js");
-    const dbQuestionsMap = await resolveExamQuestions(exam);
-
-    let totalScore = 0;
-    let hasEssay = false;
-    const processedAnswers = [];
-
-    // 5. [Đã gỡ bỏ normalizeQuestionType nội bộ, dùng hàm chung từ shared/utils]
-
-    // 6. Bắt đầu vòng lặp chấm điểm
-    for (const ans of studentAnswers) {
-      if (!ans?.questionId) continue;
-      const qIdStr = ans.questionId.toString();
-      const questionConfig = dbQuestionsMap.get(qIdStr);
-      const allocatedPoints = examPointsMap.get(qIdStr) || 0;
-
-      if (!questionConfig) {
-        console.error(`[gradeSubmission] Không tìm thấy config cho câu hỏi ${qIdStr} trong đề ${exam._id}`);
-        continue;
-      }
-
-      const normalizedType = normalizeQuestionType(questionConfig.type);
-      let pointsEarned = 0;
-
-      if (normalizedType === "CHOICE" || normalizedType === "TRUE_FALSE") {
-        const isCorrect = compareAnswers(questionConfig.correctAnswer, ans.selectedOption);
-
-        if (isCorrect) {
-          pointsEarned = allocatedPoints;
-          totalScore += pointsEarned;
-        }
-
-        processedAnswers.push({
-          questionId: questionConfig._id,
-          questionSource: questionConfig.source || "legacy",
-          selectedOption: ans.selectedOption,
-          pointsEarned: Number(pointsEarned.toFixed(2)),
-        });
-      } else if (normalizedType === "SHORT_ANSWER") {
-        const isCorrect = compareShortAnswer(
-          questionConfig.correctAnswer,
-          questionConfig.acceptedAnswers,
-          ans.essayText || ans.selectedOption,
-          questionConfig.caseSensitive
-        );
-
-        if (isCorrect) {
-          pointsEarned = allocatedPoints;
-          totalScore += pointsEarned;
-        }
-
-        processedAnswers.push({
-          questionId: questionConfig._id,
-          questionSource: questionConfig.source || "legacy",
-          essayText: ans.essayText || ans.selectedOption,
-          pointsEarned: Number(pointsEarned.toFixed(2)),
-        });
-      } else if (normalizedType === "ESSAY") {
-        hasEssay = true;
-        processedAnswers.push({
-          questionId: questionConfig._id,
-          questionSource: questionConfig.source || "legacy",
-          essayText: ans.essayText,
-          pointsEarned: 0, // Tạm thời 0 điểm, đợi GV chấm
-        });
-      } else {
-        console.error(`[gradeSubmission] BÁO ĐỘNG LỖI CHẤM ĐIỂM: Loại câu hỏi không xác định: '${questionConfig.type}' (câu ${qIdStr}, attempt: ${attemptId}). Lượt thi này cần được GV xem lại.`);
-        hasEssay = true; // Ép trạng thái thành PARTIALLY_GRADED để GV phải xem
-        processedAnswers.push({
-          questionId: questionConfig._id,
-          questionSource: questionConfig.source || "legacy",
-          essayText: ans.essayText || ans.selectedOption,
-          pointsEarned: 0,
-          needsReview: true,
-        });
-      }
-    }
-
-    // 6. Cập nhật trạng thái và lưu kết quả (An toàn chống NaN)
-    if (isCheat) {
-      totalScore = 0;
-      processedAnswers.forEach((ans) => {
-        ans.pointsEarned = 0;
+  if (attempt.status === "GRADED" && !attempt.performanceProcessedAt) {
+    import("../performance/performance.service.js")
+      .then(({ processAttemptPerformanceService }) => {
+        processAttemptPerformanceService(attempt, "EXAM")
+          .then(async () => {
+            await ExamAttempt.findByIdAndUpdate(attempt._id, {
+              performanceProcessedAt: new Date(),
+            });
+          })
+          .catch((err) => console.error("Performance Process Error:", err));
       });
-      hasEssay = false; // Phạt thì không cần chờ chấm tự luận nữa, chốt luôn
-    }
-
-    attempt.answers = processedAnswers;
-    attempt.totalScore = Number(totalScore.toFixed(2));
-    attempt.status = hasEssay ? "PARTIALLY_GRADED" : "GRADED";
-
-    await attempt.save({ session });
-    await session.commitTransaction();
-    session.endSession();
-    return attempt;
-  } catch (error) {
-    await session.abortTransaction();
-    session.endSession();
-    throw error;
   }
 };
 
-// ==========================================
-// HÀM CHẤM TỰ LUẬN ĐÃ ĐƯỢC VÁ LỖI AN TOÀN
-// ==========================================
-const gradeEssay = async (attemptId, essayGrades, userId, userRole) => {
-  const session = await mongoose.startSession();
-  session.startTransaction();
-  try {
-    const attempt = await ExamAttempt.findById(attemptId).populate("examId").session(session);
-    if (!attempt) throw new Error("Không tìm thấy phiên làm bài thi này!");
+export const incrementCheatWarningService = async (attemptId, sessionToken, studentId, cheatType) => {
+  const attempt = await ExamAttempt.findOneAndUpdate(
+    { _id: attemptId, studentId, sessionToken, status: "IN_PROGRESS" },
+    {
+      $inc: { cheatWarnings: 1 },
+      $push: { cheatLogs: { cheatType, timestamp: new Date() } },
+    },
+    { new: true }
+  );
 
-    // Lấy danh sách phân bổ điểm tối đa từ đề thi để đối chiếu chống gian lận
-    const exam = attempt.examId;
-
-    const isAuthorized = await checkClassTeacherOwnership(exam.classId, userId, userRole);
-    if (!isAuthorized) {
-      const error = new Error("Bạn không có quyền chấm điểm bài thi của lớp học này!");
-      error.status = 403;
-      throw error;
-    }
-
-    const examPointsMap = new Map(exam.questions.map((q) => [q.questionId.toString(), q.points]));
-
-    // Lặp qua mảng điểm giáo viên gửi lên và cập nhật trực tiếp vào câu trả lời
-    for (const grade of essayGrades) {
-      if (!grade?.questionId) continue;
-      const qIdStr = grade.questionId.toString();
-      const answerIndex = attempt.answers.findIndex((ans) => ans.questionId.toString() === qIdStr);
-
-      if (answerIndex !== -1) {
-        // Ép kiểu an toàn, chống giá trị NaN / undefined
-        let points = Number(grade.pointsEarned ?? grade.pointsAwarded);
-        if (isNaN(points)) points = 0;
-
-        // [BẢO MẬT] Không cho phép giáo viên chấm vượt quá số điểm tối đa của câu hỏi trong đề
-        const maxAllowed = examPointsMap.get(qIdStr) || 10;
-        if (points > maxAllowed) {
-          points = maxAllowed;
-        }
-
-        attempt.answers[answerIndex].pointsEarned = points;
-      }
-    }
-
-    // TÍNH LẠI TOÀN BỘ TỔNG ĐIỂM (Tự động cộng dồn từ tất cả các câu MCQ + ESSAY)
-    // Cách này tuyệt đối an toàn, dù bấm phê duyệt 10 lần điểm cũng không bị nhân đôi
-    let recalculatedTotal = 0;
-    for (const ans of attempt.answers) {
-      const p = Number(ans.pointsEarned);
-      if (!isNaN(p)) {
-        recalculatedTotal += p;
-      }
-    }
-
-    attempt.totalScore = Number(recalculatedTotal.toFixed(2));
-    attempt.status = "GRADED"; // Đã chấm xong toàn bộ
-
-    await attempt.save({ session });
-    await session.commitTransaction();
-    session.endSession();
-    return attempt;
-  } catch (error) {
-    await session.abortTransaction();
-    session.endSession();
-    throw error;
+  if (!attempt) {
+    throw new Error("Attempt not found or invalid session");
   }
+
+  return attempt;
 };
 
-export default { gradeSubmission, gradeEssay };
+export const getFinalExamResultService = async (examId, studentId) => {
+  const exam = await Exam.findById(examId).select("scorePolicy attemptsAllowed status");
+  if (!exam) throw new Error("Exam not found");
+
+  const validAttempts = await ExamAttempt.find({
+    examId,
+    studentId,
+    status: { $in: ["GRADED", "PARTIALLY_GRADED", "SUBMITTED"] },
+    score: { $ne: null },
+  }).sort({ attemptNumber: -1 });
+
+  const totalAttempts = await ExamAttempt.countDocuments({ examId, studentId });
+
+  let finalScore = null;
+
+  if (validAttempts.length > 0) {
+    if (exam.scorePolicy === "HIGHEST") {
+      finalScore = Math.max(...validAttempts.map((a) => a.score));
+    } else if (exam.scorePolicy === "LATEST") {
+      finalScore = validAttempts[0].score;
+    }
+  }
+
+  return {
+    finalScore,
+    scorePolicy: exam.scorePolicy,
+    attemptsUsed: totalAttempts,
+    attemptsAllowed: exam.attemptsAllowed,
+  };
+};
+
+/**
+ * Chấm bài tự động (được gọi bởi auto-submit cron job hoặc lazy submit).
+ * Đọc answers từ attempt.questions[].answer (không nhận tham số answers[]).
+ */
+export const gradeSubmission = async (attemptId) => {
+  const attempt = await ExamAttempt.findById(attemptId);
+  if (!attempt) return null;
+  if (attempt.status !== "IN_PROGRESS") return attempt;
+
+  await _gradeAttempt(attempt);
+  return attempt;
+};

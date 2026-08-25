@@ -15,7 +15,7 @@ interface ChangePasswordModalProps {
 
 export const changePassword = async (values: ChangePasswordFormValues): Promise<boolean> => {
   // Prepared function structure for future API integration
-  // e.g. await axiosClient.post("/api/admin/change-password", values);
+  // e.g. await axiosClient.post("/admin/change-password", values);
   console.log("Submitting password change:", values);
   return true;
 };

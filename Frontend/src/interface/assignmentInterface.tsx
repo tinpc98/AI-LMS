@@ -1,57 +1,64 @@
-export interface IAttachment {
-  name: string;
-  url: string;
-  publicId: string;
-  format?: string | null;
-}
+import type { ContentBlock as IContentBlock } from "../features/question/question.types";
 
-export type SubmissionMode = "file" | "link" | "direct" | "any";
+export type AssignmentStatus = "DRAFT" | "PUBLISHED" | "ARCHIVED";
+export type AttemptStatus = "IN_PROGRESS" | "SUBMITTED" | "GRADED";
 
 export interface IAssignmentQuestion {
-  _id?: string;
+  questionId: string | any;
   order: number;
-  content: string;
-  required: boolean;
+  points: number;
 }
 
 export interface IAssignment {
   _id: string;
+  topicId: string | any;
   title: string;
   description?: string;
-  submissionMode?: SubmissionMode;
-  maxScore?: number;
-  hasGradedSubmissions?: boolean;
-  questions?: IAssignmentQuestion[];
-  attachments: IAttachment[];
-  deadline: string;
-  classId: string;
-  lessonId?: string;
-  teacherId: string;
+  instructions?: IContentBlock[];
+  questions: IAssignmentQuestion[];
+  status: AssignmentStatus;
+  createdBy: string | any;
   createdAt: string;
   updatedAt: string;
 }
 
-export interface ISubmissionAnswer {
-  questionId: string;
-  content: string;
+export interface IAttemptOptionSnapshot {
+  id: string;
+  content: IContentBlock[];
+  order: number;
 }
 
-export interface ISubmission {
-  _id: string;
-  assignmentId: string;
-  studentId: string | { _id: string; fullName?: string; email?: string; avatar?: string };
-  classId: string;
-  content?: string;
-  submissionType?: "file" | "link" | "direct" | null;
-  linkUrl?: string | null;
-  answers?: ISubmissionAnswer[];
-  attachments: IAttachment[];
-  status: "draft" | "submitted" | "late" | "graded" | "withdrawn" | "resubmitted";
-  grade: number | null;
+export interface IAttemptQuestionSnapshot {
+  type: "MCQ" | "ESSAY" | "SHORT_ANSWER" | string;
+  content: IContentBlock[];
+  options: IAttemptOptionSnapshot[];
+}
+
+export interface IAttemptAnswer {
+  selectedOptionIds?: string[];
+  content?: IContentBlock[];
   feedback?: string;
-  aiFeedback?: string;
-  gradedBy?: string | { _id: string; fullName?: string; email?: string };
-  gradedAt?: string | null;
-  createdAt: string;
-  updatedAt: string;
+}
+
+export interface IAttemptQuestion {
+  questionId: string;
+  questionSnapshot: IAttemptQuestionSnapshot;
+  order: number;
+  points: number;
+  answer?: IAttemptAnswer;
+  isCorrect?: boolean | null;
+  score?: number;
+}
+
+export interface IAssignmentAttempt {
+  _id: string;
+  assignmentId: string | IAssignment;
+  studentId: string | any;
+  attemptNumber: number;
+  status: AttemptStatus;
+  questions: IAttemptQuestion[];
+  score: number | null;
+  startedAt: string;
+  submittedAt: string | null;
+  performanceProcessedAt: string | null;
 }

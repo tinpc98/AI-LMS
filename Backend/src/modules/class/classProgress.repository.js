@@ -9,10 +9,11 @@ import mongoose from "mongoose";
 import { Lesson } from "#modules/lesson";
 import { LessonProgress } from "#modules/lesson";
 import { Assignment } from "#modules/assignment";
-import { Submission } from "#modules/assignment";
+import { AssignmentAttempt } from "#modules/assignment";
 
-// Bài đã rút lại (withdrawn) không được tính là đã nộp.
-const SUBMITTED_STATUSES = ["submitted", "late", "graded", "resubmitted"];
+// LEGACY DEPENDENCY DETECTED: Assignment models have been migrated to topicId.
+// The queries below relying on classId will return empty.
+const SUBMITTED_STATUSES = ["SUBMITTED", "GRADED"];
 
 const toObjectId = (value) =>
   value instanceof mongoose.Types.ObjectId ? value : new mongoose.Types.ObjectId(String(value));
@@ -54,18 +55,15 @@ export const collectProgressTotals = async (studentId, classIds = []) => {
         ])
       : [],
     assignmentIds.length
-      ? Submission.aggregate([
+      ? AssignmentAttempt.aggregate([
           {
             $match: {
               studentId: sid,
               assignmentId: { $in: assignmentIds },
-              isDeleted: false,
               status: { $in: SUBMITTED_STATUSES },
             },
           },
-          // Unique index {assignmentId, studentId} đảm bảo mỗi bài tập tối đa 1 submission
-          // cho mỗi học sinh, nên đếm thẳng là an toàn, không cần $addToSet.
-          { $group: { _id: "$classId", submittedAssignments: { $sum: 1 } } },
+          { $group: { _id: "$assignmentId", submittedAssignments: { $sum: 1 } } },
         ])
       : [],
   ]);
@@ -86,10 +84,20 @@ export const collectProgressTotals = async (studentId, classIds = []) => {
 
   for (const cid of cids) ensure(cid);
   for (const lesson of lessons) ensure(lesson.classId).totalLessons += 1;
-  for (const assignment of assignments) ensure(assignment.classId).totalAssignments += 1;
+  
+  const assignmentClassMap = {};
+  for (const a of assignments) {
+    ensure(a.classId).totalAssignments += 1;
+    assignmentClassMap[String(a._id)] = String(a.classId);
+  }
+
   for (const row of progressRows) ensure(row._id).lessonProgressSum = row.lessonProgressSum || 0;
-  for (const row of submissionRows)
-    ensure(row._id).submittedAssignments = row.submittedAssignments || 0;
+  for (const row of submissionRows) {
+    const classId = assignmentClassMap[String(row._id)];
+    if (classId) {
+      ensure(classId).submittedAssignments += row.submittedAssignments || 0;
+    }
+  }
 
   return totals;
 };

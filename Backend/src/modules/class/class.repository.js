@@ -7,6 +7,10 @@
 // nhau đúng một mắt xích `.withDeleted()`. Sửa cột populate ở một chỗ mà quên chỗ kia là
 // lỗi rất dễ xảy ra và rất khó thấy.
 import ClassModel from "./class.model.js";
+import ClassSession from "../classSession/classSession.model.js";
+import Attendance from "../attendance/attendance.model.js";
+import ClassEnrollment from "../classEnrollment/classEnrollment.model.js";
+import mongoose from "mongoose";
 
 // Chuỗi populate dùng chung cho mọi truy vấn trả về lớp học "đầy đủ".
 //
@@ -49,7 +53,48 @@ export const findClassById = (id) => ClassModel.findById(id);
 
 export const createClass = (data) => new ClassModel(data);
 
-export const softDeleteClass = (id, userId) => ClassModel.softDelete(id, userId);
+export const softDeleteClass = async (id, userId) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+  try {
+    const classDoc = await ClassModel.findById(id).withDeleted().session(session);
+    if (!classDoc) return null;
+
+    classDoc.isDeleted = true;
+    classDoc.deletedAt = new Date();
+    classDoc.deletedBy = userId || null;
+    await classDoc.save({ session });
+
+    // Cascade cancel active enrollments
+    await ClassEnrollment.updateMany(
+      { classId: id, status: "ACTIVE" },
+      { $set: { status: "CANCELLED", leftAt: new Date(), updatedBy: userId } },
+      { session }
+    );
+
+    // Cascade soft delete sessions
+    await ClassSession.updateMany(
+      { classId: id, isDeleted: false },
+      { $set: { isDeleted: true, deletedAt: new Date(), deletedBy: userId } },
+      { session }
+    );
+
+    // Cascade soft delete attendances
+    await Attendance.updateMany(
+      { classId: id, isDeleted: false },
+      { $set: { isDeleted: true, deletedAt: new Date(), deletedBy: userId } },
+      { session }
+    );
+
+    await session.commitTransaction();
+    return classDoc;
+  } catch (error) {
+    await session.abortTransaction();
+    throw error;
+  } finally {
+    session.endSession();
+  }
+};
 
 export const restoreClass = (id) => ClassModel.restore(id);
 

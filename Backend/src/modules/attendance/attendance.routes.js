@@ -1,6 +1,7 @@
 import { Router } from "express";
 import {
   markAttendance,
+  confirmAttendance,
   updateAttendance,
   getAttendanceByClass,
   getAttendanceByStudent,
@@ -13,8 +14,12 @@ import { isTeacher } from "#shared/middlewares/rbac.middleware.js";
 
 const router = Router();
 
-// Giáo viên / Admin thực hiện điểm danh
-router.post("/", verifyUser, isTeacher, markAttendance);
+// Giáo viên / Admin thực hiện điểm danh hàng loạt
+router.post("/sessions/:sessionId/mark", verifyUser, isTeacher, markAttendance);
+
+// Xác nhận điểm danh (khóa sổ)
+router.post("/sessions/:sessionId/confirm", verifyUser, isTeacher, confirmAttendance);
+
 router.put("/:id", verifyUser, isTeacher, updateAttendance);
 
 // Xem danh sách các buổi học ảo (Virtual Sessions)

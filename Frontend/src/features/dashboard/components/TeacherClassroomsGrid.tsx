@@ -115,8 +115,7 @@ export const TeacherClassroomsGrid: React.FC<TeacherClassroomsGridProps> = React
           <>
             <Row gutter={[tokens.space[4], tokens.space[4]]}>
               {paginatedClasses.map((cls) => {
-                const studentCount =
-                  cls.currentStudents ?? (Array.isArray(cls.students) ? cls.students.length : 0);
+                const studentCount = cls.currentStudents ?? 0;
                 const max = cls.maxStudents || 30;
                 const courseName = typeof cls.courseId === "object" ? cls.courseId?.courseName : "";
 

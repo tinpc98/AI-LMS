@@ -1,6 +1,6 @@
 import express from "express";
 import {
-  createLiveSession,
+  startLiveSession,
   getActiveLiveSession,
   getLiveSessionDetail,
   getLiveSessionHistory,
@@ -20,14 +20,14 @@ import {
 const router = express.Router();
 
 // --- 2. Tuyến Đường REST API V2 Chuẩn Mục Tiêu (Sprint J3 & J4) ---
-// Tạo buổi học mới (Teacher Owner)
+// Bắt đầu buổi học đã lên lịch (Teacher Owner)
 router.post(
-  "/sessions",
+  "/sessions/:sessionId/start",
   verifyUser,
   isTeacher,
-  resolveClassIdFromBody,
+  resolveLiveSession,
   checkClassTeacherOwnership,
-  createLiveSession
+  startLiveSession
 );
 
 // Lấy active session của lớp (Teacher Owner & Enrolled Student)

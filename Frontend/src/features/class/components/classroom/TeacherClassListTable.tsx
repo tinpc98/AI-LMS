@@ -88,8 +88,7 @@ export const TeacherClassListTable: React.FC<TeacherClassListTableProps> = React
         title: "Sĩ số",
         key: "students",
         render: (_, record) => {
-          const count =
-            record.currentStudents ?? (Array.isArray(record.students) ? record.students.length : 0);
+          const count = record.currentStudents ?? 0;
           const max = record.maxStudents || 30;
           return (
             <Space>

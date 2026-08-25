@@ -4,10 +4,13 @@ import { Link, useLocation } from "react-router-dom";
 import {
   DashboardOutlined,
   BookOutlined,
-  BellOutlined,
+  HighlightOutlined,
+  CreditCardOutlined,
   UserOutlined,
   LogoutOutlined,
+  NotificationOutlined,
   MessageOutlined,
+  HomeOutlined,
 } from "@ant-design/icons";
 import { useAuth } from "../../../hooks/useAuth";
 import { useMessagesStore } from "../../../../features/chat/store/useMessagesStore";
@@ -43,27 +46,45 @@ export const StudentSidebar: React.FC<StudentSidebarProps> = React.memo(
       () => [
         {
           key: "/student",
-          icon: <DashboardOutlined />,
-          label: <Link to="/student">Dashboard</Link>,
+          icon: <HomeOutlined />,
+          label: <Link to="/student">Trang chủ</Link>,
         },
         {
           key: "/student/myclasses",
           icon: <BookOutlined />,
-          label: <Link to="/student/myclasses">Lớp học của tôi</Link>,
+          label: <Link to="/student/myclasses">Lớp học</Link>,
+        },
+        {
+          key: "/student/exams",
+          icon: <HighlightOutlined />,
+          label: <Link to="/student/exams">Kiểm tra & Thi thử</Link>,
+        },
+        {
+          key: "/student/enrollments",
+          icon: <BookOutlined />,
+          label: <Link to="/student/enrollments">Ghi danh</Link>,
         },
         {
           key: "/student/notifications",
-          icon: <BellOutlined />,
+          icon: <NotificationOutlined />,
           label: <Link to="/student/notifications">Thông báo</Link>,
         },
         {
           key: "/student/messages",
-          icon: (
-            <Badge count={totalUnread} size="small" offset={[2, 0]}>
-              <MessageOutlined />
-            </Badge>
+          icon: <MessageOutlined />,
+          label: (
+            <Link to="/student/messages">
+              Thảo luận
+              {totalUnread > 0 && (
+                <Badge count={totalUnread} offset={[10, 0]} size="small" />
+              )}
+            </Link>
           ),
-          label: <Link to="/student/messages">Tin nhắn</Link>,
+        },
+        {
+          key: "/student/tuition",
+          icon: <CreditCardOutlined />,
+          label: <Link to="/student/tuition">Học phí</Link>,
         },
       ],
       [totalUnread]

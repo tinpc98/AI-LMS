@@ -1,504 +1,132 @@
-import mongoose from "mongoose";
-import examService from "./exam.service.js";
-import { aiExamGenerationService } from "#modules/ai";
-import Exam from "./exam.model.js";
-import { resolveDisplayStatus } from "./examLifecycle.service.js";
-import { Class as classModel } from "#modules/class";
 import { asyncHandler } from "#shared/utils/asyncHandler.js";
+import Exam from "./exam.model.js";
+import * as examService from "./exam.service.js";
+import { checkClassTeacherOwnership } from "#modules/class";
+import { ClassEnrollment } from "#modules/classEnrollment";
 
-// S4-FIX-01 (mở rộng): che đáp án đúng trong snapshotData khi trả về cho học sinh.
-// snapshotData lưu trực tiếp toàn bộ nội dung câu hỏi (bao gồm đáp án) ngay trong
-// document Exam đối với đề AI-generated/từ ExamSet — không populate cũng lộ đáp án
-// nếu không redact ở đây.
-const redactExamAnswersForStudent = (exam) => {
-  if (!exam.questions || exam.questions.length === 0) return exam;
-  return {
-    ...exam,
-    questions: exam.questions.map((q) => {
-      if (!q.isSnapshot || !q.snapshotData) return q;
-      const safeData = { ...q.snapshotData };
-      delete safeData.correctAnswer;
-      delete safeData.acceptedAnswers;
-      delete safeData.suggestedAnswer;
-      delete safeData.rubric;
-      delete safeData.explanation;
-      delete safeData.feedbackCorrect;
-      delete safeData.feedbackIncorrect;
-      if (Array.isArray(safeData.options)) {
-        safeData.options = safeData.options.map((opt) => {
-          if (typeof opt === "string") return opt;
-          const safeOpt = { ...opt };
-          delete safeOpt.isCorrect;
-          return safeOpt;
-        });
-      }
-      return { ...q, snapshotData: safeData };
-    }),
-  };
+/**
+ * Kiểm tra quyền giáo viên sở hữu exam (qua classId).
+ */
+const checkExamOwnership = async (exam, userId, role) => {
+  if (!exam) return false;
+  if ((role || "").toLowerCase() === "admin") return true;
+  return checkClassTeacherOwnership(exam.classId, userId, role);
 };
 
-// 1. Tạo đề thi tự động bằng AI / Ma trận câu hỏi
-export const autoGenerateExam = asyncHandler(async (req, res) => {
-  const {
-    title,
-    duration,
-    topic,
-    mcqCount,
-    mcqPoints,
-    essayCount,
-    essayPoints,
-    startTime,
-    classId,
-    aiPromptUsed,
-  } = req.body;
-
-  if (!topic || (!mcqCount && !essayCount)) {
-    return res.status(400).json({ message: "Thiếu thông số sinh đề thi!" });
-  }
-
-  if (!classId || !mongoose.Types.ObjectId.isValid(classId)) {
-    return res.status(400).json({ message: "ID lớp học không hợp lệ!" });
-  }
-
-  const newExam = await examService.generateExamWithMatrix({
-    title,
-    duration,
-    topic,
-    mcqCount,
-    mcqPoints,
-    essayCount,
-    essayPoints,
-    startTime,
-    classId,
-  });
-
-  if (newExam) {
-    newExam.createdBy = req.user.id || req.user._id;
-    newExam.isAIGenerated = true;
-    newExam.aiPromptUsed = aiPromptUsed || `Sinh đề thi tự động chủ đề ${topic}`;
-    await newExam.save();
-  }
-
-  return res.status(201).json({
-    message: "Tạo đề thi tự động thành công!",
-    data: newExam,
-  });
-});
-
-// 2. Tạo đề thi thủ công
+/**
+ * POST /api/exams
+ * Teacher tạo Exam mới gắn với classId.
+ */
 export const createExam = asyncHandler(async (req, res) => {
-  const { title, duration, questions, startTime, classId, maxScore, status } = req.body;
+  const { classId, title, duration, attemptsAllowed } = req.body;
+  const userId = req.user.id || req.user._id;
 
-  if (!title || !duration || !startTime || !classId || !Array.isArray(questions)) {
-    return res.status(400).json({ message: "Thiếu thông tin bắt buộc để tạo đề thi" });
+  if (!classId || !title || !duration || !attemptsAllowed) {
+    return res.status(400).json({ success: false, message: "Thiếu dữ liệu bắt buộc: classId, title, duration, attemptsAllowed" });
   }
 
-  if (!mongoose.Types.ObjectId.isValid(classId)) {
-    return res.status(400).json({ message: "ID lớp học không hợp lệ!" });
-  }
+  // Chỉ teacher sở hữu class mới được tạo exam
+  const isAuthorized = await checkClassTeacherOwnership(classId, userId, req.user?.role);
+  if (!isAuthorized) return res.status(403).json({ success: false, message: "Không có quyền tạo bài thi cho lớp này" });
 
-  // Chuẩn hóa phân bổ điểm câu hỏi đảm bảo tổng = 10
-  let formattedQuestions = questions.map((q) => {
-    if (typeof q === "string" || q instanceof mongoose.Types.ObjectId) {
-      return { questionId: q, points: 0 };
-    }
-    return {
-      questionId: q.questionId || q._id,
-      points: Number(q.points) || 0,
-    };
-  });
-
-  const totalPoints = formattedQuestions.reduce((sum, q) => sum + (q.points || 0), 0);
-
-  // Nếu tổng điểm khác 10 hoặc chưa được gán điểm, tự động phân bổ đều điểm 10 cho các câu
-  if (parseFloat(totalPoints.toFixed(2)) !== 10 && formattedQuestions.length > 0) {
-    const count = formattedQuestions.length;
-    const basePoint = Math.floor((10 / count) * 100) / 100;
-    const remainder = 10 - basePoint * (count - 1);
-
-    formattedQuestions = formattedQuestions.map((q, idx) => ({
-      ...q,
-      points: idx === count - 1 ? Number(remainder.toFixed(2)) : basePoint,
-    }));
-  }
-
-  const newExam = new Exam({
-    title,
-    duration: Number(duration),
-    questions: formattedQuestions,
-    startTime: new Date(startTime),
-    classId,
-    createdBy: req.user.id || req.user._id,
-    maxScore: maxScore || 10,
-    status: status || "PUBLISHED",
-    isAIGenerated: false,
-  });
-
-  await newExam.save();
-  return res.status(201).json({ message: "Tạo đề thi thành công!", data: newExam });
+  const exam = await examService.createExamService(req.body, userId);
+  return res.status(201).json({ success: true, message: "Tạo bài thi thành công", data: exam });
 });
 
-// 3. Cập nhật đề thi
-export const updateExam = asyncHandler(async (req, res) => {
-  const { id } = req.params;
-  if (!id || !mongoose.Types.ObjectId.isValid(id)) {
-    return res.status(400).json({ message: "ID đề thi không hợp lệ!" });
-  }
-
-  const exam = await Exam.findById(id);
-  if (!exam) {
-    return res.status(404).json({ message: "Đề thi không tồn tại!" });
-  }
-
-  const userId = (req.user.id || req.user._id).toString();
-  const userRole = (req.user.role || "").toLowerCase();
-
-  if (userRole !== "admin" && exam.createdBy?.toString() !== userId) {
-    return res.status(403).json({ message: "Bạn không có quyền chỉnh sửa đề thi này!" });
-  }
-
-  examService.updateExamFields(exam, req.body);
-
-  await exam.save();
-
-  return res.status(200).json({ message: "Cập nhật đề thi thành công!", data: exam });
-});
-
-// 4. Xóa đề thi
-export const deleteExam = asyncHandler(async (req, res) => {
-  const { id } = req.params;
-  if (!id || !mongoose.Types.ObjectId.isValid(id)) {
-    return res.status(400).json({ message: "ID đề thi không hợp lệ!" });
-  }
-
-  const exam = await Exam.findById(id);
-  if (!exam) {
-    return res.status(404).json({ message: "Đề thi không tồn tại!" });
-  }
-
-  const userId = (req.user._id || req.user.id || "").toString();
-  const userRole = (req.user.role || "").toLowerCase();
-
-  // Lấy thông tin lớp học để kiểm tra xem Giáo viên hiện tại có phải giảng viên phụ trách lớp không
-  const targetClass = await classModel.findById(exam.classId);
-  const classTeacherId = (targetClass?.teacherId?._id || targetClass?.teacherId || "").toString();
-
-  const isCreator = exam.createdBy && exam.createdBy.toString() === userId;
-  const isClassTeacher = classTeacherId && classTeacherId === userId;
-
-  if (userRole !== "admin" && !isCreator && !isClassTeacher) {
-    return res.status(403).json({ message: "Bạn không có quyền xóa đề thi này!" });
-  }
-
-  await Exam.softDelete(id, userId);
-  return res.status(200).json({ message: "Xóa đề thi thành công!" });
-});
-
-// 5. Lấy danh sách đề thi theo Lớp
+/**
+ * GET /api/exams/class/:classId
+ * Lấy danh sách exam theo lớp.
+ * Teacher: chỉ lấy exam của class mình.
+ * Student: chỉ lấy exam của class mình đang enrolled (PUBLISHED).
+ */
 export const getExamsByClass = asyncHandler(async (req, res) => {
   const { classId } = req.params;
-  if (!classId || !mongoose.Types.ObjectId.isValid(classId)) {
-    return res.status(200).json({ success: true, data: [] });
+  const userId = req.user.id || req.user._id;
+  const role = (req.user?.role || "").toLowerCase();
+
+  let filter = { classId, isDeleted: { $ne: true } };
+
+  if (role === "teacher") {
+    const isOwner = await checkClassTeacherOwnership(classId, userId, role);
+    if (!isOwner) return res.status(403).json({ success: false, message: "Không có quyền truy cập lớp này" });
+    // Teacher xem tất cả status
+  } else if (role === "student") {
+    // Kiểm tra enrollment
+    const enrollment = await ClassEnrollment.findOne({ studentId: userId, classId, status: "ACTIVE" });
+    if (!enrollment) return res.status(403).json({ success: false, message: "Bạn không đăng ký vào lớp này" });
+    // Student chỉ thấy PUBLISHED
+    filter.status = "PUBLISHED";
   }
+  // admin: không filter thêm
 
-  const userId = (req.user._id || req.user.id || "").toString();
-  const userRole = (req.user.role || "").toLowerCase();
-  const targetClass = await classModel.findById(classId).lean();
-  if (!targetClass) {
-    return res.status(200).json({ success: true, data: [] });
-  }
+  const exams = await Exam.find(filter)
+    .select("-questions -instructions")
+    .sort({ createdAt: -1 })
+    .lean();
 
-  // RBAC: học sinh chỉ xem lớp mình học, giáo viên chỉ xem lớp mình phụ trách (admin xem tất cả)
-  if (userRole === "student") {
-    const isStudentInClass = targetClass.students?.some((s) => s.studentId?.toString() === userId);
-    if (!isStudentInClass) {
-      return res.status(200).json({ success: true, data: [] });
-    }
-  } else if (userRole === "teacher") {
-    const classTeacherId = (targetClass.teacherId?._id || targetClass.teacherId || "").toString();
-    if (classTeacherId !== userId) {
-      return res.status(200).json({ success: true, data: [] });
-    }
-  }
-
-  let query = Exam.find({ classId });
-  if (userRole === "student") {
-    query = query.where("status").in(["PUBLISHED", "COMPLETED"]);
-  }
-  const exams = await query.sort({ createdAt: -1 }).lean();
-
-  let data = userRole === "student" ? exams.map(redactExamAnswersForStudent) : exams;
-
-  // A3: Đính kèm attempt mới nhất của học sinh vào mỗi đề thi
-  if (userRole === "student" && exams.length > 0) {
-    const ExamAttempt = mongoose.model("ExamAttempt");
-    const examIds = exams.map((e) => e._id);
-    const attempts = await ExamAttempt.find({
-      studentId: userId,
-      examId: { $in: examIds },
-      isDeleted: false,
-    }).lean();
-
-    data = data.map((exam) => {
-      const examAttempts = attempts.filter((a) => a.examId.toString() === exam._id.toString());
-      if (examAttempts.length > 0) {
-        examAttempts.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
-        exam.attempt = examAttempts[0];
-      } else {
-        exam.attempt = null;
-      }
-      return exam;
-    });
-  }
-
-  return res.status(200).json({
-    success: true,
-    data,
-  });
+  return res.status(200).json({ success: true, data: exams });
 });
 
-// 6. Lấy tất cả đề thi (đã lọc theo phạm vi truy cập của user)
-export const getAllExams = asyncHandler(async (req, res) => {
-  const userId = (req.user._id || req.user.id || "").toString();
-  const userRole = (req.user.role || "").toLowerCase();
-
-  let examFilter = {};
-  if (userRole === "teacher") {
-    const teachingClasses = await classModel.find({ teacherId: userId }).select("_id").lean();
-    const classIds = teachingClasses.map((c) => c._id);
-    examFilter = { $or: [{ classId: { $in: classIds } }, { createdBy: userId }] };
-  } else if (userRole !== "admin") {
-    // student (hoặc role khác): chỉ xem đề đã công bố của các lớp mình học
-    const enrolledClasses = await classModel
-      .find({ "students.studentId": userId })
-      .select("_id")
-      .lean();
-    const classIds = enrolledClasses.map((c) => c._id);
-    examFilter = { classId: { $in: classIds }, status: { $in: ["PUBLISHED", "COMPLETED"] } };
-  }
-  // admin: examFilter = {} → xem tất cả
-
-  const exams = await Exam.find(examFilter).sort({ createdAt: -1 });
-
-  // Trạng thái hiển thị của kỳ thi đã quá giờ.
-  //
-  // ĐÃ HẾT NỢ §6.7 — ENDPOINT NÀY KHÔNG CÒN GHI DỮ LIỆU.
-  //
-  // Lịch sử: bản đầu gọi exam.save() cho từng kỳ hết hạn (N+1 ghi ngay trong request GET),
-  // Wave 4.6 gom lại thành một updateMany, nhưng vẫn là một thao tác ĐỌC đang GHI. Hệ quả
-  // thật: hai người cùng mở danh sách là hai lượt ghi chồng nhau, và nếu KHÔNG AI mở danh
-  // sách thì kỳ thi không bao giờ được đóng — trạng thái dữ liệu phụ thuộc vào việc có ai
-  // vào xem hay không.
-  //
-  // Nay việc ghi thuộc về cron job examLifecycle (chạy mỗi 10 phút). Ở đây chỉ TÍNH trạng
-  // thái để hiển thị, dùng CHUNG hàm resolveDisplayStatus với job — nên người dùng vẫn thấy
-  // "COMPLETED" ngay lập tức, không phải chờ tới lượt cron.
-  const now = Date.now();
-  for (const exam of exams) {
-    exam.status = resolveDisplayStatus(exam, now);
-  }
-
-  const updatedExams = exams;
-
-  const data =
-    userRole === "admin" || userRole === "teacher"
-      ? updatedExams
-      : updatedExams.map((exam) => redactExamAnswersForStudent(exam.toObject()));
-
-  return res.status(200).json({
-    success: true,
-    data,
-  });
-});
-
-// 7. Lấy chi tiết đề thi theo ID
+/**
+ * GET /api/exams/:id
+ */
 export const getExamById = asyncHandler(async (req, res) => {
-  const examId = req.params.id;
-  if (!examId || !mongoose.Types.ObjectId.isValid(examId)) {
-    return res.status(404).json({ message: "Kỳ thi không tồn tại hoặc ID không hợp lệ!" });
-  }
+  const userId = req.user.id || req.user._id;
+  const role = (req.user.role || "").toLowerCase();
 
-  const exam = await Exam.findById(examId).lean();
+  const exam = await Exam.findById(req.params.id);
+  if (!exam) return res.status(404).json({ success: false, message: "Exam not found" });
 
-  if (!exam) {
-    return res.status(404).json({ message: "Không tìm thấy kỳ thi!" });
-  }
-
-  const userId = (req.user._id || req.user.id || "").toString();
-  const userRole = (req.user.role || "").toLowerCase();
-  const targetClass = await classModel.findById(exam.classId).lean();
-
-  // S4-FIX-01: RBAC & IDOR check
-  if (userRole === "student") {
-    if (!targetClass) return res.status(404).json({ message: "Không tìm thấy kỳ thi!" });
-    const isStudentInClass = targetClass.students?.some((s) => s.studentId?.toString() === userId);
-    if (!isStudentInClass) return res.status(404).json({ message: "Không tìm thấy kỳ thi!" });
-    if (exam.status !== "PUBLISHED" && exam.status !== "COMPLETED")
-      return res.status(404).json({ message: "Không tìm thấy kỳ thi!" });
-  } else if (userRole === "teacher") {
-    const classTeacherId = (targetClass?.teacherId?._id || targetClass?.teacherId || "").toString();
-    const isCreator = (exam.createdBy?._id || exam.createdBy || "").toString() === userId;
-    if (classTeacherId !== userId && !isCreator) {
-      return res.status(403).json({ message: "Bạn không có quyền truy cập đề thi này!" });
+  if (role === "student") {
+    if (exam.status !== "PUBLISHED") {
+      return res.status(403).json({ success: false, message: "Bài thi chưa được xuất bản" });
     }
-  }
-
-  // Polyfill for AI Exam Generation snapshot data and Legacy Questions
-  if (exam.questions && exam.questions.length > 0) {
-    const { resolveExamQuestions } = await import("../exam-attempt/examQuestionResolver.js");
-    const questionMap = await resolveExamQuestions(exam);
-
-    exam.questions = exam.questions.map((q) => {
-      const qIdStr = (q.questionId?._id || q.questionId || "").toString();
-      let questionData = questionMap.get(qIdStr);
-
-      if (!questionData) {
-        console.error("[getExamById] Không tìm thấy câu hỏi (resolveQuestion thất bại)", { examId, questionId: qIdStr });
-        questionData = {
-          _id: qIdStr,
-          type: "UNKNOWN",
-          content: "[Lỗi: Dữ liệu câu hỏi bị mất hoặc không hợp lệ]",
-          options: []
-        };
-      }
-
-      // S4-FIX-01: Redact answers for student
-      if (userRole === "student") {
-        if (typeof questionData !== "object" || questionData === null) {
-            console.error("[getExamById] questionData không hợp lệ", { examId, questionId: qIdStr });
-        } else {
-            const safeData = { ...questionData };
-            delete safeData.correctAnswer;
-            delete safeData.acceptedAnswers;
-            delete safeData.suggestedAnswer;
-            delete safeData.rubric;
-            delete safeData.explanation;
-            delete safeData.feedbackCorrect;
-            delete safeData.feedbackIncorrect;
-            if (Array.isArray(safeData.options)) {
-              safeData.options = safeData.options.map((opt) => {
-                if (typeof opt === "string") return opt;
-                if (typeof opt !== "object" || opt === null) return opt;
-                const safeOpt = { ...opt };
-                delete safeOpt.isCorrect;
-                return safeOpt;
-              });
-            }
-            questionData = safeData;
-        }
-      } else if (typeof questionData !== "object" || questionData === null) {
-          console.error("[getExamById] questionData không hợp lệ", { examId, questionId: qIdStr });
-          questionData = { _id: qIdStr, type: "UNKNOWN", content: "[Lỗi tải câu hỏi]" };
-      }
-
-      return {
-        ...q,
-        questionId: questionData,
-      };
+    const isEnrolled = await ClassEnrollment.exists({
+      studentId: userId,
+      classId: exam.classId,
+      status: "ACTIVE",
     });
+    if (!isEnrolled) {
+      return res.status(403).json({ success: false, message: "Bạn không được phép truy cập bài thi này" });
+    }
+  } else if (role === "teacher") {
+    const isOwner = await checkExamOwnership(exam, userId, req.user?.role);
+    if (!isOwner) return res.status(403).json({ success: false, message: "Không có quyền truy cập bài thi này" });
   }
 
-  return res.status(200).json({ data: exam });
+  return res.status(200).json({ success: true, data: exam });
 });
 
-// 8. Tạo đề thi từ ExamSet (Sprint 4 AI Blueprint Engine)
-export const generateFromExamSet = asyncHandler(async (req, res) => {
-  const {
-    classId,
-    examSetId,
-    title,
-    durationMinutes,
-    totalQuestions,
-    totalPoints,
-    questionTypeDistribution,
-    difficultyDistribution,
-    shuffleQuestions,
-    shuffleOptions,
-  } = req.body;
+/**
+ * PUT /api/exams/:id
+ */
+export const updateExam = asyncHandler(async (req, res) => {
+  const examId = req.params.id;
+  const userId = req.user.id || req.user._id;
 
-  // Validate essential inputs
-  if (!classId || !mongoose.Types.ObjectId.isValid(classId)) {
-    return res.status(400).json({ message: "ID lớp học không hợp lệ!" });
-  }
-  if (!examSetId || !mongoose.Types.ObjectId.isValid(examSetId)) {
-    return res.status(400).json({ message: "ID bộ đề không hợp lệ!" });
-  }
-  if (!title || typeof title !== "string" || title.trim() === "") {
-    return res.status(400).json({ message: "Tiêu đề không hợp lệ!" });
-  }
-  if (title.length > 255) {
-    return res.status(400).json({ message: "Tiêu đề quá dài!" });
-  }
-  if (!Number.isInteger(durationMinutes) || durationMinutes <= 0) {
-    return res.status(400).json({ message: "Thời gian làm bài phải là số nguyên dương!" });
-  }
-  if (!Number.isInteger(totalQuestions) || totalQuestions <= 0) {
-    return res.status(400).json({ message: "Tổng số câu hỏi phải là số nguyên dương!" });
-  }
-  if (typeof totalPoints !== "number" || totalPoints !== 10) {
-    return res.status(400).json({ message: "Tổng điểm phải bằng đúng 10!" }); // S4-FIX-03
-  }
-  if (
-    !questionTypeDistribution ||
-    typeof questionTypeDistribution !== "object" ||
-    Array.isArray(questionTypeDistribution) ||
-    !difficultyDistribution ||
-    typeof difficultyDistribution !== "object" ||
-    Array.isArray(difficultyDistribution)
-  ) {
-    return res.status(400).json({ message: "Phân bố câu hỏi không hợp lệ!" });
-  }
+  const exam = await Exam.findById(examId);
+  if (!exam) return res.status(404).json({ success: false, message: "Exam not found" });
 
-  const validTypes = ["multiple_choice", "true_false", "short_answer", "essay"];
-  const validDiffs = ["easy", "medium", "hard"];
+  const isAuthorized = await checkExamOwnership(exam, userId, req.user?.role);
+  if (!isAuthorized) return res.status(403).json({ success: false, message: "Không có quyền" });
 
-  for (const [key, value] of Object.entries(questionTypeDistribution)) {
-    if (!validTypes.includes(key))
-      return res.status(400).json({ message: `Loại câu hỏi ${key} không hợp lệ!` });
-    if (!Number.isInteger(value) || value < 0)
-      return res.status(400).json({ message: "Giá trị phân bổ phải là số nguyên >= 0!" });
-  }
-  for (const [key, value] of Object.entries(difficultyDistribution)) {
-    if (!validDiffs.includes(key))
-      return res.status(400).json({ message: `Độ khó ${key} không hợp lệ!` });
-    if (!Number.isInteger(value) || value < 0)
-      return res.status(400).json({ message: "Giá trị phân bổ phải là số nguyên >= 0!" });
-  }
+  const updatedExam = await examService.updateExamService(examId, req.body);
+  return res.status(200).json({ success: true, message: "Cập nhật thành công", data: updatedExam });
+});
 
-  const targetClass = await classModel.findOne({ _id: classId, isDeleted: false });
-  if (!targetClass) {
-    return res.status(404).json({ message: "Lớp học không tồn tại!" });
-  }
+/**
+ * DELETE /api/exams/:id
+ */
+export const deleteExam = asyncHandler(async (req, res) => {
+  const examId = req.params.id;
+  const userId = req.user.id || req.user._id;
 
-  // Check if Teacher has access to the class
-  const userId = (req.user._id || req.user.id || "").toString();
-  const userRole = (req.user.role || "").toLowerCase();
+  const exam = await Exam.findById(examId);
+  if (!exam) return res.status(404).json({ success: false, message: "Exam not found" });
 
-  if (userRole !== "admin") {
-    const classTeacherId = (targetClass.teacherId?._id || targetClass.teacherId || "").toString();
-    if (classTeacherId !== userId) {
-      return res.status(403).json({ message: "Bạn không có quyền tạo đề thi cho lớp học này!" });
-    }
-  }
+  const isAuthorized = await checkExamOwnership(exam, userId, req.user?.role);
+  if (!isAuthorized) return res.status(403).json({ success: false, message: "Không có quyền" });
 
-  const newExam = await aiExamGenerationService.generateExamFromSet({
-    userId,
-    classId,
-    examSetId,
-    blueprint: {
-      title: title.trim(),
-      durationMinutes,
-      totalQuestions,
-      totalPoints,
-      questionTypeDistribution,
-      difficultyDistribution,
-      shuffleQuestions: !!shuffleQuestions,
-      shuffleOptions: !!shuffleOptions,
-    },
-  });
-
-  return res.status(201).json({
-    message: "Tạo đề thi nháp từ bộ đề thành công!",
-    data: newExam,
-  });
+  await Exam.softDelete(examId, userId);
+  return res.status(200).json({ success: true, message: "Đã xóa bài thi" });
 });

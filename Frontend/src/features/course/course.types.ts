@@ -1,17 +1,25 @@
-export type CourseSubject = "Mathematics" | "Physics" | "Chemistry" | "English" | "Literature";
-export type CourseStatus = "Draft" | "Published" | "Closed";
+import type { Subject } from "../subject/subject.types";
+
+export type CourseStatus = "DRAFT" | "PUBLISHED" | "ARCHIVED";
+export type CourseLevel = "FOUNDATION" | "INTERMEDIATE" | "ADVANCED";
 
 export interface CourseRecord {
   id: string;
-  courseName: string;
-  subject: CourseSubject;
+  name: string;
+  code: string;
+  subjectId: Subject | string;
   grade: number;
+  level: CourseLevel;
   description: string;
   thumbnail: string;
-  tuitionFee: number;
-  durationWeeks: number;
-  totalLessons: number;
-  target: string;
+  pricing?: {
+    tuitionFee?: number;
+    [key: string]: any;
+  };
+  duration: {
+    value: number;
+    unit: string;
+  };
   status: CourseStatus;
   createdAt: string;
   updatedAt: string;
@@ -38,7 +46,7 @@ export interface ApiResponse<T> {
 
 export interface CourseFilters {
   search: string;
-  subject: CourseSubject | "All";
+  subjectId: string | "All";
   status: CourseStatus | "All";
   page?: number;
   limit?: number;
@@ -47,14 +55,19 @@ export interface CourseFilters {
 }
 
 export interface CourseFormValues {
-  courseName: string;
-  subject: CourseSubject;
+  name: string;
+  code: string;
+  subjectId: string;
   grade: number;
+  level: CourseLevel;
   description: string;
   thumbnail: string;
-  tuitionFee: number;
-  durationWeeks: number;
-  totalLessons: number;
-  target: string;
+  pricing?: {
+    tuitionFee?: number;
+  };
+  duration: {
+    value: number;
+    unit: string;
+  };
   status: CourseStatus;
 }

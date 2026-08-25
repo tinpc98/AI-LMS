@@ -1,5 +1,8 @@
-import React from "react";
-import { Row, Col, Alert, Divider } from "antd";
+import React, { useMemo } from "react";
+import { Row, Col, Alert, Card, Typography, List, Tag, Button, Space } from "antd";
+import { ClockCircleOutlined, CalendarOutlined, ExclamationCircleOutlined, PlayCircleFilled } from "@ant-design/icons";
+import { Link, useNavigate } from "react-router-dom";
+import dayjs from "dayjs";
 import PageContainer from "../../shared/components/PageContainer";
 import {
   LearningDashboardProvider,
@@ -7,37 +10,66 @@ import {
 } from "./context/LearningDashboardContext";
 import DashboardErrorBoundary from "./components/DashboardErrorBoundary";
 import DashboardLoadingSkeleton from "./components/DashboardLoadingSkeleton";
-import DashboardHeader from "./components/DashboardHeader";
-import LearningScoreCard from "./components/LearningScoreCard";
-import LearningStatsWidget from "./components/LearningStatsWidget";
-import TodayClassesWidget from "./components/TodayClassesWidget";
-import AssignmentOverviewWidget from "./components/AssignmentOverviewWidget";
-import UpcomingExamsWidget from "./components/UpcomingExamsWidget";
-import AnnouncementsTimelineWidget from "./components/AnnouncementsTimelineWidget";
-import ClassProgressWidget from "./components/ClassProgressWidget";
-import LearningInsightsWidget from "./components/LearningInsightsWidget";
 import StudentWelcomeBanner from "./components/dashboard/StudentWelcomeBanner";
-import StudentQuickActions from "./components/dashboard/StudentQuickActions";
-import SectionHeader from "../../shared/components/SectionHeader";
 import { tokens } from "../../shared/theme/tokens";
+import { ClassCard } from "../class/components/classes/ClassCard";
+import { sortClassesByUpcomingSession } from "./utils/learningDashboard.utils";
+import { mapToStudentClass } from "../../api/studentClassApi";
 
+const { Title, Text } = Typography;
 
 // ─── Dashboard Content ─────────────────────────────────────────────────────────
 const DashboardContent: React.FC = React.memo(() => {
+  const navigate = useNavigate();
   const {
     overview,
-    statistics,
-    learningScore,
     assignments,
     exams,
-    todayClasses,
-    announcements,
-    classProgress,
-    learningInsight,
+    rawClasses,
     loading,
     error,
     refresh,
   } = useLearningDashboardContext();
+
+  // Gom nhóm Deadline (Assignments + Exams)
+  const upcomingDeadlines = useMemo(() => {
+    const items: Array<{ id: string; title: string; type: 'assignment' | 'exam'; deadline: Date; link: string; classId?: string }> = [];
+    
+    assignments.forEach(a => {
+      const deadline = (a as any).deadline || a.dueDate;
+      if (deadline) {
+        items.push({
+          id: String((a as any)._id || a.id),
+          title: a.title,
+          type: 'assignment',
+          deadline: new Date(deadline),
+          link: `/student/studentassignment/${(a as any)._id || a.id}`,
+          classId: String((a as any).classId?._id || (a as any).classId)
+        });
+      }
+    });
+
+    exams.forEach(e => {
+      if (e.startTime) {
+        items.push({
+          id: String((e as any)._id || e.id),
+          title: e.title,
+          type: 'exam',
+          deadline: new Date(e.startTime),
+          link: `/student/exams`, // Route tổng hợp thi
+          classId: String((e as any).classId)
+        });
+      }
+    });
+
+    // Sắp xếp tăng dần theo thời gian
+    return items.sort((a, b) => a.deadline.getTime() - b.deadline.getTime()).slice(0, 5); // Lấy 5 cái gần nhất
+  }, [assignments, exams]);
+
+  const sortedClasses = useMemo(() => {
+    const mappedClasses = (rawClasses || []).map((cls: any) => mapToStudentClass(cls));
+    return sortClassesByUpcomingSession(mappedClasses);
+  }, [rawClasses]);
 
   if (loading) {
     return <DashboardLoadingSkeleton />;
@@ -49,17 +81,14 @@ const DashboardContent: React.FC = React.memo(() => {
       {error && (
         <Alert
           type="error"
-          message="Lỗi tải dữ liệu"
+          title="Lỗi tải dữ liệu"
           description={error}
           showIcon
           style={{ marginBottom: tokens.space[5], borderRadius: tokens.radius.md }}
         />
       )}
 
-      {/* ═══════════════════════════════════════════════════════
-          SECTION 1 — TODAY OVERVIEW
-          Greeting + Refresh Button + 4 KPI Cards
-      ═══════════════════════════════════════════════════════ */}
+      {/* Welcome Banner */}
       <StudentWelcomeBanner
         totalClassesCount={overview.totalClasses}
         pendingAssignmentsCount={overview.pendingAssignmentsCount}
@@ -69,115 +98,129 @@ const DashboardContent: React.FC = React.memo(() => {
         loading={loading}
       />
 
-      {/* AI Badge (compact) */}
-      <DashboardHeader
-        overview={overview}
-        learningScore={learningScore}
-        onRefresh={refresh}
-        loading={loading}
-      />
+      <div style={{ marginTop: tokens.space[5] }}>
+        <Row gutter={[24, 24]}>
+          {/* ═══════════════════════════════════════════════════════
+              WIDGET 1 — Danh sách lớp học (Grid)
+          ═══════════════════════════════════════════════════════ */}
+          <Col span={24}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+              <Title level={4} style={{ margin: 0, display: 'flex', alignItems: 'center' }}>
+                <CalendarOutlined style={{ color: tokens.color.action.primaryBg, marginRight: 8 }} />
+                Danh sách lớp học
+              </Title>
+              <Button type="link" onClick={() => navigate('/student/myclasses')}>
+                Xem tất cả
+              </Button>
+            </div>
+            
+            {sortedClasses.length === 0 ? (
+              <Card style={{ borderRadius: 16, boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
+                <div style={{ textAlign: "center", padding: "32px 0", color: tokens.color.text.description }}>
+                  <CalendarOutlined style={{ fontSize: 32, marginBottom: 8, opacity: 0.5 }} />
+                  <p>Bạn chưa tham gia lớp học nào.</p>
+                </div>
+              </Card>
+            ) : (
+              <Row gutter={[24, 24]}>
+                {sortedClasses.slice(0, 6).map((cls) => (
+                  <Col xs={24} sm={12} lg={8} key={cls._id || cls.id}>
+                    <ClassCard item={cls} />
+                  </Col>
+                ))}
+              </Row>
+            )}
+          </Col>
 
-      {/* ═══════════════════════════════════════════════════════
-          SECTION 2 — HÔM NAY CẦN LÀM (Most prominent)
-          Lịch học | Bài tập sắp hết hạn | Lịch thi
-      ═══════════════════════════════════════════════════════ */}
-      <div style={{ marginTop: tokens.space[5], marginBottom: tokens.space[6] }}>
-        <SectionHeader
-          emoji="📌"
-          title="Hôm nay cần làm"
-          subtitle="Tập trung vào những việc quan trọng nhất hôm nay"
-        />
-        <Row gutter={[tokens.space[4], tokens.space[4]]}>
-          <Col
-            xs={{ span: 24, order: 2 }}
-            md={{ span: 12, order: 1 }}
-            lg={{ span: 12, order: 1 }}
-            xl={{ span: 9, order: 1 }}
-          >
-            <TodayClassesWidget todayClasses={todayClasses} />
+          {/* ═══════════════════════════════════════════════════════
+              WIDGET 2 — Deadline sắp tới
+          ═══════════════════════════════════════════════════════ */}
+          <Col xs={24} lg={12}>
+            <Card 
+              title={<><ExclamationCircleOutlined style={{ color: tokens.color.semantic.warning.base, marginRight: 8 }}/> Deadline sắp tới</>}
+              style={{ borderRadius: 16, boxShadow: '0 2px 8px rgba(0,0,0,0.08)', height: '100%' }}
+            >
+              {upcomingDeadlines.length === 0 ? (
+                <div style={{ textAlign: "center", padding: "32px 0", color: tokens.color.text.description }}>
+                  <p>Tuyệt vời! Bạn không có bài tập hay kỳ thi nào sắp tới.</p>
+                </div>
+              ) : (
+                <List
+                  dataSource={upcomingDeadlines}
+                  renderItem={(item) => {
+                    const hoursLeft = dayjs(item.deadline).diff(dayjs(), 'hour');
+                    const isUrgent = hoursLeft > 0 && hoursLeft < 24;
+                    const isOverdue = hoursLeft <= 0;
+
+                    return (
+                      <List.Item
+                        style={{ 
+                          padding: '12px', 
+                          borderBottom: `1px solid ${tokens.color.border.default}`,
+                          backgroundColor: isUrgent ? '#fff1f0' : 'transparent',
+                          borderRadius: isUrgent ? 8 : 0,
+                          marginBottom: 4
+                        }}
+                      >
+                        <List.Item.Meta
+                          title={
+                            <Link to={item.link} style={{ color: isUrgent ? tokens.color.semantic.error.base : 'inherit', fontWeight: 600 }}>
+                              {item.type === 'assignment' ? '📝 Bài tập: ' : '⏱️ Kỳ thi: '} {item.title}
+                            </Link>
+                          }
+                          description={
+                            <Text type="secondary" style={{ color: isUrgent ? tokens.color.semantic.error.base : undefined }}>
+                              Hạn: {dayjs(item.deadline).format('DD/MM/YYYY HH:mm')} 
+                              {isUrgent && <span style={{ marginLeft: 8, fontWeight: 'bold' }}> (CÒN {hoursLeft} GIỜ)</span>}
+                              {isOverdue && <span style={{ marginLeft: 8, fontWeight: 'bold', color: 'red' }}> (ĐÃ QUÁ HẠN)</span>}
+                            </Text>
+                          }
+                        />
+                      </List.Item>
+                    );
+                  }}
+                />
+              )}
+            </Card>
           </Col>
-          <Col
-            xs={{ span: 24, order: 1 }}
-            md={{ span: 12, order: 2 }}
-            lg={{ span: 12, order: 2 }}
-            xl={{ span: 9, order: 2 }}
-          >
-            <AssignmentOverviewWidget assignments={assignments} />
-          </Col>
-          <Col
-            xs={{ span: 24, order: 3 }}
-            md={{ span: 24, order: 3 }}
-            lg={{ span: 24, order: 3 }}
-            xl={{ span: 6, order: 3 }}
-          >
-            <UpcomingExamsWidget exams={exams} />
+
+          {/* ═══════════════════════════════════════════════════════
+              WIDGET 3 — Đồng hồ đếm ngược (Mockup)
+          ═══════════════════════════════════════════════════════ */}
+          <Col xs={24} lg={12}>
+            <Card 
+              style={{ 
+                borderRadius: 16, 
+                boxShadow: '0 2px 8px rgba(0,0,0,0.08)', 
+                height: '100%', 
+                background: 'linear-gradient(135deg, #1890ff 0%, #0050b3 100%)',
+                color: '#fff',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                textAlign: 'center'
+              }}
+              styles={{ body: { width: '100%' } }}
+            >
+              <div>
+                <Title level={4} style={{ color: 'rgba(255,255,255,0.8)', margin: 0, fontWeight: 500, textTransform: 'uppercase', letterSpacing: 1 }}>
+                  Kỳ thi THPT Quốc Gia
+                </Title>
+                <div style={{ fontSize: 72, fontWeight: 900, lineHeight: 1.1, margin: '16px 0', textShadow: '0 4px 12px rgba(0,0,0,0.15)' }}>
+                  120
+                </div>
+                <Text style={{ fontSize: 20, color: 'rgba(255,255,255,0.9)', fontWeight: 600, letterSpacing: 2, textTransform: 'uppercase' }}>
+                  Ngày Nữa
+                </Text>
+                <div style={{ marginTop: 24 }}>
+                  <Button type="default" size="large" shape="round" style={{ fontWeight: 600, color: '#0050b3' }} onClick={() => navigate('/student/myclasses')}>
+                    TIẾP TỤC ÔN LUYỆN
+                  </Button>
+                </div>
+              </div>
+            </Card>
           </Col>
         </Row>
-      </div>
-
-      {/* ═══════════════════════════════════════════════════════
-          SECTION 3 — AI LEARNING INSIGHT
-          Compact, collapsible recommendations
-      ═══════════════════════════════════════════════════════ */}
-      <div style={{ marginBottom: tokens.space[6] }}>
-        <SectionHeader
-          emoji="🤖"
-          title="AI Learning Insights"
-          subtitle="Phân tích cá nhân hoá từ hệ thống AI"
-        />
-        <LearningInsightsWidget insight={learningInsight} />
-      </div>
-
-      {/* ═══════════════════════════════════════════════════════
-          SECTION 4 — LEARNING PERFORMANCE
-          Score + Stats + Progress (long-term tracking)
-      ═══════════════════════════════════════════════════════ */}
-      <div style={{ marginBottom: tokens.space[6] }}>
-        <SectionHeader
-          emoji="📊"
-          title="Thành tích học tập"
-          subtitle="Theo dõi hiệu suất dài hạn của bạn"
-        />
-
-        {/* Row 4a: Score + Stats */}
-        <Row gutter={[tokens.space[4], tokens.space[4]]} style={{ marginBottom: tokens.space[4] }}>
-          <Col xs={24} md={10} lg={10} xl={9}>
-            <LearningScoreCard score={learningScore} />
-          </Col>
-          <Col xs={24} md={14} lg={14} xl={15}>
-            <LearningStatsWidget statistics={statistics} />
-          </Col>
-        </Row>
-
-        {/* Row 4b: Class Progress */}
-        <ClassProgressWidget classProgress={classProgress} />
-      </div>
-
-      {/* ═══════════════════════════════════════════════════════
-          QUICK ACTIONS — Full width
-      ═══════════════════════════════════════════════════════ */}
-      <Divider
-        style={{ margin: `0 0 ${tokens.space[5]}px 0`, borderColor: tokens.color.border.divider }}
-      />
-      <div>
-        <SectionHeader
-          emoji="⚡"
-          title="Thao tác nhanh"
-          subtitle="Truy cập nhanh các tính năng thường dùng"
-        />
-        <StudentQuickActions />
-      </div>
-
-      {/* ═══════════════════════════════════════════════════════
-          Announcements — Full width at bottom
-      ═══════════════════════════════════════════════════════ */}
-      <div>
-        <SectionHeader
-          emoji="🔔"
-          title="Thông báo gần đây"
-          subtitle="Cập nhật mới nhất từ giảng viên"
-        />
-        <AnnouncementsTimelineWidget announcements={announcements} />
       </div>
     </div>
   );

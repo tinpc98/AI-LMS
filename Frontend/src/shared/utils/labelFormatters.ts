@@ -24,9 +24,8 @@ export function formatClassStatus(status?: string): string {
 
 // 2. Hình thức học (Learning Mode)
 export const LEARNING_MODE_LABELS: Record<string, string> = {
-  Offline: "Tại lớp",
+  Offline: "Trực tiếp",
   Online: "Trực tuyến",
-  Hybrid: "Kết hợp",
 };
 
 export function formatLearningMode(mode?: string): string {

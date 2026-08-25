@@ -4,39 +4,41 @@ import type { ICreateLessonPayload } from "../interface/lessonInterface";
 
 export const lessonApi = {
   getLessonsByClass: (classId: string) => {
-    return axiosClient.get(`/api/lessons/class/${classId}`);
+    return axiosClient.get(`/lessons/class/${classId}`);
   },
 
   createLesson: (payload: ICreateLessonPayload) => {
-    const formData = new FormData();
-    formData.append("title", payload.title);
-    if (payload.description) formData.append("description", payload.description);
-    if (payload.videoUrl) formData.append("videoUrl", payload.videoUrl);
-    formData.append("classId", payload.classId);
-    if (payload.order !== undefined) formData.append("order", String(payload.order));
-    if (payload.isPublished !== undefined)
-      formData.append("isPublished", String(payload.isPublished));
-    if (payload.duration !== undefined) formData.append("duration", String(payload.duration));
-    payload.files?.forEach((file) => formData.append("files", file));
-
-    return axiosClient.post("/api/lessons", formData);
+    const data = {
+      title: payload.title,
+      description: payload.description,
+      videoUrl: payload.videoUrl,
+      classId: payload.classId,
+      order: payload.order,
+      status: payload.isPublished ? "PUBLISHED" : "DRAFT",
+      duration: payload.duration,
+      // videoIds, documentIds would be handled here if file upload was separate
+    };
+    return axiosClient.post("/lessons", data);
   },
 
   updateLesson: (id: string, payload: Partial<ICreateLessonPayload>) => {
-    const formData = new FormData();
-    if (payload.title) formData.append("title", payload.title);
-    if (payload.description !== undefined) formData.append("description", payload.description);
-    if (payload.videoUrl !== undefined) formData.append("videoUrl", payload.videoUrl);
-    if (payload.order !== undefined) formData.append("order", String(payload.order));
-    if (payload.isPublished !== undefined)
-      formData.append("isPublished", String(payload.isPublished));
-    if (payload.duration !== undefined) formData.append("duration", String(payload.duration));
-    payload.files?.forEach((file) => formData.append("files", file));
-
-    return axiosClient.put(`/api/lessons/${id}`, formData);
+    const data: any = { ...payload };
+    if (payload.isPublished !== undefined) {
+      data.status = payload.isPublished ? "PUBLISHED" : "DRAFT";
+      delete data.isPublished;
+    }
+    return axiosClient.put(`/lessons/${id}`, data);
   },
 
   deleteLesson: (id: string) => {
-    return axiosClient.delete(`/api/lessons/${id}`);
+    return axiosClient.delete(`/lessons/${id}`);
+  },
+
+  updateLessonQuiz: (id: string, payload: { allowImageSubmit: boolean; questions: any[] }) => {
+    return axiosClient.patch(`/lessons/${id}/quiz`, payload);
+  },
+
+  deleteLessonAttachment: (id: string, publicId: string) => {
+    return axiosClient.delete(`/lessons/${id}/attachments/${encodeURIComponent(publicId)}`);
   },
 };

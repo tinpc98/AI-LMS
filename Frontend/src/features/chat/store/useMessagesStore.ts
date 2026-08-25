@@ -40,7 +40,7 @@ export const useMessagesStore = create<MessagesState>((set, get) => {
     fetchSummary: async () => {
       try {
         set({ loading: true });
-        const res = await api.get('/api/messages/unread-summary');
+        const res = await api.get('/messages/unread-summary');
         if (res.data.success) {
           const { totalUnread, details } = res.data.data;
           set({

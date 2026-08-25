@@ -36,7 +36,7 @@ const unwrapList = (payload: any, ...keys: string[]): any[] => {
 export const fetchTeacherDashboard = async (): Promise<TeacherDashboardData> => {
   const [classRes, annRes] = await Promise.all([
     classApi.getMyClasses(),
-    axiosClient.get("/api/announcements").catch((e) => {
+    axiosClient.get("/announcements").catch((e) => {
       console.warn("[Teacher Dashboard] Announcements fetch warning:", e);
       return null;
     }),
@@ -55,12 +55,12 @@ export const fetchTeacherDashboard = async (): Promise<TeacherDashboardData> => 
   const [assignmentResults, liveResults] = await Promise.all([
     Promise.all(
       targetClasses.map((cls: any) =>
-        axiosClient.get(`/api/assignments/class/${cls._id}`).catch(() => null)
+        axiosClient.get(`/assignments/class/${cls._id}`).catch(() => null)
       )
     ),
     Promise.all(
       targetClasses.map((cls: any) =>
-        axiosClient.get(`/api/live/classes/${cls._id}/active`).catch(() => null)
+        axiosClient.get(`/live/classes/${cls._id}/active`).catch(() => null)
       )
     ),
   ]);

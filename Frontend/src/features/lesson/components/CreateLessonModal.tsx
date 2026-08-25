@@ -167,6 +167,8 @@ export default function CreateLessonModal({
             </div>
           )}
 
+          {/* Temporarily hidden file input since backend expects pre-uploaded videoIds/documentIds */}
+          {/*
           <div className="flex flex-col gap-2">
             <label className="text-sm font-semibold text-gray-700">
               {isEditMode
@@ -188,6 +190,7 @@ export default function CreateLessonModal({
               </ul>
             )}
           </div>
+          */}
 
           <label className="flex items-center gap-2 cursor-pointer">
             <input

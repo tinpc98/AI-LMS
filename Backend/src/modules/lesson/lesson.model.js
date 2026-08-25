@@ -1,8 +1,14 @@
-import mongoose from "mongoose";
+import mongoose, { Schema, model } from "mongoose";
 import softDeletePlugin from "#shared/plugins/softDelete.plugin.js";
+import { contentBlockSchema } from "../question/question.model.js";
 
-const lessonSchema = new mongoose.Schema(
+const lessonSchema = new Schema(
   {
+    topicId: {
+      type: Schema.Types.ObjectId,
+      ref: "Topic",
+      required: [true, "Bài giảng phải thuộc về một Chủ đề (Topic)"],
+    },
     title: {
       type: String,
       required: [true, "Tiêu đề bài giảng là bắt buộc"],
@@ -11,49 +17,44 @@ const lessonSchema = new mongoose.Schema(
     description: {
       type: String,
       trim: true,
-    },
-    videoUrl: {
-      type: String,
-      trim: true,
       default: "",
     },
-    attachments: [
+    content: [contentBlockSchema],
+    videoIds: [
       {
-        name: { type: String, required: true },
-        url: { type: String, required: true },
-        publicId: { type: String, required: true },
+        type: Schema.Types.ObjectId,
+        ref: "Video",
+      },
+    ],
+    documentIds: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "Document",
       },
     ],
     order: {
       type: Number,
       default: 0,
+      min: 0,
     },
-    isPublished: {
-      type: Boolean,
-      default: true,
+    status: {
+      type: String,
+      enum: ["DRAFT", "PUBLISHED", "ARCHIVED"],
+      default: "DRAFT",
     },
-    duration: {
-      type: Number,
-      default: 0,
-    },
-    classId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Class",
-      required: [true, "Bài giảng phải thuộc về một lớp học cụ thể"],
-    },
-    teacherId: {
-      type: mongoose.Schema.Types.ObjectId,
+    createdBy: {
+      type: Schema.Types.ObjectId,
       ref: "User",
-      required: [true, "Bài giảng phải có giáo viên phụ trách"],
+      required: [true, "Bài giảng phải có người tạo"],
     },
   },
   { timestamps: true }
 );
 
-lessonSchema.index({ classId: 1, isPublished: 1, order: 1 });
-lessonSchema.index({ teacherId: 1 });
+lessonSchema.index({ topicId: 1, order: 1 });
+lessonSchema.index({ topicId: 1, status: 1 });
+lessonSchema.index({ createdBy: 1 });
 
 lessonSchema.plugin(softDeletePlugin);
 
-const Lesson = mongoose.model("Lesson", lessonSchema);
-export default Lesson;
+export default model("Lesson", lessonSchema);

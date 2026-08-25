@@ -25,12 +25,10 @@ export function useStudentExams(
       const attempt = attemptsMap[exam._id] || (exam as any).attempt || null;
       let status: StudentExamStatus = "Upcoming";
 
-      const startTime = new Date(exam.startTime).getTime();
-      const oneHourBefore = startTime - 60 * 60 * 1000;
+      const startTime = exam.startAt ? new Date(exam.startAt).getTime() : 0;
+      const oneHourBefore = startTime ? startTime - 60 * 60 * 1000 : 0;
       const durationMs = (exam.duration || 45) * 60 * 1000;
-      const endTime = exam.createdAt
-        ? new Date(exam.startTime).getTime() + durationMs + 24 * 60 * 60 * 1000
-        : startTime + durationMs;
+      const endTime = startTime ? startTime + durationMs : 0;
 
       if (attempt) {
         if (attempt.status === "SUBMITTED" || attempt.status === "GRADED") {
@@ -102,7 +100,7 @@ export function useStudentExams(
     if (filters.statusFilter !== "all") {
       const target = filters.statusFilter.toLowerCase();
       result = result.filter((e) => {
-        const s = e.status.toLowerCase();
+        const s = e.displayStatus.toLowerCase();
         if (target === "upcoming") return s === "upcoming";
         if (target === "available") return s === "available";
         if (target === "in_progress") return s === "in progress";
@@ -114,8 +112,8 @@ export function useStudentExams(
 
     // Sorting
     result.sort((a, b) => {
-      const timeA = new Date(a.startTime).getTime();
-      const timeB = new Date(b.startTime).getTime();
+      const timeA = a.startAt ? new Date(a.startAt).getTime() : 0;
+      const timeB = b.startAt ? new Date(b.startAt).getTime() : 0;
 
       if (filters.sortBy === "start_asc") return timeA - timeB;
       if (filters.sortBy === "start_desc") return timeB - timeA;

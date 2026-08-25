@@ -1,6 +1,7 @@
 import { checkSocketLiveClassAccess } from "./socketLiveAccess.service.js";
 import { logger } from "#shared/utils/logger.js";
-import LiveSession from "./liveSession.model.js";
+import ClassSession from "../classSession/classSession.model.js";
+import Attendance from "../attendance/attendance.model.js";
 
 /**
  * Socket.IO Handler cho Module Học Trực Tuyến (Live Session)
@@ -39,10 +40,10 @@ export default function liveSocketHandler(io) {
         socket.classRoom = roomName;
 
         // Bổ sung Track Participant Join
-        if (socket.user.role === "Student") {
-          const activeSession = await LiveSession.findOne({
+        if (socket.user.role === "student" || socket.user.role === "Student") {
+          const activeSession = await ClassSession.findOne({
             classId,
-            status: "Live",
+            status: "IN_PROGRESS",
             isDeleted: false,
           });
           if (activeSession) {
@@ -50,30 +51,35 @@ export default function liveSocketHandler(io) {
             socket.joinTime = new Date();
 
             // Upsert participant
-            const participantExists = activeSession.participants.some(
+            const participantExists = activeSession.rawParticipants.some(
               (p) => p.studentId.toString() === socket.user.id.toString()
             );
 
             if (!participantExists) {
-              await LiveSession.updateOne(
+              await ClassSession.updateOne(
                 { _id: activeSession._id },
                 {
                   $push: {
-                    participants: {
+                    rawParticipants: {
                       studentId: socket.user.id,
                       joinTime: socket.joinTime,
-                      status: "Present",
                     },
                   },
                 }
               );
             }
 
+            // Update Attendance evidence
+            await Attendance.updateOne(
+              { sessionId: activeSession._id, studentId: socket.user.id },
+              { $set: { "evidence.firstJoinAt": socket.joinTime } }
+            );
+
             // Lấy lại đếm số lượng participant hiện tại
-            const updatedSession = await LiveSession.findById(activeSession._id)
-              .select("participants")
+            const updatedSession = await ClassSession.findById(activeSession._id)
+              .select("rawParticipants")
               .lean();
-            const activeCount = updatedSession.participants.filter((p) => !p.leaveTime).length;
+            const activeCount = updatedSession.rawParticipants.filter((p) => !p.leaveTime).length;
 
             // Broadcast realtime
             io.to(roomName).emit("LIVE_PARTICIPANTS_UPDATED", {
@@ -121,7 +127,7 @@ export default function liveSocketHandler(io) {
         // Bổ sung Track Participant Leave
         if (
           socket.user &&
-          socket.user.role === "Student" &&
+          (socket.user.role === "student" || socket.user.role === "Student") &&
           socket.liveSessionId &&
           socket.joinTime
         ) {
@@ -130,22 +136,30 @@ export default function liveSocketHandler(io) {
             (leaveTime.getTime() - socket.joinTime.getTime()) / 1000
           );
 
-          await LiveSession.updateOne(
-            { _id: socket.liveSessionId, "participants.studentId": socket.user.id },
+          await ClassSession.updateOne(
+            { _id: socket.liveSessionId, "rawParticipants.studentId": socket.user.id },
             {
               $set: {
-                "participants.$.leaveTime": leaveTime,
+                "rawParticipants.$.leaveTime": leaveTime,
               },
               $inc: {
-                "participants.$.durationSeconds": durationSeconds,
+                "rawParticipants.$.durationSeconds": durationSeconds,
               },
             }
           );
 
-          const updatedSession = await LiveSession.findById(socket.liveSessionId)
-            .select("participants")
+          await Attendance.updateOne(
+            { sessionId: socket.liveSessionId, studentId: socket.user.id },
+            {
+              $set: { "evidence.lastLeaveAt": leaveTime },
+              $inc: { "evidence.onlineDurationSeconds": durationSeconds },
+            }
+          );
+
+          const updatedSession = await ClassSession.findById(socket.liveSessionId)
+            .select("rawParticipants")
             .lean();
-          const activeCount = updatedSession.participants.filter((p) => !p.leaveTime).length;
+          const activeCount = updatedSession.rawParticipants.filter((p) => !p.leaveTime).length;
 
           if (classId) {
             io.to(`room_class_${classId}`).emit("LIVE_PARTICIPANTS_UPDATED", {
@@ -179,7 +193,7 @@ export default function liveSocketHandler(io) {
     socket.on("disconnect", async () => {
       if (
         socket.user &&
-        socket.user.role === "Student" &&
+        (socket.user.role === "student" || socket.user.role === "Student") &&
         socket.liveSessionId &&
         socket.joinTime
       ) {
@@ -189,23 +203,31 @@ export default function liveSocketHandler(io) {
             (leaveTime.getTime() - socket.joinTime.getTime()) / 1000
           );
 
-          await LiveSession.updateOne(
-            { _id: socket.liveSessionId, "participants.studentId": socket.user.id },
+          await ClassSession.updateOne(
+            { _id: socket.liveSessionId, "rawParticipants.studentId": socket.user.id },
             {
               $set: {
-                "participants.$.leaveTime": leaveTime,
+                "rawParticipants.$.leaveTime": leaveTime,
               },
               $inc: {
-                "participants.$.durationSeconds": durationSeconds,
+                "rawParticipants.$.durationSeconds": durationSeconds,
               },
             }
           );
 
-          const updatedSession = await LiveSession.findById(socket.liveSessionId)
-            .select("participants classId")
+          await Attendance.updateOne(
+            { sessionId: socket.liveSessionId, studentId: socket.user.id },
+            {
+              $set: { "evidence.lastLeaveAt": leaveTime },
+              $inc: { "evidence.onlineDurationSeconds": durationSeconds },
+            }
+          );
+
+          const updatedSession = await ClassSession.findById(socket.liveSessionId)
+            .select("rawParticipants classId")
             .lean();
           if (updatedSession) {
-            const activeCount = updatedSession.participants.filter((p) => !p.leaveTime).length;
+            const activeCount = updatedSession.rawParticipants.filter((p) => !p.leaveTime).length;
             io.to(`room_class_${updatedSession.classId}`).emit("LIVE_PARTICIPANTS_UPDATED", {
               classId: updatedSession.classId,
               sessionId: socket.liveSessionId,

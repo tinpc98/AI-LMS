@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import { Class } from "#modules/class";
 import { logger } from "#shared/utils/logger.js";
+import ClassEnrollment from "../classEnrollment/classEnrollment.model.js";
 
 const checkSocketChatAccess = async (user, classId) => {
   if (!user || !user.id || !user.role) {
@@ -34,11 +35,11 @@ const checkSocketChatAccess = async (user, classId) => {
   }
 
   if (role === "student") {
-    const isEnrolled =
-      Array.isArray(targetClass.students) &&
-      targetClass.students.some(
-        (s) => s.studentId && s.studentId.toString() === user.id && s.status === "Enrolled"
-      );
+    const isEnrolled = await ClassEnrollment.exists({
+      classId,
+      studentId: user.id,
+      status: "ACTIVE"
+    });
     if (!isEnrolled) {
       return { allowed: false, message: "Bạn không thuộc lớp học này hoặc đã bị chuyển" };
     }

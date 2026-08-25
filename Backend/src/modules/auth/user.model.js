@@ -37,9 +37,8 @@ const userSchema = new Schema(
     email: {
       type: String,
       required: [true, "Email là bắt buộc"],
-      unique: true,
-      lowercase: true,
       trim: true,
+      lowercase: true,
     },
     password: {
       type: String,
@@ -52,12 +51,20 @@ const userSchema = new Schema(
     },
     status: {
       type: String,
-      enum: ["Active", "Inactive", "Locked"],
+      enum: ["Active", "Inactive", "Locked", "Expired"],
       default: "Active",
     },
     avatar: {
       type: String,
       default: "",
+    },
+    accountActivatedAt: {
+      type: Date,
+      default: null,
+    },
+    firstEnrollmentAt: {
+      type: Date,
+      default: null,
     },
     phone: {
       type: String,
@@ -101,7 +108,10 @@ const userSchema = new Schema(
 );
 
 // Indexes phục vụ tìm kiếm nhanh theo Email, Role và Status
-// userSchema.index({ email: 1 }, { unique: true });
+userSchema.index(
+  { email: 1 },
+  { unique: true, partialFilterExpression: { isDeleted: false } }
+);
 userSchema.index({ role: 1 });
 userSchema.index({ status: 1 });
 

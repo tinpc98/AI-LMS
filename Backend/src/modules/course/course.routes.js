@@ -8,6 +8,7 @@ import {
   getCourseTrash,
   restoreCourse,
   permanentDeleteCourse,
+  getAvailableCourses,
 } from "./course.controller.js";
 import { verifyUser } from "#modules/auth";
 import { isAdmin } from "#shared/middlewares/rbac.middleware.js";
@@ -18,6 +19,7 @@ const router = Router();
 router.get("/trash", verifyUser, isAdmin, getCourseTrash);
 
 // ===== CRUD =====
+router.get("/available", verifyUser, getAvailableCourses);
 router.get("/", verifyUser, getCourses);
 router.post("/", verifyUser, isAdmin, createCourse);
 

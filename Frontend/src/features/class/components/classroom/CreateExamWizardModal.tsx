@@ -183,16 +183,23 @@ export const CreateExamWizardModal: React.FC<CreateExamWizardModalProps> = React
         const payload = {
           title: step1Values.title.trim(),
           duration: Number(step1Values.duration),
-          startTime: step1Values.startTime
-            ? step1Values.startTime.toISOString()
-            : new Date().toISOString(),
+          startAt: step1Values.startAt
+            ? step1Values.startAt.toISOString()
+            : null,
+          endAt: step1Values.endAt
+            ? step1Values.endAt.toISOString()
+            : null,
           classId,
-          maxScore: Number(step1Values.maxScore || 10),
+          topicId: step1Values.topicId || undefined,
+          attemptsAllowed: Number(step1Values.attemptsAllowed || 1),
+          scorePolicy: step1Values.scorePolicy || "HIGHEST",
+          shuffleQuestions: !!step1Values.shuffleQuestions,
+          shuffleOptions: !!step1Values.shuffleOptions,
           status,
-          isAIGenerated: false,
-          questions: selectedQuestionsList.map((item) => ({
+          questions: selectedQuestionsList.map((item, idx) => ({
             questionId: item.questionId,
             points: item.points,
+            order: idx + 1,
           })),
         };
 
@@ -387,18 +394,34 @@ export const CreateExamWizardModal: React.FC<CreateExamWizardModalProps> = React
                 </Col>
 
                 <Col span={8}>
-                  <Form.Item name="maxScore" label="Điểm tối đa thang điểm">
-                    <InputNumber min={1} max={100} style={{ width: "100%" }} disabled value={10} />
+                  <Form.Item name="scorePolicy" label="Chính sách điểm" initialValue="HIGHEST">
+                    <Select>
+                      <Select.Option value="HIGHEST">Điểm cao nhất</Select.Option>
+                      <Select.Option value="LATEST">Lần thi cuối</Select.Option>
+                    </Select>
                   </Form.Item>
                 </Col>
               </Row>
 
               <Form.Item
-                name="startTime"
-                label="Thời gian bắt đầu mở đề *"
-                rules={[{ required: true, message: "Vui lòng chọn thời gian bắt đầu!" }]}
+                name="startAt"
+                label="Thời gian bắt đầu mở đề"
               >
                 <DatePicker showTime format="DD/MM/YYYY HH:mm" style={{ width: "100%" }} />
+              </Form.Item>
+              <Form.Item
+                name="endAt"
+                label="Thời gian kết thúc"
+              >
+                <DatePicker showTime format="DD/MM/YYYY HH:mm" style={{ width: "100%" }} />
+              </Form.Item>
+              <Form.Item
+                name="attemptsAllowed"
+                label="Số lần thi tối đa"
+                initialValue={1}
+                rules={[{ required: true, message: "Vui lòng nhập số lần thi!" }]}
+              >
+                <InputNumber min={1} max={10} style={{ width: "100%" }} />
               </Form.Item>
             </Card>
 

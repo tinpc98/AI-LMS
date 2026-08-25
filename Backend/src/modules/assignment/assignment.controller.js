@@ -1,236 +1,175 @@
-// Controller bài tập
 import * as assignmentService from "./assignment.service.js";
+import * as assignmentRepo from "./assignment.repository.js";
 import { asyncHandler } from "#shared/utils/asyncHandler.js";
+import Topic from "../topic/topic.model.js";
+import Enrollment from "../enrollment/enrollment.model.js";
+import { BusinessRuleError, AuthorizationError, NotFoundError } from "#shared/utils/appError.js";
 
-const assignmentController = {
-  // ==========================================
-  // NHÁNH 1: DÀNH CHO GIÁO VIÊN
-  // ==========================================
-
-  // 1. Tạo bài tập mới
-  createAssignment: asyncHandler(async (req, res) => {
-    const {
-      title,
-      description,
-      submissionMode,
-      questions,
-      deadline,
-      classId,
-      lessonId,
-      isAIGenerated,
-      aiPromptUsed,
-      maxScore,
-    } = req.body || {};
-    const teacherId = req.user.id || req.user._id;
-
-    const newAssignment = await assignmentService.createAssignmentService({
-      title,
-      description,
-      submissionMode,
-      questions,
-      deadline,
-      classId,
-      lessonId,
-      isAIGenerated,
-      aiPromptUsed,
-      maxScore,
-      files: req.files,
-      teacherId,
-      teacherRole: req.user?.role,
-    });
-
-    return res.status(201).json({
-      message: "Tạo bài tập thành công",
-      assignment: newAssignment,
-      data: newAssignment,
-    });
-  }),
-
-  // 2. Giáo viên chấm điểm và nhận xét
-  gradeSubmission: asyncHandler(async (req, res) => {
-    const { submissionId } = req.params;
-    const { grade, feedback, aiFeedback } = req.body || {};
-    const userId = req.user.id || req.user._id;
-
-    const submission = await assignmentService.gradeSubmissionService({
-      submissionId,
-      grade,
-      feedback,
-      aiFeedback,
-      userId,
-      userRole: req.user?.role,
-    });
-
-    return res.status(200).json({ message: "Chấm điểm thành công", submission, data: submission });
-  }),
-
-  // 3. Cập nhật bài tập
-  updateAssignment: asyncHandler(async (req, res) => {
-    const { id } = req.params;
-    const { title, description, submissionMode, questions, deadline, lessonId, maxScore } = req.body || {};
-    const userId = req.user.id || req.user._id;
-
-    const assignment = await assignmentService.updateAssignmentService({
-      id,
-      title,
-      description,
-      submissionMode,
-      questions,
-      deadline,
-      lessonId,
-      maxScore,
-      files: req.files,
-      userId,
-      userRole: req.user?.role,
-    });
-
-    return res
-      .status(200)
-      .json({ message: "Cập nhật bài tập thành công", assignment, data: assignment });
-  }),
-
-  // 4. Xóa bài tập
-  deleteAssignment: asyncHandler(async (req, res) => {
-    const { id } = req.params;
-    const userId = req.user.id || req.user._id;
-
-    await assignmentService.deleteAssignmentService({ id, userId, userRole: req.user?.role });
-    return res.status(200).json({ message: "Xóa bài tập thành công" });
-  }),
-
-  // ==========================================
-  // NHÁNH 2: DÀNH CHO HỌC SINH & CHUNG
-  // ==========================================
-
-  // 5. Lấy chi tiết 1 bài tập
-  getAssignmentById: asyncHandler(async (req, res) => {
-    const { id } = req.params;
-    const assignment = await assignmentService.getAssignmentByIdService(id);
-    return res.status(200).json({ assignment, data: assignment });
-  }),
-
-  // 6. Lấy danh sách bài tập của lớp
-  getAssignmentsByClass: asyncHandler(async (req, res) => {
-    const { classId } = req.params;
-    const { page, limit } = req.query;
-
-    const { assignments, pagination } = await assignmentService.getAssignmentsByClassService({
-      classId,
-      page,
-      limit,
-    });
-
-    const responseBody = { assignments, data: assignments };
-    if (pagination) responseBody.pagination = pagination;
-    return res.status(200).json(responseBody);
-  }),
-
-  // 7. Lấy danh sách bài nộp của một assignment (Chỉ Giáo viên phân công / Admin)
-  getSubmissionsByAssignment: asyncHandler(async (req, res) => {
-    const { assignmentId } = req.params;
-    const { page, limit } = req.query;
-    const userId = req.user.id || req.user._id;
-
-    const { submissions, pagination } = await assignmentService.getSubmissionsByAssignmentService({
-      assignmentId,
-      page,
-      limit,
-      userId,
-      userRole: req.user?.role,
-    });
-
-    const responseBody = { submissions, data: submissions };
-    if (pagination) responseBody.pagination = pagination;
-    return res.status(200).json(responseBody);
-  }),
-
-  // 8. Lấy chi tiết 1 bài nộp (Đã được xác thực quyền qua canViewSubmission middleware)
-  getSubmissionById: asyncHandler(async (req, res) => {
-    return res
-      .status(200)
-      .json({ success: true, submission: req.submission, data: req.submission });
-  }),
-
-  // 9. Lấy bài nộp cá nhân của Học sinh
-  getMySubmission: asyncHandler(async (req, res) => {
-    const { assignmentId } = req.params;
-
-    if (!req.user || (!req.user.id && !req.user._id)) {
-      return res.status(401).json({ message: "UNAUTHENTICATED" });
-    }
-    const studentId = req.user.id || req.user._id;
-
-    const submission = await assignmentService.getMySubmissionService({
-      assignmentId,
-      studentId,
-    });
-    return res.status(200).json({ success: true, submission, data: submission });
-  }),
-
-  // 10. Học sinh lưu bản nháp (Draft)
-  saveDraft: asyncHandler(async (req, res) => {
-    const { assignmentId } = req.params;
-    const { content, submissionType, linkUrl, answers } = req.body || {};
-    const studentId = req.user.id || req.user._id;
-
-    const { submission, savedAt } = await assignmentService.saveDraftService({
-      assignmentId,
-      content,
-      submissionType,
-      linkUrl,
-      answers,
-      studentId,
-    });
-
-    return res.status(200).json({
-      success: true,
-      message: "Lưu bản nháp thành công",
-      savedAt,
-      submission,
-      data: submission,
-    });
-  }),
-
-  // 11. Học sinh Nộp bài / Nộp lại bài
-  submitAssignment: asyncHandler(async (req, res) => {
-    const { assignmentId } = req.params;
-    const { content, submissionType, linkUrl, answers } = req.body || {};
-    const studentId = req.user.id || req.user._id;
-
-    const { submission, isNew } = await assignmentService.submitAssignmentService({
-      assignmentId,
-      content,
-      submissionType,
-      linkUrl,
-      answers,
-      files: req.files,
-      studentId,
-    });
-
-    return res.status(isNew ? 201 : 200).json({
-      message: isNew ? "Nộp bài tập thành công" : "Nộp lại bài tập thành công",
-      submission,
-      data: submission,
-    });
-  }),
-
-  // 12. Học sinh Hủy nộp bài
-  cancelSubmission: asyncHandler(async (req, res) => {
-    const { assignmentId } = req.params;
-    const studentId = req.user.id || req.user._id;
-
-    const submission = await assignmentService.cancelSubmissionService({
-      assignmentId,
-      studentId,
-    });
-
-    return res.status(200).json({
-      success: true,
-      message: "Đã hủy bài nộp thành công",
-      submission,
-      data: submission,
-    });
-  }),
+// Helper check ownership (from Topic -> Course -> createdBy)
+const checkTopicOwnership = async (topicId, userId, role) => {
+  if (role === "Admin" || role === "admin" || role === "ADMIN") return true;
+  const topic = await Topic.findById(topicId).populate("courseId");
+  if (!topic || !topic.courseId) return false;
+  return topic.courseId.createdBy.toString() === userId.toString();
 };
 
-export default assignmentController;
+export const createAssignment = asyncHandler(async (req, res) => {
+  const { topicId, title, description, instructions, questions, status } = req.body;
+  const userId = req.user.id || req.user._id;
+
+  if (!topicId || !title) return res.status(400).json({ message: "Thiếu topicId hoặc title" });
+
+  const isAuthorized = await checkTopicOwnership(topicId, userId, req.user?.role);
+  if (!isAuthorized) return res.status(403).json({ message: "Không có quyền tạo bài tập cho Topic này" });
+
+  const assignment = await assignmentService.createAssignmentService(req.body, userId);
+  return res.status(201).json({ message: "Tạo bài tập thành công", assignment });
+});
+
+export const getAssignmentById = asyncHandler(async (req, res) => {
+  const assignment = await assignmentRepo.findAssignmentById(req.params.id);
+  if (!assignment) return res.status(404).json({ message: "Assignment not found" });
+
+  const userId = req.user.id || req.user._id;
+  const userRole = (req.user?.role || "").toUpperCase();
+
+  if (userRole === "STUDENT") {
+    if (assignment.status !== "PUBLISHED") {
+      return res.status(403).json({ message: "Forbidden: Assignment not published" });
+    }
+    const topic = await Topic.findById(assignment.topicId);
+    if (!topic) return res.status(404).json({ message: "Topic not found" });
+
+    const ClassModel = (await import("../class/class.model.js")).default;
+    const ClassEnrollmentModel = (await import("../classEnrollment/classEnrollment.model.js")).default;
+
+    const classes = await ClassModel.find({ courseId: topic.courseId, isDeleted: { $ne: true } }).select("_id");
+    const classIds = classes.map(c => c._id);
+
+    const isEnrolled = await ClassEnrollmentModel.exists({
+      studentId: userId,
+      classId: { $in: classIds },
+      status: "ACTIVE"
+    });
+
+    if (!isEnrolled) {
+      return res.status(403).json({ message: "Forbidden: Not enrolled in any class for this assignment" });
+    }
+    
+    // Khuyến nghị: Ẩn answer key hoặc thông tin của giáo viên đối với học sinh.
+    // Tạm giữ nguyên response contract để không phá vỡ UI như yêu cầu.
+  } else if (userRole === "TEACHER") {
+    const isAuthorized = await checkTopicOwnership(assignment.topicId, userId, userRole);
+    if (!isAuthorized) {
+      return res.status(403).json({ message: "Forbidden: You do not own this assignment" });
+    }
+  }
+
+  return res.status(200).json({ assignment });
+});
+
+export const publishAssignment = asyncHandler(async (req, res) => {
+  const assignment = await assignmentRepo.findAssignmentById(req.params.id);
+  if (!assignment) return res.status(404).json({ message: "Assignment not found" });
+
+  const userId = req.user.id || req.user._id;
+  const isAuthorized = await checkTopicOwnership(assignment.topicId, userId, req.user?.role);
+  if (!isAuthorized) return res.status(403).json({ message: "Không có quyền sửa bài tập này" });
+
+  if (!assignment.questions || assignment.questions.length === 0) {
+    return res.status(400).json({ message: "Phải có ít nhất 1 câu hỏi để publish" });
+  }
+
+  // Validate points >= 0
+  if (assignment.questions.some(q => q.points < 0)) {
+    return res.status(400).json({ message: "Điểm không hợp lệ" });
+  }
+
+  assignment.status = "PUBLISHED";
+  await assignment.save();
+  return res.status(200).json({ message: "Publish thành công", assignment });
+});
+
+export const startAttempt = asyncHandler(async (req, res) => {
+  const studentId = req.user.id || req.user._id;
+  
+  const attempt = await assignmentService.startAttemptService(req.params.id, studentId);
+  return res.status(201).json({ message: "Bắt đầu làm bài", attempt });
+});
+
+export const getAttempt = asyncHandler(async (req, res) => {
+  const attemptId = req.params.attemptId;
+  const userId = req.user.id || req.user._id;
+  const userRole = (req.user?.role || "").toLowerCase();
+
+  const attempt = await assignmentRepo.findAttemptById(attemptId);
+  if (!attempt) return res.status(404).json({ message: "Attempt not found" });
+
+  if (userRole === "student" && attempt.studentId.toString() !== userId.toString()) {
+    return res.status(403).json({ message: "Forbidden" });
+  }
+
+  if (userRole === "teacher") {
+    // Check if teacher owns the assignment
+    const assignment = await assignmentRepo.findAssignmentById(attempt.assignmentId);
+    if (!assignment) return res.status(404).json({ message: "Assignment not found" });
+    const isAuthorized = await checkTopicOwnership(assignment.topicId, userId, req.user?.role);
+    if (!isAuthorized) return res.status(403).json({ message: "Forbidden: Teacher does not own this assignment" });
+  }
+
+  return res.status(200).json({ attempt });
+});
+
+export const saveAnswer = asyncHandler(async (req, res) => {
+  const attemptId = req.params.attemptId;
+  const questionId = req.params.questionId;
+  const studentId = req.user.id || req.user._id;
+  
+  const attempt = await assignmentService.saveAnswerService(attemptId, questionId, studentId, req.body);
+  return res.status(200).json({ message: "Đã lưu", attempt });
+});
+
+export const submitAttempt = asyncHandler(async (req, res) => {
+  const attemptId = req.params.attemptId;
+  const studentId = req.user.id || req.user._id;
+  
+  const attempt = await assignmentService.submitAttemptService(attemptId, studentId);
+  return res.status(200).json({ message: "Nộp bài thành công", attempt });
+});
+
+export const getAttemptHistory = asyncHandler(async (req, res) => {
+  const assignmentId = req.params.id;
+  const studentId = req.user.id || req.user._id;
+  const attempts = await assignmentRepo.findAttemptsByStudentAndAssignment(studentId, assignmentId);
+  return res.status(200).json({ attempts });
+});
+
+export const getAttemptsForTeacher = asyncHandler(async (req, res) => {
+  const assignmentId = req.params.id;
+  // checkAssignmentAccess middleware already verifies the teacher owns the assignment
+  const AssignmentAttempt = (await import("./assignmentAttempt.model.js")).default || (await import("mongoose")).model("AssignmentAttempt");
+  const attempts = await AssignmentAttempt.find({ assignmentId })
+    .populate("studentId", "fullName email")
+    .sort({ startedAt: -1 });
+    
+  return res.status(200).json({ attempts });
+});
+
+export const gradeEssay = asyncHandler(async (req, res) => {
+  const attemptId = req.params.attemptId;
+  const questionId = req.params.questionId;
+  const { score, feedback } = req.body;
+  const userId = req.user.id || req.user._id;
+
+  const attempt = await assignmentRepo.findAttemptById(attemptId);
+  if (!attempt) throw new NotFoundError("Attempt not found");
+
+  const assignment = await assignmentRepo.findAssignmentById(attempt.assignmentId);
+  if (!assignment) throw new NotFoundError("Assignment not found");
+
+  const isAuthorized = await checkTopicOwnership(assignment.topicId, userId, req.user?.role);
+  if (!isAuthorized) throw new AuthorizationError("Forbidden");
+
+  const updatedAttempt = await assignmentService.gradeEssayService(attemptId, questionId, score, feedback);
+  return res.status(200).json({ message: "Chấm điểm thành công", attempt: updatedAttempt });
+});

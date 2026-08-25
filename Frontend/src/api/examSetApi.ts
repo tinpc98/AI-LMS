@@ -22,20 +22,20 @@ export const examSetApi = {
     page?: number;
     limit?: number;
   }): Promise<IExamSet[]> => {
-    const response = await axiosClient.get<ApiEnvelope<IExamSet[]>>("/api/exam-sets", { params });
+    const response = await axiosClient.get<ApiEnvelope<IExamSet[]>>("/exam-sets", { params });
     return unwrap(response.data, []);
   },
 
   // Lấy chi tiết bộ đề thi theo ID
   getExamSetById: async (id: string): Promise<IExamSet> => {
-    const response = await axiosClient.get<ApiEnvelope<IExamSet>>(`/api/exam-sets/${id}`);
+    const response = await axiosClient.get<ApiEnvelope<IExamSet>>(`/exam-sets/${id}`);
     return unwrap(response.data, {} as IExamSet);
   },
 
   // Nhân bản bộ đề thi
   duplicateExamSet: async (examSetId: string): Promise<IExamSet> => {
     const response = await axiosClient.post<ApiEnvelope<IExamSet>>(
-      `/api/exam-sets/${examSetId}/duplicate`
+      `/exam-sets/${examSetId}/duplicate`
     );
     return unwrap(response.data, {} as IExamSet);
   },

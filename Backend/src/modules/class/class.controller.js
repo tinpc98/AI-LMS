@@ -5,6 +5,7 @@ import * as classRepo from "./class.repository.js";
 import { asyncHandler } from "#shared/utils/asyncHandler.js";
 import { Course } from "#modules/course";
 import { User } from "#modules/auth";
+import ClassEnrollment from "../classEnrollment/classEnrollment.model.js";
 import classService from "./class.service.js";
 import { attachStudentProgress } from "./classProgress.service.js";
 import storageService from "#shared/services/storage.service.js";
@@ -19,7 +20,7 @@ export const ClassList = asyncHandler(async (req, res) => {
   const userRole = (req.user?.role || "").toLowerCase();
 
   // Dùng Service để build query
-  const { finalQuery, skip, limitNum, pageNum, sortOption } = classService.buildClassQueryOptions(
+  const { finalQuery, skip, limitNum, pageNum, sortOption } = await classService.buildClassQueryOptions(
     req.query,
     false,
     userRole,
@@ -68,15 +69,32 @@ export const ClassListById = asyncHandler(async (req, res) => {
   const userRole = (req.user?.role || "").toLowerCase();
   if (userRole === "student") {
     const userId = (req.user?.id || req.user?._id || "").toString();
-    const isEnrolled = (classDetail.students || []).some(
-      (s) => s.studentId && (s.studentId._id || s.studentId).toString() === userId
-    );
+    const isEnrolled = await ClassEnrollment.exists({
+      classId: id,
+      studentId: userId,
+      status: "ACTIVE"
+    });
     if (!isEnrolled) {
       return res
         .status(403)
         .json({ success: false, message: "Bạn không có quyền xem thông tin lớp học này." });
     }
   }
+
+  // MIGRATION PHASE 3: Lấy danh sách học sinh từ ClassEnrollment thay vì mảng students cũ
+  const enrollments = await ClassEnrollment.find({ classId: id, status: "ACTIVE" })
+    .populate("studentId", "fullName email avatar phone")
+    .lean();
+
+  classDetail.students = enrollments.map((e) => ({
+    studentId: e.studentId,
+    status: "Enrolled", // Trạng thái hiển thị trên giao diện
+    joinedAt: e.createdAt,
+    notes: "",
+  }));
+  classDetail.currentStudents = enrollments.length;
+  // Ghi đè activeCount cho chắc chắn khớp với số enrollment thực tế
+  classDetail.activeCount = enrollments.length;
 
   return res
     .status(200)
@@ -87,17 +105,17 @@ export const ClassListById = asyncHandler(async (req, res) => {
 // Tạo lớp học mới (Dành cho Admin)
 export const AddNewClass = asyncHandler(async (req, res) => {
   const {
-    className,
+    name,
     courseId,
     teacherId,
-    classCode,
+    code,
     room,
     classRoom,
-    learningMode,
+    mode,
     schedule,
     startDate,
     endDate,
-    maxStudents,
+    capacity,
     description,
     note,
     status,
@@ -106,10 +124,11 @@ export const AddNewClass = asyncHandler(async (req, res) => {
     googleMeetLink,
     googleCalendarEventId,
     gradingWeight,
+    level,
   } = req.body;
 
-  if (!className || !courseId) {
-    return res.status(400).json({ success: false, message: "Vui lòng nhập tên lớp và khóa học" });
+  if (!name || !courseId || !level) {
+    return res.status(400).json({ success: false, message: "Vui lòng nhập tên lớp, khóa học và level" });
   }
 
   if (!mongoose.Types.ObjectId.isValid(courseId)) {
@@ -126,28 +145,29 @@ export const AddNewClass = asyncHandler(async (req, res) => {
   }
 
   const newClassData = {
-    className: className.trim(),
-    classCode: classCode?.trim() || `CLS-${Date.now().toString().slice(-6)}`,
+    name: name.trim(),
+    code: code?.trim().toUpperCase() || `CLS-${Date.now().toString().slice(-6)}`,
     courseId,
+    level,
     teacherId: teacherId || null,
     assignedBy: req.user.id || req.user._id,
     assignedAt: teacherId ? new Date() : null,
-    meetingRoomId: null, // Legacy field (Deprecated) - Sprint J1</span>
+    meetingRoomId: null, // Legacy field (Deprecated) - Sprint J1
     googleMeetLink: googleMeetLink || "",
     googleCalendarEventId: googleCalendarEventId || "",
     classRoom: classRoom ?? room ?? "",
-    learningMode: learningMode || "Offline",
+    mode: mode || "OFFLINE",
     schedule: schedule || { days: [], startTime: "", endTime: "" },
     gradingWeight: gradingWeight || { attendance: 10, assignment: 20, midterm: 30, final: 40 },
     startDate: startDate || null,
     endDate: endDate || null,
-    maxStudents: maxStudents || 30,
-    currentStudents: Array.isArray(students) ? students.length : 0,
+    capacity: capacity || 30,
+    activeCount: Array.isArray(students) ? students.length : 0,
     students: Array.isArray(students) ? students : [],
     description: description || "",
     note: note || "",
     isEnrollmentOpen: typeof isEnrollmentOpen === "boolean" ? isEnrollmentOpen : true,
-    status: status || "Draft",
+    status: status || "DRAFT",
   };
 
   const savedClass = await classRepo.createClass(newClassData).save();
@@ -206,7 +226,7 @@ export const AssignTeacher = asyncHandler(async (req, res) => {
     return res.status(404).json({ success: false, message: "Lớp học không tồn tại" });
   }
 
-  const allowedStatuses = ["Draft", "Ready", "Ongoing"];
+  const allowedStatuses = ["DRAFT", "OPEN", "FULL"];
   if (!allowedStatuses.includes(targetClass.status)) {
     return res.status(400).json({
       success: false,
@@ -238,91 +258,19 @@ export const AssignTeacher = asyncHandler(async (req, res) => {
 //=====================================================================================
 // Thêm học sinh vào lớp (Dành cho Admin)
 export const AssignStudent = asyncHandler(async (req, res) => {
-  const { id } = req.params;
-  const { studentId } = req.body;
-
-  if (!id || !mongoose.Types.ObjectId.isValid(id)) {
-    return res.status(400).json({ success: false, message: "Class ID is invalid." });
-  }
-
-  if (!studentId || !mongoose.Types.ObjectId.isValid(studentId)) {
-    return res.status(400).json({ success: false, message: "Student ID is invalid." });
-  }
-
-  const studentExists = await User.findOne({ _id: studentId, role: "Student", isDeleted: false });
-  if (!studentExists) {
-    return res.status(400).json({ success: false, message: "Student not found or invalid role." });
-  }
-
-  const updatedClass = await classRepo.findOneAndUpdateClassPopulated(
-    {
-      _id: id,
-      isEnrollmentOpen: true,
-      "students.studentId": { $ne: studentId },
-      $expr: { $lt: [{ $size: { $ifNull: ["$students", []] } }, "$maxStudents"] },
-    },
-    {
-      $push: { students: { studentId, joinedAt: new Date(), status: "Enrolled" } },
-      $inc: { currentStudents: 1 },
-    }
-  );
-
-  if (!updatedClass) {
-    const classCheck = await classRepo.findClassById(id);
-    if (!classCheck) return res.status(404).json({ success: false, message: "Class not found." });
-    if (!classCheck.isEnrollmentOpen)
-      return res
-        .status(400)
-        .json({ success: false, message: "Enrollment for this class is currently closed." });
-    const isEnrolled = classCheck.students.some(
-      (s) => s.studentId && s.studentId.toString() === studentId
-    );
-    if (isEnrolled)
-      return res
-        .status(400)
-        .json({ success: false, message: "Student is already enrolled in this class." });
-    return res.status(400).json({
-      success: false,
-      message: "Class has reached its maximum capacity or enrollment is closed.",
-    });
-  }
-
-  return res
-    .status(200)
-    .json({ success: true, message: "Student added to class successfully.", data: updatedClass });
+  return res.status(410).json({
+    success: false,
+    message: "Route này đã bị loại bỏ (Deprecated). Vui lòng sử dụng ClassEnrollment API (/api/class-enrollments) để thêm học sinh vào lớp.",
+  });
 });
 
 //=====================================================================================
 // Xóa / Gỡ học sinh khỏi lớp (Dành cho Admin)
 export const RemoveStudent = asyncHandler(async (req, res) => {
-  const { id, studentId } = req.params;
-
-  if (
-    !id ||
-    !mongoose.Types.ObjectId.isValid(id) ||
-    !studentId ||
-    !mongoose.Types.ObjectId.isValid(studentId)
-  ) {
-    return res
-      .status(400)
-      .json({ success: false, message: "ID lớp học hoặc ID học sinh không hợp lệ!" });
-  }
-
-  const updatedClass = await classRepo.findOneAndUpdateClassPopulated(
-    { _id: id, "students.studentId": studentId },
-    {
-      $pull: { students: { studentId } },
-      $inc: { currentStudents: -1 },
-    }
-  );
-
-  if (!updatedClass) {
-    return res.status(404).json({ success: false, message: "Lớp học không tồn tại" });
-  }
-
-  return res
-    .status(200)
-    .json({ success: true, message: "Xóa học sinh khỏi lớp thành công", data: updatedClass });
+  return res.status(410).json({
+    success: false,
+    message: "Route này đã bị loại bỏ (Deprecated). Vui lòng sử dụng ClassEnrollment API (/api/class-enrollments) để quản lý học sinh trong lớp.",
+  });
 });
 
 //=====================================================================================
@@ -456,7 +404,7 @@ export const ClassTrashList = asyncHandler(async (req, res) => {
   const userRole = (req.user?.role || "").toLowerCase();
 
   // Dùng Service để build query cho Trash (truyền isTrash = true)
-  const { finalQuery, skip, limitNum, pageNum, sortOption } = classService.buildClassQueryOptions(
+  const { finalQuery, skip, limitNum, pageNum, sortOption } = await classService.buildClassQueryOptions(
     req.query,
     true,
     userRole,
@@ -576,66 +524,6 @@ export const UnassignTeacher = asyncHandler(async (req, res) => {
 });
 
 //=====================================================================================
-// Cập nhật trạng thái học sinh trong lớp (Dành cho Admin/Teacher)
-export const UpdateStudentStatus = asyncHandler(async (req, res) => {
-  const { id, studentId } = req.params;
-  const { status } = req.body;
-
-  if (!id || !mongoose.Types.ObjectId.isValid(id)) {
-    return res.status(400).json({ success: false, message: "ID lớp học không hợp lệ!" });
-  }
-  if (!studentId || !mongoose.Types.ObjectId.isValid(studentId)) {
-    return res.status(400).json({ success: false, message: "ID học sinh không hợp lệ!" });
-  }
-
-  const VALID_STATUSES = ["Enrolled", "Reserved", "Transferred", "Dropped"];
-  if (!status || !VALID_STATUSES.includes(status)) {
-    return res.status(400).json({
-      success: false,
-      message: `Trạng thái không hợp lệ. Giá trị cho phép: ${VALID_STATUSES.join(", ")}.`,
-    });
-  }
-
-  const updatedClass = await classRepo.findOneAndUpdateClass(
-    { _id: id, "students.studentId": studentId },
-    { $set: { "students.$.status": status } }
-  );
-
-  if (!updatedClass) {
-    return res.status(404).json({
-      success: false,
-      message: "Lớp học không tồn tại hoặc học sinh không có trong lớp này",
-    });
-  }
-
-  const updatedStudent = updatedClass.students.find(
-    (s) => s.studentId && s.studentId.toString() === studentId
-  );
-
-  // Xử lý đá khỏi phòng chat nếu học sinh bị đổi sang Dropped hoặc Transferred
-  const io = req.app.get("io");
-  if (io && ["Dropped", "Transferred"].includes(status)) {
-    const roomName = `chat_class_${id}`;
-    io.in(roomName).fetchSockets().then(socketsInRoom => {
-      for (const s of socketsInRoom) {
-        if (s.user && s.user.id === studentId) {
-          s.leave(roomName);
-          if (s.chatRooms) {
-            s.chatRooms.delete(roomName);
-          }
-        }
-      }
-    }).catch(err => console.error("[UpdateStudentStatus] Lỗi kick socket:", err));
-  }
-
-  return res.status(200).json({
-    success: true,
-    message: `Cập nhật trạng thái học sinh thành "${status}" thành công`,
-    data: updatedStudent,
-  });
-});
-
-//=====================================================================================
 // Upload tài liệu lên Cloudinary (Dành cho Teacher/Admin phụ trách lớp)
 // POST /api/classes/:id/resources/upload
 export const UploadResource = asyncHandler(async (req, res) => {
@@ -687,66 +575,82 @@ export const UploadResource = asyncHandler(async (req, res) => {
   }
 
   // Upload lên Cloudinary
-  const uploadResult = await storageService.uploadFile(
-    req.file.buffer,
-    req.file.originalname,
-    {
-      folder: `eduspace/classes/${id}`,
-      resourceType: "raw",
+  let uploadResult;
+  try {
+    uploadResult = await storageService.uploadFile(
+      req.file.buffer,
+      req.file.originalname,
+      {
+        folder: `eduspace/classes/${id}`,
+        resourceType: "raw",
+      }
+    );
+  } catch (uploadError) {
+    throw uploadError; // Let asyncHandler handle it
+  }
+
+  try {
+    // Xác định loại tài nguyên dựa trên type do client gửi hoặc MIME đã phát hiện
+    const validTypes = ["Document", "Video", "Link", "Other"];
+    const detectedExt = req.file.detectedExt || "";
+    const nameExt =
+      req.file.originalname && req.file.originalname.includes(".")
+        ? req.file.originalname.split(".").pop().toLowerCase()
+        : "";
+    const resolvedFormat = (detectedExt || nameExt || uploadResult.format || "").toLowerCase() || null;
+
+    let resourceTypeLabel = "Document";
+    if (validTypes.includes(type)) {
+      resourceTypeLabel = type;
+    } else if (["jpg", "jpeg", "png", "webp", "gif"].includes(resolvedFormat || "")) {
+      resourceTypeLabel = "Other";
     }
-  );
 
-  // Xác định loại tài nguyên dựa trên type do client gửi hoặc MIME đã phát hiện
-  const validTypes = ["Document", "Video", "Link", "Other"];
-  const detectedExt = req.file.detectedExt || "";
-  const nameExt =
-    req.file.originalname && req.file.originalname.includes(".")
-      ? req.file.originalname.split(".").pop().toLowerCase()
-      : "";
-  const resolvedFormat = (detectedExt || nameExt || uploadResult.format || "").toLowerCase() || null;
+    const newResource = {
+      title: title.trim(),
+      description: description?.trim() || "",
+      type: resourceTypeLabel,
+      url: null,               // Không có URL ngoài, dùng publicId
+      publicId: uploadResult.publicId,
+      storageType: "authenticated",
+      resourceType: uploadResult.resourceType,
+      format: resolvedFormat,
+      bytes: uploadResult.bytes,
+      originalFilename: req.file.originalname,
+      uploadedBy: userId,
+      uploadedAt: new Date(),
+    };
 
-  let resourceTypeLabel = "Document";
-  if (validTypes.includes(type)) {
-    resourceTypeLabel = type;
-  } else if (["jpg", "jpeg", "png", "webp", "gif"].includes(resolvedFormat || "")) {
-    resourceTypeLabel = "Other";
+    targetClass.resources.push(newResource);
+    await targetClass.save();
+
+    // Tính quota sau upload
+    const usageAfter = projectedUsage;
+    const isNearQuota = usageAfter / CLASS_STORAGE_LIMIT_BYTES >= QUOTA_WARNING_THRESHOLD;
+
+    const response = {
+      success: true,
+      message: "Tải tài liệu lên thành công!",
+      data: targetClass.resources[targetClass.resources.length - 1],
+      storageUsed: usageAfter,
+      storageLimit: CLASS_STORAGE_LIMIT_BYTES,
+    };
+
+    if (isNearQuota) {
+      response.warning = `Lớp đã dùng ${((usageAfter / CLASS_STORAGE_LIMIT_BYTES) * 100).toFixed(1)}% dung lượng. Vui lòng xóa bớt tài liệu cũ để tránh hết quota.`;
+    }
+
+    return res.status(201).json(response);
+  } catch (error) {
+    if (uploadResult?.publicId) {
+      try {
+        await storageService.deleteFile(uploadResult.publicId, uploadResult.resourceType || "raw");
+      } catch (cleanupError) {
+        console.error(`[UploadResource] Rollback Cloudinary failed for publicId: ${uploadResult.publicId}`, cleanupError);
+      }
+    }
+    throw error;
   }
-
-  const newResource = {
-    title: title.trim(),
-    description: description?.trim() || "",
-    type: resourceTypeLabel,
-    url: null,               // Không có URL ngoài, dùng publicId
-    publicId: uploadResult.publicId,
-    storageType: "authenticated",
-    resourceType: uploadResult.resourceType,
-    format: resolvedFormat,
-    bytes: uploadResult.bytes,
-    originalFilename: req.file.originalname,
-    uploadedBy: userId,
-    uploadedAt: new Date(),
-  };
-
-  targetClass.resources.push(newResource);
-  await targetClass.save();
-
-  // Tính quota sau upload
-  const usageAfter = projectedUsage;
-  const isNearQuota = usageAfter / CLASS_STORAGE_LIMIT_BYTES >= QUOTA_WARNING_THRESHOLD;
-
-  const response = {
-    success: true,
-    message: "Tải tài liệu lên thành công!",
-    data: targetClass.resources[targetClass.resources.length - 1],
-    storageUsed: usageAfter,
-    storageLimit: CLASS_STORAGE_LIMIT_BYTES,
-  };
-
-  if (isNearQuota) {
-    response.warning = `Lớp đã dùng ${((usageAfter / CLASS_STORAGE_LIMIT_BYTES) * 100).toFixed(1)}% dung lượng. Vui lòng xóa bớt tài liệu cũ để tránh hết quota.`;
-  }
-
-  return res.status(201).json(response);
 });
 
 //=====================================================================================
@@ -803,11 +707,12 @@ export const GetResourceAccessUrl = asyncHandler(async (req, res) => {
   } else if (userRole === "teacher") {
     isAuthorized = targetClass.teacherId?.toString() === userId;
   } else if (userRole === "student") {
-    // Chỉ sinh viên có trạng thái Enrolled mới được xem
-    const studentEntry = (targetClass.students || []).find(
-      (s) => s.studentId && s.studentId.toString() === userId
-    );
-    isAuthorized = studentEntry?.status === "Enrolled";
+    // Chỉ sinh viên có trạng thái ACTIVE mới được xem
+    isAuthorized = await ClassEnrollment.exists({
+      classId,
+      studentId: userId,
+      status: "ACTIVE"
+    });
   }
 
   if (!isAuthorized) {
@@ -827,4 +732,43 @@ export const GetResourceAccessUrl = asyncHandler(async (req, res) => {
     success: true,
     data: { signedUrl, expiresAt, isExternal: false },
   });
+});
+
+//=====================================================================================
+export const GetClassStudents = asyncHandler(async (req, res) => {
+  return res.status(410).json({
+    success: false,
+    message: "Route này đã bị loại bỏ (Deprecated). Vui lòng lấy danh sách học sinh thông qua ClassEnrollment API (/api/class-enrollments).",
+  });
+});
+
+//=====================================================================================
+// Lifecycle hooks
+const updateClassLifecycleStatus = async (req, res, targetStatus) => {
+  const { id } = req.params;
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return res.status(400).json({ success: false, message: "ID lớp học không hợp lệ!" });
+  }
+
+  const targetClass = await classRepo.findClassById(id);
+  if (!targetClass) {
+    return res.status(404).json({ success: false, message: "Lớp học không tồn tại" });
+  }
+
+  targetClass.status = targetStatus;
+  await targetClass.save();
+
+  return res.status(200).json({ success: true, message: `Cập nhật trạng thái thành ${targetStatus} thành công`, data: targetClass });
+};
+
+export const OpenClass = asyncHandler(async (req, res) => {
+  return updateClassLifecycleStatus(req, res, "OPEN");
+});
+
+export const CloseClass = asyncHandler(async (req, res) => {
+  return updateClassLifecycleStatus(req, res, "CLOSED");
+});
+
+export const ArchiveClass = asyncHandler(async (req, res) => {
+  return updateClassLifecycleStatus(req, res, "ARCHIVED");
 });

@@ -1,28 +1,20 @@
 // Lưu tạm bài làm của học sinh trong lúc đang thi.
 //
-// VÌ SAO PHẢI CÓ TRƯỚC KHI LÀM CRON TỰ ĐỘNG NỘP BÀI
+// Cơ chế: ghi vào attempt.questions[i].answer (canonical), không phải attempt.answers[].
+// answersVersion dùng làm optimistic lock để chặn conflict khi nhiều tab cùng ghi.
 //
-// Trước đây bài làm CHỈ nằm trong localStorage của trình duyệt cho tới lúc bấm nộp. Nếu bật
-// cron đóng phiên quá hạn ngay lúc này, mọi phiên bị đóng sẽ được chấm với answers RỖNG —
-// học sinh làm bài xong mà mất trắng vì mất mạng đúng phút cuối.
-//
-// Nói cách khác: chính sách "hết giờ là nộp" chỉ công bằng khi máy chủ THẬT SỰ BIẾT học sinh
-// đã trả lời gì. Đây là mảnh còn thiếu đó.
-//
-// KHÔNG CHẤM ĐIỂM Ở ĐÂY. Hàm này chỉ ghi lại lựa chọn. Chấm điểm vẫn là việc của
-// gradeSubmission, chạy đúng một lần khi phiên kết thúc — dù do học sinh bấm nộp hay do cron.
+// QUAN TRỌNG: deadline dùng attempt.expiresAt (field chính thức trong model),
+// không phải attempt.startTime + exam.duration.
 import ExamAttempt from "./examAttempt.model.js";
-import { Exam } from "#modules/exam";
-import { GRACE_PERIOD_MS, resolveAttemptDeadline } from "./attemptDeadline.js";
 import { ErrorCode, createError } from "#shared/errors/errorCodes.js";
 
 const loi = (message, status, errorCode) => createError(message, status, errorCode);
 
 /**
- * Ghi đè các câu trả lời gửi lên vào phiên làm bài.
+ * Lưu câu trả lời gửi lên vào phiên làm bài.
  *
- * Gộp theo questionId chứ không thay cả mảng: máy khách có thể gửi từng câu một khi học sinh
- * chọn, và không được xoá mất những câu đã lưu trước đó.
+ * answers[] — mảng { questionId, selectedOptionIds?, content? }
+ * Gộp theo questionId: không xóa câu đã lưu, chỉ ghi đè câu được gửi lên.
  */
 export const saveDraftAnswers = async (attemptId, studentId, answers, clientVersion, sessionToken) => {
   if (!Array.isArray(answers)) {
@@ -30,8 +22,7 @@ export const saveDraftAnswers = async (attemptId, studentId, answers, clientVers
   }
 
   // ────────────────────────────────────────────────────────────────
-  // Bước 1: Đọc attempt để xác thực quyền truy cập và thời hạn.
-  //         Không dùng bản này để write — chỉ để validate.
+  // Bước 1: Validate quyền truy cập
   // ────────────────────────────────────────────────────────────────
   const attempt = await ExamAttempt.findById(attemptId);
   if (!attempt) throw loi("Không tìm thấy phiên làm bài thi!", 404, ErrorCode.ATTEMPT_NOT_FOUND);
@@ -48,13 +39,14 @@ export const saveDraftAnswers = async (attemptId, studentId, answers, clientVers
     throw loi("Bài thi này đang được làm ở thiết bị khác.", 403, "SESSION_MISMATCH");
   }
 
-  const exam = await Exam.findById(attempt.examId).select("duration").lean();
-  const deadline = resolveAttemptDeadline(attempt.startTime, exam?.duration);
-
-  // Chặn ghi sau khi đã quá hạn và kích hoạt "lazy auto-submit".
-  if (deadline && Date.now() > deadline.getTime() + GRACE_PERIOD_MS) {
-    const { default: examAttemptService } = await import("./examAttempt.service.js");
-    await examAttemptService.gradeSubmission(attemptId, attempt.answers || []);
+  // ────────────────────────────────────────────────────────────────
+  // Bước 2: Kiểm tra thời hạn dùng expiresAt (field chính thức)
+  // ────────────────────────────────────────────────────────────────
+  const GRACE_PERIOD_MS = 2 * 60 * 1000;
+  if (attempt.expiresAt && Date.now() > attempt.expiresAt.getTime() + GRACE_PERIOD_MS) {
+    // Lazy auto-submit: chấm theo những gì đã lưu
+    const { gradeSubmission } = await import("./examAttempt.service.js");
+    await gradeSubmission(attemptId);
     throw loi(
       "Đã hết giờ làm bài. Hệ thống đã tự động thu bài của bạn dựa trên dữ liệu đã lưu.",
       409,
@@ -63,55 +55,64 @@ export const saveDraftAnswers = async (attemptId, studentId, answers, clientVers
   }
 
   // ────────────────────────────────────────────────────────────────
-  // Bước 2: Gộp câu trả lời mới vào map.
+  // Bước 3: Atomic update — dùng findOneAndUpdate với answersVersion
+  //         để chặn concurrent write từ nhiều tab.
   // ────────────────────────────────────────────────────────────────
-  const theoCauHoi = new Map(
-    (attempt.answers || []).map((answer) => [answer.questionId?.toString(), answer])
+
+  // Xây dựng $set cho từng câu trong questions[]
+  const questionMap = new Map(
+    attempt.questions.map((q, idx) => [q.questionId.toString(), idx])
   );
 
-  for (const gui of answers) {
-    if (!gui?.questionId) continue;
-    const key = gui.questionId.toString();
-    const cu = theoCauHoi.get(key) || {};
+  const setOps = {};
+  for (const ans of answers) {
+    if (!ans?.questionId) continue;
+    const idx = questionMap.get(ans.questionId.toString());
+    if (idx === undefined) continue; // Câu không thuộc đề thi này
 
-    theoCauHoi.set(key, {
-      ...(typeof cu.toObject === "function" ? cu.toObject() : cu),
-      questionId: gui.questionId,
-      selectedOption: gui.selectedOption,
-      essayText: gui.essayText,
-      pointsEarned: 0,
-    });
+    if (ans.selectedOptionIds !== undefined) {
+      setOps[`questions.${idx}.answer.selectedOptionIds`] = Array.isArray(ans.selectedOptionIds)
+        ? ans.selectedOptionIds
+        : [ans.selectedOptionIds];
+    }
+    if (ans.essayText !== undefined) {
+      // essayText → lưu vào content dạng [{type:"text",text:...}]
+      setOps[`questions.${idx}.answer.content`] = [{ type: "text", text: ans.essayText }];
+    }
+    if (ans.content !== undefined) {
+      setOps[`questions.${idx}.answer.content`] = ans.content;
+    }
   }
 
-  const newAnswers = Array.from(theoCauHoi.values());
+  if (Object.keys(setOps).length === 0) {
+    // Không có câu hợp lệ để lưu
+    return { saved: 0, deadline: attempt.expiresAt, answersVersion: attempt.answersVersion };
+  }
 
-  // ────────────────────────────────────────────────────────────────
-  // Bước 3: Atomic update — chỉ thành công nếu version vẫn khớp.
-  //
-  // Không dùng attempt.save() ở đây vì giữa bước Read và Write ở
-  // trên, một request song song có thể đã tăng answersVersion lên.
-  // findOneAndUpdate với filter version là cách DUY NHẤT an toàn.
-  // ────────────────────────────────────────────────────────────────
   const filter = { _id: attemptId, status: "IN_PROGRESS" };
-  if (clientVersion !== undefined) {
+  if (clientVersion !== undefined && clientVersion !== null) {
     filter.answersVersion = clientVersion;
   }
 
   const updated = await ExamAttempt.findOneAndUpdate(
     filter,
     {
-      $set: { answers: newAnswers },
+      $set: setOps,
       $inc: { answersVersion: 1 },
     },
     { new: true }
   );
 
   if (!updated) {
-    // Không match vì version đã đổi — một tab khác đã ghi trước.
+    // Version mismatch — tab khác đã ghi trước
     throw loi("Bài làm đã được cập nhật ở nơi khác. Tải lại trang để tiếp tục?", 409, "VERSION_MISMATCH");
   }
 
-  return { saved: updated.answers.length, deadline, answersVersion: updated.answersVersion };
+  return {
+    saved: answers.length,
+    deadline: updated.expiresAt,
+    answersVersion: updated.answersVersion,
+  };
 };
 
 export default { saveDraftAnswers };

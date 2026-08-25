@@ -40,7 +40,7 @@ const TeacherAssignmentFilter = ({
           onChange={(value) => onFiltersChange({ ...filters, courseId: value || "" })}
           options={[
             { label: "All Courses", value: "" },
-            ...courses.map((item) => ({ label: item.courseName, value: item.id })),
+            ...courses.map((item) => ({ label: item.name, value: item.id })),
           ]}
         />
       </Col>

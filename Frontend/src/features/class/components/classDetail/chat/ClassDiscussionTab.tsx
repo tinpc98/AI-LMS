@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
+import envConfig from "../../../../../config/env";
 import { Avatar, Tooltip, Input, Button, Upload, Popover, Spin, Progress } from "antd";
 import {
   SendOutlined,
@@ -42,7 +43,7 @@ const AttachmentImage = ({ file, classId }: { file: ChatAttachment; classId: str
       setLoading(true);
       setError(false);
       const encodedId = encodeURIComponent(file.publicId);
-      const res = await api.get(`/api/classes/${classId}/messages/attachments/${encodedId}/signed-url?resourceType=image`);
+      const res = await api.get(`/classes/${classId}/messages/attachments/${encodedId}/signed-url?resourceType=image`);
       if (res.data.success) {
         setUrl(res.data.data.signedUrl);
       } else {
@@ -113,7 +114,7 @@ const AttachmentFile = ({ file, classId }: { file: ChatAttachment; classId: stri
     const fetchSignedUrl = async () => {
       try {
         const encodedId = encodeURIComponent(file.publicId);
-        const res = await api.get(`/api/classes/${classId}/messages/attachments/${encodedId}/signed-url?resourceType=raw`);
+        const res = await api.get(`/classes/${classId}/messages/attachments/${encodedId}/signed-url?resourceType=raw`);
         if (res.data.success) setUrl(res.data.data.signedUrl);
       } catch (err) {
         console.error("Failed to load signed URL", err);
@@ -346,7 +347,7 @@ export const ClassDiscussionTab: React.FC<ClassDiscussionTabProps> = ({ classId,
   // Tải file
   const uploadProps: UploadProps = {
     name: "file",
-    action: `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/classes/${classId}/messages/attachments`,
+    action: `${envConfig.apiUrl}/classes/${classId}/messages/attachments`,
     headers: {
       Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
       "X-Requested-With": null as any,

@@ -6,33 +6,25 @@ import {
   getJaasDomain,
   getPrivateKey,
 } from "./jaas.service.js";
-import { LiveError, sendLiveError } from "./live.validator.js";
+import { asyncHandler } from "#shared/utils/asyncHandler.js";
 
 export { validateJaasConfig, getJaasAppId, getJaasApiKeyId, getJaasDomain, getPrivateKey };
 
 /**
  * Controller Sinh JWT Token JaaS (API V2 & Legacy Adapter)
  */
-export const generateJaasTokenForSession = async (req, res) => {
-  try {
-    const { sessionId } = req.params;
-    const user = req.user;
+export const generateJaasTokenForSession = asyncHandler(async (req, res) => {
+  const { sessionId } = req.params;
+  const user = req.user;
 
-    const result = await generateJaasTokenService({
-      sessionId,
-      user,
-      isLegacy: false,
-    });
+  const result = await generateJaasTokenService({
+    sessionId,
+    user,
+    isLegacy: false,
+  });
 
-    return res.status(200).json({
-      success: true,
-      data: result,
-    });
-  } catch (error) {
-    if (error instanceof LiveError) {
-      return sendLiveError(res, error.statusCode, error.code, error.message, error.details);
-    }
-    console.error("[JaaS Controller Error]:", error);
-    return res.status(500).json({ success: false, message: `Lỗi tạo JWT JaaS: ${error.message}` });
-  }
-};
+  return res.status(200).json({
+    success: true,
+    data: result,
+  });
+});

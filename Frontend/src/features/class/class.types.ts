@@ -13,22 +13,20 @@ export interface ApiResponse<T> {
   errors?: any;
 }
 
-export type ClassLearningMode = "Offline" | "Online" | "Hybrid";
+export type ClassLearningMode = "Offline" | "Online";
 export type ClassStatus =
-  | "Draft"
-  | "Ready"
-  | "Ongoing"
-  | "Completed"
-  | "Cancelled"
-  | "Archived"
-  | "Active" // Legacy
-  | "Upcoming"; // Legacy
+  | "DRAFT"
+  | "OPEN"
+  | "FULL"
+  | "CLOSED"
+  | "ARCHIVED";
 
 export interface ClassRecord {
   id: string; // Mapped from _id
   className: string;
   classCode: string;
   courseId: string;
+  level: "FOUNDATION" | "INTERMEDIATE" | "ADVANCED";
   teacherId?: string | null;
   teacher?: { id: string; fullName: string } | null;
   assignedBy?: string | null;
@@ -71,6 +69,7 @@ export interface ClassFormValues {
   className: string;
   classCode: string;
   courseId: string;
+  level: "FOUNDATION" | "INTERMEDIATE" | "ADVANCED";
   teacherId?: string;
   joinCode?: string;
   classRoom: string;

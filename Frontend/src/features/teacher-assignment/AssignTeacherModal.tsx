@@ -51,7 +51,7 @@ const AssignTeacherModal = ({
   const courseName = useMemo(() => {
     if (!classRecord) return "—";
     const found = courses.find((c) => c.id === classRecord.courseId);
-    return found ? found.courseName : classRecord.courseId;
+    return found ? found.name : classRecord.courseId;
   }, [classRecord, courses]);
 
   const conflictResult = useMemo(() => {

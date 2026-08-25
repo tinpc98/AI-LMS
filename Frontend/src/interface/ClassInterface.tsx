@@ -5,8 +5,8 @@ export interface IStudentSummary {
 }
 export interface IClass {
   _id: string;
-  className: string;
-  classCode?: string;
+  name: string;
+  code?: string;
   joinCode: string;
   subjectId?: string | null;
   teacherId?: {
@@ -16,15 +16,15 @@ export interface IClass {
   } | null;
   classroom?: string;
   room?: string;
-  learningMode?: "Offline" | "Online" | "Hybrid";
+  mode?: "OFFLINE" | "ONLINE";
   description?: string;
   isEnrollmentOpen?: boolean;
   students: IStudentSummary[];
-  status: "active" | "completed" | "closed";
+  status: "DRAFT" | "OPEN" | "FULL" | "CLOSED" | "ARCHIVED";
   createdAt: string;
 }
 
 export interface ICreateClassPayload {
-  className: string;
+  name: string;
   subjectId?: string;
 }

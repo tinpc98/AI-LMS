@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import { Class } from "#modules/class";
+import ClassEnrollment from "../classEnrollment/classEnrollment.model.js";
 
 /**
  * Service kiểm tra quyền truy cập Socket Room Lớp Học Trực Tuyến
@@ -59,11 +60,11 @@ export const checkSocketLiveClassAccess = async (user, classId) => {
 
   // 5. Kiểm tra Student Enrollment
   if (user.role === "student") {
-    const isEnrolled =
-      Array.isArray(targetClass.students) &&
-      targetClass.students.some(
-        (s) => s.studentId && s.studentId.toString() === user.id && s.status === "Enrolled"
-      );
+    const isEnrolled = await ClassEnrollment.exists({
+      classId,
+      studentId: user.id,
+      status: "ACTIVE",
+    });
 
     if (!isEnrolled) {
       return {

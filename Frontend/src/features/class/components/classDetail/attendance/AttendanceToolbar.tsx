@@ -80,10 +80,10 @@ export const AttendanceToolbar: React.FC<AttendanceToolbarProps> = React.memo(
                 style={{ width: 140, borderRadius: 8 }}
               >
                 <Option value="all">Tất cả trạng thái</Option>
-                <Option value="Present">Có mặt</Option>
-                <Option value="Late">Đi muộn</Option>
-                <Option value="Absent">Vắng mặt</Option>
-                <Option value="Excused">Có phép</Option>
+                <Option value="PRESENT">Có mặt</Option>
+                <Option value="LATE">Đi muộn</Option>
+                <Option value="ABSENT">Vắng mặt</Option>
+                <Option value="EXCUSED">Có phép</Option>
               </Select>
 
               {/* View Mode Segmented Toggle */}

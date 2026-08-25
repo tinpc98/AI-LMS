@@ -5,7 +5,7 @@ import { ClockCircleOutlined } from "@ant-design/icons";
 const { Title, Text } = Typography;
 
 interface WaitingScreenProps {
-  waitingExamData: { examId: string; startTime: string; title: string } | null;
+  waitingExamData: { examId: string; startAt: string; title: string } | null;
   onClose: () => void;
   onRetry: () => void;
 }
@@ -15,7 +15,7 @@ const WaitingScreen: React.FC<WaitingScreenProps> = ({ waitingExamData, onClose,
 
   useEffect(() => {
     if (!waitingExamData) return;
-    const startMs = new Date(waitingExamData.startTime).getTime();
+    const startMs = new Date(waitingExamData.startAt).getTime();
     
     const calculateTimeLeft = () => {
       const now = Date.now();

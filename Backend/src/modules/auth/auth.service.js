@@ -16,7 +16,7 @@ export const loginService = async (email, password) => {
 
   // Phân vùng kiểm tra tài khoản đã bị vô hiệu hóa / Soft Delete
   if (user.isDeleted) {
-    const error = new Error("Tài khoản đã bị vô hiệu hóa.");
+    const error = new Error("Tài khoản đã bị xóa hoặc vô hiệu hóa hoàn toàn.");
     error.status = 403;
     throw error;
   }
@@ -29,17 +29,23 @@ export const loginService = async (email, password) => {
     throw error;
   }
 
-  // Kiểm tra tài khoản có bị khóa hay không
-  if (user.status === "Inactive" || user.status === "Locked") {
-    const error = new Error("Tài khoản của bạn đã bị khóa hoặc ngừng hoạt động!");
+  // Kiểm tra tài khoản có bị khóa hay hết hạn không
+  if (user.status === "Inactive" || user.status === "Locked" || user.status === "Expired") {
+    const error = new Error("Tài khoản của bạn đã bị khóa, hết hạn hoặc ngừng hoạt động!");
     error.status = 403;
+    throw error;
+  }
+
+  if (!process.env.JWT_SECRET) {
+    const error = new Error("Hệ thống chưa được cấu hình khóa bảo mật JWT_SECRET.");
+    error.status = 500;
     throw error;
   }
 
   // Bước 3: Tạo Access Token thời hạn 1 ngày
   const accessToken = jwt.sign(
     { id: user._id, email: user.email, role: user.role },
-    process.env.JWT_SECRET || "123456",
+    process.env.JWT_SECRET,
     { expiresIn: "1d" }
   );
 

@@ -1,4 +1,4 @@
-export type AttendanceStatus = "Present" | "Absent" | "Late" | "Excused";
+export type AttendanceStatus = "DRAFT" | "PRESENT" | "ABSENT" | "LATE" | "EXCUSED";
 
 export interface IStudentAttendanceRecord {
   studentId: string;
@@ -11,7 +11,6 @@ export interface IStudentAttendanceRecord {
 
 export interface IAttendancePayload {
   classId: string;
-  date: string; // YYYY-MM-DD
   records: Array<{
     studentId: string;
     status: AttendanceStatus;

@@ -2,6 +2,9 @@ import mongoose from "mongoose";
 import { User } from "#modules/auth";
 import { Class as classModel } from "#modules/class";
 import { Course } from "#modules/course";
+import { Payment } from "#modules/payment";
+import { Payroll } from "#modules/payroll";
+import { Attendance } from "#modules/attendance";
 
 /**
  * Chuyển đổi readyState của Mongoose sang chuỗi có ý nghĩa.
@@ -27,8 +30,7 @@ class DashboardService {
    */
   async getAdminMetrics() {
     const now = new Date();
-    const oneYearAgo = new Date(now.getFullYear(), now.getMonth() - 11, 1);
-    oneYearAgo.setHours(0, 0, 0, 0);
+    const oneYearAgo = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 11, 1));
 
     // Chạy song song tất cả các query đếm & aggregation – không await tuần tự
     const [
@@ -46,6 +48,11 @@ class DashboardService {
       recentClasses,
       recentUsers,
       rawStudentReg,
+      // Financial & Attendance Analytics
+      totalRevenueData,
+      tuitionData,
+      totalPayrollData,
+      attendanceData,
     ] = await Promise.all([
       // Tổng người dùng chưa bị xóa mềm (mọi role)
       User.countDocuments({ isDeleted: false }),
@@ -174,12 +181,33 @@ class DashboardService {
         {
           $group: {
             _id: {
-              year: { $year: "$createdAt" },
-              month: { $month: "$createdAt" },
+              year: { $year: { date: "$createdAt", timezone: "UTC" } },
+              month: { $month: { date: "$createdAt", timezone: "UTC" } },
             },
             count: { $sum: 1 },
           },
         },
+      ]),
+
+      // PART 7: Payment (Revenue & Tuition)
+      Payment.aggregate([
+        { $match: { status: "PAID" } },
+        { $group: { _id: null, totalRevenue: { $sum: "$amount" } } }
+      ]),
+      Payment.aggregate([
+        { $group: { _id: "$status", count: { $sum: 1 } } }
+      ]),
+
+      // PART 8: Payroll Analytics
+      Payroll.aggregate([
+        { $match: { status: "PAID", isDeleted: false } },
+        { $group: { _id: null, totalPayroll: { $sum: "$totalAmount" } } }
+      ]),
+
+      // PART 9: Attendance Overview
+      Attendance.aggregate([
+        { $match: { isDeleted: false } },
+        { $group: { _id: "$status", count: { $sum: 1 } } }
       ]),
     ]);
 
@@ -201,9 +229,9 @@ class DashboardService {
     const studentRegistrationChart = [];
 
     for (let i = 11; i >= 0; i--) {
-      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      const y = d.getFullYear();
-      const m = d.getMonth() + 1; // 1-12
+      const d = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - i, 1));
+      const y = d.getUTCFullYear();
+      const m = d.getUTCMonth() + 1; // 1-12
 
       const found = rawStudentReg.find((item) => item._id.year === y && item._id.month === m);
       studentRegistrationChart.push({
@@ -236,6 +264,10 @@ class DashboardService {
       recentClasses,
       recentUsers,
       studentRegistrationChart,
+      revenue: totalRevenueData[0]?.totalRevenue || 0,
+      tuition: tuitionData.map(t => ({ status: t._id, count: t.count })),
+      payroll: totalPayrollData[0]?.totalPayroll || 0,
+      attendance: attendanceData.map(a => ({ status: a._id, count: a.count })),
     };
   }
 }

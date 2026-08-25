@@ -1,20 +1,22 @@
 import mongoose, { Schema, model } from "mongoose";
 import softDeletePlugin from "#shared/plugins/softDelete.plugin.js";
+import { contentBlockSchema } from "../question/question.model.js";
 
 const examQuestionSchema = new Schema(
   {
     questionId: {
-      type: Schema.Types.Mixed, // Could be ObjectId for legacy Question, or String/ObjectId for snapshot ID
+      type: Schema.Types.ObjectId,
+      ref: "Question",
       required: true,
     },
-    points: { type: Number, required: true },
-    isSnapshot: {
-      type: Boolean,
-      default: false,
+    order: {
+      type: Number,
+      required: true,
     },
-    snapshotData: {
-      type: Schema.Types.Mixed, // Stores the complete question object from ExamSet
-      default: null,
+    points: {
+      type: Number,
+      required: true,
+      min: 0,
     },
   },
   { _id: false }
@@ -22,84 +24,92 @@ const examQuestionSchema = new Schema(
 
 const examSchema = new Schema(
   {
-    title: { type: String, required: [true, "Tiêu đề đề thi là bắt buộc"], trim: true },
-    duration: { type: Number, required: [true, "Thời gian làm bài là bắt buộc"] },
-
-    questions: [examQuestionSchema],
-
-    startTime: {
-      type: Date,
-      required: [true, "Thời gian bắt đầu thi là bắt buộc"],
+    topicId: {
+      type: Schema.Types.ObjectId,
+      ref: "Topic",
+      default: null,
     },
-
     classId: {
       type: Schema.Types.ObjectId,
       ref: "Class",
-      required: [true, "Lớp học liên kết là bắt buộc"],
+      required: [true, "Lớp học (Class) là bắt buộc"],
     },
-
-    createdBy: {
-      type: Schema.Types.ObjectId,
-      ref: "User",
+    title: {
+      type: String,
+      required: [true, "Tiêu đề đề thi là bắt buộc"],
+      trim: true,
+    },
+    description: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    instructions: [contentBlockSchema],
+    questions: [examQuestionSchema],
+    duration: {
+      type: Number,
+      required: [true, "Thời gian làm bài là bắt buộc (phút)"],
+      min: 1,
+    },
+    attemptsAllowed: {
+      type: Number,
+      required: true,
+      default: 1,
+      min: 1,
+    },
+    scorePolicy: {
+      type: String,
+      enum: ["HIGHEST", "LATEST"],
+      default: "HIGHEST",
+    },
+    startAt: {
+      type: Date,
       default: null,
     },
-
-    isAIGenerated: {
+    endAt: {
+      type: Date,
+      default: null,
+    },
+    shuffleQuestions: {
       type: Boolean,
       default: false,
     },
-
-    aiPromptUsed: {
-      type: String,
-      trim: true,
-      default: null,
+    shuffleOptions: {
+      type: Boolean,
+      default: false,
     },
-
-    aiSourceExamSetId: {
-      type: Schema.Types.ObjectId,
-      ref: "ExamSet",
-      default: null,
-    },
-
-    aiSourceFingerprint: {
-      type: String,
-      default: null,
-    },
-
-    maxScore: {
-      type: Number,
-      default: 10,
-      max: 10,
-    },
-
     status: {
       type: String,
-      enum: ["DRAFT", "PUBLISHED", "COMPLETED"],
-      default: "PUBLISHED",
+      enum: ["DRAFT", "PUBLISHED", "ARCHIVED"],
+      default: "DRAFT",
+    },
+    createdBy: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
     },
   },
   { timestamps: true }
 );
 
-// Indexes phục vụ tìm kiếm nhanh
-examSchema.index({ classId: 1 });
+// Indexes
+examSchema.index({ topicId: 1, status: 1 });
 examSchema.index({ createdBy: 1 });
-examSchema.index({ status: 1 });
 
-examSchema.pre("save", function () {
-  if (this.questions && this.questions.length > 0) {
-    const currentTotal = this.questions.reduce((sum, q) => sum + (q.points || 0), 0);
-    if (parseFloat(currentTotal.toFixed(2)) !== 10) {
-      const error = new Error(
-        `Tổng điểm của đề thi phải bằng đúng 10. Tổng hiện tại: ${currentTotal}`
-      );
-      error.status = 400;
-      throw error;
+// Validation
+examSchema.pre("validate", function () {
+  if (this.startAt && this.endAt) {
+    if (this.startAt >= this.endAt) {
+      this.invalidate("startAt", "Thời gian bắt đầu phải nhỏ hơn thời gian kết thúc.");
+    }
+  }
+  if (this.status === "PUBLISHED") {
+    if (!this.questions || this.questions.length === 0) {
+      this.invalidate("questions", "Đề thi PUBLISHED phải có ít nhất 1 câu hỏi.");
     }
   }
 });
 
 examSchema.plugin(softDeletePlugin);
 
-const Exam = model("Exam", examSchema);
-export default Exam;
+export default model("Exam", examSchema);

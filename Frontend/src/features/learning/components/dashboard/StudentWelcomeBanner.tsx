@@ -1,50 +1,28 @@
 import React, { useMemo } from "react";
-import { Button, Typography, Row, Col, Avatar } from "antd";
-import {
-  BookOutlined,
-  FileTextOutlined,
-  FormOutlined,
-  BellOutlined,
-  UserOutlined,
-  ReloadOutlined,
-} from "@ant-design/icons";
+import { Button, Typography } from "antd";
+import { ReloadOutlined } from "@ant-design/icons";
 import { useAuth } from "../../../../shared/hooks/useAuth";
 import { tokens } from "../../../../shared/theme/tokens";
+import { useTheme } from "../../../../shared/context/ThemeContext";
 
 const { Title, Text } = Typography;
 
 interface StudentWelcomeBannerProps {
-  totalClassesCount: number;
-  pendingAssignmentsCount: number;
-  upcomingExamsCount: number;
-  unreadAnnouncementsCount: number;
+  totalClassesCount?: number;
+  pendingAssignmentsCount?: number;
+  upcomingExamsCount?: number;
+  unreadAnnouncementsCount?: number;
   onRefresh?: () => void;
   loading?: boolean;
 }
 
-const kpiCardStyle: React.CSSProperties = {
-  backgroundColor: "rgba(255, 255, 255, 0.15)",
-  backdropFilter: "blur(8px)",
-  borderRadius: tokens.radius.md,
-  padding: `${tokens.space[4]}px ${tokens.space[4]}px`,
-  display: "flex",
-  alignItems: "center",
-  gap: tokens.space[3],
-  transition: "var(--transition-fast)",
-  cursor: "default",
-  border: "1px solid rgba(255,255,255,0.2)",
-};
-
 export const StudentWelcomeBanner: React.FC<StudentWelcomeBannerProps> = React.memo(
   ({
-    totalClassesCount,
-    pendingAssignmentsCount,
-    upcomingExamsCount,
-    unreadAnnouncementsCount,
     onRefresh,
     loading,
   }) => {
     const { user } = useAuth();
+    const { isDark } = useTheme();
 
     const { greeting, currentDateString } = useMemo(() => {
       const now = new Date();
@@ -72,181 +50,83 @@ export const StudentWelcomeBanner: React.FC<StudentWelcomeBannerProps> = React.m
 
     const studentName = user?.fullName || "Sinh viên";
 
-    const kpiItems = [
-      {
-        key: "classes",
-        icon: <BookOutlined style={{ fontSize: 26, color: tokens.color.text.inverse }} />,
-        value: totalClassesCount,
-        label: "Lớp học",
-        iconBg: "rgba(255,255,255,0.2)",
-      },
-      {
-        key: "assignments",
-        icon: <FileTextOutlined style={{ fontSize: 26, color: "var(--color-warning-base)" }} />,
-        value: pendingAssignmentsCount,
-        label: "Bài tập",
-        iconBg: "rgba(255,236,61,0.15)",
-      },
-      {
-        key: "exams",
-        icon: <FormOutlined style={{ fontSize: 26, color: "var(--color-warning-base)" }} />,
-        value: upcomingExamsCount,
-        label: "Bài kiểm tra",
-        iconBg: "rgba(255,156,110,0.15)",
-      },
-      {
-        key: "announcements",
-        icon: <BellOutlined style={{ fontSize: 26, color: "var(--color-success-base)" }} />,
-        value: unreadAnnouncementsCount,
-        label: "Thông báo",
-        iconBg: "rgba(149,222,100,0.15)",
-      },
-    ];
-
     return (
       <div
         style={{
-          borderRadius: tokens.radius.xl,
-          background: tokens.color.gradient.primary,
-          padding: `${tokens.space[5]}px ${tokens.space[6]}px`,
-          marginBottom: tokens.space[6],
-          boxShadow: "0 8px 32px rgba(45, 140, 219, 0.25)",
           position: "relative",
+          marginBottom: tokens.space[6],
+          background: "var(--color-bg-page)",
+          borderRadius: tokens.radius.lg,
           overflow: "hidden",
         }}
       >
-        {/* Decorative circles */}
+        {/* Background Layer */}
         <div
           style={{
             position: "absolute",
-            top: -40,
-            right: -40,
-            width: 200,
-            height: 200,
-            borderRadius: "50%",
-            background: "rgba(255,255,255,0.05)",
-            pointerEvents: "none",
-          }}
-        />
-        <div
-          style={{
-            position: "absolute",
-            bottom: -60,
-            right: 80,
-            width: 160,
-            height: 160,
-            borderRadius: "50%",
-            background: "rgba(255,255,255,0.04)",
-            pointerEvents: "none",
+            inset: 0,
+            background: isDark
+              ? "linear-gradient(135deg, rgba(67, 67, 67, 0.3) 0%, rgba(0, 0, 0, 0.8) 100%)"
+              : "linear-gradient(135deg, rgba(230, 247, 255, 0.5) 0%, rgba(240, 245, 255, 1) 100%)",
+            zIndex: 0,
           }}
         />
 
-        <Row gutter={[32, 24]} align="middle">
-          {/* Left: Greeting */}
-          <Col xs={24} md={10}>
-            <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-              <Avatar
-                size={64}
-                src={(user as any)?.avatar || undefined}
-                icon={!(user as any)?.avatar ? <UserOutlined style={{ fontSize: 28 }} /> : undefined}
-                style={{
-                  backgroundColor: "rgba(255, 255, 255, 0.25)",
-                  border: "2.5px solid rgba(255, 255, 255, 0.7)",
-                  flexShrink: 0,
-                }}
-              />
-              <div>
-                <Text
+        {/* Decorative elements */}
+        <div
+          style={{
+            position: "absolute",
+            top: -50,
+            right: -20,
+            width: 250,
+            height: 250,
+            borderRadius: "50%",
+            background: isDark
+              ? "radial-gradient(circle, rgba(24, 144, 255, 0.15) 0%, transparent 70%)"
+              : "radial-gradient(circle, rgba(24, 144, 255, 0.1) 0%, transparent 70%)",
+            zIndex: 0,
+          }}
+        />
+
+        {/* Content Layer */}
+        <div style={{ position: "relative", zIndex: 1, padding: "32px 40px" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 16 }}>
+            {/* Left: Welcome Message */}
+            <div>
+              <Text style={{ fontSize: 16, color: "var(--color-text-description)", marginBottom: 8, display: "block" }}>
+                {currentDateString}
+              </Text>
+              <Title level={2} style={{ margin: 0, color: "var(--color-text-title)" }}>
+                {greeting}, <span style={{ color: "var(--color-primary-base)" }}>{studentName}</span> 👋
+              </Title>
+              <Text style={{ fontSize: 14, color: "var(--color-text-description)", marginTop: 8, display: "block", maxWidth: 600 }}>
+                Sẵn sàng cho các mục tiêu học tập mới trong ngày hôm nay!
+              </Text>
+            </div>
+
+            {/* Right: Actions */}
+            <div>
+              {onRefresh && (
+                <Button
+                  icon={<ReloadOutlined />}
+                  onClick={onRefresh}
+                  loading={loading}
+                  type="text"
                   style={{
-                    color: "rgba(255,255,255,0.75)",
-                    fontSize: 13,
-                    display: "block",
-                    marginBottom: 2,
-                    letterSpacing: 0.3,
+                    backgroundColor: "var(--color-bg-container)",
+                    border: "1px solid var(--color-border-default)",
                   }}
                 >
-                  {currentDateString}
-                </Text>
-                <Title
-                  level={3}
-                  style={{ color: "var(--color-surface)", margin: "0 0 4px 0", fontWeight: 700, lineHeight: 1.2 }}
-                >
-                  {greeting}, {studentName}! 👋
-                </Title>
-                <Text style={{ color: "rgba(255, 255, 255, 0.75)", fontSize: 13, lineHeight: 1.5 }}>
-                  Hôm nay bạn muốn học gì?
-                </Text>
-              </div>
+                  Làm mới
+                </Button>
+              )}
             </div>
-          </Col>
-
-          {/* Right: KPI Cards */}
-          <Col xs={24} md={14}>
-            <Row gutter={[16, 16]}>
-              {kpiItems.map((kpi) => (
-                <Col xs={12} sm={6} md={12} lg={6} key={kpi.key}>
-                  <div style={kpiCardStyle}>
-                    <div
-                      style={{
-                        width: 48,
-                        height: 48,
-                        borderRadius: 12,
-                        backgroundColor: kpi.iconBg,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        flexShrink: 0,
-                      }}
-                    >
-                      {kpi.icon}
-                    </div>
-                    <div>
-                      <div
-                        style={{
-                          fontSize: 26,
-                          fontWeight: 800,
-                          lineHeight: 1,
-                          color: "var(--color-surface)",
-                          letterSpacing: -0.5,
-                        }}
-                      >
-                        {kpi.value}
-                      </div>
-                      <div style={{ fontSize: 12, color: "rgba(255,255,255,0.8)", marginTop: 2 }}>
-                        {kpi.label}
-                      </div>
-                    </div>
-                  </div>
-                </Col>
-              ))}
-            </Row>
-          </Col>
-        </Row>
-
-        {/* Refresh button */}
-        {onRefresh && (
-          <div style={{ position: "absolute", top: 20, right: 24 }}>
-            <Button
-              icon={<ReloadOutlined spin={loading} />}
-              onClick={onRefresh}
-              size="small"
-              style={{
-                backgroundColor: "rgba(255,255,255,0.2)",
-                border: "1px solid rgba(255,255,255,0.3)",
-                color: "var(--color-surface)",
-                borderRadius: 8,
-                backdropFilter: "blur(4px)",
-              }}
-            >
-              Làm mới
-            </Button>
           </div>
-        )}
+        </div>
       </div>
     );
   }
 );
 
 StudentWelcomeBanner.displayName = "StudentWelcomeBanner";
-
 export default StudentWelcomeBanner;

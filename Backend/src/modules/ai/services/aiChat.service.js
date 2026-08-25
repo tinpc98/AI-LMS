@@ -7,6 +7,7 @@ import { AIError, AIErrorCode } from "../aiError.js";
 import aiCoreService from "./aiCore.service.js";
 import chatOutputValidator from "../validators/chatOutput.validator.js";
 import { AIInputBudget } from "../utils/aiInputBudget.js";
+import ClassEnrollment from "../../classEnrollment/classEnrollment.model.js";
 
 class AIChatService {
   /**
@@ -75,11 +76,11 @@ class AIChatService {
           403
         );
       }
-      const isEnrolled =
-        classDoc.students &&
-        classDoc.students.some(
-          (s) => String(s.studentId) === String(userId) && s.status === "Enrolled"
-        );
+      const isEnrolled = await ClassEnrollment.exists({
+        classId: classDoc._id,
+        studentId: userId,
+        status: "ACTIVE"
+      });
       if (!isEnrolled) {
         throw new AIError(
           "Bạn không phải là học sinh hợp lệ của lớp học này.",

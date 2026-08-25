@@ -27,16 +27,16 @@ export interface UploadResourceResponse {
 
 export const classApi = {
   // Lấy danh sách lớp do Giáo viên phụ trách hoặc học sinh tham gia
-  getMyClasses: () => axiosClient.get("/api/classes"),
+  getMyClasses: () => axiosClient.get("/classes"),
 
   // Lấy chi tiết lớp học theo ID
-  getClassById: (id: string) => axiosClient.get(`/api/classes/${id}`),
+  getClassById: (id: string) => axiosClient.get(`/classes/${id}`),
 
   // Thêm tài nguyên bằng cách dán URL (Giáo viên / Admin)
   addResource: (
     classId: string,
     resourceData: { title: string; description?: string; type?: string; url: string }
-  ) => axiosClient.post(`/api/classes/${classId}/resources`, resourceData),
+  ) => axiosClient.post(`/classes/${classId}/resources`, resourceData),
 
   /**
    * Upload file tài liệu lên Cloudinary qua backend.
@@ -52,7 +52,7 @@ export const classApi = {
     signal?: AbortSignal
   ) =>
     axiosClient.post<UploadResourceResponse>(
-      `/api/classes/${classId}/resources/upload`,
+      `/classes/${classId}/resources/upload`,
       formData,
       {
         signal,
@@ -70,10 +70,10 @@ export const classApi = {
    */
   getResourceAccessUrl: (classId: string, resourceId: string) =>
     axiosClient.get<{ success: boolean; data: ResourceAccessData }>(
-      `/api/classes/${classId}/resources/${resourceId}/access`
+      `/classes/${classId}/resources/${resourceId}/access`
     ),
 
   // Xóa tài nguyên bài học khỏi lớp (Giáo viên / Admin)
   removeResource: (classId: string, resourceId: string) =>
-    axiosClient.delete(`/api/classes/${classId}/resources/${resourceId}`),
+    axiosClient.delete(`/classes/${classId}/resources/${resourceId}`),
 };

@@ -10,8 +10,8 @@ import { mockClasses } from "../../../features/class/class.mock";
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from "recharts";
 
 export const ClassReport: React.FC = () => {
-  const activeClasses = mockClasses.filter((c) => c.status === "Active").length;
-  const upcomingClasses = mockClasses.filter((c) => c.status === "Upcoming").length;
+  const activeClasses = mockClasses.filter((c) => c.status === "OPEN").length;
+  const upcomingClasses = mockClasses.filter((c) => c.status === "DRAFT").length;
 
   const classFillRateData = mockClasses.map((c) => ({
     name: c.className,
@@ -86,9 +86,9 @@ export const ClassReport: React.FC = () => {
       key: "status",
       render: (status: string) => {
         const color =
-          status === "Active" ? "success" : status === "Upcoming" ? "processing" : "default";
+          status === "OPEN" ? "success" : status === "DRAFT" ? "processing" : "default";
         const label =
-          status === "Active" ? "Đang diễn ra" : status === "Upcoming" ? "Sắp mở" : "Đã xong";
+          status === "OPEN" ? "Đang diễn ra" : status === "DRAFT" ? "Sắp mở" : "Đã xong";
         return <Tag color={color}>{label}</Tag>;
       },
     },

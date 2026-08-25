@@ -127,7 +127,7 @@ export interface TodayClassRecord {
   days: string;
   currentStudents: number;
   maxStudents: number;
-  learningMode: "Offline" | "Online" | "Hybrid";
+  learningMode: "Offline" | "Online";
   status: "Upcoming" | "Active" | "Completed" | "Cancelled";
 }
 

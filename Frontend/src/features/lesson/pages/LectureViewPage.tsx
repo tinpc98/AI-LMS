@@ -1,8 +1,7 @@
-import React, { useState, useMemo, useRef, useEffect } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
-  Spin,
   Button,
   Tag,
   Typography,
@@ -10,9 +9,12 @@ import {
   Card,
   Progress,
   Tooltip,
-  Divider,
+  Alert,
   Empty,
   Skeleton,
+  Drawer,
+  Row,
+  Col,
 } from "antd";
 import {
   ArrowLeftOutlined,
@@ -22,25 +24,20 @@ import {
   CheckCircleOutlined,
   PlayCircleFilled,
   PlayCircleOutlined,
-  ClockCircleOutlined,
-  PaperClipOutlined,
-  DownloadOutlined,
-  RobotOutlined,
-  ThunderboltOutlined,
-  SendOutlined,
-  SyncOutlined,
+  MenuOutlined,
+  FilePdfOutlined,
+  EditOutlined,
+  BulbOutlined,
+  WarningOutlined,
 } from "@ant-design/icons";
 
 import { lessonApi } from "../../../api/lessonApi";
 import learningApi, { type ILessonProgress } from "../../../api/learningApi";
-import aiApi from "../../../api/aiApi";
-import { useAIChat } from "../../ai/hooks/useAIChat";
 import { toast } from "../../../utils/toast";
-import { queryKeys } from "../../../shared/api/queryKeys";
-import { getApiErrorCode, getApiErrorMessage, getApiErrorStatus } from "../../../shared/utils/apiError";
 import type { ILesson } from "../../../interface/lessonInterface";
 import { YouTubeLessonPlayer } from "../components/YouTubeLessonPlayer";
 import { sortLessons, formatLessonDisplayTitle, cleanLessonTitle } from "../utils/lessonHelper";
+import { getApiErrorMessage } from "../../../shared/utils/apiError";
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -54,23 +51,24 @@ export const LectureViewPage: React.FC = () => {
   const location = useLocation();
   const queryClient = useQueryClient();
 
-  // Nhận diện portal (Teacher hay Student)
   const isTeacherPortal = location.pathname.startsWith("/teacher");
-
-  // Đường dẫn động theo vai trò
-  const baseClassPath = isTeacherPortal
-    ? `/teacher/classroom-detail/${classId}`
-    : `/student/classdetail/${classId}`;
-
+  const baseClassPath = isTeacherPortal ? `/teacher/classroom-detail/${classId}` : `/student/classdetail/${classId}`;
   const getLecturePath = (targetLessonId: string) =>
     isTeacherPortal
       ? `/teacher/classroom-detail/${classId}/lecture/${targetLessonId}`
       : `/student/classdetail/${classId}/lecture/${targetLessonId}`;
 
-  // Hỗ trợ cả lectureId lẫn lessonId để tương thích ngược route cũ
   const activeLessonId = lectureId || lessonId;
 
-  // 1. Fetch danh sách bài giảng của lớp
+  const [showVideo, setShowVideo] = useState(false);
+  const [drawerVisible, setDrawerVisible] = useState(false);
+
+  // Reset video state when lesson changes
+  useEffect(() => {
+    setShowVideo(false);
+  }, [activeLessonId]);
+
+  // 1. Fetch danh sách bài giảng
   const {
     data: lessonsData,
     isLoading: isLoadingLessons,
@@ -85,7 +83,7 @@ export const LectureViewPage: React.FC = () => {
     enabled: !!classId,
   });
 
-  // 2. Fetch tiến độ bài học của học sinh trong lớp
+  // 2. Fetch tiến độ
   const { data: progressList = [], isLoading: isLoadingProgress } = useQuery({
     queryKey: ["lessonProgress", classId],
     queryFn: async () => {
@@ -95,23 +93,16 @@ export const LectureViewPage: React.FC = () => {
     enabled: !!classId,
   });
 
-  // Sắp xếp bài giảng ổn định
-  const sortedLessons = useMemo(() => {
-    return sortLessons(lessonsData || []);
-  }, [lessonsData]);
+  const sortedLessons = useMemo(() => sortLessons(lessonsData || []), [lessonsData]);
 
-  // Tạo map tiến độ theo lessonId để tra cứu O(1)
   const progressMap = useMemo(() => {
     const map = new Map<string, ILessonProgress>();
     (progressList || []).forEach((p) => {
-      if (p.lessonId) {
-        map.set(String(p.lessonId), p);
-      }
+      if (p.lessonId) map.set(String(p.lessonId), p);
     });
     return map;
   }, [progressList]);
 
-  // Tìm bài giảng hiện tại
   const currentIndex = useMemo(() => {
     if (!activeLessonId) return -1;
     return sortedLessons.findIndex((l) => String(l._id) === String(activeLessonId));
@@ -131,7 +122,6 @@ export const LectureViewPage: React.FC = () => {
   const currentProgress = currentLesson ? progressMap.get(String(currentLesson._id)) : undefined;
   const isCurrentCompleted = Boolean(currentProgress?.completed);
 
-  // Số lượng bài đã hoàn thành
   const completedCount = useMemo(() => {
     return sortedLessons.filter((l) => progressMap.get(String(l._id))?.completed).length;
   }, [sortedLessons, progressMap]);
@@ -141,7 +131,7 @@ export const LectureViewPage: React.FC = () => {
     return Math.round((completedCount / sortedLessons.length) * 100);
   }, [completedCount, sortedLessons.length]);
 
-  // 3. Mutation: Đánh dấu bài học đã hoàn thành
+  // 3. Mutation: Đánh dấu hoàn thành
   const markCompletedMutation = useMutation({
     mutationFn: async () => {
       if (!currentLesson || !classId) return;
@@ -160,89 +150,22 @@ export const LectureViewPage: React.FC = () => {
     },
   });
 
-  // 4. Tích hợp AI Summary
-  const summaryQueryKey = queryKeys.lesson.summary(activeLessonId);
-  const { data: summary = null, isLoading: isFetchingSummary } = useQuery({
-    queryKey: summaryQueryKey,
-    queryFn: async () => {
-      if (!activeLessonId) return null;
-      try {
-        const data = await aiApi.getLessonSummary(activeLessonId);
-        return data?.content || data?.summary || null;
-      } catch (err: unknown) {
-        const code = getApiErrorCode(err);
-        if (code === "AI_SUMMARY_NOT_FOUND") return null;
-        if (!code && getApiErrorStatus(err) === 404) return null;
-        throw err;
-      }
-    },
-    enabled: !!activeLessonId,
-  });
-
-  const generateSummaryMutation = useMutation({
-    mutationFn: () => aiApi.generateLessonSummary(activeLessonId!),
-    onSuccess: (data) => {
-      queryClient.setQueryData(
-        summaryQueryKey,
-        data.content || data.summary || "Đã tạo tóm tắt nhưng không có nội dung."
-      );
-      toast.success("Đã tạo tóm tắt bài học bằng AI!");
-    },
-    onError: (err: any) => {
-      toast.error(getApiErrorMessage(err, "Không thể tạo tóm tắt bài học"));
-    },
-  });
-
-  const isLoadingSummary = isFetchingSummary || generateSummaryMutation.isPending;
-
-  // 5. Tích hợp AI Chatbot
-  const {
-    messages,
-    isLoading: isChatLoading,
-    isTyping,
-    error: chatError,
-    initSession,
-    sendMessage,
-  } = useAIChat(activeLessonId);
-
-  const [chatInput, setChatInput] = useState("");
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (activeLessonId) {
-      initSession();
-    }
-  }, [activeLessonId, initSession]);
-
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, isTyping]);
-
-  const handleSendChat = () => {
-    if (chatInput.trim()) {
-      sendMessage(chatInput.trim());
-      setChatInput("");
-    }
-  };
-
-  // Điều hướng chuyển bài học mà không reload trang
   const handleSelectLesson = (targetLessonId: string) => {
     navigate(getLecturePath(targetLessonId));
+    setDrawerVisible(false);
   };
 
-  // Trạng thái Loading
   if (isLoadingLessons) {
     return (
-      <div style={{ maxWidth: 1400, margin: "0 auto", padding: "24px 20px" }}>
+      <div className="w-full max-w-[1440px] mx-auto p-6 md:p-8">
         <Skeleton active paragraph={{ rows: 12 }} />
       </div>
     );
   }
 
-  // Trạng thái Lỗi hoặc Lớp không có bài giảng
   if (isLessonsError || sortedLessons.length === 0) {
     return (
-      <div style={{ maxWidth: 900, margin: "60px auto", textAlign: "center", padding: 24 }}>
+      <div className="w-full max-w-[1440px] mx-auto p-6 md:p-8 text-center mt-12">
         <Empty
           description={
             <Text type="secondary">
@@ -252,12 +175,7 @@ export const LectureViewPage: React.FC = () => {
             </Text>
           }
         >
-          <Button
-            type="primary"
-            icon={<ArrowLeftOutlined />}
-            onClick={() => navigate(baseClassPath)}
-            style={{ borderRadius: 8 }}
-          >
+          <Button type="primary" icon={<ArrowLeftOutlined />} onClick={() => navigate(baseClassPath)}>
             Quay lại lớp học
           </Button>
         </Empty>
@@ -265,19 +183,11 @@ export const LectureViewPage: React.FC = () => {
     );
   }
 
-  // Trạng thái không tìm thấy bài học cụ thể
   if (!currentLesson) {
     return (
-      <div style={{ maxWidth: 900, margin: "60px auto", textAlign: "center", padding: 24 }}>
-        <Empty
-          description={<Text type="secondary">Bài giảng yêu cầu không tồn tại trong lớp học này.</Text>}
-        >
-          <Button
-            type="primary"
-            icon={<ArrowLeftOutlined />}
-            onClick={() => navigate(baseClassPath)}
-            style={{ borderRadius: 8 }}
-          >
+      <div className="w-full max-w-[1440px] mx-auto p-6 md:p-8 text-center mt-12">
+        <Empty description={<Text type="secondary">Bài giảng yêu cầu không tồn tại trong lớp học này.</Text>}>
+          <Button type="primary" icon={<ArrowLeftOutlined />} onClick={() => navigate(baseClassPath)}>
             Quay lại danh sách bài giảng
           </Button>
         </Empty>
@@ -286,12 +196,12 @@ export const LectureViewPage: React.FC = () => {
   }
 
   return (
-    <div style={{ backgroundColor: "var(--color-bg-layout, #f8fafc)", minHeight: "100vh" }}>
+    <div style={{ backgroundColor: "#f8fafc", minHeight: "100vh" }}>
       {/* Top Header Bar */}
       <div
         style={{
           backgroundColor: "#fff",
-          borderBottom: "1px solid var(--color-border-default, #e2e8f0)",
+          borderBottom: "1px solid #e2e8f0",
           padding: "12px 24px",
           display: "flex",
           alignItems: "center",
@@ -302,33 +212,19 @@ export const LectureViewPage: React.FC = () => {
         }}
       >
         <Space size={16}>
-          <Button
-            icon={<ArrowLeftOutlined />}
-            onClick={() => navigate(baseClassPath)}
-            style={{ borderRadius: 8, fontWeight: 500 }}
-          >
-            Lớp học
+          <Button icon={<ArrowLeftOutlined />} onClick={() => navigate(baseClassPath)} type="text">
+            Quay lại
           </Button>
-          <div>
-            <Text strong style={{ fontSize: 16, display: "block" }}>
-              {formatLessonDisplayTitle(currentIndex, currentLesson.title)}
-            </Text>
-            <Text type="secondary" style={{ fontSize: 12 }}>
-              Bài {currentIndex + 1} / {sortedLessons.length} bài giảng
-            </Text>
-          </div>
+          <Button icon={<MenuOutlined />} onClick={() => setDrawerVisible(true)}>
+            Danh sách bài học
+          </Button>
         </Space>
 
-        {/* Nút Điều hướng nhanh & Trạng thái hoàn thành */}
         <Space size={12}>
           {!isTeacherPortal && (
             isCurrentCompleted ? (
-              <Tag
-                icon={<CheckCircleFilled style={{ color: "var(--color-success-base)" }} />}
-                color="success"
-                style={{ padding: "4px 10px", fontSize: 13, borderRadius: 6 }}
-              >
-                Đã học xong
+              <Tag icon={<CheckCircleFilled />} color="success" style={{ padding: "4px 10px", fontSize: 13, borderRadius: 6 }}>
+                Đã hoàn thành
               </Tag>
             ) : (
               <Button
@@ -337,348 +233,219 @@ export const LectureViewPage: React.FC = () => {
                 loading={markCompletedMutation.isPending}
                 style={{ borderRadius: 6 }}
               >
-                Đánh dấu đã học
+                Đánh dấu hoàn thành
               </Button>
             )
           )}
-
           <Button.Group>
             <Tooltip title={prevLesson ? `Bài trước: ${cleanLessonTitle(prevLesson.title)}` : "Đã là bài đầu tiên"}>
-              <Button
-                icon={<LeftOutlined />}
-                disabled={!prevLesson}
-                onClick={() => prevLesson && handleSelectLesson(prevLesson._id)}
-              />
+              <Button icon={<LeftOutlined />} disabled={!prevLesson} onClick={() => prevLesson && handleSelectLesson(prevLesson._id)} />
             </Tooltip>
             <Tooltip title={nextLesson ? `Bài tiếp: ${cleanLessonTitle(nextLesson.title)}` : "Đã là bài cuối cùng"}>
-              <Button
-                icon={<RightOutlined />}
-                disabled={!nextLesson}
-                onClick={() => nextLesson && handleSelectLesson(nextLesson._id)}
-              />
+              <Button icon={<RightOutlined />} disabled={!nextLesson} onClick={() => nextLesson && handleSelectLesson(nextLesson._id)} />
             </Tooltip>
           </Button.Group>
         </Space>
       </div>
 
-      {/* Main Content Layout: 70% Player / Details + 30% Sidebar */}
-      <div
-        style={{
-          maxWidth: 1600,
-          margin: "0 auto",
-          padding: "24px 20px",
-          display: "grid",
-          gridTemplateColumns: "minmax(0, 7fr) minmax(320px, 3fr)",
-          gap: 24,
-        }}
-      >
-        {/* Left Column: Player, Info, Summary */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-          {/* 1. YouTube IFrame Player */}
-          <YouTubeLessonPlayer
-            videoUrl={currentLesson.videoUrl}
-            lessonTitle={formatLessonDisplayTitle(currentIndex, currentLesson.title)}
-            hasNextLesson={Boolean(nextLesson)}
-            onNextLesson={() => nextLesson && handleSelectLesson(nextLesson._id)}
-            isCompleted={isCurrentCompleted}
-            onMarkCompleted={() => markCompletedMutation.mutate()}
-            onVideoEnded={() => {
-              if (!isCurrentCompleted) {
-                markCompletedMutation.mutate();
-              }
-            }}
-          />
-
-          {/* 2. Lesson Header & Details Card */}
-          <Card style={{ borderRadius: 12 }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 16 }}>
-              <div style={{ flex: 1 }}>
-                <Space size={8} style={{ marginBottom: 8 }}>
-                  <Tag color="blue" style={{ borderRadius: 6, fontWeight: 600 }}>
-                    Bài {currentIndex + 1}
-                  </Tag>
-                  {currentLesson.duration && currentLesson.duration > 0 && (
-                    <Tag icon={<ClockCircleOutlined />} style={{ borderRadius: 6 }}>
-                      {currentLesson.duration} phút
-                    </Tag>
-                  )}
-                </Space>
-
-                <Title level={3} style={{ margin: "0 0 12px", fontSize: 22 }}>
-                  {formatLessonDisplayTitle(currentIndex, currentLesson.title)}
-                </Title>
-
-                {currentLesson.description && (
-                  <Paragraph style={{ color: "var(--color-text-description)", fontSize: 14, lineHeight: 1.6 }}>
-                    {currentLesson.description}
-                  </Paragraph>
-                )}
-              </div>
-
-              {/* Action: AI Summary Button */}
-              <Button
-                icon={<RobotOutlined />}
-                type="primary"
-                ghost
-                onClick={() => generateSummaryMutation.mutate()}
-                loading={isLoadingSummary}
-                style={{ borderRadius: 8, fontWeight: 600 }}
-              >
-                Tóm tắt AI
-              </Button>
+      {/* Main Container - Single Column */}
+      <div className="w-full max-w-[1440px] mx-auto p-6 md:p-8" style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+        
+        {/* Bước 2: Overview Header */}
+        <Card style={{ borderRadius: 16, boxShadow: '0 4px 12px rgba(0,0,0,0.05)', border: 'none' }}>
+          <Space direction="vertical" size="large" style={{ width: '100%' }}>
+            <div>
+              <Text type="secondary" style={{ fontSize: 14, textTransform: 'uppercase', letterSpacing: 1, fontWeight: 600 }}>
+                BÀI {currentIndex + 1}
+              </Text>
+              <Title level={2} style={{ margin: "4px 0 0", color: '#1e293b' }}>
+                Chuyên đề: {cleanLessonTitle(currentLesson.title)}
+              </Title>
+              {currentLesson.description && (
+                <Paragraph style={{ color: "#64748b", marginTop: 8, fontSize: 15 }}>
+                  {currentLesson.description}
+                </Paragraph>
+              )}
             </div>
 
-            {/* Attachments Section if any */}
-            {currentLesson.attachments && currentLesson.attachments.length > 0 && (
-              <div style={{ marginTop: 16, paddingTop: 16, borderTop: "1px solid var(--color-border-default, #f1f5f9)" }}>
-                <Text strong style={{ fontSize: 13, display: "block", marginBottom: 8 }}>
-                  Tài liệu đính kèm ({currentLesson.attachments.length}):
-                </Text>
-                <Space size={10} wrap>
-                  {currentLesson.attachments.map((file, fIdx) => (
-                    <Button
-                      key={file.publicId || `att-${fIdx}`}
-                      size="small"
-                      icon={<PaperClipOutlined />}
-                      href={file.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      style={{ borderRadius: 6 }}
-                    >
-                      {file.name}
-                    </Button>
-                  ))}
-                </Space>
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+                <Text strong style={{ color: '#334155' }}>Mức độ nắm vững: 68%</Text>
+                <Text type="secondary">dựa trên 45/66 câu đúng qua 3 đề</Text>
               </div>
-            )}
-          </Card>
+              <Progress percent={68} strokeColor={{ '0%': '#108ee9', '100%': '#87d068' }} status="active" />
+            </div>
 
-          {/* 3. AI Summary Box */}
-          {(summary || isLoadingSummary) && (
+            <Alert
+              type="warning"
+              showIcon
+              icon={<WarningOutlined />}
+              message={<Text strong>Điểm yếu cần khắc phục: Tích phân từng phần (2/8 câu đúng)</Text>}
+              style={{ borderRadius: 8, backgroundColor: '#fffbe6', border: '1px solid #ffe58f' }}
+            />
+          </Space>
+        </Card>
+
+        {/* Bước 3: Resource Grid */}
+        <Title level={4} style={{ margin: "16px 0 0", color: '#334155' }}>Nguồn tài nguyên học tập</Title>
+        <Row gutter={[24, 24]}>
+          <Col xs={24} sm={12}>
             <Card
-              style={{
-                borderRadius: 12,
-                backgroundColor: "rgba(99, 102, 241, 0.04)",
-                borderColor: "rgba(99, 102, 241, 0.2)",
+              hoverable
+              onClick={() => setShowVideo(true)}
+              style={{ 
+                borderRadius: 16, 
+                textAlign: 'center', 
+                border: showVideo ? '2px solid #1677ff' : '2px solid transparent',
+                backgroundColor: showVideo ? '#e6f4ff' : '#fff',
+                transition: 'all 0.2s',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.04)'
               }}
+              styles={{ body: { padding: '32px 24px' } }}
             >
-              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
-                <RobotOutlined style={{ fontSize: 20, color: "#6366f1" }} />
-                <Text strong style={{ fontSize: 16, color: "#4338ca" }}>
-                  AI Scholar Tóm Tắt Bài Học
-                </Text>
-              </div>
-              {isLoadingSummary && !summary ? (
-                <div style={{ display: "flex", alignItems: "center", gap: 8, color: "#6366f1", padding: "12px 0" }}>
-                  <SyncOutlined spin />
-                  <Text style={{ color: "#6366f1" }}>Đang phân tích và tổng hợp nội dung bài học...</Text>
-                </div>
-              ) : (
-                <div style={{ fontSize: 14, color: "#334155", lineHeight: 1.7, whiteSpace: "pre-wrap" }}>
-                  {summary}
-                </div>
-              )}
+              <PlayCircleOutlined style={{ fontSize: 48, color: '#1677ff', marginBottom: 16 }} />
+              <Title level={4} style={{ margin: 0, color: '#1e293b' }}>Video lý thuyết</Title>
+              <Text type="secondary">Xem bài giảng chi tiết từ giáo viên</Text>
             </Card>
-          )}
-        </div>
+          </Col>
 
-        {/* Right Column: Lessons Sidebar & AI Tutor */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-          {/* Course Playlist Card */}
-          <Card
-            title={
-              <div>
-                <Text strong style={{ fontSize: 15 }}>
-                  Danh sách bài giảng
-                </Text>
-                <div style={{ marginTop: 6 }}>
-                  <Progress
-                    percent={progressPercentage}
-                    size="small"
-                    strokeColor="var(--color-success-base, #10b981)"
-                  />
-                  <div style={{ display: "flex", justifyContent: "space-between", marginTop: 2 }}>
-                    <Text type="secondary" style={{ fontSize: 11 }}>
-                      Tiến độ: {completedCount}/{sortedLessons.length} bài
-                    </Text>
-                    <Text type="secondary" style={{ fontSize: 11 }}>
-                      {progressPercentage}%
-                    </Text>
-                  </div>
+          <Col xs={24} sm={12}>
+            <Card
+              hoverable
+              onClick={() => {
+                const pdf = currentLesson.attachments?.find(a => a.name?.toLowerCase().endsWith('.pdf'));
+                if (pdf) window.open(pdf.url, '_blank');
+                else toast.info("Bài học này chưa có tài liệu đính kèm.");
+              }}
+              style={{ borderRadius: 16, textAlign: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}
+              styles={{ body: { padding: '32px 24px' } }}
+            >
+              <FilePdfOutlined style={{ fontSize: 48, color: '#f5222d', marginBottom: 16 }} />
+              <Title level={4} style={{ margin: 0, color: '#1e293b' }}>Tài liệu tóm tắt (PDF)</Title>
+              <Text type="secondary">Tải xuống lý thuyết cô đọng</Text>
+            </Card>
+          </Col>
+
+          <Col xs={24} sm={12}>
+            <Card
+              hoverable
+              onClick={() => navigate(`/student/studentassignment`)} // Mock link
+              style={{ borderRadius: 16, textAlign: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}
+              styles={{ body: { padding: '32px 24px' } }}
+            >
+              <EditOutlined style={{ fontSize: 48, color: '#52c41a', marginBottom: 16 }} />
+              <Title level={4} style={{ margin: 0, color: '#1e293b' }}>Bài tập tự luyện</Title>
+              <Text type="secondary">Thực hành để củng cố kiến thức</Text>
+            </Card>
+          </Col>
+
+          <Col xs={24} sm={12}>
+            <Tooltip title="Chỉ mở khóa sau khi bạn nộp bài tập" color="red">
+              <Card
+                style={{ 
+                  borderRadius: 16, 
+                  textAlign: 'center', 
+                  backgroundColor: '#f1f5f9', 
+                  opacity: 0.7, 
+                  cursor: 'not-allowed',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.04)'
+                }}
+                styles={{ body: { padding: '32px 24px' } }}
+              >
+                <BulbOutlined style={{ fontSize: 48, color: '#94a3b8', marginBottom: 16 }} />
+                <Title level={4} style={{ margin: 0, color: '#64748b' }}>Video chữa câu khó</Title>
+                <Text type="secondary">Phân tích chi tiết các dạng bài</Text>
+              </Card>
+            </Tooltip>
+          </Col>
+        </Row>
+
+        {/* Trình phát Video (Chỉ hiện khi click) */}
+        {showVideo && (
+          <div style={{ marginTop: 24, animation: 'fadeIn 0.5s ease' }}>
+            <YouTubeLessonPlayer
+              videoUrl={currentLesson.videoUrl}
+              lessonTitle={formatLessonDisplayTitle(currentIndex, currentLesson.title)}
+              hasNextLesson={Boolean(nextLesson)}
+              onNextLesson={() => nextLesson && handleSelectLesson(nextLesson._id)}
+              isCompleted={isCurrentCompleted}
+              onMarkCompleted={() => markCompletedMutation.mutate()}
+              onVideoEnded={() => {
+                if (!isCurrentCompleted) {
+                  markCompletedMutation.mutate();
+                }
+              }}
+            />
+          </div>
+        )}
+      </div>
+
+      {/* Drawer: Playlist Bài học */}
+      <Drawer
+        title={
+          <div>
+            <Text strong style={{ fontSize: 16 }}>Danh sách bài giảng</Text>
+            <div style={{ marginTop: 8 }}>
+              <Progress percent={progressPercentage} size="small" strokeColor="#10b981" />
+              <div style={{ display: "flex", justifyContent: "space-between", marginTop: 4 }}>
+                <Text type="secondary" style={{ fontSize: 12 }}>Đã học {completedCount}/{sortedLessons.length}</Text>
+              </div>
+            </div>
+          </div>
+        }
+        placement="right"
+        onClose={() => setDrawerVisible(false)}
+        open={drawerVisible}
+        width={360}
+        styles={{ body: { padding: 0 } }}
+      >
+        <div style={{ display: "flex", flexDirection: "column" }}>
+          {sortedLessons.map((item, idx) => {
+            const isActive = currentLesson ? String(item._id) === String(currentLesson._id) : false;
+            const isItemCompleted = Boolean(progressMap.get(String(item._id))?.completed);
+
+            return (
+              <div
+                key={item._id}
+                onClick={() => handleSelectLesson(item._id)}
+                style={{
+                  padding: "16px 20px",
+                  cursor: "pointer",
+                  borderBottom: "1px solid #f1f5f9",
+                  backgroundColor: isActive ? "#e6f4ff" : "transparent",
+                  borderLeft: isActive ? "4px solid #1677ff" : "4px solid transparent",
+                  transition: "all 0.2s ease",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 12,
+                }}
+              >
+                <div>
+                  {isItemCompleted ? (
+                    <CheckCircleFilled style={{ color: "#10b981", fontSize: 18 }} />
+                  ) : isActive ? (
+                    <PlayCircleFilled style={{ color: "#1677ff", fontSize: 18 }} />
+                  ) : (
+                    <PlayCircleOutlined style={{ color: "#94a3b8", fontSize: 18 }} />
+                  )}
+                </div>
+
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <Text strong={isActive} style={{ fontSize: 14, display: "block", color: isActive ? "#1677ff" : "inherit" }}>
+                    Bài {idx + 1}: {cleanLessonTitle(item.title)}
+                  </Text>
                 </div>
               </div>
-            }
-            styles={{ body: { padding: 0 } }}
-            style={{ borderRadius: 12, overflow: "hidden" }}
-          >
-            <div
-              style={{
-                maxHeight: "calc(100vh - 360px)",
-                overflowY: "auto",
-                display: "flex",
-                flexDirection: "column",
-              }}
-            >
-              {sortedLessons.map((item, idx) => {
-                const isActive = currentLesson ? String(item._id) === String(currentLesson._id) : false;
-                const isItemCompleted = Boolean(progressMap.get(String(item._id))?.completed);
-
-                return (
-                  <div
-                    key={item._id}
-                    onClick={() => handleSelectLesson(item._id)}
-                    style={{
-                      padding: "14px 16px",
-                      cursor: "pointer",
-                      borderBottom: "1px solid var(--color-border-default, #f1f5f9)",
-                      backgroundColor: isActive
-                        ? "var(--color-action-primary-bg-light, #e6f4ff)"
-                        : "transparent",
-                      borderLeft: isActive ? "4px solid var(--color-action-primary-bg, #1677ff)" : "4px solid transparent",
-                      transition: "all 0.2s ease",
-                      display: "flex",
-                      alignItems: "flex-start",
-                      gap: 12,
-                    }}
-                  >
-                    <div style={{ marginTop: 2 }}>
-                      {isItemCompleted ? (
-                        <CheckCircleFilled style={{ color: "var(--color-success-base, #10b981)", fontSize: 16 }} />
-                      ) : isActive ? (
-                        <PlayCircleFilled style={{ color: "var(--color-action-primary-bg, #1677ff)", fontSize: 16 }} />
-                      ) : (
-                        <PlayCircleOutlined style={{ color: "var(--color-text-description, #94a3b8)", fontSize: 16 }} />
-                      )}
-                    </div>
-
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <Text
-                        strong={isActive}
-                        style={{
-                          fontSize: 13,
-                          display: "block",
-                          color: isActive ? "var(--color-action-primary-bg, #1677ff)" : "inherit",
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                          whiteSpace: "nowrap",
-                        }}
-                      >
-                        Bài {idx + 1}: {cleanLessonTitle(item.title)}
-                      </Text>
-                      {item.duration && item.duration > 0 ? (
-                        <Text type="secondary" style={{ fontSize: 11 }}>
-                          {item.duration} phút
-                        </Text>
-                      ) : null}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </Card>
-
-          {/* AI Scholar Tutor Chat Box */}
-          <Card
-            title={
-              <Space size={8}>
-                <RobotOutlined style={{ color: "var(--color-action-primary-bg)" }} />
-                <Text strong style={{ fontSize: 14 }}>
-                  Trợ lý học tập AI
-                </Text>
-              </Space>
-            }
-            extra={
-              <Button type="text" size="small" icon={<SyncOutlined />} onClick={initSession} title="Làm mới chat" />
-            }
-            styles={{ body: { padding: 0 } }}
-            style={{ borderRadius: 12, overflow: "hidden" }}
-          >
-            <div
-              style={{
-                height: 280,
-                overflowY: "auto",
-                padding: 12,
-                display: "flex",
-                flexDirection: "column",
-                gap: 10,
-                backgroundColor: "#f8fafc",
-              }}
-            >
-              {isChatLoading ? (
-                <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100%" }}>
-                  <Spin tip="Đang kết nối AI..." />
-                </div>
-              ) : chatError ? (
-                <div style={{ textAlign: "center", color: "var(--color-error-base)", padding: 12 }}>
-                  <Text type="danger" style={{ fontSize: 12 }}>{chatError}</Text>
-                  <Button type="link" size="small" onClick={initSession}>Thử lại</Button>
-                </div>
-              ) : messages.length === 0 ? (
-                <div style={{ textAlign: "center", color: "var(--color-text-description)", marginTop: 60 }}>
-                  <RobotOutlined style={{ fontSize: 32, marginBottom: 8, opacity: 0.5 }} />
-                  <p style={{ fontSize: 12, margin: 0 }}>Hỏi AI Scholar về nội dung bài học này.</p>
-                </div>
-              ) : (
-                messages.map((msg, mIdx) => (
-                  <div
-                    key={msg.id || mIdx}
-                    style={{
-                      alignSelf: msg.role === "user" ? "flex-end" : "flex-start",
-                      maxWidth: "85%",
-                      backgroundColor: msg.role === "user" ? "var(--color-action-primary-bg, #1677ff)" : "#fff",
-                      color: msg.role === "user" ? "#fff" : "inherit",
-                      padding: "8px 12px",
-                      borderRadius: 10,
-                      fontSize: 12,
-                      boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
-                    }}
-                  >
-                    {msg.content}
-                  </div>
-                ))
-              )}
-              {isTyping && (
-                <div style={{ alignSelf: "flex-start", padding: "6px 12px", backgroundColor: "#fff", borderRadius: 10, fontSize: 12 }}>
-                  <SyncOutlined spin style={{ marginRight: 6 }} /> AI đang phản hồi...
-                </div>
-              )}
-              <div ref={messagesEndRef} />
-            </div>
-
-            {/* Chat Input */}
-            <div style={{ padding: 10, borderTop: "1px solid var(--color-border-default, #f1f5f9)", display: "flex", gap: 8 }}>
-              <input
-                type="text"
-                placeholder="Hỏi AI về bài học..."
-                value={chatInput}
-                onChange={(e) => setChatInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && !e.shiftKey) {
-                    e.preventDefault();
-                    handleSendChat();
-                  }
-                }}
-                style={{
-                  flex: 1,
-                  padding: "6px 12px",
-                  borderRadius: 6,
-                  border: "1px solid var(--color-border-default, #cbd5e1)",
-                  outline: "none",
-                  fontSize: 12,
-                }}
-              />
-              <Button
-                type="primary"
-                size="small"
-                icon={<SendOutlined />}
-                onClick={handleSendChat}
-                disabled={!chatInput.trim() || isTyping}
-                style={{ borderRadius: 6 }}
-              />
-            </div>
-          </Card>
+            );
+          })}
         </div>
-      </div>
+      </Drawer>
+      <style>{`
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(-10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
     </div>
   );
 };

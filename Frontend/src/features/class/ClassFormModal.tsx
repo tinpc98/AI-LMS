@@ -40,6 +40,7 @@ const ClassFormModal = forwardRef<ClassFormModalHandle, ClassFormModalProps>(
           className: initialValues?.className || "",
           classCode: initialValues?.classCode || "",
           courseId: initialValues?.courseId || undefined,
+          level: initialValues?.level || "FOUNDATION",
           teacherId: initialValues?.teacherId || undefined,
           joinCode: initialValues?.joinCode || "",
           classRoom: initialValues?.classRoom || "",
@@ -55,7 +56,7 @@ const ClassFormModal = forwardRef<ClassFormModalHandle, ClassFormModalProps>(
           description: initialValues?.description || "",
           note: initialValues?.note || "",
           isEnrollmentOpen: initialValues?.isEnrollmentOpen ?? true,
-          status: initialValues?.status || "Draft",
+          status: initialValues?.status || "DRAFT",
         });
       }
     }, [open, initialValues, form]);
@@ -88,20 +89,19 @@ const ClassFormModal = forwardRef<ClassFormModalHandle, ClassFormModalProps>(
       currentStatus: string | undefined,
       optionStatus: string
     ): boolean => {
-      const status = currentStatus || "Draft";
+      const status = currentStatus || "DRAFT";
       if (status === optionStatus) return false;
 
       switch (status) {
-        case "Draft":
-          return optionStatus !== "Ready";
-        case "Ready":
-          return optionStatus !== "Ongoing";
-        case "Ongoing":
-          return !["Completed", "Cancelled"].includes(optionStatus);
-        case "Completed":
-          return optionStatus !== "Archived";
-        case "Cancelled":
-        case "Archived":
+        case "DRAFT":
+          return optionStatus !== "OPEN";
+        case "OPEN":
+          return optionStatus !== "FULL" && optionStatus !== "CLOSED";
+        case "FULL":
+          return optionStatus !== "OPEN" && optionStatus !== "CLOSED";
+        case "CLOSED":
+          return optionStatus !== "ARCHIVED";
+        case "ARCHIVED":
           return true;
         default:
           return false;
@@ -145,13 +145,26 @@ const ClassFormModal = forwardRef<ClassFormModalHandle, ClassFormModalProps>(
               options={courseOptions.map((item) => ({ label: item.label, value: item.id }))}
             />
           </Form.Item>
+          <Form.Item
+            name="level"
+            label="Level"
+            rules={[{ required: true, message: "Level is required" }]}
+          >
+            <Select
+              options={[
+                { label: "Foundation", value: "FOUNDATION" },
+                { label: "Intermediate", value: "INTERMEDIATE" },
+                { label: "Advanced", value: "ADVANCED" },
+              ]}
+            />
+          </Form.Item>
           <Form.Item name="teacherId" label="Teacher">
             <Select
               allowClear
               options={mergedTeacherOptions.map((item) => ({ label: item.label, value: item.id }))}
               disabled={
                 mode === "edit" &&
-                ["Completed", "Cancelled", "Archived"].includes(initialValues?.status || "")
+                ["CLOSED", "ARCHIVED"].includes(initialValues?.status || "")
               }
             />
           </Form.Item>
@@ -163,8 +176,7 @@ const ClassFormModal = forwardRef<ClassFormModalHandle, ClassFormModalProps>(
             <Select
               options={[
                 { label: "Offline", value: "Offline" },
-                { label: "Online", value: "Online" },
-                { label: "Hybrid", value: "Hybrid" },
+                { label: "Online", value: "Online" }
               ]}
             />
           </Form.Item>
@@ -203,7 +215,20 @@ const ClassFormModal = forwardRef<ClassFormModalHandle, ClassFormModalProps>(
           <Form.Item label="Schedule">
             <Input.Group compact>
               <Form.Item name={["schedule", "days"]} noStyle>
-                <Select mode="tags" style={{ width: "40%" }} placeholder="Days (e.g. Monday)" />
+                <Select
+                  mode="multiple"
+                  style={{ width: "40%" }}
+                  placeholder="Days"
+                  options={[
+                    { label: "Monday", value: "Monday" },
+                    { label: "Tuesday", value: "Tuesday" },
+                    { label: "Wednesday", value: "Wednesday" },
+                    { label: "Thursday", value: "Thursday" },
+                    { label: "Friday", value: "Friday" },
+                    { label: "Saturday", value: "Saturday" },
+                    { label: "Sunday", value: "Sunday" },
+                  ]}
+                />
               </Form.Item>
               <Form.Item name={["schedule", "startTime"]} noStyle>
                 <Input style={{ width: "30%" }} placeholder="Start (08:00)" />
@@ -238,13 +263,17 @@ const ClassFormModal = forwardRef<ClassFormModalHandle, ClassFormModalProps>(
             rules={[{ required: true, message: "Status is required" }]}
           >
             <Select
-              options={["Draft", "Ready", "Ongoing", "Completed", "Cancelled", "Archived"].map(
-                (status) => ({
-                  label: status,
-                  value: status,
-                  disabled: getDisabledStatus(initialValues?.status, status),
-                })
-              )}
+              options={[
+                { label: "Draft", value: "DRAFT" },
+                { label: "Ready", value: "OPEN" },
+                { label: "Full", value: "FULL" },
+                { label: "Closed", value: "CLOSED" },
+                { label: "Archived", value: "ARCHIVED" },
+              ].map((opt) => ({
+                label: opt.label,
+                value: opt.value,
+                disabled: getDisabledStatus(initialValues?.status, opt.value),
+              }))}
             />
           </Form.Item>
         </Form>

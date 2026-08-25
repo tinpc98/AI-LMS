@@ -1,5 +1,6 @@
 import axiosClient from "./axiosClient";
 import { unwrapOrNull, type ApiEnvelope } from "./unwrap";
+import envConfig from "../config/env";
 
 export interface IStudentAnalytics {
   progress: {
@@ -43,19 +44,19 @@ export interface ITeacherAnalytics {
 const analyticsApi = {
   getStudentDashboard: async (classId: string): Promise<IStudentAnalytics | null> => {
     const response = await axiosClient.get<ApiEnvelope<IStudentAnalytics>>(
-      `/api/analytics/student/dashboard/${classId}`
+      `/analytics/student/dashboard/${classId}`
     );
     return unwrapOrNull(response.data);
   },
   getTeacherDashboard: async (classId: string): Promise<ITeacherAnalytics | null> => {
     const response = await axiosClient.get<ApiEnvelope<ITeacherAnalytics>>(
-      `/api/analytics/teacher/dashboard/${classId}`
+      `/analytics/teacher/dashboard/${classId}`
     );
     return unwrapOrNull(response.data);
   },
   getTeacherExportUrl: (classId: string) => {
     // Generate full URL for direct download
-    const baseURL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+    const baseURL = envConfig.apiUrl;
     return `${baseURL}/analytics/teacher/export/${classId}`;
   },
 };

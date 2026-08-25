@@ -39,6 +39,7 @@ import {
 
 import examApi from "../../../../api/examApi";
 import examSetApi from "../../../../api/examSetApi";
+import { resolveExamDisplayStatus } from "../../../../types/exam";
 import type { IExam } from "../../../../api/examApi";
 import { toast } from "../../../../utils/toast";
 import { TeacherExamAttemptsModal } from "./TeacherExamAttemptsModal";
@@ -94,7 +95,7 @@ export const TeacherExamsTab: React.FC<TeacherExamsTabProps> = React.memo(
     const stats = useMemo(() => {
       const total = exams.length;
       const publishedCount = exams.filter((e) => e.status === "PUBLISHED").length;
-      const completedCount = exams.filter((e) => e.status === "COMPLETED").length;
+      const completedCount = exams.filter((e) => resolveExamDisplayStatus(e.status, e.startAt, e.endAt) === "COMPLETED" || e.status === "ARCHIVED").length;
       const aiCount = exams.filter((e) => e.isAIGenerated).length;
 
       return { total, publishedCount, completedCount, aiCount };
@@ -125,10 +126,9 @@ export const TeacherExamsTab: React.FC<TeacherExamsTabProps> = React.memo(
         if (sortBy === "duration") return b.duration - a.duration;
         if (sortBy === "title") return a.title.localeCompare(b.title);
         // Default: newest
-        return (
-          new Date(b.createdAt || b.startTime).getTime() -
-          new Date(a.createdAt || a.startTime).getTime()
-        );
+        const timeB = b.createdAt ? new Date(b.createdAt).getTime() : (b.startAt ? new Date(b.startAt).getTime() : 0);
+        const timeA = a.createdAt ? new Date(a.createdAt).getTime() : (a.startAt ? new Date(a.startAt).getTime() : 0);
+        return timeB - timeA;
       });
 
       return result;
@@ -222,7 +222,7 @@ export const TeacherExamsTab: React.FC<TeacherExamsTabProps> = React.memo(
               </Text>
             </Space>
             <div style={{ fontSize: 12, color: "var(--color-text-description)", marginTop: 2 }}>
-              Bắt đầu: {new Date(record.startTime).toLocaleString("vi-VN")}
+              Bắt đầu: {record.startAt ? new Date(record.startAt).toLocaleString("vi-VN") : "Chưa xác định"}
             </div>
           </div>
         ),

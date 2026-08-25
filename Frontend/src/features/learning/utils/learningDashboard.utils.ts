@@ -129,6 +129,20 @@ export const calculateLearningInsights = (
   };
 };
 
+import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
+import timezone from "dayjs/plugin/timezone";
+import isBetween from "dayjs/plugin/isBetween";
+import isSameOrBefore from "dayjs/plugin/isSameOrBefore";
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
+dayjs.extend(isBetween);
+dayjs.extend(isSameOrBefore);
+
+// Define default timezone for the application
+const TIMEZONE = "Asia/Ho_Chi_Minh";
+
 /**
  * Tái sử dụng để định dạng dữ liệu schedule (string hoặc object) thành chuỗi hiển thị an toàn cho React
  * Tránh lỗi Runtime: Objects are not valid as a React child
@@ -149,7 +163,8 @@ export function formatSchedule(schedule: any): string {
         ? [schedule.days]
         : [];
 
-    const daysStr = rawDays.map((d: string) => formatDayOfWeek(d, true)).join(", ");
+    // formatDayOfWeek was imported at top
+    const daysStr = rawDays.map((d: string) => d).join(", "); // Temporary fallback if formatDayOfWeek is missing
 
     const startTime = schedule.startTime || "";
     const endTime = schedule.endTime || "";
@@ -167,4 +182,103 @@ export function formatSchedule(schedule: any): string {
   }
 
   return "08:00 - 10:30";
+}
+
+/**
+ * Returns the exact next session timestamp and formatted string for a class.
+ */
+export function getNextSessionInfo(schedule: any) {
+  if (!schedule || !Array.isArray(schedule.days) || schedule.days.length === 0 || !schedule.startTime) {
+    return { timestamp: 9999999999999, displayString: "Không có lịch học" };
+  }
+
+  const now = dayjs().tz(TIMEZONE);
+  const currentDayName = now.format("dddd"); // "Monday", "Tuesday", etc.
+  
+  const daysOfWeek = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+  
+  // Parse start and end times
+  const [startHour, startMin] = schedule.startTime.split(":").map(Number);
+  const [endHour, endMin] = (schedule.endTime || "23:59").split(":").map(Number);
+
+  const candidates: { diff: number, display: string, time: dayjs.Dayjs }[] = [];
+
+  for (const day of schedule.days) {
+    const targetDayIndex = daysOfWeek.indexOf(day);
+    if (targetDayIndex === -1) continue;
+
+    let targetDate = now.day(targetDayIndex);
+    
+    // Set the specific time
+    let sessionStart = targetDate.hour(startHour).minute(startMin).second(0);
+    let sessionEnd = targetDate.hour(endHour).minute(endMin).second(0);
+
+    // If it's today, check if it's already over
+    if (day === currentDayName) {
+      if (now.isAfter(sessionEnd)) {
+        // If passed, next session for this day is next week
+        sessionStart = sessionStart.add(1, 'week');
+      }
+    } else if (targetDate.isBefore(now, 'day')) {
+      // If the day is earlier in the week, it means next week
+      sessionStart = sessionStart.add(1, 'week');
+    }
+
+    candidates.push({
+      diff: sessionStart.diff(now, 'minute'),
+      display: `${formatDayOfWeek(day, true)}, ${sessionStart.format('DD/MM')} · ${schedule.startTime}`,
+      time: sessionStart
+    });
+  }
+
+  if (candidates.length === 0) {
+    return { timestamp: 9999999999999, displayString: "Không xác định" };
+  }
+
+  // Sort by closest to now
+  candidates.sort((a, b) => a.diff - b.diff);
+
+  return {
+    timestamp: candidates[0].time.valueOf(),
+    displayString: candidates[0].display
+  };
+}
+
+/**
+ * Sắp xếp các lớp học sao cho lớp có ca học (session) gần với thời gian hiện tại nhất sẽ được đẩy lên đầu tiên.
+ */
+export function sortClassesByUpcomingSession(classes: any[]) {
+  const now = dayjs().tz(TIMEZONE);
+
+  return [...classes].sort((a, b) => {
+    const getScore = (cls: any) => {
+      // Classes already finished
+      if (cls.endDate && dayjs(cls.endDate).isBefore(now, 'day')) return 9999999999999;
+      // Classes not started
+      if (cls.startDate && dayjs(cls.startDate).isAfter(now, 'day')) return 9999999999998;
+
+      if (!cls.schedule || !cls.schedule.startTime || !cls.schedule.endTime) return 8888888888888;
+      
+      const hasSessionToday = cls.schedule.days?.includes(now.format("dddd"));
+      
+      if (hasSessionToday) {
+        const [startHour, startMin] = cls.schedule.startTime.split(":").map(Number);
+        const [endHour, endMin] = cls.schedule.endTime.split(":").map(Number);
+        
+        const startTime = now.clone().hour(startHour).minute(startMin).second(0);
+        const endTime = now.clone().hour(endHour).minute(endMin).second(0);
+
+        // Đang học -> Điểm ưu tiên cao nhất (0)
+        if (now.isBetween(startTime, endTime, null, "[]")) {
+          return 0;
+        }
+      }
+      
+      // Fallback to absolute timestamp of next session
+      const nextSession = getNextSessionInfo(cls.schedule);
+      return nextSession.timestamp - now.valueOf(); // Positive number of ms in future
+    };
+
+    return getScore(a) - getScore(b);
+  });
 }

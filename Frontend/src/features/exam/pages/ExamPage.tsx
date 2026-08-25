@@ -116,7 +116,7 @@ const ExamPageContent = () => {
     let isMounted = true;
     const fetchExamData = async () => {
       try {
-        const response = await axiosClient.get(`/api/exam-attempts/${attemptId}`);
+        const response = await axiosClient.get(`/exam-attempts/${attemptId}`);
         if (!isMounted) return;
 
         const data = response.data.data || response.data;
@@ -173,7 +173,7 @@ const ExamPageContent = () => {
     if (!attemptId || !sessionToken) return;
     const ping = async () => {
       try {
-        await axiosClient.post(`/api/exam-attempts/${attemptId}/heartbeat`, null, {
+        await axiosClient.post(`/exam-attempts/${attemptId}/heartbeat`, null, {
           headers: { "x-session-token": sessionToken },
         });
         
@@ -216,7 +216,7 @@ const ExamPageContent = () => {
       });
 
       const config = sessionToken ? { headers: { "x-session-token": sessionToken } } : {};
-      const response = await axiosClient.post(`/api/exam-attempts/${attemptId}/submit`, {
+      const response = await axiosClient.post(`/exam-attempts/${attemptId}/submit`, {
         answers: formattedAnswers,
         answersVersion: answersVersionRef.current,
         isForcedSubmit: isForced,
@@ -326,7 +326,7 @@ const ExamPageContent = () => {
       for (const cheat of queue) {
         try {
           const config = sessionToken ? { headers: { "x-session-token": sessionToken } } : {};
-          const response = await axiosClient.post(`/api/exam-attempts/${attemptId}/warning`, {
+          const response = await axiosClient.post(`/exam-attempts/${attemptId}/warning`, {
             cheatType: cheat.type,
           }, config);
           maxWarnings = Math.max(maxWarnings, response.data.cheatWarnings);

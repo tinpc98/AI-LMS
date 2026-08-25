@@ -1,8 +1,9 @@
 import jwt from "jsonwebtoken";
 import fs from "fs";
 import path from "path";
-import LiveSession from "./liveSession.model.js";
+import ClassSession from "../classSession/classSession.model.js";
 import { Class as classModel } from "#modules/class";
+import ClassEnrollment from "../classEnrollment/classEnrollment.model.js";
 import { LiveError, LIVE_ERROR_CODES } from "./live.validator.js";
 
 const DEFAULT_DOMAIN = "8x8.vc";
@@ -87,7 +88,7 @@ export const generateJaasTokenService = async ({ sessionId, user }) => {
   let targetSession = null;
 
   if (sessionId) {
-    targetSession = await LiveSession.findById(sessionId).lean();
+    targetSession = await ClassSession.findById(sessionId).lean();
   }
 
   if (!targetSession || targetSession.isDeleted) {
@@ -98,9 +99,9 @@ export const generateJaasTokenService = async ({ sessionId, user }) => {
     );
   }
 
-  if (targetSession.status !== "Live") {
+  if (targetSession.status !== "IN_PROGRESS" || targetSession.onlineMeeting?.status !== "OPEN") {
     throw new LiveError(
-      `Buổi học trực tuyến đã kết thúc (${targetSession.status}). Không thể cấp Token tham gia!`,
+      `Buổi học trực tuyến chưa mở hoặc đã kết thúc (${targetSession.status}). Không thể cấp Token tham gia!`,
       409,
       LIVE_ERROR_CODES.SESSION_ALREADY_ENDED
     );
@@ -113,9 +114,12 @@ export const generateJaasTokenService = async ({ sessionId, user }) => {
 
   const userIdStr = String(user.id || user._id);
   const isTeacherOwner = classInfo.teacherId && String(classInfo.teacherId) === userIdStr;
-  const isEnrolledStudent =
-    Array.isArray(classInfo.students) &&
-    classInfo.students.some((s) => String(s.studentId) === userIdStr && s.status === "Enrolled");
+  
+  const isEnrolledStudent = await ClassEnrollment.exists({
+    classId: targetSession.classId,
+    studentId: userIdStr,
+    status: "ACTIVE",
+  });
 
   if (!isTeacherOwner && !isEnrolledStudent) {
     throw new LiveError(
@@ -125,9 +129,21 @@ export const generateJaasTokenService = async ({ sessionId, user }) => {
     );
   }
 
+  const nowTime = new Date();
+  if (!isTeacherOwner) {
+    const studentStartWindow = new Date(targetSession.scheduledStartAt.getTime() - 15 * 60000);
+    if (nowTime < studentStartWindow) {
+      throw new LiveError(
+        "Chưa tới giờ vào lớp. Học sinh chỉ được phép tham gia 15 phút trước khi buổi học bắt đầu.",
+        403,
+        "STUDENT_JOIN_TOO_EARLY"
+      );
+    }
+  }
+
   // Moderator CHỈ DÙNG TRUE duy nhất cho Giáo viên sở hữu Lớp học
   const isModerator = Boolean(isTeacherOwner);
-  const targetRoomName = targetSession.roomName || targetSession.meetingRoomId;
+  const targetRoomName = targetSession.onlineMeeting?.roomId || `room_class_${targetSession.classId}_${targetSession._id}`;
 
   const now = Math.floor(Date.now() / 1000);
   const appId = getJaasAppId();

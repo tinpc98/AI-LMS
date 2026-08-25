@@ -1,8 +1,10 @@
-import React, { useCallback } from "react";
-import { Layout } from "antd";
-import { Outlet } from "react-router-dom";
+import React, { useCallback, useEffect } from "react";
+import { Layout, Badge } from "antd";
+import { Outlet, useNavigate } from "react-router-dom";
+import { MessageOutlined } from "@ant-design/icons";
 
 import { useResponsiveLayout } from "../../hooks/useResponsiveLayout";
+import { useMessagesStore } from "../../../features/chat/store/useMessagesStore";
 
 import { StudentSidebar } from "./student/StudentSidebar";
 import { StudentHeader } from "./student/StudentHeader";
@@ -10,6 +12,15 @@ import { StudentContent } from "./student/StudentContent";
 import { AIChatWidget } from "../../../features/ai/components/AIChatWidget";
 
 export const HomeLayoutStudent: React.FC = () => {
+  const navigate = useNavigate();
+  const { totalUnread, fetchSummary, initialized } = useMessagesStore();
+
+  useEffect(() => {
+    if (!initialized) {
+      fetchSummary();
+    }
+  }, [initialized, fetchSummary]);
+
   // Bố cục responsive: trạng thái đầu tiên được tính NGAY LÚC KHỞI TẠO nên không còn
   // nhịp render hiển thị sai bố cục. Xem ghi chú đầy đủ trong useResponsiveLayout.
   const {

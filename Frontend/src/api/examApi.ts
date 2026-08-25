@@ -26,19 +26,19 @@ interface ApiEnvelope<T> {
 export const examApi = {
   // Lấy danh sách bài kiểm tra của lớp
   getExamsByClass: async (classId: string): Promise<IExam[]> => {
-    const response = await axiosClient.get<ApiEnvelope<IExam[]>>(`/api/exams/class/${classId}`);
+    const response = await axiosClient.get<ApiEnvelope<IExam[]>>(`/exams/class/${classId}`);
     return response.data.data ?? [];
   },
 
   // Lấy chi tiết 1 bài kiểm tra
   getExamById: async (examId: string): Promise<IExam> => {
-    const response = await axiosClient.get<ApiEnvelope<IExam>>(`/api/exams/${examId}`);
+    const response = await axiosClient.get<ApiEnvelope<IExam>>(`/exams/${examId}`);
     return response.data.data;
   },
 
   // Tạo bài kiểm tra thủ công
   createExam: async (examData: Partial<IExam>): Promise<IExam> => {
-    const response = await axiosClient.post<ApiEnvelope<IExam>>("/api/exams", examData);
+    const response = await axiosClient.post<ApiEnvelope<IExam>>("/exams", examData);
     return response.data.data;
   },
 
@@ -56,7 +56,7 @@ export const examApi = {
     matrix: Array<{ topic: string; difficulty?: string; count: number }>;
   }): Promise<IExam> => {
     const response = await axiosClient.post<ApiEnvelope<IExam>>(
-      "/api/exams/generate-auto",
+      "/exams/generate-auto",
       matrixData
     );
     return response.data.data;
@@ -64,7 +64,7 @@ export const examApi = {
 
   // Cập nhật đề thi (status: PUBLISHED / DRAFT)
   updateExam: async (examId: string, data: Partial<IExam>): Promise<IExam> => {
-    const response = await axiosClient.put<ApiEnvelope<IExam>>(`/api/exams/${examId}`, data);
+    const response = await axiosClient.put<ApiEnvelope<IExam>>(`/exams/${examId}`, data);
     return response.data.data;
   },
 
@@ -78,7 +78,7 @@ export const examApi = {
   getQuestions: async (
     params?: QuestionQueryParams
   ): Promise<{ total: number; data: IQuestion[] }> => {
-    const response = await axiosClient.get<{ total: number; data: IQuestion[] }>("/api/questions", {
+    const response = await axiosClient.get<{ total: number; data: IQuestion[] }>("/questions", {
       params,
     });
     return response.data;
@@ -86,7 +86,7 @@ export const examApi = {
 
   // Xóa bài kiểm tra
   deleteExam: async (examId: string): Promise<void> => {
-    await axiosClient.delete(`/api/exams/${examId}`);
+    await axiosClient.delete(`/exams/${examId}`);
   },
 
   // Lấy danh sách lượt thi của sinh viên theo examId
@@ -94,7 +94,7 @@ export const examApi = {
     examId: string
   ): Promise<{ attempts: IExamAttempt[]; stats?: IAttemptStats }> => {
     const response = await axiosClient.get<ApiEnvelope<IExamAttempt[]> & { stats?: IAttemptStats }>(
-      `/api/exam-attempts/exam/${examId}`
+      `/exam-attempts/exam/${examId}`
     );
 
     return { attempts: response.data.data ?? [], stats: response.data.stats };
@@ -109,7 +109,7 @@ export const examApi = {
    */
   getAttemptForReview: async (attemptId: string): Promise<IAttemptReview> => {
     const response = await axiosClient.get<ApiEnvelope<IAttemptReview>>(
-      `/api/exam-attempts/${attemptId}/review`
+      `/exam-attempts/${attemptId}/review`
     );
     return response.data.data;
   },
@@ -120,7 +120,7 @@ export const examApi = {
     essayGrades: Array<{ questionId: string; pointsEarned: number }>
   ): Promise<IExamAttempt> => {
     const response = await axiosClient.put<ApiEnvelope<IExamAttempt>>(
-      `/api/exam-attempts/${attemptId}/grade-essay`,
+      `/exam-attempts/${attemptId}/grade-essay`,
       { essayGrades }
     );
     return response.data.data;

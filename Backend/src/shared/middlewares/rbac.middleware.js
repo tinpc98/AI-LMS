@@ -39,3 +39,15 @@ export const isAdmin = (req, res, next) => {
   }
   next();
 };
+
+// Kiểm tra xem có phải Học sinh hay không
+export const isStudent = (req, res, next) => {
+  if (!requireAuthenticated(req, res)) return;
+
+  if (getRole(req) !== "student") {
+    return res.status(403).json({
+      message: "Quyền truy cập bị từ chối. Chỉ Học viên mới được phép thực hiện chức năng này",
+    });
+  }
+  next();
+};

@@ -27,6 +27,7 @@ const NotificationCenterPage = lazy(
 );
 const MessagesPage = lazy(() => import("./features/chat/pages/MessagesPage"));
 const ExamPage = lazy(() => import("./features/exam/pages/ExamPage"));
+const StudentExamPage = lazy(() => import("./features/exam/pages/StudentExamPage"));
 
 // Teacher Components (Lazy Loaded)
 const HomeLayoutTeacher = lazy(() => import("./shared/components/layout/HomeLayoutTeacher"));
@@ -36,12 +37,18 @@ const ClassroomDetail = lazy(() => import("./features/class/pages/ClassroomDetai
 const QuestionBank = lazy(() => import("./features/exam-set/pages/QuestionBank"));
 const ExamResults = lazy(() => import("./features/exam/pages/ExamResults"));
 const ExamAttemptDetail = lazy(() => import("./features/exam/pages/ExamAttemptDetail"));
+const TeacherGlobalExamsPage = lazy(() => import("./features/exam/pages/TeacherGlobalExamsPage"));
+const LectureDetailTeacherPage = lazy(() => import("./features/lesson/pages/LectureDetailTeacherPage"));
+const TeacherAttendancePage = lazy(() => import("./features/teacher-attendance/TeacherAttendancePage"));
+const TeacherPayrollPage = lazy(() => import("./features/payroll/TeacherPayrollPage"));
+const AdminPayrollPage = lazy(() => import("./features/admin/payroll/AdminPayrollPage"));
 
 // Admin Components (Lazy Loaded)
 const AdminLayout = lazy(() => import("./shared/components/layout/AdminLayout"));
 const DashboardPage = lazy(() => import("./features/dashboard/DashboardPage"));
 const AccountManagementPage = lazy(() => import("./features/account/AccountManagementPage"));
 const CourseManagementPage = lazy(() => import("./features/course/CourseManagementPage"));
+const SubjectManagementPage = lazy(() => import("./features/subject/SubjectManagementPage"));
 const ClassManagementPage = lazy(() => import("./features/class/ClassManagementPage"));
 const TeacherAssignmentPage = lazy(
   () => import("./features/teacher-assignment/TeacherAssignmentPage")
@@ -49,7 +56,12 @@ const TeacherAssignmentPage = lazy(
 const AIManagementPage = lazy(() => import("./features/ai/AIManagementPage"));
 const ReportPage = lazy(() => import("./features/report/pages/ReportPage"));
 const ProfilePage = lazy(() => import("./features/profile/pages/ProfilePage"));
-const AdminPage = lazy(() => import("./shared/components/PlaceholderPage"));
+const PlaceholderPage = lazy(() => import("./shared/components/PlaceholderPage"));
+const MyEnrollmentsPage = lazy(() => import("./features/enrollment/MyEnrollmentsPage"));
+const EnrollmentManagementPage = lazy(() => import("./features/enrollment/EnrollmentManagementPage"));
+const MyPaymentsPage = lazy(() => import("./features/payment/MyPaymentsPage"));
+const PaymentManagementPage = lazy(() => import("./features/payment/PaymentManagementPage"));
+const PaymentDetailPage = lazy(() => import("./features/payment/PaymentDetailPage"));
 
 const LiveSessionLayout = lazy(() => import("./shared/components/layout/LiveSessionLayout"));
 const LiveSessionPage = lazy(() => import("./features/live-session/pages/LiveSessionPage"));
@@ -113,6 +125,10 @@ function App() {
                 <Route path="notifications" element={<NotificationCenterPage />} />
                 <Route path="messages" element={<MessagesPage />} />
                 <Route path="messages/:classId" element={<MessagesPage />} />
+                <Route path="exams" element={<StudentExamPage />} />
+                <Route path="enrollments" element={<MyEnrollmentsPage />} />
+                <Route path="tuition" element={<MyPaymentsPage />} />
+                <Route path="tuition/:id" element={<PaymentDetailPage />} />
               </Route>
 
               {/* Live Session Route cho Student (Full màn hình, không Header/Sidebar) */}
@@ -134,7 +150,7 @@ function App() {
                 <Route path="classroom-detail/:classId" element={<ClassroomDetail />} />
                 <Route
                   path="classroom-detail/:classId/lecture/:lectureId"
-                  element={<LectureViewPage />}
+                  element={<LectureDetailTeacherPage />}
                 />
                 <Route
                   path="classroom-detail/:classId/resource/:resourceId"
@@ -143,8 +159,18 @@ function App() {
                 <Route path="questionbank" element={<QuestionBank />} />
                 <Route path="examresults/:examId" element={<ExamResults />} />
                 <Route path="exam-review/:attemptId" element={<ExamAttemptDetail />} />
+                <Route path="notifications" element={<NotificationCenterPage />} />
                 <Route path="messages" element={<MessagesPage />} />
                 <Route path="messages/:classId" element={<MessagesPage />} />
+                <Route 
+                  path="exams" 
+                  element={<TeacherGlobalExamsPage />} 
+                />
+                <Route 
+                  path="payroll" 
+                  element={<TeacherPayrollPage />} 
+                />
+                <Route path="attendance" element={<TeacherAttendancePage />} />
               </Route>
 
               {/* Live Session Route cho Teacher (Full màn hình, không Header/Sidebar) */}
@@ -158,16 +184,21 @@ function App() {
               <Route path="/admin" element={<AdminLayout />}>
                 <Route index element={<DashboardPage />} />
                 <Route path="accounts" element={<AccountManagementPage />} />
+                <Route path="subjects" element={<SubjectManagementPage />} />
                 <Route path="courses" element={<CourseManagementPage />} />
                 <Route path="classes" element={<ClassManagementPage />} />
                 <Route path="teacher-assignment" element={<TeacherAssignmentPage />} />
                 <Route path="ai-management" element={<AIManagementPage />} />
                 <Route path="reports" element={<ReportPage />} />
+                <Route path="enrollments" element={<EnrollmentManagementPage />} />
+                <Route path="payments" element={<PaymentManagementPage />} />
+                <Route path="payments/:id" element={<PaymentDetailPage />} />
                 <Route path="profile" element={<ProfilePage />} />
+                <Route path="payroll" element={<AdminPayrollPage />} />
                 <Route
                   path="system"
                   element={
-                    <AdminPage
+                    <PlaceholderPage
                       title="System Management"
                       description="Configure system-wide settings."
                     />

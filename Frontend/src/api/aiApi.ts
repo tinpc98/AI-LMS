@@ -144,7 +144,7 @@ const aiApi = {
     const payload = lessonId ? { lessonId } : {};
     console.log("[AI Chat] create session payload", payload);
     const response = await axiosClient.post<CreateChatSessionResponse>(
-      "/api/ai/chat/sessions",
+      "/ai/chat/sessions",
       payload
     );
     console.log("[AI Chat] create session response", response.data);
@@ -161,7 +161,7 @@ const aiApi = {
 
   getChatHistory: async (sessionId: string): Promise<IChatMessage[]> => {
     const response = await axiosClient.get<{ data: { messages: IChatMessageApi[] } }>(
-      `/api/ai/chat/sessions/${sessionId}/messages`
+      `/ai/chat/sessions/${sessionId}/messages`
     );
     const rawMessages = response.data?.data?.messages ?? [];
     return rawMessages.map(normalizeChatMessage);
@@ -169,7 +169,7 @@ const aiApi = {
 
   sendChatMessage: async (sessionId: string, message: string): Promise<IChatMessage> => {
     const response = await axiosClient.post<{ data: IChatMessageApi }>(
-      `/api/ai/chat/sessions/${sessionId}/messages`,
+      `/ai/chat/sessions/${sessionId}/messages`,
       { message }
     );
     const rawMessage = response.data?.data ?? (response.data as unknown as IChatMessageApi);
@@ -181,14 +181,14 @@ const aiApi = {
   // ==========================================
   getLessonSummary: async (lessonId: string): Promise<IAISummary | null> => {
     const response = await axiosClient.get<{ data?: IAISummary }>(
-      `/api/ai/lectures/${lessonId}/summary`
+      `/ai/lectures/${lessonId}/summary`
     );
     return response.data.data ?? null;
   },
 
   generateLessonSummary: async (lessonId: string): Promise<IAISummary> => {
     const response = await axiosClient.post<{ data: IAISummary }>(
-      `/api/ai/lectures/${lessonId}/summary`
+      `/ai/lectures/${lessonId}/summary`
     );
     return response.data.data;
   },
@@ -201,7 +201,7 @@ const aiApi = {
     options: IQuestionGenerationOptions
   ): Promise<IGeneratedQuestionSet> => {
     const response = await axiosClient.post<{ data: IGeneratedQuestionSet }>(
-      `/api/ai/lectures/${lessonId}/question-sets/generate`,
+      `/ai/lectures/${lessonId}/question-sets/generate`,
       options
     );
     return response.data.data;
@@ -215,7 +215,7 @@ const aiApi = {
     questionId: string
   ): Promise<{ suggestedScore: number; feedback: string }> => {
     const response = await axiosClient.post<{ data: { suggestedScore: number; feedback: string } }>(
-      `/api/ai/exam-attempts/${attemptId}/questions/${questionId}/grade-suggestion`
+      `/ai/exam-attempts/${attemptId}/questions/${questionId}/grade-suggestion`
     );
     return response.data.data;
   },
@@ -226,7 +226,7 @@ const aiApi = {
     data: { grade: number; feedback?: string; aiFeedback?: string }
   ): Promise<{ success: boolean }> => {
     const response = await axiosClient.post<{ data?: { success: boolean } }>(
-      `/api/ai/exam-attempts/${attemptId}/questions/${questionId}/grade-confirmation`,
+      `/ai/exam-attempts/${attemptId}/questions/${questionId}/grade-confirmation`,
       data
     );
     return response.data.data ?? { success: true };

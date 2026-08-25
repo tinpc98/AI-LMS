@@ -1,5 +1,5 @@
 import React from "react";
-import { Row, Col, Card, Statistic, Tag, Progress } from "antd";
+import { Row, Col, Card, Statistic, Tag, Progress, Skeleton, Alert } from "antd";
 import {
   UserOutlined,
   TeamOutlined,
@@ -24,67 +24,47 @@ import {
   Cell,
   Legend,
 } from "recharts";
-import { mockUsers } from "../../../features/account/account.mock";
-import { mockCourses } from "../../../features/course/course.mock";
-import { mockClasses } from "../../../features/class/class.mock";
-import { mockAILogs } from "../../../features/ai/mock/aiLogs.mock";
-import { mockLiveSessions } from "../../../features/class/liveSessions.mock";
+import { useDashboardQuery } from "../../../features/dashboard/hooks/useDashboardQuery";
 
 const COLORS = ["var(--color-action-primary-bg)", "var(--color-success-base)", "var(--color-warning-base)", "var(--color-error-base)", "var(--color-secondary-icon)", "var(--color-info-base)"];
 
 export const ReportOverview: React.FC = () => {
-  const students = mockUsers.filter((u) => u.role === "Student");
-  const teachers = mockUsers.filter((u) => u.role === "Teacher");
-  const totalCourses = mockCourses.length;
-  const totalClasses = mockClasses.length;
-  const activeClasses = mockClasses.filter((c) => c.status === "Active").length;
-  const liveSessionsCount = mockLiveSessions.length;
-  const aiLogsCount = mockAILogs.length;
+  const {
+    data,
+    loading,
+    error,
+    registrationChart,
+    courseDistribution,
+    classStatusChart,
+    aiChart,
+  } = useDashboardQuery();
 
-  const totalCapacity = mockClasses.reduce((acc, curr) => acc + curr.maxStudents, 0);
-  const totalEnrolled = mockClasses.reduce((acc, curr) => acc + curr.currentStudents, 0);
-  const fillRate = totalCapacity > 0 ? Math.round((totalEnrolled / totalCapacity) * 100) : 0;
+  if (loading) return <Skeleton active paragraph={{ rows: 10 }} />;
+  if (error) return <Alert type="error" message="Lỗi tải dữ liệu báo cáo" description={error.message} />;
+  if (!data) return <Alert type="info" message="Chưa có dữ liệu" />;
 
-  // Chart Data Preparation
-  const monthlyTrendData = [
-    { month: "Tháng 2", students: 120, teachers: 12, courses: 8, aiUsage: 450 },
-    { month: "Tháng 3", students: 280, teachers: 18, courses: 10, aiUsage: 780 },
-    { month: "Tháng 4", students: 450, teachers: 24, courses: 12, aiUsage: 1100 },
-    { month: "Tháng 5", students: 680, teachers: 30, courses: 14, aiUsage: 1650 },
-    { month: "Tháng 6", students: 920, teachers: 36, courses: 16, aiUsage: 2300 },
-    { month: "Tháng 7", students: 1250, teachers: 42, courses: 18, aiUsage: 3100 },
-  ];
+  const studentsCount = data.activeStudents || 0;
+  const teachersCount = data.activeTeachers || 0;
+  const totalCourses = data.totalCourses || 0;
+  const totalClasses = data.totalClasses || 0;
+  const activeClasses = data.activeClasses || 0;
+  
+  // These are not provided by dashboard API natively yet, set to 0 or use basic stats
+  const liveSessionsCount = 0; 
+  const aiLogsCount = 0; 
 
-  const classStatusData = [
-    {
-      name: "Đang diễn ra (Active)",
-      value: mockClasses.filter((c) => c.status === "Active").length,
-    },
-    { name: "Sắp mở (Upcoming)", value: mockClasses.filter((c) => c.status === "Upcoming").length },
-    {
-      name: "Đã hoàn thành (Completed)",
-      value: mockClasses.filter((c) => c.status === "Completed").length,
-    },
-  ];
+  const totalCapacity = 0;
+  const totalEnrolled = 0;
+  const fillRate = 0;
 
-  const aiFeatureData = [
-    {
-      feature: "Chatbot AI",
-      usage: mockAILogs.filter((l) => l.feature === "Chatbot").length * 45 + 120,
-    },
-    {
-      feature: "Tóm tắt bài học",
-      usage: mockAILogs.filter((l) => l.feature === "Summary").length * 35 + 85,
-    },
-    {
-      feature: "Tạo trắc nghiệm",
-      usage: mockAILogs.filter((l) => l.feature === "Quiz").length * 28 + 60,
-    },
-    {
-      feature: "Chấm điểm tự động",
-      usage: mockAILogs.filter((l) => l.feature === "Exam").length * 19 + 40,
-    },
-  ];
+  const monthlyTrendData = registrationChart.length > 0 ? registrationChart : [];
+  
+  const classStatusData = classStatusChart.map(item => ({
+    name: item.status,
+    value: item.count
+  }));
+
+  const aiFeatureData = aiChart.length > 0 ? aiChart : [];
 
   return (
     <div className="space-y-6">
@@ -94,7 +74,7 @@ export const ReportOverview: React.FC = () => {
           <Card className="rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
             <Statistic
               title={<span className="text-gray-500 font-medium">Tổng Học Sinh</span>}
-              value={students.length * 250 || 1250}
+              value={studentsCount}
               prefix={<UserOutlined className="text-blue-500 mr-2 p-2 bg-blue-50 rounded-lg" />}
               suffix={
                 <Tag color="blue" className="ml-2 rounded-full">
@@ -103,7 +83,7 @@ export const ReportOverview: React.FC = () => {
               }
             />
             <div className="mt-3 text-xs text-gray-400">
-              Đang hoạt động: {students.length} tài khoản mẫu
+              Đang hoạt động: {studentsCount} tài khoản
             </div>
           </Card>
         </Col>
@@ -112,7 +92,7 @@ export const ReportOverview: React.FC = () => {
           <Card className="rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
             <Statistic
               title={<span className="text-gray-500 font-medium">Giáo Viên & Trợ Giảng</span>}
-              value={teachers.length * 10 || 42}
+              value={teachersCount}
               prefix={<TeamOutlined className="text-purple-500 mr-2 p-2 bg-purple-50 rounded-lg" />}
               suffix={
                 <Tag color="purple" className="ml-2 rounded-full">
@@ -121,7 +101,7 @@ export const ReportOverview: React.FC = () => {
               }
             />
             <div className="mt-3 text-xs text-gray-400">
-              Giáo viên active: {teachers.filter((t) => t.status === "Active").length}
+              Giáo viên active: {teachersCount}
             </div>
           </Card>
         </Col>

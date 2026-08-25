@@ -12,15 +12,17 @@ const CourseDetailDrawer = ({ open, course, onClose }: CourseDetailDrawerProps) 
     <Drawer title="Course Details" placement="right" onClose={onClose} open={open} width={460}>
       {course ? (
         <Descriptions column={1} bordered>
-          <Descriptions.Item label="Course Name">{course.courseName}</Descriptions.Item>
-          <Descriptions.Item label="Subject">{course.subject}</Descriptions.Item>
-          <Descriptions.Item label="Grade">{course.grade}</Descriptions.Item>
-          <Descriptions.Item label="Duration">{course.durationWeeks} weeks</Descriptions.Item>
-          <Descriptions.Item label="Tuition Fee">
-            {course.tuitionFee.toLocaleString()} VND
+          <Descriptions.Item label="Course Name">{course.name}</Descriptions.Item>
+          <Descriptions.Item label="Code">{course.code}</Descriptions.Item>
+          <Descriptions.Item label="Subject">
+            {typeof course.subjectId === "object" ? (course.subjectId as any).name : course.subjectId}
           </Descriptions.Item>
-          <Descriptions.Item label="Total Lessons">{course.totalLessons}</Descriptions.Item>
-          <Descriptions.Item label="Target">{course.target || "—"}</Descriptions.Item>
+          <Descriptions.Item label="Grade">{course.grade}</Descriptions.Item>
+          <Descriptions.Item label="Level">{course.level}</Descriptions.Item>
+          <Descriptions.Item label="Duration">{course.duration.value} {course.duration.unit.toLowerCase()}(s)</Descriptions.Item>
+          <Descriptions.Item label="Tuition Fee">
+            {course.pricing?.tuitionFee?.toLocaleString() || 0} VND
+          </Descriptions.Item>
           <Descriptions.Item label="Status">{course.status}</Descriptions.Item>
           <Descriptions.Item label="Description">{course.description || "—"}</Descriptions.Item>
           <Descriptions.Item label="Thumbnail">{course.thumbnail || "—"}</Descriptions.Item>

@@ -5,13 +5,14 @@ import path from "path";
 import {
   uploadExcelQuestions,
   getQuestions,
+  getQuestionById,
   createQuestion,
   updateQuestion,
   deleteQuestion,
 } from "./question.controller.js";
 import { verifyUser } from "#modules/auth";
 import { isTeacher } from "#shared/middlewares/rbac.middleware.js";
-import { updateQuestionValidation } from "./question.validator.js";
+import { updateQuestionValidation, createQuestionValidation } from "./question.validator.js";
 
 const router = express.Router();
 
@@ -38,7 +39,8 @@ const upload = multer({
 // Tất cả các thao tác trên Ngân hàng câu hỏi bắt buộc phải đăng nhập và có quyền Giáo viên / Admin
 router.post("/import-excel", verifyUser, isTeacher, upload.single("file"), uploadExcelQuestions);
 router.get("/", verifyUser, isTeacher, getQuestions);
-router.post("/", verifyUser, isTeacher, createQuestion);
+router.get("/:id", verifyUser, isTeacher, getQuestionById);
+router.post("/", verifyUser, isTeacher, createQuestionValidation, createQuestion);
 router.put("/:id", verifyUser, isTeacher, updateQuestionValidation, updateQuestion);
 router.delete("/:id", verifyUser, isTeacher, deleteQuestion);
 

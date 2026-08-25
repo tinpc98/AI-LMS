@@ -4,6 +4,7 @@ import { LessonProgress } from "#modules/lesson";
 import LearningActivity from "./learningActivity.model.js";
 import { Attendance } from "#modules/attendance";
 import { Grade } from "#modules/grade";
+import ClassEnrollment from "../classEnrollment/classEnrollment.model.js";
 
 class LearningRankingService {
   /**
@@ -25,7 +26,7 @@ class LearningRankingService {
       (await Attendance.countDocuments({
         classId: cid,
         studentId: sid,
-        status: "Present",
+        status: "PRESENT",
         isDeleted: false,
       })) * 10;
 
@@ -53,12 +54,9 @@ class LearningRankingService {
     const page = Math.max(1, parseInt(queryOptions.page || 1, 10));
     const limit = Math.min(100, Math.max(1, parseInt(queryOptions.limit || 20, 10)));
 
-    // Aggregation pipeline tối ưu từ Class -> Students
+    // Aggregation pipeline tối ưu từ ClassEnrollment
     const pipeline = [
-      { $match: { _id: cid, isDeleted: false } },
-      { $unwind: "$students" },
-      { $match: { "students.status": "Enrolled" } },
-      { $replaceRoot: { newRoot: "$students" } },
+      { $match: { classId: cid, status: "ACTIVE" } },
 
       // Lookup Lesson Progress
       {
@@ -89,7 +87,7 @@ class LearningRankingService {
                   $and: [
                     { $eq: ["$classId", cid] },
                     { $eq: ["$studentId", "$$sid"] },
-                    { $eq: ["$status", "Present"] },
+                    { $eq: ["$status", "PRESENT"] },
                     { $eq: ["$isDeleted", false] },
                   ],
                 },
@@ -185,7 +183,7 @@ class LearningRankingService {
       { $sort: { totalXP: -1, fullName: 1 } },
     ];
 
-    const ranking = await Class.aggregate(pipeline);
+    const ranking = await ClassEnrollment.aggregate(pipeline);
 
     // Apply Ranking Position với xử lý đồng hạng và totalXP = 0
     let currentRank = 1;

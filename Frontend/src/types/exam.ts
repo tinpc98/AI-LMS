@@ -1,19 +1,15 @@
 // Kiểu dữ liệu miền thi cử — viết theo ĐÚNG phản hồi thật của backend.
 //
-// CÁCH LÀM: đọc model và controller ở Backend rồi mới viết, không suy từ tên biến. Kiểu bịa ra
-// còn tệ hơn `any`: `any` nói thật rằng "không ai biết", còn một kiểu sai trông như đã được
-// kiểm chứng và khiến người đọc tin nhầm.
+// SOURCE OF TRUTH: Backend exam.model.js, examAttempt.model.js, examAttempt.controller.js
 //
-// Nguồn đối chiếu:
-//   Backend/src/modules/exam/exam.model.js
-//   Backend/src/modules/question/question.model.js
-//   Backend/src/modules/exam-attempt/examAttempt.model.js
-//   Backend/src/modules/exam-attempt/examAttempt.controller.js  (hình dạng reviewData)
+// ExamStatus: chỉ DRAFT | PUBLISHED | ARCHIVED (enum trong model).
+//   COMPLETED / AVAILABLE / EXPIRED là trạng thái HIỂN THỊ (ExamDisplayStatus), không ghi DB.
 
 /** Người dùng ở dạng đã populate. Backend trả ObjectId khi chưa populate, object khi đã. */
 export interface UserSummary {
   _id: string;
   fullName?: string;
+  name?: string;
   email?: string;
   studentCode?: string;
   avatar?: string;
@@ -21,24 +17,21 @@ export interface UserSummary {
 
 /**
  * Tham chiếu tới một document: hoặc là id dạng chuỗi, hoặc object đã populate.
- *
- * Đây KHÔNG phải sự mơ hồ do lười — cùng một endpoint trả về hai dạng tuỳ có populate hay
- * không, và nơi gọi buộc phải xử lý cả hai. Kiểu này ép người viết nhớ điều đó.
  */
 export type Ref<T> = string | T;
 
-export type QuestionType = "MCQ" | "ESSAY";
+export type QuestionType = "MCQ" | "ESSAY" | "SHORT_ANSWER" | "MULTIPLE_CHOICE";
 export type QuestionDifficulty = "EASY" | "MEDIUM" | "HARD";
 
 export interface IQuestion {
   _id: string;
   content: string;
   type: QuestionType;
-  options?: string[];
-  /** Chỉ có ở phía giáo viên. Backend XOÁ trường này khi trả cho học sinh đang làm bài. */
+  options?: Array<{ id: string; content: any; order: number; isCorrect?: boolean }>;
   correctAnswer?: string;
   difficulty?: QuestionDifficulty;
-  topic: string;
+  topicId?: string;
+  topic?: string;
   tags?: string[];
   createdBy?: Ref<UserSummary>;
   createdAt?: string;
@@ -47,67 +40,132 @@ export interface IQuestion {
 /** Một câu hỏi trong đề, kèm điểm được phân bổ. */
 export interface IExamQuestionConfig {
   questionId: string;
+  order?: number;
   points: number;
-  /** Đề sinh từ ExamSet lưu bản sao nội dung câu hỏi ngay trong document Exam. */
-  isSnapshot?: boolean;
-  snapshotData?: IQuestion | null;
 }
 
-export type ExamStatus = "DRAFT" | "PUBLISHED" | "COMPLETED";
+/**
+ * Enum trạng thái Exam (Source of Truth = Backend enum DRAFT|PUBLISHED|ARCHIVED).
+ */
+export type ExamStatus = "DRAFT" | "PUBLISHED" | "ARCHIVED";
+
+/**
+ * Trạng thái hiển thị UI (derive từ status + startAt + endAt + thời gian hiện tại).
+ * KHÔNG persist xuống DB.
+ */
+export type ExamDisplayStatus = ExamStatus | "COMPLETED" | "UPCOMING" | "ONGOING" | "EXPIRED";
+
+/** Hàm derive display status từ exam data — thuần FE, không persist */
+export const resolveExamDisplayStatus = (
+  status: ExamStatus,
+  startAt?: string | null,
+  endAt?: string | null,
+  now = Date.now()
+): ExamDisplayStatus => {
+  if (status !== "PUBLISHED") return status;
+  if (startAt && now < new Date(startAt).getTime()) return "UPCOMING";
+  if (endAt && now > new Date(endAt).getTime()) return "COMPLETED";
+  return "ONGOING";
+};
 
 export interface IExam {
   _id: string;
   title: string;
+  description?: string;
   /** Phút. */
   duration: number;
-  startTime: string;
   classId: Ref<{ _id: string; className?: string }>;
+  topicId?: Ref<{ _id: string; name?: string }> | null;
   createdBy?: Ref<UserSummary> | null;
-  isAIGenerated?: boolean;
-  aiPromptUsed?: string | null;
-  maxScore?: number;
   status: ExamStatus;
   questions?: IExamQuestionConfig[];
-  topic?: string;
+  startAt?: string | null;
+  endAt?: string | null;
+  attemptsAllowed?: number;
+  scorePolicy?: "HIGHEST" | "LATEST";
+  shuffleQuestions?: boolean;
+  shuffleOptions?: boolean;
   createdAt?: string;
+  updatedAt?: string;
+  // Backward compat aliases (không có trong model, chỉ dùng để tránh TS lỗi)
+  /** @alias startAt — backward compat */
+  startTime?: string | null;
+  /** Không có trong schema, UI-only */
+  maxScore?: number;
+  /** Không có trong schema */
+  isAIGenerated?: boolean;
+  /** Không có trong schema */
+  aiPromptUsed?: string | null;
 }
 
 export type AttemptStatus = "IN_PROGRESS" | "SUBMITTED" | "PARTIALLY_GRADED" | "GRADED";
 
-export interface IAttemptAnswer {
+/** Câu trả lời trong attempt (questions[].answer trong model). */
+export interface IAttemptQuestionAnswer {
+  selectedOptionIds?: string[];
+  content?: Array<{ type: string; text?: string }>;
+}
+
+/** Snapshot câu hỏi tại lúc bắt đầu thi. */
+export interface IQuestionSnapshot {
+  type: QuestionType;
+  content: any;
+  options?: Array<{ id: string; content: any; order: number }>;
+}
+
+/** Một câu trong ExamAttempt.questions[]. */
+export interface IAttemptQuestion {
   questionId: string;
-  selectedOption?: string;
-  essayText?: string;
-  pointsEarned?: number;
+  questionSnapshot: IQuestionSnapshot;
+  order: number;
+  points: number;
+  answer?: IAttemptQuestionAnswer;
+  isCorrect?: boolean | null;
+  score?: number;
 }
 
 export interface IExamAttempt {
   _id: string;
   examId: Ref<IExam>;
   studentId: Ref<UserSummary>;
+  attemptNumber?: number;
   status: AttemptStatus;
-  answers?: IAttemptAnswer[];
-  totalScore?: number;
+  questions?: IAttemptQuestion[];
+  score?: number | null;
+  /** @alias score — backward compat */
+  totalScore?: number | null;
+  startedAt?: string;
+  /** @alias startedAt — backward compat */
   startTime?: string;
+  expiresAt?: string;
+  /** @alias expiresAt — backward compat */
   endTime?: string;
-  cheatCount?: number;
+  submittedAt?: string | null;
+  performanceProcessedAt?: string | null;
   cheatWarnings?: number;
   cheatLogs?: Array<{ cheatType: string; timestamp: string }>;
-  /** Nộp quá hạn (Wave 7+). Hệ thống vẫn nhận bài, nhưng ghi lại để giáo viên thấy. */
+  sessionToken?: string;
+  activeTabId?: string;
   isLate?: boolean;
-  /** Số giây vượt hạn, ĐÃ trừ ân hạn 2 phút. */
   lateBySeconds?: number;
+  answersVersion?: number;
   createdAt?: string;
+  // examInfo wrapper từ getAttempt response
+  examInfo?: {
+    title?: string;
+    duration?: number;
+    classId?: string;
+    topicId?: string;
+  } | null;
+  serverTime?: string;
 }
 
 /** Thống kê tình trạng bài thi của một kỳ — khớp buildAttemptStats ở backend. */
 export interface IAttemptStats {
   total: number;
   graded: number;
-  /** Chỉ đếm SUBMITTED — bài đang làm dở nằm ở `abandoned`. */
   pending: number;
   late: number;
-  /** Bài kẹt IN_PROGRESS: học sinh vào thi nhưng không có kết quả. */
   abandoned: number;
 }
 
@@ -115,20 +173,20 @@ export interface IAttemptStats {
 export interface IAttemptAnswerDetail {
   questionId: string;
   type?: QuestionType;
-  questionContent?: string;
-  options?: string[];
-  /** Backend đã gộp essayText / selectedOption về một trường, rỗng nếu bỏ trống. */
+  questionContent?: any;
+  options?: any[];
   studentAnswer: string;
   correctAnswer?: string;
+  isCorrect?: boolean | null;
   pointsEarned?: number;
   maxPoints: number;
 }
 
-/** Payload của GET /api/exam-attempts/:id/review — KHÔNG phải một IExamAttempt. */
+/** Payload của GET /api/exam-attempts/:id/review */
 export interface IAttemptReview {
   attemptId: string;
   student: UserSummary;
-  examInfo: { title: string; topic?: string; duration: number };
+  examInfo: { title: string; topicId?: string; duration: number };
   status: AttemptStatus;
   totalScore?: number;
   submittedAt?: string;
@@ -136,7 +194,6 @@ export interface IAttemptReview {
   cheatLogs?: Array<{ cheatType: string; timestamp: string }>;
   isLate: boolean;
   lateBySeconds: number;
-  isHideAnswers?: boolean;
   answersDetail: IAttemptAnswerDetail[];
 }
 

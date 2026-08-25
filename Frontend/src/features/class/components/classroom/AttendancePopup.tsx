@@ -148,7 +148,6 @@ export const AttendancePopup: React.FC<AttendancePopupProps> = ({
     try {
       const payload = {
         classId: session.classId,
-        date: session.date,
         records: records.map((r) => ({
           studentId: r.studentId,
           status: r.status,
@@ -156,7 +155,7 @@ export const AttendancePopup: React.FC<AttendancePopupProps> = ({
         })),
       };
 
-      await attendanceApi.markAttendance(payload);
+      await attendanceApi.markAttendance(session.id, payload);
       // Bỏ hiệu lực cache: lần mở popup sau phải đọc lại từ máy chủ, không dùng bản đã cũ.
       await queryClient.invalidateQueries({
         queryKey: queryKeys.class.attendanceByDate(session.classId, session.date),
@@ -202,37 +201,37 @@ export const AttendancePopup: React.FC<AttendancePopupProps> = ({
           disabled={isClosed || isUpcoming}
         >
           <Radio.Button
-            value="Present"
+            value="PRESENT"
             style={{
-              backgroundColor: record.status === "Present" ? "var(--color-success-base)" : undefined,
-              color: record.status === "Present" ? "var(--color-surface)" : undefined,
+              backgroundColor: record.status === "PRESENT" ? "var(--color-success-base)" : undefined,
+              color: record.status === "PRESENT" ? "var(--color-surface)" : undefined,
             }}
           >
             Có mặt
           </Radio.Button>
           <Radio.Button
-            value="Late"
+            value="LATE"
             style={{
-              backgroundColor: record.status === "Late" ? "var(--color-warning-base)" : undefined,
-              color: record.status === "Late" ? "var(--color-surface)" : undefined,
+              backgroundColor: record.status === "LATE" ? "var(--color-warning-base)" : undefined,
+              color: record.status === "LATE" ? "var(--color-surface)" : undefined,
             }}
           >
             Đi muộn
           </Radio.Button>
           <Radio.Button
-            value="Excused"
+            value="EXCUSED"
             style={{
-              backgroundColor: record.status === "Excused" ? "var(--color-action-primary-bg)" : undefined,
-              color: record.status === "Excused" ? "var(--color-surface)" : undefined,
+              backgroundColor: record.status === "EXCUSED" ? "var(--color-action-primary-bg)" : undefined,
+              color: record.status === "EXCUSED" ? "var(--color-surface)" : undefined,
             }}
           >
             Có phép
           </Radio.Button>
           <Radio.Button
-            value="Absent"
+            value="ABSENT"
             style={{
-              backgroundColor: record.status === "Absent" ? "var(--color-error-base)" : undefined,
-              color: record.status === "Absent" ? "var(--color-surface)" : undefined,
+              backgroundColor: record.status === "ABSENT" ? "var(--color-error-base)" : undefined,
+              color: record.status === "ABSENT" ? "var(--color-surface)" : undefined,
             }}
           >
             Vắng
@@ -254,7 +253,7 @@ export const AttendancePopup: React.FC<AttendancePopupProps> = ({
     },
   ];
 
-  const presentCount = records.filter((r) => r.status === "Present").length;
+  const presentCount = records.filter((r) => r.status === "PRESENT").length;
   const totalCount = records.length;
   const rate = totalCount > 0 ? Math.round((presentCount / totalCount) * 100) : 0;
 
@@ -341,7 +340,7 @@ export const AttendancePopup: React.FC<AttendancePopupProps> = ({
           <Button
             size="small"
             icon={<CheckCircleOutlined />}
-            onClick={() => handleMarkAll("Present")}
+            onClick={() => handleMarkAll("PRESENT")}
             disabled={isClosed || isUpcoming}
           >
             Có mặt tất cả
@@ -349,7 +348,7 @@ export const AttendancePopup: React.FC<AttendancePopupProps> = ({
           <Button
             size="small"
             icon={<CloseCircleOutlined />}
-            onClick={() => handleMarkAll("Absent")}
+            onClick={() => handleMarkAll("ABSENT")}
             disabled={isClosed || isUpcoming}
           >
             Vắng tất cả

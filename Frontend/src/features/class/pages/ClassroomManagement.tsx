@@ -69,7 +69,7 @@ export default function ClassroomManagement() {
     ).length;
     const completed = classes.filter((c) => ["Completed", "completed"].includes(c.status)).length;
     const totalStudents = classes.reduce((sum, c) => {
-      const count = c.currentStudents ?? (Array.isArray(c.students) ? c.students.length : 0);
+      const count = c.currentStudents ?? 0;
       return sum + count;
     }, 0);
     return { total, active, completed, totalStudents };

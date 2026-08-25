@@ -3,6 +3,7 @@ import announcementService from "./announcement.service.js";
 import { sendSuccess, sendError } from "#shared/utils/response.js";
 import notificationService from "#modules/notification/notification.service.js";
 import { Class as classModel } from "#modules/class/index.js";
+import { Course } from "#modules/course/index.js";
 
 export const createAnnouncement = async (req, res) => {
   try {
@@ -29,11 +30,11 @@ export const createAnnouncement = async (req, res) => {
       userRole,
     });
 
-    // Tạo notification realtime cho toàn bộ sinh viên trong lớp
+    // Tạo notification realtime tương ứng với scope
+    const io = req.app.get("io");
     if (scope === "Class" && classId) {
       const classInfo = await classModel.findById(classId).populate("teacherId", "fullName email avatar").lean();
       if (classInfo) {
-        const io = req.app.get("io");
         // Không await để không block response
         notificationService.notifyClassAnnouncementCreated({
           announcement: result,
@@ -41,9 +42,29 @@ export const createAnnouncement = async (req, res) => {
           teacherInfo: classInfo.teacherId,
           io: io,
         }).catch(err => {
-          console.error("[AnnouncementController] Lỗi khi tạo notification:", err);
+          console.error("[AnnouncementController] Lỗi khi tạo notification Class:", err);
         });
       }
+    } else if (scope === "Course" && courseId) {
+      const courseInfo = await Course.findById(courseId).lean();
+      if (courseInfo) {
+        notificationService.notifyCourseAnnouncementCreated({
+          announcement: result,
+          courseInfo: courseInfo,
+          adminInfo: req.user,
+          io: io,
+        }).catch(err => {
+          console.error("[AnnouncementController] Lỗi khi tạo notification Course:", err);
+        });
+      }
+    } else if (scope === "System") {
+      notificationService.notifySystemAnnouncementCreated({
+        announcement: result,
+        adminInfo: req.user,
+        io: io,
+      }).catch(err => {
+        console.error("[AnnouncementController] Lỗi khi tạo notification System:", err);
+      });
     }
 
     return sendSuccess(res, "Tạo thông báo thành công", result, null, 201);

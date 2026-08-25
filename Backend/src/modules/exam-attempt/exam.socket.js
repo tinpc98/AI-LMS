@@ -3,10 +3,11 @@ import ExamAttempt from "./examAttempt.model.js";
 import { logger } from "#shared/utils/logger.js";
 import { checkSocketExamAccess } from "./socketExamAccess.service.js";
 
-// Whitelist các loại hành vi gian lận hợp lệ — chặn client gửi giá trị tùy ý vào DB.
+// Whitelist các loại hành vi gian lận hợp lệ — phải khớp với enum trong examAttempt.model.js.
 const ALLOWED_CHEAT_TYPES = [
   "TAB_SWITCH",
   "COPY_ATTEMPT",
+  "COPY_PASTE",
   "PASTE_ATTEMPT",
   "FULLSCREEN_EXIT",
   "DEVTOOLS_OPEN",
@@ -99,7 +100,7 @@ export default function socketHandler(io) {
         await ExamAttempt.findOneAndUpdate(
           { _id: socket.attemptId, studentId: socket.userId },
           {
-            $inc: { cheatCount: 1 },
+            $inc: { cheatWarnings: 1 },
             $push: {
               cheatLogs: {
                 cheatType,

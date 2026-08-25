@@ -21,7 +21,7 @@ const TeacherAssignmentDrawer = ({
   if (!classRecord) return null;
 
   const courseName =
-    courses.find((c) => c.id === classRecord.courseId)?.courseName || classRecord.courseId;
+    courses.find((c) => c.id === classRecord.courseId)?.name || classRecord.courseId;
   const isAssigned = !!classRecord.teacherId;
 
   return (

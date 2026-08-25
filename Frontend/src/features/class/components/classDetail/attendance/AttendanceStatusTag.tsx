@@ -14,7 +14,7 @@ interface AttendanceStatusTagProps {
 
 export const AttendanceStatusTag: React.FC<AttendanceStatusTagProps> = React.memo(({ status }) => {
   switch (status) {
-    case "Present":
+    case "PRESENT":
       return (
         <Tag
           color="success"
@@ -24,7 +24,7 @@ export const AttendanceStatusTag: React.FC<AttendanceStatusTagProps> = React.mem
           Có mặt
         </Tag>
       );
-    case "Late":
+    case "LATE":
       return (
         <Tag
           color="warning"
@@ -34,7 +34,7 @@ export const AttendanceStatusTag: React.FC<AttendanceStatusTagProps> = React.mem
           Đi muộn
         </Tag>
       );
-    case "Absent":
+    case "ABSENT":
       return (
         <Tag
           color="error"
@@ -44,7 +44,7 @@ export const AttendanceStatusTag: React.FC<AttendanceStatusTagProps> = React.mem
           Vắng mặt
         </Tag>
       );
-    case "Excused":
+    case "EXCUSED":
       return (
         <Tag
           color="processing"

@@ -92,7 +92,7 @@ export const gradeApi = {
   // Lấy bảng điểm của toàn bộ lớp học (Dạng Matrix)
   getGradesByClass: async (classId: string): Promise<IGradeMatrixResponse> => {
     const response = await axiosClient.get<{ success?: boolean; data: IGradeMatrixResponse }>(
-      `/api/grades/class/${classId}`
+      `/grades/class/${classId}`
     );
     return response.data.data ?? response.data;
   },
@@ -109,7 +109,7 @@ export const gradeApi = {
     aiFeedback?: string;
   }): Promise<IGrade> => {
     const response = await axiosClient.post<{ success?: boolean; data: IGrade }>(
-      "/api/grades",
+      "/grades",
       data
     );
     return response.data.data ?? response.data;
@@ -117,11 +117,11 @@ export const gradeApi = {
 
   // Lấy bảng điểm cá nhân của học sinh (Dạng Matrix)
   getGradesByStudent: async (
-    studentId: string,
+    studentId: string = "me",
     classId?: string
   ): Promise<IGradeMatrixResponse> => {
     const response = await axiosClient.get<{ success?: boolean; data: IGradeMatrixResponse }>(
-      `/api/grades/student/${studentId}${classId ? `?classId=${classId}` : ""}`
+      `/grades/student/${studentId}${classId ? `?classId=${classId}` : ""}`
     );
     return response.data.data ?? response.data;
   },
@@ -129,7 +129,7 @@ export const gradeApi = {
   // Lấy tổng kết GPA môn học của học sinh từ Backend API
   getStudentGPA: async (classId: string, studentId: string = "me"): Promise<StudentGPAResponse> => {
     const response = await axiosClient.get<{ success?: boolean; data?: unknown }>(
-      `/api/grades/gpa/${classId}/${studentId}`
+      `/grades/gpa/${classId}/${studentId}`
     );
     return mapGPAResponse(response.data.data ?? response.data);
   },

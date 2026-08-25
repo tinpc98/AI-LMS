@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import { asyncHandler } from "#shared/utils/asyncHandler.js";
 import { Class } from "#modules/class/index.js";
+import { ClassEnrollment } from "#modules/classEnrollment/index.js";
 import Message from "./message.model.js";
 import ChatReceipt from "./chatReceipt.model.js";
 
@@ -25,9 +26,9 @@ export const getUnreadSummary = asyncHandler(async (req, res) => {
   if (role === "teacher") {
     classQuery.teacherId = userId;
   } else if (role === "student") {
-    classQuery.students = {
-      $elemMatch: { studentId: userId, status: "Enrolled" }
-    };
+    const activeEnrollments = await ClassEnrollment.find({ studentId: userId, status: "ACTIVE" }).select("classId").lean();
+    const enrolledClassIds = activeEnrollments.map((en) => en.classId);
+    classQuery._id = { $in: enrolledClassIds };
   }
 
   const classes = await Class.find(classQuery).select("_id className").lean();

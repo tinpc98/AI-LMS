@@ -1,123 +1,67 @@
 import React from "react";
-import { Typography } from "antd";
-import AssignmentStatistic from "./AssignmentStatistic";
-import AssignmentToolbar from "./AssignmentToolbar";
-import AssignmentList from "./AssignmentList";
-import AssignmentEmptyState from "./AssignmentEmptyState";
-import AssignmentLoadingSkeleton from "./AssignmentLoadingSkeleton";
-import AssignmentDetailModal from "./AssignmentDetailModal";
-import SubmitAssignmentModal from "../../../../assignment/components/SubmitAssignmentModal";
-import useAssignments from "../../../../assignment/hooks/useAssignments";
-import useAssignmentDetail from "../../../../assignment/hooks/useAssignmentDetail";
-import useSubmission from "../../../../assignment/hooks/useSubmission";
-import type { IAssignment, ISubmission } from "../../../../../interface/assignmentInterface";
+import { Typography, Card, Button, Space, Tag, List } from "antd";
+import { useNavigate } from "react-router-dom";
+import type { IAssignment } from "../../../../../interface/assignmentInterface";
 
-const { Title, Text } = Typography;
+const { Title, Text, Paragraph } = Typography;
 
 interface AssignmentsTabProps {
   assignments?: IAssignment[];
-  submittedIds?: string[];
-  submissionsMap?: Record<string, ISubmission>;
   loading?: boolean;
-  onRefresh?: () => void;
 }
 
-export const AssignmentsTab: React.FC<AssignmentsTabProps> = React.memo(
-  ({ assignments = [], submittedIds = [], submissionsMap = {}, loading = false, onRefresh }) => {
-    // Custom Hooks
-    const {
-      filters,
-      stats,
-      filteredAssignments,
-      handleSearchChange,
-      handleStatusFilterChange,
-      handleSortChange,
-    } = useAssignments(assignments, submittedIds, submissionsMap);
+const AssignmentsTab: React.FC<AssignmentsTabProps> = React.memo(({ assignments = [], loading = false }) => {
+  const navigate = useNavigate();
 
-    const { selectedAssignment, isDetailOpen, openDetail, closeDetail } = useAssignmentDetail();
-
-    const {
-      submittingAssignment,
-      isSubmitModalOpen,
-      openSubmitModal,
-      closeSubmitModal,
-      handleCancelSubmission,
-    } = useSubmission(onRefresh);
-
-    const isFiltered = filters.searchQuery.trim() !== "" || filters.statusFilter !== "all";
-
-    return (
-      <div style={{ padding: "8px 0" }}>
-        {/* 1. Header Banner & Stats Section */}
-        <div style={{ marginBottom: 24 }}>
-          <div style={{ marginBottom: 16 }}>
-            <Title level={4} style={{ margin: "0 0 4px 0", fontWeight: 700, color: "var(--color-text-title)" }}>
-              📝 Bài tập của tôi
-            </Title>
-            <Text type="secondary" style={{ fontSize: 13 }}>
-              Theo dõi danh sách bài tập, thời hạn nộp bài, trạng thái và điểm số cá nhân.
-            </Text>
-          </div>
-
-          {/* 5 Statistic Cards */}
-          <AssignmentStatistic stats={stats} />
-        </div>
-
-        {/* 2. Toolbar (Search, Filter, Sort) */}
-        <AssignmentToolbar
-          searchQuery={filters.searchQuery}
-          statusFilter={filters.statusFilter}
-          sortBy={filters.sortBy}
-          onSearchChange={handleSearchChange}
-          onStatusFilterChange={handleStatusFilterChange}
-          onSortChange={handleSortChange}
-        />
-
-        {/* 3. Content Box: Loading / Empty / Assignment List */}
-        {loading ? (
-          <AssignmentLoadingSkeleton count={8} />
-        ) : filteredAssignments.length === 0 ? (
-          <AssignmentEmptyState
-            isFiltered={isFiltered}
-            onResetFilters={() => {
-              handleSearchChange("");
-              handleStatusFilterChange("all");
-            }}
-          />
-        ) : (
-          <AssignmentList
-            assignments={filteredAssignments}
-            onDetail={openDetail}
-            onSubmit={openSubmitModal}
-            onFeedback={openDetail}
-            onCancelSubmission={handleCancelSubmission}
-          />
-        )}
-
-        {/* 4. Assignment Detail Modal */}
-        <AssignmentDetailModal
-          open={isDetailOpen}
-          item={selectedAssignment}
-          onClose={closeDetail}
-          onSubmit={openSubmitModal}
-        />
-
-        {/* 5. Submit Assignment Modal */}
-        <SubmitAssignmentModal
-          isOpen={isSubmitModalOpen}
-          onClose={closeSubmitModal}
-          assignment={submittingAssignment as any}
-          initialSubmission={submittingAssignment ? submissionsMap[submittingAssignment._id] : undefined}
-          onSuccess={(id) => {
-            closeSubmitModal();
-            if (onRefresh) onRefresh();
-          }}
-        />
+  return (
+    <div style={{ padding: "8px 0" }}>
+      <div style={{ marginBottom: 24 }}>
+        <Title level={4} style={{ margin: "0 0 4px 0", fontWeight: 700, color: "var(--color-text-title)" }}>
+          📝 Bài tập của tôi
+        </Title>
+        <Text type="secondary" style={{ fontSize: 13 }}>
+          Theo dõi danh sách bài tập, trạng thái và làm bài trực tuyến.
+        </Text>
       </div>
-    );
-  }
-);
 
-AssignmentsTab.displayName = "AssignmentsTab";
+      <List
+        loading={loading}
+        grid={{ gutter: 16, column: 1 }}
+        dataSource={assignments}
+        renderItem={(item) => (
+          <List.Item>
+            <Card size="small" style={{ borderRadius: 8 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                <div>
+                  <Title level={5} style={{ margin: 0 }}>
+                    {item.title}
+                  </Title>
+                  <Space style={{ marginTop: 8 }}>
+                    <Tag color={item.status === "PUBLISHED" ? "success" : "default"}>{item.status}</Tag>
+                    <Text type="secondary" style={{ fontSize: 12 }}>
+                      {item.questions?.length || 0} câu hỏi
+                    </Text>
+                  </Space>
+                  {item.description && (
+                    <Paragraph type="secondary" ellipsis={{ rows: 2 }} style={{ marginTop: 8, marginBottom: 0, fontSize: 13 }}>
+                      {item.description}
+                    </Paragraph>
+                  )}
+                </div>
+                <div>
+                  {item.status === "PUBLISHED" && (
+                    <Button type="primary" onClick={() => navigate(`/studentassignment/${item._id}`)}>
+                      Làm bài ngay
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </Card>
+          </List.Item>
+        )}
+      />
+    </div>
+  );
+});
 
 export default AssignmentsTab;

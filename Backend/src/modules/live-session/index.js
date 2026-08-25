@@ -7,5 +7,5 @@
 // vụ, không gom chung một thư mục sockets/ tách rời. Việc đăng ký handler do
 // infra/socket/registerHandlers.js làm.
 
-export { default as LiveSession } from "./liveSession.model.js";
+
 export { validateJaasConfig } from "./jaas.controller.js";

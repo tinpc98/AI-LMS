@@ -7,8 +7,9 @@ interface AccountStatusTagProps {
 
 const statusColorMap: Record<AccountStatus, string> = {
   Active: "green",
-  Inactive: "orange",
+  Inactive: "default",
   Locked: "red",
+  Expired: "orange",
 };
 
 const AccountStatusTag = ({ status }: AccountStatusTagProps) => {

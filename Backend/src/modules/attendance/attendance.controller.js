@@ -1,15 +1,33 @@
 import mongoose from "mongoose";
 import attendanceService from "./attendance.service.js";
+import Attendance from "./attendance.model.js";
 import { sendSuccess, sendError } from "#shared/utils/response.js";
-import { checkClassTeacherOwnership } from "#modules/class";
+import { checkClassTeacherOwnership } from "#modules/class/index.js";
+import { ClassEnrollment } from "#modules/classEnrollment/index.js";
+import ClassSession from "#modules/classSession/classSession.model.js";
 
+const verifyClassAccess = async (classId, req) => {
+  const userId = req.user.id || req.user._id;
+  const role = (req.user.role || "").toLowerCase();
+  
+  if (role === "admin") return true;
+  if (role === "teacher") {
+    return await checkClassTeacherOwnership(classId, userId, role);
+  }
+  if (role === "student") {
+    const enrollment = await ClassEnrollment.findOne({ classId, studentId: userId, status: "ACTIVE" }).lean();
+    return !!enrollment;
+  }
+  return false;
+};
 export const markAttendance = async (req, res) => {
   try {
-    const { classId, date, records } = req.body;
-    if (!classId || !date || !Array.isArray(records) || records.length === 0) {
+    const { sessionId } = req.params;
+    const { classId, records } = req.body;
+    if (!sessionId || !classId || !Array.isArray(records) || records.length === 0) {
       return sendError(
         res,
-        "Vui lòng truyền đầy đủ classId, date và danh sách học sinh cần điểm danh",
+        "Vui lòng truyền đầy đủ classId, sessionId và danh sách học sinh cần điểm danh",
         400
       );
     }
@@ -20,7 +38,7 @@ export const markAttendance = async (req, res) => {
       return sendError(res, "Bạn không có quyền điểm danh cho lớp học này!", 403);
     }
 
-    const result = await attendanceService.markAttendance({ classId, date, records, teacherId });
+    const result = await attendanceService.markAttendance({ sessionId, classId, records, teacherId });
     return sendSuccess(res, "Điểm danh thành công", result);
   } catch (error) {
     if (error.code === 11000 || error.name === "MongoServerError") {
@@ -30,11 +48,43 @@ export const markAttendance = async (req, res) => {
   }
 };
 
+export const confirmAttendance = async (req, res) => {
+  try {
+    const { sessionId } = req.params;
+    if (!sessionId) {
+      return sendError(res, "Vui lòng cung cấp sessionId", 400);
+    }
+    const session = await ClassSession.findById(sessionId).lean();
+    if (!session) return sendError(res, "Buổi học không tồn tại!", 404);
+    
+    const teacherId = req.user.id || req.user._id;
+    const isAuthorized = await checkClassTeacherOwnership(session.classId, teacherId, req.user?.role);
+    if (!isAuthorized) {
+      return sendError(res, "Bạn không có quyền xác nhận điểm danh cho lớp học này!", 403);
+    }
+    const result = await attendanceService.confirmAttendance({ sessionId, teacherId });
+    return sendSuccess(res, "Xác nhận điểm danh thành công", result);
+  } catch (error) {
+    return sendError(res, error.message || "Lỗi khi xác nhận điểm danh", error.status || 500);
+  }
+};
+
 export const updateAttendance = async (req, res) => {
   try {
     const { id } = req.params;
     if (!id || !mongoose.Types.ObjectId.isValid(id)) {
       return sendError(res, "ID bản ghi điểm danh không hợp lệ!", 400);
+    }
+
+    const attendance = await Attendance.findById(id).lean();
+    if (!attendance) {
+      return sendError(res, "Bản ghi điểm danh không tồn tại!", 404);
+    }
+
+    const teacherId = req.user.id || req.user._id;
+    const isAuthorized = await checkClassTeacherOwnership(attendance.classId, teacherId, req.user?.role);
+    if (!isAuthorized) {
+      return sendError(res, "Bạn không có quyền điểm danh cho lớp học này!", 403);
     }
 
     const { status, note } = req.body;
@@ -52,6 +102,11 @@ export const getAttendanceByClass = async (req, res) => {
       return sendError(res, "ID lớp học không hợp lệ!", 400);
     }
 
+    const isAuthorized = await verifyClassAccess(classId, req);
+    if (!isAuthorized) {
+      return sendError(res, "Bạn không có quyền xem thông tin điểm danh của lớp này", 403);
+    }
+
     const { date } = req.query;
     const result = await attendanceService.getAttendanceByClass(classId, date);
     return sendSuccess(res, "Lấy danh sách điểm danh thành công", result);
@@ -67,6 +122,11 @@ export const getClassSessions = async (req, res) => {
       return sendError(res, "ID lớp học không hợp lệ!", 400);
     }
 
+    const isAuthorized = await verifyClassAccess(classId, req);
+    if (!isAuthorized) {
+      return sendError(res, "Bạn không có quyền xem danh sách buổi học của lớp này", 403);
+    }
+
     const result = await attendanceService.getClassSessions(classId);
     return sendSuccess(res, "Lấy danh sách buổi học thành công", result);
   } catch (error) {
@@ -79,6 +139,11 @@ export const getAttendanceMatrix = async (req, res) => {
     const { classId } = req.params;
     if (!classId || !mongoose.Types.ObjectId.isValid(classId)) {
       return sendError(res, "ID lớp học không hợp lệ!", 400);
+    }
+
+    const isAuthorized = await verifyClassAccess(classId, req);
+    if (!isAuthorized) {
+      return sendError(res, "Bạn không có quyền xem ma trận điểm danh của lớp này", 403);
     }
 
     const result = await attendanceService.getAttendanceMatrix(classId);
@@ -122,6 +187,11 @@ export const getAttendanceStats = async (req, res) => {
     const { classId } = req.params;
     if (!classId || !mongoose.Types.ObjectId.isValid(classId)) {
       return sendError(res, "ID lớp học không hợp lệ!", 400);
+    }
+
+    const isAuthorized = await verifyClassAccess(classId, req);
+    if (!isAuthorized) {
+      return sendError(res, "Bạn không có quyền xem thống kê điểm danh của lớp này", 403);
     }
 
     const result = await attendanceService.getAttendanceStats(classId);

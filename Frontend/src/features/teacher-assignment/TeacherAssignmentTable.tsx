@@ -26,8 +26,6 @@ const getLearningModeColor = (mode: string) => {
       return "cyan";
     case "Online":
       return "purple";
-    case "Hybrid":
-      return "geekblue";
     default:
       return "default";
   }
@@ -71,7 +69,7 @@ const TeacherAssignmentTable = ({
       ellipsis: true,
       render: (courseId: string) => {
         const course = courseMap.get(courseId);
-        return course ? course.courseName : courseId;
+        return <span>{course ? course.name : "N/A"}</span>;
       },
     },
     {

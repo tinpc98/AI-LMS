@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
-import { User } from "#modules/auth";
-import { Class as classModel } from "#modules/class";
+import { User } from "#modules/auth/index.js";
+import { Class as classModel } from "#modules/class/index.js";
+import { ClassEnrollment } from "#modules/classEnrollment/index.js";
 import Notification from "./notification.model.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -102,29 +103,25 @@ class NotificationService {
    * @returns {Promise<string[]>} Mảng userId dạng string (unique)
    */
   async resolveEnrolledUserIds(targetRole) {
-    // Lấy tất cả lớp học đang hoạt động (không bị xóa mềm)
-    // softDeletePlugin tự động filter isDeleted: false nên chỉ cần find({})
-    const activeClasses = await classModel.find({}).select("teacherId students.studentId").lean();
-
     const enrolledIdSet = new Set();
 
-    activeClasses.forEach((cls) => {
-      // Thu thập teacherId nếu cần lấy teacher
-      if (targetRole === "all" || targetRole === "teacher") {
+    if (targetRole === "all" || targetRole === "teacher") {
+      const activeClasses = await classModel.find({}).select("teacherId").lean();
+      activeClasses.forEach((cls) => {
         if (cls.teacherId) {
           enrolledIdSet.add(cls.teacherId.toString());
         }
-      }
+      });
+    }
 
-      // Thu thập studentId nếu cần lấy student
-      if (targetRole === "all" || targetRole === "student") {
-        (cls.students || []).forEach((s) => {
-          if (s.studentId) {
-            enrolledIdSet.add(s.studentId.toString());
-          }
-        });
-      }
-    });
+    if (targetRole === "all" || targetRole === "student") {
+      const activeEnrollments = await ClassEnrollment.find({ status: "ACTIVE" }).select("studentId").lean();
+      activeEnrollments.forEach((en) => {
+        if (en.studentId) {
+          enrolledIdSet.add(en.studentId.toString());
+        }
+      });
+    }
 
     // Chuyển Set<string> → Array<ObjectId> cho $in query
     return [...enrolledIdSet].map((id) => new mongoose.Types.ObjectId(id));
@@ -237,16 +234,17 @@ class NotificationService {
 
     try {
       // 1. Chỉ lấy những Student đang thực sự enroll hợp lệ trong lớp
-      const activeStudents = (classInfo.students || []).filter(
-        (s) => s.status === "Enrolled" && s.studentId
-      );
+      const activeEnrollments = await ClassEnrollment.find({
+        classId: classInfo._id,
+        status: "ACTIVE",
+      }).select("studentId").lean();
 
-      if (activeStudents.length === 0) return;
+      if (activeEnrollments.length === 0) return;
 
       const actorId = typeof teacherInfo === "object" ? teacherInfo._id : teacherInfo;
 
       // 2. Chuẩn bị bulkWrite ops với upsert
-      const bulkOps = activeStudents.map((s) => {
+      const bulkOps = activeEnrollments.map((s) => {
         const recipientId = typeof s.studentId === "object" ? s.studentId._id : s.studentId;
 
         return {
@@ -308,6 +306,135 @@ class NotificationService {
     }
   }
 
+  async notifyCourseAnnouncementCreated({ announcement, courseInfo, adminInfo, io }) {
+    if (!announcement || !courseInfo) return;
+
+    try {
+      const activeClasses = await classModel.find({ courseId: courseInfo._id, isDeleted: false }).select("_id").lean();
+      if (activeClasses.length === 0) return;
+
+      const classIds = activeClasses.map(c => c._id);
+
+      const activeEnrollments = await ClassEnrollment.find({
+        classId: { $in: classIds },
+        status: "ACTIVE",
+      }).select("studentId").lean();
+
+      if (activeEnrollments.length === 0) return;
+
+      const actorId = typeof adminInfo === "object" ? adminInfo._id : adminInfo;
+
+      const bulkOps = activeEnrollments.map((s) => {
+        const recipientId = typeof s.studentId === "object" ? s.studentId._id : s.studentId;
+
+        return {
+          updateOne: {
+            filter: {
+              recipientId: new mongoose.Types.ObjectId(recipientId),
+              type: "announcement",
+              entityId: new mongoose.Types.ObjectId(announcement._id),
+            },
+            update: {
+              $setOnInsert: {
+                recipientId: new mongoose.Types.ObjectId(recipientId),
+                actorId: actorId ? new mongoose.Types.ObjectId(actorId) : null,
+                senderId: actorId ? new mongoose.Types.ObjectId(actorId) : null,
+                title: "Thông báo khóa học mới",
+                message: `Quản trị viên vừa đăng thông báo mới trong khóa học ${courseInfo.name || ""}`,
+                content: `Quản trị viên vừa đăng thông báo mới trong khóa học ${courseInfo.name || ""}`,
+                type: "announcement",
+                entityType: "ANNOUNCEMENT",
+                entityId: new mongoose.Types.ObjectId(announcement._id),
+                actionUrl: `/student/courses`,
+                link: `/student/courses`,
+                metadata: {
+                  courseName: courseInfo.name,
+                  announcementTitle: announcement.title,
+                },
+                isRead: false,
+                readAt: null,
+              },
+            },
+            upsert: true,
+          },
+        };
+      });
+
+      const result = await Notification.bulkWrite(bulkOps, { ordered: false });
+
+      if (result.upsertedCount > 0 && io) {
+        const upsertedIds = Object.values(result.upsertedIds);
+        const newNotifications = await Notification.find({ _id: { $in: upsertedIds } }).lean();
+
+        newNotifications.forEach((notif) => {
+          io.to(`user:${notif.recipientId}`).emit("notification:new", notif);
+        });
+
+        console.log(`✅ [NotificationService] Đã tạo ${result.upsertedCount} thông báo Course Announcement.`);
+      }
+    } catch (error) {
+      console.error("❌ [NotificationService] notifyCourseAnnouncementCreated Error:", error);
+    }
+  }
+
+  async notifySystemAnnouncementCreated({ announcement, adminInfo, io }) {
+    if (!announcement) return;
+
+    try {
+      const activeUsers = await User.find({ status: "Active", isDeleted: false }).select("_id").lean();
+      if (activeUsers.length === 0) return;
+
+      const actorId = typeof adminInfo === "object" ? adminInfo._id : adminInfo;
+
+      const bulkOps = activeUsers.map((u) => {
+        const recipientId = u._id;
+
+        return {
+          updateOne: {
+            filter: {
+              recipientId: new mongoose.Types.ObjectId(recipientId),
+              type: "system",
+              entityId: new mongoose.Types.ObjectId(announcement._id),
+            },
+            update: {
+              $setOnInsert: {
+                recipientId: new mongoose.Types.ObjectId(recipientId),
+                actorId: actorId ? new mongoose.Types.ObjectId(actorId) : null,
+                senderId: actorId ? new mongoose.Types.ObjectId(actorId) : null,
+                title: "Thông báo hệ thống",
+                message: announcement.title,
+                content: announcement.title,
+                type: "system",
+                entityType: "ANNOUNCEMENT",
+                entityId: new mongoose.Types.ObjectId(announcement._id),
+                actionUrl: `/dashboard`,
+                link: `/dashboard`,
+                isRead: false,
+                readAt: null,
+              },
+            },
+            upsert: true,
+          },
+        };
+      });
+
+      const result = await Notification.bulkWrite(bulkOps, { ordered: false });
+
+      if (result.upsertedCount > 0 && io) {
+        const upsertedIds = Object.values(result.upsertedIds);
+        const newNotifications = await Notification.find({ _id: { $in: upsertedIds } }).lean();
+
+        newNotifications.forEach((notif) => {
+          io.to(`user:${notif.recipientId}`).emit("notification:new", notif);
+        });
+
+        console.log(`✅ [NotificationService] Đã tạo ${result.upsertedCount} thông báo System Announcement.`);
+      }
+    } catch (error) {
+      console.error("❌ [NotificationService] notifySystemAnnouncementCreated Error:", error);
+    }
+  }
+
   // ──────────────────────────────────────────────
 
   /**
@@ -319,16 +446,17 @@ class NotificationService {
 
     try {
       // 1. Chỉ lấy những Student đang thực sự enroll hợp lệ trong lớp
-      const activeStudents = (classInfo.students || []).filter(
-        (s) => s.status === "Enrolled" && s.studentId
-      );
+      const activeEnrollments = await ClassEnrollment.find({
+        classId: classInfo._id,
+        status: "ACTIVE",
+      }).select("studentId").lean();
 
-      if (activeStudents.length === 0) return;
+      if (activeEnrollments.length === 0) return;
 
       const actorId = typeof teacherInfo === "object" ? teacherInfo._id : teacherInfo;
 
       // 2. Chuẩn bị bulkWrite ops với upsert
-      const bulkOps = activeStudents.map((s) => {
+      const bulkOps = activeEnrollments.map((s) => {
         const recipientId = typeof s.studentId === "object" ? s.studentId._id : s.studentId;
 
         return {
@@ -402,15 +530,16 @@ class NotificationService {
     if (!session || !classInfo) return;
 
     try {
-      const activeStudents = (classInfo.students || []).filter(
-        (s) => s.status === "Enrolled" && s.studentId
-      );
+      const activeEnrollments = await ClassEnrollment.find({
+        classId: classInfo._id,
+        status: "ACTIVE",
+      }).select("studentId").lean();
 
-      if (activeStudents.length === 0) return;
+      if (activeEnrollments.length === 0) return;
 
       const actorId = typeof teacherInfo === "object" ? teacherInfo._id : teacherInfo;
 
-      const bulkOps = activeStudents.map((s) => {
+      const bulkOps = activeEnrollments.map((s) => {
         const recipientId = typeof s.studentId === "object" ? s.studentId._id : s.studentId;
 
         return {

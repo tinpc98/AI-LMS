@@ -3,49 +3,56 @@ import softDeletePlugin from "#shared/plugins/softDelete.plugin.js";
 
 const attendanceSchema = new Schema(
   {
+    sessionId: {
+      type: Schema.Types.ObjectId,
+      ref: "ClassSession",
+      required: [true, "ID buổi học (Session) là bắt buộc"],
+    },
     classId: {
       type: Schema.Types.ObjectId,
       ref: "Class",
       required: [true, "ID lớp học là bắt buộc"],
-    },
-    teacherId: {
-      type: Schema.Types.ObjectId,
-      ref: "User",
-      required: [true, "ID giáo viên điểm danh là bắt buộc"],
     },
     studentId: {
       type: Schema.Types.ObjectId,
       ref: "User",
       required: [true, "ID học sinh được điểm danh là bắt buộc"],
     },
-    date: {
-      type: Date,
-      required: [true, "Ngày điểm danh là bắt buộc"],
-    },
     status: {
       type: String,
-      enum: ["Present", "Absent", "Late", "Excused"],
-      default: "Present",
+      enum: ["DRAFT", "PRESENT", "ABSENT", "LATE", "EXCUSED"],
+      default: "DRAFT",
       required: [true, "Trạng thái điểm danh là bắt buộc"],
+    },
+    evidence: {
+      firstJoinAt: { type: Date, default: null },
+      lastLeaveAt: { type: Date, default: null },
+      onlineDurationSeconds: { type: Number, default: 0 },
     },
     note: {
       type: String,
       trim: true,
       default: "",
     },
-    createdBy: {
+    confirmedAt: {
+      type: Date,
+      default: null,
+    },
+    confirmedBy: {
       type: Schema.Types.ObjectId,
       ref: "User",
-      required: [true, "Người tạo bản ghi là bắt buộc"],
+      default: null,
     },
   },
   { timestamps: true }
 );
 
-attendanceSchema.index({ classId: 1, studentId: 1, date: 1 }, { unique: true });
-
-attendanceSchema.index({ classId: 1, date: 1 });
-attendanceSchema.index({ studentId: 1 });
+// Single Source of Truth for Unique Attendance
+attendanceSchema.index(
+  { sessionId: 1, studentId: 1 },
+  { unique: true, partialFilterExpression: { isDeleted: false } }
+);
+attendanceSchema.index({ classId: 1, studentId: 1 });
 
 attendanceSchema.plugin(softDeletePlugin);
 

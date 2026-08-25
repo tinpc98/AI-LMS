@@ -77,7 +77,7 @@ const learningApi = {
   // Progress
   getStudentProgress: async (classId: string): Promise<ILessonProgress[]> => {
     const response = await axiosClient.get<ApiEnvelope<ILessonProgress[]>>(
-      `/api/learning/progress/class/${classId}`
+      `/learning/progress/class/${classId}`
     );
     return unwrap(response.data, []);
   },
@@ -88,7 +88,7 @@ const learningApi = {
     durationSeconds?: number;
   }) => {
     const response = await axiosClient.post<ApiEnvelope<ILessonProgress>>(
-      `/api/learning/progress`,
+      `/learning/progress`,
       payload
     );
     return unwrapOrNull(response.data);
@@ -100,14 +100,14 @@ const learningApi = {
     params?: { page?: number; limit?: number }
   ): Promise<IRankingResponse | null> => {
     const response = await axiosClient.get<ApiEnvelope<IRankingResponse>>(
-      `/api/learning/ranking/class/${classId}`,
+      `/learning/ranking/class/${classId}`,
       { params }
     );
     return unwrapOrNull(response.data);
   },
   getStudentRanking: async (classId: string, studentId: string = "me") => {
     const response = await axiosClient.get<ApiEnvelope<IStudentRank>>(
-      `/api/learning/ranking/student/${studentId}`,
+      `/learning/ranking/student/${studentId}`,
       { params: { classId } }
     );
     return unwrapOrNull(response.data);
@@ -115,12 +115,12 @@ const learningApi = {
 
   // Gamification
   getMyBadges: async () => {
-    const response = await axiosClient.get<ApiEnvelope<IStudentBadge[]>>(`/api/learning/badges`);
+    const response = await axiosClient.get<ApiEnvelope<IStudentBadge[]>>(`/learning/badges`);
     return unwrap(response.data, []);
   },
   getMyActivities: async (params?: { classId?: string }) => {
     const response = await axiosClient.get<ApiEnvelope<ILearningActivity[]>>(
-      `/api/learning/activities`,
+      `/learning/activities`,
       { params }
     );
     return unwrap(response.data, []);

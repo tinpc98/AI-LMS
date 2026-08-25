@@ -9,14 +9,12 @@ import announcementApi from "../../api/announcementApi";
 import { getCurrentUserId } from "../../shared/utils/authToken";
 import type { IClass } from "../../interface/ClassInterface";
 import type { ILesson } from "../../interface/lessonInterface";
-import type { IAssignment, ISubmission } from "../../interface/assignmentInterface";
+import type { IAssignment } from "../../interface/assignmentInterface";
 
 export interface ClassDetailData {
   classInfo: IClass | null;
   lessons: ILesson[];
   assignments: IAssignment[];
-  submittedAssignmentIds: string[];
-  submissionsMap: Record<string, ISubmission>;
 }
 
 /**
@@ -48,43 +46,7 @@ const unwrapAssignments = (res: unknown): IAssignment[] => {
   return (res as { data?: IAssignment[] })?.data ?? [];
 };
 
-/**
- * Những bài tập mà học sinh này đã nộp (và chưa rút lại).
- *
- * LƯU Ý VỀ HIỆU NĂNG: gọi một request cho MỖI bài tập (N+1). Lớp có 30 bài tập là 30 request.
- * Giữ nguyên vì backend chưa có endpoint lấy hàng loạt — đã ghi nhận thành việc riêng chứ
- * không sửa lén ở đây. Ít nhất chúng chạy song song và lỗi lẻ được bỏ qua, nên một bài tập
- * hỏng không kéo sập cả trang.
- */
-const fetchSubmissionsData = async (assignments: IAssignment[]): Promise<{ submittedIds: string[], submissionsMap: Record<string, ISubmission> }> => {
-  const studentId = getCurrentUserId();
-  if (!studentId || assignments.length === 0) return { submittedIds: [], submissionsMap: {} };
-
-  const submissionsMap: Record<string, ISubmission> = {};
-  const submittedIds: string[] = [];
-
-  const results = await Promise.all(
-    assignments.map(async (item) => {
-      try {
-        const submission = await assignmentApi.getMySubmission(item._id);
-        if (submission) {
-          submissionsMap[item._id] = submission;
-          if (submission.status !== "withdrawn") {
-            submittedIds.push(item._id);
-          }
-        }
-      } catch {
-        // bài tập chưa nộp trả 404 — đó là câu trả lời, không phải sự cố
-      }
-    })
-  );
-
-  return { submittedIds, submissionsMap };
-};
-
 export const fetchClassDetail = async (classId: string): Promise<ClassDetailData> => {
-  // Bài giảng và bài tập hỏng thì vẫn hiện được phần còn lại của trang; riêng thông tin lớp
-  // hỏng thì không còn gì để hiện, nên để lỗi nổi lên cho React Query bắt.
   const [classRes, lessonRes, assignmentRes, announcementsRes] = await Promise.all([
     classApi.getClassById(classId),
     lessonApi.getLessonsByClass(classId).catch(() => ({ data: { lessons: [] } })),
@@ -93,7 +55,6 @@ export const fetchClassDetail = async (classId: string): Promise<ClassDetailData
   ]);
 
   const assignments = unwrapAssignments(assignmentRes);
-  const { submittedIds, submissionsMap } = await fetchSubmissionsData(assignments);
 
   const classInfo = unwrapClass(classRes);
   if (classInfo) {
@@ -102,9 +63,7 @@ export const fetchClassDetail = async (classId: string): Promise<ClassDetailData
 
   return {
     classInfo,
-    lessons: selectPublishedLessons(unwrapLessons(lessonRes)),
+    lessons: unwrapLessons(lessonRes),
     assignments,
-    submittedAssignmentIds: submittedIds,
-    submissionsMap,
   };
 };

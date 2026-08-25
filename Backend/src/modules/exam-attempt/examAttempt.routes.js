@@ -1,33 +1,27 @@
 import express from "express";
-import {
-  submitExam,
-  startExam,
-  gradeEssaySubmit,
-  getAttemptForReview,
-  getExamAttemptDetail,
-  getAttemptsByExam,
-  recordCheatWarning,
-  heartbeat,
-} from "./examAttempt.controller.js";
+import * as examAttemptController from "./examAttempt.controller.js";
 import { saveDraft } from "./draftAnswers.controller.js";
 import { verifyUser } from "#modules/auth";
 import { isTeacher } from "#shared/middlewares/rbac.middleware.js";
 
 const router = express.Router();
 
-// --- Tuyến đường dành cho Học sinh ---
-router.post("/start", verifyUser, startExam);
-router.post("/:id/submit", verifyUser, submitExam);
-router.get("/:id", verifyUser, getExamAttemptDetail);
-router.post("/:id/heartbeat", verifyUser, heartbeat);
-router.post("/:id/warning", verifyUser, recordCheatWarning);
-// Lưu tạm bài làm. PATCH vì đây là cập nhật MỘT PHẦN — máy khách gửi từng câu khi học sinh
-// chọn, không gửi lại toàn bộ bài.
-router.patch("/:id/answers", verifyUser, saveDraft);
+router.use(verifyUser);
 
-// --- Tuyến đường dành cho Giáo viên / Admin ---
-router.put("/:id/grade-essay", verifyUser, isTeacher, gradeEssaySubmit);
-router.get("/:id/review", verifyUser, getAttemptForReview);
-router.get("/exam/:examId", verifyUser, isTeacher, getAttemptsByExam);
+// ── Static routes (phải đứng TRƯỚC /:attemptId để không bị match nhầm) ──
+// Teacher: lấy danh sách attempt theo exam
+router.get("/exam/:examId", isTeacher, examAttemptController.getAttemptsByExam);
+
+// ── Dynamic routes ──
+router.get("/:attemptId", examAttemptController.getAttempt);
+router.patch("/:attemptId/questions/:questionId", examAttemptController.saveAnswer);
+router.patch("/:attemptId/answers", saveDraft);
+router.post("/:attemptId/submit", examAttemptController.submitExam);
+router.post("/:attemptId/cheat", examAttemptController.reportCheat);
+router.post("/:attemptId/heartbeat", examAttemptController.heartbeat);
+
+// Teacher routes
+router.get("/:attemptId/review", isTeacher, examAttemptController.getAttemptForReview);
+router.put("/:attemptId/grade-essay", isTeacher, examAttemptController.gradeEssay);
 
 export default router;

@@ -12,7 +12,7 @@ import type { CourseFilters, CourseFormValues, CourseRecord, CourseStatus } from
 
 const initialFilters: CourseFilters = {
   search: "",
-  subject: "All",
+  subjectId: "All",
   status: "All",
   page: 1,
   limit: 10,
@@ -108,11 +108,11 @@ const CourseManagementPage = () => {
   const handleChangeStatus = async (course: CourseRecord) => {
     try {
       const nextStatus: CourseStatus =
-        course.status === "Published"
-          ? "Closed"
-          : course.status === "Closed"
-            ? "Draft"
-            : "Published";
+        course.status === "PUBLISHED"
+          ? "ARCHIVED"
+          : course.status === "ARCHIVED"
+            ? "DRAFT"
+            : "PUBLISHED";
       await courseService.updateStatus(course.id, nextStatus);
       message.success(`Status changed to ${nextStatus}`);
       await loadCourses();
@@ -234,14 +234,14 @@ const CourseManagementPage = () => {
 
       <DeleteConfirmModal
         open={deleteOpen}
-        courseName={selectedCourse?.courseName}
+        courseName={selectedCourse?.name}
         onConfirm={confirmDelete}
         onCancel={() => setDeleteOpen(false)}
       />
 
       <DeleteConfirmModal
         open={permanentDeleteOpen}
-        courseName={selectedCourse?.courseName + " (PERMANENTLY)"}
+        courseName={selectedCourse?.name + " (PERMANENTLY)"}
         onConfirm={confirmPermanentDelete}
         onCancel={() => setPermanentDeleteOpen(false)}
       />

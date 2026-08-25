@@ -136,11 +136,13 @@ export const mapStatusToTone = (
     case "upcoming":
     case "sắp diễn ra":
     case "sắp khai giảng":
+    case "open":
       return { tone: "warning", label: "Sắp khai giảng", icon: <ClockCircleOutlined /> };
 
     case "sắp hết hạn":
     case "sắp đến hạn":
-      return { tone: "warning", label: "Sắp hết hạn", icon: <ClockCircleOutlined /> };
+    case "full":
+      return { tone: "warning", label: "Đủ chỗ", icon: <InfoCircleOutlined /> };
 
     case "late":
     case "nộp muộn":

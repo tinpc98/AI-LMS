@@ -1,43 +1,105 @@
-import mongoose from "mongoose";
+import mongoose, { Schema } from "mongoose";
 import softDeletePlugin from "#shared/plugins/softDelete.plugin.js";
+import { contentBlockSchema } from "../question/question.model.js";
 
-const examAttemptSchema = new mongoose.Schema(
+const optionSnapshotSchema = new Schema(
+  {
+    id: { type: String, required: true },
+    content: [contentBlockSchema],
+    order: { type: Number, required: true },
+  },
+  { _id: false }
+);
+
+const questionSnapshotSchema = new Schema(
+  {
+    type: { type: String, required: true },
+    content: [contentBlockSchema],
+    options: [optionSnapshotSchema],
+  },
+  { _id: false }
+);
+
+const attemptQuestionSchema = new Schema(
+  {
+    questionId: {
+      type: Schema.Types.ObjectId,
+      ref: "Question",
+      required: true,
+    },
+    questionSnapshot: {
+      type: questionSnapshotSchema,
+      required: true,
+    },
+    order: {
+      type: Number,
+      required: true,
+    },
+    points: {
+      type: Number,
+      required: true,
+    },
+    answer: {
+      selectedOptionIds: [String],
+      content: [contentBlockSchema],
+    },
+    isCorrect: {
+      type: Boolean,
+      default: null,
+    },
+    score: {
+      type: Number,
+      default: 0,
+    },
+  },
+  { _id: false }
+);
+
+const examAttemptSchema = new Schema(
   {
     examId: {
-      type: mongoose.Schema.Types.ObjectId,
+      type: Schema.Types.ObjectId,
       ref: "Exam",
       required: true,
     },
     studentId: {
-      type: mongoose.Schema.Types.ObjectId,
+      type: Schema.Types.ObjectId,
       ref: "User",
       required: true,
+    },
+    attemptNumber: {
+      type: Number,
+      required: true,
+      min: 1,
     },
     status: {
       type: String,
       enum: ["IN_PROGRESS", "SUBMITTED", "PARTIALLY_GRADED", "GRADED"],
       default: "IN_PROGRESS",
     },
-    answers: [
-      {
-        questionId: {
-          type: mongoose.Schema.Types.Mixed, // Hỗ trợ ObjectId (Legacy) hoặc String/UUID (Snapshot)
-          required: true,
-        },
-        questionSource: {
-          type: String,
-          enum: ["legacy", "snapshot"],
-          default: "legacy",
-        },
-        selectedOption: { type: String },
-        essayText: { type: String },
-        pointsEarned: { type: Number, default: 0 },
-      },
-    ],
-    totalScore: { type: Number, default: 0 },
-    startTime: { type: Date, default: Date.now },
-    endTime: { type: Date },
-    cheatCount: {
+    questions: [attemptQuestionSchema],
+    score: {
+      type: Number,
+      default: null,
+    },
+    startedAt: {
+      type: Date,
+      default: Date.now,
+    },
+    expiresAt: {
+      type: Date,
+      required: true,
+    },
+    submittedAt: {
+      type: Date,
+      default: null,
+    },
+    performanceProcessedAt: {
+      type: Date,
+      default: null,
+    },
+    // Anti-Cheat & Legacy integration fields
+    cheatWarnings: {
       type: Number,
       default: 0,
     },
@@ -45,7 +107,18 @@ const examAttemptSchema = new mongoose.Schema(
       {
         cheatType: {
           type: String,
-          enum: ["TAB_SWITCH", "FULLSCREEN_EXIT", "COPY_PASTE", "MULTIPLE_FACES"],
+          enum: [
+            "TAB_SWITCH",
+            "FULLSCREEN_EXIT",
+            "COPY_PASTE",
+            "COPY_ATTEMPT",
+            "PASTE_ATTEMPT",
+            "MULTIPLE_FACES",
+            "NO_FACE_DETECTED",
+            "DEVTOOLS_OPEN",
+            "RIGHT_CLICK",
+            "WINDOW_BLUR",
+          ],
         },
         timestamp: {
           type: Date,
@@ -53,22 +126,12 @@ const examAttemptSchema = new mongoose.Schema(
         },
       },
     ],
-    cheatWarnings: {
-      type: Number,
-      default: 0,
-    },
-    answersVersion: {
-      type: Number,
-      default: 0,
-    },
     sessionToken: {
       type: String,
+      required: true,
     },
     activeTabId: {
       type: String,
-    },
-    lastHeartbeat: {
-      type: Date,
     },
     takeoverCount: {
       type: Number,
@@ -84,22 +147,15 @@ const examAttemptSchema = new mongoose.Schema(
         },
       },
     ],
-
-    // ── Ghi nhận nộp muộn (Wave 7+) ──────────────────────────────────────────
-    //
-    // Trước đây bài nộp quá hạn được chấp nhận ÂM THẦM: gradeSubmission kẹp lại endTime cho
-    // gọn rồi chấm bình thường, không để lại dấu vết. Giáo viên không có cách nào biết một
-    // học sinh đã làm quá giờ.
-    //
-    // Hai trường này KHÔNG chặn bài nộp — chúng chỉ ghi lại sự việc. Có từ chối bài muộn hay
-    // không là quyết định về chính sách thi cử, và giờ đây người có thẩm quyền đã có dữ kiện
-    // để quyết, thay vì phải tin rằng chuyện đó không xảy ra.
     isLate: {
       type: Boolean,
       default: false,
     },
-    /** Số giây vượt quá hạn, ĐÃ trừ ân hạn 2 phút cho độ trễ mạng. */
     lateBySeconds: {
+      type: Number,
+      default: 0,
+    },
+    answersVersion: {
       type: Number,
       default: 0,
     },
@@ -109,13 +165,13 @@ const examAttemptSchema = new mongoose.Schema(
 
 examAttemptSchema.plugin(softDeletePlugin);
 
-// Index chống tạo 2 bản ghi cho cùng 1 sinh viên trong 1 đề thi (ngoại trừ khi đã xóa mềm)
+// Compound Index quan trọng cho attempts
 examAttemptSchema.index(
-  { examId: 1, studentId: 1 },
-  { 
-    unique: true, 
-    partialFilterExpression: { isDeleted: false } 
-  }
+  { examId: 1, studentId: 1, attemptNumber: 1 },
+  { unique: true, partialFilterExpression: { isDeleted: false } }
 );
+
+examAttemptSchema.index({ examId: 1, studentId: 1, status: 1 });
+examAttemptSchema.index({ sessionToken: 1 });
 
 export default mongoose.model("ExamAttempt", examAttemptSchema);

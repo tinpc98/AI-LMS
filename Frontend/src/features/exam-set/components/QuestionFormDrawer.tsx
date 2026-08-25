@@ -83,10 +83,10 @@ export const QuestionFormDrawer: React.FC<QuestionFormDrawerProps> = React.memo(
         }
 
         if (isEditing && initialData) {
-          await axiosClient.put(`/api/questions/${initialData._id}`, payload);
+          await axiosClient.put(`/questions/${initialData._id}`, payload);
           toast.success("Cập nhật câu hỏi thành công!");
         } else {
-          await axiosClient.post("/api/questions", payload);
+          await axiosClient.post("/questions", payload);
           toast.success("Thêm câu hỏi mới vào Ngân hàng thành công!");
         }
 

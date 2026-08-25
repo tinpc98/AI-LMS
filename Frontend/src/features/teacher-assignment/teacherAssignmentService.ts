@@ -36,28 +36,28 @@ export const teacherAssignmentService = {
       }
     });
 
-    const res = await axiosClient.get("/api/classes", { params });
+    const res = await axiosClient.get("/classes", { params });
     // Assuming backend returns { data: [...], pagination: {...} }
     return res.data.data.map(mapClass);
   },
 
   getAllClasses: async (): Promise<ClassRecord[]> => {
-    const res = await axiosClient.get("/api/classes", { params: { limit: 1000 } });
+    const res = await axiosClient.get("/classes", { params: { limit: 1000 } });
     return res.data.data.map(mapClass);
   },
 
   getTeachers: async (): Promise<AccountRecord[]> => {
-    const res = await axiosClient.get("/api/users", { params: { role: "Teacher", limit: 1000 } });
+    const res = await axiosClient.get("/users", { params: { role: "Teacher", limit: 1000 } });
     return res.data.data.map((u: any) => ({ ...u, id: u._id }));
   },
 
   getCourses: async (): Promise<CourseRecord[]> => {
-    const res = await axiosClient.get("/api/courses", { params: { limit: 1000 } });
+    const res = await axiosClient.get("/courses", { params: { limit: 1000 } });
     return res.data.data.map((c: any) => ({ ...c, id: c._id }));
   },
 
   assignTeacher: async (classId: string, teacherId: string): Promise<ClassRecord> => {
-    const res = await axiosClient.patch(`/api/classes/${classId}/assign-teacher`, { teacherId });
+    const res = await axiosClient.patch(`/classes/${classId}/assign-teacher`, { teacherId });
     return mapClass(res.data.data);
   },
 
@@ -66,7 +66,7 @@ export const teacherAssignmentService = {
   },
 
   removeTeacher: async (classId: string): Promise<ClassRecord> => {
-    const res = await axiosClient.patch(`/api/classes/${classId}/unassign-teacher`);
+    const res = await axiosClient.patch(`/classes/${classId}/unassign-teacher`);
     return mapClass(res.data.data);
   },
 };

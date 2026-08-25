@@ -2,7 +2,7 @@ import { classApi } from "../../../api/classApi";
 import assignmentApi from "../../../api/assignmentApi";
 import examApi from "../../../api/examApi";
 import announcementApi from "../../../api/announcementApi";
-import { attendanceApi } from "../../../api/attendanceApi";
+import analyticsApi from "../../../api/analyticsApi";
 import gradeApi from "../../../api/gradeApi";
 import {
   mapClassResponse,
@@ -38,12 +38,14 @@ export const learningDashboardService = {
     let rawAssignments: any[] = [];
     let rawExams: any[] = [];
     let rawAnnouncements: any[] = [];
+    let analyticsResults: any[] = [];
+    let attendance: any = { attendanceRate: 0, presentCount: 0, totalCount: 0, records: [] };
 
     // 2. Fetch Assignments, Exams, Announcements across classes
     if (classList.length > 0) {
       const topClasses = classList.slice(0, 5);
 
-      const [assResults, examResults, annResults] = await Promise.all([
+      const [assResults, examResults, annResults, fetchedAnalytics] = await Promise.all([
         Promise.all(
           topClasses.map((c: any) =>
             assignmentApi.getAssignmentsByClass(c._id || c.id).catch(() => [])
@@ -56,6 +58,11 @@ export const learningDashboardService = {
           topClasses
             .slice(0, 3)
             .map((c: any) => announcementApi.getAnnouncementsByClass(c._id || c.id).catch(() => []))
+        ),
+        Promise.all(
+          topClasses.map((c: any) =>
+            analyticsApi.getStudentDashboard(c._id || c.id).catch(() => null)
+          )
         ),
       ]);
 
@@ -70,35 +77,46 @@ export const learningDashboardService = {
       annResults.forEach((list) => {
         if (Array.isArray(list)) rawAnnouncements = [...rawAnnouncements, ...list];
       });
+
+      analyticsResults = fetchedAnalytics;
     }
 
     const assignments = mapAssignmentResponse(rawAssignments, classMap);
     const exams = mapExamResponse(rawExams, classMap);
     const announcements = mapAnnouncementResponse(rawAnnouncements);
 
-    // 3. Fetch Attendance & Grade Stats for Student
-    let rawAttendance: any[] = [];
-    let rawGrades: any[] = [];
+    // 3. Extract Analytics Stats
+    let totalAssignmentScore = 0;
+    let totalAssignmentsCount = 0;
+    let totalPresent = 0;
+    let totalAttendanceCount = 0;
+    let totalExamScore = 0;
+    let totalExamsCount = 0;
 
-    if (userId) {
-      try {
-        const attRes = await attendanceApi.getAttendanceByStudent(userId).catch(() => null);
-        rawAttendance = attRes?.data?.data || [];
-        const gradeRes = await gradeApi.getGradesByStudent(userId).catch(() => []);
-        rawGrades = Array.isArray(gradeRes) ? gradeRes : [];
-      } catch (e) {
-        console.warn("[learningDashboardService] Attendance/Grade warning:", e);
-      }
+    if (classList.length > 0 && typeof analyticsResults !== "undefined") {
+      analyticsResults.forEach((res: any) => {
+        if (res && res.data) {
+          const d = res.data;
+          totalAssignmentScore += (d.assignment?.averageScore || 0) * (d.assignment?.completed || 0);
+          totalAssignmentsCount += d.assignment?.completed || 0;
+          totalPresent += d.attendance?.present || 0;
+          totalAttendanceCount += d.attendance?.total || 0;
+          totalExamScore += (d.exam?.averageScore || 0) * (d.exam?.completed || 0);
+          totalExamsCount += d.exam?.completed || 0;
+        }
+      });
     }
 
-    const attendance = mapAttendanceResponse(rawAttendance);
-    const gpa = calculateAverageGrade(rawGrades);
+    const gpa = totalAssignmentsCount > 0 ? totalAssignmentScore / totalAssignmentsCount : null;
+    const attendanceRate = totalAttendanceCount > 0 ? (totalPresent / totalAttendanceCount) * 100 : 0;
+    attendance.attendanceRate = attendanceRate;
+    
+    const examPerformanceRate = totalExamsCount > 0 ? totalExamScore / totalExamsCount : null;
     const assignmentCompletionRate = calculateCompletionRate(assignments);
-    const examPerformanceRate = calculateExamPerformanceRate(exams);
 
     const statistics = {
       gpa,
-      attendanceRate: attendance.attendanceRate,
+      attendanceRate,
       assignmentCompletionRate,
       examPerformanceRate,
     };
@@ -125,7 +143,7 @@ export const learningDashboardService = {
       upcomingExamsCount,
       unreadAnnouncementsCount,
       overallProgressPercent: Math.round(
-        attendance.attendanceRate * 0.3 +
+        attendanceRate * 0.3 +
           (assignmentCompletionRate ?? 0) * 0.35 +
           (examPerformanceRate ?? 0) * 0.35
       ),
@@ -161,6 +179,7 @@ export const learningDashboardService = {
       announcements,
       classProgress,
       learningInsight,
+      rawClasses: classList,
     };
   },
 };

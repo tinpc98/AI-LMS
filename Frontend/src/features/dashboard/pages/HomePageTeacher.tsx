@@ -5,15 +5,17 @@ import { useTeacherDashboardQuery } from "../hooks/useTeacherDashboardQuery";
 import { tokens } from "../../../shared/theme/tokens";
 
 import { TeacherWelcomeHeader } from "../components/TeacherWelcomeHeader";
-import { TeacherQuickStats } from "../components/TeacherQuickStats";
-import { TeacherQuickActions } from "../components/TeacherQuickActions";
-import { TeacherScheduleWidget } from "../components/TeacherScheduleWidget";
-import { TeacherClassroomsGrid } from "../components/TeacherClassroomsGrid";
-import { TeacherAnnouncementsWidget } from "../components/TeacherAnnouncementsWidget";
 import { TeacherAssignmentsWidget } from "../components/TeacherAssignmentsWidget";
-import { TeacherLiveSessionWidget } from "../components/TeacherLiveSessionWidget";
+import { PendingAttendanceWidget } from "../components/PendingAttendanceWidget";
+import { TeacherClassCard } from "../../class/components/classes/TeacherClassCard";
+import { sortClassesByUpcomingSession } from "../../learning/utils/learningDashboard.utils";
+import { useMemo } from "react";
+import { Typography, Card, Empty } from "antd";
+import { CalendarOutlined } from "@ant-design/icons";
+import { useNavigate } from "react-router-dom";
 
 import { useResponsiveLayout } from "../../../shared/hooks/useResponsiveLayout";
+const { Title } = Typography;
 
 export default function HomePageTeacher() {
   const { user } = useAuth();
@@ -36,6 +38,11 @@ export default function HomePageTeacher() {
     error,
     refetch,
   } = useTeacherDashboardQuery();
+  const navigate = useNavigate();
+
+  const sortedClasses = useMemo(() => {
+    return sortClassesByUpcomingSession(classes || []);
+  }, [classes]);
 
   return (
     <div
@@ -79,40 +86,42 @@ export default function HomePageTeacher() {
         />
       )}
 
-      {/* 2. Active Live Sessions Banner Widget */}
-      <TeacherLiveSessionWidget activeSessions={activeLiveSessions} loading={loading} />
-
-      {/* 3. Quick Statistics Cards */}
-      <TeacherQuickStats
-        totalClasses={classes.length}
-        totalStudents={totalStudentsCount}
-        pendingSubmissionsCount={assignments.length}
-        activeLiveSessionsCount={activeLiveSessions.length}
-        totalAnnouncementsCount={announcements.length}
-        loading={loading}
-      />
-
-      {/* 4. Quick Action Navigation */}
-      <TeacherQuickActions />
-
-      {/* 5. Main Layout Split (Left & Right Column) */}
+      {/* Main Layout Split (Left & Right Column) */}
       <Row gutter={[24, 24]}>
-        {/* Left Column (Main Content) */}
-        <Col xs={24} lg={16}>
-          {/* Schedule Widget */}
-          <TeacherScheduleWidget classes={classes} loading={loading} />
+        {/* Left Column (Danh sách lớp học Grid) */}
+        <Col xs={24} lg={16} xl={16}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+            <Title level={4} style={{ margin: 0, display: 'flex', alignItems: 'center' }}>
+              <CalendarOutlined style={{ color: tokens.color.action.primaryBg, marginRight: 8 }} />
+              Danh sách lớp học
+            </Title>
+            <Button type="link" onClick={() => navigate('/teacher/classes')}>
+              Xem tất cả
+            </Button>
+          </div>
 
-          {/* Classrooms Grid */}
-          <TeacherClassroomsGrid classes={classes} loading={loading} />
+          {sortedClasses.length === 0 ? (
+            <Card style={{ borderRadius: 16, boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
+              <div style={{ textAlign: "center", padding: "32px 0", color: tokens.color.text.description }}>
+                <CalendarOutlined style={{ fontSize: 32, marginBottom: 8, opacity: 0.5 }} />
+                <p>Bạn chưa phụ trách lớp học nào.</p>
+              </div>
+            </Card>
+          ) : (
+            <Row gutter={[16, 16]}>
+              {sortedClasses.slice(0, 6).map((cls: any) => (
+                <Col xs={24} sm={12} lg={12} xl={8} key={cls._id || cls.id}>
+                  <TeacherClassCard item={cls} />
+                </Col>
+              ))}
+            </Row>
+          )}
         </Col>
 
-        {/* Right Column (Sidebar Widgets) */}
-        <Col xs={24} lg={8}>
-          {/* Assignments Widget */}
+        {/* Right Column (Việc cần xử lý) */}
+        <Col xs={24} lg={8} xl={8}>
+          <PendingAttendanceWidget classes={classes} loading={loading} />
           <TeacherAssignmentsWidget assignments={assignments} loading={loading} />
-
-          {/* Announcements Widget */}
-          <TeacherAnnouncementsWidget announcements={announcements} loading={loading} />
         </Col>
       </Row>
     </div>

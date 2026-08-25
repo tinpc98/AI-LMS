@@ -2,7 +2,7 @@
 //
 // Tách khỏi AttendancePopup vì đoạn này toàn quy tắc chuẩn hoá id, và nó quyết định giáo viên
 // có nhìn thấy đúng trạng thái đã lưu hay không. Sai một bước so khớp là cả bảng hiện
-// "Present" mặc định, giáo viên bấm Lưu và ghi đè sạch dữ liệu cũ mà không hay biết.
+// "PRESENT" mặc định, giáo viên bấm Lưu và ghi đè sạch dữ liệu cũ mà không hay biết.
 import type {
   AttendanceStatus,
   IStudentAttendanceRecord,
@@ -21,7 +21,7 @@ const extractId = (value: unknown): string => {
 };
 
 /** Trạng thái mặc định cho học sinh chưa có bản ghi nào trong buổi này. */
-export const DEFAULT_STATUS: AttendanceStatus = "Present";
+export const DEFAULT_STATUS: AttendanceStatus = "PRESENT";
 
 export const buildAttendanceRoster = (
   students: unknown[],

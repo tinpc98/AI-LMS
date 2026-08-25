@@ -47,6 +47,7 @@ const AccountToolbar = ({ filters, onFiltersChange, onRefresh, onCreate }: Accou
             { label: "Active", value: "Active" },
             { label: "Inactive", value: "Inactive" },
             { label: "Locked", value: "Locked" },
+            { label: "Expired", value: "Expired" },
           ]}
         />
       </Col>

@@ -15,10 +15,20 @@ export const envConfig = {
     return sanitizeDomain(import.meta.env.VITE_JAAS_DOMAIN);
   },
   get apiUrl(): string {
-    return import.meta.env.VITE_API_URL || "http://localhost:5000";
+    const url = import.meta.env.VITE_API_URL;
+    if (!url) {
+      if (import.meta.env.PROD) throw new Error("VITE_API_URL is missing in production environment");
+      return "http://localhost:5000/api"; // Chỉ được phép fallback khi chạy local (development)
+    }
+    return url;
   },
   get socketUrl(): string {
-    return import.meta.env.VITE_SOCKET_URL || "http://localhost:5000";
+    const url = import.meta.env.VITE_SOCKET_URL;
+    if (!url) {
+      if (import.meta.env.PROD) throw new Error("VITE_SOCKET_URL is missing in production environment");
+      return "http://localhost:5000"; // Chỉ được phép fallback khi chạy local (development)
+    }
+    return url;
   },
 };
 

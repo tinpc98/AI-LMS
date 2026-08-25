@@ -24,7 +24,7 @@ export const announcementApi = {
     if (search) params.search = search;
 
     const response = await axiosClient.get<{ data: IAnnouncement[]; items?: IAnnouncement[] }>(
-      "/api/announcements",
+      "/announcements",
       {
         params,
       }
@@ -34,7 +34,7 @@ export const announcementApi = {
 
   // Lấy chi tiết 1 thông báo
   getAnnouncementById: async (id: string): Promise<IAnnouncement> => {
-    const response = await axiosClient.get<{ data: IAnnouncement }>(`/api/announcements/${id}`);
+    const response = await axiosClient.get<{ data: IAnnouncement }>(`/announcements/${id}`);
     return response.data.data || response.data;
   },
 
@@ -49,7 +49,7 @@ export const announcementApi = {
       ...data,
       scope: data.scope || "Class",
     };
-    const response = await axiosClient.post<{ data: IAnnouncement }>("/api/announcements", payload);
+    const response = await axiosClient.post<{ data: IAnnouncement }>("/announcements", payload);
     return response.data.data || response.data;
   },
 
@@ -59,7 +59,7 @@ export const announcementApi = {
     data: { title?: string; content?: string }
   ): Promise<IAnnouncement> => {
     const response = await axiosClient.put<{ data: IAnnouncement }>(
-      `/api/announcements/${id}`,
+      `/announcements/${id}`,
       data
     );
     return response.data.data || response.data;
@@ -67,7 +67,7 @@ export const announcementApi = {
 
   // Xóa thông báo
   deleteAnnouncement: async (id: string): Promise<void> => {
-    await axiosClient.delete(`/api/announcements/${id}`);
+    await axiosClient.delete(`/announcements/${id}`);
   },
 };
 

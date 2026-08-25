@@ -24,11 +24,11 @@ interface CourseTableProps {
 
 const getStatusColor = (status: CourseRecord["status"]) => {
   switch (status) {
-    case "Published":
+    case "PUBLISHED":
       return "green";
-    case "Draft":
+    case "DRAFT":
       return "orange";
-    case "Closed":
+    case "ARCHIVED":
       return "red";
     default:
       return "default";
@@ -56,20 +56,31 @@ const CourseTable = ({
       width: 70,
       render: (_: string, record: CourseRecord) => (
         <Avatar shape="square" src={record.thumbnail || undefined}>
-          {record.courseName.charAt(0).toUpperCase()}
+          {record.name.charAt(0).toUpperCase()}
         </Avatar>
       ),
     },
     {
       title: "Course Name",
-      dataIndex: "courseName",
-      key: "courseName",
+      dataIndex: "name",
+      key: "name",
       sorter: true,
     },
     {
+      title: "Code",
+      dataIndex: "code",
+      key: "code",
+    },
+    {
+      title: "Level",
+      dataIndex: "level",
+      key: "level",
+    },
+    {
       title: "Subject",
-      dataIndex: "subject",
-      key: "subject",
+      dataIndex: "subjectId",
+      key: "subjectId",
+      render: (subjectId: any) => subjectId?.name || "N/A",
     },
     {
       title: "Grade",
@@ -79,12 +90,12 @@ const CourseTable = ({
     {
       title: "Duration",
       key: "duration",
-      render: (_: unknown, record: CourseRecord) => `${record.durationWeeks} weeks`,
+      render: (_: unknown, record: CourseRecord) => `${record.duration.value} ${record.duration.unit.toLowerCase()}(s)`,
     },
     {
       title: "Tuition Fee",
       key: "tuitionFee",
-      render: (_: unknown, record: CourseRecord) => `${record.tuitionFee.toLocaleString()} VND`,
+      render: (_: unknown, record: CourseRecord) => `${record.pricing?.tuitionFee?.toLocaleString() || 0} VND`,
     },
     {
       title: "Status",

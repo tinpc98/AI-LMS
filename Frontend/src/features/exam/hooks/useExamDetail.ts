@@ -1,5 +1,4 @@
 import { useState, useCallback } from "react";
-import { getCurrentUserId } from "../../../shared/utils/authToken";
 import { useNavigate } from "react-router-dom";
 import type { IExtendedExam } from "../../../types/studentExam";
 import axiosClient from "../../../api/axiosClient";
@@ -11,7 +10,7 @@ export function useExamDetail() {
   const [selectedExam, setSelectedExam] = useState<IExtendedExam | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [isStartModalOpen, setIsStartModalOpen] = useState(false);
-  const [waitingExamData, setWaitingExamData] = useState<{ examId: string; startTime: string; title: string } | null>(null);
+  const [waitingExamData, setWaitingExamData] = useState<{ examId: string; startAt: string; title: string } | null>(null);
 
   const openDetail = useCallback((item: IExtendedExam) => {
     setSelectedExam(item);
@@ -36,80 +35,54 @@ export function useExamDetail() {
     async (examId: string, attemptId?: string) => {
       setIsStartModalOpen(false);
       setIsDetailOpen(false);
+
       if (attemptId) {
+        // Resume existing attempt
         navigate(`/exam/${attemptId}`);
-      } else {
-        const studentId = getCurrentUserId();
-        if (!studentId) {
-          toast.error(
-            "Không tìm thấy thông tin đăng nhập. Vui lòng đăng nhập lại!",
-            "Lỗi xác thực"
-          );
+        return;
+      }
+
+      try {
+        let tabId = sessionStorage.getItem("exam_tab_id");
+        if (!tabId) {
+          tabId = "tab_" + Date.now() + "_" + Math.random().toString(36).substr(2, 9);
+          sessionStorage.setItem("exam_tab_id", tabId);
+        }
+
+        // ĐÚNG route: POST /exams/:examId/start (không phải /exam-attempts/start)
+        const response = await axiosClient.post<{
+          success: boolean;
+          data: { _id: string; sessionToken?: string; expiresAt?: string; isResume?: boolean };
+        }>(`/exams/${examId}/start`, { tabId });
+
+        const attempt = response.data.data;
+        const newAttemptId = attempt._id;
+
+        if (attempt.sessionToken) {
+          localStorage.setItem(`exam_token_${newAttemptId}`, attempt.sessionToken);
+          localStorage.setItem(`exam_token_latest`, attempt.sessionToken);
+        }
+
+        navigate(`/exam/${newAttemptId}`);
+      } catch (error: unknown) {
+        const err = error as { response?: { data?: { errorCode?: string; startAt?: string; message?: string } } };
+        console.error("Lỗi khi tạo phiên làm bài:", error);
+
+        if (err?.response?.data?.errorCode === "EXAM_NOT_STARTED") {
+          const startAtStr = err.response?.data?.startAt;
+          if (startAtStr) {
+            setWaitingExamData({ examId, startAt: startAtStr, title: "Kỳ thi" });
+            setIsStartModalOpen(false);
+          } else {
+            toast.error("Kỳ thi chưa tới giờ bắt đầu!", "Lỗi bài thi");
+          }
           return;
         }
-        try {
-          const oldToken = localStorage.getItem(`exam_token_latest`);
-          let tabId = sessionStorage.getItem("exam_tab_id");
-          if (!tabId) {
-            tabId = "tab_" + Date.now() + "_" + Math.random().toString(36).substr(2, 9);
-            sessionStorage.setItem("exam_tab_id", tabId);
-          }
 
-          const response = await axiosClient.post<{ data: { _id: string, sessionToken?: string } }>(
-            "/api/exam-attempts/start",
-            {
-              examId,
-              studentId,
-              sessionToken: oldToken,
-              tabId
-            }
-          );
-          const newAttemptId = response.data.data._id;
-          if (response.data.data.sessionToken) {
-            localStorage.setItem(`exam_token_${newAttemptId}`, response.data.data.sessionToken);
-            localStorage.setItem(`exam_token_latest`, response.data.data.sessionToken);
-          }
-          navigate(`/exam/${newAttemptId}`);
-        } catch (error: any) {
-          console.error("Lỗi khi tạo phiên làm bài:", error);
-          if (error?.response?.data?.errorCode === "NOT_STARTED") {
-            const startTimeStr = error.response.data.startTime;
-            if (startTimeStr) {
-              setWaitingExamData({ examId, startTime: startTimeStr, title: "Kỳ thi" });
-              setIsStartModalOpen(false);
-            } else {
-              toast.error("Kỳ thi chưa tới giờ bắt đầu!", "Lỗi bài thi");
-            }
-            return;
-          }
-          if (error?.response?.data?.errorCode === "SESSION_ACTIVE") {
-            if (window.confirm("Hệ thống phát hiện phiên làm bài đang mở hoặc chưa được đóng đúng cách. Bấm Tiếp tục để kết nối lại.")) {
-               try {
-                  let tabId = sessionStorage.getItem("exam_tab_id");
-                  if (!tabId) {
-                    tabId = "tab_" + Date.now() + "_" + Math.random().toString(36).substr(2, 9);
-                    sessionStorage.setItem("exam_tab_id", tabId);
-                  }
-                  const takeoverRes = await axiosClient.post<{ data: { _id: string, sessionToken?: string } }>(
-                    "/api/exam-attempts/start",
-                    { examId, studentId, takeover: true, tabId }
-                  );
-                  const newAttemptId = takeoverRes.data.data._id;
-                  if (takeoverRes.data.data.sessionToken) {
-                    localStorage.setItem(`exam_token_${newAttemptId}`, takeoverRes.data.data.sessionToken);
-                    localStorage.setItem(`exam_token_latest`, takeoverRes.data.data.sessionToken);
-                  }
-                  navigate(`/exam/${newAttemptId}`);
-                  return;
-               } catch (e: any) {
-                  toast.error(getApiErrorMessage(e, "Không thể bắt đầu bài thi."), "Lỗi bài thi");
-               }
-            } else {
-                return;
-            }
-          }
-          toast.error(getApiErrorMessage(error, "Không thể bắt đầu bài thi."), "Lỗi bài thi");
-        }
+        toast.error(
+          getApiErrorMessage(error, "Không thể bắt đầu bài thi."),
+          "Lỗi bài thi"
+        );
       }
     },
     [navigate]

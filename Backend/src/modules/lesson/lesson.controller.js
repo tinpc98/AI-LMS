@@ -1,103 +1,198 @@
 import Lesson from "./lesson.model.js";
-import cloudinary from "../../config/cloudinary.js";
-import { checkClassTeacherOwnership } from "#modules/class";
+import Topic from "../topic/topic.model.js";
+import Course from "../course/course.model.js";
+import Class from "../class/class.model.js";
+import ClassEnrollment from "../classEnrollment/classEnrollment.model.js";
 import { asyncHandler } from "#shared/utils/asyncHandler.js";
 
-// Helper function: Đẩy Buffer từ RAM lên Cloudinary bằng Stream
-const uploadToCloudinary = (fileBuffer, originalName) => {
-  return new Promise((resolve, reject) => {
-    const stream = cloudinary.uploader.upload_stream(
-      {
-        folder: "AI_LMS_Materials",
-        resource_type: "auto",
-      },
-      (error, result) => {
-        if (error) return reject(error);
-        resolve({
-          name: originalName,
-          url: result.secure_url,
-          publicId: result.public_id,
+// Helper check ownership (Topic -> Course -> createdBy)
+const checkTopicTeacherOwnership = async (topicId, userId, role) => {
+  if (role === "Admin" || role === "admin" || role === "ADMIN") return true;
+
+  const topic = await Topic.findById(topicId).populate("courseId");
+  if (!topic || !topic.courseId) return false;
+
+  return topic.courseId.createdBy.toString() === userId.toString();
+};
+
+const lessonController = {
+  createLesson: asyncHandler(async (req, res) => {
+    let { topicId, classId, title, description, content, order, status, videoIds, documentIds } = req.body;
+    const userId = req.user.id || req.user._id;
+
+    if (!title) {
+      return res.status(400).json({ message: "Thiếu thông tin bắt buộc: Tiêu đề" });
+    }
+
+    if (!topicId && classId) {
+      const classObj = await Class.findById(classId);
+      if (!classObj) return res.status(404).json({ message: "Không tìm thấy lớp học" });
+      
+      let defaultTopic = await Topic.findOne({ courseId: classObj.courseId, name: "Migrated Lessons Topic" });
+      if (!defaultTopic) {
+        defaultTopic = await Topic.create({
+          name: "Migrated Lessons Topic",
+          courseId: classObj.courseId,
+          description: "Default topic for class lessons",
+          order: 999,
         });
       }
-    );
-    stream.end(fileBuffer);
-  });
-};
-//============================================================\
-// Quản lý Bài giảng
-//
-// Wave 4.4: các khối try/catch trả 500 thủ công đã được gỡ, thay bằng asyncHandler.
-// Lỗi bất ngờ nay đi tới errorHandler tập trung — nơi có requestId, ẩn chi tiết nội bộ ở
-// production, và tôn trọng err.status nếu tầng dưới đặt.
-// Các phản hồi 400/403/404 dưới đây KHÔNG đổi: chúng là return tường minh, không phải
-// exception, nên vẫn nguyên như cũ.
-const lessonController = {
-  // 1. TẠO BÀI GIẢNG
-  createLesson: asyncHandler(async (req, res) => {
-    // Bổ sung lấy order, isPublished, duration từ body
-    const { title, description, videoUrl, classId, order, isPublished, duration } = req.body;
-    const teacherId = req.user.id || req.user._id;
-
-    if (!title || !classId) {
-      return res.status(400).json({ message: "Thiếu thông tin bắt buộc: Tiêu đề hoặc ClassId" });
+      topicId = defaultTopic._id;
+    } else if (!topicId) {
+      return res.status(400).json({ message: "Thiếu thông tin bắt buộc: TopicId hoặc ClassId" });
     }
 
-    const isAuthorized = await checkClassTeacherOwnership(classId, teacherId, req.user?.role);
+    const isAuthorized = await checkTopicTeacherOwnership(topicId, userId, req.user?.role);
     if (!isAuthorized) {
-      return res.status(403).json({ message: "Bạn không có quyền tạo bài giảng cho lớp học này!" });
+      return res.status(403).json({ message: "Bạn không có quyền tạo bài giảng cho Topic này!" });
     }
 
-    let attachments = [];
-    if (req.files && req.files.length > 0) {
-      const uploadPromises = req.files.map((file) =>
-        uploadToCloudinary(file.buffer, file.originalname)
-      );
-      attachments = await Promise.all(uploadPromises);
-    }
-
-    // Xử lý ép kiểu dữ liệu từ form-data (vì form-data gửi mọi thứ dưới dạng String)
     const parsedOrder = order ? Number(order) : 0;
-    const parsedDuration = duration ? Number(duration) : 0;
-    const parsedIsPublished = isPublished === "false" ? false : true; // Mặc định là true trừ khi gửi rõ chữ 'false'
+    
+    // Nếu status là PUBLISHED, có thể check content block length
+    if (status === "PUBLISHED") {
+      if (!content || !Array.isArray(content) || content.length === 0) {
+        return res.status(400).json({ message: "Bài giảng phải có nội dung (Content) trước khi Xuất bản." });
+      }
+    }
 
     const newLesson = new Lesson({
+      topicId,
       title,
       description,
-      videoUrl,
-      attachments,
-      classId,
-      teacherId,
+      content: content || [],
+      videoIds: videoIds || [],
+      documentIds: documentIds || [],
       order: parsedOrder,
-      isPublished: parsedIsPublished,
-      duration: parsedDuration,
+      status: status || "DRAFT",
+      createdBy: userId,
     });
 
     await newLesson.save();
     return res.status(201).json({ message: "Tạo bài giảng thành công", lesson: newLesson });
   }),
 
-  // 2. LẤY DANH SÁCH BÀI GIẢNG THEO LỚP
-  getLessonsByClass: asyncHandler(async (req, res) => {
-    const { classId } = req.params;
+  // 2. LẤY DANH SÁCH BÀI GIẢNG THEO TOPIC
+  getLessonsByTopic: asyncHandler(async (req, res) => {
+    const { topicId } = req.params;
+    const userId = req.user.id || req.user._id;
+    const role = req.user?.role?.toUpperCase();
 
-    // Khởi tạo query tìm kiếm
-    const query = { classId };
+    const query = { topicId };
 
-    // [Thực chiến] Phân quyền hiển thị: Học sinh chỉ thấy bài đã Publish
-    if (req.user && req.user.role !== "teacher" && req.user.role !== "admin") {
-      query.isPublished = true;
+    if (role === "STUDENT") {
+      query.status = "PUBLISHED";
+      
+      // Basic check: is Student enrolled in this Course via an Active Class?
+      const topic = await Topic.findById(topicId);
+      if (!topic) return res.status(404).json({ message: "Không tìm thấy Topic" });
+
+      const classes = await Class.find({ courseId: topic.courseId, isDeleted: { $ne: true } }).select("_id");
+      const classIds = classes.map(c => c._id);
+
+      const isEnrolled = await ClassEnrollment.exists({
+        studentId: userId,
+        classId: { $in: classIds },
+        status: "ACTIVE",
+      });
+
+      if (!isEnrolled) {
+         return res.status(403).json({ message: "Bạn chưa tham gia lớp học nào thuộc khóa học này." });
+      }
     }
 
-    // Cập nhật sắp xếp: Ưu tiên xếp theo trường order trước, trùng order thì xếp theo ngày tạo
-    const lessons = await Lesson.find(query).sort({ order: 1, createdAt: 1 }).lean();
+    const lessons = await Lesson.find(query)
+      .sort({ order: 1, createdAt: 1 })
+      .select("-content") // Không lấy full content ở list để tối ưu
+      .lean();
 
     return res.status(200).json({ lessons });
   }),
 
-  // 3. CẬP NHẬT BÀI GIẢNG
+  // 2.5 LẤY DANH SÁCH BÀI GIẢNG THEO CLASS
+  getLessonsByClass: asyncHandler(async (req, res) => {
+    const { classId } = req.params;
+    const userId = req.user.id || req.user._id;
+    const role = req.user?.role?.toUpperCase();
+
+    const classObj = await Class.findById(classId);
+    if (!classObj) return res.status(404).json({ message: "Không tìm thấy lớp học" });
+
+    if (role === "STUDENT") {
+      const isEnrolled = await ClassEnrollment.exists({
+        studentId: userId,
+        classId: classId,
+        status: "ACTIVE",
+      });
+
+      if (!isEnrolled) {
+         return res.status(403).json({ message: "Bạn chưa tham gia lớp học này." });
+      }
+    }
+
+    const topics = await Topic.find({ courseId: classObj.courseId }).select("_id");
+    const topicIds = topics.map(t => t._id);
+
+    const query = { topicId: { $in: topicIds } };
+    if (role === "STUDENT") {
+      query.status = "PUBLISHED";
+    }
+
+    const lessons = await Lesson.find(query)
+      .sort({ order: 1, createdAt: 1 })
+      .select("-content")
+      .lean();
+
+    return res.status(200).json({ lessons });
+  }),
+
+  // 3. CHI TIẾT BÀI GIẢNG
+  getLessonById: asyncHandler(async (req, res) => {
+    const { id } = req.params;
+    const userId = req.user.id || req.user._id;
+    const role = req.user?.role?.toUpperCase();
+
+    const lesson = await Lesson.findById(id)
+      .populate("videoIds")
+      .populate("documentIds");
+
+    if (!lesson) {
+      return res.status(404).json({ message: "Bài giảng không tồn tại" });
+    }
+
+    if (role === "STUDENT") {
+      if (lesson.status !== "PUBLISHED") {
+        return res.status(403).json({ message: "Bài giảng chưa được xuất bản" });
+      }
+      
+      const topic = await Topic.findById(lesson.topicId);
+      const classes = await Class.find({ courseId: topic.courseId, isDeleted: { $ne: true } }).select("_id");
+      const classIds = classes.map(c => c._id);
+
+      const isEnrolled = await ClassEnrollment.exists({
+        studentId: userId,
+        classId: { $in: classIds },
+        status: "ACTIVE",
+      });
+
+      if (!isEnrolled) {
+         return res.status(403).json({ message: "Bạn chưa tham gia lớp học nào thuộc khóa học chứa bài giảng này." });
+      }
+    } else {
+      // Teacher / Admin check
+      const isAuthorized = await checkTopicTeacherOwnership(lesson.topicId, userId, req.user?.role);
+      if (!isAuthorized) {
+        return res.status(403).json({ message: "Bạn không có quyền truy cập bài giảng này!" });
+      }
+    }
+
+    return res.status(200).json({ lesson });
+  }),
+
+  // 4. CẬP NHẬT BÀI GIẢNG
   updateLesson: asyncHandler(async (req, res) => {
     const { id } = req.params;
-    const { title, description, videoUrl, order, isPublished, duration } = req.body;
+    const { title, description, content, order, videoIds, documentIds } = req.body;
     const userId = req.user.id || req.user._id;
 
     const lesson = await Lesson.findById(id);
@@ -105,64 +200,56 @@ const lessonController = {
       return res.status(404).json({ message: "Bài giảng không tồn tại" });
     }
 
-    const isAuthorized = await checkClassTeacherOwnership(lesson.classId, userId, req.user?.role);
+    const isAuthorized = await checkTopicTeacherOwnership(lesson.topicId, userId, req.user?.role);
     if (!isAuthorized) {
       return res.status(403).json({
         message: "Bạn không có quyền sửa bài giảng này!",
       });
     }
 
-    // Cập nhật các trường cơ bản
-    if (title) lesson.title = title;
-    if (description) lesson.description = description;
-    if (videoUrl !== undefined) lesson.videoUrl = videoUrl;
-
-    // Cập nhật và ép kiểu các trường nâng cấp
+    if (title !== undefined) lesson.title = title;
+    if (description !== undefined) lesson.description = description;
+    if (content !== undefined) lesson.content = content;
     if (order !== undefined) lesson.order = Number(order);
-    if (duration !== undefined) lesson.duration = Number(duration);
-    if (isPublished !== undefined) {
-      lesson.isPublished = isPublished === "false" ? false : Boolean(isPublished);
-    }
-
-    // Xử lý upload file mới (nếu có)
-    if (req.files && req.files.length > 0) {
-      const uploadPromises = req.files.map((file) =>
-        uploadToCloudinary(file.buffer, file.originalname)
-      );
-      const newAttachments = await Promise.all(uploadPromises);
-      lesson.attachments.push(...newAttachments);
-    }
+    if (videoIds !== undefined) lesson.videoIds = videoIds;
+    if (documentIds !== undefined) lesson.documentIds = documentIds;
 
     await lesson.save();
     return res.status(200).json({ message: "Cập nhật bài giảng thành công", lesson });
   }),
 
-  // 4. XÓA BÀI GIẢNG (Dọn rác Cloudinary và xóa DB)
-  deleteLesson: asyncHandler(async (req, res) => {
+  // 5. CẬP NHẬT TRẠNG THÁI BÀI GIẢNG
+  updateLessonStatus: asyncHandler(async (req, res) => {
     const { id } = req.params;
+    const { status } = req.body;
     const userId = req.user.id || req.user._id;
+
+    if (!["DRAFT", "PUBLISHED", "ARCHIVED"].includes(status)) {
+      return res.status(400).json({ message: "Trạng thái không hợp lệ" });
+    }
 
     const lesson = await Lesson.findById(id);
     if (!lesson) {
       return res.status(404).json({ message: "Bài giảng không tồn tại" });
     }
 
-    const isAuthorized = await checkClassTeacherOwnership(lesson.classId, userId, req.user?.role);
+    const isAuthorized = await checkTopicTeacherOwnership(lesson.topicId, userId, req.user?.role);
     if (!isAuthorized) {
       return res.status(403).json({
-        message: "Bạn không có quyền xóa bài giảng này!",
+        message: "Bạn không có quyền sửa bài giảng này!",
       });
     }
 
-    if (lesson.attachments && lesson.attachments.length > 0) {
-      const deletePromises = lesson.attachments.map((file) =>
-        cloudinary.uploader.destroy(file.publicId)
-      );
-      await Promise.all(deletePromises);
+    if (status === "PUBLISHED") {
+      if (!lesson.content || lesson.content.length === 0) {
+        return res.status(400).json({ message: "Bài giảng phải có nội dung trước khi Xuất bản." });
+      }
     }
 
-    await lesson.softDelete(userId);
-    return res.status(200).json({ message: "Xóa bài giảng và tài liệu liên quan thành công" });
+    lesson.status = status;
+    await lesson.save();
+
+    return res.status(200).json({ message: "Cập nhật trạng thái thành công", lesson });
   }),
 };
 

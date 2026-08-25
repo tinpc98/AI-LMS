@@ -3,15 +3,22 @@ import softDeletePlugin from "#shared/plugins/softDelete.plugin.js";
 
 const courseSchema = new Schema(
   {
-    courseName: {
+    name: {
       type: String,
       required: true,
       trim: true,
       minlength: 3,
     },
-    subject: {
+    code: {
       type: String,
-      enum: ["Mathematics", "Physics", "Chemistry", "English", "Literature"],
+      required: true,
+      unique: true,
+      uppercase: true,
+      trim: true,
+    },
+    subjectId: {
+      type: Schema.Types.ObjectId,
+      ref: "Subject",
       required: true,
     },
     grade: {
@@ -20,6 +27,7 @@ const courseSchema = new Schema(
       min: 1,
       max: 12,
     },
+
     description: {
       type: String,
       trim: true,
@@ -29,35 +37,41 @@ const courseSchema = new Schema(
       type: String,
       default: "",
     },
-    tuitionFee: {
-      type: Number,
-      default: 0,
-      min: 0,
+    prices: {
+      type: Map,
+      of: Number,
+      default: {
+        FOUNDATION: 0,
+        INTERMEDIATE: 0,
+        ADVANCED: 0,
+      }
     },
-    durationWeeks: {
-      type: Number,
-      default: 0,
-      min: 0,
-    },
-    totalLessons: {
-      type: Number,
-      default: 0,
-      min: 0,
-    },
-    target: {
-      type: String,
-      trim: true,
-      default: "",
+    duration: {
+      value: {
+        type: Number,
+        required: true,
+        min: 1,
+      },
+      unit: {
+        type: String,
+        enum: ["MONTH", "WEEK", "DAY"],
+        default: "WEEK",
+        required: true,
+      },
     },
     status: {
       type: String,
-      enum: ["Draft", "Published", "Closed"],
-      default: "Draft",
+      enum: ["DRAFT", "PUBLISHED", "ARCHIVED"],
+      default: "DRAFT",
     },
     createdBy: {
       type: Schema.Types.ObjectId,
       ref: "User",
       required: true,
+    },
+    updatedBy: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
     },
   },
   {
@@ -66,7 +80,7 @@ const courseSchema = new Schema(
 );
 
 // Indexes nâng cao hiệu năng truy vấn khóa học
-courseSchema.index({ subject: 1, status: 1 });
+courseSchema.index({ subjectId: 1, status: 1 });
 courseSchema.index({ createdBy: 1 });
 
 courseSchema.plugin(softDeletePlugin);

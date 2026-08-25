@@ -4,6 +4,7 @@ import { runAIPendingRecovery } from "./aiPendingRecovery.job.js";
 import { runExamAutoClose } from "./examLifecycle.job.js";
 import { runExamAttemptAutoSubmit } from "./examAttemptAutoSubmit.job.js";
 import { runChatCleanup } from "./chatCleanup.job.js";
+import { runStudentExpiryCheck } from "./userLifecycle.job.js";
 
 /**
  * initCronJobs – Khởi tạo và đăng ký tất cả các cron job của hệ thống.
@@ -197,4 +198,24 @@ export const initCronJobs = (runImmediately = false) => {
     { scheduled: true, timezone: "Asia/Ho_Chi_Minh" }
   );
   console.log("[CRON] 📅 Đã đăng ký job: Chat Cleanup (lịch: 03:00 Chủ Nhật hàng tuần)");
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // JOB 6: Tự động khóa tài khoản Học sinh quá hạn (15 ngày) chưa đăng ký khóa học
+  // Lịch: Mỗi ngày lúc 00:00:00 (nửa đêm)
+  // ──────────────────────────────────────────────────────────────────────────
+  cron.schedule(
+    "0 0 * * *",
+    async () => {
+      try {
+        const { expiredCount } = await runStudentExpiryCheck();
+        if (expiredCount > 0) {
+          console.log(`[CRON] 🛑 Student Expiry: Đã vô hiệu hóa ${expiredCount} học sinh hết hạn 15 ngày.`);
+        }
+      } catch (error) {
+        console.error("[CRON ERROR] ❌ Student Expiry Check Failed:", error);
+      }
+    },
+    { scheduled: true, timezone: "Asia/Ho_Chi_Minh" }
+  );
+  console.log("[CRON] 📅 Đã đăng ký job: Student Expiry Check (lịch: 00:00 hàng ngày)");
 };

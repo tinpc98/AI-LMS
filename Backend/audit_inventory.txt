@@ -1,0 +1,200 @@
+aiChat.routes.js | GET /sessions/:sessionId/messages | verifyUser, getHistory
+aiSummary.routes.js | GET /:lessonId/summary | requireAuth, checkAILessonAccess, aiSummaryController.getSummary
+announcement.routes.js | GET / | verifyUser, getAnnouncements
+announcement.routes.js | GET /:id | verifyUser, getAnnouncementById
+announcement.routes.js | POST / | verifyUser, isTeacher, createAnnouncement
+announcement.routes.js | PUT /:id | verifyUser, isTeacher, updateAnnouncement
+announcement.routes.js | DELETE /:id | verifyUser, isTeacher, deleteAnnouncement
+assignment.routes.js | POST / | verifyUser, isTeacher, assignmentController.createAssignment
+assignment.routes.js | GET /:id/teacher-attempts | verifyUser, isTeacher, checkAssignmentAccess, assignmentController.getAttemptsForTeacher
+assignment.routes.js | PATCH /:id/publish | verifyUser, isTeacher, checkAssignmentAccess, assignmentController.publishAssignment
+assignment.routes.js | GET /:id | verifyUser, checkAssignmentAccess, assignmentController.getAssignmentById
+assignment.routes.js | POST /:id/attempts | verifyUser, checkAssignmentAccess, assignmentController.startAttempt
+assignment.routes.js | GET /:id/attempts | verifyUser, checkAssignmentAccess, assignmentController.getAttemptHistory
+assignment.routes.js | GET /attempts/:attemptId | verifyUser, assignmentController.getAttempt
+assignment.routes.js | PATCH /attempts/:attemptId/questions/:questionId | verifyUser, assignmentController.saveAnswer
+assignment.routes.js | POST /attempts/:attemptId/submit | verifyUser, assignmentController.submitAttempt
+assignment.routes.js | PATCH /attempts/:attemptId/questions/:questionId/grade | verifyUser, isTeacher, assignmentController.gradeEssay
+assignmentAttempt.routes.js | GET /:attemptId | assignmentController.getAttempt
+assignmentAttempt.routes.js | PATCH /:attemptId/questions/:questionId | assignmentController.saveAnswer
+assignmentAttempt.routes.js | POST /:attemptId/submit | assignmentController.submitAttempt
+assignmentAttempt.routes.js | PATCH /:attemptId/questions/:questionId/grade | isTeacher, assignmentController.gradeEssay
+attendance.routes.js | POST /sessions/:sessionId/mark | verifyUser, isTeacher, markAttendance
+attendance.routes.js | POST /sessions/:sessionId/confirm | verifyUser, isTeacher, confirmAttendance
+attendance.routes.js | PUT /:id | verifyUser, isTeacher, updateAttendance
+attendance.routes.js | GET /class/:classId/sessions | verifyUser, getClassSessions
+attendance.routes.js | GET /class/:classId/matrix | verifyUser, getAttendanceMatrix
+attendance.routes.js | GET /class/:classId | verifyUser, getAttendanceByClass
+attendance.routes.js | GET /student/:studentId | verifyUser, getAttendanceByStudent
+attendance.routes.js | GET /stats/class/:classId | verifyUser, isTeacher, getAttendanceStats
+auth.routes.js | POST /login | loginRateLimit, loginValidation, login
+auth.routes.js | GET /me | verifyUser, getMyProfile
+auth.routes.js | PUT /me | verifyUser, updateMyProfile
+user.routes.js | GET /trash | verifyUser, isAdmin, getUserTrash
+user.routes.js | GET / | verifyUser, isAdmin, getAllUsers
+user.routes.js | POST / | verifyUser, isAdmin, createUser
+user.routes.js | GET /:id | verifyUser, isAdmin, getUserById
+user.routes.js | PUT /:id | verifyUser, isAdmin, updateUser
+user.routes.js | DELETE /:id | verifyUser, isAdmin, deleteUser
+user.routes.js | PATCH /:id/restore | verifyUser, isAdmin, restoreUser
+user.routes.js | DELETE /:id/force | verifyUser, isAdmin, permanentDeleteUser
+badge.routes.js | GET /ranking/class/:classId | getClassRanking
+badge.routes.js | GET /ranking/student/:studentId | getStudentRanking
+badge.routes.js | GET /badges | getMyBadges
+badge.routes.js | GET /activities | getMyActivities
+chat.routes.js | GET / | validateGetMessages, getMessages
+chat.routes.js | POST / | messageRateLimiter, validateSendMessage, sendMessage
+chat.routes.js | PATCH /:messageId | validateEditMessage, editMessage
+chat.routes.js | DELETE /:messageId | deleteMessage
+chat.routes.js | GET /attachments/:publicId/signed-url | getAttachmentSignedUrl
+chat.routes.js | POST /read | markAsRead
+chat.routes.js | GET /unread-count | getUnreadCount
+chat.routes.js | PUT /:messageId/reactions | addReaction
+chat.routes.js | DELETE /:messageId/reactions | removeReaction
+chatGlobal.routes.js | GET /unread-summary | getUnreadSummary
+class.routes.js | GET /trash | verifyUser, isAdmin, ClassTrashList
+class.routes.js | GET / | verifyUser, ClassList
+class.routes.js | GET /:id | verifyUser, ClassListById
+class.routes.js | GET /:id/students | verifyUser, GetClassStudents
+class.routes.js | POST /:id/resources/upload | verifyUser, isTeacher, resourceUpload.single("file"), validateMagicBytes, UploadResource
+class.routes.js | POST /:id/resources | verifyUser, isTeacher, AddResource
+class.routes.js | DELETE /:id/resources/:resourceId | verifyUser, isTeacher, RemoveResource
+class.routes.js | GET /:classId/resources/:resourceId/access | verifyUser, GetResourceAccessUrl
+class.routes.js | POST / | verifyUser, isAdmin, AddNewClass
+class.routes.js | PUT /:id | verifyUser, isAdmin, updateClassValidation, UpdateClass
+class.routes.js | PATCH /:id/assign-teacher | verifyUser, isAdmin, AssignTeacher
+class.routes.js | PATCH /:id/unassign-teacher | verifyUser, isAdmin, UnassignTeacher
+class.routes.js | PATCH /:id/open | verifyUser, isAdmin, OpenClass
+class.routes.js | PATCH /:id/close | verifyUser, isAdmin, CloseClass
+class.routes.js | PATCH /:id/archive | verifyUser, isAdmin, ArchiveClass
+class.routes.js | POST /:id/students | verifyUser, isAdmin, AssignStudent
+class.routes.js | DELETE /:id/students/:studentId | verifyUser, isAdmin, RemoveStudent
+class.routes.js | PATCH /:id/delete | verifyUser, isAdmin, DeleteClass
+class.routes.js | PATCH /:id/restore | verifyUser, isAdmin, RestoreClass
+class.routes.js | DELETE /:id/force | verifyUser, isAdmin, PermanentDeleteClass
+classEnrollment.routes.js | GET /my | verifyUser, isStudent, GetMyClassEnrollments
+classEnrollment.routes.js | POST / | verifyUser, isAdmin, AssignClass
+classEnrollment.routes.js | GET / | verifyUser, isAdmin, GetClassEnrollments
+classEnrollment.routes.js | PATCH /:id/transfer | verifyUser, isAdmin, TransferClass
+classEnrollment.routes.js | PATCH /:id/complete | verifyUser, isAdmin, CompleteClassEnrollment
+classEnrollment.routes.js | PATCH /:id/cancel | verifyUser, isAdmin, CancelClassEnrollment
+classSession.routes.js | POST /generate | verifyUser, generateClassSessions
+classSession.routes.js | GET / | verifyUser, getClassSessions
+classSession.routes.js | GET /:sessionId | verifyUser, getSessionDetail
+course.routes.js | GET /trash | verifyUser, isAdmin, getCourseTrash
+course.routes.js | GET /available | verifyUser, getAvailableCourses
+course.routes.js | GET / | verifyUser, getCourses
+course.routes.js | POST / | verifyUser, isAdmin, createCourse
+course.routes.js | PATCH /:id/restore | verifyUser, isAdmin, restoreCourse
+course.routes.js | DELETE /:id/force | verifyUser, isAdmin, permanentDeleteCourse
+course.routes.js | GET /:id | verifyUser, getCourseById
+course.routes.js | PUT /:id | verifyUser, isAdmin, updateCourse
+course.routes.js | DELETE /:id | verifyUser, isAdmin, deleteCourse
+enrollment.routes.js | GET /me | verifyUser, isStudent, getMyEnrollments
+enrollment.routes.js | POST / | verifyUser, isStudent, createEnrollment
+enrollment.routes.js | POST /admin | verifyUser, isAdmin, createEnrollmentByAdmin
+enrollment.routes.js | GET /admin/pending-class | verifyUser, isAdmin, getAdminPendingClass
+enrollment.routes.js | GET / | verifyUser, isAdmin, getAllEnrollments
+enrollment.routes.js | PATCH /:id/pay | verifyUser, isAdmin, markPaid
+enrollment.routes.js | PATCH /:id/approve | verifyUser, isAdmin, approveEnrollment
+enrollment.routes.js | POST /:id/assign-class | verifyUser, isAdmin, assignClass
+enrollment.routes.js | PATCH /:id/complete | verifyUser, isAdmin, completeEnrollment
+enrollment.routes.js | PATCH /:id/cancel | verifyUser, cancelEnrollment
+enrollment.routes.js | GET /:id | verifyUser, getEnrollmentById
+examAttempt.routes.js | GET /exam/:examId | isTeacher, examAttemptController.getAttemptsByExam
+examAttempt.routes.js | GET /:attemptId | examAttemptController.getAttempt
+examAttempt.routes.js | PATCH /:attemptId/questions/:questionId | examAttemptController.saveAnswer
+examAttempt.routes.js | PATCH /:attemptId/answers | saveDraft
+examAttempt.routes.js | POST /:attemptId/submit | examAttemptController.submitExam
+examAttempt.routes.js | POST /:attemptId/cheat | examAttemptController.reportCheat
+examAttempt.routes.js | POST /:attemptId/heartbeat | examAttemptController.heartbeat
+examAttempt.routes.js | GET /:attemptId/review | isTeacher, examAttemptController.getAttemptForReview
+examAttempt.routes.js | PUT /:attemptId/grade-essay | isTeacher, examAttemptController.gradeEssay
+examSet.routes.js | POST / | createExamSet
+examSet.routes.js | GET / | getExamSets
+examSet.routes.js | POST /import-excel | isTeacher, uploadExcelMiddleware, importExcelExamSet
+examSet.routes.js | PATCH /:examSetId/save-draft | requireExamSetAccess("EDIT"), saveDraftExamSet
+examSet.routes.js | POST /:examSetId/duplicate | requireExamSetEditAccess, duplicateExamSet
+examSet.routes.js | POST /:examSetId/new-version | requireExamSetEditAccess, createNewExamSetVersion
+examSet.routes.js | GET /shared-with-me | examSetSharedWithMeValidation, listSharedExamSets
+examSet.routes.js | POST /:examSetId/restore | requireExamSetEditAccess, restoreExamSetVersion
+examSet.routes.js | GET /:id | requireExamSetAccess("VIEW"), getExamSetById
+examSet.routes.js | DELETE /:id/questions/:questionId | requireExamSetAccess("EDIT"), deleteQuestionInExamSet
+examSet.routes.js | PATCH /:id | requireExamSetAccess("EDIT"), updateExamSet
+examSet.routes.js | DELETE /:id | requireExamSetEditAccess, deleteExamSet
+examSet.routes.js | PATCH /:id/restore | requireExamSetEditAccess, restoreExamSet
+exam.routes.js | POST / | verifyUser, isTeacher, examController.createExam
+exam.routes.js | PUT /:id | verifyUser, isTeacher, examController.updateExam
+exam.routes.js | DELETE /:id | verifyUser, isTeacher, examController.deleteExam
+exam.routes.js | GET /class/:classId | verifyUser, examController.getExamsByClass
+exam.routes.js | GET /:id | verifyUser, examController.getExamById
+exam.routes.js | POST /:examId/start | verifyUser, examAttemptController.startExam
+exam.routes.js | GET /:examId/my-results | verifyUser, examAttemptController.getMyResults
+folder.routes.js | POST / | createFolder
+folder.routes.js | GET / | getFolders
+folder.routes.js | GET /tree | getFolderTree
+folder.routes.js | GET /:id | getFolder
+folder.routes.js | PATCH /:id | updateFolder
+folder.routes.js | DELETE /:id | deleteFolder
+grade.routes.js | POST / | verifyUser, isTeacher, upsertGrade
+grade.routes.js | GET /class/:classId | verifyUser, isTeacher, getGradesByClass
+grade.routes.js | GET /student/:studentId | verifyUser, getGradesByStudent
+grade.routes.js | GET /gpa/class/:classId/student/:studentId | verifyUser, getStudentGPA
+grade.routes.js | GET /gpa/:classId/:studentId | verifyUser, getStudentGPA
+lesson.routes.js | POST / | verifyUser, isTeacher, lessonController.createLesson
+lesson.routes.js | GET /topic/:topicId | verifyUser, lessonController.getLessonsByTopic
+lesson.routes.js | GET /:id | verifyUser, lessonController.getLessonById
+lesson.routes.js | PUT /:id | verifyUser, isTeacher, lessonController.updateLesson
+lesson.routes.js | PATCH /:id/status | verifyUser, isTeacher, lessonController.updateLessonStatus
+lessonProgress.routes.js | PATCH /lessons/:lessonId/progress | updateLessonProgress
+lessonProgress.routes.js | GET /topics/:topicId/progress | getStudentTopicProgress
+notification.routes.js | GET / | verifyUser, getMyNotifications
+notification.routes.js | GET /unread-count | verifyUser, getUnreadCount
+notification.routes.js | PUT /read-all | verifyUser, markAllAsRead
+notification.routes.js | PATCH /read-all | verifyUser, markAllAsRead
+notification.routes.js | PUT /:id/read | verifyUser, markAsRead
+notification.routes.js | PATCH /:id/read | verifyUser, markAsRead
+notification.routes.js | POST /send-bulk | verifyUser, isAdmin, sendBulkNotification
+payment.routes.js | GET /config | verifyUser, GetPaymentConfig
+payment.routes.js | PUT /config | verifyUser, isAdmin, UpdatePaymentConfig
+payment.routes.js | POST /admin | verifyUser, isAdmin, AdminCreatePayment
+payment.routes.js | GET /admin/pending | verifyUser, isAdmin, getPendingPaymentsAdmin
+payment.routes.js | POST /:id/confirm | verifyUser, isAdmin, confirmPayment
+payment.routes.js | POST /:id/reject | verifyUser, isAdmin, rejectPayment
+payment.routes.js | PATCH /:id/refund | verifyUser, isAdmin, RefundPayment
+payment.routes.js | POST /:id/submit | verifyUser, isStudent, submitPayment
+payment.routes.js | GET /me | verifyUser, isStudent, getMyPayments
+payment.routes.js | GET /:id | verifyUser, GetPaymentDetail
+payment.routes.js | PATCH /:id/cancel | verifyUser, CancelPayment
+payroll.routes.js | GET /my | verifyUser, isTeacher, getMyPayrolls
+payroll.routes.js | GET / | verifyUser, isAdmin, getAllPayrolls
+payroll.routes.js | POST /:id/confirm | verifyUser, isAdmin, confirmPayroll
+payroll.routes.js | POST /:id/pay | verifyUser, isAdmin, payPayroll
+payroll.routes.js | POST /config | verifyUser, isAdmin, createPayrollConfig
+payroll.routes.js | GET /config | verifyUser, isAdmin, getPayrollConfigs
+payroll.routes.js | POST /periods | verifyUser, isAdmin, createPayrollPeriod
+payroll.routes.js | GET /periods | verifyUser, isAdmin, getPayrollPeriods
+payroll.routes.js | POST /periods/:id/calculate | verifyUser, isAdmin, calculatePayroll
+performance.routes.js | GET /me | isStudent, getMyPerformance
+performance.routes.js | GET /me/weaknesses | isStudent, getMyWeaknesses
+performance.routes.js | GET /me/recommendations | isStudent, getMyRecommendations
+performance.routes.js | POST /me/recommendations/generate | isStudent, generateMyRecommendation
+performance.routes.js | GET /teacher/students/:studentId | isTeacher, getStudentPerformanceByTeacher
+performance.routes.js | GET /teacher/students/:studentId/weaknesses | isTeacher, getStudentWeaknessesByTeacher
+performance.routes.js | POST /admin/rebuild/:studentId | isAdmin, adminRebuildStudentPerformance
+question.routes.js | POST /import-excel | verifyUser, isTeacher, upload.single("file"), uploadExcelQuestions
+question.routes.js | GET / | verifyUser, isTeacher, getQuestions
+question.routes.js | GET /:id | verifyUser, isTeacher, getQuestionById
+question.routes.js | POST / | verifyUser, isTeacher, createQuestionValidation, createQuestion
+question.routes.js | PUT /:id | verifyUser, isTeacher, updateQuestionValidation, updateQuestion
+question.routes.js | DELETE /:id | verifyUser, isTeacher, deleteQuestion
+subject.routes.js | GET / | subjectController.getSubjects
+subject.routes.js | GET /:id | subjectController.getSubjectById
+subject.routes.js | POST / | isAdmin, subjectController.createSubject
+subject.routes.js | PATCH /:id | isAdmin, subjectController.updateSubject
+subject.routes.js | PATCH /:id/activate | isAdmin, subjectController.activateSubject
+subject.routes.js | PATCH /:id/archive | isAdmin, subjectController.archiveSubject
+teacherAttendance.routes.js | GET /my | verifyUser, isTeacher, getMyAttendance
+teacherAttendance.routes.js | POST /:id/confirm | verifyUser, isTeacher, confirmAttendance
+teacherAttendance.routes.js | GET / | verifyUser, isAdmin, getAllAttendanceAdmin
+teacherAttendance.routes.js | POST /:id/override | verifyUser, isAdmin, overrideAttendanceAdmin

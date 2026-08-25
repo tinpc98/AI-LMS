@@ -13,35 +13,35 @@ export const courseService = {
     if (params.status === "All") delete params.status;
     if (!params.search) delete params.search;
 
-    const response = await axiosClient.get("/api/courses", { params });
+    const response = await axiosClient.get("/courses", { params });
     return { ...response.data, data: response.data.data.map(mapCourse) };
   },
 
   async getCourseById(id: string): Promise<ApiResponse<CourseRecord>> {
-    const response = await axiosClient.get(`/api/courses/${id}`);
+    const response = await axiosClient.get(`/courses/${id}`);
     return { ...response.data, data: mapCourse(response.data.data) };
   },
 
   async createCourse(payload: CourseFormValues): Promise<ApiResponse<CourseRecord>> {
-    const response = await axiosClient.post("/api/courses", payload);
+    const response = await axiosClient.post("/courses", payload);
     return { ...response.data, data: mapCourse(response.data.data) };
   },
 
   async updateCourse(id: string, payload: CourseFormValues): Promise<ApiResponse<CourseRecord>> {
-    const response = await axiosClient.put(`/api/courses/${id}`, payload);
+    const response = await axiosClient.put(`/courses/${id}`, payload);
     return { ...response.data, data: mapCourse(response.data.data) };
   },
 
   async updateStatus(
     id: string,
-    status: "Draft" | "Published" | "Closed"
+    status: "DRAFT" | "PUBLISHED" | "ARCHIVED"
   ): Promise<ApiResponse<CourseRecord>> {
-    const response = await axiosClient.put(`/api/courses/${id}`, { status });
+    const response = await axiosClient.put(`/courses/${id}`, { status });
     return { ...response.data, data: mapCourse(response.data.data) };
   },
 
   async deleteCourse(id: string): Promise<ApiResponse<void>> {
-    const response = await axiosClient.delete(`/api/courses/${id}`);
+    const response = await axiosClient.delete(`/courses/${id}`);
     return response.data;
   },
 
@@ -51,17 +51,17 @@ export const courseService = {
     if (params.status === "All") delete params.status;
     if (!params.search) delete params.search;
 
-    const response = await axiosClient.get("/api/courses/trash", { params });
+    const response = await axiosClient.get("/courses/trash", { params });
     return { ...response.data, data: response.data.data.map(mapCourse) };
   },
 
   async restoreCourse(id: string): Promise<ApiResponse<CourseRecord>> {
-    const response = await axiosClient.patch(`/api/courses/${id}/restore`);
+    const response = await axiosClient.patch(`/courses/${id}/restore`);
     return { ...response.data, data: mapCourse(response.data.data) };
   },
 
   async permanentDeleteCourse(id: string): Promise<ApiResponse<void>> {
-    const response = await axiosClient.delete(`/api/courses/${id}/force`);
+    const response = await axiosClient.delete(`/courses/${id}/force`);
     return response.data;
   },
 };

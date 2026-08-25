@@ -22,7 +22,7 @@ export default function ExamAttemptDetail() {
   useEffect(() => {
     const fetchReviewData = async () => {
       try {
-        const response = await axiosClient.get(`/api/exam-attempts/${attemptId}/review`);
+        const response = await axiosClient.get(`/exam-attempts/${attemptId}/review`);
         const data = response.data.data;
         setReviewData(data);
 
@@ -94,7 +94,7 @@ export default function ExamAttemptDetail() {
       });
 
       // Gọi API chốt điểm
-      await axiosClient.put(`/api/exam-attempts/${attemptId}/grade-essay`, {
+      await axiosClient.put(`/exam-attempts/${attemptId}/grade-essay`, {
         essayGrades: payload,
       });
       toast.success("Duyệt điểm tự luận thành công!");

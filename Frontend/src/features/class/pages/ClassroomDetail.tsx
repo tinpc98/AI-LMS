@@ -33,17 +33,12 @@ import CreateLessonModal from "../../lesson/components/CreateLessonModal";
 import { useJitsiLiveSession } from "../../live-session/hooks/useJitsiLiveSession";
 import { AIQuestionGeneratorModal } from "../components/classroom/AIQuestionGeneratorModal";
 
-import { TeacherClassOverviewTab } from "../components/classroom/TeacherClassOverviewTab";
 import { TeacherStudentTableTab } from "../components/classroom/TeacherStudentTableTab";
 import { TeacherAttendanceTab } from "../components/classroom/TeacherAttendanceTab";
 import { TeacherMaterialsTab } from "../components/classroom/TeacherMaterialsTab";
 import { TeacherAssignmentsTab } from "../components/classroom/TeacherAssignmentsTab";
-import { TeacherExamsTab } from "../components/classroom/TeacherExamsTab";
-import { TeacherAnnouncementsTab } from "../components/classroom/TeacherAnnouncementsTab";
 import { TeacherLiveSessionTab } from "../components/classroom/TeacherLiveSessionTab";
 import { TeacherGradebookTab } from "../components/classroom/TeacherGradebookTab";
-import { TeacherAnalyticsTab } from "../components/classroom/TeacherAnalyticsTab";
-import { ClassDiscussionTab } from "../components/classDetail/chat/ClassDiscussionTab";
 import { toast } from "../../../utils/toast";
 import { getApiErrorMessage } from "../../../shared/utils/apiError";
 import { useBreadcrumb } from "../../../shared/context/BreadcrumbContext";
@@ -70,9 +65,9 @@ export default function ClassroomDetail() {
     if (isLoading) {
       setBreadcrumbEntity(null, true);
     } else if (classInfo) {
-      const title = classInfo.classCode
-        ? `Lớp ${classInfo.classCode} - ${classInfo.className}`
-        : (classInfo.className || "Chi tiết lớp học");
+      const title = classInfo.code
+        ? `Lớp ${classInfo.code} - ${classInfo.name}`
+        : (classInfo.name || "Chi tiết lớp học");
       setBreadcrumbEntity(title, false);
     }
     return () => {
@@ -82,7 +77,7 @@ export default function ClassroomDetail() {
 
   const [editingLesson, setEditingLesson] = useState<ILesson | null>(null);
   const [selectedLessonForAI, setSelectedLessonForAI] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState(searchParams.get("tab") || "overview");
+  const [activeTab, setActiveTab] = useState(searchParams.get("tab") || "lessons");
 
   const handleTabChange = (key: string) => {
     setActiveTab(key);
@@ -214,168 +209,6 @@ export default function ClassroomDetail() {
 
   const tabItems = [
     {
-      key: "overview",
-      label: (
-        <Space>
-          <BookOutlined />
-          <span>Tổng quan</span>
-        </Space>
-      ),
-      children: <TeacherClassOverviewTab classInfo={classInfo} />,
-    },
-    {
-      key: "students",
-      label: (
-        <Space>
-          <TeamOutlined />
-          <span>Học sinh ({studentList.length})</span>
-        </Space>
-      ),
-      children: <TeacherStudentTableTab students={studentList} loading={false} />,
-    },
-    {
-      key: "attendance",
-      label: (
-        <Space>
-          <CheckSquareOutlined />
-          <span>Điểm danh</span>
-        </Space>
-      ),
-      children: (
-        <TeacherAttendanceTab
-          classId={classId!}
-          className={classInfo.className}
-          students={studentList}
-        />
-      ),
-    },
-    {
-      key: "materials",
-      label: (
-        <Space>
-          <FolderOpenOutlined />
-          <span>Tài liệu ({resourceList.length})</span>
-        </Space>
-      ),
-      children: (
-        <TeacherMaterialsTab
-          classId={classId!}
-          className={classInfo.className}
-          resources={resourceList}
-          teacherName={teacherName}
-          onRefresh={loadClassroom}
-          loading={isLoading}
-        />
-      ),
-    },
-    {
-      key: "assignments",
-      label: (
-        <Space>
-          <FormOutlined />
-          <span>Bài tập ({assignments.length})</span>
-        </Space>
-      ),
-      children: (
-        <TeacherAssignmentsTab
-          classId={classId!}
-          className={classInfo.className}
-          assignments={assignments}
-          onRefresh={loadAssignments}
-          loading={isLoading}
-        />
-      ),
-    },
-    {
-      key: "exams",
-      label: (
-        <Space>
-          <FileDoneOutlined />
-          <span>Bài kiểm tra</span>
-        </Space>
-      ),
-      children: (
-        <TeacherExamsTab
-          classId={classId!}
-          className={classInfo.className}
-          onRefresh={loadClassroom}
-          loading={isLoading}
-        />
-      ),
-    },
-    {
-      key: "announcements",
-      label: (
-        <Space>
-          <NotificationOutlined />
-          <span>Thông báo</span>
-        </Space>
-      ),
-      children: (
-        <TeacherAnnouncementsTab
-          classId={classId!}
-          className={classInfo.className}
-          onRefresh={loadClassroom}
-          loading={isLoading}
-        />
-      ),
-    },
-    {
-      key: "chat",
-      label: (
-        <Space>
-          <MessageOutlined />
-          <span>Thảo luận</span>
-        </Space>
-      ),
-      children: <ClassDiscussionTab key={classId} classId={classId!} isTeacher={true} />,
-    },
-    {
-      key: "live",
-      label: (
-        <Space>
-          <VideoCameraOutlined />
-          <span>Phòng học Live</span>
-        </Space>
-      ),
-      children: (
-        <TeacherLiveSessionTab
-          classId={classId!}
-          className={classInfo.className}
-          teacherName={teacherName}
-        />
-      ),
-    },
-    {
-      key: "gradebook",
-      label: (
-        <Space>
-          <TrophyOutlined />
-          <span>Bảng điểm</span>
-        </Space>
-      ),
-      children: (
-        <TeacherGradebookTab
-          classId={classId!}
-          className={classInfo.className}
-          teacherName={teacherName}
-          students={studentList}
-          onRefresh={loadClassroom}
-          loading={isLoading}
-        />
-      ),
-    },
-    {
-      key: "analytics",
-      label: (
-        <Space>
-          <TrophyOutlined />
-          <span>Thành tích</span>
-        </Space>
-      ),
-      children: <TeacherAnalyticsTab classId={classId!} />,
-    },
-    {
       key: "lessons",
       label: (
         <Space>
@@ -496,6 +329,104 @@ export default function ClassroomDetail() {
         </Card>
       ),
     },
+    {
+      key: "materials",
+      label: (
+        <Space>
+          <FolderOpenOutlined />
+          <span>Tài liệu ({resourceList.length})</span>
+        </Space>
+      ),
+      children: (
+        <TeacherMaterialsTab
+          classId={classId!}
+          className={classInfo.name}
+          resources={resourceList}
+          teacherName={teacherName}
+          onRefresh={loadClassroom}
+          loading={isLoading}
+        />
+      ),
+    },
+    {
+      key: "assignments",
+      label: (
+        <Space>
+          <FormOutlined />
+          <span>Bài tập ({assignments.length})</span>
+        </Space>
+      ),
+      children: (
+        <TeacherAssignmentsTab
+          classId={classId!}
+          className={classInfo.name}
+          assignments={assignments}
+          onRefresh={loadAssignments}
+          loading={isLoading}
+        />
+      ),
+    },
+    {
+      key: "students",
+      label: (
+        <Space>
+          <TeamOutlined />
+          <span>Học sinh ({studentList.length})</span>
+        </Space>
+      ),
+      children: <TeacherStudentTableTab students={studentList} loading={false} />,
+    },
+    {
+      key: "attendance",
+      label: (
+        <Space>
+          <CheckSquareOutlined />
+          <span>Điểm danh</span>
+        </Space>
+      ),
+      children: (
+        <TeacherAttendanceTab
+          classId={classId!}
+          className={classInfo.name}
+          students={studentList}
+        />
+      ),
+    },
+    {
+      key: "gradebook",
+      label: (
+        <Space>
+          <TrophyOutlined />
+          <span>Bảng điểm</span>
+        </Space>
+      ),
+      children: (
+        <TeacherGradebookTab
+          classId={classId!}
+          className={classInfo.name}
+          teacherName={teacherName}
+          students={studentList}
+          onRefresh={loadClassroom}
+          loading={isLoading}
+        />
+      ),
+    },
+    {
+      key: "live",
+      label: (
+        <Space>
+          <VideoCameraOutlined />
+          <span>Phòng học Live</span>
+        </Space>
+      ),
+      children: (
+        <TeacherLiveSessionTab
+          classId={classId!}
+          className={classInfo.name}
+          teacherName={teacherName}
+        />
+      ),
+    },
   ];
 
   return (
@@ -508,67 +439,35 @@ export default function ClassroomDetail() {
         minHeight: "100vh",
       }}
     >
-      {/* 1. Header Banner */}
-      <Card
-        style={{
-          borderRadius: 16,
-          background: "linear-gradient(135deg, var(--color-sidebar-bg) 0%, var(--color-sidebar-hover) 100%)",
-          color: "var(--color-surface)",
-          marginBottom: 24,
-          boxShadow: "0 8px 24px rgba(0, 33, 64, 0.25)",
-        }}
-        styles={{ body: { padding: "24px 32px" } }}
-      >
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            flexWrap: "wrap",
-            gap: 16,
-          }}
-        >
-          <div>
-            <Space size={12} align="center">
-              <Button
-                type="text"
-                icon={<ArrowLeftOutlined style={{ color: "var(--color-surface)", fontSize: 18 }} />}
-                onClick={() => navigate("/teacher/classes")}
-              />
-              <Title level={3} style={{ color: "var(--color-surface)", margin: 0, fontWeight: 700 }}>
-                {classInfo.className}
-              </Title>
-              <Tag color="cyan" style={{ fontFamily: "monospace", fontSize: 13 }}>
-                {classInfo.joinCode || classInfo.classCode}
-              </Tag>
-              <Tag color="green">{classInfo.status || "Đang hoạt động"}</Tag>
-            </Space>
-            <Text
-              style={{
-                color: "rgba(255,255,255,0.85)",
-                display: "block",
-                marginTop: 8,
-                fontSize: 14,
-              }}
-            >
-              Sĩ số: {studentList.length} học sinh | Lịch học:{" "}
-              {(classInfo as any).schedule?.days?.join(", ") || "Tự do"}
-            </Text>
-          </div>
-
-          <Space size={12}>
-            <Button
-              type="primary"
-              icon={<VideoCameraOutlined />}
-              loading={isLiveLoading}
-              onClick={handleStartLiveSession}
-              style={{ fontWeight: 600, borderRadius: 8 }}
-            >
-              Bắt đầu phòng LIVE
-            </Button>
-          </Space>
+      {/* 1. MINIMALIST HEADER */}
+      <div style={{ marginBottom: 24, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <Link 
+            to="/teacher/classes" 
+            style={{ color: "var(--color-text-secondary)", display: "flex", alignItems: "center", gap: 6, fontSize: 15 }}
+            className="hover:text-blue-600 transition-colors"
+          >
+            <ArrowLeftOutlined /> Quay lại
+          </Link>
+          <span style={{ color: "var(--color-border-default)" }}>|</span>
+          <Title level={4} style={{ margin: 0, color: "var(--color-text-body)", fontWeight: 600 }}>
+            {classInfo.name}
+          </Title>
+          <Tag color="cyan" style={{ fontFamily: "monospace", margin: 0 }}>
+            {classInfo.joinCode || classInfo.code}
+          </Tag>
         </div>
-      </Card>
+        
+        <Button
+          type="primary"
+          icon={<VideoCameraOutlined />}
+          loading={isLiveLoading}
+          onClick={handleStartLiveSession}
+          style={{ fontWeight: 600, borderRadius: 8, backgroundColor: "#f56a00", borderColor: "#f56a00" }}
+        >
+          Bắt đầu phòng LIVE
+        </Button>
+      </div>
 
       {/* 2. Tabs Navigation Content */}
       <Tabs

@@ -15,7 +15,7 @@ import type { DashboardResponse } from "./dashboard.types";
  */
 export const dashboardService = {
   async getAdminDashboard(): Promise<DashboardResponse> {
-    const res = await axiosClient.get("/api/dashboard/admin");
+    const res = await axiosClient.get("/dashboard/admin");
     return res.data.data;
   },
 };

@@ -4,7 +4,7 @@ import PageContainer from "../../../shared/components/PageContainer";
 import useStudentClasses from "../hooks/useStudentClasses";
 
 // Sub-components
-import MyClassesHeader from "../components/classes/MyClassesHeader";
+// Sub-components
 import SearchToolbar from "../components/classes/SearchToolbar";
 import ClassCard from "../components/classes/ClassCard";
 import EmptyClassState from "../components/classes/EmptyClassState";
@@ -26,17 +26,6 @@ export const StudentMyClassesPage: React.FC = () => {
     resetFilters,
   } = useStudentClasses();
 
-  // Metrics for header
-  const activeClassesCount = useMemo(
-    () => classes.filter((c) => c.status === "Active" || c.status === "active").length,
-    [classes]
-  );
-
-  const completedClassesCount = useMemo(
-    () => classes.filter((c) => c.status === "Completed" || c.status === "completed").length,
-    [classes]
-  );
-
   const isFiltered =
     filters.search !== "" ||
     filters.status !== "ALL" ||
@@ -45,12 +34,12 @@ export const StudentMyClassesPage: React.FC = () => {
 
   return (
     <PageContainer maxWidth="1400px" loading={false}>
-      {/* 1. Page Header with Statistics */}
-      <MyClassesHeader
-        totalClasses={classes.length}
-        activeClassesCount={activeClassesCount}
-        completedClassesCount={completedClassesCount}
-      />
+      {/* 1. Page Title */}
+      <div style={{ marginBottom: 24 }}>
+        <h2 style={{ fontSize: 28, fontWeight: 700, margin: 0, color: "var(--color-on-surface)" }}>
+          Lớp học của tôi
+        </h2>
+      </div>
 
       {/* Error Alert */}
       {error && (

@@ -3,6 +3,7 @@ import {
   BarChartOutlined,
   BookOutlined,
   DashboardOutlined,
+  DollarOutlined,
   RobotOutlined,
   SettingOutlined,
   TeamOutlined,
@@ -45,6 +46,24 @@ const adminMenuItems: AdminMenuItem[] = [
   },
   { key: "ai", label: "AI Management", path: "/admin/ai-management", icon: <RobotOutlined /> },
   { key: "reports", label: "Reports", path: "/admin/reports", icon: <BarChartOutlined /> },
+  {
+    key: "payroll",
+    label: "Quản lý lương",
+    path: "/admin/payroll",
+    icon: <DollarOutlined />,
+  },
+  {
+    key: "enrollments",
+    label: "Quản lý ghi danh",
+    path: "/admin/enrollments",
+    icon: <BookOutlined />,
+  },
+  {
+    key: "payments",
+    label: "Quản lý thanh toán",
+    path: "/admin/payments",
+    icon: <DollarOutlined />,
+  },
   {
     key: "system",
     label: "System Management",

@@ -3,8 +3,10 @@ import type { InternalAxiosRequestConfig } from "axios";
 import { toast } from "../utils/toast";
 import { getApiErrorStatus } from "../shared/utils/apiError";
 
+import envConfig from "../config/env";
+
 const axiosClient = axios.create({
-  baseURL: "http://localhost:5000", // Port của Backend Node.js
+  baseURL: envConfig.apiUrl,
   headers: {
     "Content-Type": "application/json",
   },
@@ -40,6 +42,8 @@ axiosClient.interceptors.request.use(
   }
 );
 
+let isLogoutHandlingInProgress = false;
+
 // 2. RESPONSE INTERCEPTOR: Quản lý phản hồi và Tự động Logout khi Token hết hạn
 axiosClient.interceptors.response.use(
   (response) => {
@@ -54,18 +58,30 @@ axiosClient.interceptors.response.use(
     }
 
     const requestUrl = error.config?.url || "";
-    const isLoginRequest = requestUrl.includes("/api/auth/login");
+    const isLoginRequest = requestUrl.includes("/auth/login");
 
     // Chỉ tự động xử lý hết hạn phiên đăng nhập (401) cho các protected API, KHÔNG can thiệp vào API login
     if (getApiErrorStatus(error) === 401 && !isLoginRequest) {
-      const token = localStorage.getItem("accessToken");
-      if (token) {
-        toast.error(
-          "Phiên đăng nhập của bạn đã hết hạn hoặc không hợp lệ. Vui lòng đăng nhập lại!",
-          "Phiên hết hạn"
-        );
-        // Phát sự kiện toàn cục để useAuth tự động logout an toàn qua React Router (0 RELOAD)
-        window.dispatchEvent(new Event("unauthorized-logout"));
+      if (!isLogoutHandlingInProgress) {
+        const token = localStorage.getItem("accessToken");
+        if (token) {
+          isLogoutHandlingInProgress = true;
+          
+          toast.error(
+            "Phiên đăng nhập của bạn đã hết hạn hoặc không hợp lệ. Vui lòng đăng nhập lại!",
+            "Phiên hết hạn"
+          );
+          
+          // Phát sự kiện toàn cục để useAuth tự động logout an toàn qua React Router (0 RELOAD)
+          window.dispatchEvent(new Event("unauthorized-logout"));
+          
+          // Sau khi dispatch logout, token sẽ bị xóa bởi AuthProvider.
+          // Reset lock sau một khoảng thời gian đủ dài để ứng dụng redirect về login (ví dụ: 10 giây),
+          // tránh khóa vĩnh viễn nếu có lỗi xảy ra.
+          setTimeout(() => {
+            isLogoutHandlingInProgress = false;
+          }, 10000);
+        }
       }
     } else if (getApiErrorStatus(error) === 403) {
       toast.error("Bạn không có quyền thực hiện thao tác này!", "Từ chối truy cập");

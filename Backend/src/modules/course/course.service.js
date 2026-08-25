@@ -1,7 +1,23 @@
 import Course from "./course.model.js";
+import Subject from "../subject/subject.model.js";
+import ClassModel from "../class/class.model.js";
+import { softDeleteClass } from "../class/class.repository.js";
 
 class CourseService {
   async createCourse(data, createdBy) {
+    if (data.subjectId) {
+      const subject = await Subject.findById(data.subjectId);
+      if (!subject) {
+        const error = new Error("Môn học không tồn tại");
+        error.status = 404;
+        throw error;
+      }
+      if (subject.status !== "ACTIVE") {
+        const error = new Error("Không thể sử dụng môn học chưa ACTIVE");
+        error.status = 400;
+        throw error;
+      }
+    }
     const course = new Course({
       ...data,
       createdBy,
@@ -11,22 +27,30 @@ class CourseService {
 
   async getCourses({
     search,
-    subject,
+    subjectId,
     grade,
     status,
     page = 1,
     limit = 10,
     sort = "createdAt",
     order = "desc",
+    userRole,
   }) {
     const query = {};
     if (search) {
       const safeSearch = search.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-      query.courseName = { $regex: safeSearch, $options: "i" };
+      query.name = { $regex: safeSearch, $options: "i" };
     }
-    if (subject) query.subject = subject;
+    if (subjectId) query.subjectId = subjectId;
     if (grade) query.grade = Number(grade);
-    if (status) query.status = status;
+    
+    if (status) {
+      query.status = status;
+    }
+    
+    if (userRole !== "Admin") {
+      query.status = "PUBLISHED";
+    }
 
     const skip = (Number(page) - 1) * Number(limit);
     const sortDirection = order === "asc" ? 1 : -1;
@@ -34,6 +58,7 @@ class CourseService {
 
     const [items, total] = await Promise.all([
       Course.find(query)
+        .populate("subjectId", "name code")
         .populate("createdBy", "fullName email")
         .sort(sortQuery)
         .skip(skip)
@@ -53,40 +78,51 @@ class CourseService {
   }
 
   async getCourseById(id) {
-    const course = await Course.findById(id).populate("createdBy", "fullName email");
+    const course = await Course.findById(id)
+      .populate("subjectId", "name code")
+      .populate("createdBy", "fullName email");
     if (!course) {
       throw new Error("Khóa học không tồn tại!");
     }
     return course;
   }
 
-  async updateCourse(id, data) {
-    // Whitelist rõ ràng: findByIdAndUpdate(id, data, ...) trước đây nhận nguyên req.body, cho
-    // phép client tự đặt isDeleted/deletedAt/deletedBy/createdBy — bỏ qua hẳn flow soft-delete
-    // chính thức (DELETE /:id) và để lại bản ghi ở trạng thái không nhất quán.
+  async updateCourse(id, data, updatedBy) {
     const {
-      courseName,
-      subject,
+      name,
+      code,
+      subjectId,
       grade,
       description,
       thumbnail,
-      tuitionFee,
-      durationWeeks,
-      totalLessons,
-      target,
+      prices,
+      duration,
       status,
     } = data;
     const update = {};
-    if (courseName !== undefined) update.courseName = courseName;
-    if (subject !== undefined) update.subject = subject;
+    if (name !== undefined) update.name = name;
+    if (code !== undefined) update.code = code;
+    if (subjectId !== undefined) {
+      const subject = await Subject.findById(subjectId);
+      if (!subject) {
+        const error = new Error("Môn học không tồn tại");
+        error.status = 404;
+        throw error;
+      }
+      if (subject.status !== "ACTIVE") {
+        const error = new Error("Không thể sử dụng môn học chưa ACTIVE");
+        error.status = 400;
+        throw error;
+      }
+      update.subjectId = subjectId;
+    }
     if (grade !== undefined) update.grade = grade;
     if (description !== undefined) update.description = description;
     if (thumbnail !== undefined) update.thumbnail = thumbnail;
-    if (tuitionFee !== undefined) update.tuitionFee = tuitionFee;
-    if (durationWeeks !== undefined) update.durationWeeks = durationWeeks;
-    if (totalLessons !== undefined) update.totalLessons = totalLessons;
-    if (target !== undefined) update.target = target;
+    if (prices !== undefined) update.prices = prices;
+    if (duration !== undefined) update.duration = duration;
     if (status !== undefined) update.status = status;
+    if (updatedBy !== undefined) update.updatedBy = updatedBy;
 
     const course = await Course.findByIdAndUpdate(id, update, { new: true, runValidators: true });
     if (!course) {
@@ -98,19 +134,32 @@ class CourseService {
   }
 
   async deleteCourse(id, userId = null) {
-    const course = await Course.softDelete(id, userId);
+    // Modify status to ARCHIVED alongside soft delete
+    const course = await Course.findByIdAndUpdate(
+      id,
+      { status: "ARCHIVED", updatedBy: userId },
+      { new: true }
+    );
     if (!course) {
       const error = new Error("Khóa học không tồn tại!");
       error.status = 404;
       throw error;
     }
+    await Course.softDelete(id, userId);
+
+    // Cascade soft delete all classes belonging to this course
+    const classes = await ClassModel.find({ courseId: id, isDeleted: false });
+    for (const cls of classes) {
+      await softDeleteClass(cls._id, userId);
+    }
+
     return true;
   }
 
   async getCourseTrash(queryParams) {
     const {
       search,
-      subject,
+      subjectId,
       grade,
       status,
       page = 1,
@@ -122,9 +171,9 @@ class CourseService {
 
     if (search) {
       const safeSearch = search.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-      query.courseName = { $regex: safeSearch, $options: "i" };
+      query.name = { $regex: safeSearch, $options: "i" };
     }
-    if (subject) query.subject = subject;
+    if (subjectId) query.subjectId = subjectId;
     if (grade) query.grade = Number(grade);
     if (status) query.status = status;
 
@@ -134,6 +183,7 @@ class CourseService {
 
     const [items, total] = await Promise.all([
       Course.find(query)
+        .populate("subjectId", "name code")
         .populate("createdBy", "fullName email")
         .withDeleted()
         .sort(sortQuery)

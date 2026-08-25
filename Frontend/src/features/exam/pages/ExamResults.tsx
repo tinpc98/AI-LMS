@@ -15,13 +15,13 @@ export default function ExamResults() {
         if (isFirstLoad) setIsLoading(true);
 
         // 1. Gọi API lấy danh sách học sinh làm bài
-        const resAttempts = await axiosClient.get(`/api/exam-attempts/exam/${examId}`);
+        const resAttempts = await axiosClient.get(`/exam-attempts/exam/${examId}`);
         setStudentList(resAttempts.data.data || []);
 
         // 2. GỌI API LẤY CHI TIẾT KỲ THI ĐỂ HIỆN TÊN (Chỉ gọi lần đầu tiên)
         if (isFirstLoad) {
           try {
-            const resExam = await axiosClient.get(`/api/exams/${examId}`);
+            const resExam = await axiosClient.get(`/exams/${examId}`);
             const examData = resExam.data.data || resExam.data;
             setExamInfo({
               title: examData.title || "Kỳ thi không xác định",

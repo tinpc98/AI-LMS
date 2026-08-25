@@ -18,7 +18,7 @@ export function useQuestionBank() {
     setLoading(true);
     setError(null);
     try {
-      const response = await axiosClient.get("/api/questions");
+      const response = await axiosClient.get("/questions");
       setQuestions(response.data.data || []);
     } catch (err: unknown) {
       console.error("[useQuestionBank] Fetch error:", err);
@@ -34,7 +34,7 @@ export function useQuestionBank() {
       setLoading(true);
       setError(null);
       try {
-        const response = await axiosClient.get("/api/questions");
+        const response = await axiosClient.get("/questions");
         if (isMounted) {
           setQuestions(response.data.data || []);
         }
@@ -86,7 +86,7 @@ export function useQuestionBank() {
   const handleDeleteQuestion = async (id: string) => {
     if (!id) return;
     try {
-      await axiosClient.delete(`/api/questions/${id}`);
+      await axiosClient.delete(`/questions/${id}`);
       toast.success("Xóa câu hỏi khỏi Ngân hàng thành công!");
       fetchQuestions();
     } catch (err: unknown) {
@@ -100,7 +100,7 @@ export function useQuestionBank() {
     formData.append("file", file);
 
     try {
-      const res = await axiosClient.post("/api/questions/import-excel", formData, {
+      const res = await axiosClient.post("/questions/import-excel", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
       toast.success(res.data?.message || "Nhập bộ câu hỏi từ Excel thành công!");

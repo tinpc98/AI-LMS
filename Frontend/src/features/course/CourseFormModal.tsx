@@ -1,6 +1,8 @@
 import { Form, Input, InputNumber, Modal, Select } from "antd";
-import { useEffect, forwardRef, useImperativeHandle } from "react";
+import { useEffect, useState, forwardRef, useImperativeHandle } from "react";
 import type { CourseFormValues, CourseRecord } from "./course.types";
+import { subjectService } from "../subject/subjectService";
+import type { Subject } from "../subject/subject.types";
 
 interface CourseFormModalProps {
   open: boolean;
@@ -21,19 +23,31 @@ const CourseFormModal = forwardRef<CourseFormModalHandle, CourseFormModalProps>(
     useEffect(() => {
       if (open) {
         form.setFieldsValue({
-          courseName: initialValues?.courseName || "",
-          subject: initialValues?.subject || "Mathematics",
+          name: initialValues?.name || "",
+          code: initialValues?.code || "",
+          subjectId: typeof initialValues?.subjectId === "object" 
+            ? (initialValues.subjectId as any)._id 
+            : initialValues?.subjectId || undefined,
           grade: initialValues?.grade || 12,
+          level: initialValues?.level || "FOUNDATION",
           description: initialValues?.description || "",
           thumbnail: initialValues?.thumbnail || "",
-          tuitionFee: initialValues?.tuitionFee || 0,
-          durationWeeks: initialValues?.durationWeeks || 0,
-          totalLessons: initialValues?.totalLessons || 0,
-          target: initialValues?.target || "",
-          status: initialValues?.status || "Draft",
+          pricing: initialValues?.pricing || { tuitionFee: 0 },
+          duration: initialValues?.duration || { value: 1, unit: "WEEK" },
+          status: initialValues?.status || "DRAFT",
         });
       }
     }, [open, initialValues, form]);
+
+    const [subjects, setSubjects] = useState<Subject[]>([]);
+    
+    useEffect(() => {
+      if (open) {
+        subjectService.getSubjects({ status: "ACTIVE", limit: 100 })
+          .then(res => setSubjects(res.data || []))
+          .catch(() => {});
+      }
+    }, [open]);
 
     useImperativeHandle(ref, () => ({
       submit: () => form.submit(),
@@ -42,10 +56,10 @@ const CourseFormModal = forwardRef<CourseFormModalHandle, CourseFormModalProps>(
     const handleFinish = async (values: CourseFormValues) => {
       const trimmedValues = {
         ...values,
-        courseName: values.courseName.trim(),
+        name: values.name.trim(),
+        code: values.code.trim().toUpperCase(),
         description: values.description.trim(),
         thumbnail: values.thumbnail.trim(),
-        target: values.target.trim(),
       };
 
       await onSubmit(trimmedValues);
@@ -66,7 +80,7 @@ const CourseFormModal = forwardRef<CourseFormModalHandle, CourseFormModalProps>(
             <Input placeholder="Optional thumbnail URL" />
           </Form.Item>
           <Form.Item
-            name="courseName"
+            name="name"
             label="Course Name"
             rules={[
               { required: true, message: "Course name is required" },
@@ -76,18 +90,23 @@ const CourseFormModal = forwardRef<CourseFormModalHandle, CourseFormModalProps>(
             <Input placeholder="Enter course name" />
           </Form.Item>
           <Form.Item
-            name="subject"
+            name="code"
+            label="Course Code"
+            rules={[
+              { required: true, message: "Course code is required" },
+              { whitespace: true, message: "Course code is required" },
+            ]}
+          >
+            <Input placeholder="e.g. MATH12-FND" style={{ textTransform: "uppercase" }} />
+          </Form.Item>
+          <Form.Item
+            name="subjectId"
             label="Subject"
             rules={[{ required: true, message: "Subject is required" }]}
           >
             <Select
-              options={[
-                { label: "Mathematics", value: "Mathematics" },
-                { label: "Physics", value: "Physics" },
-                { label: "Chemistry", value: "Chemistry" },
-                { label: "English", value: "English" },
-                { label: "Literature", value: "Literature" },
-              ]}
+              placeholder="Select a subject"
+              options={subjects.map((s) => ({ label: s.name, value: s._id }))}
             />
           </Form.Item>
           <Form.Item
@@ -98,7 +117,20 @@ const CourseFormModal = forwardRef<CourseFormModalHandle, CourseFormModalProps>(
             <InputNumber min={1} max={12} style={{ width: "100%" }} />
           </Form.Item>
           <Form.Item
-            name="tuitionFee"
+            name="level"
+            label="Level"
+            rules={[{ required: true, message: "Level is required" }]}
+          >
+            <Select
+              options={[
+                { label: "Nền tảng", value: "FOUNDATION" },
+                { label: "Trung cấp", value: "INTERMEDIATE" },
+                { label: "Nâng cao", value: "ADVANCED" },
+              ]}
+            />
+          </Form.Item>
+          <Form.Item
+            name={["pricing", "tuitionFee"]}
             label="Tuition Fee"
             rules={[
               { required: true, message: "Tuition fee is required" },
@@ -107,29 +139,35 @@ const CourseFormModal = forwardRef<CourseFormModalHandle, CourseFormModalProps>(
           >
             <InputNumber min={0} style={{ width: "100%" }} />
           </Form.Item>
-          <Form.Item
-            name="durationWeeks"
-            label="Duration (Weeks)"
-            rules={[
-              { required: true, message: "Duration is required" },
-              { type: "number", min: 1, message: "Duration must be at least 1 week" },
-            ]}
-          >
-            <InputNumber min={1} style={{ width: "100%" }} />
-          </Form.Item>
-          <Form.Item
-            name="totalLessons"
-            label="Total Lessons"
-            rules={[
-              { required: true, message: "Total lessons is required" },
-              { type: "number", min: 1, message: "Must be at least 1" },
-            ]}
-          >
-            <InputNumber min={1} style={{ width: "100%" }} />
-          </Form.Item>
-          <Form.Item name="target" label="Target">
-            <Input placeholder="Who is this course for?" />
-          </Form.Item>
+          
+          <div style={{ display: "flex", gap: "16px" }}>
+            <Form.Item
+              name={["duration", "value"]}
+              label="Duration Value"
+              style={{ flex: 1 }}
+              rules={[
+                { required: true, message: "Duration value is required" },
+                { type: "number", min: 1, message: "Must be at least 1" },
+              ]}
+            >
+              <InputNumber min={1} style={{ width: "100%" }} />
+            </Form.Item>
+            <Form.Item
+              name={["duration", "unit"]}
+              label="Duration Unit"
+              style={{ flex: 1 }}
+              rules={[{ required: true, message: "Duration unit is required" }]}
+            >
+              <Select
+                options={[
+                  { label: "Day", value: "DAY" },
+                  { label: "Week", value: "WEEK" },
+                  { label: "Month", value: "MONTH" },
+                ]}
+              />
+            </Form.Item>
+          </div>
+
           <Form.Item name="description" label="Description">
             <Input.TextArea rows={4} placeholder="Short course description" />
           </Form.Item>
@@ -140,9 +178,9 @@ const CourseFormModal = forwardRef<CourseFormModalHandle, CourseFormModalProps>(
           >
             <Select
               options={[
-                { label: "Draft", value: "Draft" },
-                { label: "Published", value: "Published" },
-                { label: "Closed", value: "Closed" },
+                { label: "Draft", value: "DRAFT" },
+                { label: "Published", value: "PUBLISHED" },
+                { label: "Archived", value: "ARCHIVED" },
               ]}
             />
           </Form.Item>

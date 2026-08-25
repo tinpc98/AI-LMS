@@ -50,8 +50,7 @@ export const TeacherClassGrid: React.FC<TeacherClassGridProps> = React.memo(
     return (
       <Row gutter={[20, 20]}>
         {classes.map((cls) => {
-          const studentCount =
-            cls.currentStudents ?? (Array.isArray(cls.students) ? cls.students.length : 0);
+          const studentCount = cls.currentStudents ?? 0;
           const max = cls.maxStudents || 30;
           const code = cls.joinCode || cls.classCode || "";
           const courseName = typeof cls.courseId === "object" ? cls.courseId?.courseName : "";

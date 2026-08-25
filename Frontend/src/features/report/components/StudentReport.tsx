@@ -1,154 +1,169 @@
-import React from "react";
-import { Row, Col, Card, Table, Tag, Progress, Avatar, Statistic } from "antd";
-import { UserOutlined, TrophyOutlined, CheckCircleOutlined } from "@ant-design/icons";
-import { mockUsers } from "../../../features/account/account.mock";
-import { mockClasses } from "../../../features/class/class.mock";
-import { stableMetric } from "../demoMetrics";
+import React, { useEffect, useState } from "react";
+import { Card, Table, Tag, Progress, Statistic, Row, Col, Alert, Spin } from "antd";
+import { CheckCircleOutlined, TrophyOutlined, CloseCircleOutlined } from "@ant-design/icons";
+import { performanceApi, type IStudentPerformance, type IWeakness } from "../../../api/performanceApi";
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from "recharts";
 
 export const StudentReport: React.FC = () => {
-  const students = mockUsers.filter((u) => u.role === "Student");
-  const activeStudents = students.filter((u) => u.status === "Active").length;
+  const [performances, setPerformances] = useState<IStudentPerformance[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const studentPerformanceData = [
-    { name: "Hoàng Văn E", math: 8.5, physics: 7.8, english: 9.0, avg: 8.4 },
-    { name: "Đỗ Thị Phương", math: 9.2, physics: 8.8, english: 8.5, avg: 8.8 },
-    { name: "Lê Văn C", math: 7.0, physics: 6.5, english: 7.5, avg: 7.0 },
-    { name: "Nguyễn Văn D", math: 8.0, physics: 8.5, english: 8.2, avg: 8.2 },
-    { name: "Trần Minh T", math: 9.5, physics: 9.0, english: 9.2, avg: 9.2 },
-  ];
+  useEffect(() => {
+    const fetchPerformance = async () => {
+      try {
+        setLoading(true);
+        const res = await performanceApi.getMyPerformance();
+        if (res.success && res.data) {
+          setPerformances(res.data);
+        }
+      } catch (err: any) {
+        setError(err.message || "Failed to load performance data");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchPerformance();
+  }, []);
+
+  const totalQuestions = performances.reduce((acc, p) => acc + p.totalQuestions, 0);
+  const totalCorrect = performances.reduce((acc, p) => acc + p.correctAnswers, 0);
+  const overallAccuracy = totalQuestions > 0 ? (totalCorrect / totalQuestions) * 100 : 0;
+
+  const getMasteryColor = (level: string) => {
+    switch (level) {
+      case "MASTERED": return "success";
+      case "PROFICIENT": return "processing";
+      case "DEVELOPING": return "warning";
+      default: return "default";
+    }
+  };
 
   const columns = [
     {
-      title: "Học sinh",
-      dataIndex: "fullName",
-      key: "fullName",
-      render: (text: string, record: any) => (
-        <div className="flex items-center gap-3">
-          <Avatar icon={<UserOutlined />} className="bg-indigo-500" />
-          <div>
-            <div className="font-medium text-gray-800">{text}</div>
-            <div className="text-xs text-gray-400">{record.email}</div>
-          </div>
-        </div>
-      ),
+      title: "Chủ đề (Topic)",
+      dataIndex: "topicId",
+      key: "topic",
+      render: (topic: any) => <span className="font-medium text-gray-800">{topic?.name || "N/A"}</span>,
     },
     {
-      title: "Số điện thoại",
-      dataIndex: "phone",
-      key: "phone",
+      title: "Đã trả lời",
+      dataIndex: "answeredQuestions",
+      key: "answered",
+      render: (val: number, record: IStudentPerformance) => `${val} / ${record.totalQuestions}`,
     },
     {
-      title: "Số lớp tham gia",
-      key: "classes",
-      render: (_: any, record: any) => {
-        const count = mockClasses.filter((c) => c.students?.includes(record.id)).length || 2;
-        return <Tag color="blue">{count} Lớp</Tag>;
-      },
+      title: "Số câu đúng",
+      dataIndex: "correctAnswers",
+      key: "correct",
+      render: (val: number) => <Tag color="success">{val} đúng</Tag>,
     },
     {
-      title: "Tiến độ học tập",
-      key: "progress",
-      // ESLint KHÔNG bắt được chỗ này vì Math.random() nằm trong callback render của antd chứ
-      // không nằm thẳng trong thân component — nhưng nó vẫn chạy mỗi lần vẽ lại ô, nên thanh
-      // tiến độ của mỗi học sinh nhảy số liên tục. Tìm ra khi đi soi các lỗi purity khác.
-      render: (_: unknown, record: { id: string }) => (
+      title: "Độ chính xác",
+      dataIndex: "accuracy",
+      key: "accuracy",
+      render: (accuracy: number) => (
         <Progress
-          percent={stableMetric(record.id, "progress", 60, 99)}
+          percent={accuracy}
           size="small"
-          status="active"
+          status={accuracy >= 85 ? "success" : accuracy >= 50 ? "active" : "exception"}
         />
       ),
     },
     {
-      title: "Trạng thái tài khoản",
-      dataIndex: "status",
-      key: "status",
-      render: (status: string) => (
-        <Tag color={status === "Active" ? "success" : "error"} className="rounded-full px-3">
-          {status === "Active" ? "Đang học" : "Tạm khóa"}
-        </Tag>
-      ),
+      title: "Mức độ thông thạo",
+      dataIndex: "masteryLevel",
+      key: "mastery",
+      render: (level: string) => <Tag color={getMasteryColor(level)}>{level}</Tag>,
     },
     {
-      title: "Ngày gia nhập",
-      dataIndex: "createdAt",
-      key: "createdAt",
-      render: (date: string) => new Date(date).toLocaleDateString("vi-VN"),
+      title: "Cập nhật lần cuối",
+      dataIndex: "lastAttemptAt",
+      key: "lastAttemptAt",
+      render: (date: string) => date ? new Date(date).toLocaleString("vi-VN") : "Chưa có",
     },
   ];
 
+  if (loading) {
+    return <div className="p-10 flex justify-center"><Spin size="large" /></div>;
+  }
+
+  if (error) {
+    return <Alert type="error" message="Lỗi" description={error} showIcon />;
+  }
+
   return (
     <div className="space-y-6">
-      {/* Metrics Row */}
       <Row gutter={[16, 16]}>
         <Col xs={24} sm={8}>
           <Card className="rounded-xl border border-gray-100 shadow-sm">
             <Statistic
-              title="Tổng Số Học Sinh Đăng Ký"
-              value={students.length * 150 + 12}
-              prefix={<UserOutlined className="text-blue-500 mr-2 p-2 bg-blue-50 rounded-lg" />}
+              title="Tổng Câu Đã Làm"
+              value={totalQuestions}
+              prefix={<CheckCircleOutlined className="text-blue-500 mr-2" />}
             />
           </Card>
         </Col>
-
         <Col xs={24} sm={8}>
           <Card className="rounded-xl border border-gray-100 shadow-sm">
             <Statistic
-              title="Học Sinh Đang Học (Active)"
-              value={activeStudents * 150 + 5}
-              prefix={
-                <CheckCircleOutlined className="text-green-500 mr-2 p-2 bg-green-50 rounded-lg" />
-              }
+              title="Tổng Câu Đúng"
+              value={totalCorrect}
+              prefix={<TrophyOutlined className="text-green-500 mr-2" />}
             />
           </Card>
         </Col>
-
         <Col xs={24} sm={8}>
           <Card className="rounded-xl border border-gray-100 shadow-sm">
             <Statistic
-              title="Điểm Trung Bình Tích Cực"
-              value={8.35}
+              title="Độ Chính Xác Tổng Thể"
+              value={overallAccuracy}
               precision={2}
-              suffix="/ 10"
-              prefix={<TrophyOutlined className="text-amber-500 mr-2 p-2 bg-amber-50 rounded-lg" />}
+              suffix="%"
+              prefix={<CheckCircleOutlined className="text-amber-500 mr-2" />}
             />
           </Card>
         </Col>
       </Row>
 
-      {/* Chart Row */}
       <Card
-        title="Phân tích Điểm Trung bình theo Môn học (Top Học sinh)"
+        title="Biểu Đồ Độ Chính Xác Theo Chủ Đề"
         className="rounded-xl border border-gray-100 shadow-sm"
       >
         <div className="h-72">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart
-              data={studentPerformanceData}
-              margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-            >
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--color-border-default)" />
-              <XAxis dataKey="name" tickLine={false} />
-              <YAxis domain={[0, 10]} tickLine={false} axisLine={false} />
-              <Tooltip />
-              <Bar dataKey="math" name="Toán học" fill="var(--color-action-primary-bg)" radius={[4, 4, 0, 0]} />
-              <Bar dataKey="physics" name="Vật lý" fill="var(--color-success-base)" radius={[4, 4, 0, 0]} />
-              <Bar dataKey="english" name="Tiếng Anh" fill="var(--color-secondary-icon)" radius={[4, 4, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
+          {performances.length > 0 ? (
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart
+                data={performances.map(p => ({
+                  name: p.topicId?.name || "Unknown",
+                  accuracy: p.accuracy
+                }))}
+                margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
+                <XAxis dataKey="name" axisLine={false} tickLine={false} />
+                <YAxis domain={[0, 100]} tickFormatter={(val) => `${val}%`} />
+                <Tooltip cursor={{ fill: "#f3f4f6" }} />
+                <Bar dataKey="accuracy" name="Độ chính xác (%)" fill="#4F46E5" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="flex items-center justify-center h-full text-gray-400">Chưa có dữ liệu học tập</div>
+          )}
         </div>
       </Card>
 
-      {/* Table Row */}
       <Card
-        title="Danh Sách Học Sinh & Kết Quả Học Tập"
+        title="Báo Cáo Hiệu Suất Học Tập (Theo Chủ Đề)"
         className="rounded-xl border border-gray-100 shadow-sm"
       >
-        <Table columns={columns} dataSource={students} rowKey="id" pagination={{ pageSize: 5 }} />
+        <Table 
+          columns={columns} 
+          dataSource={performances} 
+          rowKey="_id" 
+          pagination={false} 
+        />
       </Card>
     </div>
   );
 };
-
-export default StudentReport;

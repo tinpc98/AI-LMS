@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import Announcement from "./announcement.model.js";
 import { Class as classModel } from "#modules/class";
+import { ClassEnrollment } from "#modules/classEnrollment";
 
 class AnnouncementService {
   async createAnnouncement({
@@ -74,11 +75,10 @@ class AnnouncementService {
     }
 
     if (normalizedRole === "student" && !classId) {
-      const myClasses = await classModel
-        .find({ "students.studentId": userId })
-        .select("_id")
+      const myEnrollments = await ClassEnrollment.find({ studentId: userId, status: "ACTIVE" })
+        .select("classId")
         .lean();
-      const classIds = myClasses.map((c) => c._id);
+      const classIds = myEnrollments.map((e) => e.classId);
       query.$or = [{ scope: "System" }, { scope: "Class", classId: { $in: classIds } }];
     } else if (normalizedRole === "teacher" && !classId && !scope) {
       const myClasses = await classModel.find({ teacherId: userId }).select("_id").lean();

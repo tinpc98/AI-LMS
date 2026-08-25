@@ -1,6 +1,7 @@
 import { Lesson } from "#modules/lesson";
 import { Class } from "#modules/class";
 import { AIError, AIErrorCode } from "../aiError.js";
+import ClassEnrollment from "../../classEnrollment/classEnrollment.model.js";
 
 /**
  * Middleware kiểm tra quyền truy cập vào AI Summary của Lesson
@@ -65,11 +66,11 @@ export const checkAILessonAccess = async (req, res, next) => {
       }
 
       // 2. Student must be enrolled in class
-      const isEnrolled =
-        classDoc.students &&
-        classDoc.students.some(
-          (s) => String(s.studentId) === String(userId) && s.status === "Enrolled"
-        );
+      const isEnrolled = await ClassEnrollment.exists({
+        classId: lesson.classId,
+        studentId: userId,
+        status: "ACTIVE"
+      });
 
       if (!isEnrolled) {
         throw new AIError(

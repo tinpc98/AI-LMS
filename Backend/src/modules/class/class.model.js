@@ -126,22 +126,28 @@ const gradingWeightSchema = new Schema(
 
 const classSchema = new Schema(
   {
-    className: {
+    name: {
       type: String,
       required: [true, "Tên lớp học là bắt buộc"],
       trim: true,
       minlength: 3,
     },
-    classCode: {
+    code: {
       type: String,
+      required: true,
       trim: true,
+      uppercase: true,
       unique: true,
-      sparse: true,
     },
     courseId: {
       type: Schema.Types.ObjectId,
       ref: "Course",
       required: [true, "Khóa học liên kết là bắt buộc"],
+    },
+    level: {
+      type: String,
+      enum: ["FOUNDATION", "INTERMEDIATE", "ADVANCED"],
+      required: true,
     },
     teacherId: {
       type: Schema.Types.ObjectId,
@@ -159,7 +165,7 @@ const classSchema = new Schema(
       type: Date,
       default: null,
     },
-    // Danh sách học sinh dạng Subdocument
+    // Legacy Field (Deprecated): Danh sách học sinh cũ
     students: {
       type: [classStudentSchema],
       default: [],
@@ -188,10 +194,10 @@ const classSchema = new Schema(
       trim: true,
       default: "",
     },
-    learningMode: {
+    mode: {
       type: String,
-      enum: ["Offline", "Online", "Hybrid"],
-      default: "Offline",
+      enum: ["OFFLINE", "ONLINE"],
+      default: "OFFLINE",
     },
     schedule: {
       type: scheduleSchema,
@@ -220,12 +226,12 @@ const classSchema = new Schema(
       type: Date,
       default: null,
     },
-    maxStudents: {
+    capacity: {
       type: Number,
-      default: 30,
+      required: true,
       min: 1,
     },
-    currentStudents: {
+    activeCount: {
       type: Number,
       default: 0,
       min: 0,
@@ -250,11 +256,11 @@ const classSchema = new Schema(
       type: Boolean,
       default: true,
     },
-    // Trạng thái vòng đời lớp học chuẩn hóa (loại bỏ giá trị legacy)
+    // Trạng thái vòng đời lớp học chuẩn hóa Domain 02.4
     status: {
       type: String,
-      enum: ["Draft", "Ready", "Ongoing", "Completed", "Cancelled", "Archived"],
-      default: "Draft",
+      enum: ["DRAFT", "OPEN", "FULL", "CLOSED", "ARCHIVED"],
+      default: "DRAFT",
     },
     isDeleted: {
       type: Boolean,
@@ -272,33 +278,11 @@ classSchema.index({ courseId: 1 });
 classSchema.index({ "students.studentId": 1 });
 classSchema.index({ status: 1 });
 
-// Hook chuẩn hóa dữ liệu trước khi validate (Hỗ trợ tương thích truyền mảng ID hoặc Subdocument)
-classSchema.pre("validate", function () {
-  if (Array.isArray(this.students)) {
-    this.students = this.students.map((item) => {
-      if (
-        item &&
-        (typeof item === "string" ||
-          item instanceof mongoose.Types.ObjectId ||
-          (typeof item === "object" && !item.studentId))
-      ) {
-        return {
-          studentId: item._id || item,
-          status: "Enrolled",
-          joinedAt: new Date(),
-          notes: "",
-        };
-      }
-      return item;
-    });
-  }
+// Compound indexes (Phase 4.2 Hardening)
+classSchema.index({ courseId: 1, status: 1 });
+classSchema.index({ status: 1, isDeleted: 1 });
 
-  const studentCount = Array.isArray(this.students) ? this.students.length : 0;
-  this.currentStudents = Math.min(studentCount, this.maxStudents);
-  if (this.currentStudents < 0) {
-    this.currentStudents = 0;
-  }
-});
+// (Hook validate cũ đã bị gỡ bỏ để phục vụ migration và ClassEnrollment)
 
 classSchema.plugin(softDeletePlugin);
 

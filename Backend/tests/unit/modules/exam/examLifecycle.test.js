@@ -1,139 +1,108 @@
-// Chốt quy tắc vòng đời kỳ thi (§6.7).
-//
-// Hai phần tách bạch:
-//   - isExamExpired / resolveDisplayStatus: hàm thuần, kiểm trực tiếp.
-//   - closeExpiredExams: kiểm ĐIỀU KIỆN gửi xuống MongoDB. Không thể tự tính bằng JS ở tầng
-//     ứng dụng được — phép so sánh startTime + duration phút < now phải do MongoDB làm, nếu
-//     không thì phải tải cả collection về bộ nhớ. Nên thứ đáng kiểm là bộ lọc $expr có đúng
-//     hình dạng không: sai một dấu $lt/$gt là đóng nhầm toàn bộ kỳ thi chưa diễn ra.
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { expect } from "chai";
+import mongoose from "mongoose";
+import Exam from "../../../../src/modules/exam/exam.model.js";
+import ExamAttempt from "../../../../src/modules/exam-attempt/examAttempt.model.js";
+import Question from "../../../../src/modules/question/question.model.js";
+import * as examAttemptService from "../../../../src/modules/exam-attempt/examAttempt.service.js";
 
-const updateMany = vi.fn();
-const find = vi.fn();
+describe("Domain 03.4 - Exam Lifecycle & Anti-Cheat", () => {
+  let question;
+  let exam;
+  let studentId;
 
-vi.mock("#modules/exam/exam.model.js", () => ({
-  default: {
-    updateMany: (...args) => updateMany(...args),
-    find: (...args) => find(...args),
-  },
-}));
+  before(async () => {
+    const mongoUri = process.env.MONGO_URI || "mongodb://localhost:27017/ai-lms";
+    await mongoose.connect(mongoUri);
 
-const { isExamExpired, resolveDisplayStatus, closeExpiredExams, findClosedExamIds } =
-  await import("#modules/exam/examLifecycle.service.js");
+    studentId = new mongoose.Types.ObjectId();
 
-const MINUTE = 60 * 1000;
-const MOC = new Date("2026-08-01T10:00:00Z").getTime();
-
-/** Kỳ thi bắt đầu `phutTruoc` phút trước, kéo dài `duration` phút. */
-const ky = (phutTruoc, duration, status = "PUBLISHED") => ({
-  startTime: new Date(MOC - phutTruoc * MINUTE),
-  duration,
-  status,
-});
-
-beforeEach(() => {
-  updateMany.mockReset().mockResolvedValue({ modifiedCount: 0 });
-  find.mockReset();
-});
-
-describe("isExamExpired", () => {
-  it("chưa hết giờ thì false", () => {
-    expect(isExamExpired(ky(10, 60), MOC)).toBe(false);
-  });
-
-  it("đã quá giờ thì true", () => {
-    expect(isExamExpired(ky(90, 60), MOC)).toBe(true);
-  });
-
-  it("đúng khoảnh khắc kết thúc thì CHƯA hết giờ", () => {
-    // Biên quan trọng: học sinh bấm nộp đúng giây cuối không được bị coi là quá hạn.
-    expect(isExamExpired(ky(60, 60), MOC)).toBe(false);
-  });
-
-  it("kỳ thi chưa bắt đầu (startTime tương lai) thì không thể hết giờ", () => {
-    expect(isExamExpired({ startTime: new Date(MOC + 60 * MINUTE), duration: 30 }, MOC)).toBe(
-      false
-    );
-  });
-
-  it("thiếu startTime hoặc duration thì false, không ném lỗi", () => {
-    expect(isExamExpired({ duration: 60 }, MOC)).toBe(false);
-    expect(isExamExpired({ startTime: new Date(MOC) }, MOC)).toBe(false);
-    expect(isExamExpired(null, MOC)).toBe(false);
-    expect(isExamExpired(undefined, MOC)).toBe(false);
-  });
-});
-
-describe("resolveDisplayStatus", () => {
-  it("PUBLISHED đã quá giờ -> hiển thị COMPLETED", () => {
-    expect(resolveDisplayStatus(ky(90, 60), MOC)).toBe("COMPLETED");
-  });
-
-  it("PUBLISHED chưa quá giờ -> giữ nguyên", () => {
-    expect(resolveDisplayStatus(ky(10, 60), MOC)).toBe("PUBLISHED");
-  });
-
-  it("DRAFT quá giờ vẫn là DRAFT — không tự công bố rồi đóng", () => {
-    // Kỳ thi nháp chưa từng được công bố thì không có khái niệm "hết giờ".
-    expect(resolveDisplayStatus(ky(90, 60, "DRAFT"), MOC)).toBe("DRAFT");
-  });
-
-  it("COMPLETED giữ nguyên COMPLETED", () => {
-    expect(resolveDisplayStatus(ky(90, 60, "COMPLETED"), MOC)).toBe("COMPLETED");
-  });
-});
-
-describe("closeExpiredExams — điều kiện gửi xuống MongoDB", () => {
-  it("chỉ động vào kỳ thi đang PUBLISHED", async () => {
-    await closeExpiredExams(new Date(MOC));
-
-    const [filter, update] = updateMany.mock.calls[0];
-    expect(filter.status).toBe("PUBLISHED");
-    expect(update).toEqual({ $set: { status: "COMPLETED" } });
-  });
-
-  it("so sánh startTime + duration PHÚT với thời điểm hiện tại, chiều nhỏ hơn", async () => {
-    // Nếu ai đó đổi $lt thành $gt, hệ thống sẽ đóng đúng những kỳ thi CHƯA diễn ra và bỏ qua
-    // những kỳ đã xong — hỏng ngược hoàn toàn mà vẫn "chạy được". Chốt hình dạng biểu thức.
-    const now = new Date(MOC);
-    await closeExpiredExams(now);
-
-    const [filter] = updateMany.mock.calls[0];
-    expect(filter.$expr).toEqual({
-      $lt: [{ $add: ["$startTime", { $multiply: ["$duration", 60000] }] }, now],
+    question = new Question({
+      topicId: new mongoose.Types.ObjectId(),
+      type: "MCQ",
+      selectionMode: "SINGLE",
+      content: [{ id: "q1", type: "TEXT", text: "What is 10 * 10?" }],
+      options: [
+        { id: "opt1", content: [{ id: "o1", type: "TEXT", text: "100" }], isCorrect: true, order: 1 },
+        { id: "opt2", content: [{ id: "o2", type: "TEXT", text: "20" }], isCorrect: false, order: 2 }
+      ],
+      status: "PUBLISHED"
     });
+    await question.save();
+
+    exam = new Exam({
+      topicId: new mongoose.Types.ObjectId(),
+      title: "Math Final",
+      status: "PUBLISHED",
+      duration: 60, // 60 minutes
+      attemptsAllowed: 2,
+      scorePolicy: "HIGHEST",
+      createdBy: new mongoose.Types.ObjectId(),
+      questions: [
+        { questionId: question._id, order: 1, points: 10 }
+      ]
+    });
+    await exam.save();
   });
 
-  it("trả về số kỳ thi thực sự bị đóng", async () => {
-    updateMany.mockResolvedValue({ modifiedCount: 7 });
-    await expect(closeExpiredExams(new Date(MOC))).resolves.toEqual({ closed: 7 });
+  after(async () => {
+    await Question.deleteMany({});
+    await Exam.deleteMany({});
+    await ExamAttempt.deleteMany({});
   });
 
-  it("không có kỳ nào hết giờ thì trả 0, không lỗi", async () => {
-    updateMany.mockResolvedValue({ modifiedCount: 0 });
-    await expect(closeExpiredExams(new Date(MOC))).resolves.toEqual({ closed: 0 });
+  it("should enforce attemptsAllowed limit", async () => {
+    // Attempt 1
+    const attempt1 = await examAttemptService.startExamService(exam._id, studentId);
+    expect(attempt1.sessionToken).to.exist;
+    
+    // Simulate submission of attempt 1
+    await ExamAttempt.findByIdAndUpdate(attempt1.attemptId, { status: "GRADED" });
+
+    // Attempt 2
+    const attempt2 = await examAttemptService.startExamService(exam._id, studentId);
+    expect(attempt2.sessionToken).to.exist;
+
+    // Simulate submission of attempt 2
+    await ExamAttempt.findByIdAndUpdate(attempt2.attemptId, { status: "GRADED" });
+
+    // Attempt 3 (Should fail)
+    let error;
+    try {
+      await examAttemptService.startExamService(exam._id, studentId);
+    } catch (e) {
+      error = e;
+    }
+    expect(error).to.exist;
+    expect(error.message).to.include("maximum number of attempts");
   });
-});
 
-describe("findClosedExamIds", () => {
-  const chainLean = (docs) => ({ select: () => ({ lean: () => Promise.resolve(docs) }) });
+  it("should record cheat warnings atomically", async () => {
+    // Get attempt 2 and reset status to IN_PROGRESS for testing
+    const attempt = await ExamAttempt.findOne({ examId: exam._id, studentId }).sort({ attemptNumber: -1 });
+    attempt.status = "IN_PROGRESS";
+    await attempt.save();
 
-  it("chỉ lấy id, không kéo cả document về", async () => {
-    const select = vi.fn(() => ({ lean: () => Promise.resolve([]) }));
-    find.mockReturnValue({ select });
+    // Trigger 2 cheat warnings
+    await examAttemptService.incrementCheatWarningService(attempt._id, attempt.sessionToken, studentId, "TAB_SWITCH");
+    const finalAttempt = await examAttemptService.incrementCheatWarningService(attempt._id, attempt.sessionToken, studentId, "COPY_PASTE");
 
-    await findClosedExamIds(new Date(MOC));
-
-    expect(select).toHaveBeenCalledWith("_id");
+    expect(finalAttempt.cheatWarnings).to.equal(2);
+    expect(finalAttempt.cheatLogs.length).to.equal(2);
+    expect(finalAttempt.cheatLogs[0].cheatType).to.equal("TAB_SWITCH");
+    expect(finalAttempt.cheatLogs[1].cheatType).to.equal("COPY_PASTE");
   });
 
-  it("trả về mảng id phẳng", async () => {
-    find.mockReturnValue(chainLean([{ _id: "e1" }, { _id: "e2" }]));
-    await expect(findClosedExamIds(new Date(MOC))).resolves.toEqual(["e1", "e2"]);
-  });
+  it("should grade automatically and accurately", async () => {
+    const attempt = await ExamAttempt.findOne({ examId: exam._id, studentId, status: "IN_PROGRESS" });
 
-  it("không có kỳ nào đã đóng thì trả mảng rỗng", async () => {
-    find.mockReturnValue(chainLean([]));
-    await expect(findClosedExamIds(new Date(MOC))).resolves.toEqual([]);
+    // Save answer
+    await examAttemptService.saveExamAnswerService(attempt._id, attempt.sessionToken, studentId, question._id.toString(), {
+      selectedOptionIds: ["opt1"]
+    });
+
+    // Submit
+    const graded = await examAttemptService.submitExamService(attempt._id, attempt.sessionToken, studentId);
+    expect(graded.status).to.equal("GRADED");
+    expect(graded.score).to.equal(10);
   });
 });

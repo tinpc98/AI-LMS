@@ -110,6 +110,7 @@ const AccountFormModal = forwardRef<AccountFormModalHandle, AccountFormModalProp
                 { label: "Active", value: "Active" },
                 { label: "Inactive", value: "Inactive" },
                 { label: "Locked", value: "Locked" },
+                { label: "Expired", value: "Expired" },
               ]}
             />
           </Form.Item>

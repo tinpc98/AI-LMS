@@ -54,6 +54,7 @@ const defaultState: LearningDashboardState = {
   },
   loading: true,
   error: null,
+  rawClasses: [],
 };
 
 export function useLearningDashboard() {

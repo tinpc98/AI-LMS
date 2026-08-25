@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import { Class as classModel } from "#modules/class";
-import LiveSession from "./liveSession.model.js";
+import ClassSession from "../classSession/classSession.model.js";
+import ClassEnrollment from "../classEnrollment/classEnrollment.model.js";
 import { LIVE_ERROR_CODES, sendLiveError } from "./live.validator.js";
 
 // ============================================================================
@@ -50,8 +51,8 @@ export const resolveLiveSession = async (req, res, next) => {
     }
 
     // Select the necessary fields to determine class context and deleted status
-    const session = await LiveSession.findById(sessionId).select(
-      "classId status isDeleted roomName"
+    const session = await ClassSession.findById(sessionId).select(
+      "classId status isDeleted onlineMeeting"
     );
 
     if (!session || session.isDeleted) {
@@ -191,12 +192,13 @@ export const checkClassEnrollment = async (req, res, next) => {
       return next();
     }
 
-    // 3. Học sinh phải nằm trong danh sách students với status "Enrolled"
-    if (Array.isArray(classInfo.students)) {
-      const isEnrolled = classInfo.students.some(
-        (s) =>
-          s.studentId && s.studentId.toString() === userId?.toString() && s.status === "Enrolled"
-      );
+    // 3. Học sinh phải nằm trong danh sách ClassEnrollment ACTIVE
+    if (userRole === "student") {
+      const isEnrolled = await ClassEnrollment.exists({
+        classId,
+        studentId: userId,
+        status: "ACTIVE",
+      });
       if (isEnrolled) {
         req.classInfo = classInfo;
         req.isClassOwner = false;

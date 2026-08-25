@@ -46,7 +46,7 @@ export const TeacherAttendanceHistoryDrawer: React.FC<TeacherAttendanceHistoryDr
         </Tag>
       );
       switch (status) {
-        case "Present":
+        case "PRESENT":
           icon = (
             <Tag
               color="success"
@@ -56,7 +56,7 @@ export const TeacherAttendanceHistoryDrawer: React.FC<TeacherAttendanceHistoryDr
             </Tag>
           );
           break;
-        case "Late":
+        case "LATE":
           icon = (
             <Tag
               color="warning"
@@ -66,7 +66,7 @@ export const TeacherAttendanceHistoryDrawer: React.FC<TeacherAttendanceHistoryDr
             </Tag>
           );
           break;
-        case "Excused":
+        case "EXCUSED":
           icon = (
             <Tag
               color="processing"
@@ -76,7 +76,7 @@ export const TeacherAttendanceHistoryDrawer: React.FC<TeacherAttendanceHistoryDr
             </Tag>
           );
           break;
-        case "Absent":
+        case "ABSENT":
           icon = (
             <Tag
               color="error"
@@ -170,7 +170,7 @@ export const TeacherAttendanceHistoryDrawer: React.FC<TeacherAttendanceHistoryDr
         render: (_, studentRecord) => {
           let count = 0;
           sortedSessions.forEach((s) => {
-            if (matrix.records[studentRecord._id]?.[s.date]?.status === "Present") count++;
+            if (matrix.records[studentRecord._id]?.[s.date]?.status === "PRESENT") count++;
           });
           return (
             <Text type="success" strong>
@@ -189,7 +189,7 @@ export const TeacherAttendanceHistoryDrawer: React.FC<TeacherAttendanceHistoryDr
           let count = 0;
           sortedSessions.forEach((s) => {
             const st = matrix.records[studentRecord._id]?.[s.date]?.status;
-            if (st === "Absent" || st === "Late") count++;
+            if (st === "ABSENT" || st === "LATE") count++;
           });
           return (
             <Text type="danger" strong>
@@ -209,7 +209,7 @@ export const TeacherAttendanceHistoryDrawer: React.FC<TeacherAttendanceHistoryDr
           let cm = 0;
           sortedSessions.forEach((s) => {
             if (s.status === "Closed" || matrix.records[studentRecord._id]?.[s.date]) total++;
-            if (matrix.records[studentRecord._id]?.[s.date]?.status === "Present") cm++;
+            if (matrix.records[studentRecord._id]?.[s.date]?.status === "PRESENT") cm++;
           });
           const rate = total > 0 ? Math.round((cm / total) * 100) : 0;
           const color = rate >= 80 ? "success" : rate >= 50 ? "warning" : "danger";

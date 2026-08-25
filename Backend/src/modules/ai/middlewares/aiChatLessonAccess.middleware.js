@@ -2,6 +2,7 @@ import { Lesson } from "#modules/lesson";
 import { Class } from "#modules/class";
 import { AIError, AIErrorCode } from "../aiError.js";
 import mongoose from "mongoose";
+import ClassEnrollment from "../../classEnrollment/classEnrollment.model.js";
 
 /**
  * Middleware kiểm tra quyền truy cập vào phiên Chat của AI
@@ -78,11 +79,11 @@ export const checkAIChatLessonAccess = async (req, res, next) => {
       }
 
       // 2. Student must be enrolled in class
-      const isEnrolled =
-        classDoc.students &&
-        classDoc.students.some(
-          (s) => String(s.studentId) === String(userId) && s.status === "Enrolled"
-        );
+      const isEnrolled = await ClassEnrollment.exists({
+        classId: lesson.classId,
+        studentId: userId,
+        status: "ACTIVE"
+      });
 
       if (!isEnrolled) {
         throw new AIError(

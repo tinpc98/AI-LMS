@@ -10,15 +10,15 @@ export interface ITeacherSummary {
 
 export interface IStudentClass {
   _id: string;
-  className: string;
-  classCode?: string;
+  name: string;
+  code?: string;
   joinCode?: string;
   subject?: string;
   courseName?: string;
   semester?: string;
   teacher?: ITeacherSummary | null;
   totalStudents?: number;
-  maxStudents?: number;
+  capacity?: number;
   // 0 - 100, hoặc null khi lớp chưa có bài giảng/bài tập nào để tính tiến độ.
   // null KHÁC 0: null nghĩa là "chưa xác định được", 0 nghĩa là "chưa học gì".
   progress?: number | null;
@@ -26,8 +26,13 @@ export interface IStudentClass {
   startDate?: string;
   endDate?: string;
   isLiveActive?: boolean;
-  learningMode?: "Offline" | "Online" | "Hybrid";
+  mode?: "OFFLINE" | "ONLINE";
   description?: string;
+  schedule?: {
+    days?: string[];
+    startTime?: string;
+    endTime?: string;
+  };
   createdAt?: string;
 }
 

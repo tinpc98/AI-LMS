@@ -1,28 +1,32 @@
-import React from "react";
-import { Row, Col, Card, Table, Tag, Avatar, Statistic, Rate, Progress } from "antd";
+import React, { useEffect, useState } from "react";
+import { Row, Col, Card, Table, Tag, Avatar, Statistic, Spin, Alert } from "antd";
 import { TeamOutlined, StarOutlined, CheckCircleOutlined } from "@ant-design/icons";
-import { mockUsers } from "../../../features/account/account.mock";
-import { mockClasses } from "../../../features/class/class.mock";
-import { mockLiveSessions } from "../../../features/class/liveSessions.mock";
+import { accountService } from "../../../features/account/accountService";
+import type { AccountRecord } from "../../../features/account/account.types";
 
 export const TeacherReport: React.FC = () => {
-  const teachers = mockUsers.filter((u) => u.role === "Teacher");
-  const activeTeachers = teachers.filter((u) => u.status === "Active").length;
+  const [teachers, setTeachers] = useState<AccountRecord[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const teacherPerformanceList = teachers.map((t) => {
-    const assignedClasses = mockClasses.filter((c) => c.teacherId === t.id);
-    const liveCount = mockLiveSessions.filter((s) => s.teacherName === t.fullName).length;
-    const totalStudentsTaught = assignedClasses.reduce((acc, c) => acc + c.currentStudents, 0);
-
-    return {
-      ...t,
-      classCount: assignedClasses.length,
-      liveCount,
-      totalStudentsTaught,
-      rating: 4.8,
-      onTimeRate: 98,
+  useEffect(() => {
+    const fetchTeachers = async () => {
+      try {
+        setLoading(true);
+        const res = await accountService.getAccounts({ role: "Teacher", page: 1, limit: 100, search: "", status: "All" });
+        if (res.success && res.data) {
+          setTeachers(res.data);
+        }
+      } catch (err: any) {
+        setError(err.message || "Lỗi tải dữ liệu giáo viên");
+      } finally {
+        setLoading(false);
+      }
     };
-  });
+    fetchTeachers();
+  }, []);
+
+  const activeTeachers = teachers.filter((u) => u.status === "Active").length;
 
   const columns = [
     {
@@ -45,43 +49,6 @@ export const TeacherReport: React.FC = () => {
       key: "phone",
     },
     {
-      title: "Lớp phụ trách",
-      dataIndex: "classCount",
-      key: "classCount",
-      render: (count: number) => <Tag color="purple">{count} Lớp</Tag>,
-    },
-    {
-      title: "Học sinh phụ trách",
-      dataIndex: "totalStudentsTaught",
-      key: "totalStudentsTaught",
-      render: (count: number) => (
-        <span className="font-medium text-gray-700">{count} Học sinh</span>
-      ),
-    },
-    {
-      title: "Buổi dạy trực tuyến",
-      dataIndex: "liveCount",
-      key: "liveCount",
-      render: (count: number) => <Tag color="blue">{count} Buổi Live</Tag>,
-    },
-    {
-      title: "Đánh giá từ Học sinh",
-      dataIndex: "rating",
-      key: "rating",
-      render: (val: number) => (
-        <div className="flex items-center gap-2">
-          <Rate disabled defaultValue={val} allowHalf style={{ fontSize: 14 }} />
-          <span className="font-bold text-amber-600">{val}</span>
-        </div>
-      ),
-    },
-    {
-      title: "Tỷ lệ đúng giờ",
-      dataIndex: "onTimeRate",
-      key: "onTimeRate",
-      render: (rate: number) => <Progress percent={rate} size="small" status="success" />,
-    },
-    {
       title: "Trạng thái",
       dataIndex: "status",
       key: "status",
@@ -92,6 +59,9 @@ export const TeacherReport: React.FC = () => {
       ),
     },
   ];
+
+  if (loading) return <Spin className="block my-10 mx-auto" size="large" />;
+  if (error) return <Alert type="error" message={error} />;
 
   return (
     <div className="space-y-6">
@@ -133,15 +103,13 @@ export const TeacherReport: React.FC = () => {
       </Row>
 
       {/* Table */}
-      <Card
-        title="Báo Cáo Năng Lực & Hiệu Suất Giảng Dạy của Giáo Viên"
-        className="rounded-xl border border-gray-100 shadow-sm"
-      >
+      <Card title="Danh sách Giáo viên" className="rounded-xl shadow-sm border border-gray-100">
         <Table
           columns={columns}
-          dataSource={teacherPerformanceList}
+          dataSource={teachers}
           rowKey="id"
-          pagination={false}
+          pagination={{ pageSize: 10 }}
+          className="overflow-x-auto"
         />
       </Card>
     </div>

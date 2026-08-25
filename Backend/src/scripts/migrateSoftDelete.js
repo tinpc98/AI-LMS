@@ -7,7 +7,7 @@ import { Course } from "#modules/course";
 import { Class as classModel } from "#modules/class";
 import { Lesson } from "#modules/lesson";
 import { Assignment } from "#modules/assignment";
-import { Submission } from "#modules/assignment";
+import { AssignmentAttempt } from "#modules/assignment";
 import { Question } from "#modules/question";
 import { Exam } from "#modules/exam";
 import { ExamAttempt } from "#modules/exam-attempt";
@@ -31,7 +31,7 @@ export async function runSoftDeleteMigration() {
       { name: "Class", model: classModel },
       { name: "Lesson", model: Lesson },
       { name: "Assignment", model: Assignment },
-      { name: "Submission", model: Submission },
+      { name: "AssignmentAttempt", model: AssignmentAttempt },
       { name: "Question", model: Question },
       { name: "Exam", model: Exam },
       { name: "ExamAttempt", model: ExamAttempt },

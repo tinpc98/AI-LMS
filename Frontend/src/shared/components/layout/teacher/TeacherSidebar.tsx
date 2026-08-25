@@ -4,10 +4,13 @@ import { Link, useLocation } from "react-router-dom";
 import {
   DashboardOutlined,
   BookOutlined,
-  DatabaseOutlined,
+  CheckSquareOutlined,
+  FileDoneOutlined,
   LogoutOutlined,
   UserOutlined,
   MessageOutlined,
+  NotificationOutlined,
+  DollarOutlined,
 } from "@ant-design/icons";
 import { useAuth } from "../../../hooks/useAuth";
 import { useMessagesStore } from "../../../../features/chat/store/useMessagesStore";
@@ -44,7 +47,7 @@ export const TeacherSidebar: React.FC<TeacherSidebarProps> = React.memo(
         {
           key: "/teacher",
           icon: <DashboardOutlined />,
-          label: <Link to="/teacher">Trang chủ Dashboard</Link>,
+          label: <Link to="/teacher">Trang chủ</Link>,
         },
         {
           key: "/teacher/classes",
@@ -52,9 +55,14 @@ export const TeacherSidebar: React.FC<TeacherSidebarProps> = React.memo(
           label: <Link to="/teacher/classes">Quản lý lớp học</Link>,
         },
         {
-          key: "/teacher/questionbank",
-          icon: <DatabaseOutlined />,
-          label: <Link to="/teacher/questionbank">Ngân hàng câu hỏi</Link>,
+          key: "/teacher/exams",
+          icon: <FileDoneOutlined />,
+          label: <Link to="/teacher/exams">Quản lý Thi cử</Link>,
+        },
+        {
+          key: "/teacher/notifications",
+          icon: <NotificationOutlined />,
+          label: <Link to="/teacher/notifications">Thông báo</Link>,
         },
         {
           key: "/teacher/messages",
@@ -63,7 +71,17 @@ export const TeacherSidebar: React.FC<TeacherSidebarProps> = React.memo(
               <MessageOutlined />
             </Badge>
           ),
-          label: <Link to="/teacher/messages">Tin nhắn</Link>,
+          label: <Link to="/teacher/messages">Thảo luận</Link>,
+        },
+        {
+          key: "/teacher/attendance",
+          icon: <CheckSquareOutlined />,
+          label: <Link to="/teacher/attendance">Điểm danh</Link>,
+        },
+        {
+          key: "/teacher/payroll",
+          icon: <DollarOutlined />,
+          label: <Link to="/teacher/payroll">Bảng lương</Link>,
         },
       ],
       [totalUnread]

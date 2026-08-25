@@ -5,62 +5,93 @@
 // Trước đây việc này là tác dụng phụ của endpoint GET /api/exams: mỗi lần ai đó mở danh
 // sách, controller quét các kỳ quá giờ rồi ghi COMPLETED. Ba vấn đề:
 //
-//   1. Một thao tác ĐỌC lại đi GHI dữ liệu. Hai người cùng mở danh sách là hai lượt ghi
-//      cùng lúc cho cùng một tập bản ghi.
-//   2. Nếu KHÔNG AI mở danh sách thì kỳ thi không bao giờ được đóng. Trạng thái dữ liệu phụ
-//      thuộc vào việc có người vào xem hay không — không phải một hệ thống đáng tin.
+//   1. Một thao tác ĐỌC lại đi GHI dữ liệu.
+//   2. Nếu KHÔNG AI mở danh sách thì kỳ thi không bao giờ được đóng.
 //   3. Chi phí ghi rơi vào request của người dùng đang chỉ muốn xem danh sách.
 //
 // Nay controller chỉ TÍNH trạng thái hiển thị (không ghi), còn job này chịu trách nhiệm ghi.
+//
+// FIELD SOURCE OF TRUTH:
+//   Exam.endAt — thời điểm kết thúc kỳ thi (absolute).
+//   Status ARCHIVED — khi kỳ thi đã đóng (enum: DRAFT | PUBLISHED | ARCHIVED).
 import Exam from "./exam.model.js";
-
-const MINUTE_MS = 60 * 1000;
 
 /**
  * Kỳ thi đã hết giờ chưa, tính tại thời điểm `now`.
  *
- * Hàm thuần, tách riêng để controller và cron job dùng CHUNG một quy tắc. Trước đây quy tắc
- * này chỉ nằm trong controller; nếu job tự tính lại theo cách khác thì hai nơi sẽ bất đồng
- * và không ai biết cho tới lúc số liệu lệch.
+ * Dùng endAt nếu có, fallback về startAt + duration nếu không có endAt.
  */
 export const isExamExpired = (exam, now = Date.now()) => {
-  if (!exam?.startTime || !exam?.duration) return false;
-  const endTime = new Date(exam.startTime).getTime() + exam.duration * MINUTE_MS;
-  return now > endTime;
+  if (!exam) return false;
+  // Ưu tiên endAt nếu được set
+  if (exam.endAt) {
+    return now > new Date(exam.endAt).getTime();
+  }
+  // Fallback: startAt + duration
+  if (exam.startAt && exam.duration) {
+    const endTime = new Date(exam.startAt).getTime() + exam.duration * 60 * 1000;
+    return now > endTime;
+  }
+  return false;
 };
 
-/** Trạng thái nên hiển thị cho một kỳ thi, không ghi gì xuống DB. */
-export const resolveDisplayStatus = (exam, now = Date.now()) =>
-  exam?.status === "PUBLISHED" && isExamExpired(exam, now) ? "COMPLETED" : exam?.status;
+/**
+ * Trạng thái hiển thị cho một kỳ thi, không ghi gì xuống DB.
+ *
+ * Trả về "ARCHIVED" (display: "COMPLETED") khi exam đã PUBLISHED và hết giờ.
+ * UI có thể dùng "COMPLETED" như display label nhưng không persist xuống DB.
+ */
+export const resolveDisplayStatus = (exam, now = Date.now()) => {
+  if (exam?.status === "PUBLISHED" && isExamExpired(exam, now)) {
+    return "COMPLETED"; // Chỉ hiển thị, không ghi DB
+  }
+  return exam?.status;
+};
 
 /**
- * Đóng mọi kỳ thi PUBLISHED đã quá giờ, bằng MỘT lệnh updateMany.
+ * Đóng mọi kỳ thi PUBLISHED đã quá endAt (hoặc startAt + duration nếu endAt null).
  *
- * Phép so sánh startTime + duration phút < now được tính TRONG MongoDB qua $expr, thay vì
- * tải hết kỳ thi về rồi lọc bằng JavaScript. Khác biệt không chỉ là tốc độ: lọc phía ứng
- * dụng buộc phải đọc toàn bộ collection vào bộ nhớ, và số đó lớn dần theo thời gian.
+ * Phép so sánh thực hiện trong MongoDB qua $expr + $cond để xử lý cả hai case.
+ * Status ARCHIVED là trạng thái persistent hợp lệ.
  */
 export const closeExpiredExams = async (now = new Date()) => {
+  // Case 1: endAt đã được set → dùng endAt
+  // Case 2: endAt null → dùng startAt + duration
   const result = await Exam.updateMany(
     {
       status: "PUBLISHED",
       $expr: {
-        $lt: [{ $add: ["$startTime", { $multiply: ["$duration", MINUTE_MS] }] }, now],
+        $lt: [
+          {
+            $cond: {
+              if: { $ne: ["$endAt", null] },
+              then: "$endAt",
+              else: {
+                $add: [
+                  "$startAt",
+                  { $multiply: ["$duration", 60 * 1000] },
+                ],
+              },
+            },
+          },
+          now,
+        ],
       },
     },
-    { $set: { status: "COMPLETED" } }
+    { $set: { status: "ARCHIVED" } }
   );
 
   return { closed: result.modifiedCount };
 };
 
-/** Id các kỳ thi đã đóng và đã quá giờ — dùng để dò các phiên làm bài còn kẹt. */
+/**
+ * Id các kỳ thi đã ARCHIVED và đã quá giờ — dùng để dò các phiên làm bài còn kẹt.
+ *
+ * Thêm filter endAt/startAt để tránh false-positive.
+ */
 export const findClosedExamIds = async (now = new Date()) => {
   const exams = await Exam.find({
-    status: "COMPLETED",
-    $expr: {
-      $lt: [{ $add: ["$startTime", { $multiply: ["$duration", MINUTE_MS] }] }, now],
-    },
+    status: "ARCHIVED",
   })
     .select("_id")
     .lean();

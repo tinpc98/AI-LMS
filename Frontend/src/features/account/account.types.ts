@@ -1,5 +1,5 @@
 export type AccountRole = "Admin" | "Teacher" | "Student";
-export type AccountStatus = "Active" | "Inactive" | "Locked";
+export type AccountStatus = "Active" | "Inactive" | "Locked" | "Expired";
 
 export interface AccountRecord {
   id: string;

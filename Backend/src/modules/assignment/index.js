@@ -17,4 +17,4 @@
 // canViewSubmission cố ý KHÔNG export: nó chỉ được assignment.routes.js dùng, tức nội bộ.
 
 export { default as Assignment } from "./assignment.model.js";
-export { default as Submission } from "./submission.model.js";
+export { default as AssignmentAttempt } from "./assignmentAttempt.model.js";

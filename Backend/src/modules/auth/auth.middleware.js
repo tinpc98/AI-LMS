@@ -11,18 +11,19 @@
 // #shared/middlewares/rbac.middleware.js.
 import jwt from "jsonwebtoken";
 import User from "./user.model.js";
+import { AuthenticationError, AuthorizationError } from "#shared/utils/appError.js";
 
 export const verifyUser = async (req, res, next) => {
   const { authorization } = req.headers;
 
   if (!authorization) {
-    return res.status(401).json({ message: "Bạn chưa đăng nhập hệ thống!" });
+    return next(new AuthenticationError("Bạn chưa đăng nhập hệ thống!"));
   }
 
   try {
     const token = authorization.split(" ")[1]; // Tách chuỗi "Bearer <token>"
     if (!token) {
-      return res.status(401).json({ message: "Định dạng token không hợp lệ!" });
+      return next(new AuthenticationError("Định dạng token không hợp lệ!"));
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
@@ -33,15 +34,11 @@ export const verifyUser = async (req, res, next) => {
     // Kiểm tra trạng thái tài khoản thực tế từ DB (Xử lý Soft Delete và Lock)
     const user = await User.findById(userId);
     if (!user || user.isDeleted) {
-      return res
-        .status(401)
-        .json({ message: "Tài khoản của bạn không tồn tại hoặc đã bị vô hiệu hóa!" });
+      return next(new AuthenticationError("Tài khoản của bạn không tồn tại hoặc đã bị vô hiệu hóa!"));
     }
 
-    if (user.status === "Inactive" || user.status === "Locked") {
-      return res
-        .status(403)
-        .json({ message: "Tài khoản của bạn đã bị khóa hoặc ngừng hoạt động!" });
+    if (user.status === "Inactive" || user.status === "Locked" || user.status === "Expired") {
+      return next(new AuthorizationError("Tài khoản của bạn đã bị khóa, hết hạn hoặc ngừng hoạt động!"));
     }
 
     req.user = {
@@ -53,6 +50,12 @@ export const verifyUser = async (req, res, next) => {
 
     next();
   } catch (error) {
-    return res.status(401).json({ message: "Token không hợp lệ hoặc đã hết hạn!" });
+    if (error.name === "TokenExpiredError") {
+      return next(new AuthenticationError("Token đã hết hạn, vui lòng đăng nhập lại!"));
+    }
+    if (error.name === "JsonWebTokenError") {
+      return next(new AuthenticationError("Token không hợp lệ!"));
+    }
+    next(error);
   }
 };

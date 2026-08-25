@@ -6,21 +6,21 @@ import { mockClasses } from "../../../features/class/class.mock";
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from "recharts";
 
 export const CourseReport: React.FC = () => {
-  const publishedCourses = mockCourses.filter((c) => c.status === "Published").length;
-  const totalLessons = mockCourses.reduce((acc, curr) => acc + curr.totalLessons, 0);
+  const publishedCourses = mockCourses.filter((c) => c.status === "PUBLISHED").length;
+  const totalLessons = mockCourses.reduce((acc, curr) => acc + (curr as any).totalLessons, 0);
 
   const courseRevenueData = mockCourses.map((c) => ({
-    name: c.courseName,
-    fee: c.tuitionFee,
-    lessons: c.totalLessons,
-    weeks: c.durationWeeks,
+    name: c.name,
+    fee: c.pricing?.tuitionFee || 0,
+    lessons: (c as any).totalLessons || 0,
+    weeks: c.duration.value,
   }));
 
   const columns = [
     {
       title: "Tên khóa học",
-      dataIndex: "courseName",
-      key: "courseName",
+      dataIndex: "name",
+      key: "name",
       render: (text: string, record: any) => (
         <div>
           <div className="font-semibold text-gray-800">{text}</div>
@@ -42,10 +42,9 @@ export const CourseReport: React.FC = () => {
     },
     {
       title: "Học phí",
-      dataIndex: "tuitionFee",
-      key: "tuitionFee",
-      render: (fee: number) => (
-        <span className="font-bold text-emerald-600">{fee.toLocaleString("vi-VN")} VNĐ</span>
+      key: "pricing",
+      render: (_: any, record: any) => (
+        <span className="font-bold text-emerald-600">{(record.pricing?.tuitionFee || 0).toLocaleString("vi-VN")} VNĐ</span>
       ),
     },
     {
@@ -53,7 +52,7 @@ export const CourseReport: React.FC = () => {
       key: "duration",
       render: (_: any, record: any) => (
         <span>
-          {record.durationWeeks} tuần ({record.totalLessons} bài học)
+          {record.duration.value} tuần ({record.totalLessons || 0} bài học)
         </span>
       ),
     },
@@ -71,9 +70,9 @@ export const CourseReport: React.FC = () => {
       key: "status",
       render: (status: string) => {
         const color =
-          status === "Published" ? "success" : status === "Draft" ? "warning" : "default";
+          status === "PUBLISHED" ? "success" : status === "DRAFT" ? "warning" : "default";
         const label =
-          status === "Published" ? "Đã xuất bản" : status === "Draft" ? "Bản nháp" : "Đã đóng";
+          status === "PUBLISHED" ? "Đã xuất bản" : status === "DRAFT" ? "Bản nháp" : "Đã đóng";
         return <Tag color={color}>{label}</Tag>;
       },
     },
@@ -114,7 +113,7 @@ export const CourseReport: React.FC = () => {
               value={
                 mockCourses.length > 0
                   ? Math.round(
-                      mockCourses.reduce((a, b) => a + b.tuitionFee, 0) / mockCourses.length
+                      mockCourses.reduce((a, b) => a + (b.pricing?.tuitionFee || 0), 0) / mockCourses.length
                     )
                   : 0
               }

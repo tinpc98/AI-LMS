@@ -9,7 +9,10 @@ import {
   UnassignTeacher,
   AssignStudent,
   RemoveStudent,
-  UpdateStudentStatus,
+  OpenClass,
+  CloseClass,
+  ArchiveClass,
+  GetClassStudents,
   AddResource,
   RemoveResource,
   ClassTrashList,
@@ -36,6 +39,7 @@ route.get("/trash", verifyUser, isAdmin, ClassTrashList);
 // Xem danh sách và chi tiết lớp học
 route.get("/", verifyUser, ClassList);
 route.get("/:id", verifyUser, ClassListById);
+route.get("/:id/students", verifyUser, GetClassStudents);
 
 // Quản lý tài nguyên bài học của lớp (Giáo viên hoặc Admin)
 // QUAN TRọNG: /:id/resources/upload phải đặt TRƯỚC /:id/resources/:resourceId
@@ -54,12 +58,19 @@ route.use("/:classId/messages", chatRoutes);
 // Nhóm API quản trị dành riêng cho Admin
 route.post("/", verifyUser, isAdmin, AddNewClass);
 route.put("/:id", verifyUser, isAdmin, updateClassValidation, UpdateClass);
-route.patch("/:id/assign-teacher", verifyUser, isAdmin, AssignTeacher); // PATCH: chỉ update 2-3 field
-route.patch("/:id/unassign-teacher", verifyUser, isAdmin, UnassignTeacher); // Gỡ giáo viên
+route.patch("/:id/assign-teacher", verifyUser, isAdmin, AssignTeacher);
+route.patch("/:id/unassign-teacher", verifyUser, isAdmin, UnassignTeacher);
+
+// Class Lifecycle
+route.patch("/:id/open", verifyUser, isAdmin, OpenClass);
+route.patch("/:id/close", verifyUser, isAdmin, CloseClass);
+route.patch("/:id/archive", verifyUser, isAdmin, ArchiveClass);
+
+// Deprecated student assignment routes
 route.post("/:id/students", verifyUser, isAdmin, AssignStudent);
 route.delete("/:id/students/:studentId", verifyUser, isAdmin, RemoveStudent);
-route.patch("/:id/students/:studentId/status", verifyUser, isTeacher, UpdateStudentStatus); // Admin hoặc Teacher
-route.patch("/:id/delete", verifyUser, isAdmin, DeleteClass); // PATCH: soft delete (flag update)
+
+route.patch("/:id/delete", verifyUser, isAdmin, DeleteClass);
 route.patch("/:id/restore", verifyUser, isAdmin, RestoreClass);
 route.delete("/:id/force", verifyUser, isAdmin, PermanentDeleteClass);
 

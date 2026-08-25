@@ -6,11 +6,40 @@ import { mockUsers } from "../account/account.mock";
 const mapClass = (c: any): ClassRecord => {
   return {
     ...c,
-    id: c._id,
+    className: c.name || c.className,
+    classCode: c.code || c.classCode,
+    learningMode: c.mode ? (c.mode === "ONLINE" ? "Online" : "Offline") : c.learningMode,
+    maxStudents: c.capacity || c.maxStudents,
+    currentStudents: c.activeCount ?? 0,
+    students: c.students || [], 
+    status: c.status,
+    id: c._id || c.id,
     courseId: c.courseId?._id || c.courseId,
+    courseName: c.courseId ? c.courseId.name : "",
     teacherId: c.teacherId?._id || c.teacherId,
     teacher: c.teacherId?._id ? { id: c.teacherId._id, fullName: c.teacherId.fullName } : null,
     assignedBy: c.assignedBy?._id || c.assignedBy,
+  };
+};
+
+const mapPayload = (payload: ClassFormValues): any => {
+  return {
+    name: payload.className,
+    code: payload.classCode,
+    courseId: typeof payload.courseId === "object" ? (payload.courseId as any)._id : payload.courseId,
+    level: payload.level,
+    teacherId: payload.teacherId ? (typeof payload.teacherId === "object" ? (payload.teacherId as any)._id : payload.teacherId) : null,
+    mode: payload.learningMode?.toUpperCase(),
+    capacity: Number(payload.maxStudents),
+    status: payload.status,
+    classRoom: payload.classRoom,
+    joinCode: payload.joinCode,
+    startDate: payload.startDate || null,
+    endDate: payload.endDate || null,
+    schedule: payload.schedule,
+    description: payload.description,
+    note: payload.note,
+    isEnrollmentOpen: payload.isEnrollmentOpen,
   };
 };
 
@@ -20,7 +49,7 @@ export const classService = {
     if (params.learningMode === "All") delete params.learningMode;
     if (params.status === "All") delete params.status;
 
-    const endpoint = isTrash ? "/api/classes/trash" : "/api/classes";
+    const endpoint = isTrash ? "/classes/trash" : "/classes";
     const res = await axiosClient.get<ApiResponse<any[]>>(endpoint, { params });
     return {
       ...res.data,
@@ -29,56 +58,48 @@ export const classService = {
   },
 
   async getCourseOptions() {
-    // Optional: fetch real courses if needed. For now, keep mock or use real courseService.
-    try {
-      const res = await axiosClient.get("/api/courses", { params: { limit: 1000 } });
-      return res.data.data.map((c: any) => ({ id: c._id, label: c.courseName }));
-    } catch {
-      return mockCourses.map((course) => ({ id: course.id, label: course.courseName }));
-    }
+    const res = await axiosClient.get("/courses", { params: { limit: 1000 } });
+    return res.data.data.map((c: any) => ({ id: c._id, label: c.name }));
   },
 
   async getTeacherOptions() {
-    // Optional: fetch real teachers if needed.
-    try {
-      const res = await axiosClient.get("/api/users", { params: { role: "teacher", limit: 1000 } });
-      return res.data.data.map((u: any) => ({ id: u._id, label: u.fullName }));
-    } catch {
-      return mockUsers
-        .filter((user) => user.role === "Teacher")
-        .map((user) => ({ id: user.id, label: user.fullName }));
-    }
+    const res = await axiosClient.get("/users", { params: { role: "teacher", limit: 1000 } });
+    return res.data.data.map((u: any) => ({ id: u._id, label: u.fullName }));
   },
 
   async getClassById(id: string): Promise<ClassRecord> {
-    const res = await axiosClient.get<ApiResponse<any>>(`/api/classes/${id}`);
+    const res = await axiosClient.get<ApiResponse<any>>(`/classes/${id}`);
     return mapClass(res.data.data);
   },
 
   async createClass(payload: ClassFormValues): Promise<ClassRecord> {
-    const res = await axiosClient.post<ApiResponse<any>>("/api/classes", payload);
+    const cleanPayload = mapPayload(payload);
+    console.log("[classService] CREATE CLASS PAYLOAD", cleanPayload);
+    const res = await axiosClient.post<ApiResponse<any>>("/classes", cleanPayload);
     return mapClass(res.data.data);
   },
 
   async updateClass(id: string, payload: ClassFormValues): Promise<ClassRecord> {
-    const res = await axiosClient.put<ApiResponse<any>>(`/api/classes/${id}`, payload);
+    const cleanPayload = mapPayload(payload);
+    console.log("[classService] UPDATE CLASS PAYLOAD", cleanPayload);
+    const res = await axiosClient.put<ApiResponse<any>>(`/classes/${id}`, cleanPayload);
     return mapClass(res.data.data);
   },
 
   async updateStatus(id: string, status: ClassRecord["status"]): Promise<ClassRecord> {
-    const res = await axiosClient.put<ApiResponse<any>>(`/api/classes/${id}`, { status });
+    const res = await axiosClient.put<ApiResponse<any>>(`/classes/${id}`, { status });
     return mapClass(res.data.data);
   },
 
   async deleteClass(id: string): Promise<void> {
-    await axiosClient.patch(`/api/classes/${id}/delete`);
+    await axiosClient.patch(`/classes/${id}/delete`);
   },
 
   async restoreClass(id: string): Promise<void> {
-    await axiosClient.patch(`/api/classes/${id}/restore`);
+    await axiosClient.patch(`/classes/${id}/restore`);
   },
 
   async permanentDeleteClass(id: string): Promise<void> {
-    await axiosClient.delete(`/api/classes/${id}/force`);
+    await axiosClient.delete(`/classes/${id}/force`);
   },
 };

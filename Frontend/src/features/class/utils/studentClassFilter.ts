@@ -32,8 +32,8 @@ const matchesSearch = (item: IStudentClass, query: string): boolean => {
   const q = query.toLowerCase().trim();
   if (!q) return true;
   return (
-    item.className.toLowerCase().includes(q) ||
-    !!item.classCode?.toLowerCase().includes(q) ||
+    item.name.toLowerCase().includes(q) ||
+    !!item.code?.toLowerCase().includes(q) ||
     !!item.subject?.toLowerCase().includes(q)
   );
 };
@@ -44,9 +44,9 @@ const compareBy = (sortBy: StudentClassFilterOptions["sortBy"]) => {
     switch (sortBy) {
       // localeCompare với locale "vi" để "Đ" đứng đúng chỗ trong bảng chữ cái tiếng Việt.
       case "name_asc":
-        return a.className.localeCompare(b.className, "vi");
+        return a.name.localeCompare(b.name, "vi");
       case "name_desc":
-        return b.className.localeCompare(a.className, "vi");
+        return b.name.localeCompare(a.name, "vi");
       case "date_asc":
         return toTime(a.startDate) - toTime(b.startDate);
       case "date_desc":

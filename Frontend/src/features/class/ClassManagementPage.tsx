@@ -115,17 +115,14 @@ const ClassManagementPage = () => {
 
   const getNextStatus = (status: ClassStatus): ClassStatus | null => {
     switch (status) {
-      case "Draft":
-        return "Ready";
+      case "DRAFT":
+        return "OPEN";
 
-      case "Ready":
-        return "Ongoing";
+      case "OPEN":
+        return "CLOSED";
 
-      case "Ongoing":
-        return "Completed";
-
-      case "Completed":
-        return "Archived";
+      case "CLOSED":
+        return "ARCHIVED";
 
       default:
         return null;
@@ -223,8 +220,7 @@ const ClassManagementPage = () => {
           learningModeOptions={[
             { label: "All Modes", value: "All" },
             { label: "Offline", value: "Offline" },
-            { label: "Online", value: "Online" },
-            { label: "Hybrid", value: "Hybrid" },
+            { label: "Online", value: "Online" }
           ]}
         />
 
