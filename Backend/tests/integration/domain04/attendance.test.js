@@ -179,31 +179,33 @@ describe("Domain 04 - Attendance & Auto-Present Regression", () => {
       status: "DRAFT",
     });
 
-    // Simulate JOIN by updating evidence manually as live-evidence socket would
+    // TÍNH NĂNG MỚI (mục 7): evidence giờ lưu evidence.sessions[] (khoảng join-leave thô) thay
+    // vì các field rời rạc firstJoinAt/lastLeaveAt/onlineDurationSeconds — xem attendance.model.js
+    // và live.socket.js. Mô phỏng JOIN như socket thật sẽ làm: $push khoảng mới, leaveAt=null.
     const joinTime = new Date();
     await Attendance.updateOne(
       { _id: att._id },
-      { $set: { "evidence.firstJoinAt": joinTime, "evidence.lastLeaveAt": null } }
+      { $push: { "evidence.sessions": { joinAt: joinTime, leaveAt: null } } }
     );
 
     const checkJoin = await Attendance.findById(att._id);
     expect(checkJoin.status).toBe("DRAFT"); // TEST FAIL IF PRESENT
-    expect(checkJoin.evidence.firstJoinAt).toBeDefined();
+    expect(checkJoin.evidence.sessions).toHaveLength(1);
+    expect(checkJoin.evidence.sessions[0].joinAt).toBeDefined();
+    expect(checkJoin.evidence.sessions[0].leaveAt).toBeNull();
 
-    // Simulate LEAVE > 60s
+    // Simulate LEAVE > 60s — đóng đúng khoảng vừa mở qua arrayFilters (giống closeAttendanceSession).
     const leaveTime = new Date(joinTime.getTime() + 120 * 1000); // 2 mins later
     await Attendance.updateOne(
       { _id: att._id },
-      {
-        $set: { "evidence.lastLeaveAt": leaveTime },
-        $inc: { "evidence.onlineDurationSeconds": 120 },
-      }
+      { $set: { "evidence.sessions.$[elem].leaveAt": leaveTime } },
+      { arrayFilters: [{ "elem.joinAt": joinTime, "elem.leaveAt": null }] }
     );
 
     const checkLeave = await Attendance.findById(att._id);
     expect(checkLeave.status).toBe("DRAFT"); // MUST BE DRAFT
-    expect(checkLeave.evidence.lastLeaveAt).toBeDefined();
-    expect(checkLeave.evidence.onlineDurationSeconds).toBe(120);
+    expect(checkLeave.evidence.sessions[0].leaveAt).toBeDefined();
+    expect(checkLeave.evidence.sessions[0].leaveAt.getTime()).toBe(leaveTime.getTime());
   });
 
   it("Attendance Query Regression: getAttendanceByClass uses sessionId", async () => {

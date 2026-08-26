@@ -3,6 +3,7 @@ import Attendance from "./attendance.model.js";
 import { Class as classModel } from "#modules/class/index.js";
 import { ClassEnrollment } from "#modules/classEnrollment/index.js";
 import ClassSession from "../classSession/classSession.model.js";
+import { computeAttendanceResult } from "./attendanceEvidence.js";
 
 class AttendanceService {
   async getClassSessions(classId) {
@@ -248,7 +249,13 @@ class AttendanceService {
   }
 
   // Cập nhật 1 bản ghi điểm danh
-  async updateAttendance(id, { status, note }) {
+  //
+  // BR-7.6 (đặc tả nghiệp vụ mục 7, thay thế quy tắc time-lock 24h cũ ở đây): giáo viên sửa
+  // được trong 7 ngày kể từ buổi học; sau đó chỉ Admin. Bắt buộc nhập lý do khi đổi status,
+  // ghi log (ai/lúc nào/lý do/status cũ→mới) — KHÔNG ghi đè autoStatus, chỉ đổi `status`
+  // (final_status hiển thị/dùng cho XP-badge), để sau này còn biết công thức tự động từng cho
+  // ra gì (BR-7.5).
+  async updateAttendance(id, { status, note, reason }, editorId, editorRole) {
     if (!mongoose.Types.ObjectId.isValid(id)) {
       const error = new Error("ID điểm danh không hợp lệ!");
       error.status = 400;
@@ -262,26 +269,82 @@ class AttendanceService {
       throw error;
     }
 
-    // BUG ĐÃ SỬA: updateAttendance (route PUT /:id, sửa 1 bản ghi lẻ) không có time-lock, trong
-    // khi markAttendance/confirmAttendance đều chặn sau 24h kể từ khi buổi học kết thúc — giáo
-    // viên có thể lách khóa 24h bằng cách sửa từng bản ghi thay vì điểm danh hàng loạt. Áp cùng
-    // quy tắc time-lock ở đây để nhất quán.
-    const session = await ClassSession.findById(attendance.sessionId).lean();
-    if (session?.scheduledEndAt) {
-      const maxConfirmTime = new Date(session.scheduledEndAt.getTime() + 24 * 60 * 60 * 1000);
-      if (new Date() > maxConfirmTime) {
-        const error = new Error(
-          "Đã quá 24h kể từ khi buổi học kết thúc, không thể thay đổi điểm danh!"
-        );
-        error.status = 403;
-        throw error;
+    const isAdmin = (editorRole || "").toLowerCase() === "admin";
+    if (!isAdmin) {
+      const session = await ClassSession.findById(attendance.sessionId).lean();
+      const sessionDate = session?.actualStartAt || session?.scheduledStartAt;
+      if (sessionDate) {
+        const editDeadline = new Date(sessionDate.getTime() + 7 * 24 * 60 * 60 * 1000);
+        if (new Date() > editDeadline) {
+          const error = new Error(
+            "Đã quá 7 ngày kể từ buổi học, chỉ Admin mới sửa được điểm danh này."
+          );
+          error.status = 403;
+          throw error;
+        }
       }
     }
 
-    if (status) attendance.status = status;
+    if (status && status !== attendance.status) {
+      if (!reason || !reason.trim()) {
+        const error = new Error("Vui lòng nhập lý do khi thay đổi trạng thái điểm danh.");
+        error.status = 400;
+        throw error;
+      }
+      attendance.editLog.push({
+        editedBy: editorId,
+        editedAt: new Date(),
+        reason: reason.trim(),
+        fromStatus: attendance.status,
+        toStatus: status,
+      });
+      attendance.status = status;
+    }
     if (note !== undefined) attendance.note = note;
 
     return await attendance.save();
+  }
+
+  /**
+   * TÍNH NĂNG MỚI (mục 7): chốt sổ điểm danh tự động cho 1 buổi học trực tuyến — đọc
+   * evidence.sessions[] của từng học sinh (đã ghi bởi live.socket.js lúc join/leave thật),
+   * tính attended_ratio/first_join_delay rồi suy ra status. Chỉ áp dụng cho bản ghi còn DRAFT
+   * (chưa ai đụng vào) — nếu giáo viên đã sửa tay trước khi cron chạy tới, không ghi đè.
+   */
+  async finalizeSessionAttendance(sessionId) {
+    const session = await ClassSession.findById(sessionId).lean();
+    if (!session) {
+      const error = new Error("Buổi học không tồn tại!");
+      error.status = 404;
+      throw error;
+    }
+    if (!session.actualStartAt || !session.actualEndAt) {
+      // Chưa thực sự diễn ra (không có mốc thời gian thật) — không có gì để tính.
+      return { updated: 0 };
+    }
+
+    const draftRecords = await Attendance.find({ sessionId, status: "DRAFT" });
+
+    let updated = 0;
+    for (const record of draftRecords) {
+      const result = computeAttendanceResult(
+        record.evidence,
+        session.actualStartAt,
+        session.actualEndAt
+      );
+      record.autoStatus = result.autoStatus;
+      record.status = result.autoStatus;
+      record.attendedSeconds = result.attendedSeconds;
+      record.attendedRatio = result.attendedRatio;
+      record.firstJoinDelaySeconds = result.firstJoinDelaySeconds;
+      record.finalizedAt = new Date();
+      await record.save();
+      updated += 1;
+    }
+
+    await ClassSession.updateOne({ _id: sessionId }, { attendanceFinalizedAt: new Date() });
+
+    return { updated };
   }
 
   // Lấy danh sách điểm danh theo lớp

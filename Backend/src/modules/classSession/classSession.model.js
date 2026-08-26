@@ -45,6 +45,9 @@ const classSessionSchema = new Schema(
       type: onlineMeetingSchema,
       default: () => ({ status: "NOT_CREATED" }),
     },
+    // TÍNH NĂNG MỚI (mục 7 — điểm danh tự động): đánh dấu đã chốt điểm danh tự động cho buổi
+    // này chưa, để cron attendanceFinalize.job.js không tính lại nhiều lần cho cùng 1 buổi.
+    attendanceFinalizedAt: { type: Date, default: null },
     // Chuyển mảng participants legacy từ LiveSession thành evidence tạm
     // Nhưng Attendance model mới là Single Source of Truth
     // Mảng này không còn cần thiết, tuy nhiên ta có thể giữ để log raw join/leave socket
@@ -53,9 +56,9 @@ const classSessionSchema = new Schema(
         studentId: { type: Schema.Types.ObjectId, ref: "User" },
         joinTime: { type: Date },
         leaveTime: { type: Date },
-        durationSeconds: { type: Number, default: 0 }
-      }
-    ]
+        durationSeconds: { type: Number, default: 0 },
+      },
+    ],
   },
   { timestamps: true }
 );

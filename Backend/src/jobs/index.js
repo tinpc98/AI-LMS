@@ -3,6 +3,7 @@ import { runAIPendingRecovery } from "./aiPendingRecovery.job.js";
 import { runExamAutoClose } from "./examLifecycle.job.js";
 import { runExamAttemptAutoSubmit } from "./examAttemptAutoSubmit.job.js";
 import { runAssignmentAttemptAutoSubmit } from "./assignmentAttemptAutoSubmit.job.js";
+import { runAttendanceFinalize } from "./attendanceFinalize.job.js";
 import { runChatCleanup } from "./chatCleanup.job.js";
 import { runStudentExpiryCheck } from "./userLifecycle.job.js";
 import { runCohortEscalationLevel1 } from "./cohortEscalation.job.js";
@@ -259,4 +260,35 @@ export const initCronJobs = (runImmediately = false) => {
     { scheduled: true, timezone: "Asia/Ho_Chi_Minh" }
   );
   console.log("[CRON] 📅 Đã đăng ký job: Assignment Attempt Auto-Submit (lịch: mỗi phút)");
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // JOB 9: Tự động chốt sổ điểm danh buổi học trực tuyến — TÍNH NĂNG MỚI (mục 7 đặc tả
+  // nghiệp vụ). Trước đây điểm danh online hoàn toàn thủ công dù dữ liệu join/leave thật đã
+  // được ghi sẵn qua live.socket.js (evidence.sessions), chỉ là chưa ai đọc lại để tính.
+  //
+  // Lịch: mỗi 5 phút — không cần dày như auto-submit bài thi (không có deadline cứng nào bị
+  // trễ nếu chốt sổ muộn vài phút, chỉ ảnh hưởng thời điểm hiển thị).
+  // ──────────────────────────────────────────────────────────────────────────
+  cron.schedule(
+    "*/5 * * * *",
+    async () => {
+      try {
+        const { finalized, failed } = await runAttendanceFinalize();
+        if (finalized > 0) {
+          console.log(
+            `[CRON] 📋 Attendance Finalize: đã chốt sổ ${finalized} buổi học trực tuyến.`
+          );
+        }
+        if (failed > 0) {
+          console.warn(
+            `[CRON] ⚠️ Attendance Finalize: ${failed} buổi KHÔNG chốt được — xem log lỗi phía trên để truy id.`
+          );
+        }
+      } catch (error) {
+        console.error("[CRON ERROR] ❌ Attendance Finalize Failed:", error);
+      }
+    },
+    { scheduled: true, timezone: "Asia/Ho_Chi_Minh" }
+  );
+  console.log("[CRON] 📅 Đã đăng ký job: Attendance Finalize (lịch: mỗi 5 phút)");
 };
