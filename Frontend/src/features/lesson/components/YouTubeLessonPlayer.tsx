@@ -68,7 +68,11 @@ export interface YouTubeLessonPlayerProps {
   onVideoEnded?: () => void;
   isCompleted?: boolean;
   onMarkCompleted?: () => void;
+  /** TÍNH NĂNG MỚI (mục 1.4): gọi định kỳ (~5s) với currentTime (giây) trong lúc video đang phát. */
+  onProgressTick?: (currentTimeSeconds: number) => void;
 }
+
+const PROGRESS_TICK_INTERVAL_MS = 5000;
 
 export const YouTubeLessonPlayer: React.FC<YouTubeLessonPlayerProps> = ({
   videoUrl,
@@ -78,6 +82,7 @@ export const YouTubeLessonPlayer: React.FC<YouTubeLessonPlayerProps> = ({
   onVideoEnded,
   isCompleted = false,
   onMarkCompleted,
+  onProgressTick,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const playerRef = useRef<any>(null);
@@ -87,6 +92,7 @@ export const YouTubeLessonPlayer: React.FC<YouTubeLessonPlayerProps> = ({
   const [isPlayerReady, setIsPlayerReady] = useState(false);
   const [isEnded, setIsEnded] = useState(false);
   const [errorCode, setErrorCode] = useState<number | null>(null);
+  const isPlayingRef = useRef(false);
 
   // Parse video ID and timestamp
   const parsedData = parseYouTubeUrl(videoUrl);
@@ -141,12 +147,24 @@ export const YouTubeLessonPlayer: React.FC<YouTubeLessonPlayerProps> = ({
             // YT.PlayerState.ENDED is 0
             if (event.data === 0) {
               setIsEnded(true);
+              isPlayingRef.current = false;
+              if (onProgressTick && playerRef.current) {
+                try {
+                  onProgressTick(playerRef.current.getCurrentTime());
+                } catch {
+                  // ignore
+                }
+              }
               if (onVideoEnded) {
                 onVideoEnded();
               }
             } else if (event.data === 1) {
               // Playing: ensure overlay is hidden
               setIsEnded(false);
+              isPlayingRef.current = true;
+            } else {
+              // Paused (2), buffering, cued...
+              isPlayingRef.current = false;
             }
           },
           onError: (event: any) => {
@@ -159,7 +177,7 @@ export const YouTubeLessonPlayer: React.FC<YouTubeLessonPlayerProps> = ({
       console.error("Error initializing YT player:", err);
       setErrorCode(5);
     }
-  }, [videoId, startSeconds, onVideoEnded, destroyPlayer]);
+  }, [videoId, startSeconds, onVideoEnded, onProgressTick, destroyPlayer]);
 
   // Load API once and init player
   useEffect(() => {
@@ -178,6 +196,24 @@ export const YouTubeLessonPlayer: React.FC<YouTubeLessonPlayerProps> = ({
       destroyPlayer();
     };
   }, [videoId, initPlayer, destroyPlayer]);
+
+  // TÍNH NĂNG MỚI (mục 1.4): báo currentTime định kỳ trong lúc phát để tính % đã xem thật (union
+  // các đoạn đã xem) — không báo khi đang tạm dừng/buffer, tránh gửi đoạn [t,t] vô nghĩa.
+  useEffect(() => {
+    if (!onProgressTick || !isPlayerReady) return;
+
+    const interval = setInterval(() => {
+      if (!isPlayingRef.current || !playerRef.current) return;
+      try {
+        const currentTime = playerRef.current.getCurrentTime();
+        if (typeof currentTime === "number") onProgressTick(currentTime);
+      } catch {
+        // ignore
+      }
+    }, PROGRESS_TICK_INTERVAL_MS);
+
+    return () => clearInterval(interval);
+  }, [onProgressTick, isPlayerReady]);
 
   // Action: Replay video from start
   const handleReplay = () => {
@@ -210,7 +246,9 @@ export const YouTubeLessonPlayer: React.FC<YouTubeLessonPlayerProps> = ({
           color: "#fff",
         }}
       >
-        <WarningOutlined style={{ fontSize: 42, color: "var(--color-warning-base)", marginBottom: 12 }} />
+        <WarningOutlined
+          style={{ fontSize: 42, color: "var(--color-warning-base)", marginBottom: 12 }}
+        />
         <Title level={5} style={{ color: "#fff", margin: "0 0 8px" }}>
           Không thể nhúng video
         </Title>
@@ -381,7 +419,14 @@ export const YouTubeLessonPlayer: React.FC<YouTubeLessonPlayerProps> = ({
             Bạn đã xem hết bài giảng!
           </Title>
 
-          <Paragraph style={{ color: "rgba(255, 255, 255, 0.75)", maxWidth: 440, fontSize: 13, marginBottom: 20 }}>
+          <Paragraph
+            style={{
+              color: "rgba(255, 255, 255, 0.75)",
+              maxWidth: 440,
+              fontSize: 13,
+              marginBottom: 20,
+            }}
+          >
             {lessonTitle
               ? `Hoàn thành nội dung "${lessonTitle}". Hãy tiếp tục bài học tiếp theo hoặc xem lại nếu cần.`
               : "Hoàn thành nội dung bài học. Hãy tiếp tục bài học tiếp theo hoặc xem lại nếu cần."}

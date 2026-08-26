@@ -1,70 +1,58 @@
-import LessonProgress from "./lessonProgress.model.js";
-import Lesson from "./lesson.model.js";
-import { Topic } from "#modules/topic";
-import Enrollment from "../enrollment/enrollment.model.js";
 import { asyncHandler } from "#shared/utils/asyncHandler.js";
+import {
+  recordVideoProgressService,
+  recordDocumentOpenService,
+  recordDocumentCloseService,
+  submitPracticeQuizAttemptService,
+  getStudentTopicProgressService,
+  getProgressForLessonsService,
+} from "./lessonProgress.service.js";
 
-// Đánh dấu hoàn thành hoặc bỏ hoàn thành
-export const updateLessonProgress = asyncHandler(async (req, res) => {
-  const { lessonId } = req.params;
-  const { completed, progress: rawProgress } = req.body;
+// TÍNH NĂNG MỚI (đặc tả nghiệp vụ mục 1.5) — thay cho updateLessonProgress cũ (tự khai báo
+// completed:true/false không kiểm chứng gì). Mỗi loại block có 1 endpoint ghi tiến độ riêng,
+// hoàn thành Lesson được TÍNH LẠI từ dữ liệu thật, không nhận trực tiếp từ client.
+
+export const recordVideoProgress = asyncHandler(async (req, res) => {
+  const { lessonId, blockId } = req.params;
+  const { start, end } = req.body;
   const studentId = req.user.id || req.user._id;
 
-  // progress granular (0-100) chỉ dùng khi client gửi kèm; hiện chưa có UI nào gửi giá trị
-  // này (chỉ có toggle hoàn thành), nên mặc định quy đổi từ completed: xong = 100, chưa = 0.
-  const progress =
-    typeof rawProgress === "number" && Number.isFinite(rawProgress)
-      ? Math.min(100, Math.max(0, rawProgress))
-      : completed
-        ? 100
-        : 0;
+  const progress = await recordVideoProgressService(lessonId, blockId, studentId, { start, end });
+  return res.status(200).json({ message: "Đã ghi nhận tiến độ xem video", progress });
+});
 
-  // 1. Kiểm tra bài giảng có tồn tại không
-  const lesson = await Lesson.findById(lessonId);
-  if (!lesson) {
-    return res.status(404).json({ message: "Không tìm thấy bài giảng" });
-  }
+export const recordDocumentOpen = asyncHandler(async (req, res) => {
+  const { lessonId, blockId } = req.params;
+  const studentId = req.user.id || req.user._id;
 
-  // 2. Kiểm tra quyền truy cập (Enrollment)
-  const topic = await Topic.findById(lesson.topicId);
-  if (!topic) {
-    return res.status(404).json({ message: "Không tìm thấy Topic chứa bài giảng" });
-  }
+  const { progress, documentUrl, documentUrlExpiresAt } = await recordDocumentOpenService(
+    lessonId,
+    blockId,
+    studentId
+  );
+  return res
+    .status(200)
+    .json({ message: "Đã ghi nhận mở tài liệu", progress, documentUrl, documentUrlExpiresAt });
+});
 
-  // BUG ĐÃ SỬA: "ACTIVE" không tồn tại trong enum status của Enrollment (đó là field của
-  // ClassEnrollment, model khác) — query này trước đây không bao giờ khớp document nào, khiến
-  // MỌI học sinh đã đóng tiền + được xếp lớp hợp lệ đều bị từ chối đánh dấu hoàn thành bài giảng.
-  // Chỉ APPROVED/CLASS_ASSIGNED (SAU khi thanh toán đã được duyệt, theo lifecycle ở đầu
-  // enrollment.model.js) — KHÔNG dùng ACTIVE_STATUSES đầy đủ vì nó còn gồm cả PENDING_PAYMENT/
-  // PAYMENT_PENDING_CONFIRMATION, tức học sinh CHƯA đóng tiền xong sẽ vô tình được cấp quyền.
-  const isEnrolled = await Enrollment.findOne({
-    studentId,
-    courseId: topic.courseId,
-    status: { $in: ["APPROVED", "CLASS_ASSIGNED"] },
+export const recordDocumentClose = asyncHandler(async (req, res) => {
+  const { lessonId, blockId } = req.params;
+  const { openedSeconds } = req.body;
+  const studentId = req.user.id || req.user._id;
+
+  const progress = await recordDocumentCloseService(lessonId, blockId, studentId, {
+    openedSeconds,
   });
-  if (!isEnrolled) {
-    return res.status(403).json({ message: "Bạn chưa đăng ký khóa học chứa bài giảng này." });
-  }
+  return res.status(200).json({ message: "Đã ghi nhận thời gian đọc tài liệu", progress });
+});
 
-  // 3. Cập nhật hoặc tạo mới
-  let progressDoc = await LessonProgress.findOne({ studentId, lessonId });
+export const submitPracticeQuizAttempt = asyncHandler(async (req, res) => {
+  const { lessonId, blockId } = req.params;
+  const { answers } = req.body;
+  const studentId = req.user.id || req.user._id;
 
-  if (!progressDoc) {
-    progressDoc = new LessonProgress({
-      studentId,
-      lessonId,
-      completed: Boolean(completed),
-      completedAt: completed ? new Date() : null,
-      progress,
-    });
-  } else {
-    progressDoc.completed = Boolean(completed);
-    progressDoc.completedAt = completed ? new Date() : null;
-    progressDoc.progress = progress;
-  }
-
-  await progressDoc.save();
-  return res.status(200).json({ message: "Cập nhật tiến độ thành công", progress: progressDoc });
+  const result = await submitPracticeQuizAttemptService(lessonId, blockId, studentId, { answers });
+  return res.status(200).json({ message: "Đã nộp bài Practice Quiz", ...result });
 });
 
 // Lấy tiến độ của học sinh trong 1 Topic
@@ -72,15 +60,15 @@ export const getStudentTopicProgress = asyncHandler(async (req, res) => {
   const { topicId } = req.params;
   const studentId = req.user.id || req.user._id;
 
-  // Lấy tất cả bài giảng PUBLISHED trong topic
-  const lessons = await Lesson.find({ topicId, status: "PUBLISHED" }).select("_id").lean();
-  const lessonIds = lessons.map((l) => l._id);
+  const progresses = await getStudentTopicProgressService(topicId, studentId);
+  return res.status(200).json({ progresses });
+});
 
-  // Tìm tiến độ của các bài giảng đó
-  const progresses = await LessonProgress.find({
-    studentId,
-    lessonId: { $in: lessonIds },
-  }).lean();
+// Lấy tiến độ của học sinh cho 1 danh sách lessonId cụ thể (sidebar danh sách bài giảng của Class)
+export const getProgressForLessons = asyncHandler(async (req, res) => {
+  const { lessonIds } = req.body;
+  const studentId = req.user.id || req.user._id;
 
+  const progresses = await getProgressForLessonsService(lessonIds, studentId);
   return res.status(200).json({ progresses });
 });
