@@ -45,6 +45,8 @@ import teacherAttendanceRoutes from "#modules/teacherAttendance/teacherAttendanc
 import payrollRoutes from "#modules/payroll/payroll.routes.js";
 import performanceRoutes from "#modules/performance/performance.routes.js";
 import learnerNeedRoutes from "#modules/learnerNeed/learnerNeed.routes.js";
+import cohortMechanismRoutes from "#modules/class/cohortMechanism.routes.js";
+import verificationRoutes from "#modules/auth/verification.routes.js";
 
 // Tầng đọc tổng hợp — KHÔNG phải module nghiệp vụ. Xem src/reporting/README.md.
 import analyticsRoutes from "../reporting/analytics.routes.js";
@@ -68,6 +70,8 @@ router.use("/classes/:classId/sessions", classSessionRoutes);
 router.use("/sessions", classSessionRoutes);
 
 router.use("/classes", classRoutes);
+router.use("/cohort-mechanism", cohortMechanismRoutes);
+router.use("/verification", verificationRoutes);
 router.use("/subjects", subjectRoutes);
 router.use("/learner-needs", learnerNeedRoutes);
 router.use("/courses", courseRoutes);
