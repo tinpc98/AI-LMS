@@ -68,6 +68,9 @@ const ReportIssuePage = lazy(() => import("./features/complaint/pages/ReportIssu
 const ComplaintManagementPage = lazy(
   () => import("./features/complaint/pages/ComplaintManagementPage")
 );
+const TeacherRatingsPage = lazy(
+  () => import("./features/cohort-feedback/pages/TeacherRatingsPage")
+);
 const PlaceholderPage = lazy(() => import("./shared/components/PlaceholderPage"));
 const MyEnrollmentsPage = lazy(() => import("./features/enrollment/MyEnrollmentsPage"));
 const EnrollmentManagementPage = lazy(
@@ -183,6 +186,7 @@ function App() {
                 <Route path="profile" element={<ProfilePage />} />
                 <Route path="learner-needs" element={<LearnerNeedBrowsePage />} />
                 <Route path="report-issue" element={<ReportIssuePage />} />
+                <Route path="ratings" element={<TeacherRatingsPage />} />
               </Route>
 
               {/* Live Session Route cho Teacher (Full màn hình, không Header/Sidebar) */}

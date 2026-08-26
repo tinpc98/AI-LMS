@@ -1,5 +1,5 @@
 import { classApi } from "./classApi";
-import type { IStudentClass, StudentClassStatus } from "../types/studentClass";
+import type { CommitmentStatus, IStudentClass, StudentClassStatus } from "../types/studentClass";
 
 /**
  * Lớp học ở dạng THÔ từ máy chủ, trước khi chuẩn hoá.
@@ -35,6 +35,7 @@ interface RawClassFromApi {
   courseName?: string;
   semester?: string;
   status?: string;
+  commitmentStatus?: string;
   startDate?: string;
   endDate?: string;
   description?: string;
@@ -73,7 +74,12 @@ export const mapToStudentClass = (item: RawClassFromApi): IStudentClass => {
     name: item.className || item.name || "Lớp học",
     code: item.classCode || item.code || `LMS-${(item._id || "").slice(-4).toUpperCase()}`,
     joinCode: item.joinCode,
-    subject: item.subject || item.subjectId?.name || item.courseId?.subject || item.courseId?.courseName || "",
+    subject:
+      item.subject ||
+      item.subjectId?.name ||
+      item.courseId?.subject ||
+      item.courseId?.courseName ||
+      "",
     courseName: item.courseId?.courseName || item.courseName || "",
     semester: item.semester || "",
     teacher: item.teacherId
@@ -96,6 +102,7 @@ export const mapToStudentClass = (item: RawClassFromApi): IStudentClass => {
     schedule: (item as any).schedule,
     isLiveActive: Boolean(item.isLiveSessionActive || item.liveRoomId),
     mode: (item.mode || item.learningMode || "ONLINE") as IStudentClass["mode"],
+    commitmentStatus: item.commitmentStatus as CommitmentStatus | undefined,
     description: item.description,
     createdAt: item.createdAt || new Date().toISOString(),
   };
