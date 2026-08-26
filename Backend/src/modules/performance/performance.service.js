@@ -1,7 +1,7 @@
 import StudentPerformance from "./studentPerformance.model.js";
 import PerformanceEvidence from "./performanceEvidence.model.js";
 import Question from "../question/question.model.js";
-import Topic from "../topic/topic.model.js";
+import { Topic } from "#modules/topic";
 import { evaluateWeaknessService } from "./weakness.service.js";
 
 // Các ngưỡng Performance được config cứng (Constants) như thiết kế MVP
@@ -22,36 +22,40 @@ export const getMasteryLevel = (accuracy) => {
 export const processAttemptPerformanceService = async (attempt, attemptType) => {
   if (!attempt.studentId) return;
 
-  const validQuestions = attempt.questions.filter(aq => aq.isCorrect !== null && aq.isCorrect !== undefined);
+  const validQuestions = attempt.questions.filter(
+    (aq) => aq.isCorrect !== null && aq.isCorrect !== undefined
+  );
   if (validQuestions.length === 0) return;
 
-  const questionIds = validQuestions.map(aq => aq.questionId);
+  const questionIds = validQuestions.map((aq) => aq.questionId);
 
   // 1. Check existing evidence in bulk
   const existingEvidences = await PerformanceEvidence.find({
     studentId: attempt.studentId,
     sourceType: attemptType,
     sourceId: attempt._id,
-    questionId: { $in: questionIds }
+    questionId: { $in: questionIds },
   }).lean();
-  
-  const existingQIds = new Set(existingEvidences.map(e => e.questionId.toString()));
+
+  const existingQIds = new Set(existingEvidences.map((e) => e.questionId.toString()));
 
   // 2. Fetch missing Questions in bulk
-  const questionsToProcess = validQuestions.filter(aq => !existingQIds.has(aq.questionId.toString()));
+  const questionsToProcess = validQuestions.filter(
+    (aq) => !existingQIds.has(aq.questionId.toString())
+  );
   if (questionsToProcess.length === 0) return;
 
-  const qIdsToProcess = questionsToProcess.map(aq => aq.questionId);
+  const qIdsToProcess = questionsToProcess.map((aq) => aq.questionId);
   const questionsDb = await Question.find({ _id: { $in: qIdsToProcess } }, "topicId").lean();
-  
-  const topicIds = [...new Set(questionsDb.map(q => q.topicId).filter(Boolean))];
+
+  const topicIds = [...new Set(questionsDb.map((q) => q.topicId).filter(Boolean))];
   const topicsDb = await Topic.find({ _id: { $in: topicIds } }, "courseId").lean();
-  
+
   const topicMap = new Map();
-  topicsDb.forEach(t => topicMap.set(t._id.toString(), t.courseId));
-  
+  topicsDb.forEach((t) => topicMap.set(t._id.toString(), t.courseId));
+
   const questionMap = new Map();
-  questionsDb.forEach(q => {
+  questionsDb.forEach((q) => {
     if (q.topicId) {
       const courseId = topicMap.get(q.topicId.toString());
       if (courseId) {
@@ -118,13 +122,14 @@ export const processAttemptPerformanceService = async (attempt, attemptType) => 
         },
         $set: {
           lastAttemptAt: now,
-        }
+        },
       },
       { upsert: true, new: true, setDefaultsOnInsert: true }
     );
 
     // Tính lại accuracy và masteryLevel
-    const accuracy = perf.answeredQuestions > 0 ? (perf.correctAnswers / perf.answeredQuestions) * 100 : 0;
+    const accuracy =
+      perf.answeredQuestions > 0 ? (perf.correctAnswers / perf.answeredQuestions) * 100 : 0;
     perf.accuracy = parseFloat(accuracy.toFixed(2));
     perf.masteryLevel = getMasteryLevel(perf.accuracy);
     await perf.save();

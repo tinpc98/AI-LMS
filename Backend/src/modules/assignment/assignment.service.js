@@ -1,6 +1,6 @@
 import * as assignmentRepo from "./assignment.repository.js";
 import Question from "../question/question.model.js";
-import Topic from "../topic/topic.model.js";
+import { Topic } from "#modules/topic";
 import AssignmentAttempt from "./assignmentAttempt.model.js";
 import { evaluateLateness } from "./assignmentDeadline.js";
 

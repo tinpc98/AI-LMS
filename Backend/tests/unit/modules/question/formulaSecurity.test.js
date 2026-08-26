@@ -40,6 +40,7 @@ describe("Formula Security Validation", () => {
     const topic = await Topic.create({
       name: "Security Test Topic",
       courseId: new mongoose.Types.ObjectId(),
+      createdBy: teacher._id,
     });
     topicId = topic._id;
   });

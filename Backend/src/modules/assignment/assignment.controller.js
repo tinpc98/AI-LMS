@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 import * as assignmentService from "./assignment.service.js";
 import * as assignmentRepo from "./assignment.repository.js";
 import { asyncHandler } from "#shared/utils/asyncHandler.js";
-import Topic from "../topic/topic.model.js";
+import { Topic } from "#modules/topic";
 import Enrollment from "../enrollment/enrollment.model.js";
 import { BusinessRuleError, AuthorizationError, NotFoundError } from "#shared/utils/appError.js";
 import { checkClassTeacherOwnership, resolveClassContentIds } from "#modules/class";

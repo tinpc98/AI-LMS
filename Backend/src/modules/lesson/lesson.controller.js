@@ -1,5 +1,5 @@
 import Lesson from "./lesson.model.js";
-import Topic from "../topic/topic.model.js";
+import { Topic } from "#modules/topic";
 import Course from "../course/course.model.js";
 import Class from "../class/class.model.js";
 import ClassEnrollment from "../classEnrollment/classEnrollment.model.js";
@@ -17,7 +17,8 @@ const checkTopicTeacherOwnership = async (topicId, userId, role) => {
 
 const lessonController = {
   createLesson: asyncHandler(async (req, res) => {
-    let { topicId, classId, title, description, content, order, status, videoIds, documentIds } = req.body;
+    let { topicId, classId, title, description, content, order, status, videoIds, documentIds } =
+      req.body;
     const userId = req.user.id || req.user._id;
 
     if (!title) {
@@ -27,14 +28,21 @@ const lessonController = {
     if (!topicId && classId) {
       const classObj = await Class.findById(classId);
       if (!classObj) return res.status(404).json({ message: "Không tìm thấy lớp học" });
-      
-      let defaultTopic = await Topic.findOne({ courseId: classObj.courseId, name: "Migrated Lessons Topic" });
+
+      let defaultTopic = await Topic.findOne({
+        courseId: classObj.courseId,
+        name: "Migrated Lessons Topic",
+      });
       if (!defaultTopic) {
+        // BUG ĐÃ SỬA: Topic.createdBy giờ là field bắt buộc (xem topic.model.js) — trước đây
+        // Topic.create() ở đây không truyền createdBy, sẽ ném ValidationError kể từ khi field
+        // này trở thành required.
         defaultTopic = await Topic.create({
           name: "Migrated Lessons Topic",
           courseId: classObj.courseId,
           description: "Default topic for class lessons",
           order: 999,
+          createdBy: userId,
         });
       }
       topicId = defaultTopic._id;
@@ -48,11 +56,13 @@ const lessonController = {
     }
 
     const parsedOrder = order ? Number(order) : 0;
-    
+
     // Nếu status là PUBLISHED, có thể check content block length
     if (status === "PUBLISHED") {
       if (!content || !Array.isArray(content) || content.length === 0) {
-        return res.status(400).json({ message: "Bài giảng phải có nội dung (Content) trước khi Xuất bản." });
+        return res
+          .status(400)
+          .json({ message: "Bài giảng phải có nội dung (Content) trước khi Xuất bản." });
       }
     }
 
@@ -82,13 +92,16 @@ const lessonController = {
 
     if (role === "STUDENT") {
       query.status = "PUBLISHED";
-      
+
       // Basic check: is Student enrolled in this Course via an Active Class?
       const topic = await Topic.findById(topicId);
       if (!topic) return res.status(404).json({ message: "Không tìm thấy Topic" });
 
-      const classes = await Class.find({ courseId: topic.courseId, isDeleted: { $ne: true } }).select("_id");
-      const classIds = classes.map(c => c._id);
+      const classes = await Class.find({
+        courseId: topic.courseId,
+        isDeleted: { $ne: true },
+      }).select("_id");
+      const classIds = classes.map((c) => c._id);
 
       const isEnrolled = await ClassEnrollment.exists({
         studentId: userId,
@@ -97,7 +110,9 @@ const lessonController = {
       });
 
       if (!isEnrolled) {
-         return res.status(403).json({ message: "Bạn chưa tham gia lớp học nào thuộc khóa học này." });
+        return res
+          .status(403)
+          .json({ message: "Bạn chưa tham gia lớp học nào thuộc khóa học này." });
       }
     }
 
@@ -126,12 +141,12 @@ const lessonController = {
       });
 
       if (!isEnrolled) {
-         return res.status(403).json({ message: "Bạn chưa tham gia lớp học này." });
+        return res.status(403).json({ message: "Bạn chưa tham gia lớp học này." });
       }
     }
 
     const topics = await Topic.find({ courseId: classObj.courseId }).select("_id");
-    const topicIds = topics.map(t => t._id);
+    const topicIds = topics.map((t) => t._id);
 
     const query = { topicId: { $in: topicIds } };
     if (role === "STUDENT") {
@@ -152,9 +167,7 @@ const lessonController = {
     const userId = req.user.id || req.user._id;
     const role = req.user?.role?.toUpperCase();
 
-    const lesson = await Lesson.findById(id)
-      .populate("videoIds")
-      .populate("documentIds");
+    const lesson = await Lesson.findById(id).populate("videoIds").populate("documentIds");
 
     if (!lesson) {
       return res.status(404).json({ message: "Bài giảng không tồn tại" });
@@ -164,10 +177,13 @@ const lessonController = {
       if (lesson.status !== "PUBLISHED") {
         return res.status(403).json({ message: "Bài giảng chưa được xuất bản" });
       }
-      
+
       const topic = await Topic.findById(lesson.topicId);
-      const classes = await Class.find({ courseId: topic.courseId, isDeleted: { $ne: true } }).select("_id");
-      const classIds = classes.map(c => c._id);
+      const classes = await Class.find({
+        courseId: topic.courseId,
+        isDeleted: { $ne: true },
+      }).select("_id");
+      const classIds = classes.map((c) => c._id);
 
       const isEnrolled = await ClassEnrollment.exists({
         studentId: userId,
@@ -176,7 +192,9 @@ const lessonController = {
       });
 
       if (!isEnrolled) {
-         return res.status(403).json({ message: "Bạn chưa tham gia lớp học nào thuộc khóa học chứa bài giảng này." });
+        return res
+          .status(403)
+          .json({ message: "Bạn chưa tham gia lớp học nào thuộc khóa học chứa bài giảng này." });
       }
     } else {
       // Teacher / Admin check

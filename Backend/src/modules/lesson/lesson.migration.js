@@ -40,6 +40,7 @@ const migrateLessons = async () => {
         courseId: courseId,
         description: "Topic chứa các bài giảng migrate từ hệ thống cũ",
         order: 999,
+        createdBy: adminId,
       });
     }
 

@@ -9,7 +9,7 @@ import { User } from "#modules/auth";
 import { checkClassTeacherOwnership } from "#modules/class";
 import { calculateGradeMatrix } from "./gradeCalculator.js";
 import { ClassEnrollment } from "#modules/classEnrollment/index.js";
-import Topic from "../topic/topic.model.js";
+import { Topic } from "#modules/topic";
 
 class GradeService {
   // Tạo mới hoặc Cập nhật điểm số của học sinh theo cột điểm (Manual Grades)

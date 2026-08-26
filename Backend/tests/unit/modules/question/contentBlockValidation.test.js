@@ -41,6 +41,7 @@ describe("ContentBlock & MCQ Logic Validation", () => {
     const topic = await Topic.create({
       name: "Test Topic",
       courseId: new mongoose.Types.ObjectId(),
+      createdBy: teacher._id,
     });
     topicId = topic._id;
   });
