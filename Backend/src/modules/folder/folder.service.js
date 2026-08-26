@@ -174,7 +174,33 @@ export const updateFolderService = async (folderId, userId, updateData) => {
 };
 
 /**
- * Delete folder (soft delete)
+ * Thu thập ID của TOÀN BỘ thư mục con (mọi cấp, đệ quy) của 1 folder — duyệt theo từng tầng
+ * (BFS) để xử lý đúng cây lồng nhau sâu bao nhiêu cấp cũng được. Giới hạn 50 tầng chỉ để phòng
+ * dữ liệu lỗi tạo thành vòng lặp (parentFolderId trỏ vòng), không phải giới hạn nghiệp vụ thật.
+ */
+const collectDescendantFolderIds = async (rootFolderId) => {
+  const allDescendantIds = [];
+  let currentLevelIds = [rootFolderId];
+
+  for (let depth = 0; depth < 50 && currentLevelIds.length > 0; depth++) {
+    const children = await Folder.find({
+      parentFolderId: { $in: currentLevelIds },
+      isDeleted: false,
+    })
+      .select("_id")
+      .lean();
+
+    if (children.length === 0) break;
+
+    currentLevelIds = children.map((c) => c._id);
+    allDescendantIds.push(...currentLevelIds);
+  }
+
+  return allDescendantIds;
+};
+
+/**
+ * Delete folder (soft delete) — cascade xuống toàn bộ thư mục con.
  * @param {string} folderId - Folder ID
  * @param {string} userId - Current user ID (for ownership check)
  * @returns {Object} Deleted folder
@@ -193,9 +219,21 @@ export const deleteFolderService = async (folderId, userId) => {
     throw error;
   }
 
-  // Soft delete the folder
-  folder.isDeleted = true;
-  await folder.save();
+  // BUG ĐÃ SỬA: trước đây chỉ xóa mềm ĐÚNG 1 folder được chọn — thư mục con (parentFolderId trỏ
+  // tới folder này) vẫn isDeleted:false trong DB nhưng KHÔNG BAO GIỜ hiển thị lại được nữa, vì
+  // getFolderTreeService chỉ gắn con vào cây khi tìm thấy cha trong tập folder CHƯA xóa
+  // (`if (parent) { parent.children.push(...) }`) — cha biến mất thì con cũng biến mất theo dù
+  // bản thân vẫn "sống" trong DB, không ai truy cập lại được qua danh sách. Cascade xuống mọi
+  // cấp con trước khi xóa chính folder này.
+  const descendantIds = await collectDescendantFolderIds(folderId);
+  if (descendantIds.length > 0) {
+    await Folder.updateMany(
+      { _id: { $in: descendantIds } },
+      { isDeleted: true, deletedAt: new Date(), deletedBy: userId }
+    );
+  }
+
+  await folder.softDelete(userId);
 
   return folder;
 };

@@ -2,6 +2,7 @@ import cron from "node-cron";
 import { runAIPendingRecovery } from "./aiPendingRecovery.job.js";
 import { runExamAutoClose } from "./examLifecycle.job.js";
 import { runExamAttemptAutoSubmit } from "./examAttemptAutoSubmit.job.js";
+import { runAssignmentAttemptAutoSubmit } from "./assignmentAttemptAutoSubmit.job.js";
 import { runChatCleanup } from "./chatCleanup.job.js";
 import { runStudentExpiryCheck } from "./userLifecycle.job.js";
 import { runCohortEscalationLevel1 } from "./cohortEscalation.job.js";
@@ -224,4 +225,38 @@ export const initCronJobs = (runImmediately = false) => {
     { scheduled: true, timezone: "Asia/Ho_Chi_Minh" }
   );
   console.log("[CRON] 📅 Đã đăng ký job: Cohort Escalation Level 1 (lịch: mỗi 5 phút)");
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // JOB 8: Tự động nộp bài Assignment đã hết giờ — TÍNH NĂNG MỚI, mirror đúng Job 4
+  // (Exam Attempt Auto-Submit). Assignment trước đây hoàn toàn không có deadline, xem
+  // assignment.model.js/assignmentDeadline.js.
+  //
+  // Lịch: mỗi phút, cùng lý do với Job 4 — phiên treo lâu là bài chưa nộp, điểm chưa có, học
+  // sinh không xuất hiện ở danh sách nào của giáo viên.
+  // ──────────────────────────────────────────────────────────────────────────
+  cron.schedule(
+    "* * * * *",
+    async () => {
+      try {
+        const { submitted, failed } = await runAssignmentAttemptAutoSubmit();
+
+        if (submitted > 0) {
+          console.log(
+            "[CRON] ⏱️ Assignment Auto-Submit: đã nộp tự động " + submitted + " bài tập hết giờ."
+          );
+        }
+        if (failed > 0) {
+          console.warn(
+            "[CRON] ⚠️ Assignment Auto-Submit: " +
+              failed +
+              " bài KHÔNG nộp được — xem log lỗi phía trên để truy id."
+          );
+        }
+      } catch (error) {
+        console.error("[CRON ERROR] ❌ Assignment Attempt Auto-Submit Failed:", error);
+      }
+    },
+    { scheduled: true, timezone: "Asia/Ho_Chi_Minh" }
+  );
+  console.log("[CRON] 📅 Đã đăng ký job: Assignment Attempt Auto-Submit (lịch: mỗi phút)");
 };

@@ -17,10 +17,13 @@ const checkTopicOwnership = async (topicId, userId, role) => {
 };
 
 export const createAssignment = asyncHandler(async (req, res) => {
-  const { topicId, title, description, instructions, questions, status } = req.body;
+  const { topicId, title, duration } = req.body;
   const userId = req.user.id || req.user._id;
 
   if (!topicId || !title) return res.status(400).json({ message: "Thiếu topicId hoặc title" });
+  if (!duration || duration < 1) {
+    return res.status(400).json({ message: "Thời gian làm bài (duration, phút) là bắt buộc" });
+  }
 
   const isAuthorized = await checkTopicOwnership(topicId, userId, req.user?.role);
   if (!isAuthorized)
@@ -103,10 +106,9 @@ export const getAssignmentById = asyncHandler(async (req, res) => {
 // Class.courseId -> Topic.courseId -> Assignment.topicId (dùng chung resolveClassContentIds
 // đã xây cho Lesson, xem class/classProgress.repository.js).
 //
-// KHÔNG trả kèm "deadline": assignedAfterSessionId/dueBeforeSessionId của Assignment tham
-// chiếu tới model LiveSession — model này đã bị xoá khỏi codebase ở một đợt refactor khác
-// (thay bằng ClassSession.onlineMeeting), nên deadline hiện KHÔNG có cách nào tính được.
-// Trả assignment thật (tiêu đề/mô tả/trạng thái), không bịa deadline.
+// TÍNH NĂNG MỚI: giờ trả kèm duration/startAt/endAt thật (xem assignment.model.js) — trước đây
+// assignedAfterSessionId/dueBeforeSessionId tham chiếu model LiveSession đã bị xóa khỏi
+// codebase, không dùng được, nên endpoint này từng cố tình không bịa deadline.
 export const getAssignmentsByClass = asyncHandler(async (req, res) => {
   const { classId } = req.params;
 

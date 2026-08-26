@@ -1,4 +1,8 @@
-import type { IAssignment, IAssignmentAttempt, IAttemptAnswer } from "../interface/assignmentInterface";
+import type {
+  IAssignment,
+  IAssignmentAttempt,
+  IAttemptAnswer,
+} from "../interface/assignmentInterface";
 import axiosClient from "./axiosClient";
 
 interface IAssignmentCreatePayload {
@@ -8,6 +12,10 @@ interface IAssignmentCreatePayload {
   instructions?: any[];
   questions: Array<{ questionId: string; order: number; points: number }>;
   status: "DRAFT" | "PUBLISHED";
+  /** TÍNH NĂNG MỚI: thời gian làm bài (phút), bắt buộc — mirror IExamCreatePayload.duration. */
+  duration: number;
+  startAt?: string | null;
+  endAt?: string | null;
 }
 
 const assignmentApi = {
@@ -16,7 +24,7 @@ const assignmentApi = {
   getAssignmentsByClass: async (classId: string): Promise<IAssignment[]> => {
     return [];
   },
-  
+
   // Tạo bài tập mới
   createAssignment: async (payload: IAssignmentCreatePayload): Promise<IAssignment> => {
     const response = await axiosClient.post<{ message: string; assignment: IAssignment }>(
@@ -65,7 +73,11 @@ const assignmentApi = {
   },
 
   // Lưu câu trả lời (Học sinh)
-  saveAnswer: async (attemptId: string, questionId: string, answer: IAttemptAnswer): Promise<IAssignmentAttempt> => {
+  saveAnswer: async (
+    attemptId: string,
+    questionId: string,
+    answer: IAttemptAnswer
+  ): Promise<IAssignmentAttempt> => {
     const response = await axiosClient.patch<{ message: string; attempt: IAssignmentAttempt }>(
       `/assignments/attempts/${attemptId}/questions/${questionId}`,
       answer
@@ -90,13 +102,18 @@ const assignmentApi = {
   },
 
   // Giáo viên chấm điểm essay
-  gradeEssay: async (attemptId: string, questionId: string, score: number, feedback?: string): Promise<IAssignmentAttempt> => {
+  gradeEssay: async (
+    attemptId: string,
+    questionId: string,
+    score: number,
+    feedback?: string
+  ): Promise<IAssignmentAttempt> => {
     const response = await axiosClient.patch<{ message: string; attempt: IAssignmentAttempt }>(
       `/assignments/attempts/${attemptId}/questions/${questionId}/grade`,
       { score, feedback }
     );
     return response.data.attempt;
-  }
+  },
 };
 
 export default assignmentApi;

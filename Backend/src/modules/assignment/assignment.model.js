@@ -73,13 +73,21 @@ const assignmentSchema = new Schema(
     },
     instructions: [contentBlockSchema],
     questions: [assignmentQuestionSchema],
-    assignedAfterSessionId: {
-      type: Schema.Types.ObjectId,
-      ref: "LiveSession", // Assuming a Session model exists, maybe named LiveSession or Session
+    // TÍNH NĂNG MỚI: deadline thật, mirror đúng pattern của Exam (exam.model.js) — trước đây
+    // Assignment không có cách nào tính hạn nộp (assignedAfterSessionId/dueBeforeSessionId cũ
+    // tham chiếu model LiveSession đã bị xóa khỏi codebase, không dùng được — đã bỏ 2 field đó).
+    duration: {
+      type: Number,
+      required: [true, "Thời gian làm bài là bắt buộc (phút)"],
+      min: 1,
     },
-    dueBeforeSessionId: {
-      type: Schema.Types.ObjectId,
-      ref: "LiveSession",
+    startAt: {
+      type: Date,
+      default: null,
+    },
+    endAt: {
+      type: Date,
+      default: null,
     },
     solutionResources: [solutionResourceSchema],
     status: {
@@ -95,6 +103,13 @@ const assignmentSchema = new Schema(
   },
   { timestamps: true }
 );
+
+// Mirror exam.model.js: startAt phải nhỏ hơn endAt nếu cả 2 được set.
+assignmentSchema.pre("validate", function () {
+  if (this.startAt && this.endAt && this.startAt >= this.endAt) {
+    this.invalidate("startAt", "Thời gian bắt đầu phải nhỏ hơn thời gian kết thúc.");
+  }
+});
 
 // Indexes
 assignmentSchema.index({ topicId: 1, status: 1 });

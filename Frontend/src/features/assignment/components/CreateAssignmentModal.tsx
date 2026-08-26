@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from "react";
+import dayjs, { type Dayjs } from "dayjs";
 import type { IAssignment, IAssignmentQuestion } from "../../../interface/assignmentInterface";
 import type { IQuestion } from "../../../types/exam";
 import { toast } from "../../../utils/toast";
 import assignmentApi from "../../../api/assignmentApi";
 import { examApi } from "../../../api/examApi";
-import { Modal, Button, Input, Select, InputNumber, Space } from "antd";
+import { Modal, Button, Input, Select, InputNumber, Space, DatePicker } from "antd";
 
 interface CreateAssignmentModalProps {
   isOpen: boolean;
@@ -31,6 +32,10 @@ export const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
   const [topicId, setTopicId] = useState<string>("");
   const [questions, setQuestions] = useState<IAssignmentQuestion[]>([]);
   const [loading, setLoading] = useState(false);
+  // TÍNH NĂNG MỚI: deadline thật cho Assignment, mirror CreateExamWizardModal.
+  const [duration, setDuration] = useState<number>(30);
+  const [startAt, setStartAt] = useState<Dayjs | null>(null);
+  const [endAt, setEndAt] = useState<Dayjs | null>(null);
 
   // Bank questions
   const [bankQuestions, setBankQuestions] = useState<IQuestion[]>([]);
@@ -48,11 +53,17 @@ export const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
       setDescription(initialAssignment.description || "");
       setTopicId(initialAssignment.topicId?._id || initialAssignment.topicId || "");
       setQuestions(initialAssignment.questions || []);
+      setDuration(initialAssignment.duration || 30);
+      setStartAt(initialAssignment.startAt ? dayjs(initialAssignment.startAt) : null);
+      setEndAt(initialAssignment.endAt ? dayjs(initialAssignment.endAt) : null);
     } else {
       setTitle("");
       setDescription("");
       setTopicId("");
       setQuestions([]);
+      setDuration(30);
+      setStartAt(null);
+      setEndAt(null);
     }
   }, [initialAssignment, isOpen]);
 
@@ -77,10 +88,7 @@ export const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
 
   const handleAddQuestion = (qId: string) => {
     if (questions.find((q) => q.questionId === qId)) return;
-    setQuestions([
-      ...questions,
-      { questionId: qId, order: questions.length + 1, points: 1 },
-    ]);
+    setQuestions([...questions, { questionId: qId, order: questions.length + 1, points: 1 }]);
   };
 
   const handleRemoveQuestion = (qId: string) => {
@@ -88,9 +96,7 @@ export const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
   };
 
   const handleUpdatePoints = (qId: string, points: number) => {
-    setQuestions(
-      questions.map((q) => (q.questionId === qId ? { ...q, points } : q))
-    );
+    setQuestions(questions.map((q) => (q.questionId === qId ? { ...q, points } : q)));
   };
 
   const handleSubmit = async () => {
@@ -104,17 +110,30 @@ export const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
       return;
     }
 
+    if (!duration || duration < 1) {
+      toast.error("Vui lòng nhập thời gian làm bài (phút)");
+      return;
+    }
+
+    if (startAt && endAt && !startAt.isBefore(endAt)) {
+      toast.error("Thời gian bắt đầu phải trước thời gian kết thúc");
+      return;
+    }
+
     setLoading(true);
     try {
       const payload = {
         topicId,
         title,
         description,
-        questions: questions.map(q => ({
+        questions: questions.map((q) => ({
           questionId: q.questionId,
           order: q.order,
-          points: q.points
+          points: q.points,
         })),
+        duration,
+        startAt: startAt ? startAt.toISOString() : null,
+        endAt: endAt ? endAt.toISOString() : null,
         status: "PUBLISHED" as const, // Auto publish for simplicity
       };
 
@@ -134,11 +153,9 @@ export const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
   };
 
   // Filter bank questions by selected topic
-  const availableQuestions = bankQuestions.filter(
-    (q) => {
-      return q.topic === topicId;
-    }
-  );
+  const availableQuestions = bankQuestions.filter((q) => {
+    return q.topic === topicId;
+  });
 
   return (
     <Modal
@@ -195,26 +212,67 @@ export const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
           />
         </div>
 
+        <div className="flex gap-4">
+          <div style={{ flex: 1 }}>
+            <label className="block mb-2 font-semibold">Thời gian làm bài (Phút) *</label>
+            <InputNumber
+              min={1}
+              max={600}
+              value={duration}
+              onChange={(val) => setDuration(val || 1)}
+              style={{ width: "100%" }}
+              placeholder="Ví dụ: 30 phút"
+            />
+          </div>
+          <div style={{ flex: 1 }}>
+            <label className="block mb-2 font-semibold">Thời gian mở (tùy chọn)</label>
+            <DatePicker
+              showTime
+              format="DD/MM/YYYY HH:mm"
+              value={startAt}
+              onChange={(val) => setStartAt(val)}
+              style={{ width: "100%" }}
+            />
+          </div>
+          <div style={{ flex: 1 }}>
+            <label className="block mb-2 font-semibold">Thời gian đóng (tùy chọn)</label>
+            <DatePicker
+              showTime
+              format="DD/MM/YYYY HH:mm"
+              value={endAt}
+              onChange={(val) => setEndAt(val)}
+              style={{ width: "100%" }}
+            />
+          </div>
+        </div>
+
         {topicId && (
           <div className="flex gap-4">
             <div className="flex-1 border p-4 rounded bg-gray-50">
               <h4 className="font-semibold mb-2">Ngân hàng câu hỏi (Topic đã chọn)</h4>
               <div className="max-h-64 overflow-y-auto">
-                {availableQuestions.length === 0 && <p className="text-gray-500">Không có câu hỏi nào</p>}
+                {availableQuestions.length === 0 && (
+                  <p className="text-gray-500">Không có câu hỏi nào</p>
+                )}
                 {availableQuestions.map((q) => {
                   const isSelected = questions.some((sq) => sq.questionId === q._id);
                   return (
-                    <div key={q._id} className="flex justify-between items-center bg-white p-2 mb-2 border rounded">
+                    <div
+                      key={q._id}
+                      className="flex justify-between items-center bg-white p-2 mb-2 border rounded"
+                    >
                       <div className="flex-1 truncate pr-2">
-                        <span className="text-xs bg-blue-100 text-blue-800 px-1 py-0.5 rounded mr-2">{q.type}</span>
-                        <span className="text-sm">
-                          {q.content || "Câu hỏi..."}
+                        <span className="text-xs bg-blue-100 text-blue-800 px-1 py-0.5 rounded mr-2">
+                          {q.type}
                         </span>
+                        <span className="text-sm">{q.content || "Câu hỏi..."}</span>
                       </div>
                       <Button
                         size="small"
                         type={isSelected ? "default" : "primary"}
-                        onClick={() => isSelected ? handleRemoveQuestion(q._id) : handleAddQuestion(q._id)}
+                        onClick={() =>
+                          isSelected ? handleRemoveQuestion(q._id) : handleAddQuestion(q._id)
+                        }
                       >
                         {isSelected ? "Bỏ chọn" : "Chọn"}
                       </Button>
@@ -229,12 +287,21 @@ export const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
               <div className="max-h-64 overflow-y-auto">
                 {questions.length === 0 && <p className="text-gray-500">Chưa chọn câu hỏi nào</p>}
                 {questions.map((q, idx) => {
-                  const bq = bankQuestions.find(bq => bq._id === q.questionId);
+                  const bq = bankQuestions.find((bq) => bq._id === q.questionId);
                   return (
-                    <div key={q.questionId} className="flex flex-col bg-gray-50 p-2 mb-2 border rounded">
+                    <div
+                      key={q.questionId}
+                      className="flex flex-col bg-gray-50 p-2 mb-2 border rounded"
+                    >
                       <div className="flex justify-between mb-2">
                         <span className="font-medium">Câu {idx + 1}</span>
-                        <Button size="small" danger onClick={() => handleRemoveQuestion(q.questionId)}>Xóa</Button>
+                        <Button
+                          size="small"
+                          danger
+                          onClick={() => handleRemoveQuestion(q.questionId)}
+                        >
+                          Xóa
+                        </Button>
                       </div>
                       <div className="text-sm truncate mb-2 text-gray-600">
                         {bq?.content || "Câu hỏi..."}

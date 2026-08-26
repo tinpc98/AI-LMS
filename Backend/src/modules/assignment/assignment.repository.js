@@ -20,7 +20,7 @@ export const findAssignmentsByIds = (assignmentIds, status) => {
   const filter = { _id: { $in: assignmentIds } };
   if (status) filter.status = status;
   return Assignment.find(filter)
-    .select("title description status topicId createdAt")
+    .select("title description status topicId createdAt duration startAt endAt")
     .sort({ createdAt: -1 })
     .lean();
 };

@@ -20,6 +20,11 @@ export interface IAssignment {
   createdBy: string | any;
   createdAt: string;
   updatedAt: string;
+  /** TÍNH NĂNG MỚI: thời gian làm bài (phút), bắt buộc — mirror IExam.duration. */
+  duration: number;
+  /** Khung thời gian mở/đóng bài tập, tùy chọn — mirror IExam.startAt/endAt. */
+  startAt?: string | null;
+  endAt?: string | null;
 }
 
 export interface IAttemptOptionSnapshot {
@@ -59,6 +64,10 @@ export interface IAssignmentAttempt {
   questions: IAttemptQuestion[];
   score: number | null;
   startedAt: string;
+  /** TÍNH NĂNG MỚI: hạn nộp của riêng lượt làm bài này — tính 1 lần lúc bắt đầu. */
+  expiresAt: string;
   submittedAt: string | null;
+  isLate?: boolean;
+  lateBySeconds?: number;
   performanceProcessedAt: string | null;
 }

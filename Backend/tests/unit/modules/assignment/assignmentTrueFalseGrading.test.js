@@ -14,6 +14,10 @@ vi.mock("#modules/question/question.model.js", () => ({
   default: { findById: (...a) => questionFindById(...a) },
 }));
 vi.mock("#modules/topic/topic.model.js", () => ({ default: {} }));
+// assignment.service.js giờ import trực tiếp AssignmentAttempt (dùng cho gradeEssayService) —
+// mock luôn để không kéo theo schema thật của assignmentAttempt.model.js (cần contentBlockSchema
+// thật từ question.model.js, vốn đã bị mock rút gọn ở trên).
+vi.mock("#modules/assignment/assignmentAttempt.model.js", () => ({ default: {} }));
 
 const { submitAttemptService } = await import("#modules/assignment/assignment.service.js");
 
