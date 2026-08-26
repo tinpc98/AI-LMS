@@ -9,6 +9,7 @@ import {
   SettingOutlined,
   TeamOutlined,
   UsergroupAddOutlined,
+  WarningOutlined,
 } from "@ant-design/icons";
 import { Drawer, Layout, Menu } from "antd";
 import { useMemo } from "react";
@@ -50,6 +51,12 @@ const adminMenuItems: AdminMenuItem[] = [
     label: "Nhu cầu học tập",
     path: "/admin/learner-needs",
     icon: <AimOutlined />,
+  },
+  {
+    key: "complaints",
+    label: "Khiếu nại cần xử lý",
+    path: "/admin/complaints",
+    icon: <WarningOutlined />,
   },
   { key: "ai", label: "AI Management", path: "/admin/ai-management", icon: <RobotOutlined /> },
   { key: "reports", label: "Reports", path: "/admin/reports", icon: <BarChartOutlined /> },

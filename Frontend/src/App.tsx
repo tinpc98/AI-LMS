@@ -64,6 +64,10 @@ const LearnerNeedPage = lazy(() => import("./features/learner-need/pages/Learner
 const LearnerNeedBrowsePage = lazy(
   () => import("./features/learner-need/pages/LearnerNeedBrowsePage")
 );
+const ReportIssuePage = lazy(() => import("./features/complaint/pages/ReportIssuePage"));
+const ComplaintManagementPage = lazy(
+  () => import("./features/complaint/pages/ComplaintManagementPage")
+);
 const PlaceholderPage = lazy(() => import("./shared/components/PlaceholderPage"));
 const MyEnrollmentsPage = lazy(() => import("./features/enrollment/MyEnrollmentsPage"));
 const EnrollmentManagementPage = lazy(
@@ -139,6 +143,7 @@ function App() {
                 <Route path="tuition/:id" element={<PaymentDetailPage />} />
                 <Route path="profile" element={<ProfilePage />} />
                 <Route path="learner-needs" element={<LearnerNeedPage />} />
+                <Route path="report-issue" element={<ReportIssuePage />} />
               </Route>
 
               {/* Live Session Route cho Student (Full màn hình, không Header/Sidebar) */}
@@ -177,6 +182,7 @@ function App() {
                 <Route path="attendance" element={<TeacherAttendancePage />} />
                 <Route path="profile" element={<ProfilePage />} />
                 <Route path="learner-needs" element={<LearnerNeedBrowsePage />} />
+                <Route path="report-issue" element={<ReportIssuePage />} />
               </Route>
 
               {/* Live Session Route cho Teacher (Full màn hình, không Header/Sidebar) */}
@@ -195,6 +201,7 @@ function App() {
                 <Route path="classes" element={<ClassManagementPage />} />
                 <Route path="teacher-assignment" element={<TeacherAssignmentPage />} />
                 <Route path="learner-needs" element={<LearnerNeedBrowsePage />} />
+                <Route path="complaints" element={<ComplaintManagementPage />} />
                 <Route path="ai-management" element={<AIManagementPage />} />
                 <Route path="reports" element={<ReportPage />} />
                 <Route path="enrollments" element={<EnrollmentManagementPage />} />

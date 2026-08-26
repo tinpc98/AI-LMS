@@ -12,6 +12,7 @@ import {
   NotificationOutlined,
   DollarOutlined,
   AimOutlined,
+  WarningOutlined,
 } from "@ant-design/icons";
 import { useAuth } from "../../../hooks/useAuth";
 import { useMessagesStore } from "../../../../features/chat/store/useMessagesStore";
@@ -88,6 +89,11 @@ export const TeacherSidebar: React.FC<TeacherSidebarProps> = React.memo(
           key: "/teacher/learner-needs",
           icon: <AimOutlined />,
           label: <Link to="/teacher/learner-needs">Nhu cầu học tập</Link>,
+        },
+        {
+          key: "/teacher/report-issue",
+          icon: <WarningOutlined />,
+          label: <Link to="/teacher/report-issue">Báo cáo vấn đề</Link>,
         },
         {
           key: "/teacher/profile",
