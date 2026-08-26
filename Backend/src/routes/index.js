@@ -47,6 +47,8 @@ import performanceRoutes from "#modules/performance/performance.routes.js";
 import learnerNeedRoutes from "#modules/learnerNeed/learnerNeed.routes.js";
 import cohortMechanismRoutes from "#modules/class/cohortMechanism.routes.js";
 import verificationRoutes from "#modules/auth/verification.routes.js";
+import cohortFeedbackRoutes from "#modules/feedback/cohortFeedback.routes.js";
+import complaintRoutes from "#modules/complaint/complaint.routes.js";
 
 // Tầng đọc tổng hợp — KHÔNG phải module nghiệp vụ. Xem src/reporting/README.md.
 import analyticsRoutes from "../reporting/analytics.routes.js";
@@ -72,6 +74,8 @@ router.use("/sessions", classSessionRoutes);
 router.use("/classes", classRoutes);
 router.use("/cohort-mechanism", cohortMechanismRoutes);
 router.use("/verification", verificationRoutes);
+router.use("/cohort-feedback", cohortFeedbackRoutes);
+router.use("/complaints", complaintRoutes);
 router.use("/subjects", subjectRoutes);
 router.use("/learner-needs", learnerNeedRoutes);
 router.use("/courses", courseRoutes);

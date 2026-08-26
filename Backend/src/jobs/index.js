@@ -4,6 +4,7 @@ import { runExamAutoClose } from "./examLifecycle.job.js";
 import { runExamAttemptAutoSubmit } from "./examAttemptAutoSubmit.job.js";
 import { runChatCleanup } from "./chatCleanup.job.js";
 import { runStudentExpiryCheck } from "./userLifecycle.job.js";
+import { runCohortEscalationLevel1 } from "./cohortEscalation.job.js";
 
 /**
  * initCronJobs – Khởi tạo và đăng ký tất cả các cron job của hệ thống.
@@ -181,4 +182,40 @@ export const initCronJobs = (runImmediately = false) => {
     { scheduled: true, timezone: "Asia/Ho_Chi_Minh" }
   );
   console.log("[CRON] 📅 Đã đăng ký job: Student Expiry Check (lịch: 00:00 hàng ngày)");
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // JOB 7: Leo thang Mức 1 khi giáo viên vắng mặt — EduSpace mechanism design Phần B.1 (BR-13)
+  // Lịch: Mỗi 5 phút.
+  //
+  // Vì sao 5 phút: ngưỡng phát hiện là CHECKIN_GRACE_MINUTES=15 phút sau giờ học; quét mỗi 5
+  // phút nghĩa là độ trễ phát hiện tối đa cộng thêm chỉ ~5 phút — đủ nhanh để dự bị (nếu có)
+  // vào lớp trước khi học viên mất kiên nhẫn, không cần dày như job chấm thi (đây không chốt
+  // điểm số, chỉ điều phối con người).
+  //
+  // Mức 2/3 KHÔNG tự động — job chỉ đếm `needsAdminAttention` để log cảnh báo, đúng cùng
+  // nguyên tắc với Job 3 (Exam Auto-Close đếm `dangling` thay vì tự xử lý).
+  // ──────────────────────────────────────────────────────────────────────────
+  cron.schedule(
+    "*/5 * * * *",
+    async () => {
+      try {
+        const { checked, resolved, needsAdminAttention } = await runCohortEscalationLevel1();
+
+        if (checked > 0) {
+          console.log(
+            `[CRON] 👥 Cohort Escalation: ${checked} buổi quá giờ chưa check-in, ${resolved} đã tự kích hoạt dự bị.`
+          );
+        }
+        if (needsAdminAttention > 0) {
+          console.warn(
+            `[CRON] ⚠️ Cohort Escalation: ${needsAdminAttention} buổi KHÔNG có dự bị hoặc kích hoạt lỗi — cần Admin can thiệp (Mức 2/3).`
+          );
+        }
+      } catch (error) {
+        console.error("[CRON ERROR] ❌ Cohort Escalation Level 1 Failed:", error);
+      }
+    },
+    { scheduled: true, timezone: "Asia/Ho_Chi_Minh" }
+  );
+  console.log("[CRON] 📅 Đã đăng ký job: Cohort Escalation Level 1 (lịch: mỗi 5 phút)");
 };
