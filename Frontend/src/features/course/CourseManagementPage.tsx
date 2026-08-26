@@ -9,6 +9,7 @@ import CourseToolbar from "./CourseToolbar";
 import DeleteConfirmModal from "./DeleteConfirmModal";
 import { courseService } from "./courseService";
 import type { CourseFilters, CourseFormValues, CourseRecord, CourseStatus } from "./course.types";
+import TopicManagerModal from "../topic/TopicManagerModal";
 
 const initialFilters: CourseFilters = {
   search: "",
@@ -27,6 +28,7 @@ const CourseManagementPage = () => {
   const [permanentDeleteOpen, setPermanentDeleteOpen] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState<CourseRecord | undefined>();
   const [mode, setMode] = useState<"create" | "edit">("create");
+  const [topicsOpen, setTopicsOpen] = useState(false);
   const formRef = useRef<CourseFormModalHandle | null>(null);
 
   const searchTimeoutRef = useRef<number | null>(null);
@@ -103,6 +105,11 @@ const CourseManagementPage = () => {
   const handleView = (course: CourseRecord) => {
     setSelectedCourse(course);
     setDetailOpen(true);
+  };
+
+  const handleManageTopics = (course: CourseRecord) => {
+    setSelectedCourse(course);
+    setTopicsOpen(true);
   };
 
   const handleChangeStatus = async (course: CourseRecord) => {
@@ -209,6 +216,7 @@ const CourseManagementPage = () => {
             onChange={handleTableChange}
             onView={handleView}
             onEdit={openEditModal}
+            onManageTopics={activeTab === "active" ? handleManageTopics : undefined}
             onChangeStatus={handleChangeStatus}
             onDelete={handleDeleteRequest}
             onRestore={handleRestore}
@@ -230,6 +238,13 @@ const CourseManagementPage = () => {
         open={detailOpen}
         course={selectedCourse}
         onClose={() => setDetailOpen(false)}
+      />
+
+      <TopicManagerModal
+        open={topicsOpen}
+        courseId={selectedCourse?.id ?? null}
+        courseName={selectedCourse?.name}
+        onClose={() => setTopicsOpen(false)}
       />
 
       <DeleteConfirmModal

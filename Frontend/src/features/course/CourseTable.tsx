@@ -5,6 +5,7 @@ import {
   SyncOutlined,
   DeleteOutlined,
   UnlockOutlined,
+  UnorderedListOutlined,
 } from "@ant-design/icons";
 import type { CourseRecord } from "./course.types";
 
@@ -13,6 +14,7 @@ interface CourseTableProps {
   loading: boolean;
   onView: (course: CourseRecord) => void;
   onEdit: (course: CourseRecord) => void;
+  onManageTopics?: (course: CourseRecord) => void;
   onChangeStatus?: (course: CourseRecord) => void;
   onDelete?: (course: CourseRecord) => void;
   onRestore?: (course: CourseRecord) => void;
@@ -40,6 +42,7 @@ const CourseTable = ({
   loading,
   onView,
   onEdit,
+  onManageTopics,
   onChangeStatus,
   onDelete,
   onRestore,
@@ -146,6 +149,15 @@ const CourseTable = ({
               <Tooltip title="Edit">
                 <Button size="small" icon={<EditOutlined />} onClick={() => onEdit(record)} />
               </Tooltip>
+              {onManageTopics && (
+                <Tooltip title="Manage Topics">
+                  <Button
+                    size="small"
+                    icon={<UnorderedListOutlined />}
+                    onClick={() => onManageTopics(record)}
+                  />
+                </Tooltip>
+              )}
               {onChangeStatus && (
                 <Tooltip title="Change Status">
                   <Button
