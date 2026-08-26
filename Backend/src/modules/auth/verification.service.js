@@ -62,6 +62,15 @@ export async function tryPromoteToL3(teacherId) {
 
   teacher.verificationTier = "L3";
   await teacher.save();
+
+  // BR-23: hoàn hạn mức bảo lãnh cho những người đã bảo lãnh giáo viên này — comment vouchLimit
+  // trong user.model.js nói rõ "cộng lại khi người được bảo lãnh hoàn tất", nhưng bước này
+  // trước đây không tồn tại ở đâu cả: vouchLimit chỉ từng bị trừ (voucherForTeacher), không bao
+  // giờ được hoàn — khiến hạn mức bảo lãnh của giáo viên L3 cạn dần vĩnh viễn theo thời gian.
+  if (Array.isArray(teacher.vouchedBy) && teacher.vouchedBy.length > 0) {
+    await User.updateMany({ _id: { $in: teacher.vouchedBy } }, { $inc: { vouchLimit: 1 } });
+  }
+
   return { promoted: true, ...result };
 }
 

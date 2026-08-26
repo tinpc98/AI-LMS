@@ -13,6 +13,7 @@ import {
   listOverdueSessions,
   escalateSessionLevel1,
   cancelSessionAndCreateMakeup,
+  listFlaggedCohorts,
 } from "./cohortMechanism.controller.js";
 
 const router = Router();
@@ -20,6 +21,7 @@ const router = Router();
 // Đọc — Admin xem trước khi quyết định (giáo viên chính/dự bị xem tình trạng lớp mình qua
 // GET /classes/:id thường, không cần route riêng ở đây).
 router.get("/sessions/overdue", verifyUser, isAdmin, listOverdueSessions);
+router.get("/cohorts/flagged-for-review", verifyUser, isAdmin, listFlaggedCohorts);
 router.get("/:id/readiness", verifyUser, isAdmin, getCohortReadiness);
 
 // Cam kết (Phần A)

@@ -11,6 +11,7 @@ const activateBackupTeacher = vi.fn();
 const findOverdueSessions = vi.fn();
 const escalateLevel1 = vi.fn();
 const cancelSessionWithMakeup = vi.fn();
+const listCohortsFlaggedForReview = vi.fn();
 
 vi.mock("#modules/class/commitment.service.js", () => ({
   transitionCommitment: (...a) => transitionCommitment(...a),
@@ -27,6 +28,7 @@ vi.mock("#modules/class/escalation.service.js", () => ({
   findOverdueSessions: (...a) => findOverdueSessions(...a),
   escalateLevel1: (...a) => escalateLevel1(...a),
   cancelSessionWithMakeup: (...a) => cancelSessionWithMakeup(...a),
+  listCohortsFlaggedForReview: (...a) => listCohortsFlaggedForReview(...a),
 }));
 
 const {
@@ -38,6 +40,7 @@ const {
   listOverdueSessions,
   escalateSessionLevel1,
   cancelSessionAndCreateMakeup,
+  listFlaggedCohorts,
 } = await import("#modules/class/cohortMechanism.controller.js");
 
 const buildRes = () => {
@@ -160,6 +163,56 @@ describe("escalation endpoints", () => {
       makeupScheduledStartAt: "2026-09-01",
       makeupScheduledEndAt: "2026-09-02",
     });
+  });
+
+  it("cancelSessionAndCreateMakeup: reviewFlag.flaggedForReview=true → message cảnh báo BR-14", async () => {
+    cancelSessionWithMakeup.mockResolvedValue({
+      cancelledSession: {},
+      makeupSession: {},
+      reviewFlag: { flaggedForReview: true, cancelledCount: 2 },
+    });
+    const req = {
+      params: { sessionId: "s1" },
+      body: { makeupScheduledStartAt: "2026-09-01", makeupScheduledEndAt: "2026-09-02" },
+      user: { id: "admin-1" },
+    };
+    const res = buildRes();
+
+    await cancelSessionAndCreateMakeup(req, res, vi.fn());
+
+    expect(res.json).toHaveBeenCalledWith(
+      expect.objectContaining({ message: expect.stringContaining("cần xem xét đóng sớm") })
+    );
+  });
+
+  it("cancelSessionAndCreateMakeup: reviewFlag.flaggedForReview=false → message bình thường, không nhắc BR-14", async () => {
+    cancelSessionWithMakeup.mockResolvedValue({
+      cancelledSession: {},
+      makeupSession: {},
+      reviewFlag: { flaggedForReview: false, cancelledCount: 1 },
+    });
+    const req = {
+      params: { sessionId: "s1" },
+      body: { makeupScheduledStartAt: "2026-09-01", makeupScheduledEndAt: "2026-09-02" },
+      user: { id: "admin-1" },
+    };
+    const res = buildRes();
+
+    await cancelSessionAndCreateMakeup(req, res, vi.fn());
+
+    expect(res.json).toHaveBeenCalledWith(
+      expect.objectContaining({ message: "Đã huỷ buổi và tạo buổi bù." })
+    );
+  });
+
+  it("listFlaggedCohorts: gọi service không tham số, trả data", async () => {
+    listCohortsFlaggedForReview.mockResolvedValue([{ _id: "class-1" }]);
+    const res = buildRes();
+
+    await listFlaggedCohorts({}, res, vi.fn());
+
+    expect(listCohortsFlaggedForReview).toHaveBeenCalledWith();
+    expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ data: [{ _id: "class-1" }] }));
   });
 });
 

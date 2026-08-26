@@ -3,6 +3,7 @@ import type { ApiEnvelope } from "./unwrap";
 import type {
   ClassCommitmentInfo,
   EscalateLevel1Result,
+  FlaggedCohort,
   OverdueSession,
   ReadinessResult,
 } from "../features/cohort-mechanism/cohortMechanism.types";
@@ -37,6 +38,8 @@ export const cohortMechanismApi = {
     }),
   listOverdueSessions: () =>
     axiosClient.get<ApiEnvelope<OverdueSession[]>>("/cohort-mechanism/sessions/overdue"),
+  listFlaggedCohorts: () =>
+    axiosClient.get<ApiEnvelope<FlaggedCohort[]>>("/cohort-mechanism/cohorts/flagged-for-review"),
   escalateLevel1: (sessionId: string) =>
     axiosClient.post<ApiEnvelope<EscalateLevel1Result>>(
       `/cohort-mechanism/sessions/${sessionId}/escalate-level1`

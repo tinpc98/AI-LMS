@@ -311,6 +311,14 @@ const classSchema = new Schema(
       ],
       default: "OFFERED",
     },
+    // BR-14: mốc thời gian cohort ĐẠT ngưỡng buổi bị huỷ (Mức 3) cần Admin xem xét đóng sớm —
+    // null nghĩa là chưa từng đạt ngưỡng. CHỈ ghi nhận, KHÔNG tự đóng (Phần B.5: quyết định đóng
+    // sớm luôn là của Admin, ảnh hưởng người học thật). Giữ nguyên mốc lần đầu đạt ngưỡng dù sau
+    // đó còn huỷ thêm buổi — đây là "đã từng đáng chú ý", không phải "đếm lại mỗi lần".
+    cancelledSessionsFlaggedAt: {
+      type: Date,
+      default: null,
+    },
   },
   { timestamps: true }
 );

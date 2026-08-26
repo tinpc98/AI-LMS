@@ -3,13 +3,18 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import mongoose from "mongoose";
 
 const classFindById = vi.fn();
+const classCountDocuments = vi.fn();
 const eventFind = vi.fn();
 const eventCreate = vi.fn();
 const eventFindById = vi.fn();
 const userFindById = vi.fn();
+const userUpdateMany = vi.fn();
 
 vi.mock("#modules/class/class.model.js", () => ({
-  default: { findById: (...a) => classFindById(...a) },
+  default: {
+    findById: (...a) => classFindById(...a),
+    countDocuments: (...a) => classCountDocuments(...a),
+  },
 }));
 vi.mock("#modules/class/commitmentEvent.model.js", () => ({
   default: {
@@ -33,7 +38,10 @@ vi.mock("#modules/class/commitmentEvent.model.js", () => ({
   ],
 }));
 vi.mock("#modules/auth", () => ({
-  User: { findById: (...a) => userFindById(...a) },
+  User: {
+    findById: (...a) => userFindById(...a),
+    updateMany: (...a) => userUpdateMany(...a),
+  },
 }));
 
 const assertCohortReady = vi.fn().mockResolvedValue({ ready: true });
@@ -60,8 +68,16 @@ const mockTeacher = (overrides = {}) => ({
   reliabilityScore: 100,
   poolStatus: "ACTIVE",
   poolLockedUntil: null,
+  vouchedBy: [],
   save: vi.fn().mockResolvedValue(true),
   ...overrides,
+});
+
+// User.findById được gọi CẢ hai kiểu trong cùng luồng: `await User.findById(x)` trực tiếp (đọc
+// bản ghi động để .save()) VÀ `await User.findById(x).lean()` (suspendVouchersOfRemovedTeacher).
+const mongooseFindResult = (result) => ({
+  lean: () => Promise.resolve(result),
+  then: (resolve, reject) => Promise.resolve(result).then(resolve, reject),
 });
 
 beforeEach(() => {
@@ -69,6 +85,8 @@ beforeEach(() => {
   eventFind.mockReturnValue({ lean: () => Promise.resolve([]) });
   eventCreate.mockResolvedValue({});
   assertCohortReady.mockReset().mockResolvedValue({ ready: true });
+  classCountDocuments.mockResolvedValue(0);
+  userUpdateMany.mockResolvedValue({ modifiedCount: 0 });
 });
 
 describe("transitionCommitment — BR-16 chặn CONFIRMED khi thiếu học liệu", () => {
@@ -279,12 +297,28 @@ describe("transitionCommitment — A.5 ngưỡng khóa/loại khỏi pool", () =
   it("ESCALATION_TERMINATED loại khỏi pool NGAY, không cần đủ 3 strike", async () => {
     const classDoc = mockClassDoc("ACTIVE");
     classFindById.mockResolvedValue(classDoc);
-    const teacher = mockTeacher(); // chưa từng có strike nào
-    userFindById.mockResolvedValue(teacher);
+    const teacher = mockTeacher(); // chưa từng có strike nào, vouchedBy=[]
+    userFindById.mockImplementation(() => mongooseFindResult(teacher));
 
     await transitionCommitment(CLASS_ID, "TERMINATED", { reason: "ESCALATION_TERMINATED" });
 
     expect(teacher.poolStatus).toBe("REMOVED");
+    // vouchedBy rỗng -> không có ai để tạm khóa quyền bảo lãnh.
+    expect(userUpdateMany).not.toHaveBeenCalled();
+  });
+
+  it("BR-24: ESCALATION_TERMINATED VÀ giáo viên từng được bảo lãnh → tạm khóa quyền bảo lãnh của những người đó 3 tháng", async () => {
+    const classDoc = mockClassDoc("ACTIVE");
+    classFindById.mockResolvedValue(classDoc);
+    const teacher = mockTeacher({ vouchedBy: ["voucher-1", "voucher-2"] });
+    userFindById.mockImplementation(() => mongooseFindResult(teacher));
+
+    await transitionCommitment(CLASS_ID, "TERMINATED", { reason: "ESCALATION_TERMINATED" });
+
+    expect(userUpdateMany).toHaveBeenCalledWith(
+      { _id: { $in: ["voucher-1", "voucher-2"] } },
+      { $set: { vouchSuspendedUntil: expect.any(Date) } }
+    );
   });
 
   it("Strike đã decay quá 6 tháng KHÔNG tính vào ngưỡng", async () => {
@@ -300,6 +334,72 @@ describe("transitionCommitment — A.5 ngưỡng khóa/loại khỏi pool", () =
 
     // Đây là strike đầu tiên còn hiệu lực -> chưa đạt ngưỡng 2, không khóa.
     expect(teacher.poolStatus).toBe("ACTIVE");
+  });
+});
+
+describe("transitionCommitment — BR-20 tự động nâng L3 khi cohort COMPLETED", () => {
+  it("Đủ điều kiện (2 cohort COMMUNITY hoàn thành, còn pool, đã có người bảo lãnh) → tự nâng L3 + hoàn vouchLimit cho người bảo lãnh", async () => {
+    const classDoc = mockClassDoc("ACTIVE");
+    classFindById.mockResolvedValue(classDoc);
+    const teacher = mockTeacher({ verificationTier: "L2", vouchedBy: ["voucher-1"] });
+    userFindById.mockResolvedValue(teacher);
+    classCountDocuments.mockResolvedValue(2); // đã đủ 2 cohort COMMUNITY hoàn thành
+
+    await transitionCommitment(CLASS_ID, "COMPLETED", { reason: "COHORT_COMPLETED" });
+
+    expect(teacher.verificationTier).toBe("L3");
+    expect(userUpdateMany).toHaveBeenCalledWith(
+      { _id: { $in: ["voucher-1"] } },
+      { $inc: { vouchLimit: 1 } }
+    );
+  });
+
+  it("Chưa đủ số cohort COMMUNITY hoàn thành → KHÔNG nâng tầng, KHÔNG hoàn vouchLimit", async () => {
+    const classDoc = mockClassDoc("ACTIVE");
+    classFindById.mockResolvedValue(classDoc);
+    const teacher = mockTeacher({ verificationTier: "L2", vouchedBy: ["voucher-1"] });
+    userFindById.mockResolvedValue(teacher);
+    classCountDocuments.mockResolvedValue(1); // chưa đủ 2 cohort
+
+    await transitionCommitment(CLASS_ID, "COMPLETED", { reason: "COHORT_COMPLETED" });
+
+    expect(teacher.verificationTier).toBe("L2");
+    expect(userUpdateMany).not.toHaveBeenCalled();
+  });
+
+  it("Chưa từng được ai bảo lãnh → KHÔNG nâng tầng dù đủ cohort", async () => {
+    const classDoc = mockClassDoc("ACTIVE");
+    classFindById.mockResolvedValue(classDoc);
+    const teacher = mockTeacher({ verificationTier: "L2", vouchedBy: [] });
+    userFindById.mockResolvedValue(teacher);
+    classCountDocuments.mockResolvedValue(5);
+
+    await transitionCommitment(CLASS_ID, "COMPLETED", { reason: "COHORT_COMPLETED" });
+
+    expect(teacher.verificationTier).toBe("L2");
+  });
+
+  it("Đã là L3 từ trước → không kiểm tra lại điều kiện (bỏ qua Class.countDocuments)", async () => {
+    const classDoc = mockClassDoc("ACTIVE");
+    classFindById.mockResolvedValue(classDoc);
+    const teacher = mockTeacher({ verificationTier: "L3" });
+    userFindById.mockResolvedValue(teacher);
+
+    await transitionCommitment(CLASS_ID, "COMPLETED", { reason: "COHORT_COMPLETED" });
+
+    expect(classCountDocuments).not.toHaveBeenCalled();
+  });
+
+  it("toStatus khác COMPLETED (vd COMPLETED_PARTIAL) → không kiểm tra điều kiện L3", async () => {
+    const classDoc = mockClassDoc("ACTIVE");
+    classFindById.mockResolvedValue(classDoc);
+    userFindById.mockResolvedValue(mockTeacher());
+
+    await transitionCommitment(CLASS_ID, "COMPLETED_PARTIAL", {
+      reason: "COHORT_CLOSED_EARLY_HIGH_PROGRESS",
+    });
+
+    expect(classCountDocuments).not.toHaveBeenCalled();
   });
 });
 

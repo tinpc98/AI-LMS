@@ -1,12 +1,27 @@
 import React, { useEffect, useState } from "react";
-import { Table, Button, Tag, Empty, message, Modal, DatePicker, Space, Typography } from "antd";
-import { ThunderboltOutlined, StopOutlined } from "@ant-design/icons";
+import {
+  Table,
+  Button,
+  Tag,
+  Empty,
+  message,
+  Modal,
+  DatePicker,
+  Space,
+  Typography,
+  Divider,
+  Alert,
+} from "antd";
+import { ThunderboltOutlined, StopOutlined, WarningOutlined } from "@ant-design/icons";
 import dayjs, { Dayjs } from "dayjs";
 import { cohortMechanismApi } from "../../../api/cohortMechanismApi";
 import { unwrap } from "../../../api/unwrap";
-import type { OverdueSession } from "../cohortMechanism.types";
+import type { FlaggedCohort, OverdueSession } from "../cohortMechanism.types";
 
 const { Text } = Typography;
+
+const populatedName = (v: FlaggedCohort["teacherId"]) =>
+  v && typeof v === "object" ? v.fullName : v ? "—" : "Chưa có";
 
 // Mức 1 (tự động kích hoạt dự bị) và Mức 3 (huỷ + tạo buổi bù) của quy trình leo thang — EduSpace
 // mechanism design Phần B.1. Mức 2 chỉ là đánh dấu "cần Admin" (không có hành động riêng — Admin
@@ -14,6 +29,8 @@ const { Text } = Typography;
 export const EscalationQueueTab: React.FC = () => {
   const [sessions, setSessions] = useState<OverdueSession[]>([]);
   const [loading, setLoading] = useState(true);
+  const [flaggedCohorts, setFlaggedCohorts] = useState<FlaggedCohort[]>([]);
+  const [loadingFlagged, setLoadingFlagged] = useState(true);
   const [escalatingId, setEscalatingId] = useState<string | null>(null);
   const [makeupTarget, setMakeupTarget] = useState<OverdueSession | null>(null);
   const [makeupRange, setMakeupRange] = useState<[Dayjs, Dayjs] | null>(null);
@@ -32,8 +49,21 @@ export const EscalationQueueTab: React.FC = () => {
     }
   };
 
+  const loadFlaggedCohorts = async () => {
+    try {
+      setLoadingFlagged(true);
+      const res = await cohortMechanismApi.listFlaggedCohorts();
+      setFlaggedCohorts(unwrap(res.data, []));
+    } catch (error) {
+      console.error("Không tải được danh sách cohort cần xem xét:", error);
+    } finally {
+      setLoadingFlagged(false);
+    }
+  };
+
   useEffect(() => {
     load();
+    loadFlaggedCohorts();
   }, []);
 
   const handleEscalateLevel1 = async (session: OverdueSession) => {
@@ -63,14 +93,15 @@ export const EscalationQueueTab: React.FC = () => {
     }
     try {
       setCancelling(true);
-      await cohortMechanismApi.cancelWithMakeup(makeupTarget._id, {
+      const res = await cohortMechanismApi.cancelWithMakeup(makeupTarget._id, {
         makeupScheduledStartAt: makeupRange[0].toISOString(),
         makeupScheduledEndAt: makeupRange[1].toISOString(),
       });
-      message.success("Đã huỷ buổi học và tạo buổi bù.");
+      message.success(res.data.message || "Đã huỷ buổi học và tạo buổi bù.");
       setMakeupTarget(null);
       setMakeupRange(null);
       load();
+      loadFlaggedCohorts();
     } catch (error: any) {
       message.error(error?.response?.data?.message || "Huỷ buổi học thất bại.");
     } finally {
@@ -139,6 +170,44 @@ export const EscalationQueueTab: React.FC = () => {
           pagination={{ pageSize: 10 }}
         />
       )}
+
+      <Divider />
+
+      <div>
+        <Text strong>
+          <WarningOutlined className="mr-2 text-amber-500" />
+          Cohort cần xem xét đóng sớm (BR-14)
+        </Text>
+        <Text type="secondary" className="block" style={{ fontSize: 13, marginBottom: 12 }}>
+          Đã huỷ đủ số buổi ngưỡng — hệ thống chỉ đánh dấu, quyết định đóng sớm/chấm dứt vẫn do
+          Admin thực hiện thủ công ở tab "Cam kết & Dạy đôi".
+        </Text>
+        {flaggedCohorts.length === 0 && !loadingFlagged ? (
+          <Alert type="success" showIcon message="Không có cohort nào cần xem xét đóng sớm." />
+        ) : (
+          <Table
+            size="small"
+            rowKey="_id"
+            loading={loadingFlagged}
+            dataSource={flaggedCohorts}
+            pagination={{ pageSize: 5 }}
+            columns={[
+              { title: "Lớp", dataIndex: "name", key: "name" },
+              {
+                title: "Giáo viên",
+                key: "teacher",
+                render: (_: unknown, record: FlaggedCohort) => populatedName(record.teacherId),
+              },
+              {
+                title: "Bị đánh dấu lúc",
+                dataIndex: "cancelledSessionsFlaggedAt",
+                key: "cancelledSessionsFlaggedAt",
+                render: (v: string) => dayjs(v).format("HH:mm DD/MM/YYYY"),
+              },
+            ]}
+          />
+        )}
+      </div>
 
       <Modal
         title="Huỷ buổi học và tạo buổi bù"

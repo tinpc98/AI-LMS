@@ -15,6 +15,7 @@ import {
   findOverdueSessions,
   escalateLevel1,
   cancelSessionWithMakeup,
+  listCohortsFlaggedForReview,
 } from "./escalation.service.js";
 
 // ── Commitment (Phần A) ──────────────────────────────────────────────────────
@@ -125,7 +126,14 @@ export const cancelSessionAndCreateMakeup = asyncHandler(async (req, res) => {
 
   return res.status(200).json({
     success: true,
-    message: "Đã huỷ buổi và tạo buổi bù.",
+    message: result.reviewFlag?.flaggedForReview
+      ? `Đã huỷ buổi và tạo buổi bù. Cohort đã huỷ ${result.reviewFlag.cancelledCount} buổi — cần xem xét đóng sớm (BR-14).`
+      : "Đã huỷ buổi và tạo buổi bù.",
     data: result,
   });
+});
+
+export const listFlaggedCohorts = asyncHandler(async (req, res) => {
+  const cohorts = await listCohortsFlaggedForReview();
+  return res.status(200).json({ success: true, message: "OK", data: cohorts });
 });

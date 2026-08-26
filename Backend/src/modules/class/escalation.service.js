@@ -89,15 +89,18 @@ export async function cancelSessionWithMakeup(
     makeupForSessionId: session._id,
   });
 
-  await checkCancelledSessionThreshold(session.classId);
+  const reviewFlag = await checkCancelledSessionThreshold(session.classId);
 
-  return { cancelledSession: session, makeupSession };
+  return { cancelledSession: session, makeupSession, reviewFlag };
 }
 
 /**
  * BR-14: nếu một cohort có >= MAX_CANCELLED_SESSIONS_BEFORE_REVIEW buổi bị huỷ hoàn toàn
- * (Mức 3), tự động chuyển cohort sang xem xét đóng sớm — KHÔNG tự đóng (Phần B.5 nói rõ đây là
- * quyết định của Admin, không tự động hoá vì ảnh hưởng người học thật).
+ * (Mức 3), ĐÁNH DẤU cohort cần Admin xem xét đóng sớm bằng cách ghi `cancelledSessionsFlaggedAt`
+ * lên Class — KHÔNG tự đóng (Phần B.5 nói rõ đây là quyết định của Admin, không tự động hoá vì
+ * ảnh hưởng người học thật). Trước đây hàm này chỉ TRẢ VỀ kết quả mà không ghi lại đâu cả, khiến
+ * BR-14 không có tác dụng quan sát được ở bất kỳ đâu trong hệ thống — đây là bản sửa.
+ * Idempotent: chỉ ghi mốc lần đầu đạt ngưỡng, không cập nhật lại nếu đã có.
  */
 export async function checkCancelledSessionThreshold(classId) {
   const cancelledCount = await ClassSession.countDocuments({
@@ -107,10 +110,32 @@ export async function checkCancelledSessionThreshold(classId) {
     isDeleted: false,
   });
 
-  if (cancelledCount >= MAX_CANCELLED_SESSIONS_BEFORE_REVIEW) {
-    return { flaggedForReview: true, cancelledCount };
+  if (cancelledCount < MAX_CANCELLED_SESSIONS_BEFORE_REVIEW) {
+    return { flaggedForReview: false, cancelledCount };
   }
-  return { flaggedForReview: false, cancelledCount };
+
+  await Class.updateOne(
+    { _id: classId, cancelledSessionsFlaggedAt: null },
+    { $set: { cancelledSessionsFlaggedAt: new Date() } }
+  );
+
+  return { flaggedForReview: true, cancelledCount };
+}
+
+/**
+ * Danh sách cohort ĐANG SỐNG (chưa kết thúc/rút/chấm dứt) đã bị đánh dấu cần Admin xem xét đóng
+ * sớm — dùng cho hàng đợi Admin, tương tự findOverdueSessions().
+ */
+export async function listCohortsFlaggedForReview() {
+  return Class.find({
+    cancelledSessionsFlaggedAt: { $ne: null },
+    commitmentStatus: { $in: ["OFFERED", "ACCEPTED", "CONFIRMED", "ACTIVE"] },
+    isDeleted: false,
+  })
+    .select("name code commitmentStatus cancelledSessionsFlaggedAt teacherId")
+    .populate("teacherId", "fullName")
+    .sort({ cancelledSessionsFlaggedAt: 1 })
+    .lean();
 }
 
 export { CHECKIN_GRACE_MINUTES, MAX_CANCELLED_SESSIONS_BEFORE_REVIEW };

@@ -7,6 +7,8 @@ const sessionFindById = vi.fn();
 const sessionCreate = vi.fn();
 const sessionCountDocuments = vi.fn();
 const classFindById = vi.fn();
+const classUpdateOne = vi.fn();
+const classFind = vi.fn();
 const activateBackup = vi.fn();
 
 vi.mock("#modules/classSession", () => ({
@@ -18,7 +20,11 @@ vi.mock("#modules/classSession", () => ({
   },
 }));
 vi.mock("#modules/class/class.model.js", () => ({
-  default: { findById: (...a) => classFindById(...a) },
+  default: {
+    findById: (...a) => classFindById(...a),
+    updateOne: (...a) => classUpdateOne(...a),
+    find: (...a) => classFind(...a),
+  },
 }));
 vi.mock("#modules/class/backupTeacher.service.js", () => ({
   activateBackupTeacher: (...a) => activateBackup(...a),
@@ -29,6 +35,7 @@ const {
   escalateLevel1,
   cancelSessionWithMakeup,
   checkCancelledSessionThreshold,
+  listCohortsFlaggedForReview,
   CHECKIN_GRACE_MINUTES,
   MAX_CANCELLED_SESSIONS_BEFORE_REVIEW,
 } = await import("#modules/class/escalation.service.js");
@@ -38,6 +45,7 @@ const SESSION_ID = new mongoose.Types.ObjectId().toString();
 
 beforeEach(() => {
   vi.clearAllMocks();
+  classUpdateOne.mockResolvedValue({ modifiedCount: 1 });
 });
 
 describe("findOverdueSessions", () => {
@@ -156,7 +164,7 @@ describe("cancelSessionWithMakeup", () => {
     ).rejects.toMatchObject({ status: 422 });
   });
 
-  it(`BR-14: đủ ${MAX_CANCELLED_SESSIONS_BEFORE_REVIEW} buổi gốc bị huỷ trong cùng cohort → flaggedForReview=true`, async () => {
+  it(`BR-14: đủ ${MAX_CANCELLED_SESSIONS_BEFORE_REVIEW} buổi gốc bị huỷ trong cùng cohort → flaggedForReview=true, có trong result.reviewFlag`, async () => {
     const session = makeSession();
     sessionFindById.mockResolvedValue(session);
     sessionCreate.mockResolvedValue({ _id: "makeup-1" });
@@ -172,19 +180,48 @@ describe("cancelSessionWithMakeup", () => {
     const filter = sessionCountDocuments.mock.calls[0][0];
     expect(filter.classId).toBe(CLASS_ID);
     expect(filter.sessionType).toEqual({ $ne: "MAKEUP" });
+    // Kết quả threshold phải được trả ra ngoài (trước đây bị bỏ quên, không ai đọc được)
+    expect(result.reviewFlag).toEqual({
+      flaggedForReview: true,
+      cancelledCount: MAX_CANCELLED_SESSIONS_BEFORE_REVIEW,
+    });
   });
 });
 
 describe("checkCancelledSessionThreshold", () => {
-  it("Dưới ngưỡng → flaggedForReview=false", async () => {
+  it("Dưới ngưỡng → flaggedForReview=false, KHÔNG ghi gì lên Class", async () => {
     sessionCountDocuments.mockResolvedValue(MAX_CANCELLED_SESSIONS_BEFORE_REVIEW - 1);
     const result = await checkCancelledSessionThreshold(CLASS_ID);
     expect(result.flaggedForReview).toBe(false);
+    expect(classUpdateOne).not.toHaveBeenCalled();
   });
 
-  it("Đạt ngưỡng → flaggedForReview=true", async () => {
+  it("Đạt ngưỡng → flaggedForReview=true VÀ ghi cancelledSessionsFlaggedAt lên Class (idempotent qua filter cancelledSessionsFlaggedAt: null)", async () => {
     sessionCountDocuments.mockResolvedValue(MAX_CANCELLED_SESSIONS_BEFORE_REVIEW);
     const result = await checkCancelledSessionThreshold(CLASS_ID);
     expect(result.flaggedForReview).toBe(true);
+    expect(classUpdateOne).toHaveBeenCalledWith(
+      { _id: CLASS_ID, cancelledSessionsFlaggedAt: null },
+      { $set: { cancelledSessionsFlaggedAt: expect.any(Date) } }
+    );
+  });
+});
+
+describe("listCohortsFlaggedForReview", () => {
+  it("Chỉ lấy cohort ĐANG SỐNG (chưa COMPLETED/WITHDRAWN/TERMINATED) đã bị đánh dấu", async () => {
+    const chain = {
+      select: () => chain,
+      populate: () => chain,
+      sort: () => chain,
+      lean: () => Promise.resolve([{ _id: CLASS_ID, name: "Lớp X" }]),
+    };
+    classFind.mockReturnValue(chain);
+
+    const result = await listCohortsFlaggedForReview();
+
+    expect(result).toEqual([{ _id: CLASS_ID, name: "Lớp X" }]);
+    const filter = classFind.mock.calls[0][0];
+    expect(filter.cancelledSessionsFlaggedAt).toEqual({ $ne: null });
+    expect(filter.commitmentStatus.$in).toEqual(["OFFERED", "ACCEPTED", "CONFIRMED", "ACTIVE"]);
   });
 });

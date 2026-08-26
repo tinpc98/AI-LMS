@@ -77,6 +77,7 @@ const CohortMechanismPage = lazy(
 const VerificationStatusPage = lazy(
   () => import("./features/verification/pages/VerificationStatusPage")
 );
+const TeacherTrustPage = lazy(() => import("./features/teacher-trust/pages/TeacherTrustPage"));
 const PlaceholderPage = lazy(() => import("./shared/components/PlaceholderPage"));
 const MyEnrollmentsPage = lazy(() => import("./features/enrollment/MyEnrollmentsPage"));
 const EnrollmentManagementPage = lazy(
@@ -214,6 +215,7 @@ function App() {
                 <Route path="learner-needs" element={<LearnerNeedBrowsePage />} />
                 <Route path="complaints" element={<ComplaintManagementPage />} />
                 <Route path="cohort-mechanism" element={<CohortMechanismPage />} />
+                <Route path="teacher-trust" element={<TeacherTrustPage />} />
                 <Route path="ai-management" element={<AIManagementPage />} />
                 <Route path="reports" element={<ReportPage />} />
                 <Route path="enrollments" element={<EnrollmentManagementPage />} />

@@ -124,7 +124,7 @@ describe("tryPromoteToL3", () => {
     expect(classCountDocuments).not.toHaveBeenCalled();
   });
 
-  it("Đủ điều kiện → nâng tầng L2 → L3 và lưu lại", async () => {
+  it("Đủ điều kiện → nâng tầng L2 → L3, lưu lại, VÀ hoàn vouchLimit cho người đã bảo lãnh (BR-23)", async () => {
     const teacher = {
       _id: TEACHER_ID,
       verificationTier: "L2",
@@ -146,6 +146,10 @@ describe("tryPromoteToL3", () => {
     expect(result.promoted).toBe(true);
     expect(teacher.verificationTier).toBe("L3");
     expect(teacher.save).toHaveBeenCalled();
+    expect(userUpdateMany).toHaveBeenCalledWith(
+      { _id: { $in: [VOUCHER_ID] } },
+      { $inc: { vouchLimit: 1 } }
+    );
   });
 
   it("Chưa đủ điều kiện → promoted=false, KHÔNG đổi verificationTier", async () => {

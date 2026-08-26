@@ -199,7 +199,8 @@ export const initCronJobs = (runImmediately = false) => {
     "*/5 * * * *",
     async () => {
       try {
-        const { checked, resolved, needsAdminAttention } = await runCohortEscalationLevel1();
+        const { checked, resolved, needsAdminAttention, needsAdminAttentionDetails } =
+          await runCohortEscalationLevel1();
 
         if (checked > 0) {
           console.log(
@@ -207,8 +208,13 @@ export const initCronJobs = (runImmediately = false) => {
           );
         }
         if (needsAdminAttention > 0) {
+          // Trước đây chỉ log ĐẾM số buổi — Admin đọc log thấy "N buổi cần can thiệp" nhưng
+          // không biết buổi nào/lý do gì, phải tự tra lại. needsAdminAttentionDetails đã có sẵn
+          // từ job (sessionId + reason từng buổi), chỉ là bị bỏ quên khi log — ghi ra để log
+          // thật sự hữu ích khi Admin cần tra cứu.
           console.warn(
-            `[CRON] ⚠️ Cohort Escalation: ${needsAdminAttention} buổi KHÔNG có dự bị hoặc kích hoạt lỗi — cần Admin can thiệp (Mức 2/3).`
+            `[CRON] ⚠️ Cohort Escalation: ${needsAdminAttention} buổi KHÔNG có dự bị hoặc kích hoạt lỗi — cần Admin can thiệp (Mức 2/3).`,
+            needsAdminAttentionDetails
           );
         }
       } catch (error) {

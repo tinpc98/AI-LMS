@@ -18,6 +18,14 @@ export interface AccountRecord {
   // Chỉ có ý nghĩa khi role === "Teacher", xem Backend/src/modules/auth/user.model.js
   teachingSubjects?: string[];
   availabilitySchedule?: AvailabilitySchedule | null;
+  // Cơ chế xác minh/độ tin cậy (EduSpace mechanism design Phần A/C) — chỉ có ý nghĩa với Teacher.
+  verificationTier?: "L1" | "L2" | "L3";
+  reliabilityScore?: number;
+  poolStatus?: "ACTIVE" | "LOCKED" | "REMOVED";
+  poolLockedUntil?: string | null;
+  vouchLimit?: number;
+  vouchedBy?: string[];
+  vouchSuspendedUntil?: string | null;
 }
 
 export interface AccountFilters {

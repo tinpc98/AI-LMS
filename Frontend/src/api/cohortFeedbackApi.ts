@@ -19,4 +19,10 @@ export const cohortFeedbackApi = {
   getMyAverage: () => {
     return axiosClient.get<ApiEnvelope<TeacherAverageRatings>>("/cohort-feedback/me/average");
   },
+  // Admin xem chi tiết từng đánh giá (kèm studentId) của MỘT giáo viên bất kỳ.
+  getTeacherDetailsForAdmin: (teacherId: string) => {
+    return axiosClient.get<ApiEnvelope<CohortFeedbackRecord[]>>(
+      `/cohort-feedback/teachers/${teacherId}/details`
+    );
+  },
 };

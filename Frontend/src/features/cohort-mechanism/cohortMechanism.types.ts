@@ -106,3 +106,13 @@ export interface EscalateLevel1Result {
   reason: string;
   error?: string;
 }
+
+// BR-14: cohort đã huỷ đủ số buổi ngưỡng (Mức 3), cần Admin xem xét đóng sớm — KHÔNG tự đóng.
+export interface FlaggedCohort {
+  _id: string;
+  name: string;
+  code?: string;
+  commitmentStatus: CommitmentStatus;
+  cancelledSessionsFlaggedAt: string;
+  teacherId?: string | { _id: string; fullName: string } | null;
+}

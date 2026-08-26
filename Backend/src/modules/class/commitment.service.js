@@ -48,6 +48,11 @@ const POOL_LOCK_DAYS = 14; // [GIẢ ĐỊNH] A.5
 const STRIKE_LOCK_THRESHOLD = 2; // A.5
 const STRIKE_REMOVE_THRESHOLD = 3; // A.5
 
+// [GIẢ ĐỊNH] BR-20 — PHẢI khớp L3_MIN_COMPLETED_COMMUNITY_COHORTS ở verification.service.js.
+const L3_MIN_COMPLETED_COMMUNITY_COHORTS = 2;
+// [GIẢ ĐỊNH] BR-24 — PHẢI khớp VOUCH_SUSPENSION_MONTHS ở verification.service.js.
+const VOUCH_SUSPENSION_MONTHS = 3;
+
 /**
  * Đếm số strike CÒN HIỆU LỰC (chưa decay quá 6 tháng) của một giáo viên.
  */
@@ -72,6 +77,7 @@ async function enforcePoolThresholds(teacherId, reason) {
   if (reason === "ESCALATION_TERMINATED") {
     teacher.poolStatus = "REMOVED";
     await teacher.save();
+    await suspendVouchersOfRemovedTeacher(teacherId);
     return;
   }
 
@@ -87,6 +93,60 @@ async function enforcePoolThresholds(teacherId, reason) {
     teacher.poolStatus = "LOCKED";
     teacher.poolLockedUntil = new Date(Date.now() + POOL_LOCK_DAYS * 24 * 60 * 60 * 1000);
     await teacher.save();
+  }
+}
+
+/**
+ * BR-24: khi giáo viên bị loại khỏi pool do ESCALATION_TERMINATED (gãy lớp hoàn toàn), tạm khóa
+ * quyền bảo lãnh THÊM AI của những người từng bảo lãnh họ lên L3 trong 3 tháng — logic TRÙNG LẶP
+ * có chủ đích với verification.service.js#suspendVouchersOf. KHÔNG import trực tiếp từ
+ * #modules/auth ở đây vì auth/verification.service.js lại import Class từ #modules/class, còn
+ * class/index.js export escalation.service.js (dùng bởi src/jobs) kéo theo
+ * backupTeacher.service.js -> #modules/auth -> sẽ tạo vòng phụ thuộc, bị rule no-circular của
+ * dependency-cruiser chặn. Nếu sửa ngưỡng/thời hạn, PHẢI sửa đồng thời cả 2 nơi.
+ */
+async function suspendVouchersOfRemovedTeacher(teacherId) {
+  const teacher = await User.findById(teacherId).lean();
+  if (!teacher || !Array.isArray(teacher.vouchedBy) || teacher.vouchedBy.length === 0) return;
+
+  const suspendUntil = new Date(Date.now() + VOUCH_SUSPENSION_MONTHS * 30 * 24 * 60 * 60 * 1000);
+  await User.updateMany(
+    { _id: { $in: teacher.vouchedBy } },
+    { $set: { vouchSuspendedUntil: suspendUntil } }
+  );
+}
+
+/**
+ * BR-20: tự động nâng tầng L3 ngay khi một cohort COMMUNITY vừa COMPLETED có thể làm thay đổi
+ * điều kiện, thay vì chờ Admin tự kiểm tra thủ công — logic TRÙNG LẶP có chủ đích với
+ * verification.service.js#checkL3Eligibility/tryPromoteToL3 (lý do không import trực tiếp giống
+ * suspendVouchersOfRemovedTeacher ở trên). Nếu sửa điều kiện lên L3, PHẢI sửa đồng thời cả 2 nơi.
+ */
+async function tryAutoPromoteToL3(teacherId) {
+  const teacher = await User.findById(teacherId);
+  if (!teacher || teacher.verificationTier === "L3") return;
+
+  const completedCount = await Class.countDocuments({
+    teacherId,
+    fundingType: "COMMUNITY",
+    commitmentStatus: "COMPLETED",
+    isDeleted: false,
+  });
+  const eligible =
+    completedCount >= L3_MIN_COMPLETED_COMMUNITY_COHORTS &&
+    teacher.poolStatus !== "REMOVED" &&
+    Array.isArray(teacher.vouchedBy) &&
+    teacher.vouchedBy.length >= 1;
+
+  if (!eligible) return;
+
+  teacher.verificationTier = "L3";
+  await teacher.save();
+
+  // BR-23: hoàn hạn mức bảo lãnh cho những người đã bảo lãnh giáo viên này — xem comment tương
+  // ứng ở verification.service.js#tryPromoteToL3.
+  if (teacher.vouchedBy.length > 0) {
+    await User.updateMany({ _id: { $in: teacher.vouchedBy } }, { $inc: { vouchLimit: 1 } });
   }
 }
 
@@ -196,6 +256,12 @@ export async function transitionCommitment(classId, toStatus, { reason, changedB
 
   if (strikeApplied > 0 || effectiveReason === "ESCALATION_TERMINATED") {
     await enforcePoolThresholds(classDoc.teacherId, effectiveReason);
+  }
+
+  // BR-20: cohort vừa COMPLETED có thể vừa làm đủ điều kiện lên L3 — kiểm tra ngay, không chờ
+  // Admin tự bấm kiểm tra thủ công (xem comment tryAutoPromoteToL3 ở trên).
+  if (toStatus === "COMPLETED") {
+    await tryAutoPromoteToL3(classDoc.teacherId);
   }
 
   return classDoc;
