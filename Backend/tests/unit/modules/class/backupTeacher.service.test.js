@@ -7,6 +7,29 @@ const classCountDocuments = vi.fn();
 const eventCreate = vi.fn();
 const userFindById = vi.fn();
 
+// assignBackupTeacher giờ chạy trong mongoose transaction (session.startTransaction/commit/abort)
+// để sửa race BR-12 (đếm-rồi-ghi không nguyên tử) — giả lập session tối thiểu, giữ nguyên phần
+// còn lại của mongoose thật (mongoose.Types.ObjectId vẫn cần dùng để sinh ID test).
+// vi.mock bị hoist lên đầu file, PHẢI dùng vi.hoisted() để biến fakeSession khởi tạo trước đó.
+const { fakeSession } = vi.hoisted(() => ({
+  fakeSession: {
+    startTransaction: vi.fn(),
+    commitTransaction: vi.fn().mockResolvedValue(undefined),
+    abortTransaction: vi.fn().mockResolvedValue(undefined),
+    endSession: vi.fn(),
+  },
+}));
+vi.mock("mongoose", async () => {
+  const actual = await vi.importActual("mongoose");
+  return {
+    ...actual,
+    default: {
+      ...actual.default,
+      startSession: vi.fn().mockResolvedValue(fakeSession),
+    },
+  };
+});
+
 vi.mock("#modules/class/class.model.js", () => ({
   default: {
     findById: (...a) => classFindById(...a),
@@ -36,29 +59,40 @@ const mockClassDoc = (over = {}) => ({
   ...over,
 });
 
+const mongooseCountSession = (result) => ({ session: () => Promise.resolve(result) });
+
 beforeEach(() => {
   vi.clearAllMocks();
-  classCountDocuments.mockResolvedValue(0);
+  classCountDocuments.mockReturnValue(mongooseCountSession(0));
   eventCreate.mockResolvedValue({});
 });
 
 describe("assignBackupTeacher", () => {
-  it("Gán dự bị thành công khi chưa đạt trần BR-12", async () => {
+  it("Gán dự bị thành công khi chưa đạt trần BR-12 — chạy trong transaction, commit khi thành công", async () => {
     const classDoc = mockClassDoc();
     classFindById.mockResolvedValue(classDoc);
-    classCountDocuments.mockResolvedValue(1); // đang là dự bị 1 lớp khác, còn dưới trần 3
+    classCountDocuments.mockReturnValue(mongooseCountSession(1)); // đang là dự bị 1 lớp khác, còn dưới trần 3
 
     await assignBackupTeacher(CLASS_ID, BACKUP_ID);
 
     expect(classDoc.backupTeacherId).toBe(BACKUP_ID);
-    expect(classDoc.save).toHaveBeenCalled();
+    expect(classDoc.save).toHaveBeenCalledWith({ session: fakeSession });
+    expect(fakeSession.commitTransaction).toHaveBeenCalled();
+    expect(fakeSession.abortTransaction).not.toHaveBeenCalled();
+    expect(fakeSession.endSession).toHaveBeenCalled();
   });
 
-  it(`BR-12: chặn gán nếu đã làm dự bị đủ ${MAX_CONCURRENT_BACKUP_COHORTS} cohort đang sống`, async () => {
-    classFindById.mockResolvedValue(mockClassDoc());
-    classCountDocuments.mockResolvedValue(MAX_CONCURRENT_BACKUP_COHORTS);
+  it(`BR-12: chặn gán nếu đã làm dự bị đủ ${MAX_CONCURRENT_BACKUP_COHORTS} cohort đang sống — abort transaction, không ghi`, async () => {
+    const classDoc = mockClassDoc();
+    classFindById.mockResolvedValue(classDoc);
+    classCountDocuments.mockReturnValue(mongooseCountSession(MAX_CONCURRENT_BACKUP_COHORTS));
 
     await expect(assignBackupTeacher(CLASS_ID, BACKUP_ID)).rejects.toMatchObject({ status: 422 });
+
+    expect(classDoc.save).not.toHaveBeenCalled();
+    expect(fakeSession.abortTransaction).toHaveBeenCalled();
+    expect(fakeSession.commitTransaction).not.toHaveBeenCalled();
+    expect(fakeSession.endSession).toHaveBeenCalled();
   });
 
   it("Không cho gán dự bị trùng giáo viên chính", async () => {

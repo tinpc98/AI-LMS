@@ -15,7 +15,7 @@ import {
 import { ThunderboltOutlined, StopOutlined, WarningOutlined } from "@ant-design/icons";
 import dayjs, { Dayjs } from "dayjs";
 import { cohortMechanismApi } from "../../../api/cohortMechanismApi";
-import { unwrap } from "../../../api/unwrap";
+import { unwrap, unwrapOrNull } from "../../../api/unwrap";
 import type { FlaggedCohort, OverdueSession } from "../cohortMechanism.types";
 
 const { Text } = Typography;
@@ -70,7 +70,7 @@ export const EscalationQueueTab: React.FC = () => {
     try {
       setEscalatingId(session._id);
       const res = await cohortMechanismApi.escalateLevel1(session._id);
-      const result = res.data.data;
+      const result = unwrapOrNull(res.data);
       if (result?.resolved) {
         message.success("Đã kích hoạt giáo viên dự bị cho buổi học này.");
       } else {

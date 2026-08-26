@@ -3,6 +3,7 @@ import { Button, Modal, Form, Rate, Input, Tag } from "antd";
 import { StarOutlined, CheckCircleFilled } from "@ant-design/icons";
 import { cohortFeedbackApi } from "../../../api/cohortFeedbackApi";
 import { toast } from "../../../utils/toast";
+import { useAuth } from "../../../shared/hooks/useAuth";
 import type { SubmitCohortFeedbackPayload } from "../cohortFeedback.types";
 
 const { TextArea } = Input;
@@ -11,15 +12,22 @@ interface CohortFeedbackButtonProps {
   classId: string;
 }
 
-const submittedKey = (classId: string) => `cohortFeedback:submitted:${classId}`;
+// BUG ĐÃ SỬA: key trước đây chỉ có classId, không có học sinh — trên máy dùng chung (phòng máy
+// trường học), học sinh B đăng nhập sau có thể thấy nhầm "Đã đánh giá" của học sinh A vì cùng
+// origin localStorage. Thêm userId vào key để mỗi học sinh có trạng thái riêng trên cùng trình
+// duyệt.
+const submittedKey = (classId: string, userId: string) =>
+  `cohortFeedback:submitted:${userId}:${classId}`;
 
 // Nút "Đánh giá lớp học" — chỉ hiển thị khi commitmentStatus đã COMPLETED/COMPLETED_PARTIAL
 // (điều kiện lọc do component cha quyết định). EduSpace mechanism design Phần C.3.
 export const CohortFeedbackButton: React.FC<CohortFeedbackButtonProps> = ({ classId }) => {
+  const { user } = useAuth();
+  const userId = user?.id || user?._id || "";
   const [open, setOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(
-    () => localStorage.getItem(submittedKey(classId)) === "1"
+    () => !!userId && localStorage.getItem(submittedKey(classId, userId)) === "1"
   );
   const [form] = Form.useForm<SubmitCohortFeedbackPayload>();
 
@@ -27,7 +35,7 @@ export const CohortFeedbackButton: React.FC<CohortFeedbackButtonProps> = ({ clas
     try {
       setSubmitting(true);
       await cohortFeedbackApi.submit(classId, values);
-      localStorage.setItem(submittedKey(classId), "1");
+      if (userId) localStorage.setItem(submittedKey(classId, userId), "1");
       setSubmitted(true);
       setOpen(false);
       form.resetFields();
@@ -36,7 +44,7 @@ export const CohortFeedbackButton: React.FC<CohortFeedbackButtonProps> = ({ clas
       const message = error?.response?.data?.message || "Không thể gửi đánh giá, vui lòng thử lại.";
       toast.error(message);
       if (error?.response?.status === 409) {
-        localStorage.setItem(submittedKey(classId), "1");
+        if (userId) localStorage.setItem(submittedKey(classId, userId), "1");
         setSubmitted(true);
         setOpen(false);
       }

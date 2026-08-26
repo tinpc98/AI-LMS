@@ -4,6 +4,8 @@ import mongoose from "mongoose";
 
 const userFindById = vi.fn();
 const userUpdateMany = vi.fn();
+const userUpdateOne = vi.fn();
+const userFindOneAndUpdate = vi.fn();
 const classCountDocuments = vi.fn();
 const classExists = vi.fn();
 const classFind = vi.fn();
@@ -12,6 +14,8 @@ vi.mock("#modules/auth/user.model.js", () => ({
   default: {
     findById: (...a) => userFindById(...a),
     updateMany: (...a) => userUpdateMany(...a),
+    updateOne: (...a) => userUpdateOne(...a),
+    findOneAndUpdate: (...a) => userFindOneAndUpdate(...a),
   },
 }));
 vi.mock("#modules/class", () => ({
@@ -193,7 +197,7 @@ describe("voucherForTeacher — BR-22/BR-23", () => {
     ...over,
   });
 
-  it("Bảo lãnh thành công khi đủ điều kiện + đã đồng dạy chung", async () => {
+  it("Bảo lãnh thành công khi đủ điều kiện + đã đồng dạy chung — dùng findOneAndUpdate nguyên tử, không phải đọc-rồi-ghi", async () => {
     const voucher = makeVoucher();
     const vouchee = makeVouchee();
     // dùng mongooseFindResult vì sau khi bảo lãnh, service tự gọi tryPromoteToL3(vouchee) ->
@@ -205,12 +209,61 @@ describe("voucherForTeacher — BR-22/BR-23", () => {
     });
     classExists.mockResolvedValue(true);
     classCountDocuments.mockResolvedValue(0); // vouchee chưa đủ cohort -> chưa lên L3 ngay
+    userFindOneAndUpdate.mockImplementation((filter) => {
+      if (String(filter._id) === VOUCHER_ID) return Promise.resolve({ ...voucher, vouchLimit: 1 });
+      return Promise.resolve({ ...vouchee, vouchedBy: [VOUCHER_ID] });
+    });
 
     const result = await voucherForTeacher(VOUCHER_ID, VOUCHEE_ID);
 
-    expect(vouchee.vouchedBy).toContain(VOUCHER_ID);
-    expect(voucher.vouchLimit).toBe(1);
+    // Trừ vouchLimit PHẢI đi qua findOneAndUpdate với điều kiện lọc {vouchLimit:{$gt:0}} trong
+    // CÙNG câu lệnh ghi — không phải đọc trước rồi ghi sau (đó là TOCTOU vừa sửa).
+    expect(userFindOneAndUpdate).toHaveBeenCalledWith(
+      { _id: VOUCHER_ID, vouchLimit: { $gt: 0 } },
+      { $inc: { vouchLimit: -1 } },
+      { new: true }
+    );
+    expect(userFindOneAndUpdate).toHaveBeenCalledWith(
+      { _id: VOUCHEE_ID, vouchedBy: { $ne: VOUCHER_ID } },
+      { $push: { vouchedBy: VOUCHER_ID } },
+      { new: true }
+    );
+    expect(result.vouchee.vouchedBy).toContain(VOUCHER_ID);
+    expect(result.voucher.vouchLimit).toBe(1);
     expect(result.promotion.promoted).toBe(false); // chưa đủ cohort
+  });
+
+  it("BUG ĐÃ SỬA — race: findOneAndUpdate trừ vouchLimit trả về null (request khác đã dùng hết suất cuối) → BusinessRuleError, KHÔNG đọc voucher.vouchLimit trong bộ nhớ để tự quyết", async () => {
+    const voucher = makeVoucher({ vouchLimit: 1 }); // trong bộ nhớ TƯỞNG còn 1 suất...
+    const vouchee = makeVouchee();
+    userFindById.mockImplementation((id) => {
+      if (id === VOUCHER_ID) return Promise.resolve(voucher);
+      if (id === VOUCHEE_ID) return Promise.resolve(vouchee);
+      return Promise.resolve(null);
+    });
+    classExists.mockResolvedValue(true);
+    // ...nhưng MongoDB thật (mô phỏng qua findOneAndUpdate) nói suất đã bị request khác dùng mất.
+    userFindOneAndUpdate.mockResolvedValue(null);
+
+    await expect(voucherForTeacher(VOUCHER_ID, VOUCHEE_ID)).rejects.toMatchObject({ status: 422 });
+  });
+
+  it("BUG ĐÃ SỬA — race trên bước gán vouchedBy (đã bị bảo lãnh trùng bởi request khác) → hoàn lại vouchLimit vừa trừ, ném lỗi", async () => {
+    const voucher = makeVoucher();
+    const vouchee = makeVouchee();
+    userFindById.mockImplementation((id) => {
+      if (id === VOUCHER_ID) return Promise.resolve(voucher);
+      if (id === VOUCHEE_ID) return Promise.resolve(vouchee);
+      return Promise.resolve(null);
+    });
+    classExists.mockResolvedValue(true);
+    userFindOneAndUpdate.mockImplementation((filter) => {
+      if (String(filter._id) === VOUCHER_ID) return Promise.resolve({ ...voucher, vouchLimit: 1 });
+      return Promise.resolve(null); // vouchedBy đã có voucherId do race -> $ne không khớp
+    });
+
+    await expect(voucherForTeacher(VOUCHER_ID, VOUCHEE_ID)).rejects.toMatchObject({ status: 422 });
+    expect(userUpdateOne).toHaveBeenCalledWith({ _id: VOUCHER_ID }, { $inc: { vouchLimit: 1 } });
   });
 
   it("BR-22: chưa từng đồng dạy/dự bị chung → BusinessRuleError", async () => {

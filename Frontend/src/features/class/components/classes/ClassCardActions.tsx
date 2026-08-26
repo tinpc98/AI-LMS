@@ -2,10 +2,15 @@ import React from "react";
 import { Button, Space, Badge, Modal } from "antd";
 import { VideoCameraOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
-import type { IStudentClass } from "../../../../types/studentClass";
+import type { CommitmentStatus, IStudentClass } from "../../../../types/studentClass";
 import CohortFeedbackButton from "../../../cohort-feedback/components/CohortFeedbackButton";
 
-const FEEDBACK_ELIGIBLE_COMMITMENT_STATUSES = ["COMPLETED", "COMPLETED_PARTIAL"];
+// Gõ theo CommitmentStatus (không phải string[] trần) để nếu enum đổi tên sau này, mảng này
+// gãy ngay ở compile-time thay vì âm thầm không khớp giá trị backend thật gửi về.
+const FEEDBACK_ELIGIBLE_COMMITMENT_STATUSES: CommitmentStatus[] = [
+  "COMPLETED",
+  "COMPLETED_PARTIAL",
+];
 
 interface ClassCardActionsProps {
   item: IStudentClass;

@@ -6,6 +6,7 @@ const classFindById = vi.fn();
 const feedbackFindOne = vi.fn();
 const feedbackFind = vi.fn();
 const feedbackCreate = vi.fn();
+const enrollmentExists = vi.fn();
 
 vi.mock("#modules/feedback/cohortFeedback.model.js", () => ({
   default: {
@@ -16,6 +17,9 @@ vi.mock("#modules/feedback/cohortFeedback.model.js", () => ({
 }));
 vi.mock("#modules/class", () => ({
   Class: { findById: (...a) => classFindById(...a) },
+}));
+vi.mock("#modules/classEnrollment", () => ({
+  ClassEnrollment: { exists: (...a) => enrollmentExists(...a) },
 }));
 
 const { submitFeedback, getTeacherAverageRatings, getFeedbackDetailsForAdmin } =
@@ -32,6 +36,7 @@ const mongooseLean = (result) => ({ lean: () => Promise.resolve(result) });
 
 beforeEach(() => {
   vi.clearAllMocks();
+  enrollmentExists.mockResolvedValue(true);
 });
 
 describe("submitFeedback", () => {
@@ -102,6 +107,46 @@ describe("submitFeedback", () => {
     await expect(
       submitFeedback(CLASS_ID, STUDENT_ID, { ratingClarity: 5, ratingHelpfulness: 5 })
     ).rejects.toMatchObject({ status: 422 });
+  });
+
+  it("BUG ĐÃ SỬA — học viên CHƯA TỪNG tham gia lớp → BusinessRuleError, không tạo feedback (trước đây bất kỳ ai đăng nhập cũng đánh giá được)", async () => {
+    classFindById.mockReturnValue(
+      mongooseSelectLean({ teacherId: TEACHER_ID, commitmentStatus: "COMPLETED" })
+    );
+    enrollmentExists.mockResolvedValue(null);
+
+    await expect(
+      submitFeedback(CLASS_ID, STUDENT_ID, { ratingClarity: 5, ratingHelpfulness: 5 })
+    ).rejects.toMatchObject({ status: 422 });
+    expect(feedbackCreate).not.toHaveBeenCalled();
+    expect(feedbackFindOne).not.toHaveBeenCalled(); // chặn sớm, không cần đọc tiếp
+  });
+
+  it("Enrollment status=CANCELLED (đã rút hẳn, chưa từng thực học) → BusinessRuleError", async () => {
+    classFindById.mockReturnValue(
+      mongooseSelectLean({ teacherId: TEACHER_ID, commitmentStatus: "COMPLETED" })
+    );
+    enrollmentExists.mockResolvedValue(null); // exists({status:{$ne:"CANCELLED"}}) không khớp
+
+    await expect(
+      submitFeedback(CLASS_ID, STUDENT_ID, { ratingClarity: 5, ratingHelpfulness: 5 })
+    ).rejects.toMatchObject({ status: 422 });
+  });
+
+  it("Kiểm enrollment với studentId đúng và loại trừ status CANCELLED", async () => {
+    classFindById.mockReturnValue(
+      mongooseSelectLean({ teacherId: TEACHER_ID, commitmentStatus: "COMPLETED" })
+    );
+    feedbackFindOne.mockReturnValue(mongooseLean(null));
+    feedbackCreate.mockResolvedValue({ _id: "fb1" });
+
+    await submitFeedback(CLASS_ID, STUDENT_ID, { ratingClarity: 5, ratingHelpfulness: 5 });
+
+    expect(enrollmentExists).toHaveBeenCalledWith({
+      classId: CLASS_ID,
+      studentId: STUDENT_ID,
+      status: { $ne: "CANCELLED" },
+    });
   });
 });
 

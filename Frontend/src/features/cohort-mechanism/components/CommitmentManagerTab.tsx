@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   Select,
   Card,
@@ -16,7 +16,7 @@ import {
 } from "antd";
 import { cohortMechanismApi } from "../../../api/cohortMechanismApi";
 import { classService } from "../../class/classService";
-import { unwrapOrNull } from "../../../api/unwrap";
+import { unwrap, unwrapOrNull } from "../../../api/unwrap";
 import {
   ALLOWED_TRANSITIONS,
   COMMITMENT_REASON_LABELS,
@@ -41,6 +41,11 @@ export const CommitmentManagerTab: React.FC = () => {
   const [selected, setSelected] = useState<ClassCommitmentInfo | null>(null);
   const [loadingDetail, setLoadingDetail] = useState(false);
   const searchTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  // BUG ĐÃ SỬA: chọn nhanh lớp A rồi B trước khi response của A về có thể khiến response A
+  // (đến sau do mạng không đảm bảo thứ tự) ghi đè state, hiện chi tiết lớp A dưới Select đang
+  // chọn B — Admin có thể chuyển trạng thái cam kết/gán dự bị nhầm lớp. requestIdRef đánh dấu
+  // lượt chọn mới nhất, mọi response chỉ áp dụng nếu vẫn đúng lượt khi resolve xong.
+  const requestIdRef = useRef(0);
 
   const [toStatus, setToStatus] = useState<CommitmentStatus | undefined>();
   const [reason, setReason] = useState<string | undefined>();
@@ -56,6 +61,14 @@ export const CommitmentManagerTab: React.FC = () => {
   const [activateReason, setActivateReason] = useState<string | undefined>();
   const [activating, setActivating] = useState(false);
 
+  // Huỷ debounce đang chờ khi component unmount — tránh setOptions() trên component đã gỡ
+  // (không hỏng gì ở React 18 nhưng gây warning dev không cần thiết, dọn cho sạch).
+  useEffect(() => {
+    return () => {
+      if (searchTimer.current) clearTimeout(searchTimer.current);
+    };
+  }, []);
+
   const handleSearch = (value: string) => {
     if (searchTimer.current) clearTimeout(searchTimer.current);
     if (!value.trim()) {
@@ -66,7 +79,7 @@ export const CommitmentManagerTab: React.FC = () => {
       try {
         setSearching(true);
         const res = await cohortMechanismApi.searchClasses(value.trim());
-        const list = res.data.data || [];
+        const list = unwrap(res.data, []);
         setOptions(list.map((c) => ({ value: c._id, label: `${c.name} (${c.code || "—"})` })));
       } catch (error) {
         console.error("Tìm lớp thất bại:", error);
@@ -77,6 +90,7 @@ export const CommitmentManagerTab: React.FC = () => {
   };
 
   const loadClassDetail = async (classId: string) => {
+    const requestId = ++requestIdRef.current;
     try {
       setLoadingDetail(true);
       setReadiness(null);
@@ -84,17 +98,20 @@ export const CommitmentManagerTab: React.FC = () => {
       setReason(undefined);
       setNote("");
       const res = await cohortMechanismApi.getClassById(classId);
+      if (requestIdRef.current !== requestId) return; // đã có lượt chọn mới hơn, bỏ qua
       const detail = unwrapOrNull(res.data);
       setSelected(detail);
       if (!teacherOptions.length) {
         const teachers = await classService.getTeacherOptions();
+        if (requestIdRef.current !== requestId) return;
         setTeacherOptions(teachers);
       }
     } catch (error) {
+      if (requestIdRef.current !== requestId) return;
       console.error("Không tải được chi tiết lớp:", error);
       message.error("Không tải được chi tiết lớp học.");
     } finally {
-      setLoadingDetail(false);
+      if (requestIdRef.current === requestId) setLoadingDetail(false);
     }
   };
 
@@ -119,6 +136,13 @@ export const CommitmentManagerTab: React.FC = () => {
   const handleTransition = async () => {
     if (!selected || !toStatus) {
       message.warning("Vui lòng chọn trạng thái muốn chuyển tới.");
+      return;
+    }
+    // BUG ĐÃ SỬA: label từng ghi "(tuỳ chọn)" nhưng backend luôn bắt buộc reason
+    // (transitionCommitment ném ValidationError nếu thiếu) — Admin để trống sẽ luôn bị từ chối
+    // mà không hiểu vì sao. Chặn sớm ở đây thay vì để round-trip API rồi mới báo lỗi chung chung.
+    if (!reason) {
+      message.warning("Vui lòng chọn lý do — bắt buộc cho mọi lần chuyển trạng thái cam kết.");
       return;
     }
     try {
@@ -260,7 +284,8 @@ export const CommitmentManagerTab: React.FC = () => {
                   }))}
                 />
                 <Select
-                  placeholder="Lý do (tuỳ chọn)"
+                  placeholder="Lý do (bắt buộc)"
+                  status={!reason ? "warning" : undefined}
                   allowClear
                   value={reason}
                   onChange={setReason}

@@ -1,5 +1,6 @@
 // File: src/modules/class/backupTeacher.service.js
 // Cơ chế dạy đôi (chính/dự bị) — EduSpace mechanism design Phần A.6 (BR-09..BR-12).
+import mongoose from "mongoose";
 import Class from "./class.model.js";
 import CommitmentEvent from "./commitmentEvent.model.js";
 import { User } from "#modules/auth";
@@ -30,20 +31,35 @@ export async function assignBackupTeacher(classId, backupTeacherId) {
     throw new ValidationError("Giáo viên dự bị không được trùng giáo viên chính.");
   }
 
-  const concurrentCount = await Class.countDocuments({
-    backupTeacherId,
-    commitmentStatus: { $in: LIVE_COMMITMENT_STATUSES },
-    isDeleted: false,
-  });
-  if (concurrentCount >= MAX_CONCURRENT_BACKUP_COHORTS) {
-    throw new BusinessRuleError(
-      `Giáo viên này đang làm dự bị cho ${concurrentCount} lớp — đã đạt trần ${MAX_CONCURRENT_BACKUP_COHORTS} cohort đồng thời (BR-12).`
-    );
-  }
+  // BUG ĐÃ SỬA: trước đây đếm concurrentCount rồi ghi classDoc.save() ở 2 câu lệnh tách rời —
+  // TOCTOU. Hai Admin (hoặc 1 Admin bấm 2 lần race) gán CÙNG giáo viên dự bị cho 2 lớp khác nhau
+  // gần như đồng thời có thể cùng đọc concurrentCount=2 (trần=3), cùng qua được kiểm tra, cùng
+  // ghi — vượt trần BR-12. Dùng transaction để đếm + ghi nằm trong 1 đơn vị nguyên tử thật.
+  const session = await mongoose.startSession();
+  session.startTransaction();
+  try {
+    const concurrentCount = await Class.countDocuments({
+      backupTeacherId,
+      commitmentStatus: { $in: LIVE_COMMITMENT_STATUSES },
+      isDeleted: false,
+    }).session(session);
+    if (concurrentCount >= MAX_CONCURRENT_BACKUP_COHORTS) {
+      throw new BusinessRuleError(
+        `Giáo viên này đang làm dự bị cho ${concurrentCount} lớp — đã đạt trần ${MAX_CONCURRENT_BACKUP_COHORTS} cohort đồng thời (BR-12).`
+      );
+    }
 
-  classDoc.backupTeacherId = backupTeacherId;
-  await classDoc.save();
-  return classDoc;
+    classDoc.backupTeacherId = backupTeacherId;
+    await classDoc.save({ session });
+
+    await session.commitTransaction();
+    return classDoc;
+  } catch (error) {
+    await session.abortTransaction();
+    throw error;
+  } finally {
+    session.endSession();
+  }
 }
 
 /**

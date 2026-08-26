@@ -3,6 +3,7 @@ import { Card, Col, Row, Statistic, Typography, Empty, Skeleton, Alert } from "a
 import { StarFilled, SmileOutlined, TeamOutlined } from "@ant-design/icons";
 import { useQuery } from "@tanstack/react-query";
 import { cohortFeedbackApi } from "../../../api/cohortFeedbackApi";
+import { unwrapOrNull } from "../../../api/unwrap";
 
 const { Title, Paragraph } = Typography;
 
@@ -11,7 +12,7 @@ const { Title, Paragraph } = Typography;
 export const TeacherRatingsPage: React.FC = () => {
   const { data, isLoading, isError } = useQuery({
     queryKey: ["cohort-feedback", "my-average"],
-    queryFn: async () => (await cohortFeedbackApi.getMyAverage()).data.data,
+    queryFn: async () => unwrapOrNull((await cohortFeedbackApi.getMyAverage()).data),
   });
 
   return (

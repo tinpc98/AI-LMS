@@ -125,12 +125,38 @@ export async function voucherForTeacher(voucherId, voucheeId) {
     );
   }
 
-  vouchee.vouchedBy = [...(vouchee.vouchedBy || []), voucherId];
-  voucher.vouchLimit -= 1;
-  await Promise.all([vouchee.save(), voucher.save()]);
+  // BUG ĐÃ SỬA: trước đây đọc voucher.vouchLimit vào bộ nhớ, kiểm tra, rồi `-= 1` và `.save()` —
+  // kinh điển TOCTOU (time-of-check-to-time-of-use). Hai request bảo lãnh đồng thời của CÙNG
+  // voucher đều đọc cùng giá trị vouchLimit, đều qua được kiểm tra `<=0`, đều trừ 1 trong bộ nhớ
+  // rồi ghi đè nhau — hạn mức BR-23 có thể bị vượt trên MongoDB thật (không lộ trong unit test vì
+  // mock không mô phỏng race thật). Dùng `findOneAndUpdate` với điều kiện lọc NGAY TRONG câu
+  // lệnh ghi để MongoDB tự đảm bảo tính nguyên tử — request thua cuộc sẽ nhận `null` thay vì
+  // âm thầm vượt hạn mức.
+  const updatedVoucher = await User.findOneAndUpdate(
+    { _id: voucherId, vouchLimit: { $gt: 0 } },
+    { $inc: { vouchLimit: -1 } },
+    { new: true }
+  );
+  if (!updatedVoucher) {
+    throw new BusinessRuleError(
+      "Đã đạt hạn mức bảo lãnh đồng thời, không thể bảo lãnh thêm (BR-23)."
+    );
+  }
+
+  const updatedVouchee = await User.findOneAndUpdate(
+    { _id: voucheeId, vouchedBy: { $ne: voucherId } },
+    { $push: { vouchedBy: voucherId } },
+    { new: true }
+  );
+  if (!updatedVouchee) {
+    // Đã bảo lãnh trùng do race với 1 request khác — hoàn lại vouchLimit vừa trừ ở trên, không
+    // để voucher mất oan 1 suất cho một lần bảo lãnh không thành công.
+    await User.updateOne({ _id: voucherId }, { $inc: { vouchLimit: 1 } });
+    throw new BusinessRuleError("Đã bảo lãnh cho giáo viên này rồi.");
+  }
 
   const promotion = await tryPromoteToL3(voucheeId);
-  return { voucher, vouchee, promotion };
+  return { voucher: updatedVoucher, vouchee: updatedVouchee, promotion };
 }
 
 /**

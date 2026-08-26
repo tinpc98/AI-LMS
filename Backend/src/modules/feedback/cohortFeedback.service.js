@@ -2,6 +2,7 @@
 // Thu thập & tổng hợp đánh giá học viên — EduSpace mechanism design Phần C.3, BR-25/26.
 import CohortFeedback from "./cohortFeedback.model.js";
 import { Class } from "#modules/class";
+import { ClassEnrollment } from "#modules/classEnrollment";
 import { NotFoundError, BusinessRuleError, ConflictError } from "#shared/utils/appError.js";
 
 // Chỉ thu thập SAU buổi cuối cùng (BR-26 comment trong model) — cohort phải đã hoàn thành
@@ -29,6 +30,19 @@ export async function submitFeedback(
   }
   if (!classDoc.teacherId) {
     throw new BusinessRuleError("Lớp học không có giáo viên để đánh giá.");
+  }
+
+  // BUG ĐÃ SỬA: trước đây không kiểm học viên có thực sự học lớp này hay không — bất kỳ học
+  // sinh nào đăng nhập cũng đánh giá được bất kỳ lớp COMPLETED nào, làm nhiễu chỉ số Chất lượng
+  // của giáo viên. Không yêu cầu status="ACTIVE" (lớp đã COMPLETED thì enrollment hợp lệ có thể
+  // đã chuyển sang "COMPLETED") — chỉ loại "CANCELLED" (chưa từng thực sự tham gia/đã rút hẳn).
+  const wasEnrolled = await ClassEnrollment.exists({
+    classId,
+    studentId,
+    status: { $ne: "CANCELLED" },
+  });
+  if (!wasEnrolled) {
+    throw new BusinessRuleError("Bạn chưa từng tham gia lớp học này, không thể đánh giá.");
   }
 
   const existing = await CohortFeedback.findOne({ classId, studentId }).lean();

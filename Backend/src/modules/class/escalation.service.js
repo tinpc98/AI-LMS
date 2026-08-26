@@ -77,10 +77,22 @@ export async function cancelSessionWithMakeup(
   session.cancelledBy = adminId;
   await session.save();
 
+  // BUG ĐÃ SỬA: bản trước gán CÙNG sessionNumber với buổi gốc — nhưng buổi gốc chỉ đổi
+  // status="CANCELLED", không set isDeleted:true, nên vẫn khớp partialFilterExpression của
+  // unique index {classId,sessionNumber} (isDeleted:false) trên ClassSession -> ClassSession.create()
+  // LUÔN ném lỗi trùng khóa (E11000) trên MongoDB thật (unit test dùng mock nên không bắt được).
+  // Đúng ý đồ ban đầu ("buổi bù cuối đợt", xem docstring hàm) là buổi bù nằm Ở CUỐI đợt với số
+  // thứ tự MỚI, không thay thế đúng vị trí buổi gốc — dùng lại cách tính nextSessionNumber đã có
+  // ở classSession.service.js.
+  const lastSession = await ClassSession.findOne({ classId: session.classId })
+    .sort({ sessionNumber: -1 })
+    .lean();
+  const nextSessionNumber = (lastSession?.sessionNumber || 0) + 1;
+
   const makeupSession = await ClassSession.create({
     classId: session.classId,
     teacherId: session.teacherId,
-    sessionNumber: session.sessionNumber, // giữ cùng sessionNumber logic — buổi bù thay thế buổi gốc, không phải buổi mới thêm
+    sessionNumber: nextSessionNumber,
     title: `${session.title} (Học bù)`,
     sessionType: "MAKEUP",
     topicId: session.topicId,

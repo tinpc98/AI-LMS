@@ -301,6 +301,30 @@ export async function excuseCommitmentEvent(eventId, adminId) {
     if (strikeCount < STRIKE_LOCK_THRESHOLD && teacher.poolStatus === "LOCKED") {
       teacher.poolStatus = "ACTIVE";
       teacher.poolLockedUntil = null;
+    } else if (teacher.poolStatus === "REMOVED") {
+      // BUG ĐÃ SỬA: trước đây nhánh này không tồn tại — miễn strike cho giáo viên đã bị loại
+      // khỏi pool (REMOVED do đủ 3 strike) không bao giờ đưa họ trở lại được, mâu thuẫn với
+      // chính docstring hàm này ("có thể mở khóa nếu strike vừa bị xóa làm giảm số strike").
+      // CHỈ áp dụng khi việc REMOVED đến từ tích lũy strike — nếu giáo viên từng có sự kiện
+      // ESCALATION_TERMINATED (không thể miễn trừ qua hàm này, xem chặn ở đầu hàm), việc loại
+      // khỏi pool là do 1 lần gãy lớp nghiêm trọng, KHÔNG được tự phục hồi chỉ vì một strike
+      // nhẹ/nặng khác được miễn — đúng tinh thần A.5 "1 strike nặng đơn lẻ gây TERMINATED thì
+      // loại ngay, không cần đủ 3", tức nặng hơn diện tích lũy.
+      const hasEscalationTermination = await CommitmentEvent.exists({
+        teacherId: event.teacherId,
+        reason: "ESCALATION_TERMINATED",
+      });
+      if (!hasEscalationTermination) {
+        if (strikeCount >= STRIKE_REMOVE_THRESHOLD) {
+          // vẫn còn đủ strike để giữ REMOVED — không đổi gì.
+        } else if (strikeCount >= STRIKE_LOCK_THRESHOLD) {
+          teacher.poolStatus = "LOCKED";
+          teacher.poolLockedUntil = new Date(Date.now() + POOL_LOCK_DAYS * 24 * 60 * 60 * 1000);
+        } else {
+          teacher.poolStatus = "ACTIVE";
+          teacher.poolLockedUntil = null;
+        }
+      }
     }
     await teacher.save();
   }

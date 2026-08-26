@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Card, Form, Select, Input, Button, Typography, Alert, Result } from "antd";
+import { Card, Form, Select, Input, Button, Typography, Alert, Result, message } from "antd";
 import { WarningOutlined } from "@ant-design/icons";
 import { complaintApi } from "../../../api/complaintApi";
 import { COMPLAINT_CATEGORY_LABELS, type ComplaintCategory } from "../complaint.types";
@@ -27,8 +27,9 @@ export const ReportIssuePage: React.FC = () => {
       await complaintApi.create(values);
       setSubmitted(true);
       form.resetFields();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Gửi báo cáo thất bại:", error);
+      message.error(error?.response?.data?.message || "Gửi báo cáo thất bại, vui lòng thử lại.");
     } finally {
       setSubmitting(false);
     }

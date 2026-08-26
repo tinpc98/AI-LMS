@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import {
   Card,
   Select,
@@ -50,6 +50,12 @@ export const TeacherTrustPage: React.FC = () => {
   const [feedbacks, setFeedbacks] = useState<CohortFeedbackRecord[]>([]);
   const [loadingFeedbacks, setLoadingFeedbacks] = useState(false);
 
+  // BUG ĐÃ SỬA: chọn nhanh giáo viên A rồi B trước khi response của A về — nếu response A đến
+  // SAU response B (thứ tự mạng không đảm bảo), state sẽ hiện hồ sơ của A dưới Select đang chọn
+  // B, Admin có thể thao tác (nâng L3, tạm khoá bảo lãnh) nhầm người. requestIdRef đánh dấu lượt
+  // chọn mới nhất — mọi response chỉ được áp dụng nếu vẫn đúng lượt đó khi resolve xong.
+  const requestIdRef = useRef(0);
+
   const ensureTeacherOptions = async () => {
     if (teacherOptions.length) return;
     const teachers = await classService.getTeacherOptions();
@@ -57,27 +63,32 @@ export const TeacherTrustPage: React.FC = () => {
   };
 
   const loadTeacher = async (teacherId: string) => {
+    const requestId = ++requestIdRef.current;
     setSelectedId(teacherId);
     setEligibility(null);
     try {
       setLoadingProfile(true);
       const res = await accountService.getAccountById(teacherId);
+      if (requestIdRef.current !== requestId) return; // đã có lượt chọn mới hơn, bỏ qua
       setProfile(res.data);
     } catch (error) {
+      if (requestIdRef.current !== requestId) return;
       console.error("Không tải được hồ sơ giáo viên:", error);
       message.error("Không tải được hồ sơ giáo viên.");
     } finally {
-      setLoadingProfile(false);
+      if (requestIdRef.current === requestId) setLoadingProfile(false);
     }
 
     try {
       setLoadingFeedbacks(true);
       const res = await cohortFeedbackApi.getTeacherDetailsForAdmin(teacherId);
+      if (requestIdRef.current !== requestId) return;
       setFeedbacks(unwrap(res.data, []));
     } catch (error) {
+      if (requestIdRef.current !== requestId) return;
       console.error("Không tải được đánh giá:", error);
     } finally {
-      setLoadingFeedbacks(false);
+      if (requestIdRef.current === requestId) setLoadingFeedbacks(false);
     }
   };
 
@@ -99,7 +110,7 @@ export const TeacherTrustPage: React.FC = () => {
     try {
       setPromoting(true);
       const res = await verificationApi.promoteTeacherToL3(selectedId);
-      if (res.data.data?.promoted) {
+      if (unwrapOrNull(res.data)?.promoted) {
         message.success("Đã nâng tầng lên L3.");
         loadTeacher(selectedId);
       } else {
@@ -117,7 +128,7 @@ export const TeacherTrustPage: React.FC = () => {
     try {
       setSuspending(true);
       const res = await verificationApi.suspendTeacherVouchers(selectedId);
-      const count = res.data.data?.suspendedVoucherIds.length || 0;
+      const count = unwrapOrNull(res.data)?.suspendedVoucherIds.length || 0;
       message.success(
         count > 0
           ? `Đã tạm khoá quyền bảo lãnh của ${count} người từng bảo lãnh cho giáo viên này.`

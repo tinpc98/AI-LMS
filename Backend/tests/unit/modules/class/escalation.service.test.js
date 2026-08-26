@@ -3,6 +3,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import mongoose from "mongoose";
 
 const sessionFind = vi.fn();
+const sessionFindOne = vi.fn();
 const sessionFindById = vi.fn();
 const sessionCreate = vi.fn();
 const sessionCountDocuments = vi.fn();
@@ -14,6 +15,7 @@ const activateBackup = vi.fn();
 vi.mock("#modules/classSession", () => ({
   ClassSession: {
     find: (...a) => sessionFind(...a),
+    findOne: (...a) => sessionFindOne(...a),
     findById: (...a) => sessionFindById(...a),
     create: (...a) => sessionCreate(...a),
     countDocuments: (...a) => sessionCountDocuments(...a),
@@ -43,9 +45,12 @@ const {
 const CLASS_ID = new mongoose.Types.ObjectId().toString();
 const SESSION_ID = new mongoose.Types.ObjectId().toString();
 
+const mongooseSortLean = (result) => ({ sort: () => ({ lean: () => Promise.resolve(result) }) });
+
 beforeEach(() => {
   vi.clearAllMocks();
   classUpdateOne.mockResolvedValue({ modifiedCount: 1 });
+  sessionFindOne.mockReturnValue(mongooseSortLean(null));
 });
 
 describe("findOverdueSessions", () => {
@@ -141,6 +146,40 @@ describe("cancelSessionWithMakeup", () => {
       expect.objectContaining({ sessionType: "MAKEUP", makeupForSessionId: SESSION_ID })
     );
     expect(result.makeupSession).toEqual({ _id: "makeup-1" });
+  });
+
+  it("BUG ĐÃ SỬA — buổi bù KHÔNG được trùng sessionNumber với buổi gốc (buổi gốc chỉ đổi status, không isDeleted:true, nên trùng số sẽ vỡ unique index {classId,sessionNumber} trên MongoDB thật)", async () => {
+    const session = makeSession({ sessionNumber: 3 });
+    sessionFindById.mockResolvedValue(session);
+    sessionFindOne.mockReturnValue(mongooseSortLean({ sessionNumber: 5 })); // buổi số lớn nhất hiện có trong lớp
+    sessionCreate.mockResolvedValue({ _id: "makeup-1", sessionNumber: 6 });
+    sessionCountDocuments.mockResolvedValue(0);
+
+    await cancelSessionWithMakeup(SESSION_ID, {
+      adminId: "admin-1",
+      makeupScheduledStartAt: new Date("2026-09-01T10:00:00Z"),
+      makeupScheduledEndAt: new Date("2026-09-01T11:00:00Z"),
+    });
+
+    const createPayload = sessionCreate.mock.calls[0][0];
+    expect(createPayload.sessionNumber).toBe(6); // = max hiện có (5) + 1, KHÔNG phải 3 (số buổi gốc)
+    expect(createPayload.sessionNumber).not.toBe(session.sessionNumber);
+  });
+
+  it("Lớp chưa có buổi nào khác (findOne trả null) → buổi bù nhận sessionNumber = 1", async () => {
+    const session = makeSession({ sessionNumber: 3 });
+    sessionFindById.mockResolvedValue(session);
+    sessionFindOne.mockReturnValue(mongooseSortLean(null));
+    sessionCreate.mockResolvedValue({ _id: "makeup-1" });
+    sessionCountDocuments.mockResolvedValue(0);
+
+    await cancelSessionWithMakeup(SESSION_ID, {
+      adminId: "admin-1",
+      makeupScheduledStartAt: new Date(),
+      makeupScheduledEndAt: new Date(),
+    });
+
+    expect(sessionCreate.mock.calls[0][0].sessionNumber).toBe(1);
   });
 
   it("Thiếu thời gian buổi bù → BusinessRuleError, không huỷ session", async () => {

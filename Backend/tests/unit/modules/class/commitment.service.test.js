@@ -7,6 +7,7 @@ const classCountDocuments = vi.fn();
 const eventFind = vi.fn();
 const eventCreate = vi.fn();
 const eventFindById = vi.fn();
+const eventExists = vi.fn();
 const userFindById = vi.fn();
 const userUpdateMany = vi.fn();
 
@@ -21,6 +22,7 @@ vi.mock("#modules/class/commitmentEvent.model.js", () => ({
     find: (...a) => eventFind(...a),
     create: (...a) => eventCreate(...a),
     findById: (...a) => eventFindById(...a),
+    exists: (...a) => eventExists(...a),
   },
   COMMITMENT_REASONS: [
     "SCHEDULE_FILLED",
@@ -87,6 +89,7 @@ beforeEach(() => {
   assertCohortReady.mockReset().mockResolvedValue({ ready: true });
   classCountDocuments.mockResolvedValue(0);
   userUpdateMany.mockResolvedValue({ modifiedCount: 0 });
+  eventExists.mockResolvedValue(false);
 });
 
 describe("transitionCommitment — BR-16 chặn CONFIRMED khi thiếu học liệu", () => {
@@ -424,6 +427,74 @@ describe("excuseCommitmentEvent — BR-08 miễn strike bất khả kháng", () 
     expect(teacher.poolStatus).toBe("ACTIVE");
     expect(event.reason).toBe("FORCE_MAJEURE_EXCUSED");
     expect(event.strikeApplied).toBe(0);
+  });
+
+  it("BUG ĐÃ SỬA — REMOVED do tích lũy strike, miễn 1 strike làm giảm xuống dưới ngưỡng khóa → phục hồi về ACTIVE", async () => {
+    const event = {
+      _id: "evt1",
+      teacherId: TEACHER_ID,
+      reason: "NO_SHOW",
+      strikeApplied: 1,
+      note: "",
+      save: vi.fn().mockResolvedValue(true),
+    };
+    eventFindById.mockResolvedValue(event);
+    const teacher = mockTeacher({ reliabilityScore: 70, poolStatus: "REMOVED" });
+    userFindById.mockResolvedValue(teacher);
+    eventFind.mockReturnValue({ lean: () => Promise.resolve([]) }); // sau khi miễn, còn 0 strike
+    eventExists.mockResolvedValue(false); // chưa từng có ESCALATION_TERMINATED
+
+    await excuseCommitmentEvent("evt1", "admin-1");
+
+    expect(teacher.poolStatus).toBe("ACTIVE");
+  });
+
+  it("BUG ĐÃ SỬA — REMOVED do tích lũy strike, miễn 1 strike nhưng vẫn còn ≥2 strike hiệu lực → chỉ hạ về LOCKED, không nhảy thẳng ACTIVE", async () => {
+    const event = {
+      _id: "evt1",
+      teacherId: TEACHER_ID,
+      reason: "NO_SHOW",
+      strikeApplied: 1,
+      note: "",
+      save: vi.fn().mockResolvedValue(true),
+    };
+    eventFindById.mockResolvedValue(event);
+    const teacher = mockTeacher({ reliabilityScore: 70, poolStatus: "REMOVED" });
+    userFindById.mockResolvedValue(teacher);
+    // Còn 2 strike hiệu lực sau khi miễn 1 cái.
+    eventFind.mockReturnValue({
+      lean: () =>
+        Promise.resolve([
+          { reason: "CANCELLED_LATE", createdAt: new Date() },
+          { reason: "NO_SHOW", createdAt: new Date() },
+        ]),
+    });
+    eventExists.mockResolvedValue(false);
+
+    await excuseCommitmentEvent("evt1", "admin-1");
+
+    expect(teacher.poolStatus).toBe("LOCKED");
+    expect(teacher.poolLockedUntil).toBeInstanceOf(Date);
+  });
+
+  it("BUG ĐÃ SỬA — REMOVED nhưng giáo viên từng có ESCALATION_TERMINATED → KHÔNG tự phục hồi dù strike giảm", async () => {
+    const event = {
+      _id: "evt1",
+      teacherId: TEACHER_ID,
+      reason: "NO_SHOW",
+      strikeApplied: 1,
+      note: "",
+      save: vi.fn().mockResolvedValue(true),
+    };
+    eventFindById.mockResolvedValue(event);
+    const teacher = mockTeacher({ reliabilityScore: 40, poolStatus: "REMOVED" });
+    userFindById.mockResolvedValue(teacher);
+    eventFind.mockReturnValue({ lean: () => Promise.resolve([]) });
+    eventExists.mockResolvedValue(true); // đã từng bị TERMINATED do leo thang — nặng hơn tích lũy strike
+
+    await excuseCommitmentEvent("evt1", "admin-1");
+
+    expect(teacher.poolStatus).toBe("REMOVED"); // giữ nguyên, không tự phục hồi
   });
 
   it("Miễn trừ sự kiện KHÔNG phải strike → BusinessRuleError", async () => {
