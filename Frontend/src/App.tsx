@@ -74,6 +74,9 @@ const TeacherRatingsPage = lazy(
 const CohortMechanismPage = lazy(
   () => import("./features/cohort-mechanism/pages/CohortMechanismPage")
 );
+const VerificationStatusPage = lazy(
+  () => import("./features/verification/pages/VerificationStatusPage")
+);
 const PlaceholderPage = lazy(() => import("./shared/components/PlaceholderPage"));
 const MyEnrollmentsPage = lazy(() => import("./features/enrollment/MyEnrollmentsPage"));
 const EnrollmentManagementPage = lazy(
@@ -190,6 +193,7 @@ function App() {
                 <Route path="learner-needs" element={<LearnerNeedBrowsePage />} />
                 <Route path="report-issue" element={<ReportIssuePage />} />
                 <Route path="ratings" element={<TeacherRatingsPage />} />
+                <Route path="verification" element={<VerificationStatusPage />} />
               </Route>
 
               {/* Live Session Route cho Teacher (Full màn hình, không Header/Sidebar) */}

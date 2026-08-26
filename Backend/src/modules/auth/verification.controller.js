@@ -7,7 +7,21 @@ import {
   tryPromoteToL3,
   voucherForTeacher,
   suspendVouchersOf,
+  getOwnVerificationStatus,
+  getCoTaughtColleagues,
 } from "./verification.service.js";
+
+export const getMyVerificationStatus = asyncHandler(async (req, res) => {
+  const teacherId = req.user.id || req.user._id;
+  const result = await getOwnVerificationStatus(teacherId);
+  return res.status(200).json({ success: true, message: "OK", data: result });
+});
+
+export const getMyCoTaughtColleagues = asyncHandler(async (req, res) => {
+  const teacherId = req.user.id || req.user._id;
+  const result = await getCoTaughtColleagues(teacherId);
+  return res.status(200).json({ success: true, message: "OK", data: result });
+});
 
 export const getL3Eligibility = asyncHandler(async (req, res) => {
   const { id } = req.params;

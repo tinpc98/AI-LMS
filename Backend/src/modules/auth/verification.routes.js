@@ -8,9 +8,16 @@ import {
   promoteToL3,
   vouchForTeacher,
   suspendTeacherVouchers,
+  getMyVerificationStatus,
+  getMyCoTaughtColleagues,
 } from "./verification.controller.js";
 
 const router = Router();
+
+// Tự xem trạng thái của chính mình — đặt trước "/:id/..." dù không trùng shape, để rõ ràng đây
+// là nhóm "self-service" tách biệt với nhóm thao tác trên người khác (Admin) ở dưới.
+router.get("/me", verifyUser, isTeacher, getMyVerificationStatus);
+router.get("/me/co-taught-colleagues", verifyUser, isTeacher, getMyCoTaughtColleagues);
 
 router.get("/:id/l3-eligibility", verifyUser, isAdmin, getL3Eligibility);
 router.post("/:id/promote-l3", verifyUser, isAdmin, promoteToL3);

@@ -146,4 +146,59 @@ export async function suspendVouchersOf(teacherId) {
   return { suspendedVoucherIds: teacher.vouchedBy, suspendUntil };
 }
 
+/**
+ * Giáo viên tự xem trạng thái xác minh/độ tin cậy/pool của CHÍNH MÌNH — dùng fallback về
+ * default của schema cho các field có thể còn thiếu ở tài khoản tạo trước khi cơ chế này ra
+ * đời (Mongoose không tự backfill document cũ, xem migration backfillCommitmentStatus.js cho
+ * trường hợp tương tự ở Class).
+ */
+export async function getOwnVerificationStatus(teacherId) {
+  const teacher = await User.findById(teacherId).lean();
+  if (!teacher) {
+    throw new NotFoundError("Không tìm thấy tài khoản.");
+  }
+
+  const verificationTier = teacher.verificationTier || "L1";
+  const l3Eligibility = verificationTier === "L3" ? null : await checkL3Eligibility(teacherId);
+
+  return {
+    verificationTier,
+    reliabilityScore: teacher.reliabilityScore ?? 100,
+    poolStatus: teacher.poolStatus || "ACTIVE",
+    poolLockedUntil: teacher.poolLockedUntil || null,
+    vouchLimit: teacher.vouchLimit ?? 2,
+    vouchedByCount: Array.isArray(teacher.vouchedBy) ? teacher.vouchedBy.length : 0,
+    vouchSuspendedUntil: teacher.vouchSuspendedUntil || null,
+    l3Eligibility,
+  };
+}
+
+/**
+ * Đồng nghiệp đã từng đồng dạy/dự bị chung ít nhất 1 lớp với giáo viên này — ĐIỀU KIỆN TIÊN
+ * QUYẾT của BR-22 để bảo lãnh. Trả danh sách này thay vì để giáo viên tự gõ ID bất kỳ, vì
+ * voucherForTeacher sẽ từ chối mọi cặp chưa từng đồng dạy — hiện sẵn danh sách hợp lệ giúp UI
+ * không dẫn người dùng đến một hành động chắc chắn thất bại.
+ */
+export async function getCoTaughtColleagues(teacherId) {
+  const classes = await Class.find({
+    isDeleted: false,
+    $or: [{ teacherId }, { backupTeacherId: teacherId }],
+  })
+    .select("teacherId backupTeacherId")
+    .populate("teacherId", "fullName")
+    .populate("backupTeacherId", "fullName")
+    .lean();
+
+  const colleagues = new Map();
+  for (const cls of classes) {
+    const isMainTeacher = String(cls.teacherId?._id || cls.teacherId) === String(teacherId);
+    const other = isMainTeacher ? cls.backupTeacherId : cls.teacherId;
+    if (other?._id && String(other._id) !== String(teacherId)) {
+      colleagues.set(String(other._id), other.fullName);
+    }
+  }
+
+  return Array.from(colleagues, ([id, fullName]) => ({ id, fullName }));
+}
+
 export { L3_MIN_COMPLETED_COMMUNITY_COHORTS, VOUCH_SUSPENSION_MONTHS };

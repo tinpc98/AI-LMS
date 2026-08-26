@@ -6,6 +6,7 @@ const userFindById = vi.fn();
 const userUpdateMany = vi.fn();
 const classCountDocuments = vi.fn();
 const classExists = vi.fn();
+const classFind = vi.fn();
 
 vi.mock("#modules/auth/user.model.js", () => ({
   default: {
@@ -17,6 +18,7 @@ vi.mock("#modules/class", () => ({
   Class: {
     countDocuments: (...a) => classCountDocuments(...a),
     exists: (...a) => classExists(...a),
+    find: (...a) => classFind(...a),
   },
 }));
 
@@ -25,8 +27,20 @@ const {
   tryPromoteToL3,
   voucherForTeacher,
   suspendVouchersOf,
+  getOwnVerificationStatus,
+  getCoTaughtColleagues,
   L3_MIN_COMPLETED_COMMUNITY_COHORTS,
 } = await import("#modules/auth/verification.service.js");
+
+// find().select().populate().populate().lean() — chainable giả cho getCoTaughtColleagues.
+const mongooseFindChain = (result) => {
+  const chain = {
+    select: () => chain,
+    populate: () => chain,
+    lean: () => Promise.resolve(result),
+  };
+  return chain;
+};
 
 const TEACHER_ID = new mongoose.Types.ObjectId().toString();
 const VOUCHER_ID = new mongoose.Types.ObjectId().toString();
@@ -274,5 +288,87 @@ describe("suspendVouchersOf — BR-24", () => {
 
     expect(result.suspendedVoucherIds).toEqual([]);
     expect(userUpdateMany).not.toHaveBeenCalled();
+  });
+});
+
+describe("getOwnVerificationStatus", () => {
+  it("Tài khoản đầy đủ field → trả đúng nguyên trạng, L3 thì không kiểm eligibility nữa", async () => {
+    userFindById.mockReturnValue(
+      mongooseLean({
+        verificationTier: "L3",
+        reliabilityScore: 87,
+        poolStatus: "LOCKED",
+        poolLockedUntil: new Date("2026-01-01"),
+        vouchLimit: 1,
+        vouchedBy: ["a", "b"],
+        vouchSuspendedUntil: null,
+      })
+    );
+
+    const result = await getOwnVerificationStatus(TEACHER_ID);
+
+    expect(result).toMatchObject({
+      verificationTier: "L3",
+      reliabilityScore: 87,
+      poolStatus: "LOCKED",
+      vouchLimit: 1,
+      vouchedByCount: 2,
+      l3Eligibility: null,
+    });
+    expect(classCountDocuments).not.toHaveBeenCalled();
+  });
+
+  it("Tài khoản CŨ thiếu hết field mới (Mongoose không backfill) → fallback đúng default của schema", async () => {
+    userFindById.mockReturnValue(mongooseLean({ _id: TEACHER_ID }));
+    classCountDocuments.mockResolvedValue(0);
+
+    const result = await getOwnVerificationStatus(TEACHER_ID);
+
+    expect(result.verificationTier).toBe("L1");
+    expect(result.reliabilityScore).toBe(100);
+    expect(result.poolStatus).toBe("ACTIVE");
+    expect(result.vouchLimit).toBe(2);
+    expect(result.vouchedByCount).toBe(0);
+    expect(result.l3Eligibility).not.toBeNull();
+  });
+
+  it("Không tồn tại → NotFoundError", async () => {
+    userFindById.mockReturnValue(mongooseLean(null));
+    await expect(getOwnVerificationStatus(TEACHER_ID)).rejects.toMatchObject({ status: 404 });
+  });
+});
+
+describe("getCoTaughtColleagues — BR-22", () => {
+  it("Gộp đồng nghiệp từ cả 2 chiều (mình là chính hoặc mình là dự bị), loại trùng", async () => {
+    const colleagueA = { _id: "colleague-a", fullName: "Cô A" };
+    const colleagueB = { _id: "colleague-b", fullName: "Thầy B" };
+    classFind.mockReturnValue(
+      mongooseFindChain([
+        { teacherId: { _id: TEACHER_ID }, backupTeacherId: colleagueA },
+        { teacherId: colleagueB, backupTeacherId: { _id: TEACHER_ID } },
+        { teacherId: { _id: TEACHER_ID }, backupTeacherId: colleagueA }, // lớp khác, cùng 1 đồng nghiệp
+      ])
+    );
+
+    const result = await getCoTaughtColleagues(TEACHER_ID);
+
+    expect(result).toEqual([
+      { id: "colleague-a", fullName: "Cô A" },
+      { id: "colleague-b", fullName: "Thầy B" },
+    ]);
+  });
+
+  it("Không có lớp nào đồng dạy chung → mảng rỗng", async () => {
+    classFind.mockReturnValue(mongooseFindChain([]));
+    const result = await getCoTaughtColleagues(TEACHER_ID);
+    expect(result).toEqual([]);
+  });
+
+  it("Lớp chưa có dự bị (backupTeacherId null) → không lỗi, không thêm đồng nghiệp", async () => {
+    classFind.mockReturnValue(
+      mongooseFindChain([{ teacherId: { _id: TEACHER_ID }, backupTeacherId: null }])
+    );
+    const result = await getCoTaughtColleagues(TEACHER_ID);
+    expect(result).toEqual([]);
   });
 });

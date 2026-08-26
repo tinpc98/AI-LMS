@@ -14,6 +14,7 @@ import {
   AimOutlined,
   WarningOutlined,
   StarOutlined,
+  SafetyCertificateOutlined,
 } from "@ant-design/icons";
 import { useAuth } from "../../../hooks/useAuth";
 import { useMessagesStore } from "../../../../features/chat/store/useMessagesStore";
@@ -95,6 +96,11 @@ export const TeacherSidebar: React.FC<TeacherSidebarProps> = React.memo(
           key: "/teacher/ratings",
           icon: <StarOutlined />,
           label: <Link to="/teacher/ratings">Đánh giá của tôi</Link>,
+        },
+        {
+          key: "/teacher/verification",
+          icon: <SafetyCertificateOutlined />,
+          label: <Link to="/teacher/verification">Xác minh & Độ tin cậy</Link>,
         },
         {
           key: "/teacher/report-issue",

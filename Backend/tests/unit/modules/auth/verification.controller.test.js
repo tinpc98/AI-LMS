@@ -6,16 +6,26 @@ const checkL3Eligibility = vi.fn();
 const tryPromoteToL3 = vi.fn();
 const voucherForTeacher = vi.fn();
 const suspendVouchersOf = vi.fn();
+const getOwnVerificationStatus = vi.fn();
+const getCoTaughtColleagues = vi.fn();
 
 vi.mock("#modules/auth/verification.service.js", () => ({
   checkL3Eligibility: (...a) => checkL3Eligibility(...a),
   tryPromoteToL3: (...a) => tryPromoteToL3(...a),
   voucherForTeacher: (...a) => voucherForTeacher(...a),
   suspendVouchersOf: (...a) => suspendVouchersOf(...a),
+  getOwnVerificationStatus: (...a) => getOwnVerificationStatus(...a),
+  getCoTaughtColleagues: (...a) => getCoTaughtColleagues(...a),
 }));
 
-const { getL3Eligibility, promoteToL3, vouchForTeacher, suspendTeacherVouchers } =
-  await import("#modules/auth/verification.controller.js");
+const {
+  getL3Eligibility,
+  promoteToL3,
+  vouchForTeacher,
+  suspendTeacherVouchers,
+  getMyVerificationStatus,
+  getMyCoTaughtColleagues,
+} = await import("#modules/auth/verification.controller.js");
 
 const buildRes = () => {
   const res = {};
@@ -86,5 +96,33 @@ describe("suspendTeacherVouchers", () => {
     await suspendTeacherVouchers(req, buildRes(), vi.fn());
 
     expect(suspendVouchersOf).toHaveBeenCalledWith("teacher-1");
+  });
+});
+
+describe("getMyVerificationStatus / getMyCoTaughtColleagues", () => {
+  it("getMyVerificationStatus: lấy teacherId từ req.user, không từ params/body", async () => {
+    getOwnVerificationStatus.mockResolvedValue({ verificationTier: "L2" });
+    const req = { user: { id: "me-1" }, params: { id: "someone-else" } };
+    const res = buildRes();
+
+    await getMyVerificationStatus(req, res, vi.fn());
+
+    expect(getOwnVerificationStatus).toHaveBeenCalledWith("me-1");
+    expect(res.json).toHaveBeenCalledWith(
+      expect.objectContaining({ data: { verificationTier: "L2" } })
+    );
+  });
+
+  it("getMyCoTaughtColleagues: lấy teacherId từ req.user", async () => {
+    getCoTaughtColleagues.mockResolvedValue([{ id: "c1", fullName: "Cô A" }]);
+    const req = { user: { id: "me-1" } };
+    const res = buildRes();
+
+    await getMyCoTaughtColleagues(req, res, vi.fn());
+
+    expect(getCoTaughtColleagues).toHaveBeenCalledWith("me-1");
+    expect(res.json).toHaveBeenCalledWith(
+      expect.objectContaining({ data: [{ id: "c1", fullName: "Cô A" }] })
+    );
   });
 });
