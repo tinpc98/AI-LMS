@@ -109,15 +109,42 @@ describe("transitionCommitment — BR-16 chặn CONFIRMED khi thiếu học li�
 });
 
 describe("transitionCommitment — validate chuyển trạng thái", () => {
-  it("OFFERED → ACCEPTED hợp lệ, không strike, không đổi reliability", async () => {
+  it("OFFERED → ACCEPTED hợp lệ khi giáo viên poolStatus=ACTIVE, không strike, không đổi reliability", async () => {
     const classDoc = mockClassDoc("OFFERED");
     classFindById.mockResolvedValue(classDoc);
+    userFindById.mockResolvedValue(mockTeacher()); // poolStatus mặc định "ACTIVE"
 
     await transitionCommitment(CLASS_ID, "ACCEPTED", { reason: "SCHEDULE_FILLED" });
 
     expect(classDoc.commitmentStatus).toBe("ACCEPTED");
     expect(classDoc.save).toHaveBeenCalled();
-    expect(userFindById).not.toHaveBeenCalled(); // reliabilityDelta = 0 nên không cần đụng User
+  });
+
+  it("A.5: chặn OFFERED → ACCEPTED nếu giáo viên đang LOCKED/REMOVED khỏi pool", async () => {
+    classFindById.mockResolvedValue(mockClassDoc("OFFERED"));
+    userFindById.mockResolvedValue(
+      mockTeacher({ poolStatus: "LOCKED", poolLockedUntil: new Date(Date.now() + 999999) })
+    );
+
+    await expect(
+      transitionCommitment(CLASS_ID, "ACCEPTED", { reason: "SCHEDULE_FILLED" })
+    ).rejects.toMatchObject({ status: 422 });
+  });
+
+  it("Tự động mở khóa nếu poolLockedUntil đã qua, rồi cho phép ACCEPTED bình thường", async () => {
+    const classDoc = mockClassDoc("OFFERED");
+    classFindById.mockResolvedValue(classDoc);
+    const teacher = mockTeacher({
+      poolStatus: "LOCKED",
+      poolLockedUntil: new Date(Date.now() - 1000),
+    });
+    userFindById.mockResolvedValue(teacher);
+
+    await transitionCommitment(CLASS_ID, "ACCEPTED", { reason: "SCHEDULE_FILLED" });
+
+    expect(teacher.poolStatus).toBe("ACTIVE");
+    expect(teacher.poolLockedUntil).toBeNull();
+    expect(classDoc.commitmentStatus).toBe("ACCEPTED");
   });
 
   it("Chuyển KHÔNG hợp lệ (OFFERED → ACTIVE) → BusinessRuleError, không ghi gì", async () => {

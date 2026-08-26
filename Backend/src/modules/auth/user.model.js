@@ -139,6 +139,13 @@ const userSchema = new Schema(
       type: Date,
       default: null,
     },
+    // BR-24: người bảo lãnh (voucher) tạm mất quyền bảo lãnh THÊM AI trong 3 tháng nếu người họ
+    // bảo lãnh gây sự cố nghiêm trọng — KHÔNG trừ reliabilityScore của voucher, KHÔNG ảnh hưởng
+    // vouchLimit hiện có (chỉ chặn dùng, không chặn số lượng còn lại).
+    vouchSuspendedUntil: {
+      type: Date,
+      default: null,
+    },
   },
   {
     timestamps: true,

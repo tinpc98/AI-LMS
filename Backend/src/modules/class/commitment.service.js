@@ -91,6 +91,23 @@ async function enforcePoolThresholds(teacherId, reason) {
 }
 
 /**
+ * Tự động mở khóa pool nếu poolLockedUntil đã qua — gọi ở bất kỳ đâu cần biết trạng thái pool
+ * hiện tại còn hiệu lực hay không (REMOVED không có cơ chế tự hết hạn, chỉ LOCKED mới có).
+ */
+export async function refreshPoolLockIfExpired(teacher) {
+  if (
+    teacher?.poolStatus === "LOCKED" &&
+    teacher.poolLockedUntil &&
+    teacher.poolLockedUntil <= new Date()
+  ) {
+    teacher.poolStatus = "ACTIVE";
+    teacher.poolLockedUntil = null;
+    await teacher.save();
+  }
+  return teacher;
+}
+
+/**
  * Chuyển trạng thái cam kết của giáo viên với một lớp (cohort).
  *
  * @param {string} classId
@@ -119,6 +136,22 @@ export async function transitionCommitment(classId, toStatus, { reason, changedB
   const allowedNext = ALLOWED_TRANSITIONS[fromStatus];
   if (!allowedNext || !allowedNext.includes(toStatus)) {
     throw new BusinessRuleError(`Không thể chuyển cam kết từ "${fromStatus}" sang "${toStatus}".`);
+  }
+
+  // A.5: giáo viên đang bị khóa/loại khỏi pool không được NHẬN thêm cam kết mới — chỉ kiểm ở
+  // bước OFFERED->ACCEPTED (đây là lúc "nhận đợt"), không kiểm mọi transition để tránh 1 lượt
+  // đọc User thừa cho các bước sau vốn không còn liên quan tới việc "có được nhận cohort hay
+  // không" nữa (đã nhận từ trước rồi).
+  if (fromStatus === "OFFERED" && toStatus === "ACCEPTED") {
+    const teacher = await User.findById(classDoc.teacherId);
+    if (teacher) {
+      await refreshPoolLockIfExpired(teacher);
+      if (teacher.poolStatus !== "ACTIVE") {
+        throw new BusinessRuleError(
+          `Giáo viên đang ở trạng thái pool "${teacher.poolStatus}", không thể nhận cohort mới.`
+        );
+      }
+    }
   }
 
   // BR-16: chặn CONFIRMED nếu chưa đủ số buổi có đầy đủ học liệu khép kín (BR-15) — nếu không,
