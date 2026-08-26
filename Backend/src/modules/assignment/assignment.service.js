@@ -1,8 +1,13 @@
 import * as assignmentRepo from "./assignment.repository.js";
 import Question from "../question/question.model.js";
 import { Topic } from "#modules/topic";
+import Assignment from "./assignment.model.js";
 import AssignmentAttempt from "./assignmentAttempt.model.js";
 import { evaluateLateness } from "./assignmentDeadline.js";
+// Import trực tiếp file, không qua #modules/badge — tránh kéo theo learningRanking.service.js
+// (cùng nguyên tắc "tránh over-eager barrel export" đã áp dụng ở lesson/attendance/exam-attempt).
+import { awardXpService, resolveActiveClassIdForStudent } from "../badge/xp.service.js";
+import { XP_TABLE } from "../badge/xp.js";
 
 // Helper check ownership
 const checkTopicTeacherOwnership = async (topicId, userId, role) => {
@@ -88,6 +93,67 @@ export const startAttemptService = async (assignmentId, studentId) => {
 };
 
 /**
+ * classId của học sinh cho 1 Assignment — Assignment chỉ có topicId (qua Topic mới ra courseId),
+ * không có classId trực tiếp (khác Exam) — cần thêm 1 bước tra Assignment.topicId trước khi gọi
+ * resolveActiveClassIdForStudent (dùng chung với lesson/lessonProgress.service.js).
+ */
+const resolveClassIdForAssignment = async (assignmentId, studentId) => {
+  const assignment = await Assignment.findById(assignmentId).select("topicId").lean();
+  if (!assignment) return null;
+  const topic = await Topic.findById(assignment.topicId).select("courseId").lean();
+  if (!topic) return null;
+  return resolveActiveClassIdForStudent(topic.courseId, studentId);
+};
+
+const isHighScore = (attempt) => {
+  const maxScore = attempt.questions.reduce((sum, q) => sum + (q.points || 0), 0);
+  if (maxScore <= 0) return false;
+  return (attempt.score / maxScore) * 100 >= 80;
+};
+
+/**
+ * TÍNH NĂNG MỚI (mục 5): 15 XP nộp bài + 10 XP thưởng nộp đúng hạn + 15 XP thưởng điểm >=80% —
+ * sourceRef gắn theo assignmentId (KHÔNG theo attemptId) vì Assignment không giới hạn số lần làm
+ * lại (khác Exam có attemptsAllowed) — nếu gắn theo attemptId, học sinh có thể cày XP bằng cách
+ * nộp đi nộp lại. Điểm >=80% chỉ cộng được NGAY nếu bài không có câu tự luận (status=GRADED tức
+ * thì); bài có tự luận sẽ được cộng khi giáo viên chấm xong (xem gradeEssayService).
+ */
+const awardAssignmentSubmissionXp = async (attempt) => {
+  const classId = await resolveClassIdForAssignment(attempt.assignmentId, attempt.studentId);
+  if (!classId) return;
+
+  await awardXpService({
+    studentId: attempt.studentId,
+    classId,
+    activityType: "Assignment Submitted",
+    sourceRef: `assignment:${attempt.assignmentId}`,
+    xpAmount: XP_TABLE.ASSIGNMENT_SUBMITTED,
+  });
+
+  if (!attempt.isLate) {
+    await awardXpService({
+      studentId: attempt.studentId,
+      classId,
+      activityType: "Assignment Submitted",
+      sourceRef: `assignment-ontime:${attempt.assignmentId}`,
+      xpAmount: XP_TABLE.ASSIGNMENT_ON_TIME_BONUS,
+      metadata: { bonus: "on_time" },
+    });
+  }
+
+  if (attempt.status === "GRADED" && isHighScore(attempt)) {
+    await awardXpService({
+      studentId: attempt.studentId,
+      classId,
+      activityType: "Assignment Submitted",
+      sourceRef: `assignment-highscore:${attempt.assignmentId}`,
+      xpAmount: XP_TABLE.ASSIGNMENT_HIGH_SCORE_BONUS,
+      metadata: { bonus: "high_score" },
+    });
+  }
+};
+
+/**
  * Chấm tự động (MCQ/TRUE_FALSE) + xác định trạng thái + ghi nhận nộp muộn cho 1 attempt đã có
  * sẵn (KHÔNG kiểm quyền sở hữu — caller phải tự kiểm trước khi gọi). Dùng chung cho cả học sinh
  * tự nộp (submitAttemptService) lẫn cron auto-submit khi hết giờ (gradeSubmission), mirror
@@ -143,6 +209,8 @@ const _gradeAttempt = async (attempt, submittedAt = new Date()) => {
   attempt.lateBySeconds = lateBySeconds;
 
   await attempt.save();
+
+  await awardAssignmentSubmissionXp(attempt);
 
   if (attempt.status === "GRADED" && !attempt.performanceProcessedAt) {
     import("../performance/performance.service.js").then(({ processAttemptPerformanceService }) => {
@@ -256,6 +324,24 @@ export const gradeEssayService = async (attemptId, questionId, score, feedback) 
 
   if (!updated) {
     throw new Error("Có người khác vừa chấm bài này cùng lúc, vui lòng tải lại và thử lại.");
+  }
+
+  // TÍNH NĂNG MỚI (mục 5): bài có câu tự luận nên điểm cuối chỉ biết được SAU khi giáo viên chấm
+  // xong hết (allGraded) — 15 XP thưởng điểm >=80% được cộng TẠI ĐÂY thay vì lúc nộp bài (lúc đó
+  // status còn SUBMITTED, chưa có điểm cuối). Cùng sourceRef với nhánh chấm tự động ngay lúc nộp
+  // (awardAssignmentSubmissionXp) nên không bao giờ cộng trùng dù đi qua đường nào.
+  if (updated.status === "GRADED" && isHighScore(updated)) {
+    const classId = await resolveClassIdForAssignment(updated.assignmentId, updated.studentId);
+    if (classId) {
+      await awardXpService({
+        studentId: updated.studentId,
+        classId,
+        activityType: "Assignment Submitted",
+        sourceRef: `assignment-highscore:${updated.assignmentId}`,
+        xpAmount: XP_TABLE.ASSIGNMENT_HIGH_SCORE_BONUS,
+        metadata: { bonus: "high_score" },
+      });
+    }
   }
 
   // Trigger performance integration sau khi ghi thành công

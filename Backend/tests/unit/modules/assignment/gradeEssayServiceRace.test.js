@@ -18,6 +18,12 @@ vi.mock("#modules/assignment/assignmentAttempt.model.js", () => ({
     findByIdAndUpdate: (...a) => attemptFindByIdAndUpdate(...a),
   },
 }));
+// TÍNH NĂNG MỚI (mục 5): khi status chuyển GRADED với điểm >=80%, gradeEssayService cố cộng XP
+// thưởng — Assignment.findById trả null khiến resolveClassIdForAssignment dừng sớm, các test ở
+// đây không quan tâm việc cộng XP nên không cần mock sâu hơn (Topic/badge).
+vi.mock("#modules/assignment/assignment.model.js", () => ({
+  default: { findById: () => ({ select: () => ({ lean: () => Promise.resolve(null) }) }) },
+}));
 const { gradeEssayService } = await import("#modules/assignment/assignment.service.js");
 
 const ATTEMPT_ID = "attempt-1";

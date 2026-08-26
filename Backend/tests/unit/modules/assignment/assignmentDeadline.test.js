@@ -17,6 +17,12 @@ vi.mock("#modules/assignment/assignment.repository.js", () => ({
   findAttemptById: (...a) => findAttemptById(...a),
 }));
 vi.mock("#modules/assignment/assignmentAttempt.model.js", () => ({ default: {} }));
+// TÍNH NĂNG MỚI (mục 5): _gradeAttempt giờ cố cộng XP sau khi chấm — Assignment.findById trả về
+// null khiến resolveClassIdForAssignment dừng sớm (không tìm được courseId), nên không cần mock
+// Topic/badge sâu hơn ở đây (các test trong file này không quan tâm tới việc cộng XP).
+vi.mock("#modules/assignment/assignment.model.js", () => ({
+  default: { findById: () => ({ select: () => ({ lean: () => Promise.resolve(null) }) }) },
+}));
 
 const { startAttemptService, saveAnswerService, submitAttemptService, gradeSubmission } =
   await import("#modules/assignment/assignment.service.js");

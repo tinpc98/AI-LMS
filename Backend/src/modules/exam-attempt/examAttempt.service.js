@@ -4,6 +4,10 @@ import ExamAttempt from "./examAttempt.model.js";
 import Question from "../question/question.model.js";
 import { ClassEnrollment } from "#modules/classEnrollment";
 import { compareAnswers } from "./answerScoring.js";
+// Import trực tiếp file, không qua #modules/badge — tránh kéo theo learningRanking.service.js
+// (cùng nguyên tắc "tránh over-eager barrel export" đã áp dụng ở lesson/attendance).
+import { awardXpService } from "../badge/xp.service.js";
+import { XP_TABLE } from "../badge/xp.js";
 
 // Hàm shuffle mảng (Fisher-Yates)
 const shuffleArray = (array) => {
@@ -258,6 +262,20 @@ const _gradeAttempt = async (attempt) => {
   }
 
   await attempt.save();
+
+  // TÍNH NĂNG MỚI (mục 5): 30 XP cho việc HOÀN THÀNH 1 lượt thi (không phụ thuộc điểm số) —
+  // đúng 1 lần/attempt (sourceRef theo attemptId, Exam.attemptsAllowed đã chặn farming bằng
+  // cách làm lại vô hạn). Exam đã có classId trực tiếp (khác Assignment/Lesson qua Topic/Course).
+  const exam = await Exam.findById(attempt.examId).select("classId").lean();
+  if (exam?.classId) {
+    await awardXpService({
+      studentId: attempt.studentId,
+      classId: exam.classId,
+      activityType: "Exam Finished",
+      sourceRef: `exam-finish:${attempt._id}`,
+      xpAmount: XP_TABLE.EXAM_FINISHED,
+    });
+  }
 
   if (attempt.status === "GRADED" && !attempt.performanceProcessedAt) {
     import("../performance/performance.service.js").then(({ processAttemptPerformanceService }) => {

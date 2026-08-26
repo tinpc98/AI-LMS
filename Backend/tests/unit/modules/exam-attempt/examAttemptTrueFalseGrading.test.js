@@ -7,6 +7,8 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 
 const examAttemptFindById = vi.fn();
 const questionFind = vi.fn();
+const examFindById = vi.fn();
+const awardXpService = vi.fn();
 
 vi.mock("#modules/exam-attempt/examAttempt.model.js", () => ({
   default: { findById: (...a) => examAttemptFindById(...a) },
@@ -14,11 +16,14 @@ vi.mock("#modules/exam-attempt/examAttempt.model.js", () => ({
 vi.mock("#modules/question/question.model.js", () => ({
   default: { find: (...a) => questionFind(...a) },
 }));
-vi.mock("#modules/exam/exam.model.js", () => ({ default: {} }));
+vi.mock("#modules/exam/exam.model.js", () => ({
+  default: { findById: (...a) => examFindById(...a) },
+}));
 vi.mock("#modules/classEnrollment", () => ({ ClassEnrollment: {} }));
 vi.mock("#modules/performance/performance.service.js", () => ({
   processAttemptPerformanceService: vi.fn().mockResolvedValue(undefined),
 }));
+vi.mock("#modules/badge/xp.service.js", () => ({ awardXpService: (...a) => awardXpService(...a) }));
 
 const { gradeSubmission } = await import("#modules/exam-attempt/examAttempt.service.js");
 
@@ -51,6 +56,8 @@ const buildAttempt = (over = {}) => ({
 beforeEach(() => {
   vi.clearAllMocks();
   questionFind.mockReturnValue(mongooseLean([TRUE_FALSE_Q]));
+  examFindById.mockReturnValue({ select: () => mongooseLean({ classId: "class-1" }) });
+  awardXpService.mockResolvedValue({ _id: "xp-1" });
 });
 
 describe("gradeSubmission — BUG ĐÃ SỬA: TRUE_FALSE phải được chấm tự động như MCQ", () => {
@@ -106,5 +113,31 @@ describe("gradeSubmission — BUG ĐÃ SỬA: TRUE_FALSE phải được chấm 
     expect(attempt.questions[0].isCorrect).toBe(true); // TRUE_FALSE đã chấm xong
     expect(attempt.questions[1].isCorrect).toBeNull(); // ESSAY vẫn chờ chấm tay
     expect(attempt.status).toBe("PARTIALLY_GRADED");
+  });
+});
+
+describe("TÍNH NĂNG MỚI (mục 5) — cộng 30 XP 'Exam Finished' khi hoàn thành 1 lượt thi", () => {
+  it("Hoàn thành attempt (bất kể GRADED hay PARTIALLY_GRADED) → cộng đúng 30 XP, sourceRef theo attemptId", async () => {
+    const attempt = buildAttempt({ studentId: "student-1", examId: "exam-1" });
+    examAttemptFindById.mockResolvedValue(attempt);
+
+    await gradeSubmission("attempt-1");
+
+    expect(awardXpService).toHaveBeenCalledWith({
+      studentId: "student-1",
+      classId: "class-1",
+      activityType: "Exam Finished",
+      sourceRef: "exam-finish:attempt-1",
+      xpAmount: 30,
+    });
+  });
+
+  it("Exam không tìm thấy classId → bỏ qua cộng XP, không throw", async () => {
+    examFindById.mockReturnValue({ select: () => mongooseLean(null) });
+    const attempt = buildAttempt({ studentId: "student-1", examId: "exam-1" });
+    examAttemptFindById.mockResolvedValue(attempt);
+
+    await expect(gradeSubmission("attempt-1")).resolves.toBeTruthy();
+    expect(awardXpService).not.toHaveBeenCalled();
   });
 });

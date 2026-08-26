@@ -28,20 +28,11 @@ vi.mock("#modules/lesson/practiceQuiz.model.js", () => ({
 vi.mock("#modules/lesson/practiceQuizAttempt.model.js", () => ({
   default: { countDocuments: (...a) => attemptCount(...a), create: (...a) => attemptCreate(...a) },
 }));
-const classFind = vi.fn();
-const classEnrollmentFindOne = vi.fn();
 const awardXpService = vi.fn();
-// Mock qua alias (#modules/...) dù lessonProgress.service.js import các file này bằng đường dẫn
-// tương đối trực tiếp (tránh kéo barrel nặng) — cả 2 cách đều trỏ về cùng 1 file tuyệt đối nên
-// vi.mock vẫn chặn đúng chỗ.
-vi.mock("#modules/class/class.model.js", () => ({
-  default: { find: (...a) => classFind(...a) },
-}));
-vi.mock("#modules/classEnrollment/classEnrollment.model.js", () => ({
-  default: { findOne: (...a) => classEnrollmentFindOne(...a) },
-}));
+const resolveActiveClassIdForStudent = vi.fn();
 vi.mock("#modules/badge/xp.service.js", () => ({
   awardXpService: (...a) => awardXpService(...a),
+  resolveActiveClassIdForStudent: (...a) => resolveActiveClassIdForStudent(...a),
 }));
 
 vi.mock("#modules/lesson/lessonProgress.model.js", () => {
@@ -92,12 +83,7 @@ beforeEach(() => {
   });
   enrollmentFindOne.mockResolvedValue({ _id: "enr-1", status: "APPROVED" });
   progressFindOne.mockResolvedValue(null);
-  classFind.mockReturnValue({
-    select: () => ({ lean: () => Promise.resolve([{ _id: "class-1" }]) }),
-  });
-  classEnrollmentFindOne.mockReturnValue({
-    select: () => ({ lean: () => Promise.resolve({ classId: "class-1" }) }),
-  });
+  resolveActiveClassIdForStudent.mockResolvedValue("class-1");
   awardXpService.mockResolvedValue({ _id: "xp-1" });
 });
 
@@ -345,9 +331,7 @@ describe("TÍNH NĂNG MỚI (mục 5) — cộng XP khi có kết quả đã xá
   });
 
   it("Không tìm được lớp ACTIVE của học sinh → bỏ qua cộng XP, không throw", async () => {
-    classEnrollmentFindOne.mockReturnValue({
-      select: () => ({ lean: () => Promise.resolve(null) }),
-    });
+    resolveActiveClassIdForStudent.mockResolvedValue(null);
 
     await expect(
       submitPracticeQuizAttemptService(LESSON_ID, QUIZ_BLOCK_ID, STUDENT_ID, {

@@ -18,6 +18,11 @@ vi.mock("#modules/topic/topic.model.js", () => ({ default: {} }));
 // mock luôn để không kéo theo schema thật của assignmentAttempt.model.js (cần contentBlockSchema
 // thật từ question.model.js, vốn đã bị mock rút gọn ở trên).
 vi.mock("#modules/assignment/assignmentAttempt.model.js", () => ({ default: {} }));
+// TÍNH NĂNG MỚI (mục 5): assignment.service.js giờ cũng import trực tiếp Assignment (để resolve
+// classId khi cộng XP) — cùng lý do trên, mock rỗng để tránh chạm schema thật.
+vi.mock("#modules/assignment/assignment.model.js", () => ({
+  default: { findById: () => ({ select: () => ({ lean: () => Promise.resolve(null) }) }) },
+}));
 
 const { submitAttemptService } = await import("#modules/assignment/assignment.service.js");
 

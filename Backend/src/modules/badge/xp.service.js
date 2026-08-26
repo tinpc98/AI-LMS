@@ -1,6 +1,10 @@
 import mongoose from "mongoose";
 import LearningActivity from "./learningActivity.model.js";
 import { clampToDailyCap, computeLevelFromXp } from "./xp.js";
+// Import trực tiếp model (không qua barrel class/classEnrollment) — chỉ cần đọc dữ liệu, tránh
+// kéo theo service nặng của 2 module đó (cùng nguyên tắc "tránh over-eager barrel export").
+import Class from "../class/class.model.js";
+import ClassEnrollment from "../classEnrollment/classEnrollment.model.js";
 
 const startOfUtcDay = (date = new Date()) => {
   const d = new Date(date);
@@ -55,6 +59,35 @@ export const awardXpService = async ({
     if (err.code === 11000) return null; // sourceRef trùng — sự kiện này đã được cộng rồi.
     throw err;
   }
+};
+
+/**
+ * Lớp học ACTIVE của học sinh trong 1 Course — cần để gắn classId vào sự kiện XP khi nguồn sự
+ * kiện (Lesson, Assignment...) chỉ có courseId chứ không có classId trực tiếp (khác Exam/
+ * Attendance, vốn đã có classId sẵn trên chính bản ghi). 1 Course có thể có nhiều Class, nhưng
+ * thực tế 1 học sinh chỉ học 1 Class của cùng 1 Course tại một thời điểm — lấy Class đầu tiên
+ * khớp ClassEnrollment ACTIVE là đủ.
+ *
+ * Dùng chung cho lessonProgress.service.js và assignment.service.js — tách vào đây (thay vì định
+ * nghĩa riêng ở từng module) vì bản chất của hàm là "resolve classId để cộng XP", không phải
+ * nghiệp vụ riêng của Lesson hay Assignment.
+ */
+export const resolveActiveClassIdForStudent = async (courseId, studentId) => {
+  const classes = await Class.find({ courseId, isDeleted: { $ne: true } })
+    .select("_id")
+    .lean();
+  const classIds = classes.map((c) => c._id);
+  if (classIds.length === 0) return null;
+
+  const enrollment = await ClassEnrollment.findOne({
+    studentId,
+    classId: { $in: classIds },
+    status: "ACTIVE",
+  })
+    .select("classId")
+    .lean();
+
+  return enrollment?.classId || null;
 };
 
 /** Tổng XP trọn đời của học sinh — dùng để tính Level (KHÔNG giới hạn theo lớp/tuần). */

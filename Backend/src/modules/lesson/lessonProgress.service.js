@@ -11,14 +11,10 @@ import { Enrollment } from "#modules/enrollment";
 import storageService from "#shared/services/storage.service.js";
 import { NotFoundError, BusinessRuleError, AuthorizationError } from "#shared/utils/appError.js";
 // Import trực tiếp file, KHÔNG qua #modules/badge — barrel đó còn re-export learningRanking.service.js
-// (kéo theo Class/Attendance/Grade/ClassEnrollment), trong khi ở đây chỉ cần 2 hàm thuần liên
+// (kéo theo Class/Attendance/Grade/ClassEnrollment), trong khi ở đây chỉ cần vài hàm thuần liên
 // quan XP. Cùng nguyên tắc "tránh over-eager barrel export" đã áp dụng cho topic.service.js.
-import { awardXpService } from "../badge/xp.service.js";
+import { awardXpService, resolveActiveClassIdForStudent } from "../badge/xp.service.js";
 import { XP_TABLE } from "../badge/xp.js";
-// Dùng trực tiếp model, không qua barrel class/classEnrollment — chỉ cần đọc dữ liệu, tránh kéo
-// theo service nặng của 2 module đó (cùng lý do như trên).
-import Class from "../class/class.model.js";
-import ClassEnrollment from "../classEnrollment/classEnrollment.model.js";
 import {
   computeWatchedUnionSeconds,
   isVideoBlockComplete,
@@ -63,30 +59,6 @@ const loadLessonBlockForStudent = async (lessonId, blockId, studentId, expectedT
   await assertEnrolled(studentId, topic.courseId);
 
   return { lesson, block, courseId: topic.courseId };
-};
-
-/**
- * Lớp học ACTIVE của học sinh trong Course chứa bài giảng — cần để gắn classId vào sự kiện XP
- * (mục 5: leaderboard scoped theo lớp). 1 Course có thể có nhiều Class, nhưng học sinh chỉ có
- * tối đa 1 ClassEnrollment ACTIVE cho mỗi Class họ tham gia — lấy Class đầu tiên khớp là đủ vì
- * thực tế 1 học sinh chỉ học 1 Class của cùng 1 Course tại một thời điểm.
- */
-const resolveActiveClassIdForStudent = async (courseId, studentId) => {
-  const classes = await Class.find({ courseId, isDeleted: { $ne: true } })
-    .select("_id")
-    .lean();
-  const classIds = classes.map((c) => c._id);
-  if (classIds.length === 0) return null;
-
-  const enrollment = await ClassEnrollment.findOne({
-    studentId,
-    classId: { $in: classIds },
-    status: "ACTIVE",
-  })
-    .select("classId")
-    .lean();
-
-  return enrollment?.classId || null;
 };
 
 /**
