@@ -65,14 +65,32 @@ export const getAssignmentById = asyncHandler(async (req, res) => {
         .status(403)
         .json({ message: "Forbidden: Not enrolled in any class for this assignment" });
     }
-
-    // Khuyến nghị: Ẩn answer key hoặc thông tin của giáo viên đối với học sinh.
-    // Tạm giữ nguyên response contract để không phá vỡ UI như yêu cầu.
   } else if (userRole === "TEACHER") {
     const isAuthorized = await checkTopicOwnership(assignment.topicId, userId, userRole);
     if (!isAuthorized) {
       return res.status(403).json({ message: "Forbidden: You do not own this assignment" });
     }
+  }
+
+  // BUG ĐÃ SỬA: trước đây response trả nguyên options[].isCorrect (đáp án đúng) cho học sinh —
+  // chỉ cần gọi thẳng GET /assignments/:id là lấy được toàn bộ đáp án trước khi làm bài. Ẩn field
+  // này khi trả về cho STUDENT, giữ nguyên cho TEACHER/ADMIN (cần thấy để soạn/chấm bài).
+  if (userRole === "STUDENT") {
+    const plain = assignment.toObject ? assignment.toObject() : assignment;
+    const sanitized = {
+      ...plain,
+      questions: (plain.questions || []).map((q) => {
+        if (!q.questionId || typeof q.questionId !== "object") return q;
+        return {
+          ...q,
+          questionId: {
+            ...q.questionId,
+            options: (q.questionId.options || []).map(({ isCorrect, ...rest }) => rest),
+          },
+        };
+      }),
+    };
+    return res.status(200).json({ assignment: sanitized });
   }
 
   return res.status(200).json({ assignment });

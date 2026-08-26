@@ -119,9 +119,10 @@ describe("aggregateGradesMatrix — characterization", () => {
       submissions: [
         { _id: "s1", assignmentId: "a1", studentId: STUDENT_1, score: 9, feedback: "Tốt" },
       ],
-      attempts: [
-        { _id: "at1", examId: "e1", studentId: STUDENT_1, totalScore: 16, status: "GRADED" },
-      ],
+      // BUG ĐÃ SỬA: mock trước đây dùng `totalScore` — field KHÔNG tồn tại trên schema
+      // ExamAttempt thật (field thật là `score`). Code cũ cũng đọc nhầm field này nên test từng
+      // "pass" một cách vô nghĩa (cả 2 phía cùng sai nên khớp nhau).
+      attempts: [{ _id: "at1", examId: "e1", studentId: STUDENT_1, score: 16, status: "GRADED" }],
     });
 
     const result = await gradeService.aggregateGradesMatrix(CLASS_ID);

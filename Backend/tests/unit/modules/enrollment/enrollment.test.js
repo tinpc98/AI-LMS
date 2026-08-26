@@ -17,6 +17,14 @@ vi.mock("#modules/auth", () => ({
   verifyUser: vi.fn(),
 }));
 
+// transitionStatus() dynamic-import module classEnrollment để cascade CANCELLED/COMPLETED
+// (xem BUG ĐÃ SỬA trong enrollment.service.js) — phải mock để không chạm Mongoose thật.
+const cancelClassEnrollmentByEnrollmentId = vi.fn().mockResolvedValue(null);
+const completeClassEnrollmentByEnrollmentId = vi.fn().mockResolvedValue(null);
+vi.mock("#modules/classEnrollment/classEnrollment.service.js", () => ({
+  default: { cancelClassEnrollmentByEnrollmentId, completeClassEnrollmentByEnrollmentId },
+}));
+
 // Mock Enrollment model
 vi.mock("#modules/enrollment/enrollment.model.js", () => {
   const mockModel = {
@@ -235,22 +243,39 @@ describe("EnrollmentService", () => {
       expect(Enrollment.findOneAndUpdate).not.toHaveBeenCalled();
     });
 
-    it("16. CLASS_ASSIGNED → COMPLETED → PASS", async () => {
+    it("16. CLASS_ASSIGNED → COMPLETED → PASS, cascade sang ClassEnrollment (BUG ĐÃ SỬA)", async () => {
       const enrollment = mockEnrollment({ status: "CLASS_ASSIGNED" });
       Enrollment.findById.mockResolvedValue(enrollment);
       Enrollment.findOneAndUpdate.mockResolvedValue({ ...enrollment, status: "COMPLETED" });
 
-      const result = await enrollmentService.transitionStatus(ENROLLMENT_ID, "COMPLETED");
+      const result = await enrollmentService.transitionStatus(ENROLLMENT_ID, "COMPLETED", "admin1");
       expect(result.status).toBe("COMPLETED");
+      // BUG ĐÃ SỬA: trước đây transitionStatus không hề gọi classEnrollmentService, khiến
+      // ClassEnrollment ACTIVE bị bỏ quên mãi mãi khi Enrollment chuyển sang COMPLETED.
+      expect(completeClassEnrollmentByEnrollmentId).toHaveBeenCalledWith(ENROLLMENT_ID, "admin1");
+      expect(cancelClassEnrollmentByEnrollmentId).not.toHaveBeenCalled();
     });
 
-    it("17. PENDING_PAYMENT → CANCELLED → PASS", async () => {
+    it("CLASS_ASSIGNED → CANCELLED → PASS, cascade hủy ClassEnrollment (BUG ĐÃ SỬA)", async () => {
+      const enrollment = mockEnrollment({ status: "CLASS_ASSIGNED" });
+      Enrollment.findById.mockResolvedValue(enrollment);
+      Enrollment.findOneAndUpdate.mockResolvedValue({ ...enrollment, status: "CANCELLED" });
+
+      const result = await enrollmentService.transitionStatus(ENROLLMENT_ID, "CANCELLED", "admin1");
+      expect(result.status).toBe("CANCELLED");
+      expect(cancelClassEnrollmentByEnrollmentId).toHaveBeenCalledWith(ENROLLMENT_ID, "admin1");
+      expect(completeClassEnrollmentByEnrollmentId).not.toHaveBeenCalled();
+    });
+
+    it("17. PENDING_PAYMENT → CANCELLED → PASS (chưa xếp lớp, cascade no-op an toàn)", async () => {
       const enrollment = mockEnrollment({ status: "PENDING_PAYMENT" });
       Enrollment.findById.mockResolvedValue(enrollment);
       Enrollment.findOneAndUpdate.mockResolvedValue({ ...enrollment, status: "CANCELLED" });
 
       const result = await enrollmentService.transitionStatus(ENROLLMENT_ID, "CANCELLED");
       expect(result.status).toBe("CANCELLED");
+      // Vẫn gọi cascade (an toàn vì classEnrollmentService tự tìm ACTIVE CE và no-op nếu không có).
+      expect(cancelClassEnrollmentByEnrollmentId).toHaveBeenCalledWith(ENROLLMENT_ID, null);
     });
 
     it("18. COMPLETED → PENDING_PAYMENT → FAIL", async () => {
@@ -317,6 +342,23 @@ describe("EnrollmentService", () => {
       const result = await enrollmentService.getMyEnrollments(STUDENT_ID);
       expect(result.items).toHaveLength(1);
       expect(result.pagination.total).toBe(1);
+    });
+
+    it("BUG ĐÃ SỬA — populate courseId KHÔNG chọn field 'level'/'pricing' (không tồn tại trên schema Course, Mongoose âm thầm bỏ qua)", async () => {
+      const mockQuery = {
+        populate: vi.fn().mockReturnThis(),
+        sort: vi.fn().mockReturnThis(),
+        skip: vi.fn().mockReturnThis(),
+        limit: vi.fn().mockResolvedValue([]),
+      };
+      Enrollment.find.mockReturnValue(mockQuery);
+      Enrollment.countDocuments.mockResolvedValue(0);
+
+      await enrollmentService.getMyEnrollments(STUDENT_ID);
+
+      const selectArg = mockQuery.populate.mock.calls[0][1];
+      expect(selectArg).not.toMatch(/\blevel\b/);
+      expect(selectArg).not.toMatch(/\bpricing\b/);
     });
   });
 

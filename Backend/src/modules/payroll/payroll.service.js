@@ -36,11 +36,17 @@ class PayrollService {
         isDeleted: false,
         $or: [
           { actualStartAt: { $gte: period.startDate, $lte: period.endDate } },
-          { actualStartAt: null, scheduledStartAt: { $gte: period.startDate, $lte: period.endDate } }
-        ]
-      }).session(session).select("_id").lean();
-      
-      const validSessionIds = validSessions.map(s => s._id);
+          {
+            actualStartAt: null,
+            scheduledStartAt: { $gte: period.startDate, $lte: period.endDate },
+          },
+        ],
+      })
+        .session(session)
+        .select("_id")
+        .lean();
+
+      const validSessionIds = validSessions.map((s) => s._id);
 
       // 2. Lấy tất cả TeacherAttendance có status = CONFIRMED cho các session hợp lệ
       const validAttendances = await TeacherAttendance.find({
@@ -70,7 +76,9 @@ class PayrollService {
         const configs = await TeacherPayrollConfig.find({
           teacherId: tId,
           isDeleted: false,
-        }).session(session).lean();
+        })
+          .session(session)
+          .lean();
 
         let totalAmount = 0;
         let sessionCount = 0;
@@ -157,31 +165,37 @@ class PayrollService {
 
   async confirmPayroll(payrollId, adminId) {
     if (!mongoose.Types.ObjectId.isValid(payrollId)) throw new Error("ID bảng lương không hợp lệ");
-    
-    const payroll = await Payroll.findById(payrollId);
-    if (!payroll || payroll.isDeleted) throw new Error("Không tìm thấy bảng lương");
-    
-    if (payroll.status !== "CALCULATED") throw new Error("Bảng lương phải ở trạng thái CALCULATED mới được xác nhận");
-    
-    payroll.status = "CONFIRMED";
-    payroll.confirmedAt = new Date();
-    payroll.confirmedBy = adminId;
-    await payroll.save();
+
+    const existing = await Payroll.findById(payrollId);
+    if (!existing || existing.isDeleted) throw new Error("Không tìm thấy bảng lương");
+
+    // BUG ĐÃ SỬA (TOCTOU): trước đây đọc-kiểm tra-ghi qua .save() thường, không atomic — 2 request
+    // confirm đồng thời cùng đọc thấy CALCULATED, cùng qua được check, cùng ghi đè lên nhau (request
+    // sau thắng, mất dấu vết ai xác nhận trước). Dùng findOneAndUpdate với điều kiện status ngay
+    // trong filter để chỉ đúng 1 request thắng, giống pattern đã áp cho Enrollment.transitionStatus.
+    const payroll = await Payroll.findOneAndUpdate(
+      { _id: payrollId, status: "CALCULATED", isDeleted: false },
+      { status: "CONFIRMED", confirmedAt: new Date(), confirmedBy: adminId },
+      { new: true }
+    );
+    if (!payroll) throw new Error("Bảng lương phải ở trạng thái CALCULATED mới được xác nhận");
     return payroll;
   }
 
   async payPayroll(payrollId, adminId) {
     if (!mongoose.Types.ObjectId.isValid(payrollId)) throw new Error("ID bảng lương không hợp lệ");
-    
-    const payroll = await Payroll.findById(payrollId);
-    if (!payroll || payroll.isDeleted) throw new Error("Không tìm thấy bảng lương");
-    
-    if (payroll.status !== "CONFIRMED") throw new Error("Bảng lương phải ở trạng thái CONFIRMED mới được đánh dấu thanh toán");
-    
-    payroll.status = "PAID";
-    payroll.paidAt = new Date();
-    payroll.paidBy = adminId;
-    await payroll.save();
+
+    const existing = await Payroll.findById(payrollId);
+    if (!existing || existing.isDeleted) throw new Error("Không tìm thấy bảng lương");
+
+    // BUG ĐÃ SỬA (TOCTOU) — xem giải thích ở confirmPayroll.
+    const payroll = await Payroll.findOneAndUpdate(
+      { _id: payrollId, status: "CONFIRMED", isDeleted: false },
+      { status: "PAID", paidAt: new Date(), paidBy: adminId },
+      { new: true }
+    );
+    if (!payroll)
+      throw new Error("Bảng lương phải ở trạng thái CONFIRMED mới được đánh dấu thanh toán");
     return payroll;
   }
 
@@ -240,6 +254,32 @@ class PayrollService {
         totalPages: Math.ceil(totalItems / limit),
       },
     };
+  }
+
+  /**
+   * Tạo kỳ lương mới.
+   *
+   * BUG ĐÃ SỬA: trước đây controller gọi thẳng PayrollPeriod.create(req.body), không kiểm tra
+   * chồng lấn ngày với các kỳ lương đã có. calculatePayroll() tính lương dựa trên khoảng
+   * [startDate, endDate] của kỳ — 2 kỳ lương chồng ngày sẽ cùng gom được các ClassSession/
+   * TeacherAttendance giống nhau, khiến giáo viên bị tính lương (và có thể confirm/pay) 2 lần
+   * cho cùng một buổi dạy.
+   */
+  async createPayrollPeriod(data) {
+    const { startDate, endDate } = data;
+    if (startDate && endDate) {
+      const overlapping = await PayrollPeriod.findOne({
+        isDeleted: false,
+        startDate: { $lte: endDate },
+        endDate: { $gte: startDate },
+      }).lean();
+      if (overlapping) {
+        throw new Error(
+          `Khoảng thời gian chồng lấn với kỳ lương đã tồn tại: "${overlapping.name}".`
+        );
+      }
+    }
+    return await PayrollPeriod.create(data);
   }
 }
 

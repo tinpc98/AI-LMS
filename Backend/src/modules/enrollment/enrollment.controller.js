@@ -183,7 +183,8 @@ export const assignClass = asyncHandler(async (req, res) => {
  */
 export const completeEnrollment = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  const enrollment = await enrollmentService.transitionStatus(id, "COMPLETED");
+  const adminId = req.user.id || req.user._id;
+  const enrollment = await enrollmentService.transitionStatus(id, "COMPLETED", adminId);
   return sendSuccess(res, "Enrollment đã hoàn thành.", enrollment);
 });
 
@@ -212,6 +213,7 @@ export const cancelEnrollment = asyncHandler(async (req, res) => {
     }
   }
 
-  const enrollment = await enrollmentService.transitionStatus(id, "CANCELLED");
+  const adminId = req.user.id || req.user._id;
+  const enrollment = await enrollmentService.transitionStatus(id, "CANCELLED", adminId);
   return sendSuccess(res, "Đã hủy enrollment.", enrollment);
 });

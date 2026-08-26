@@ -243,8 +243,18 @@ export const uploadAttachment = asyncHandler(async (req, res) => {
 
 // Lấy Signed URL cho tệp đính kèm
 export const getAttachmentSignedUrl = asyncHandler(async (req, res) => {
-  const { publicId } = req.params;
+  const { classId, publicId } = req.params;
   const { resourceType = "raw" } = req.query; // client truyền lên "image" hoặc "raw"
+
+  // BUG ĐÃ SỬA (IDOR): checkClassAccess (áp ở router.use) chỉ xác nhận req.user thuộc classId
+  // trên URL — KHÔNG xác nhận publicId (do client tự truyền) thực sự thuộc về lớp đó. Trước đây
+  // bất kỳ ai có quyền vào MỘT lớp bất kỳ đều có thể xin signed URL của file đính kèm thuộc lớp
+  // KHÁC nếu biết/đoán được publicId. uploadFile() luôn lưu vào folder
+  // `eduspace/classes/{classId}/chat/...` nên chặn ngay tại đây bằng cách đối chiếu prefix.
+  const expectedPrefix = `eduspace/classes/${classId}/chat/`;
+  if (!publicId.startsWith(expectedPrefix)) {
+    throw new AppError("Tệp đính kèm không thuộc lớp học này", "ATTACHMENT_CLASS_MISMATCH", 403);
+  }
 
   const urlData = storageService.getSignedUrl(publicId, {
     resourceType,

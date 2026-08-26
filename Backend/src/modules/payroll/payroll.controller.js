@@ -51,7 +51,7 @@ export const createPayrollConfig = asyncHandler(async (req, res) => {
 export const getPayrollConfigs = asyncHandler(async (req, res) => {
   const filter = { isDeleted: false };
   if (req.query.teacherId) filter.teacherId = req.query.teacherId;
-  
+
   const configs = await TeacherPayrollConfig.find(filter)
     .populate("teacherId", "fullName email")
     .sort({ createdAt: -1 });
@@ -63,7 +63,7 @@ export const getPayrollConfigs = asyncHandler(async (req, res) => {
 // =======================
 
 export const createPayrollPeriod = asyncHandler(async (req, res) => {
-  const period = await PayrollPeriod.create(req.body);
+  const period = await payrollService.createPayrollPeriod(req.body);
   return res.status(201).json({ success: true, data: period });
 });
 

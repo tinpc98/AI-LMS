@@ -33,38 +33,47 @@ export const createAnnouncement = async (req, res) => {
     // Tạo notification realtime tương ứng với scope
     const io = req.app.get("io");
     if (scope === "Class" && classId) {
-      const classInfo = await classModel.findById(classId).populate("teacherId", "fullName email avatar").lean();
+      const classInfo = await classModel
+        .findById(classId)
+        .populate("teacherId", "fullName email avatar")
+        .lean();
       if (classInfo) {
         // Không await để không block response
-        notificationService.notifyClassAnnouncementCreated({
-          announcement: result,
-          classInfo: classInfo,
-          teacherInfo: classInfo.teacherId,
-          io: io,
-        }).catch(err => {
-          console.error("[AnnouncementController] Lỗi khi tạo notification Class:", err);
-        });
+        notificationService
+          .notifyClassAnnouncementCreated({
+            announcement: result,
+            classInfo: classInfo,
+            teacherInfo: classInfo.teacherId,
+            io: io,
+          })
+          .catch((err) => {
+            console.error("[AnnouncementController] Lỗi khi tạo notification Class:", err);
+          });
       }
     } else if (scope === "Course" && courseId) {
       const courseInfo = await Course.findById(courseId).lean();
       if (courseInfo) {
-        notificationService.notifyCourseAnnouncementCreated({
-          announcement: result,
-          courseInfo: courseInfo,
-          adminInfo: req.user,
-          io: io,
-        }).catch(err => {
-          console.error("[AnnouncementController] Lỗi khi tạo notification Course:", err);
-        });
+        notificationService
+          .notifyCourseAnnouncementCreated({
+            announcement: result,
+            courseInfo: courseInfo,
+            adminInfo: req.user,
+            io: io,
+          })
+          .catch((err) => {
+            console.error("[AnnouncementController] Lỗi khi tạo notification Course:", err);
+          });
       }
     } else if (scope === "System") {
-      notificationService.notifySystemAnnouncementCreated({
-        announcement: result,
-        adminInfo: req.user,
-        io: io,
-      }).catch(err => {
-        console.error("[AnnouncementController] Lỗi khi tạo notification System:", err);
-      });
+      notificationService
+        .notifySystemAnnouncementCreated({
+          announcement: result,
+          adminInfo: req.user,
+          io: io,
+        })
+        .catch((err) => {
+          console.error("[AnnouncementController] Lỗi khi tạo notification System:", err);
+        });
     }
 
     return sendSuccess(res, "Tạo thông báo thành công", result, null, 201);
@@ -103,10 +112,12 @@ export const getAnnouncementById = async (req, res) => {
       return sendError(res, "Thông báo không tồn tại!", 404);
     }
 
-    const result = await announcementService.getAnnouncementById(id);
+    const userId = req.user.id || req.user._id;
+    const userRole = req.user.role || "";
+    const result = await announcementService.getAnnouncementById(id, userId, userRole);
     return sendSuccess(res, "Lấy chi tiết thông báo thành công", result);
   } catch (error) {
-    return sendError(res, error.message || "Lỗi khi lấy chi tiết thông báo", 404);
+    return sendError(res, error.message || "Lỗi khi lấy chi tiết thông báo", error.status || 404);
   }
 };
 

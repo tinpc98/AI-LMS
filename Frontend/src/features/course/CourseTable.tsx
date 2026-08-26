@@ -72,11 +72,6 @@ const CourseTable = ({
       key: "code",
     },
     {
-      title: "Level",
-      dataIndex: "level",
-      key: "level",
-    },
-    {
       title: "Subject",
       dataIndex: "subjectId",
       key: "subjectId",
@@ -90,12 +85,17 @@ const CourseTable = ({
     {
       title: "Duration",
       key: "duration",
-      render: (_: unknown, record: CourseRecord) => `${record.duration.value} ${record.duration.unit.toLowerCase()}(s)`,
+      render: (_: unknown, record: CourseRecord) =>
+        `${record.duration.value} ${record.duration.unit.toLowerCase()}(s)`,
     },
     {
-      title: "Tuition Fee",
-      key: "tuitionFee",
-      render: (_: unknown, record: CourseRecord) => `${record.pricing?.tuitionFee?.toLocaleString() || 0} VND`,
+      // BUG ĐÃ SỬA: khóa học có 3 mức giá theo level (prices: Map), không phải 1 giá duy nhất.
+      title: "Prices (F / I / A)",
+      key: "prices",
+      render: (_: unknown, record: CourseRecord) =>
+        (["FOUNDATION", "INTERMEDIATE", "ADVANCED"] as const)
+          .map((lvl) => (record.prices?.[lvl] ?? 0).toLocaleString())
+          .join(" / ") + " VND",
     },
     {
       title: "Status",

@@ -15,11 +15,13 @@ class AttendanceService {
       .lean();
 
     const attendanceRecords = await Attendance.find({ classId }).lean();
-    
-    return sessions.map(session => {
-      const records = attendanceRecords.filter(r => r.sessionId?.toString() === session._id.toString());
+
+    return sessions.map((session) => {
+      const records = attendanceRecords.filter(
+        (r) => r.sessionId?.toString() === session._id.toString()
+      );
       const hasRecords = records.length > 0;
-      
+
       const presentCount = records.filter((r) => r.status === "PRESENT").length;
       const absentCount = records.filter((r) => r.status === "ABSENT").length;
       const lateCount = records.filter((r) => r.status === "LATE").length;
@@ -60,7 +62,7 @@ class AttendanceService {
 
     const sessions = await this.getClassSessions(classId);
     const sessionMap = {};
-    sessions.forEach(s => {
+    sessions.forEach((s) => {
       sessionMap[s.id.toString()] = s.date;
     });
 
@@ -69,8 +71,9 @@ class AttendanceService {
     records.forEach((r) => {
       const studentId = r.studentId.toString();
       const sessionIdStr = r.sessionId ? r.sessionId.toString() : "";
-      const dateStr = sessionMap[sessionIdStr] || (r.createdAt ? r.createdAt.toISOString().split("T")[0] : "");
-      
+      const dateStr =
+        sessionMap[sessionIdStr] || (r.createdAt ? r.createdAt.toISOString().split("T")[0] : "");
+
       if (!recordsMap[studentId]) recordsMap[studentId] = {};
       if (dateStr) {
         recordsMap[studentId][dateStr] = r;
@@ -112,11 +115,13 @@ class AttendanceService {
     }
 
     const currentServerTime = new Date();
-    
+
     // Time-Lock: Điểm danh phải được thực hiện trong vòng 24h sau khi session kết thúc
     const maxConfirmTime = new Date(session.scheduledEndAt.getTime() + 24 * 60 * 60 * 1000);
     if (currentServerTime > maxConfirmTime) {
-      const error = new Error("Đã quá 24h kể từ khi buổi học kết thúc, không thể thay đổi điểm danh!");
+      const error = new Error(
+        "Đã quá 24h kể từ khi buổi học kết thúc, không thể thay đổi điểm danh!"
+      );
       error.status = 403;
       throw error;
     }
@@ -135,16 +140,20 @@ class AttendanceService {
     const activeEnrollments = await ClassEnrollment.find({
       classId,
       status: "ACTIVE",
-    }).select("studentId").lean();
+    })
+      .select("studentId")
+      .lean();
 
-    const activeStudentIds = new Set(activeEnrollments.map(e => e.studentId.toString()));
+    const activeStudentIds = new Set(activeEnrollments.map((e) => e.studentId.toString()));
 
-    const filteredRecords = validRecords.filter(record => 
+    const filteredRecords = validRecords.filter((record) =>
       activeStudentIds.has(record.studentId.toString())
     );
 
     if (filteredRecords.length === 0) {
-      const error = new Error("Không có học sinh nào trong danh sách hợp lệ và đang học trong lớp này!");
+      const error = new Error(
+        "Không có học sinh nào trong danh sách hợp lệ và đang học trong lớp này!"
+      );
       error.status = 400;
       throw error;
     }
@@ -189,7 +198,9 @@ class AttendanceService {
     const currentServerTime = new Date();
     const maxConfirmTime = new Date(session.scheduledEndAt.getTime() + 24 * 60 * 60 * 1000);
     if (currentServerTime > maxConfirmTime) {
-      const error = new Error("Đã quá 24h kể từ khi buổi học kết thúc, không thể xác nhận điểm danh!");
+      const error = new Error(
+        "Đã quá 24h kể từ khi buổi học kết thúc, không thể xác nhận điểm danh!"
+      );
       error.status = 403;
       throw error;
     }
@@ -199,11 +210,11 @@ class AttendanceService {
       status: "ACTIVE",
     }).lean();
 
-    const activeStudentIds = activeEnrollments.map(e => e.studentId.toString());
-    
+    const activeStudentIds = activeEnrollments.map((e) => e.studentId.toString());
+
     const existingRecords = await Attendance.find({ sessionId }).lean();
     const existingRecordMap = {};
-    existingRecords.forEach(r => {
+    existingRecords.forEach((r) => {
       existingRecordMap[r.studentId.toString()] = r;
     });
 
@@ -224,7 +235,7 @@ class AttendanceService {
               },
             },
             upsert: true,
-          }
+          },
         });
       }
     }
@@ -251,6 +262,22 @@ class AttendanceService {
       throw error;
     }
 
+    // BUG ĐÃ SỬA: updateAttendance (route PUT /:id, sửa 1 bản ghi lẻ) không có time-lock, trong
+    // khi markAttendance/confirmAttendance đều chặn sau 24h kể từ khi buổi học kết thúc — giáo
+    // viên có thể lách khóa 24h bằng cách sửa từng bản ghi thay vì điểm danh hàng loạt. Áp cùng
+    // quy tắc time-lock ở đây để nhất quán.
+    const session = await ClassSession.findById(attendance.sessionId).lean();
+    if (session?.scheduledEndAt) {
+      const maxConfirmTime = new Date(session.scheduledEndAt.getTime() + 24 * 60 * 60 * 1000);
+      if (new Date() > maxConfirmTime) {
+        const error = new Error(
+          "Đã quá 24h kể từ khi buổi học kết thúc, không thể thay đổi điểm danh!"
+        );
+        error.status = 403;
+        throw error;
+      }
+    }
+
     if (status) attendance.status = status;
     if (note !== undefined) attendance.note = note;
 
@@ -273,10 +300,12 @@ class AttendanceService {
       // Find sessions on that date first
       const sessions = await ClassSession.find({
         classId,
-        scheduledStartAt: { $gte: attendanceDate, $lt: nextDay }
-      }).select("_id").lean();
+        scheduledStartAt: { $gte: attendanceDate, $lt: nextDay },
+      })
+        .select("_id")
+        .lean();
 
-      const sessionIds = sessions.map(s => s._id);
+      const sessionIds = sessions.map((s) => s._id);
       query.sessionId = { $in: sessionIds };
     }
 
@@ -311,7 +340,11 @@ class AttendanceService {
       return { total: 0, present: 0, absent: 0, late: 0, excused: 0, presentRate: 0 };
     }
 
-    const records = await Attendance.find({ classId }).lean();
+    // BUG ĐÃ SỬA: khi sinh lịch buổi học, hệ thống tạo sẵn bản ghi Attendance status="DRAFT"
+    // cho MỌI buổi TƯƠNG LAI của mọi học sinh — trước đây không lọc DRAFT ra khỏi mẫu số, nên
+    // lớp mới học vài buổi trong tổng số buổi cả kỳ bị tính tỷ lệ chuyên cần rất thấp dù học
+    // sinh có mặt đủ những buổi ĐÃ diễn ra.
+    const records = await Attendance.find({ classId, status: { $ne: "DRAFT" } }).lean();
     const total = records.length;
 
     const stats = {

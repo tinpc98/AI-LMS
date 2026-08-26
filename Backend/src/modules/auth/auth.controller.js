@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import crypto from "crypto";
 import {
   loginService,
   getUserTrashService,
@@ -269,6 +270,40 @@ export const updateUser = async (req, res) => {
     return res
       .status(400)
       .json({ success: false, message: error.message || "Lỗi khi cập nhật người dùng" });
+  }
+};
+
+// BUG ĐÃ SỬA: trước đây frontend (accountService.ts) gửi thẳng chuỗi hardcode
+// "defaultPassword123!" qua PUT /users/:id — nghĩa là mật khẩu mới của MỌI tài khoản bị admin
+// "reset" đều giống hệt nhau và công khai trong source code, ai đọc được frontend cũng đăng nhập
+// được vào bất kỳ tài khoản nào vừa bị reset. Endpoint riêng này sinh mật khẩu ngẫu nhiên đủ mạnh
+// ở SERVER (không nhận password từ client), trả về đúng 1 lần trong response để admin gửi thủ
+// công cho người dùng (hệ thống chưa có email service để tự gửi — xem ghi chú ở accountService.ts).
+export const resetUserPassword = async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "ID người dùng không hợp lệ!" });
+    }
+
+    const user = await User.findById(id);
+    if (!user) {
+      return res.status(404).json({ message: "Người dùng không tồn tại" });
+    }
+
+    const newPassword = crypto.randomBytes(9).toString("base64url");
+    user.password = newPassword; // Sẽ được băm tự động qua pre-save hook
+    await user.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Đặt lại mật khẩu thành công",
+      data: { newPassword },
+    });
+  } catch (error) {
+    return res
+      .status(400)
+      .json({ success: false, message: error.message || "Lỗi khi đặt lại mật khẩu" });
   }
 };
 

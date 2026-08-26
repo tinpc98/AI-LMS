@@ -16,9 +16,7 @@ export interface EnrollmentCourse {
   code: string;
   subject: string;
   grade: number;
-  level: string;
   duration?: { value: number; unit: string };
-  pricing?: { tuitionFee: number };
   status: string;
 }
 
@@ -33,6 +31,11 @@ export interface EnrollmentRecord {
   studentId: string | EnrollmentStudent;
   courseId: string | EnrollmentCourse;
   status: EnrollmentStatus;
+  // BUG ĐÃ SỬA: level/price là field THẬT trên Enrollment (chốt lúc đăng ký, xem
+  // enrollment.model.js) — đây là nguồn đúng để hiển thị, không phải suy ra từ Course đã join
+  // (Course không có 1 "level"/giá cố định, mà có 3 mức giá theo level).
+  level: "FOUNDATION" | "INTERMEDIATE" | "ADVANCED";
+  price: number;
   createdAt: string;
   updatedAt: string;
 }

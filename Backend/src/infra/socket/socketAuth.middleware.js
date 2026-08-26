@@ -56,12 +56,25 @@ export const socketAuthMiddleware = async (socket, next) => {
     }
 
     const user = await User.findOne({ _id: userId, isDeleted: false }).select(
-      "_id role email fullName"
+      "_id role email fullName status"
     );
 
     if (!user) {
       return next(
         createSocketError("SOCKET_AUTH_USER_NOT_FOUND", "Tài khoản không tồn tại hoặc đã bị khóa.")
+      );
+    }
+
+    // BUG ĐÃ SỬA: middleware này trước đây chỉ kiểm tra isDeleted, không kiểm tra status như
+    // verifyUser (auth.middleware.js) bên HTTP — tài khoản bị khóa/hết hạn (status Locked/
+    // Inactive/Expired) vẫn kết nối được WebSocket và chat bình thường cho tới khi JWT tự hết
+    // hạn, dù các request HTTP khác đã bị chặn ngay lập tức.
+    if (user.status === "Inactive" || user.status === "Locked" || user.status === "Expired") {
+      return next(
+        createSocketError(
+          "SOCKET_AUTH_ACCOUNT_LOCKED",
+          "Tài khoản của bạn đã bị khóa, hết hạn hoặc ngừng hoạt động."
+        )
       );
     }
 

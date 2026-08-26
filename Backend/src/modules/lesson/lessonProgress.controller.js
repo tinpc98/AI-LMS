@@ -31,10 +31,16 @@ export const updateLessonProgress = asyncHandler(async (req, res) => {
     return res.status(404).json({ message: "Không tìm thấy Topic chứa bài giảng" });
   }
 
+  // BUG ĐÃ SỬA: "ACTIVE" không tồn tại trong enum status của Enrollment (đó là field của
+  // ClassEnrollment, model khác) — query này trước đây không bao giờ khớp document nào, khiến
+  // MỌI học sinh đã đóng tiền + được xếp lớp hợp lệ đều bị từ chối đánh dấu hoàn thành bài giảng.
+  // Chỉ APPROVED/CLASS_ASSIGNED (SAU khi thanh toán đã được duyệt, theo lifecycle ở đầu
+  // enrollment.model.js) — KHÔNG dùng ACTIVE_STATUSES đầy đủ vì nó còn gồm cả PENDING_PAYMENT/
+  // PAYMENT_PENDING_CONFIRMATION, tức học sinh CHƯA đóng tiền xong sẽ vô tình được cấp quyền.
   const isEnrolled = await Enrollment.findOne({
     studentId,
     courseId: topic.courseId,
-    status: "ACTIVE",
+    status: { $in: ["APPROVED", "CLASS_ASSIGNED"] },
   });
   if (!isEnrolled) {
     return res.status(403).json({ message: "Bạn chưa đăng ký khóa học chứa bài giảng này." });

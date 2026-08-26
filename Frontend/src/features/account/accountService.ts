@@ -43,9 +43,12 @@ export const accountService = {
     return { ...response.data, data: mapUser(response.data.data) };
   },
 
-  async resetPassword(id: string): Promise<void> {
-    // Assuming backend has a reset password endpoint, or use update if none
-    await axiosClient.put(`/users/${id}`, { password: "defaultPassword123!" });
+  // BUG ĐÃ SỬA: trước đây gửi thẳng chuỗi hardcode "defaultPassword123!" — mật khẩu mới của MỌI
+  // tài khoản bị reset đều giống nhau và lộ ngay trong source code frontend. Endpoint riêng
+  // /reset-password sinh mật khẩu ngẫu nhiên ở server, trả về đúng 1 lần để admin gửi thủ công.
+  async resetPassword(id: string): Promise<string> {
+    const response = await axiosClient.post(`/users/${id}/reset-password`);
+    return response.data.data.newPassword;
   },
 
   async deleteAccount(id: string): Promise<ApiResponse<void>> {

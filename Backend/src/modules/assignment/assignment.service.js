@@ -27,20 +27,21 @@ export const startAttemptService = async (assignmentId, studentId) => {
   if (inProgress) throw new Error("You already have an IN_PROGRESS attempt");
 
   const attemptCount = await assignmentRepo.countAttempts(studentId, assignmentId);
-  
+
   // Build snapshot
   const attemptQuestions = [];
-  
+
   // assignment.questions is populated with questionId
   for (const aq of assignment.questions) {
     const q = aq.questionId;
     if (!q) continue;
 
-    const optionsSnapshot = q.options?.map(opt => ({
-      id: opt.id,
-      content: opt.content,
-      order: opt.order
-    })) || [];
+    const optionsSnapshot =
+      q.options?.map((opt) => ({
+        id: opt.id,
+        content: opt.content,
+        order: opt.order,
+      })) || [];
 
     attemptQuestions.push({
       questionId: q._id,
@@ -49,8 +50,8 @@ export const startAttemptService = async (assignmentId, studentId) => {
       questionSnapshot: {
         type: q.type,
         content: q.content,
-        options: optionsSnapshot
-      }
+        options: optionsSnapshot,
+      },
     });
   }
 
@@ -59,7 +60,7 @@ export const startAttemptService = async (assignmentId, studentId) => {
     studentId,
     attemptNumber: attemptCount + 1,
     status: "IN_PROGRESS",
-    questions: attemptQuestions
+    questions: attemptQuestions,
   });
 
   await attempt.save();
@@ -79,16 +80,24 @@ export const submitAttemptService = async (attemptId, studentId) => {
     const q = await Question.findById(aq.questionId);
     if (!q) continue;
 
-    if (q.type === "MCQ") {
+    // BUG ĐÃ SỬA: TRUE_FALSE dùng CHÍNH XÁC cấu trúc options[].isCorrect như MCQ nhưng trước
+    // đây rơi vào nhánh else (coi như cần chấm tay) — trong khi gradeEssayService lại CHỈ nhận
+    // ESSAY/SHORT_ANSWER, và hasManual bên dưới cũng không tính TRUE_FALSE là "cần chấm tay" —
+    // kết quả: bài chỉ có MCQ+TRUE_FALSE bị đánh dấu GRADED ngay lập tức với điểm TRUE_FALSE
+    // luôn là 0, SAI VĨNH VIỄN, không có đường nào sửa lại được.
+    if (q.type === "MCQ" || q.type === "TRUE_FALSE") {
       const selected = aq.answer?.selectedOptionIds || [];
-      const correctOptions = q.options.filter(o => o.isCorrect).map(o => o.id);
-      
+      const correctOptions = q.options.filter((o) => o.isCorrect).map((o) => o.id);
+
       // Simple exact match grading for MCQ
       let isCorrect = false;
-      if (selected.length === correctOptions.length && selected.every(val => correctOptions.includes(val))) {
+      if (
+        selected.length === correctOptions.length &&
+        selected.every((val) => correctOptions.includes(val))
+      ) {
         isCorrect = true;
       }
-      
+
       aq.isCorrect = isCorrect;
       aq.score = isCorrect ? aq.points : 0;
       totalScore += aq.score;
@@ -100,7 +109,9 @@ export const submitAttemptService = async (attemptId, studentId) => {
   }
 
   attempt.score = totalScore;
-  const hasManual = attempt.questions.some(aq => aq.questionSnapshot.type === "ESSAY" || aq.questionSnapshot.type === "SHORT_ANSWER");
+  const hasManual = attempt.questions.some(
+    (aq) => aq.questionSnapshot.type === "ESSAY" || aq.questionSnapshot.type === "SHORT_ANSWER"
+  );
   attempt.status = hasManual ? "SUBMITTED" : "GRADED";
   attempt.submittedAt = new Date();
 
@@ -113,7 +124,7 @@ export const submitAttemptService = async (attemptId, studentId) => {
           attempt.performanceProcessedAt = new Date();
           await attempt.save();
         })
-        .catch(err => console.error("Performance Process Error:", err));
+        .catch((err) => console.error("Performance Process Error:", err));
     });
   }
 
@@ -124,9 +135,10 @@ export const saveAnswerService = async (attemptId, questionId, studentId, answer
   const attempt = await assignmentRepo.findAttemptById(attemptId);
   if (!attempt) throw new Error("Attempt not found");
   if (attempt.studentId.toString() !== studentId.toString()) throw new Error("Forbidden");
-  if (attempt.status !== "IN_PROGRESS") throw new Error("Cannot save answers for submitted attempt");
+  if (attempt.status !== "IN_PROGRESS")
+    throw new Error("Cannot save answers for submitted attempt");
 
-  const aq = attempt.questions.find(q => q.questionId.toString() === questionId);
+  const aq = attempt.questions.find((q) => q.questionId.toString() === questionId);
   if (!aq) throw new Error("Question not found in attempt");
 
   aq.answer = answerData;
@@ -143,7 +155,7 @@ export const gradeEssayService = async (attemptId, questionId, score, feedback) 
     if (!attempt) throw new Error("Attempt not found");
     if (attempt.status === "IN_PROGRESS") throw new Error("Attempt has not been submitted yet");
 
-    const aq = attempt.questions.find(q => q.questionId.toString() === questionId);
+    const aq = attempt.questions.find((q) => q.questionId.toString() === questionId);
     if (!aq) throw new Error("Question not found in attempt");
     if (aq.questionSnapshot.type !== "ESSAY" && aq.questionSnapshot.type !== "SHORT_ANSWER") {
       throw new Error("Only ESSAY or SHORT_ANSWER can be manually graded");
@@ -153,7 +165,7 @@ export const gradeEssayService = async (attemptId, questionId, score, feedback) 
     aq.score = Math.min(Math.max(0, score), aq.points); // Bound between 0 and max points
     aq.isCorrect = aq.score > 0;
     if (feedback && !aq.answer) aq.answer = {};
-    if (feedback) aq.answer.feedback = feedback; 
+    if (feedback) aq.answer.feedback = feedback;
 
     // Re-calculate total score
     let totalScore = 0;
@@ -168,7 +180,7 @@ export const gradeEssayService = async (attemptId, questionId, score, feedback) 
     }
 
     attempt.score = totalScore;
-    
+
     if (allGraded && attempt.status !== "GRADED") {
       attempt.status = "GRADED";
     }
@@ -178,14 +190,16 @@ export const gradeEssayService = async (attemptId, questionId, score, feedback) 
 
     // Trigger performance integration AFTER successful commit
     if (attempt.status === "GRADED" && !attempt.performanceProcessedAt) {
-      import("../performance/performance.service.js").then(({ processAttemptPerformanceService }) => {
-        processAttemptPerformanceService(attempt, "ASSIGNMENT")
-          .then(async () => {
-            attempt.performanceProcessedAt = new Date();
-            await attempt.save(); // Not in transaction
-          })
-          .catch(err => console.error("Performance Process Error:", err));
-      });
+      import("../performance/performance.service.js").then(
+        ({ processAttemptPerformanceService }) => {
+          processAttemptPerformanceService(attempt, "ASSIGNMENT")
+            .then(async () => {
+              attempt.performanceProcessedAt = new Date();
+              await attempt.save(); // Not in transaction
+            })
+            .catch((err) => console.error("Performance Process Error:", err));
+        }
+      );
     }
 
     return attempt;

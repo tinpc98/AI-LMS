@@ -63,7 +63,11 @@ export const startExamService = async (examId, studentId) => {
   }
 
   // Đếm số lần thi (không tính deleted)
-  const attemptCount = await ExamAttempt.countDocuments({ examId, studentId, isDeleted: { $ne: true } });
+  const attemptCount = await ExamAttempt.countDocuments({
+    examId,
+    studentId,
+    isDeleted: { $ne: true },
+  });
   if (attemptCount >= exam.attemptsAllowed) {
     throw new Error("You have reached the maximum number of attempts allowed");
   }
@@ -148,7 +152,13 @@ export const startExamService = async (examId, studentId) => {
   };
 };
 
-export const saveExamAnswerService = async (attemptId, sessionToken, studentId, questionId, answerData) => {
+export const saveExamAnswerService = async (
+  attemptId,
+  sessionToken,
+  studentId,
+  questionId,
+  answerData
+) => {
   const attempt = await ExamAttempt.findById(attemptId);
   if (!attempt) throw new Error("Attempt not found");
   if (attempt.studentId.toString() !== studentId.toString()) throw new Error("Forbidden");
@@ -213,7 +223,12 @@ const _gradeAttempt = async (attempt) => {
     if (!q) continue;
 
     const qType = (q.type || "").toUpperCase();
-    if (qType === "MCQ" || qType === "MULTIPLE_CHOICE") {
+    // BUG ĐÃ SỬA: TRUE_FALSE dùng CHÍNH XÁC cấu trúc options[].isCorrect như MCQ (xem
+    // question.model.js) nhưng trước đây rơi vào nhánh else (chấm tay) — trong khi luồng chấm
+    // tay (gradeEssay) lại CHỈ nhận ESSAY/SHORT_ANSWER, nên câu TRUE_FALSE không đường nào chấm
+    // được, kẹt điểm 0 vĩnh viễn và khiến bài thi không bao giờ chuyển từ PARTIALLY_GRADED
+    // sang GRADED.
+    if (qType === "MCQ" || qType === "MULTIPLE_CHOICE" || qType === "TRUE_FALSE") {
       const selectedIds = aq.answer?.selectedOptionIds || [];
       const correctIds = q.options.filter((o) => o.isCorrect).map((o) => o.id);
 
@@ -245,20 +260,24 @@ const _gradeAttempt = async (attempt) => {
   await attempt.save();
 
   if (attempt.status === "GRADED" && !attempt.performanceProcessedAt) {
-    import("../performance/performance.service.js")
-      .then(({ processAttemptPerformanceService }) => {
-        processAttemptPerformanceService(attempt, "EXAM")
-          .then(async () => {
-            await ExamAttempt.findByIdAndUpdate(attempt._id, {
-              performanceProcessedAt: new Date(),
-            });
-          })
-          .catch((err) => console.error("Performance Process Error:", err));
-      });
+    import("../performance/performance.service.js").then(({ processAttemptPerformanceService }) => {
+      processAttemptPerformanceService(attempt, "EXAM")
+        .then(async () => {
+          await ExamAttempt.findByIdAndUpdate(attempt._id, {
+            performanceProcessedAt: new Date(),
+          });
+        })
+        .catch((err) => console.error("Performance Process Error:", err));
+    });
   }
 };
 
-export const incrementCheatWarningService = async (attemptId, sessionToken, studentId, cheatType) => {
+export const incrementCheatWarningService = async (
+  attemptId,
+  sessionToken,
+  studentId,
+  cheatType
+) => {
   const attempt = await ExamAttempt.findOneAndUpdate(
     { _id: attemptId, studentId, sessionToken, status: "IN_PROGRESS" },
     {

@@ -1,4 +1,4 @@
-import { Card, message, Typography, Tabs } from "antd";
+import { Card, message, Modal, Typography, Tabs } from "antd";
 import { useRef, useState } from "react";
 import { useAdminListQuery } from "../../shared/hooks/useAdminListQuery";
 import type { AccountFormModalHandle } from "./AccountFormModal";
@@ -126,8 +126,26 @@ const AccountManagementPage = () => {
 
   const handleResetPassword = async (account: AccountRecord) => {
     try {
-      await accountService.resetPassword(account.id);
-      message.success("Password reset requested");
+      const newPassword = await accountService.resetPassword(account.id);
+      // BUG ĐÃ SỬA: trước đây mật khẩu mới luôn là "defaultPassword123!" cố định và không hề
+      // hiển thị lại cho admin — giờ backend sinh mật khẩu ngẫu nhiên và chỉ trả về đúng 1 lần,
+      // nên PHẢI hiển thị ở đây để admin còn cách gửi cho người dùng (hệ thống chưa có email).
+      Modal.success({
+        title: "Đặt lại mật khẩu thành công",
+        content: (
+          <div>
+            <Typography.Paragraph>
+              Mật khẩu mới cho tài khoản <strong>{account.email}</strong>:
+            </Typography.Paragraph>
+            <Typography.Text copyable strong style={{ fontSize: 16 }}>
+              {newPassword}
+            </Typography.Text>
+            <Typography.Paragraph type="secondary" style={{ marginTop: 8 }}>
+              Vui lòng gửi mật khẩu này cho người dùng — nó sẽ không hiển thị lại được nữa.
+            </Typography.Paragraph>
+          </div>
+        ),
+      });
       await loadAccounts();
     } catch {
       message.error("Unable to reset password");

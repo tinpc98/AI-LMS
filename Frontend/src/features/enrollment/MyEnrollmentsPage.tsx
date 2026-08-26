@@ -116,23 +116,19 @@ const MyEnrollmentsPage: React.FC = () => {
       },
     },
     {
+      // BUG ĐÃ SỬA: level/học phí phải lấy từ chính Enrollment (đã chốt lúc đăng ký), không suy
+      // ra từ Course đã join — Course không có 1 level/giá cố định (3 mức giá theo level).
       title: "Cấp độ",
       key: "level",
       width: 120,
-      render: (_: unknown, record: EnrollmentRecord) => {
-        const course = getCourse(record);
-        return course ? course.level : "—";
-      },
+      render: (_: unknown, record: EnrollmentRecord) => record.level || "—",
     },
     {
       title: "Học phí",
       key: "tuitionFee",
       width: 140,
-      render: (_: unknown, record: EnrollmentRecord) => {
-        const course = getCourse(record);
-        const fee = course?.pricing?.tuitionFee;
-        return fee ? `${fee.toLocaleString()} VND` : "—";
-      },
+      render: (_: unknown, record: EnrollmentRecord) =>
+        record.price ? `${record.price.toLocaleString()} VND` : "—",
     },
     {
       title: "Trạng thái",

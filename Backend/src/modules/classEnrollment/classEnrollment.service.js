@@ -17,7 +17,9 @@ class ClassEnrollmentService {
       }
 
       if (enrollment.status !== "APPROVED") {
-        throw new Error(`Chỉ Enrollment trạng thái APPROVED mới được xếp lớp. Trạng thái hiện tại: ${enrollment.status}`);
+        throw new Error(
+          `Chỉ Enrollment trạng thái APPROVED mới được xếp lớp. Trạng thái hiện tại: ${enrollment.status}`
+        );
       }
 
       // Check Class capacity atomically
@@ -35,7 +37,8 @@ class ClassEnrollmentService {
         // Fallback checks for precise error
         const targetClass = await Class.findById(classId).session(session);
         if (!targetClass) throw new Error("Không tìm thấy lớp học");
-        if (targetClass.status !== "OPEN") throw new Error(`Lớp học không ở trạng thái OPEN (hiện tại: ${targetClass.status})`);
+        if (targetClass.status !== "OPEN")
+          throw new Error(`Lớp học không ở trạng thái OPEN (hiện tại: ${targetClass.status})`);
         if (targetClass.activeCount >= targetClass.capacity) throw new Error("Lớp học đã đủ sĩ số");
         throw new Error("Không thể xếp lớp (lỗi concurrency)");
       }
@@ -72,7 +75,9 @@ class ClassEnrollmentService {
       const futureSessions = await ClassSession.find({
         classId: updatedClass._id,
         scheduledStartAt: { $gte: new Date() },
-      }).session(session).lean();
+      })
+        .session(session)
+        .lean();
 
       if (futureSessions.length > 0) {
         const attendanceRecords = futureSessions.map((s) => ({
@@ -119,7 +124,7 @@ class ClassEnrollmentService {
 
       // Check current Class
       const currentClass = await Class.findById(currentCE.classId).session(session);
-      
+
       // Target class atomic update
       const targetClass = await Class.findOneAndUpdate(
         {
@@ -157,12 +162,19 @@ class ClassEnrollmentService {
       const oldFutureSessions = await ClassSession.find({
         classId: currentCE.classId,
         scheduledStartAt: { $gte: new Date() },
-      }).select("_id").session(session).lean();
-      
+      })
+        .select("_id")
+        .session(session)
+        .lean();
+
       if (oldFutureSessions.length > 0) {
-        const oldFutureSessionIds = oldFutureSessions.map(s => s._id);
+        const oldFutureSessionIds = oldFutureSessions.map((s) => s._id);
         await Attendance.deleteMany(
-          { sessionId: { $in: oldFutureSessionIds }, studentId: currentCE.studentId, status: "DRAFT" },
+          {
+            sessionId: { $in: oldFutureSessionIds },
+            studentId: currentCE.studentId,
+            status: "DRAFT",
+          },
           { session }
         );
       }
@@ -201,7 +213,9 @@ class ClassEnrollmentService {
       const futureSessions = await ClassSession.find({
         classId: targetClassId,
         scheduledStartAt: { $gte: new Date() },
-      }).session(session).lean();
+      })
+        .session(session)
+        .lean();
 
       if (futureSessions.length > 0) {
         const attendanceRecords = futureSessions.map((s) => ({
@@ -227,7 +241,10 @@ class ClassEnrollmentService {
     const session = await mongoose.startSession();
     session.startTransaction();
     try {
-      const ce = await ClassEnrollment.findOne({ _id: classEnrollmentId, status: "ACTIVE" }).session(session);
+      const ce = await ClassEnrollment.findOne({
+        _id: classEnrollmentId,
+        status: "ACTIVE",
+      }).session(session);
       if (!ce) throw new Error("Không tìm thấy ClassEnrollment ACTIVE");
 
       ce.status = "COMPLETED";
@@ -239,10 +256,13 @@ class ClassEnrollmentService {
       const futureSessions = await ClassSession.find({
         classId: ce.classId,
         scheduledStartAt: { $gte: new Date() },
-      }).select("_id").session(session).lean();
-      
+      })
+        .select("_id")
+        .session(session)
+        .lean();
+
       if (futureSessions.length > 0) {
-        const futureSessionIds = futureSessions.map(s => s._id);
+        const futureSessionIds = futureSessions.map((s) => s._id);
         await Attendance.deleteMany(
           { sessionId: { $in: futureSessionIds }, studentId: ce.studentId, status: "DRAFT" },
           { session }
@@ -257,7 +277,7 @@ class ClassEnrollmentService {
         }
         await cls.save({ session });
       }
-      
+
       await session.commitTransaction();
       return ce;
     } catch (error) {
@@ -272,7 +292,10 @@ class ClassEnrollmentService {
     const session = await mongoose.startSession();
     session.startTransaction();
     try {
-      const ce = await ClassEnrollment.findOne({ _id: classEnrollmentId, status: "ACTIVE" }).session(session);
+      const ce = await ClassEnrollment.findOne({
+        _id: classEnrollmentId,
+        status: "ACTIVE",
+      }).session(session);
       if (!ce) throw new Error("Không tìm thấy ClassEnrollment ACTIVE");
 
       ce.status = "CANCELLED";
@@ -284,10 +307,13 @@ class ClassEnrollmentService {
       const futureSessions = await ClassSession.find({
         classId: ce.classId,
         scheduledStartAt: { $gte: new Date() },
-      }).select("_id").session(session).lean();
-      
+      })
+        .select("_id")
+        .session(session)
+        .lean();
+
       if (futureSessions.length > 0) {
-        const futureSessionIds = futureSessions.map(s => s._id);
+        const futureSessionIds = futureSessions.map((s) => s._id);
         await Attendance.deleteMany(
           { sessionId: { $in: futureSessionIds }, studentId: ce.studentId, status: "DRAFT" },
           { session }
@@ -302,7 +328,7 @@ class ClassEnrollmentService {
         }
         await cls.save({ session });
       }
-      
+
       await session.commitTransaction();
       return ce;
     } catch (error) {
@@ -311,6 +337,24 @@ class ClassEnrollmentService {
     } finally {
       session.endSession();
     }
+  }
+
+  /**
+   * Tìm ClassEnrollment ACTIVE của một Enrollment rồi hủy — dùng khi Enrollment bị CANCELLED
+   * để cascade đúng (giải phóng activeCount, dọn Attendance DRAFT tương lai). Trả null nếu
+   * Enrollment chưa từng được xếp lớp (không có ClassEnrollment ACTIVE nào để hủy).
+   */
+  async cancelClassEnrollmentByEnrollmentId(enrollmentId, adminId) {
+    const ce = await ClassEnrollment.findOne({ enrollmentId, status: "ACTIVE" });
+    if (!ce) return null;
+    return await this.cancelClassEnrollment({ classEnrollmentId: ce._id, adminId });
+  }
+
+  /** Tương tự cancelClassEnrollmentByEnrollmentId nhưng dùng khi Enrollment COMPLETED. */
+  async completeClassEnrollmentByEnrollmentId(enrollmentId, adminId) {
+    const ce = await ClassEnrollment.findOne({ enrollmentId, status: "ACTIVE" });
+    if (!ce) return null;
+    return await this.completeClassEnrollment({ classEnrollmentId: ce._id, adminId });
   }
 
   async getClassEnrollments(filters = {}, options = {}) {

@@ -25,14 +25,18 @@ const CourseFormModal = forwardRef<CourseFormModalHandle, CourseFormModalProps>(
         form.setFieldsValue({
           name: initialValues?.name || "",
           code: initialValues?.code || "",
-          subjectId: typeof initialValues?.subjectId === "object" 
-            ? (initialValues.subjectId as any)._id 
-            : initialValues?.subjectId || undefined,
+          subjectId:
+            typeof initialValues?.subjectId === "object"
+              ? (initialValues.subjectId as any)._id
+              : initialValues?.subjectId || undefined,
           grade: initialValues?.grade || 12,
-          level: initialValues?.level || "FOUNDATION",
           description: initialValues?.description || "",
           thumbnail: initialValues?.thumbnail || "",
-          pricing: initialValues?.pricing || { tuitionFee: 0 },
+          prices: {
+            FOUNDATION: initialValues?.prices?.FOUNDATION ?? 0,
+            INTERMEDIATE: initialValues?.prices?.INTERMEDIATE ?? 0,
+            ADVANCED: initialValues?.prices?.ADVANCED ?? 0,
+          },
           duration: initialValues?.duration || { value: 1, unit: "WEEK" },
           status: initialValues?.status || "DRAFT",
         });
@@ -40,11 +44,12 @@ const CourseFormModal = forwardRef<CourseFormModalHandle, CourseFormModalProps>(
     }, [open, initialValues, form]);
 
     const [subjects, setSubjects] = useState<Subject[]>([]);
-    
+
     useEffect(() => {
       if (open) {
-        subjectService.getSubjects({ status: "ACTIVE", limit: 100 })
-          .then(res => setSubjects(res.data || []))
+        subjectService
+          .getSubjects({ status: "ACTIVE", limit: 100 })
+          .then((res) => setSubjects(res.data || []))
           .catch(() => {});
       }
     }, [open]);
@@ -116,30 +121,44 @@ const CourseFormModal = forwardRef<CourseFormModalHandle, CourseFormModalProps>(
           >
             <InputNumber min={1} max={12} style={{ width: "100%" }} />
           </Form.Item>
-          <Form.Item
-            name="level"
-            label="Level"
-            rules={[{ required: true, message: "Level is required" }]}
-          >
-            <Select
-              options={[
-                { label: "Nền tảng", value: "FOUNDATION" },
-                { label: "Trung cấp", value: "INTERMEDIATE" },
-                { label: "Nâng cao", value: "ADVANCED" },
+          {/* BUG ĐÃ SỬA: Course không có 1 "level" cố định — giá thật là 3 mức theo level
+              (prices: Map trên schema), học sinh chọn level lúc đăng ký. */}
+          <div style={{ display: "flex", gap: "16px" }}>
+            <Form.Item
+              name={["prices", "FOUNDATION"]}
+              label="Foundation Price"
+              style={{ flex: 1 }}
+              rules={[
+                { required: true, message: "Required" },
+                { type: "number", min: 0, message: "Must be a positive number" },
               ]}
-            />
-          </Form.Item>
-          <Form.Item
-            name={["pricing", "tuitionFee"]}
-            label="Tuition Fee"
-            rules={[
-              { required: true, message: "Tuition fee is required" },
-              { type: "number", min: 0, message: "Must be a positive number" },
-            ]}
-          >
-            <InputNumber min={0} style={{ width: "100%" }} />
-          </Form.Item>
-          
+            >
+              <InputNumber min={0} style={{ width: "100%" }} />
+            </Form.Item>
+            <Form.Item
+              name={["prices", "INTERMEDIATE"]}
+              label="Intermediate Price"
+              style={{ flex: 1 }}
+              rules={[
+                { required: true, message: "Required" },
+                { type: "number", min: 0, message: "Must be a positive number" },
+              ]}
+            >
+              <InputNumber min={0} style={{ width: "100%" }} />
+            </Form.Item>
+            <Form.Item
+              name={["prices", "ADVANCED"]}
+              label="Advanced Price"
+              style={{ flex: 1 }}
+              rules={[
+                { required: true, message: "Required" },
+                { type: "number", min: 0, message: "Must be a positive number" },
+              ]}
+            >
+              <InputNumber min={0} style={{ width: "100%" }} />
+            </Form.Item>
+          </div>
+
           <div style={{ display: "flex", gap: "16px" }}>
             <Form.Item
               name={["duration", "value"]}

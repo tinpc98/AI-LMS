@@ -171,8 +171,12 @@ class EnrollmentService {
     const skip = (Number(page) - 1) * Number(limit);
 
     const [items, total] = await Promise.all([
+      // BUG ĐÃ SỬA: select string liệt kê "level"/"pricing" — cả 2 field này KHÔNG tồn tại trên
+      // schema Course (course.model.js chỉ có `prices: Map`), nên Mongoose luôn bỏ qua chúng một
+      // cách âm thầm. level/price thật đã được snapshot ngay trên Enrollment lúc đăng ký (xem
+      // enrollment.model.js), không cần populate thêm từ Course.
       Enrollment.find(query)
-        .populate("courseId", "name code subject grade level duration pricing status")
+        .populate("courseId", "name code subject grade duration status")
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(Number(limit)),
@@ -204,7 +208,7 @@ class EnrollmentService {
     const [items, total] = await Promise.all([
       Enrollment.find(query)
         .populate("studentId", "fullName email")
-        .populate("courseId", "name code subject grade level pricing status")
+        .populate("courseId", "name code subject grade status")
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(Number(limit)),
@@ -228,7 +232,7 @@ class EnrollmentService {
   async getEnrollmentById(enrollmentId) {
     const enrollment = await Enrollment.findById(enrollmentId)
       .populate("studentId", "fullName email")
-      .populate("courseId", "name code subject grade level duration pricing status");
+      .populate("courseId", "name code subject grade duration status");
 
     if (!enrollment) {
       throw new NotFoundError("Enrollment không tồn tại.");
@@ -240,7 +244,7 @@ class EnrollmentService {
    * Chuyển trạng thái enrollment theo business rules.
    * Validate transition hợp lệ.
    */
-  async transitionStatus(enrollmentId, targetStatus) {
+  async transitionStatus(enrollmentId, targetStatus, adminId = null) {
     const enrollment = await Enrollment.findById(enrollmentId);
     if (!enrollment) {
       throw new NotFoundError("Enrollment không tồn tại.");
@@ -253,6 +257,26 @@ class EnrollmentService {
       throw new BusinessRuleError(
         `Không thể chuyển trạng thái từ "${currentStatus}" sang "${targetStatus}".`
       );
+    }
+
+    // BUG ĐÃ SỬA: chuyển Enrollment sang CANCELLED/COMPLETED trước đây không cascade sang
+    // ClassEnrollment — nếu Enrollment đã ở CLASS_ASSIGNED (tức có ClassEnrollment ACTIVE),
+    // ClassEnrollment đó bị BỎ QUÊN mãi mãi ở ACTIVE: Class.activeCount không được giải phóng
+    // (khóa sĩ số ảo), roster của giáo viên vẫn hiện học sinh đã hủy/hoàn thành, và Attendance
+    // DRAFT tương lai không được dọn. Cascade TRƯỚC khi cập nhật Enrollment (không phải sau):
+    // nếu cascade xong mà bước ghi Enrollment bên dưới thất bại, currentStatus vẫn là
+    // CLASS_ASSIGNED nên gọi lại được (cascade sẽ no-op vì không còn ClassEnrollment ACTIVE nào);
+    // ngược lại nếu ghi Enrollment trước mà cascade thất bại, CANCELLED/COMPLETED là trạng thái
+    // terminal (không có đường quay lại) nên ClassEnrollment sẽ orphan vĩnh viễn — đúng bug gốc.
+    if (targetStatus === "CANCELLED" || targetStatus === "COMPLETED") {
+      const classEnrollmentService = (
+        await import("#modules/classEnrollment/classEnrollment.service.js")
+      ).default;
+      if (targetStatus === "CANCELLED") {
+        await classEnrollmentService.cancelClassEnrollmentByEnrollmentId(enrollmentId, adminId);
+      } else {
+        await classEnrollmentService.completeClassEnrollmentByEnrollmentId(enrollmentId, adminId);
+      }
     }
 
     // Atomic update to prevent race conditions

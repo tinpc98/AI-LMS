@@ -150,12 +150,16 @@ describe("computeStudentGrade", () => {
   });
 
   it("chuẩn hóa điểm thi (exam attempt) về thang 10 dựa trên maxScore của đề thi", () => {
+    // BUG ĐÃ SỬA: mock trước đây dùng `totalScore` — field KHÔNG tồn tại trên schema
+    // ExamAttempt thật (field thật là `score`, xem examAttempt.model.js). Vì code cũ cũng đọc
+    // nhầm `att.totalScore`, test "pass" một cách vô nghĩa — cả 2 phía cùng sai nên khớp nhau.
+    // Sửa mock về đúng field thật để test thực sự bắt được lỗi nếu code đọc sai field lần nữa.
     const result = computeStudentGrade({
       studentId: "s1",
       user: {},
       manualGrades: [],
       submissions: [],
-      attempts: [{ studentId: "s1", examId: "e1", totalScore: 25, _id: "att1" }],
+      attempts: [{ studentId: "s1", examId: "e1", score: 25, _id: "att1" }],
       exams: [{ _id: "e1", maxScore: 50 }],
       gradingWeight: { attendance: 0, assignment: 0, midterm: 50, final: 50 },
     });

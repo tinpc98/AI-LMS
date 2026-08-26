@@ -89,6 +89,23 @@ const paymentSchema = new Schema(
       type: Date,
       required: true,
     },
+    // BUG ĐÃ SỬA: refundPayment() trước đây không ghi lại AI đã hoàn tiền và khi nào — không có
+    // audit trail cho một thao tác tài chính, trong khi confirm/reject đều có confirmedBy/
+    // rejectedBy tương ứng.
+    refundedAt: {
+      type: Date,
+      default: null,
+    },
+    refundedBy: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+    },
+    refundReason: {
+      type: String,
+      trim: true,
+      default: "",
+    },
   },
   {
     timestamps: true,
