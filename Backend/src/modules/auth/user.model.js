@@ -125,6 +125,20 @@ const userSchema = new Schema(
       default: 2,
       min: 0,
     },
+    // Trạng thái được nhận cohort mới hay không (A.5) — tách khỏi `status` (Active/Inactive/
+    // Locked/Expired) vốn là khóa tài khoản toàn hệ thống; đây chỉ khóa riêng việc NHẬN COHORT
+    // MỚI, giáo viên vẫn đăng nhập/dạy nốt cohort đang ACTIVE bình thường.
+    poolStatus: {
+      type: String,
+      enum: ["ACTIVE", "LOCKED", "REMOVED"],
+      default: "ACTIVE",
+    },
+    // Chỉ có ý nghĩa khi poolStatus="LOCKED" — hết hạn thì transitionCommitment tự đưa về
+    // ACTIVE ở lần kiểm tra kế tiếp (xem commitment.service.js).
+    poolLockedUntil: {
+      type: Date,
+      default: null,
+    },
   },
   {
     timestamps: true,
