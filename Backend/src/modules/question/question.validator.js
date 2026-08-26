@@ -265,6 +265,10 @@ export const createQuestionValidation = [
 
   body("tags").optional().isArray().withMessage("tags phải là mảng"),
 
+  // TÍNH NĂNG MỚI (mục 6): nhãn Skill — chưa nằm trong validator nên trước đây bị matchedData()
+  // âm thầm loại bỏ dù model đã có sẵn field này từ trước.
+  body("primarySkillId").optional().isMongoId().withMessage("primarySkillId không hợp lệ"),
+
   handleValidationErrors,
 ];
 
@@ -310,6 +314,8 @@ export const updateQuestionValidation = [
     .withMessage("status không hợp lệ"),
 
   body("tags").optional().isArray().withMessage("tags phải là mảng"),
+
+  body("primarySkillId").optional().isMongoId().withMessage("primarySkillId không hợp lệ"),
 
   handleValidationErrors,
 ];

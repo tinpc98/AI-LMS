@@ -20,9 +20,11 @@ import {
   CheckOutlined,
   CloseOutlined,
   InboxOutlined,
+  TagsOutlined,
 } from "@ant-design/icons";
 import { topicService } from "./topicService";
 import type { TopicRecord } from "./topic.types";
+import SkillManagerModal from "../skill/SkillManagerModal";
 
 interface TopicManagerModalProps {
   open: boolean;
@@ -53,6 +55,7 @@ const TopicManagerModal: React.FC<TopicManagerModalProps> = ({
   const [creating, setCreating] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState("");
+  const [skillTopic, setSkillTopic] = useState<TopicRecord | null>(null);
 
   const loadTopics = async () => {
     if (!courseId) return;
@@ -212,6 +215,14 @@ const TopicManagerModal: React.FC<TopicManagerModalProps> = ({
                 icon={<EditOutlined />}
                 onClick={() => startEdit(topic)}
               />,
+              <Button
+                key="skills"
+                size="small"
+                icon={<TagsOutlined />}
+                onClick={() => setSkillTopic(topic)}
+              >
+                Skill
+              </Button>,
               topic.status === "DRAFT" && (
                 <Button key="publish" size="small" onClick={() => handlePublish(topic)}>
                   Publish
@@ -263,6 +274,13 @@ const TopicManagerModal: React.FC<TopicManagerModalProps> = ({
             )}
           </List.Item>
         )}
+      />
+
+      <SkillManagerModal
+        open={!!skillTopic}
+        topicId={skillTopic?.id || null}
+        topicName={skillTopic?.name}
+        onClose={() => setSkillTopic(null)}
       />
     </Modal>
   );

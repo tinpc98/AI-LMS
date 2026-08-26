@@ -121,6 +121,8 @@
     "#modules/topic/*": "./src/modules/topic/*",
     "#modules/learnerNeed": "./src/modules/learnerNeed/index.js",
     "#modules/learnerNeed/*": "./src/modules/learnerNeed/*",
+    "#modules/skill": "./src/modules/skill/index.js",
+    "#modules/skill/*": "./src/modules/skill/*",
     "#shared/*": "./src/shared/*"
   }
 }
