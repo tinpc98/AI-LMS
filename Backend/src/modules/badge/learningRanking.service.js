@@ -1,116 +1,57 @@
 import mongoose from "mongoose";
-import { Class, resolveClassContentIds } from "#modules/class";
-import { LessonProgress } from "#modules/lesson";
-import LearningActivity from "./learningActivity.model.js";
-import { Attendance } from "#modules/attendance";
-import { Grade } from "#modules/grade";
 import ClassEnrollment from "../classEnrollment/classEnrollment.model.js";
+
+// TÍNH NĂNG MỚI (đặc tả nghiệp vụ mục 5) — bảng xếp hạng giờ đọc THẲNG từ sổ cái XP thật
+// (LearningActivity.xpAwarded, được ghi bởi xp.service.js#awardXpService khi có kết quả đã xác
+// minh), thay cho cách tính cũ: cộng LessonProgress.progress (0-100 mỗi bài, không giới hạn) +
+// đếm Attendance PRESENT * 10 + đếm LearningActivity (luôn = 0 vì trước đây KHÔNG AI ghi vào
+// bảng này) + tổng Grade.score — một phép tính không phản ánh nghiệp vụ thật nào.
+//
+// Leaderboard SCOPE THEO TUẦN (không phải trọn đời) theo đúng đặc tả — tránh học sinh vào lớp
+// muộn không bao giờ đuổi kịp học sinh cũ, và khuyến khích duy trì hoạt động đều mỗi tuần thay
+// vì chỉ dựa vào thành tích tích lũy 1 lần. Level (xem xp.service.js#getLifetimeXpService) mới
+// là chỉ số trọn đời, tách biệt với leaderboard.
+const LESSON_XP_TYPES = new Set(["Lesson Completed", "Practice Quiz Passed", "Course Completed"]);
+const ATTENDANCE_XP_TYPES = new Set(["Attendance Present"]);
+const GRADE_XP_TYPES = new Set(["Assignment Submitted", "Exam Finished"]);
+
+const startOfIsoWeek = (date = new Date()) => {
+  const d = new Date(date);
+  d.setUTCHours(0, 0, 0, 0);
+  const day = d.getUTCDay(); // 0=CN, 1=Thứ 2, ... 6=Thứ 7
+  const diffToMonday = (day === 0 ? -6 : 1) - day;
+  d.setUTCDate(d.getUTCDate() + diffToMonday);
+  return d;
+};
+
+/** Gộp các dòng {_id: activityType, totalXP} thành 3 nhóm hiển thị cho giáo viên (lessonXP/attendanceXP/gradeXP). */
+const bucketizeXpByType = (xpByType = []) => {
+  let lessonXP = 0;
+  let attendanceXP = 0;
+  let gradeXP = 0;
+
+  for (const stat of xpByType) {
+    if (LESSON_XP_TYPES.has(stat._id)) lessonXP += stat.totalXP;
+    else if (ATTENDANCE_XP_TYPES.has(stat._id)) attendanceXP += stat.totalXP;
+    else if (GRADE_XP_TYPES.has(stat._id)) gradeXP += stat.totalXP;
+  }
+
+  return { lessonXP, attendanceXP, gradeXP };
+};
 
 class LearningRankingService {
   /**
-   * Tính điểm số (XP) của một học sinh trong một lớp
-   */
-  async getStudentXP(classId, studentId) {
-    const cid = new mongoose.Types.ObjectId(classId);
-    const sid = new mongoose.Types.ObjectId(studentId);
-
-    // Điểm bài giảng (Lesson Progress)
-    // Lesson thuộc courseId (qua Topic), không có field classId trực tiếp, nên phải resolve
-    // danh sách lessonId của lớp trước khi match LessonProgress theo lessonId.
-    const { lessonIds } = (await resolveClassContentIds([cid]))[String(cid)] || { lessonIds: [] };
-    const progressXP = lessonIds.length
-      ? await LessonProgress.aggregate([
-          { $match: { studentId: sid, lessonId: { $in: lessonIds } } },
-          { $group: { _id: null, totalProgress: { $sum: "$progress" } } },
-        ])
-      : [];
-    const lessonXP = progressXP.length ? progressXP[0].totalProgress : 0;
-
-    // Điểm danh (Attendance) - 10 XP mỗi lần có mặt
-    const attendanceXP =
-      (await Attendance.countDocuments({
-        classId: cid,
-        studentId: sid,
-        status: "PRESENT",
-        isDeleted: false,
-      })) * 10;
-
-    // Điểm hoạt động (LearningActivity) - 1 XP mỗi hoạt động
-    const activityXP = await LearningActivity.countDocuments({
-      classId: cid,
-      studentId: sid,
-    });
-
-    // Điểm bài tập / Bài thi (Grade)
-    const gradeXP = await Grade.aggregate([
-      { $match: { classId: cid, studentId: sid, isDeleted: false } },
-      { $group: { _id: null, totalGrade: { $sum: "$score" } } },
-    ]);
-    const totalGradeXP = gradeXP.length ? gradeXP[0].totalGrade : 0;
-
-    return lessonXP + attendanceXP + activityXP + totalGradeXP;
-  }
-
-  /**
-   * Lấy Bảng xếp hạng của lớp học (Aggregation tối ưu)
+   * Lấy Bảng xếp hạng của lớp học (tuần hiện tại, theo giờ UTC)
    */
   async getClassRanking(classId, queryOptions = {}) {
     const cid = new mongoose.Types.ObjectId(classId);
     const page = Math.max(1, parseInt(queryOptions.page || 1, 10));
     const limit = Math.min(100, Math.max(1, parseInt(queryOptions.limit || 20, 10)));
+    const weekStart = startOfIsoWeek();
 
-    // Lesson thuộc courseId (qua Topic), không có field classId trực tiếp, nên phải resolve
-    // danh sách lessonId của lớp trước khi đưa vào $lookup bên dưới.
-    const { lessonIds } = (await resolveClassContentIds([cid]))[String(cid)] || { lessonIds: [] };
-
-    // Aggregation pipeline tối ưu từ ClassEnrollment
     const pipeline = [
       { $match: { classId: cid, status: "ACTIVE" } },
 
-      // Lookup Lesson Progress
-      {
-        $lookup: {
-          from: "lessonprogresses",
-          let: { sid: "$studentId" },
-          pipeline: [
-            {
-              $match: {
-                $expr: {
-                  $and: [{ $in: ["$lessonId", lessonIds] }, { $eq: ["$studentId", "$$sid"] }],
-                },
-              },
-            },
-            { $group: { _id: null, totalProgress: { $sum: "$progress" } } },
-          ],
-          as: "progressStats",
-        },
-      },
-
-      // Lookup Attendance
-      {
-        $lookup: {
-          from: "attendances",
-          let: { sid: "$studentId" },
-          pipeline: [
-            {
-              $match: {
-                $expr: {
-                  $and: [
-                    { $eq: ["$classId", cid] },
-                    { $eq: ["$studentId", "$$sid"] },
-                    { $eq: ["$status", "PRESENT"] },
-                    { $eq: ["$isDeleted", false] },
-                  ],
-                },
-              },
-            },
-            { $count: "count" },
-          ],
-          as: "attendanceStats",
-        },
-      },
-
-      // Lookup Activity
       {
         $lookup: {
           from: "learningactivities",
@@ -118,57 +59,21 @@ class LearningRankingService {
           pipeline: [
             {
               $match: {
-                $expr: { $and: [{ $eq: ["$classId", cid] }, { $eq: ["$studentId", "$$sid"] }] },
-              },
-            },
-            { $count: "count" },
-          ],
-          as: "activityStats",
-        },
-      },
-
-      // Lookup Grades
-      {
-        $lookup: {
-          from: "grades",
-          let: { sid: "$studentId" },
-          pipeline: [
-            {
-              $match: {
                 $expr: {
                   $and: [
                     { $eq: ["$classId", cid] },
                     { $eq: ["$studentId", "$$sid"] },
-                    { $eq: ["$isDeleted", false] },
+                    { $gte: ["$createdAt", weekStart] },
                   ],
                 },
               },
             },
-            { $group: { _id: null, totalScore: { $sum: "$score" } } },
+            { $group: { _id: "$activityType", totalXP: { $sum: "$xpAwarded" } } },
           ],
-          as: "gradeStats",
+          as: "xpByType",
         },
       },
 
-      // Project and Calculate XP
-      {
-        $project: {
-          studentId: 1,
-          lessonXP: { $ifNull: [{ $arrayElemAt: ["$progressStats.totalProgress", 0] }, 0] },
-          attendanceXP: {
-            $multiply: [{ $ifNull: [{ $arrayElemAt: ["$attendanceStats.count", 0] }, 0] }, 10],
-          },
-          activityXP: { $ifNull: [{ $arrayElemAt: ["$activityStats.count", 0] }, 0] },
-          gradeXP: { $ifNull: [{ $arrayElemAt: ["$gradeStats.totalScore", 0] }, 0] },
-        },
-      },
-      {
-        $addFields: {
-          totalXP: { $add: ["$lessonXP", "$attendanceXP", "$activityXP", "$gradeXP"] },
-        },
-      },
-
-      // Lookup User Info
       {
         $lookup: {
           from: "users",
@@ -184,24 +89,31 @@ class LearningRankingService {
           fullName: "$userInfo.fullName",
           email: "$userInfo.email",
           avatar: "$userInfo.avatar",
-          lessonXP: 1,
-          attendanceXP: 1,
-          activityXP: 1,
-          gradeXP: 1,
-          totalXP: 1,
+          xpByType: 1,
         },
       },
-      { $sort: { totalXP: -1, fullName: 1 } },
     ];
 
-    const ranking = await ClassEnrollment.aggregate(pipeline);
+    const rawRanking = await ClassEnrollment.aggregate(pipeline);
 
-    // Apply Ranking Position với xử lý đồng hạng và totalXP = 0
+    const ranking = rawRanking.map(({ xpByType, ...rest }) => {
+      const { lessonXP, attendanceXP, gradeXP } = bucketizeXpByType(xpByType);
+      return {
+        ...rest,
+        lessonXP,
+        attendanceXP,
+        gradeXP,
+        totalXP: lessonXP + attendanceXP + gradeXP,
+      };
+    });
+
+    ranking.sort((a, b) => b.totalXP - a.totalXP || a.fullName.localeCompare(b.fullName));
+
+    // Xử lý đồng hạng: cùng totalXP -> cùng rank; totalXP=0 -> chưa có thứ hạng thi đua.
     let currentRank = 1;
     for (let i = 0; i < ranking.length; i++) {
       const item = ranking[i];
-      if (!item.totalXP || item.totalXP === 0) {
-        // Học sinh chưa có XP nào: chưa có thứ hạng thi đua
+      if (!item.totalXP) {
         item.rank = null;
       } else {
         if (i > 0 && ranking[i - 1].totalXP && item.totalXP < ranking[i - 1].totalXP) {

@@ -10,6 +10,15 @@ import { Question } from "#modules/question";
 import { Enrollment } from "#modules/enrollment";
 import storageService from "#shared/services/storage.service.js";
 import { NotFoundError, BusinessRuleError, AuthorizationError } from "#shared/utils/appError.js";
+// Import trực tiếp file, KHÔNG qua #modules/badge — barrel đó còn re-export learningRanking.service.js
+// (kéo theo Class/Attendance/Grade/ClassEnrollment), trong khi ở đây chỉ cần 2 hàm thuần liên
+// quan XP. Cùng nguyên tắc "tránh over-eager barrel export" đã áp dụng cho topic.service.js.
+import { awardXpService } from "../badge/xp.service.js";
+import { XP_TABLE } from "../badge/xp.js";
+// Dùng trực tiếp model, không qua barrel class/classEnrollment — chỉ cần đọc dữ liệu, tránh kéo
+// theo service nặng của 2 module đó (cùng lý do như trên).
+import Class from "../class/class.model.js";
+import ClassEnrollment from "../classEnrollment/classEnrollment.model.js";
 import {
   computeWatchedUnionSeconds,
   isVideoBlockComplete,
@@ -53,15 +62,42 @@ const loadLessonBlockForStudent = async (lessonId, blockId, studentId, expectedT
 
   await assertEnrolled(studentId, topic.courseId);
 
-  return { lesson, block };
+  return { lesson, block, courseId: topic.courseId };
+};
+
+/**
+ * Lớp học ACTIVE của học sinh trong Course chứa bài giảng — cần để gắn classId vào sự kiện XP
+ * (mục 5: leaderboard scoped theo lớp). 1 Course có thể có nhiều Class, nhưng học sinh chỉ có
+ * tối đa 1 ClassEnrollment ACTIVE cho mỗi Class họ tham gia — lấy Class đầu tiên khớp là đủ vì
+ * thực tế 1 học sinh chỉ học 1 Class của cùng 1 Course tại một thời điểm.
+ */
+const resolveActiveClassIdForStudent = async (courseId, studentId) => {
+  const classes = await Class.find({ courseId, isDeleted: { $ne: true } })
+    .select("_id")
+    .lean();
+  const classIds = classes.map((c) => c._id);
+  if (classIds.length === 0) return null;
+
+  const enrollment = await ClassEnrollment.findOne({
+    studentId,
+    classId: { $in: classIds },
+    status: "ACTIVE",
+  })
+    .select("classId")
+    .lean();
+
+  return enrollment?.classId || null;
 };
 
 /**
  * Tính lại completed/progress toàn Lesson và ghi vào progressDoc — BR-1.7: KHÔNG bao giờ đổi
  * completed từ true về false (một khi đã hoàn thành thì giữ nguyên, kể cả khi giáo viên thêm
  * block bắt buộc mới sau đó — BR-1.8).
+ *
+ * TÍNH NĂNG MỚI (mục 5): cộng 20 XP "Lesson Completed" đúng 1 lần khi completed chuyển
+ * false -> true lần đầu (sourceRef theo lessonId nên gọi lại không cộng trùng).
  */
-const recomputeLessonProgress = (progressDoc, lesson) => {
+const recomputeLessonProgress = async (progressDoc, lesson, studentId, courseId) => {
   if (progressDoc.completed) return; // Đã hoàn thành — không tính lại, không thu hồi.
 
   const { completed, progress } = computeLessonCompletion(lesson.blocks, progressDoc.blocks);
@@ -69,6 +105,18 @@ const recomputeLessonProgress = (progressDoc, lesson) => {
   if (completed) {
     progressDoc.completed = true;
     progressDoc.completedAt = new Date();
+
+    const classId = await resolveActiveClassIdForStudent(courseId, studentId);
+    if (classId) {
+      await awardXpService({
+        studentId,
+        classId,
+        lessonId: lesson._id,
+        activityType: "Lesson Completed",
+        sourceRef: `lesson:${lesson._id}`,
+        xpAmount: XP_TABLE.LESSON_COMPLETED,
+      });
+    }
   }
 };
 
@@ -108,7 +156,12 @@ export const recordVideoProgressService = async (lessonId, blockId, studentId, {
     throw new BusinessRuleError("Khoảng thời gian xem không hợp lệ.");
   }
 
-  const { lesson, block } = await loadLessonBlockForStudent(lessonId, blockId, studentId, "VIDEO");
+  const { lesson, block, courseId } = await loadLessonBlockForStudent(
+    lessonId,
+    blockId,
+    studentId,
+    "VIDEO"
+  );
   const progressDoc = await findOrCreateProgress(studentId, lessonId);
   const bp = findOrInitBlockProgress(progressDoc, blockId, "VIDEO");
 
@@ -119,7 +172,7 @@ export const recordVideoProgressService = async (lessonId, blockId, studentId, {
     bp.completedAt = new Date();
   }
 
-  recomputeLessonProgress(progressDoc, lesson);
+  await recomputeLessonProgress(progressDoc, lesson, studentId, courseId);
   await progressDoc.save();
   return progressDoc;
 };
@@ -133,7 +186,7 @@ const IMAGE_FILE_TYPES = new Set(["jpg", "jpeg", "png", "webp", "gif"]);
  * tố thư mục vì publicId do client tự truyền lên).
  */
 export const recordDocumentOpenService = async (lessonId, blockId, studentId) => {
-  const { lesson, block } = await loadLessonBlockForStudent(
+  const { lesson, block, courseId } = await loadLessonBlockForStudent(
     lessonId,
     blockId,
     studentId,
@@ -144,7 +197,7 @@ export const recordDocumentOpenService = async (lessonId, blockId, studentId) =>
 
   if (!bp.firstOpenedAt) bp.firstOpenedAt = new Date();
 
-  recomputeLessonProgress(progressDoc, lesson);
+  await recomputeLessonProgress(progressDoc, lesson, studentId, courseId);
   await progressDoc.save();
 
   const resourceType = IMAGE_FILE_TYPES.has((block.document.fileType || "").toLowerCase())
@@ -172,7 +225,12 @@ export const recordDocumentCloseService = async (
     throw new BusinessRuleError("Thời gian mở tài liệu không hợp lệ.");
   }
 
-  const { lesson } = await loadLessonBlockForStudent(lessonId, blockId, studentId, "DOCUMENT");
+  const { lesson, courseId } = await loadLessonBlockForStudent(
+    lessonId,
+    blockId,
+    studentId,
+    "DOCUMENT"
+  );
   const progressDoc = await findOrCreateProgress(studentId, lessonId);
   const bp = findOrInitBlockProgress(progressDoc, blockId, "DOCUMENT");
 
@@ -182,7 +240,7 @@ export const recordDocumentCloseService = async (
     bp.completedAt = new Date();
   }
 
-  recomputeLessonProgress(progressDoc, lesson);
+  await recomputeLessonProgress(progressDoc, lesson, studentId, courseId);
   await progressDoc.save();
   return progressDoc;
 };
@@ -198,7 +256,7 @@ export const submitPracticeQuizAttemptService = async (
   studentId,
   { answers }
 ) => {
-  const { lesson, block } = await loadLessonBlockForStudent(
+  const { lesson, block, courseId } = await loadLessonBlockForStudent(
     lessonId,
     blockId,
     studentId,
@@ -261,13 +319,42 @@ export const submitPracticeQuizAttemptService = async (
 
   const progressDoc = await findOrCreateProgress(studentId, lessonId);
   const bp = findOrInitBlockProgress(progressDoc, blockId, "PRACTICE_QUIZ");
-  bp.bestScorePercent = Math.max(bp.bestScorePercent ?? 0, scorePercent);
+  const previousBest = bp.bestScorePercent ?? 0;
+  bp.bestScorePercent = Math.max(previousBest, scorePercent);
+
+  // TÍNH NĂNG MỚI (mục 5): 10 XP đúng 1 lần khi lần ĐẦU TIÊN đạt ngưỡng 70% (không cộng lại ở
+  // các lần làm lại sau, dù điểm có thay đổi) + 5 XP thưởng đúng 1 lần khi lần ĐẦU TIÊN đạt 100%.
+  const classId = await resolveActiveClassIdForStudent(courseId, studentId);
+  if (classId) {
+    if (isQuizBlockComplete(bp.bestScorePercent) && !isQuizBlockComplete(previousBest)) {
+      await awardXpService({
+        studentId,
+        classId,
+        lessonId,
+        activityType: "Practice Quiz Passed",
+        sourceRef: `quiz-pass:${blockId}`,
+        xpAmount: XP_TABLE.PRACTICE_QUIZ_PASSED,
+      });
+    }
+    if (bp.bestScorePercent >= 100 && previousBest < 100) {
+      await awardXpService({
+        studentId,
+        classId,
+        lessonId,
+        activityType: "Practice Quiz Passed",
+        sourceRef: `quiz-perfect:${blockId}`,
+        xpAmount: XP_TABLE.PRACTICE_QUIZ_PERFECT_BONUS,
+        metadata: { bonus: "perfect_score" },
+      });
+    }
+  }
+
   if (!bp.completed && isQuizBlockComplete(bp.bestScorePercent)) {
     bp.completed = true;
     bp.completedAt = new Date();
   }
 
-  recomputeLessonProgress(progressDoc, lesson);
+  await recomputeLessonProgress(progressDoc, lesson, studentId, courseId);
   await progressDoc.save();
 
   return {

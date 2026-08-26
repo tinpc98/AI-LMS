@@ -28,6 +28,21 @@ vi.mock("#modules/lesson/practiceQuiz.model.js", () => ({
 vi.mock("#modules/lesson/practiceQuizAttempt.model.js", () => ({
   default: { countDocuments: (...a) => attemptCount(...a), create: (...a) => attemptCreate(...a) },
 }));
+const classFind = vi.fn();
+const classEnrollmentFindOne = vi.fn();
+const awardXpService = vi.fn();
+// Mock qua alias (#modules/...) dù lessonProgress.service.js import các file này bằng đường dẫn
+// tương đối trực tiếp (tránh kéo barrel nặng) — cả 2 cách đều trỏ về cùng 1 file tuyệt đối nên
+// vi.mock vẫn chặn đúng chỗ.
+vi.mock("#modules/class/class.model.js", () => ({
+  default: { find: (...a) => classFind(...a) },
+}));
+vi.mock("#modules/classEnrollment/classEnrollment.model.js", () => ({
+  default: { findOne: (...a) => classEnrollmentFindOne(...a) },
+}));
+vi.mock("#modules/badge/xp.service.js", () => ({
+  awardXpService: (...a) => awardXpService(...a),
+}));
 
 vi.mock("#modules/lesson/lessonProgress.model.js", () => {
   class LessonProgressMock {
@@ -77,6 +92,13 @@ beforeEach(() => {
   });
   enrollmentFindOne.mockResolvedValue({ _id: "enr-1", status: "APPROVED" });
   progressFindOne.mockResolvedValue(null);
+  classFind.mockReturnValue({
+    select: () => ({ lean: () => Promise.resolve([{ _id: "class-1" }]) }),
+  });
+  classEnrollmentFindOne.mockReturnValue({
+    select: () => ({ lean: () => Promise.resolve({ classId: "class-1" }) }),
+  });
+  awardXpService.mockResolvedValue({ _id: "xp-1" });
 });
 
 describe("recordVideoProgressService", () => {
@@ -259,6 +281,136 @@ describe("submitPracticeQuizAttemptService", () => {
     });
     expect(result.gradedAnswers[1].isCorrect).toBe(false);
     expect(result.gradedAnswers[1].selectedOptionIds).toEqual([]);
+  });
+});
+
+describe("TÍNH NĂNG MỚI (mục 5) — cộng XP khi có kết quả đã xác minh", () => {
+  it("Lần đầu đạt 70% → cộng 10 XP 'Practice Quiz Passed', sourceRef theo blockId", async () => {
+    await submitPracticeQuizAttemptService(LESSON_ID, QUIZ_BLOCK_ID, STUDENT_ID, {
+      answers: [
+        { questionId: "qa", selectedOptionIds: ["a1"] },
+        { questionId: "qb", selectedOptionIds: ["b2"] },
+      ],
+    });
+
+    expect(awardXpService).toHaveBeenCalledWith(
+      expect.objectContaining({
+        studentId: STUDENT_ID,
+        classId: "class-1",
+        activityType: "Practice Quiz Passed",
+        sourceRef: `quiz-pass:${QUIZ_BLOCK_ID}`,
+        xpAmount: 10,
+      })
+    );
+  });
+
+  it("Đạt 100% ngay lần đầu → cộng CẢ 10 XP đạt ngưỡng LẪN 5 XP thưởng điểm tuyệt đối", async () => {
+    await submitPracticeQuizAttemptService(LESSON_ID, QUIZ_BLOCK_ID, STUDENT_ID, {
+      answers: [
+        { questionId: "qa", selectedOptionIds: ["a1"] },
+        { questionId: "qb", selectedOptionIds: ["b2"] },
+      ],
+    });
+
+    expect(awardXpService).toHaveBeenCalledWith(
+      expect.objectContaining({ sourceRef: `quiz-pass:${QUIZ_BLOCK_ID}`, xpAmount: 10 })
+    );
+    expect(awardXpService).toHaveBeenCalledWith(
+      expect.objectContaining({ sourceRef: `quiz-perfect:${QUIZ_BLOCK_ID}`, xpAmount: 5 })
+    );
+  });
+
+  it("Đã từng đạt 70%+ trước đó → làm lại không cộng XP 'Practice Quiz Passed' lần 2", async () => {
+    progressFindOne.mockResolvedValue({
+      studentId: STUDENT_ID,
+      lessonId: LESSON_ID,
+      completed: false,
+      blocks: [
+        { blockId: QUIZ_BLOCK_ID, type: "PRACTICE_QUIZ", completed: true, bestScorePercent: 100 },
+      ],
+      save: progressSave,
+    });
+
+    // Lần này chỉ đúng 1/2 = 50%, thấp hơn best cũ — không đạt ngưỡng mới, không thưởng mới.
+    await submitPracticeQuizAttemptService(LESSON_ID, QUIZ_BLOCK_ID, STUDENT_ID, {
+      answers: [{ questionId: "qa", selectedOptionIds: ["a1"] }],
+    });
+
+    expect(awardXpService).not.toHaveBeenCalledWith(
+      expect.objectContaining({ sourceRef: `quiz-pass:${QUIZ_BLOCK_ID}` })
+    );
+    expect(awardXpService).not.toHaveBeenCalledWith(
+      expect.objectContaining({ sourceRef: `quiz-perfect:${QUIZ_BLOCK_ID}` })
+    );
+  });
+
+  it("Không tìm được lớp ACTIVE của học sinh → bỏ qua cộng XP, không throw", async () => {
+    classEnrollmentFindOne.mockReturnValue({
+      select: () => ({ lean: () => Promise.resolve(null) }),
+    });
+
+    await expect(
+      submitPracticeQuizAttemptService(LESSON_ID, QUIZ_BLOCK_ID, STUDENT_ID, {
+        answers: [
+          { questionId: "qa", selectedOptionIds: ["a1"] },
+          { questionId: "qb", selectedOptionIds: ["b2"] },
+        ],
+      })
+    ).resolves.toBeTruthy();
+    expect(awardXpService).not.toHaveBeenCalled();
+  });
+
+  it("Hoàn thành trọn Lesson (mọi block bắt buộc xong) → cộng 20 XP 'Lesson Completed' đúng 1 lần", async () => {
+    progressFindOne.mockResolvedValue({
+      studentId: STUDENT_ID,
+      lessonId: LESSON_ID,
+      completed: false,
+      blocks: [
+        {
+          blockId: VIDEO_BLOCK_ID,
+          type: "VIDEO",
+          completed: true,
+          watchedRanges: [],
+          watchedSeconds: 100,
+        },
+        { blockId: DOC_BLOCK_ID, type: "DOCUMENT", completed: true, totalOpenSeconds: 30 },
+      ],
+      save: progressSave,
+    });
+
+    await submitPracticeQuizAttemptService(LESSON_ID, QUIZ_BLOCK_ID, STUDENT_ID, {
+      answers: [
+        { questionId: "qa", selectedOptionIds: ["a1"] },
+        { questionId: "qb", selectedOptionIds: ["b2"] },
+      ],
+    });
+
+    expect(awardXpService).toHaveBeenCalledWith(
+      expect.objectContaining({
+        activityType: "Lesson Completed",
+        sourceRef: `lesson:${LESSON_ID}`,
+        xpAmount: 20,
+      })
+    );
+  });
+
+  it("Lesson đã completed=true từ trước → không cộng lại 20 XP 'Lesson Completed'", async () => {
+    progressFindOne.mockResolvedValue({
+      studentId: STUDENT_ID,
+      lessonId: LESSON_ID,
+      completed: true,
+      progress: 100,
+      blocks: [],
+      save: progressSave,
+    });
+
+    await submitPracticeQuizAttemptService(LESSON_ID, QUIZ_BLOCK_ID, STUDENT_ID, {
+      answers: [{ questionId: "qa", selectedOptionIds: ["a1"] }],
+    });
+
+    expect(awardXpService).not.toHaveBeenCalledWith(
+      expect.objectContaining({ activityType: "Lesson Completed" })
+    );
   });
 });
 

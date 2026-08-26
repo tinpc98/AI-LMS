@@ -4,6 +4,10 @@ import { Class as classModel } from "#modules/class/index.js";
 import { ClassEnrollment } from "#modules/classEnrollment/index.js";
 import ClassSession from "../classSession/classSession.model.js";
 import { computeAttendanceResult } from "./attendanceEvidence.js";
+// Import trực tiếp file (không qua #modules/badge) — cùng lý do đã áp dụng ở
+// lessonProgress.service.js: tránh kéo theo learningRanking.service.js (nặng, không cần ở đây).
+import { awardXpService } from "../badge/xp.service.js";
+import { XP_TABLE } from "../badge/xp.js";
 
 class AttendanceService {
   async getClassSessions(classId) {
@@ -340,6 +344,19 @@ class AttendanceService {
       record.finalizedAt = new Date();
       await record.save();
       updated += 1;
+
+      // TÍNH NĂNG MỚI (mục 5): 10 XP đúng 1 lần khi kết quả chốt sổ là PRESENT (không cộng cho
+      // LATE/PARTIAL/ABSENT — chỉ verified kết quả tốt nhất mới được thưởng). sourceRef theo
+      // attendance record nên cron chạy lại (idempotency guard status DRAFT) không cộng trùng.
+      if (result.autoStatus === "PRESENT") {
+        await awardXpService({
+          studentId: record.studentId,
+          classId: record.classId,
+          activityType: "Attendance Present",
+          sourceRef: `attendance:${record._id}`,
+          xpAmount: XP_TABLE.ATTENDANCE_PRESENT,
+        });
+      }
     }
 
     await ClassSession.updateOne({ _id: sessionId }, { attendanceFinalizedAt: new Date() });

@@ -10,6 +10,7 @@ import {
   getStudentRanking,
   getMyBadges,
   getMyActivities,
+  getMyXp,
 } from "./badge.controller.js";
 import { verifyUser } from "#modules/auth";
 import { checkClassAccess } from "#modules/class";
@@ -32,5 +33,6 @@ router.get("/ranking/student/:studentId", getStudentRanking);
 // Gamification
 router.get("/badges", getMyBadges);
 router.get("/activities", getMyActivities);
+router.get("/xp/me", getMyXp);
 
 export default router;

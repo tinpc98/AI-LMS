@@ -10,6 +10,7 @@ import { sendSuccess, sendError } from "#shared/utils/response.js";
 import LearningActivity from "./learningActivity.model.js";
 import learningRankingService from "./learningRanking.service.js";
 import gamificationService from "./gamification.service.js";
+import { getLifetimeXpService } from "./xp.service.js";
 import { Class } from "#modules/class";
 import { ClassEnrollment } from "#modules/classEnrollment";
 
@@ -73,6 +74,18 @@ export const getStudentRanking = async (req, res) => {
     return sendSuccess(res, "Lấy thứ hạng thành công", rank);
   } catch (error) {
     return sendError(res, error.message || "Lỗi khi lấy thứ hạng", 500);
+  }
+};
+
+// --- XP / LEVEL (mục 5) ---
+// TÍNH NĂNG MỚI: Level tính từ TỔNG XP TRỌN ĐỜI (không giới hạn lớp/tuần), khác leaderboard.
+export const getMyXp = async (req, res) => {
+  try {
+    const studentId = req.user.id || req.user._id;
+    const result = await getLifetimeXpService(studentId);
+    return sendSuccess(res, "Lấy thông tin XP thành công", result);
+  } catch (error) {
+    return sendError(res, error.message || "Lỗi khi lấy thông tin XP", 500);
   }
 };
 

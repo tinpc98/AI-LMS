@@ -50,6 +50,9 @@ export interface IStudentBadge {
   awardedAt: string;
 }
 
+// TÍNH NĂNG MỚI (mục 5): lessonXP/attendanceXP/gradeXP giờ tính từ sổ cái XP thật (LearningActivity),
+// scope THEO TUẦN hiện tại — không còn activityXP (field cũ luôn = 0 vì trước đây không ai ghi
+// LearningActivity). rank=null nghĩa là chưa có XP tuần này, chưa có thứ hạng thi đua.
 export interface IStudentRank {
   studentId: string;
   fullName: string;
@@ -57,10 +60,9 @@ export interface IStudentRank {
   avatar: string;
   lessonXP: number;
   attendanceXP: number;
-  activityXP: number;
   gradeXP: number;
   totalXP: number;
-  rank: number;
+  rank: number | null;
 }
 
 export interface IRankingResponse {
@@ -71,6 +73,13 @@ export interface IRankingResponse {
     totalItems: number;
     totalPages: number;
   };
+}
+
+export interface IStudentXp {
+  totalXp: number;
+  level: number;
+  xpIntoLevel: number;
+  xpForNextLevel: number;
 }
 
 const learningApi = {
@@ -124,6 +133,12 @@ const learningApi = {
       { params }
     );
     return unwrap(response.data, []);
+  },
+
+  // TÍNH NĂNG MỚI (mục 5): tổng XP trọn đời + Level.
+  getMyXp: async (): Promise<IStudentXp | null> => {
+    const response = await axiosClient.get<ApiEnvelope<IStudentXp>>(`/learning/xp/me`);
+    return unwrapOrNull(response.data);
   },
 };
 

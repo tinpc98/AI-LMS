@@ -21,6 +21,8 @@ vi.mock("#modules/classSession/classSession.model.js", () => ({
     updateOne: (...a) => classSessionUpdateOne(...a),
   },
 }));
+const awardXpService = vi.fn();
+vi.mock("#modules/badge/xp.service.js", () => ({ awardXpService: (...a) => awardXpService(...a) }));
 
 const { default: attendanceService } = await import("#modules/attendance/attendance.service.js");
 
@@ -176,6 +178,9 @@ describe("finalizeSessionAttendance — TÍNH NĂNG MỚI (mục 7): chốt sổ
   const SESSION_ID = new mongoose.Types.ObjectId().toString();
 
   const fakeRecord = (evidence, overrides = {}) => ({
+    _id: new mongoose.Types.ObjectId().toString(),
+    studentId: new mongoose.Types.ObjectId().toString(),
+    classId: CLASS_ID,
     evidence,
     status: "DRAFT",
     autoStatus: null,
@@ -187,6 +192,7 @@ describe("finalizeSessionAttendance — TÍNH NĂNG MỚI (mục 7): chốt sổ
 
   beforeEach(() => {
     classSessionUpdateOne.mockResolvedValue({});
+    awardXpService.mockResolvedValue({ _id: "xp-1" });
   });
 
   it("Buổi chưa có actualStartAt/actualEndAt (chưa thực sự diễn ra) → không tính gì, updated=0", async () => {
@@ -227,6 +233,18 @@ describe("finalizeSessionAttendance — TÍNH NĂNG MỚI (mục 7): chốt sổ
       { _id: SESSION_ID },
       expect.objectContaining({ attendanceFinalizedAt: expect.any(Date) })
     );
+
+    // TÍNH NĂNG MỚI (mục 5): chỉ PRESENT mới được cộng XP, ABSENT thì không.
+    expect(awardXpService).toHaveBeenCalledTimes(1);
+    expect(awardXpService).toHaveBeenCalledWith(
+      expect.objectContaining({
+        studentId: presentRecord.studentId,
+        classId: presentRecord.classId,
+        activityType: "Attendance Present",
+        sourceRef: `attendance:${presentRecord._id}`,
+        xpAmount: 10,
+      })
+    );
   });
 
   it("Không có bản ghi DRAFT nào (đã chốt hoặc giáo viên đã sửa tay hết) → updated=0, không đụng gì", async () => {
@@ -237,5 +255,26 @@ describe("finalizeSessionAttendance — TÍNH NĂNG MỚI (mục 7): chốt sổ
 
     const result = await attendanceService.finalizeSessionAttendance(SESSION_ID);
     expect(result.updated).toBe(0);
+    expect(awardXpService).not.toHaveBeenCalled();
+  });
+
+  it("TÍNH NĂNG MỚI (mục 5): kết quả LATE/PARTIAL không được cộng XP (chỉ PRESENT)", async () => {
+    const start = new Date("2026-01-01T08:00:00Z");
+    const end = new Date("2026-01-01T09:30:00Z"); // 90 phút
+
+    classSessionFindById.mockReturnValue(
+      mongooseLean({ _id: SESSION_ID, actualStartAt: start, actualEndAt: end })
+    );
+
+    // Vào muộn 15 phút (>10 phút => LATE dù đủ tỉ lệ tham dự).
+    const lateRecord = fakeRecord({
+      sessions: [{ joinAt: new Date("2026-01-01T08:15:00Z"), leaveAt: end }],
+    });
+    attendanceFind.mockReturnValue(thenableWithLean([lateRecord]));
+
+    await attendanceService.finalizeSessionAttendance(SESSION_ID);
+
+    expect(lateRecord.autoStatus).toBe("LATE");
+    expect(awardXpService).not.toHaveBeenCalled();
   });
 });
