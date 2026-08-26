@@ -5,6 +5,7 @@
 // classProgress* — đó là nội bộ module.
 
 export { default as Class } from "./class.model.js";
+export { default as CommitmentEvent, COMMITMENT_REASONS } from "./commitmentEvent.model.js";
 export { checkClassTeacherOwnership } from "./class.ownership.js";
 export { checkClassAccess } from "./class.access.middleware.js";
 

@@ -93,6 +93,38 @@ const userSchema = new Schema(
       type: availabilityScheduleSchema,
       default: null,
     },
+
+    // --- Cơ chế cam kết & xác minh giáo viên (EduSpace mechanism design — Phần A/C) ---
+    // L1: chỉ OTP xác thực, được nhận cohort dự bị. L2: Admin duyệt bằng cấp/video, được dạy
+    // chính lớp COMMUNITY. L3: tự động khi đủ điều kiện đo được (BR-20), được dạy SPONSORED/
+    // COMMERCIAL + quyền bảo lãnh người khác.
+    verificationTier: {
+      type: String,
+      enum: ["L1", "L2", "L3"],
+      default: "L1",
+    },
+    // Độ tin cậy (Reliability) — CHỈ đo hành vi giữ cam kết (có tới lớp không), KHÔNG đo chất
+    // lượng dạy. Xem CommitmentEvent để biết nguồn tính. [0,100], 100 = chưa từng vi phạm.
+    reliabilityScore: {
+      type: Number,
+      default: 100,
+      min: 0,
+      max: 100,
+    },
+    // Danh sách người đã bảo lãnh cho giáo viên này lên L3 (BR-22).
+    vouchedBy: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "User",
+      },
+    ],
+    // Số người L3 này đang được phép bảo lãnh cùng lúc còn lại (BR-23) — giảm 1 mỗi lần bảo
+    // lãnh ai đó đang chờ lên L3, cộng lại khi người được bảo lãnh hoàn tất hoặc bị từ chối.
+    vouchLimit: {
+      type: Number,
+      default: 2,
+      min: 0,
+    },
   },
   {
     timestamps: true,

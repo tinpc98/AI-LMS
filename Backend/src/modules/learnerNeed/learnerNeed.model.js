@@ -82,6 +82,20 @@ const learnerNeedSchema = new Schema(
       trim: true,
       default: "",
     },
+
+    // --- An toàn trẻ em (EduSpace mechanism design Phần C.5, BR-29) ---
+    // Học viên K-12 (Course.grade 1-12) mặc định coi là dưới 18 tuổi — bắt buộc có xác nhận
+    // phụ huynh trước khi nhu cầu này được ghép vào một cohort (chuyển CONFIRMED).
+    parentEmail: {
+      type: String,
+      trim: true,
+      lowercase: true,
+      default: null,
+    },
+    parentConsentAt: {
+      type: Date,
+      default: null,
+    },
   },
   { timestamps: true }
 );
