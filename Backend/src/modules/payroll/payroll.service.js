@@ -5,6 +5,7 @@ import Payroll from "./payroll.model.js";
 import TeacherAttendance from "../teacherAttendance/teacherAttendance.model.js";
 import ClassSession from "../classSession/classSession.model.js";
 import Class from "../class/class.model.js";
+import { CommitmentEvent } from "#modules/class";
 
 class PayrollService {
   /**
@@ -68,9 +69,54 @@ class PayrollService {
         attendancesByTeacher[tId].push(att);
       }
 
+      // TÍNH NĂNG MỚI (PER_COURSE): CommitmentEvent với toStatus="COMPLETED" trong khoảng thời
+      // gian kỳ lương là tín hiệu "giáo viên vừa hoàn thành trọn vẹn 1 khóa/cohort" đã có sẵn
+      // trong hệ thống (EduSpace mechanism design Phần A — commitment.service.js#transitionCommitment),
+      // dùng lại thay vì phát minh field/cơ chế mới. Idempotent tự nhiên: ALLOWED_TRANSITIONS
+      // (commitment.service.js) có COMPLETED là trạng thái terminal (không có transition nào đi
+      // TỚI COMPLETED lần 2 cho cùng 1 class), nên 1 classId chỉ có ĐÚNG 1 CommitmentEvent
+      // toStatus=COMPLETED trong toàn bộ vòng đời, rơi vào đúng 1 kỳ lương duy nhất theo
+      // createdAt — không cần thêm cơ chế chống trả trùng riêng. Chỉ tính COMPLETED (hoàn thành
+      // trọn vẹn), KHÔNG tính COMPLETED_PARTIAL — việc trả lương theo tỷ lệ khi giáo viên chỉ
+      // hoàn thành một phần cohort cần quy tắc riêng, để dành cho quyết định sau.
+      // Gán tiền cho teacherId TẠI THỜI ĐIỂM hoàn thành (không phải Class.teacherId đọc bây giờ)
+      // — đúng người nếu có giáo viên dự bị (backupTeacher) tiếp quản và là người hoàn thành lớp.
+      const completionEvents = await CommitmentEvent.find({
+        toStatus: "COMPLETED",
+        createdAt: { $gte: period.startDate, $lte: period.endDate },
+      })
+        .session(session)
+        .lean();
+
+      const completedClassIds = completionEvents.map((e) => e.classId);
+      const completedClasses = await Class.find({ _id: { $in: completedClassIds } })
+        .session(session)
+        .select("courseId name code")
+        .populate("courseId", "name")
+        .lean();
+      const classById = new Map(completedClasses.map((c) => [c._id.toString(), c]));
+
+      const completionsByTeacher = {};
+      for (const ev of completionEvents) {
+        const tId = ev.teacherId.toString();
+        if (!completionsByTeacher[tId]) {
+          completionsByTeacher[tId] = [];
+        }
+        completionsByTeacher[tId].push(ev);
+      }
+
+      // Gộp danh sách giáo viên cần tính lương từ CẢ 2 nguồn — giáo viên chỉ nhận PER_COURSE
+      // (không có buổi dạy lẻ nào trong kỳ) trước đây sẽ bị bỏ sót hoàn toàn nếu chỉ lặp qua
+      // attendancesByTeacher.
+      const allTeacherIds = new Set([
+        ...Object.keys(attendancesByTeacher),
+        ...Object.keys(completionsByTeacher),
+      ]);
+
       // 2. Tính toán Payroll cho từng Teacher
-      for (const tId of Object.keys(attendancesByTeacher)) {
-        const teacherAttendances = attendancesByTeacher[tId];
+      for (const tId of allTeacherIds) {
+        const teacherAttendances = attendancesByTeacher[tId] || [];
+        const teacherCompletions = completionsByTeacher[tId] || [];
 
         // Lấy config lương của teacher này (có thể có nhiều config, cần match effectiveDate)
         const configs = await TeacherPayrollConfig.find({
@@ -112,8 +158,32 @@ class PayrollService {
           }
         }
 
-        // Logic PER_COURSE sẽ phức tạp hơn (cần check completed obligations).
-        // Tạm thời tập trung vào PER_SESSION dựa trên yêu cầu cốt lõi. Có thể mở rộng sau.
+        for (const ev of teacherCompletions) {
+          // Tìm config PER_COURSE phù hợp — cùng quy tắc match effectiveFrom/effectiveTo/ACTIVE
+          // như PER_SESSION, lấy mốc thời gian từ CommitmentEvent.createdAt.
+          const matchingConfig = configs.find((cfg) => {
+            if (cfg.type !== "PER_COURSE") return false;
+            const effFrom = new Date(cfg.effectiveFrom);
+            const effTo = cfg.effectiveTo ? new Date(cfg.effectiveTo) : new Date("2099-12-31");
+            return ev.createdAt >= effFrom && ev.createdAt <= effTo && cfg.status === "ACTIVE";
+          });
+
+          if (matchingConfig) {
+            const cls = classById.get(ev.classId.toString());
+            const unitAmount = matchingConfig.amount;
+            items.push({
+              classId: ev.classId,
+              courseId: cls?.courseId?._id || null,
+              description: `Hoàn thành khóa học: ${cls?.courseId?.name || "?"} (Lớp ${cls?.code || cls?.name || ""})`,
+              calculationType: "PER_COURSE",
+              quantity: 1,
+              unitAmount,
+              totalAmount: unitAmount,
+            });
+            totalAmount += unitAmount;
+            courseCount++;
+          }
+        }
 
         // Upsert Payroll document
         const payrollFilter = { teacherId: tId, payrollPeriodId: period._id };
