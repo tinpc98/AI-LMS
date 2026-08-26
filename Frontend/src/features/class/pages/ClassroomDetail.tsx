@@ -27,7 +27,7 @@ import { lessonApi } from "../../../api/lessonApi";
 
 import type { IClass } from "../../../interface/ClassInterface";
 import type { IAssignment } from "../../../interface/assignmentInterface";
-import type { ILesson } from "../../../interface/lessonInterface";
+import type { Lesson } from "../../lesson/lesson.types";
 
 import CreateLessonModal from "../../lesson/components/CreateLessonModal";
 import { useJitsiLiveSession } from "../../live-session/hooks/useJitsiLiveSession";
@@ -53,7 +53,7 @@ export default function ClassroomDetail() {
 
   // States
   const [classInfo, setClassInfo] = useState<IClass | null>(null);
-  const [lessons, setLessons] = useState<ILesson[]>([]);
+  const [lessons, setLessons] = useState<Lesson[]>([]);
   const [assignments, setAssignments] = useState<IAssignment[]>([]);
 
   const [isLoading, setIsLoading] = useState(true);
@@ -67,7 +67,7 @@ export default function ClassroomDetail() {
     } else if (classInfo) {
       const title = classInfo.code
         ? `Lớp ${classInfo.code} - ${classInfo.name}`
-        : (classInfo.name || "Chi tiết lớp học");
+        : classInfo.name || "Chi tiết lớp học";
       setBreadcrumbEntity(title, false);
     }
     return () => {
@@ -75,7 +75,7 @@ export default function ClassroomDetail() {
     };
   }, [isLoading, classInfo, setBreadcrumbEntity]);
 
-  const [editingLesson, setEditingLesson] = useState<ILesson | null>(null);
+  const [editingLesson, setEditingLesson] = useState<Lesson | null>(null);
   const [selectedLessonForAI, setSelectedLessonForAI] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState(searchParams.get("tab") || "lessons");
 
@@ -146,12 +146,12 @@ export default function ClassroomDetail() {
     };
   }, [loadClassroom, loadAssignments]);
 
-  const handleLessonCreated = (newLesson: ILesson) => {
+  const handleLessonCreated = (newLesson: Lesson) => {
     setLessons((prev) => [...prev, newLesson]);
     setIsModalOpen(false);
   };
 
-  const handleLessonUpdated = (updatedLesson: ILesson) => {
+  const handleLessonUpdated = (updatedLesson: Lesson) => {
     setLessons((prev) => prev.map((l) => (l._id === updatedLesson._id ? updatedLesson : l)));
     setEditingLesson(null);
   };
@@ -440,11 +440,24 @@ export default function ClassroomDetail() {
       }}
     >
       {/* 1. MINIMALIST HEADER */}
-      <div style={{ marginBottom: 24, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+      <div
+        style={{
+          marginBottom: 24,
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}
+      >
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <Link 
-            to="/teacher/classes" 
-            style={{ color: "var(--color-text-secondary)", display: "flex", alignItems: "center", gap: 6, fontSize: 15 }}
+          <Link
+            to="/teacher/classes"
+            style={{
+              color: "var(--color-text-secondary)",
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+              fontSize: 15,
+            }}
             className="hover:text-blue-600 transition-colors"
           >
             <ArrowLeftOutlined /> Quay lại
@@ -457,25 +470,25 @@ export default function ClassroomDetail() {
             {classInfo.joinCode || classInfo.code}
           </Tag>
         </div>
-        
+
         <Button
           type="primary"
           icon={<VideoCameraOutlined />}
           loading={isLiveLoading}
           onClick={handleStartLiveSession}
-          style={{ fontWeight: 600, borderRadius: 8, backgroundColor: "#f56a00", borderColor: "#f56a00" }}
+          style={{
+            fontWeight: 600,
+            borderRadius: 8,
+            backgroundColor: "#f56a00",
+            borderColor: "#f56a00",
+          }}
         >
           Bắt đầu phòng LIVE
         </Button>
       </div>
 
       {/* 2. Tabs Navigation Content */}
-      <Tabs
-        activeKey={activeTab}
-        onChange={handleTabChange}
-        items={tabItems}
-        type="card"
-      />
+      <Tabs activeKey={activeTab} onChange={handleTabChange} items={tabItems} type="card" />
 
       {/* MODALS */}
       {/* Gắn kết có điều kiện + key: form khởi tạo lại sạch sẽ cho mỗi bài giảng, không cần

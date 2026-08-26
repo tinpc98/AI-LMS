@@ -1,50 +1,53 @@
 // Frontend/src/api/lessonApi.ts
 import axiosClient from "./axiosClient";
-import type { ICreateLessonPayload } from "../interface/lessonInterface";
+import type {
+  CreateLessonPayload,
+  UpdateLessonPayload,
+  UploadedDocument,
+} from "../features/lesson/lesson.types";
 
+// TÍNH NĂNG MỚI (mục 1): dựng lại đúng theo contract backend thật (lesson.service.js) — bản cũ
+// gửi {videoUrl, duration, isPublished, ...} không khớp gì với backend (Lesson giờ là tập hợp
+// block, không còn field phẳng nào trong số đó).
 export const lessonApi = {
   getLessonsByClass: (classId: string) => {
     return axiosClient.get(`/lessons/class/${classId}`);
   },
 
-  // TÍNH NĂNG MỚI (mục 1): lấy chi tiết 1 bài giảng theo id — bao gồm blocks (VIDEO/DOCUMENT/
-  // PRACTICE_QUIZ đã populate đủ nội dung câu hỏi, không có đáp án đúng nếu người gọi là học sinh).
   getLessonById: (id: string) => {
     return axiosClient.get(`/lessons/${id}`);
   },
 
-  createLesson: (payload: ICreateLessonPayload) => {
-    const data = {
-      title: payload.title,
-      description: payload.description,
-      videoUrl: payload.videoUrl,
-      classId: payload.classId,
-      order: payload.order,
-      status: payload.isPublished ? "PUBLISHED" : "DRAFT",
-      duration: payload.duration,
-      // videoIds, documentIds would be handled here if file upload was separate
-    };
-    return axiosClient.post("/lessons", data);
+  createLesson: (payload: CreateLessonPayload) => {
+    return axiosClient.post("/lessons", payload);
   },
 
-  updateLesson: (id: string, payload: Partial<ICreateLessonPayload>) => {
-    const data: any = { ...payload };
-    if (payload.isPublished !== undefined) {
-      data.status = payload.isPublished ? "PUBLISHED" : "DRAFT";
-      delete data.isPublished;
-    }
-    return axiosClient.put(`/lessons/${id}`, data);
+  updateLesson: (id: string, payload: UpdateLessonPayload) => {
+    return axiosClient.put(`/lessons/${id}`, payload);
+  },
+
+  updateLessonStatus: (id: string, status: "DRAFT" | "PUBLISHED" | "ARCHIVED") => {
+    return axiosClient.patch(`/lessons/${id}/status`, { status });
   },
 
   deleteLesson: (id: string) => {
     return axiosClient.delete(`/lessons/${id}`);
   },
 
-  updateLessonQuiz: (id: string, payload: { allowImageSubmit: boolean; questions: any[] }) => {
-    return axiosClient.patch(`/lessons/${id}/quiz`, payload);
+  uploadDocument: (file: File) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    return axiosClient.post<{ message: string; document: UploadedDocument }>(
+      "/lessons/upload-document",
+      formData,
+      { headers: { "Content-Type": "multipart/form-data" } }
+    );
   },
 
-  deleteLessonAttachment: (id: string, publicId: string) => {
-    return axiosClient.delete(`/lessons/${id}/attachments/${encodeURIComponent(publicId)}`);
+  createPracticeQuiz: (payload: {
+    title: string;
+    questions: { questionId: string; order?: number }[];
+  }) => {
+    return axiosClient.post("/lessons/practice-quizzes", payload);
   },
 };

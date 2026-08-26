@@ -27,6 +27,10 @@ const uploadFile = vi.fn();
 vi.mock("#shared/services/storage.service.js", () => ({
   default: { uploadFile: (...a) => uploadFile(...a) },
 }));
+const progressCountDocuments = vi.fn();
+vi.mock("#modules/lesson/lessonProgress.model.js", () => ({
+  default: { countDocuments: (...a) => progressCountDocuments(...a) },
+}));
 
 const {
   createLessonService,
@@ -34,6 +38,7 @@ const {
   updateLessonStatusService,
   createPracticeQuizService,
   uploadLessonDocumentService,
+  deleteLessonService,
   checkTopicTeacherOwnership,
 } = await import("#modules/lesson/lesson.service.js");
 
@@ -49,6 +54,7 @@ const populateTopic = (createdBy) => ({
 beforeEach(() => {
   vi.clearAllMocks();
   topicFindById.mockReturnValue(populateTopic(TEACHER_ID));
+  progressCountDocuments.mockResolvedValue(0);
 });
 
 describe("checkTopicTeacherOwnership", () => {
@@ -240,5 +246,37 @@ describe("uploadLessonDocumentService", () => {
       "b.pdf",
       expect.objectContaining({ resourceType: "raw" })
     );
+  });
+});
+
+describe("deleteLessonService", () => {
+  it("Lesson không tồn tại → NotFoundError", async () => {
+    lessonFindById.mockResolvedValue(null);
+    await expect(deleteLessonService("l1", TEACHER_ID, "teacher")).rejects.toThrow(/không tồn tại/);
+  });
+
+  it("Không sở hữu Topic → AuthorizationError", async () => {
+    lessonFindById.mockResolvedValue({ topicId: TOPIC_ID });
+    await expect(deleteLessonService("l1", OTHER_TEACHER_ID, "teacher")).rejects.toThrow(/quyền/);
+  });
+
+  it("Đã có học sinh phát sinh tiến độ → BusinessRuleError, không xóa", async () => {
+    const softDelete = vi.fn();
+    lessonFindById.mockResolvedValue({ topicId: TOPIC_ID, softDelete });
+    progressCountDocuments.mockResolvedValue(3);
+
+    await expect(deleteLessonService("l1", TEACHER_ID, "teacher")).rejects.toThrow(
+      /không thể xóa/i
+    );
+    expect(softDelete).not.toHaveBeenCalled();
+  });
+
+  it("Chưa có tiến độ nào → xóa mềm thành công", async () => {
+    const softDelete = vi.fn().mockResolvedValue(true);
+    lessonFindById.mockResolvedValue({ topicId: TOPIC_ID, softDelete });
+    progressCountDocuments.mockResolvedValue(0);
+
+    await deleteLessonService("l1", TEACHER_ID, "teacher");
+    expect(softDelete).toHaveBeenCalledWith(TEACHER_ID);
   });
 });

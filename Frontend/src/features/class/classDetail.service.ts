@@ -8,23 +8,14 @@ import assignmentApi from "../../api/assignmentApi";
 import announcementApi from "../../api/announcementApi";
 import { getCurrentUserId } from "../../shared/utils/authToken";
 import type { IClass } from "../../interface/ClassInterface";
-import type { ILesson } from "../../interface/lessonInterface";
+import type { Lesson } from "../lesson/lesson.types";
 import type { IAssignment } from "../../interface/assignmentInterface";
 
 export interface ClassDetailData {
   classInfo: IClass | null;
-  lessons: ILesson[];
+  lessons: Lesson[];
   assignments: IAssignment[];
 }
-
-/**
- * Chỉ lấy bài giảng đã xuất bản, xếp theo thứ tự giáo viên đặt.
- *
- * Trả về mảng MỚI: dữ liệu gốc nằm trong cache React Query, sắp xếp tại chỗ sẽ đảo lộn danh
- * sách ở mọi component khác đang đọc cùng khoá.
- */
-export const selectPublishedLessons = (lessons: ILesson[]): ILesson[] =>
-  lessons.filter((l) => l.isPublished).sort((a, b) => (a.order || 0) - (b.order || 0));
 
 /**
  * Các hình dạng phản hồi khác nhau mà API đang trả về. Đây là nợ kỹ thuật của tầng API chứ
@@ -36,8 +27,8 @@ const unwrapClass = (res: unknown): IClass | null => {
   return body?.data ?? (body as IClass) ?? null;
 };
 
-const unwrapLessons = (res: unknown): ILesson[] => {
-  const r = res as { data?: { lessons?: ILesson[] }; lessons?: ILesson[] };
+const unwrapLessons = (res: unknown): Lesson[] => {
+  const r = res as { data?: { lessons?: Lesson[] }; lessons?: Lesson[] };
   return r?.data?.lessons ?? r?.lessons ?? [];
 };
 

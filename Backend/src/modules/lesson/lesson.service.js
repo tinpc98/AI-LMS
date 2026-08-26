@@ -2,6 +2,7 @@
 // nằm thẳng trong controller); cần thiết vì logic block giờ có quy tắc thật cần kiểm (BR-1.1,
 // BR-1.2) thay vì chỉ là pass-through field.
 import Lesson from "./lesson.model.js";
+import LessonProgress from "./lessonProgress.model.js";
 import PracticeQuiz from "./practiceQuiz.model.js";
 import { Topic } from "#modules/topic";
 import Course from "../course/course.model.js";
@@ -132,6 +133,30 @@ export const updateLessonStatusService = async (id, status, userId, role) => {
 
   lesson.status = status;
   await lesson.save();
+  return lesson;
+};
+
+/**
+ * Xóa (mềm) 1 bài giảng — TÍNH NĂNG MỚI: trước đây frontend đã có nút xóa gọi DELETE /lessons/:id
+ * nhưng route này chưa từng tồn tại (404 câm lặng). Chặn xóa nếu đã có học sinh phát sinh tiến độ
+ * (LessonProgress) — cùng nguyên tắc bảo toàn dữ liệu lịch sử đã áp dụng cho Topic (chỉ archive
+ * thay vì xóa, dùng PATCH /lessons/:id/status).
+ */
+export const deleteLessonService = async (id, userId, role) => {
+  const lesson = await Lesson.findById(id);
+  if (!lesson) throw new NotFoundError("Bài giảng không tồn tại.");
+
+  const isAuthorized = await checkTopicTeacherOwnership(lesson.topicId, userId, role);
+  if (!isAuthorized) throw new AuthorizationError("Bạn không có quyền xóa bài giảng này!");
+
+  const progressCount = await LessonProgress.countDocuments({ lessonId: id });
+  if (progressCount > 0) {
+    throw new BusinessRuleError(
+      "Bài giảng đã có học sinh học — không thể xóa để giữ toàn vẹn lịch sử tiến độ. Hãy chuyển sang trạng thái Lưu trữ (Archive) thay vì xóa."
+    );
+  }
+
+  await lesson.softDelete(userId);
   return lesson;
 };
 

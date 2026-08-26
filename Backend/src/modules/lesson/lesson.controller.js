@@ -10,6 +10,7 @@ import {
   updateLessonStatusService,
   createPracticeQuizService,
   uploadLessonDocumentService,
+  deleteLessonService,
   checkTopicTeacherOwnership,
 } from "./lesson.service.js";
 
@@ -195,6 +196,14 @@ const lessonController = {
 
     const quiz = await createPracticeQuizService({ title, questions }, userId);
     return res.status(201).json({ message: "Tạo Practice Quiz thành công", quiz });
+  }),
+
+  deleteLesson: asyncHandler(async (req, res) => {
+    const { id } = req.params;
+    const userId = req.user.id || req.user._id;
+
+    await deleteLessonService(id, userId, req.user?.role);
+    return res.status(200).json({ message: "Đã xóa bài giảng" });
   }),
 };
 

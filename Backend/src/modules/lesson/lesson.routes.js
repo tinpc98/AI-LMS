@@ -37,4 +37,7 @@ router.put("/:id", verifyUser, isTeacher, lessonController.updateLesson);
 // Cập nhật trạng thái
 router.patch("/:id/status", verifyUser, isTeacher, lessonController.updateLessonStatus);
 
+// Xóa bài giảng (chặn nếu đã có tiến độ học sinh — chỉ cho archive)
+router.delete("/:id", verifyUser, isTeacher, lessonController.deleteLesson);
+
 export default router;

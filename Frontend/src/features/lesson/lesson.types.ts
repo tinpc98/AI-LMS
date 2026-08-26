@@ -91,3 +91,37 @@ export interface QuizAttemptResult {
   bestScorePercent: number;
   progress: LessonProgress;
 }
+
+// TÍNH NĂNG MỚI: payload phía giáo viên khớp đúng lesson.service.js#createLessonService —
+// block gửi lên KHÔNG có _id (server tự sinh khi lưu).
+export interface CreateLessonBlockInput {
+  type: LessonBlockType;
+  isRequired: boolean;
+  video?: LessonVideoBlockData;
+  document?: LessonDocumentBlockData;
+  quizId?: string;
+}
+
+export interface CreateLessonPayload {
+  topicId?: string;
+  classId?: string;
+  title: string;
+  description?: string;
+  blocks?: CreateLessonBlockInput[];
+  order?: number;
+  status?: "DRAFT" | "PUBLISHED";
+}
+
+export interface UpdateLessonPayload {
+  title?: string;
+  description?: string;
+  blocks?: CreateLessonBlockInput[];
+  order?: number;
+}
+
+export interface UploadedDocument {
+  publicId: string;
+  fileType: string;
+  bytes: number;
+  title: string;
+}
