@@ -36,6 +36,11 @@ vi.mock("#modules/auth", () => ({
   User: { findById: (...a) => userFindById(...a) },
 }));
 
+const assertCohortReady = vi.fn().mockResolvedValue({ ready: true });
+vi.mock("#modules/class/cohortReadiness.service.js", () => ({
+  assertCohortReadyForConfirmation: (...a) => assertCohortReady(...a),
+}));
+
 const { transitionCommitment, excuseCommitmentEvent } =
   await import("#modules/class/commitment.service.js");
 
@@ -63,6 +68,44 @@ beforeEach(() => {
   vi.clearAllMocks();
   eventFind.mockReturnValue({ lean: () => Promise.resolve([]) });
   eventCreate.mockResolvedValue({});
+  assertCohortReady.mockReset().mockResolvedValue({ ready: true });
+});
+
+describe("transitionCommitment — BR-16 chặn CONFIRMED khi thiếu học liệu", () => {
+  it("Gọi assertCohortReadyForConfirmation khi chuyển sang CONFIRMED, và CHỈ khi đó", async () => {
+    const classDoc = mockClassDoc("ACCEPTED");
+    classFindById.mockResolvedValue(classDoc);
+
+    await transitionCommitment(CLASS_ID, "CONFIRMED", { reason: "SCHEDULE_FILLED" });
+
+    expect(assertCohortReady).toHaveBeenCalledWith(CLASS_ID);
+    expect(classDoc.commitmentStatus).toBe("CONFIRMED");
+  });
+
+  it("Không gọi assertCohortReadyForConfirmation cho các transition khác CONFIRMED", async () => {
+    const classDoc = mockClassDoc("OFFERED");
+    classFindById.mockResolvedValue(classDoc);
+
+    await transitionCommitment(CLASS_ID, "ACCEPTED", { reason: "SCHEDULE_FILLED" });
+
+    expect(assertCohortReady).not.toHaveBeenCalled();
+  });
+
+  it("Chặn CONFIRMED nếu học liệu chưa sẵn sàng — lỗi từ BR-16 truyền nguyên vẹn ra ngoài, không commit trạng thái", async () => {
+    const classDoc = mockClassDoc("ACCEPTED");
+    classFindById.mockResolvedValue(classDoc);
+    assertCohortReady.mockRejectedValue(
+      Object.assign(new Error("Chưa đủ 2 buổi có đầy đủ học liệu"), { status: 422 })
+    );
+
+    await expect(
+      transitionCommitment(CLASS_ID, "CONFIRMED", { reason: "SCHEDULE_FILLED" })
+    ).rejects.toMatchObject({ status: 422 });
+
+    expect(classDoc.commitmentStatus).toBe("ACCEPTED"); // KHÔNG bị đổi
+    expect(classDoc.save).not.toHaveBeenCalled();
+    expect(eventCreate).not.toHaveBeenCalled();
+  });
 });
 
 describe("transitionCommitment — validate chuyển trạng thái", () => {

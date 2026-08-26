@@ -5,6 +5,7 @@
 // đây là NGUỒN SỰ THẬT DUY NHẤT để tính lại điểm nếu công thức thay đổi sau này.
 import Class from "./class.model.js";
 import CommitmentEvent, { COMMITMENT_REASONS } from "./commitmentEvent.model.js";
+import { assertCohortReadyForConfirmation } from "./cohortReadiness.service.js";
 import { User } from "#modules/auth";
 import { NotFoundError, BusinessRuleError, ValidationError } from "#shared/utils/appError.js";
 
@@ -118,6 +119,13 @@ export async function transitionCommitment(classId, toStatus, { reason, changedB
   const allowedNext = ALLOWED_TRANSITIONS[fromStatus];
   if (!allowedNext || !allowedNext.includes(toStatus)) {
     throw new BusinessRuleError(`Không thể chuyển cam kết từ "${fromStatus}" sang "${toStatus}".`);
+  }
+
+  // BR-16: chặn CONFIRMED nếu chưa đủ số buổi có đầy đủ học liệu khép kín (BR-15) — nếu không,
+  // toàn bộ cơ chế leo thang/bàn giao ở Phần B trở nên vô nghĩa vì giáo viên thay không dạy
+  // được ngay.
+  if (toStatus === "CONFIRMED") {
+    await assertCohortReadyForConfirmation(classId);
   }
 
   // BR-05: rút trước khi chốt lịch (rời ACCEPTED) không bao giờ tính strike, bất kể reason
