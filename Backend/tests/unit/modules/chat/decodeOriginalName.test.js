@@ -1,5 +1,10 @@
+// Test này ban đầu import từ #modules/assignment/assignment.service.js — sai chỗ: module
+// assignment đã được viết lại hoàn toàn sang mô hình Attempt, không còn xử lý file upload nào
+// (không multer, không originalname) nên decodeOriginalName chưa từng tồn tại ở đó. Hàm thật
+// nằm ở chat.controller.js (dùng cho upload file đính kèm tin nhắn) — chuyển test về đúng chỗ
+// và export thêm để test được (trước đó chỉ là const nội bộ, không export).
 import { describe, it, expect } from "vitest";
-import { decodeOriginalName } from "#modules/assignment/assignment.service.js";
+import { decodeOriginalName } from "#modules/chat/chat.controller.js";
 
 describe("decodeOriginalName — Sửa lỗi vỡ mã tên file tiếng Việt từ multer", () => {
   it("Giải mã đúng tên file tiếng Việt bị multer đọc nhầm thành Latin-1 (mojibake)", () => {

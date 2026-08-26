@@ -23,6 +23,11 @@ dotenv.config();
  * xác nhận) hoặc không tồn tại (orphan) — nếu classId trỏ tới lớp CÒN SỐNG, dừng lại và báo
  * lỗi thay vì tự xoá, vì khi đó không còn đủ căn cứ khẳng định là rác.
  *
+ * Query exam có bổ sung bắt cả doc thiếu hẳn field `isDeleted` (không chỉ isDeleted=false) —
+ * phát hiện 1 doc "Future Exam" bị insert thẳng bypass Mongoose (không có field, không có
+ * createdAt) nên lọt qua lần chạy đầu; đã xác nhận cùng batch rác qua classId trỏ tới lớp
+ * đã soft-delete ở migration trước.
+ *
  * Hỗ trợ cờ: --dry-run (mặc định), --apply, --report=<path>
  */
 export async function cleanupE2ETestArtifacts(options = {}) {
@@ -96,8 +101,11 @@ export async function cleanupE2ETestArtifacts(options = {}) {
     const rawClasses = mongoose.connection.collection("classes");
 
     const completedExams = await rawExams
-      .find({ status: "COMPLETED", isDeleted: false })
-      .project({ title: 1, classId: 1 })
+      .find({
+        status: "COMPLETED",
+        $or: [{ isDeleted: false }, { isDeleted: { $exists: false } }],
+      })
+      .project({ title: 1, classId: 1, isDeleted: 1 })
       .toArray();
 
     report.examsJunkFound = completedExams.length;

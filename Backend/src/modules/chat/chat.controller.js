@@ -6,7 +6,7 @@ import Message from "./message.model.js";
 import ChatReceipt from "./chatReceipt.model.js";
 import storageService from "#shared/services/storage.service.js";
 
-const decodeOriginalName = (name) => {
+export const decodeOriginalName = (name) => {
   if (!name || typeof name !== "string") return "";
   const hasHighUnicode = Array.from(name).some((char) => char.charCodeAt(0) > 255);
   if (hasHighUnicode) return name;
@@ -38,7 +38,7 @@ export const getMessages = asyncHandler(async (req, res) => {
   const userId = req.user.id || req.user._id;
 
   // Xử lý nhóm reaction cho mỗi tin nhắn
-  const formattedMessages = messages.map(msg => {
+  const formattedMessages = messages.map((msg) => {
     let reactionsSummary = [];
     let userReaction = null;
 
@@ -50,14 +50,14 @@ export const getMessages = asyncHandler(async (req, res) => {
           userReaction = r.emoji;
         }
       }
-      reactionsSummary = Object.keys(counts).map(emoji => ({ emoji, count: counts[emoji] }));
+      reactionsSummary = Object.keys(counts).map((emoji) => ({ emoji, count: counts[emoji] }));
     }
 
     return {
       ...msg,
       reactionsSummary,
       userReaction,
-      reactions: undefined // Không trả về mảng gốc
+      reactions: undefined, // Không trả về mảng gốc
     };
   });
 
@@ -128,7 +128,11 @@ export const editMessage = asyncHandler(async (req, res) => {
   const now = new Date();
   const diffMinutes = (now - message.createdAt) / 1000 / 60;
   if (diffMinutes > 15) {
-    throw new AppError("Chỉ có thể sửa tin nhắn trong vòng 15 phút sau khi gửi", "EDIT_TIMEOUT", 403);
+    throw new AppError(
+      "Chỉ có thể sửa tin nhắn trong vòng 15 phút sau khi gửi",
+      "EDIT_TIMEOUT",
+      403
+    );
   }
 
   message.content = content;
@@ -173,7 +177,8 @@ export const deleteMessage = asyncHandler(async (req, res) => {
 
   // Quyền xóa: Người gửi, Giáo viên phụ trách (req.classDetail được set ở checkClassAccess), Admin
   const isSender = message.senderId.toString() === userId.toString();
-  const isTeacherOfClass = role === "teacher" && req.classDetail?.teacherId?.toString() === userId.toString();
+  const isTeacherOfClass =
+    role === "teacher" && req.classDetail?.teacherId?.toString() === userId.toString();
   const isAdmin = role === "admin";
 
   if (!isSender && !isTeacherOfClass && !isAdmin) {
@@ -189,7 +194,12 @@ export const deleteMessage = asyncHandler(async (req, res) => {
 
   const io = req.app.get("io");
   if (io) {
-    io.to(`chat_class_${classId}`).emit("CHAT_DELETE_MESSAGE", { messageId, classId, isDeleted: true, deletedBy: userId });
+    io.to(`chat_class_${classId}`).emit("CHAT_DELETE_MESSAGE", {
+      messageId,
+      classId,
+      isDeleted: true,
+      deletedBy: userId,
+    });
   }
 
   res.status(200).json({
@@ -277,7 +287,7 @@ export const getUnreadCount = asyncHandler(async (req, res) => {
 
   const receipt = await ChatReceipt.findOne({ classId, userId }).lean();
   let query = { classId, isDeleted: false };
-  
+
   if (receipt && receipt.lastReadMessageId) {
     query._id = { $gt: receipt.lastReadMessageId };
   }
@@ -313,8 +323,10 @@ export const addReaction = asyncHandler(async (req, res) => {
   }
 
   // Toggle nếu giống cũ, Replace nếu khác
-  const existingReactionIndex = message.reactions.findIndex(r => r.userId.toString() === userId.toString());
-  
+  const existingReactionIndex = message.reactions.findIndex(
+    (r) => r.userId.toString() === userId.toString()
+  );
+
   if (existingReactionIndex !== -1) {
     if (message.reactions[existingReactionIndex].emoji === emoji) {
       // Toggle (xóa)
@@ -339,14 +351,14 @@ export const addReaction = asyncHandler(async (req, res) => {
       userReaction = r.emoji;
     }
   }
-  const reactionsSummary = Object.keys(counts).map(e => ({ emoji: e, count: counts[e] }));
+  const reactionsSummary = Object.keys(counts).map((e) => ({ emoji: e, count: counts[e] }));
 
   const io = req.app.get("io");
   if (io) {
     io.to(`chat_class_${classId}`).emit("CHAT_REACTION_UPDATE", {
       messageId,
       reactionsSummary,
-      userReaction: { userId, emoji: userReaction }
+      userReaction: { userId, emoji: userReaction },
     });
   }
 
@@ -355,8 +367,8 @@ export const addReaction = asyncHandler(async (req, res) => {
     message: "Thao tác thành công",
     data: {
       reactionsSummary,
-      userReaction
-    }
+      userReaction,
+    },
   });
 });
 
@@ -373,8 +385,10 @@ export const removeReaction = asyncHandler(async (req, res) => {
     throw new AppError("Tin nhắn không thuộc lớp này", "INVALID_CLASS", 400);
   }
 
-  const existingReactionIndex = message.reactions.findIndex(r => r.userId.toString() === userId.toString());
-  
+  const existingReactionIndex = message.reactions.findIndex(
+    (r) => r.userId.toString() === userId.toString()
+  );
+
   if (existingReactionIndex !== -1) {
     message.reactions.splice(existingReactionIndex, 1);
     await message.save();
@@ -385,14 +399,14 @@ export const removeReaction = asyncHandler(async (req, res) => {
   for (const r of message.reactions) {
     counts[r.emoji] = (counts[r.emoji] || 0) + 1;
   }
-  const reactionsSummary = Object.keys(counts).map(e => ({ emoji: e, count: counts[e] }));
+  const reactionsSummary = Object.keys(counts).map((e) => ({ emoji: e, count: counts[e] }));
 
   const io = req.app.get("io");
   if (io) {
     io.to(`chat_class_${classId}`).emit("CHAT_REACTION_UPDATE", {
       messageId,
       reactionsSummary,
-      userReaction: { userId, emoji: null }
+      userReaction: { userId, emoji: null },
     });
   }
 
@@ -401,7 +415,7 @@ export const removeReaction = asyncHandler(async (req, res) => {
     message: "Đã gỡ cảm xúc",
     data: {
       reactionsSummary,
-      userReaction: null
-    }
+      userReaction: null,
+    },
   });
 });

@@ -101,6 +101,11 @@ export const errorHandler = (err, req, res, next) => {
     requestId: req.requestId || null,
   };
 
+  // details: lỗi tự khai báo (err.details) ưu tiên hơn quy đổi từ Mongoose — cho phép
+  // service tầng trên tự set chi tiết riêng mà không bị mapMongooseError ghi đè.
+  const details = err.details ?? mongo?.details;
+  if (details !== undefined) body.details = details;
+
   if (status === 500) {
     console.error("=== LỖI 500 GỐC TỪ SERVER ===");
     console.error(err.stack || err);
@@ -113,7 +118,9 @@ export const errorHandler = (err, req, res, next) => {
 
 // 404 cho các route không khớp router nào — tách riêng khỏi errorHandler (không phải lỗi runtime).
 export const notFoundHandler = (req, res) => {
-  console.error(`🔥 [${req.requestId || "no-request-id"}] 404 Not Found: ${req.method} ${req.originalUrl}`);
+  console.error(
+    `🔥 [${req.requestId || "no-request-id"}] 404 Not Found: ${req.method} ${req.originalUrl}`
+  );
   res.status(404).json({
     success: false,
     message: "Không thực hiện được thao tác. Vui lòng thử lại hoặc liên hệ quản trị viên.",

@@ -1,35 +1,51 @@
+import { describe, it, beforeAll, afterAll } from "vitest";
 import { expect } from "chai";
 import request from "supertest";
 import mongoose from "mongoose";
 import jwt from "jsonwebtoken";
-import app from "../../../../src/app.js";
+import { createApp } from "../../../../src/app.js";
 import User from "../../../../src/modules/auth/user.model.js";
 import Topic from "../../../../src/modules/topic/topic.model.js";
+import { connectDB, disconnectDB } from "../../../integration/domain04/testUtils.js";
+
+const app = createApp();
 
 describe("Formula Security Validation", () => {
   let teacherToken;
   let topicId;
 
-  before(async () => {
+  beforeAll(async () => {
+    await connectDB();
+  });
+
+  afterAll(async () => {
+    await disconnectDB();
+  });
+
+  beforeAll(async () => {
     const teacher = await User.create({
       username: "teacher_sec_test_" + Date.now(),
       email: `teacher_sec_test_${Date.now()}@example.com`,
       password: "Password123!",
       fullName: "Test Teacher",
-      role: "Teacher"
+      role: "Teacher",
     });
-    
-    teacherToken = jwt.sign({ id: teacher._id, role: "Teacher" }, process.env.JWT_SECRET || "fallback_secret", { expiresIn: "1h" });
+
+    teacherToken = jwt.sign(
+      { id: teacher._id, role: "Teacher" },
+      process.env.JWT_SECRET || "fallback_secret",
+      { expiresIn: "1h" }
+    );
 
     const topic = await Topic.create({
       name: "Security Test Topic",
-      courseId: new mongoose.Types.ObjectId()
+      courseId: new mongoose.Types.ObjectId(),
     });
     topicId = topic._id;
   });
 
-  after(async () => {
-    await User.deleteMany({ role: "TEACHER" });
+  afterAll(async () => {
+    await User.deleteMany({ role: "Teacher" });
     await Topic.deleteMany({});
   });
 
@@ -38,23 +54,23 @@ describe("Formula Security Validation", () => {
       topicId,
       type: "ESSAY",
       content: [
-        { 
-          id: "c1", 
-          type: "FORMULA", 
-          order: 1, 
-          displayMode: "INLINE", 
-          latex: "\\frac{1}{2} <script>alert(1)</script>" 
-        }
-      ]
+        {
+          id: "c1",
+          type: "FORMULA",
+          order: 1,
+          displayMode: "INLINE",
+          latex: "\\frac{1}{2} <script>alert(1)</script>",
+        },
+      ],
     };
 
     const res = await request(app)
-      .post("/api/v1/questions")
+      .post("/api/questions")
       .set("Authorization", `Bearer ${teacherToken}`)
       .send(payload);
 
     expect(res.status).to.equal(400);
-    expect(res.body.errors[0].msg).to.include("chứa payload nguy hiểm (XSS)");
+    expect(res.body.errors[0].message).to.include("chứa payload nguy hiểm (XSS)");
   });
 
   it("should reject FORMULA with javascript: URI", async () => {
@@ -62,23 +78,23 @@ describe("Formula Security Validation", () => {
       topicId,
       type: "ESSAY",
       content: [
-        { 
-          id: "c1", 
-          type: "FORMULA", 
-          order: 1, 
-          displayMode: "BLOCK", 
-          latex: "\\href{javascript:alert(1)}{click}" 
-        }
-      ]
+        {
+          id: "c1",
+          type: "FORMULA",
+          order: 1,
+          displayMode: "BLOCK",
+          latex: "\\href{javascript:alert(1)}{click}",
+        },
+      ],
     };
 
     const res = await request(app)
-      .post("/api/v1/questions")
+      .post("/api/questions")
       .set("Authorization", `Bearer ${teacherToken}`)
       .send(payload);
 
     expect(res.status).to.equal(400);
-    expect(res.body.errors[0].msg).to.include("chứa payload nguy hiểm (XSS)");
+    expect(res.body.errors[0].message).to.include("chứa payload nguy hiểm (XSS)");
   });
 
   it("should accept valid FORMULA", async () => {
@@ -87,18 +103,18 @@ describe("Formula Security Validation", () => {
       type: "ESSAY",
       points: 10,
       content: [
-        { 
-          id: "c1", 
-          type: "FORMULA", 
-          order: 1, 
-          displayMode: "BLOCK", 
-          latex: "E = mc^2" 
-        }
-      ]
+        {
+          id: "c1",
+          type: "FORMULA",
+          order: 1,
+          displayMode: "BLOCK",
+          latex: "E = mc^2",
+        },
+      ],
     };
 
     const res = await request(app)
-      .post("/api/v1/questions")
+      .post("/api/questions")
       .set("Authorization", `Bearer ${teacherToken}`)
       .send(payload);
 

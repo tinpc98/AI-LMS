@@ -17,6 +17,10 @@ const STATUS_TRANSITIONS = {
   PENDING_PAYMENT: ["PAYMENT_PENDING_CONFIRMATION", "CANCELLED"],
   PAYMENT_PENDING_CONFIRMATION: ["APPROVED", "PENDING_PAYMENT", "CANCELLED"],
   APPROVED: ["COMPLETED", "CANCELLED"],
+  // classEnrollment.service.js#assignClass set thẳng enrollment.status = "CLASS_ASSIGNED" (không
+  // qua transitionStatus) sau khi xếp lớp — thiếu key này khiến completeEnrollment() luôn lỗi
+  // 400 cho MỌI enrollment đã xếp lớp thật (đường duy nhất tới trạng thái CLASS_ASSIGNED).
+  CLASS_ASSIGNED: ["COMPLETED", "CANCELLED"],
   COMPLETED: [], // terminal
   CANCELLED: [], // terminal
   REJECTED: [], // (Not used as a main status for enrollment in normal flow, but just in case)
@@ -50,20 +54,25 @@ class EnrollmentService {
       const existing = await Enrollment.findOne({
         studentId,
         courseId,
-        status: { $in: ACTIVE_STATUSES }
+        status: { $in: ACTIVE_STATUSES },
       }).session(session);
       if (existing) {
         throw new ConflictError("Bạn đã có một đăng ký đang hoạt động cho khóa học này.");
       }
 
       // 4. Tạo enrollment
-      const enrollment = await Enrollment.create([{
-        studentId,
-        courseId,
-        level,
-        price,
-        status: "PENDING_PAYMENT",
-      }], { session });
+      const enrollment = await Enrollment.create(
+        [
+          {
+            studentId,
+            courseId,
+            level,
+            price,
+            status: "PENDING_PAYMENT",
+          },
+        ],
+        { session }
+      );
 
       const createdEnrollment = enrollment[0];
 
@@ -71,7 +80,7 @@ class EnrollmentService {
       // Dùng require dynamic hoặc import paymentConfig trực tiếp để tránh circular dependency
       const PaymentConfig = (await import("#modules/payment/paymentConfig.model.js")).default;
       const Payment = (await import("#modules/payment/payment.model.js")).default;
-      
+
       let config = await PaymentConfig.findOne().session(session);
       if (!config || !config.isActive) {
         throw new BusinessRuleError("Hệ thống thanh toán đang bảo trì.");
@@ -90,23 +99,28 @@ class EnrollmentService {
       const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
 
       // 8. Tạo Payment
-      await Payment.create([{
-        enrollmentId: createdEnrollment._id,
-        studentId,
-        courseId,
-        amount: price,
-        currency: "VND",
-        paymentMethod: "BANK_TRANSFER",
-        status: "PENDING",
-        transferInfo: {
-          bankName: config.bankName,
-          accountNumber: config.accountNumber,
-          accountName: config.accountName,
-          transferContent,
-          qrData,
-        },
-        expiresAt
-      }], { session });
+      await Payment.create(
+        [
+          {
+            enrollmentId: createdEnrollment._id,
+            studentId,
+            courseId,
+            amount: price,
+            currency: "VND",
+            paymentMethod: "BANK_TRANSFER",
+            status: "PENDING",
+            transferInfo: {
+              bankName: config.bankName,
+              accountNumber: config.accountNumber,
+              accountName: config.accountName,
+              transferContent,
+              qrData,
+            },
+            expiresAt,
+          },
+        ],
+        { session }
+      );
 
       // Update User firstEnrollmentAt if null
       const user = await User.findById(studentId).session(session);
@@ -139,9 +153,7 @@ class EnrollmentService {
       isDeleted: { $ne: true },
     });
     if (!student) {
-      throw new NotFoundError(
-        "Học sinh không tồn tại hoặc không có vai trò Student."
-      );
+      throw new NotFoundError("Học sinh không tồn tại hoặc không có vai trò Student.");
     }
 
     return this.createEnrollment(studentId, courseId);
@@ -251,7 +263,9 @@ class EnrollmentService {
     );
 
     if (!updatedEnrollment) {
-      throw new BusinessRuleError("Trạng thái đã bị thay đổi bởi một tiến trình khác. Vui lòng thử lại.");
+      throw new BusinessRuleError(
+        "Trạng thái đã bị thay đổi bởi một tiến trình khác. Vui lòng thử lại."
+      );
     }
 
     return updatedEnrollment;
@@ -273,7 +287,9 @@ class EnrollmentService {
    * Admin phân công lớp cho học sinh
    */
   async assignClass(enrollmentId, classId, adminId) {
-    const classEnrollmentService = (await import("#modules/classEnrollment/classEnrollment.service.js")).default;
+    const classEnrollmentService = (
+      await import("#modules/classEnrollment/classEnrollment.service.js")
+    ).default;
     return await classEnrollmentService.assignClass({ enrollmentId, classId, adminId });
   }
 }

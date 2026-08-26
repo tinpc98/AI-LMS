@@ -10,11 +10,17 @@ export const enrollmentService = {
   /**
    * Student: tạo enrollment cho chính mình.
    */
-  async createEnrollment({ courseId, level }: { courseId: string, level: string }): Promise<EnrollmentRecord> {
-    const res = await axiosClient.post<EnrollmentApiResponse<EnrollmentRecord>>(
-      "/enrollments",
-      { courseId, level }
-    );
+  async createEnrollment({
+    courseId,
+    level,
+  }: {
+    courseId: string;
+    level: string;
+  }): Promise<EnrollmentRecord> {
+    const res = await axiosClient.post<EnrollmentApiResponse<EnrollmentRecord>>("/enrollments", {
+      courseId,
+      level,
+    });
     return res.data.data!;
   },
 
@@ -43,10 +49,9 @@ export const enrollmentService = {
     const params: Record<string, unknown> = { ...filters };
     if (params.status === "All") delete params.status;
 
-    const res = await axiosClient.get<EnrollmentApiResponse<EnrollmentRecord[]>>(
-      "/enrollments",
-      { params }
-    );
+    const res = await axiosClient.get<EnrollmentApiResponse<EnrollmentRecord[]>>("/enrollments", {
+      params,
+    });
     return res.data;
   },
 
@@ -78,7 +83,7 @@ export const enrollmentService = {
    */
   async transitionStatus(
     id: string,
-    action: "pay" | "approve" | "complete" | "cancel"
+    action: "approve" | "complete" | "cancel"
   ): Promise<EnrollmentRecord> {
     const res = await axiosClient.patch<EnrollmentApiResponse<EnrollmentRecord>>(
       `/enrollments/${id}/${action}`
@@ -96,10 +101,7 @@ export const enrollmentService = {
   /**
    * Admin: tạo enrollment cho student.
    */
-  async createEnrollmentByAdmin(
-    studentId: string,
-    courseId: string
-  ): Promise<EnrollmentRecord> {
+  async createEnrollmentByAdmin(studentId: string, courseId: string): Promise<EnrollmentRecord> {
     const res = await axiosClient.post<EnrollmentApiResponse<EnrollmentRecord>>(
       "/enrollments/admin",
       { studentId, courseId }

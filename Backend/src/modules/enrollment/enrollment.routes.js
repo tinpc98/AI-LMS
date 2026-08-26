@@ -5,7 +5,6 @@ import {
   getMyEnrollments,
   getAllEnrollments,
   getEnrollmentById,
-  markPaid,
   approveEnrollment,
   assignClass,
   completeEnrollment,
@@ -43,7 +42,9 @@ router.get("/admin/pending-class", verifyUser, isAdmin, getAdminPendingClass);
 router.get("/", verifyUser, isAdmin, getAllEnrollments);
 
 // ── Status transition routes (Admin) ─────────────────────────────────────────
-router.patch("/:id/pay", verifyUser, isAdmin, markPaid);
+// Đường thật để duyệt thanh toán là POST /payments/:id/confirm (payment.service.js#confirmPayment,
+// chuyển thẳng Enrollment PAYMENT_PENDING_CONFIRMATION -> APPROVED). Route /approve dưới đây là
+// đường duyệt thủ công dự phòng cho admin, dùng chung STATUS_TRANSITIONS.
 router.patch("/:id/approve", verifyUser, isAdmin, approveEnrollment);
 router.post("/:id/assign-class", verifyUser, isAdmin, assignClass);
 router.patch("/:id/complete", verifyUser, isAdmin, completeEnrollment);

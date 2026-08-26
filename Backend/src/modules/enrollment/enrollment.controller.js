@@ -73,40 +73,41 @@ export const getAdminPendingClass = asyncHandler(async (req, res) => {
 
   // We find APPROVED enrollments. But how to know if they have an active class?
   // We can query enrollments and then cross-check, or use aggregate.
-  // Wait, if an enrollment has a class, does it stay APPROVED? 
+  // Wait, if an enrollment has a class, does it stay APPROVED?
   // The spec says status transitions: PAYMENT_PENDING_CONFIRMATION -> APPROVED -> COMPLETED
-  // And "Không cho Student tự thay status". 
+  // And "Không cho Student tự thay status".
   // When assigned class, it creates ClassEnrollment ACTIVE, but CourseEnrollment stays APPROVED.
-  
+
   // So we just return APPROVED enrollments that do NOT have an ACTIVE ClassEnrollment.
-  const ClassEnrollmentModel = (await import("#modules/classEnrollment/classEnrollment.model.js")).default;
-  
+  const ClassEnrollmentModel = (await import("#modules/classEnrollment/classEnrollment.model.js"))
+    .default;
+
   const skip = (page ? Number(page) - 1 : 0) * (limit ? Number(limit) : 10);
   const maxLimit = limit ? Number(limit) : 10;
-  
+
   // Find enrollments with status APPROVED
   const query = { status: "APPROVED" };
   const enrollments = await enrollmentService.getAllEnrollments({
     status: "APPROVED",
-    page: 1, 
-    limit: 1000 // Get all approved first to filter (simple approach for MVP)
+    page: 1,
+    limit: 1000, // Get all approved first to filter (simple approach for MVP)
   });
-  
+
   const approvedItems = enrollments.items;
   const pendingItems = [];
-  
+
   if (approvedItems.length > 0) {
-    const enrollmentIds = approvedItems.map(item => item._id);
-    
+    const enrollmentIds = approvedItems.map((item) => item._id);
+
     // Tìm tất cả ClassEnrollment ACTIVE thuộc danh sách enrollmentIds
     const activeEnrollments = await ClassEnrollmentModel.find({
       enrollmentId: { $in: enrollmentIds },
-      status: "ACTIVE"
-    }).select("enrollmentId").lean();
+      status: "ACTIVE",
+    })
+      .select("enrollmentId")
+      .lean();
 
-    const activeEnrollmentIds = new Set(
-      activeEnrollments.map(item => String(item.enrollmentId))
-    );
+    const activeEnrollmentIds = new Set(activeEnrollments.map((item) => String(item.enrollmentId)));
 
     // Lọc lại các approvedItems chưa có trong Set activeEnrollmentIds
     for (const enr of approvedItems) {
@@ -115,7 +116,7 @@ export const getAdminPendingClass = asyncHandler(async (req, res) => {
       }
     }
   }
-  
+
   const paginatedItems = pendingItems.slice(skip, skip + maxLimit);
 
   return sendSuccess(res, "Lấy danh sách chờ xếp lớp thành công.", paginatedItems, {
@@ -153,16 +154,7 @@ export const getEnrollmentById = asyncHandler(async (req, res) => {
 // ── Status Transition Handlers ───────────────────────────────────────────────
 
 /**
- * Admin: Mark enrollment as PAID.
- */
-export const markPaid = asyncHandler(async (req, res) => {
-  const { id } = req.params;
-  const enrollment = await enrollmentService.transitionStatus(id, "PAID");
-  return sendSuccess(res, "Đã cập nhật trạng thái sang PAID.", enrollment);
-});
-
-/**
- * Admin: Approve enrollment.
+ * Admin: Approve enrollment (duyệt thủ công, dự phòng cho POST /payments/:id/confirm).
  */
 export const approveEnrollment = asyncHandler(async (req, res) => {
   const { id } = req.params;
@@ -177,11 +169,11 @@ export const assignClass = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const { classId } = req.body;
   const adminId = req.user.id || req.user._id;
-  
+
   if (!classId) {
     return sendError(res, "classId là bắt buộc.", 400);
   }
-  
+
   const ce = await enrollmentService.assignClass(id, classId, adminId);
   return sendSuccess(res, "Đã xếp lớp cho enrollment.", ce);
 });
@@ -197,7 +189,7 @@ export const completeEnrollment = asyncHandler(async (req, res) => {
 
 /**
  * Cancel enrollment.
- * Admin: có thể cancel PENDING_PAYMENT / PAID / APPROVED.
+ * Admin: có thể cancel PENDING_PAYMENT / PAYMENT_PENDING_CONFIRMATION / APPROVED.
  * Student: chỉ có thể cancel PENDING_PAYMENT của chính mình.
  */
 export const cancelEnrollment = asyncHandler(async (req, res) => {
@@ -216,11 +208,7 @@ export const cancelEnrollment = asyncHandler(async (req, res) => {
       return sendError(res, "Bạn không có quyền hủy enrollment này.", 403);
     }
     if (enrollment.status !== "PENDING_PAYMENT") {
-      return sendError(
-        res,
-        "Học sinh chỉ được hủy enrollment ở trạng thái PENDING_PAYMENT.",
-        422
-      );
+      return sendError(res, "Học sinh chỉ được hủy enrollment ở trạng thái PENDING_PAYMENT.", 422);
     }
   }
 

@@ -3,7 +3,6 @@
 export type EnrollmentStatus =
   | "PENDING_PAYMENT"
   | "PAYMENT_PENDING_CONFIRMATION"
-  | "PAID"
   | "APPROVED"
   | "CLASS_ASSIGNED"
   | "COMPLETED"
