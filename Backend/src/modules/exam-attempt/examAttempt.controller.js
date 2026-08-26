@@ -6,6 +6,7 @@ import { checkClassTeacherOwnership } from "#modules/class";
 import { processAttemptPerformanceService } from "#modules/performance";
 import { buildAttemptStats } from "./attemptStats.js";
 import { BusinessRuleError, AuthorizationError, ValidationError } from "#shared/utils/appError.js";
+import { checkAndAwardPerfectScoreBadge } from "../badge/badgeAward.service.js";
 
 /**
  * Kiểm tra teacher có quyền với exam này (qua exam.classId).
@@ -374,6 +375,11 @@ export const gradeEssay = asyncHandler(async (req, res) => {
       success: false,
       message: "Có người khác vừa chấm bài này cùng lúc, vui lòng tải lại và thử lại.",
     });
+  }
+
+  // TÍNH NĂNG MỚI (mục 4): "Điểm tuyệt đối" — chỉ kiểm được sau khi hết câu tự luận chờ chấm.
+  if (updated.status === "GRADED" && examAttemptService.isPerfectScore(updated)) {
+    await checkAndAwardPerfectScoreBadge(updated.studentId);
   }
 
   // Trigger Performance Engine nếu đã GRADED

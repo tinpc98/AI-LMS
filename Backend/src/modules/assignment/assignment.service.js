@@ -8,6 +8,10 @@ import { evaluateLateness } from "./assignmentDeadline.js";
 // (cùng nguyên tắc "tránh over-eager barrel export" đã áp dụng ở lesson/attendance/exam-attempt).
 import { awardXpService, resolveActiveClassIdForStudent } from "../badge/xp.service.js";
 import { XP_TABLE } from "../badge/xp.js";
+import {
+  checkAndAwardOnTimeBadge,
+  checkAndAwardPerfectScoreBadge,
+} from "../badge/badgeAward.service.js";
 
 // Helper check ownership
 const checkTopicTeacherOwnership = async (topicId, userId, role) => {
@@ -111,6 +115,11 @@ const isHighScore = (attempt) => {
   return (attempt.score / maxScore) * 100 >= 80;
 };
 
+const isPerfectScore = (attempt) => {
+  const maxScore = attempt.questions.reduce((sum, q) => sum + (q.points || 0), 0);
+  return maxScore > 0 && attempt.score >= maxScore;
+};
+
 /**
  * TÍNH NĂNG MỚI (mục 5): 15 XP nộp bài + 10 XP thưởng nộp đúng hạn + 15 XP thưởng điểm >=80% —
  * sourceRef gắn theo assignmentId (KHÔNG theo attemptId) vì Assignment không giới hạn số lần làm
@@ -139,6 +148,7 @@ const awardAssignmentSubmissionXp = async (attempt) => {
       xpAmount: XP_TABLE.ASSIGNMENT_ON_TIME_BONUS,
       metadata: { bonus: "on_time" },
     });
+    await checkAndAwardOnTimeBadge(attempt.studentId);
   }
 
   if (attempt.status === "GRADED" && isHighScore(attempt)) {
@@ -150,6 +160,7 @@ const awardAssignmentSubmissionXp = async (attempt) => {
       xpAmount: XP_TABLE.ASSIGNMENT_HIGH_SCORE_BONUS,
       metadata: { bonus: "high_score" },
     });
+    if (isPerfectScore(attempt)) await checkAndAwardPerfectScoreBadge(attempt.studentId);
   }
 };
 
@@ -341,6 +352,7 @@ export const gradeEssayService = async (attemptId, questionId, score, feedback) 
         xpAmount: XP_TABLE.ASSIGNMENT_HIGH_SCORE_BONUS,
         metadata: { bonus: "high_score" },
       });
+      if (isPerfectScore(updated)) await checkAndAwardPerfectScoreBadge(updated.studentId);
     }
   }
 

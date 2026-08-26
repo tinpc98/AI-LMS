@@ -25,3 +25,15 @@ export {
   resolveActiveClassIdForStudent,
 } from "./xp.service.js";
 export { XP_TABLE } from "./xp.js";
+
+// TÍNH NĂNG MỚI (mục 4): các module khác gọi khi có 1 sự kiện có thể liên quan tới badge. Chỉ
+// import learningActivity.model.js + gamification.service.js (không phụ thuộc module khác) nên
+// an toàn để export ở barrel.
+export {
+  checkAndAwardGettingStartedBadge,
+  checkAndAwardPerfectScoreBadge,
+  checkAndAwardConquerorBadge,
+  checkAndAwardPersistentBadge,
+  checkAndAwardDiligentBadge,
+  checkAndAwardOnTimeBadge,
+} from "./badgeAward.service.js";

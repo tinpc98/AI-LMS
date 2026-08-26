@@ -16,6 +16,11 @@ import { NotFoundError, BusinessRuleError, AuthorizationError } from "#shared/ut
 import { awardXpService, resolveActiveClassIdForStudent } from "../badge/xp.service.js";
 import { XP_TABLE } from "../badge/xp.js";
 import {
+  checkAndAwardGettingStartedBadge,
+  checkAndAwardConquerorBadge,
+  checkAndAwardPerfectScoreBadge,
+} from "../badge/badgeAward.service.js";
+import {
   computeWatchedUnionSeconds,
   isVideoBlockComplete,
   isDocumentBlockComplete,
@@ -62,12 +67,47 @@ const loadLessonBlockForStudent = async (lessonId, blockId, studentId, expectedT
 };
 
 /**
+ * Chinh phục + 200 XP "Course Completed" — kiểm tra sau MỖI lần 1 Lesson vừa hoàn thành: nếu mọi
+ * Lesson PUBLISHED khác trong Course (qua mọi Topic) cũng đã completed=true cho học sinh này thì
+ * coi như vừa hoàn thành trọn khóa học. sourceRef theo courseId nên chỉ cộng đúng 1 lần/khóa.
+ */
+const checkCourseCompletionAndAward = async (courseId, studentId, classId) => {
+  const topics = await Topic.find({ courseId }).select("_id").lean();
+  const topicIds = topics.map((t) => t._id);
+  if (topicIds.length === 0) return;
+
+  const lessons = await Lesson.find({ topicId: { $in: topicIds }, status: "PUBLISHED" })
+    .select("_id")
+    .lean();
+  if (lessons.length === 0) return;
+  const lessonIds = lessons.map((l) => l._id);
+
+  const completedCount = await LessonProgress.countDocuments({
+    studentId,
+    lessonId: { $in: lessonIds },
+    completed: true,
+  });
+  if (completedCount < lessonIds.length) return; // Chưa xong hết.
+
+  await awardXpService({
+    studentId,
+    classId,
+    activityType: "Course Completed",
+    sourceRef: `course:${courseId}`,
+    xpAmount: XP_TABLE.COURSE_COMPLETED,
+  });
+  await checkAndAwardConquerorBadge(studentId);
+};
+
+/**
  * Tính lại completed/progress toàn Lesson và ghi vào progressDoc — BR-1.7: KHÔNG bao giờ đổi
  * completed từ true về false (một khi đã hoàn thành thì giữ nguyên, kể cả khi giáo viên thêm
  * block bắt buộc mới sau đó — BR-1.8).
  *
  * TÍNH NĂNG MỚI (mục 5): cộng 20 XP "Lesson Completed" đúng 1 lần khi completed chuyển
  * false -> true lần đầu (sourceRef theo lessonId nên gọi lại không cộng trùng).
+ * TÍNH NĂNG MỚI (mục 4): trao badge "Khởi đầu" ở lần hoàn thành Lesson đầu tiên, và kiểm tra
+ * "Chinh phục" (hoàn thành trọn Course) mỗi lần một Lesson hoàn thành.
  */
 const recomputeLessonProgress = async (progressDoc, lesson, studentId, courseId) => {
   if (progressDoc.completed) return; // Đã hoàn thành — không tính lại, không thu hồi.
@@ -88,6 +128,8 @@ const recomputeLessonProgress = async (progressDoc, lesson, studentId, courseId)
         sourceRef: `lesson:${lesson._id}`,
         xpAmount: XP_TABLE.LESSON_COMPLETED,
       });
+      await checkAndAwardGettingStartedBadge(studentId);
+      await checkCourseCompletionAndAward(courseId, studentId, classId);
     }
   }
 };
@@ -318,6 +360,7 @@ export const submitPracticeQuizAttemptService = async (
         xpAmount: XP_TABLE.PRACTICE_QUIZ_PERFECT_BONUS,
         metadata: { bonus: "perfect_score" },
       });
+      await checkAndAwardPerfectScoreBadge(studentId);
     }
   }
 

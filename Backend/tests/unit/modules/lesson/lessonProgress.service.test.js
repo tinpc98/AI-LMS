@@ -4,7 +4,10 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
 const lessonFindById = vi.fn();
+const lessonFind = vi.fn();
 const topicFindById = vi.fn();
+const topicFind = vi.fn();
+const progressCountDocuments = vi.fn();
 const enrollmentFindOne = vi.fn();
 const progressFindOne = vi.fn();
 const progressFind = vi.fn();
@@ -15,9 +18,11 @@ const attemptCount = vi.fn();
 const attemptCreate = vi.fn();
 
 vi.mock("#modules/lesson/lesson.model.js", () => ({
-  default: { findById: (...a) => lessonFindById(...a) },
+  default: { findById: (...a) => lessonFindById(...a), find: (...a) => lessonFind(...a) },
 }));
-vi.mock("#modules/topic", () => ({ Topic: { findById: (...a) => topicFindById(...a) } }));
+vi.mock("#modules/topic", () => ({
+  Topic: { findById: (...a) => topicFindById(...a), find: (...a) => topicFind(...a) },
+}));
 vi.mock("#modules/enrollment", () => ({
   Enrollment: { findOne: (...a) => enrollmentFindOne(...a) },
 }));
@@ -34,6 +39,14 @@ vi.mock("#modules/badge/xp.service.js", () => ({
   awardXpService: (...a) => awardXpService(...a),
   resolveActiveClassIdForStudent: (...a) => resolveActiveClassIdForStudent(...a),
 }));
+const checkAndAwardGettingStartedBadge = vi.fn();
+const checkAndAwardConquerorBadge = vi.fn();
+const checkAndAwardPerfectScoreBadge = vi.fn();
+vi.mock("#modules/badge/badgeAward.service.js", () => ({
+  checkAndAwardGettingStartedBadge: (...a) => checkAndAwardGettingStartedBadge(...a),
+  checkAndAwardConquerorBadge: (...a) => checkAndAwardConquerorBadge(...a),
+  checkAndAwardPerfectScoreBadge: (...a) => checkAndAwardPerfectScoreBadge(...a),
+}));
 
 vi.mock("#modules/lesson/lessonProgress.model.js", () => {
   class LessonProgressMock {
@@ -47,6 +60,7 @@ vi.mock("#modules/lesson/lessonProgress.model.js", () => {
   }
   LessonProgressMock.findOne = (...a) => progressFindOne(...a);
   LessonProgressMock.find = (...a) => progressFind(...a);
+  LessonProgressMock.countDocuments = (...a) => progressCountDocuments(...a);
   return { default: LessonProgressMock };
 });
 
@@ -85,6 +99,9 @@ beforeEach(() => {
   progressFindOne.mockResolvedValue(null);
   resolveActiveClassIdForStudent.mockResolvedValue("class-1");
   awardXpService.mockResolvedValue({ _id: "xp-1" });
+  // Mặc định: Course không có Topic nào -> checkCourseCompletionAndAward dừng sớm, các test
+  // không liên quan tới "Chinh phục"/Course Completed không cần mock sâu Lesson.find/countDocuments.
+  topicFind.mockReturnValue({ select: () => ({ lean: () => Promise.resolve([]) }) });
 });
 
 describe("recordVideoProgressService", () => {
@@ -304,6 +321,7 @@ describe("TÍNH NĂNG MỚI (mục 5) — cộng XP khi có kết quả đã xá
     expect(awardXpService).toHaveBeenCalledWith(
       expect.objectContaining({ sourceRef: `quiz-perfect:${QUIZ_BLOCK_ID}`, xpAmount: 5 })
     );
+    expect(checkAndAwardPerfectScoreBadge).toHaveBeenCalledWith(STUDENT_ID);
   });
 
   it("Đã từng đạt 70%+ trước đó → làm lại không cộng XP 'Practice Quiz Passed' lần 2", async () => {
@@ -376,6 +394,7 @@ describe("TÍNH NĂNG MỚI (mục 5) — cộng XP khi có kết quả đã xá
         xpAmount: 20,
       })
     );
+    expect(checkAndAwardGettingStartedBadge).toHaveBeenCalledWith(STUDENT_ID);
   });
 
   it("Lesson đã completed=true từ trước → không cộng lại 20 XP 'Lesson Completed'", async () => {
@@ -394,6 +413,93 @@ describe("TÍNH NĂNG MỚI (mục 5) — cộng XP khi có kết quả đã xá
 
     expect(awardXpService).not.toHaveBeenCalledWith(
       expect.objectContaining({ activityType: "Lesson Completed" })
+    );
+  });
+});
+
+describe("TÍNH NĂNG MỚI (mục 4) — 'Chinh phục' + 200 XP 'Course Completed' khi xong trọn khóa học", () => {
+  const mongooseLeanArray = (result) => ({
+    select: () => ({ lean: () => Promise.resolve(result) }),
+  });
+
+  const completeLessonScenario = () => {
+    progressFindOne.mockResolvedValue({
+      studentId: STUDENT_ID,
+      lessonId: LESSON_ID,
+      completed: false,
+      blocks: [
+        {
+          blockId: VIDEO_BLOCK_ID,
+          type: "VIDEO",
+          completed: true,
+          watchedRanges: [],
+          watchedSeconds: 100,
+        },
+        { blockId: DOC_BLOCK_ID, type: "DOCUMENT", completed: true, totalOpenSeconds: 30 },
+      ],
+      save: progressSave,
+    });
+  };
+
+  it("Mọi Lesson PUBLISHED trong Course đều completed → cộng 200 XP + trao badge Chinh phục", async () => {
+    completeLessonScenario();
+    topicFind.mockReturnValue(mongooseLeanArray([{ _id: TOPIC_ID }]));
+    lessonFind.mockReturnValue(mongooseLeanArray([{ _id: LESSON_ID }, { _id: "lesson-2" }]));
+    progressCountDocuments.mockResolvedValue(2); // Cả 2 lesson đều completed=true cho học sinh này.
+
+    await submitPracticeQuizAttemptService(LESSON_ID, QUIZ_BLOCK_ID, STUDENT_ID, {
+      answers: [
+        { questionId: "qa", selectedOptionIds: ["a1"] },
+        { questionId: "qb", selectedOptionIds: ["b2"] },
+      ],
+    });
+
+    expect(awardXpService).toHaveBeenCalledWith(
+      expect.objectContaining({
+        studentId: STUDENT_ID,
+        classId: "class-1",
+        activityType: "Course Completed",
+        sourceRef: "course:course-1",
+        xpAmount: 200,
+      })
+    );
+    expect(checkAndAwardConquerorBadge).toHaveBeenCalledWith(STUDENT_ID);
+  });
+
+  it("Còn Lesson khác trong Course chưa completed → KHÔNG cộng Course Completed", async () => {
+    completeLessonScenario();
+    topicFind.mockReturnValue(mongooseLeanArray([{ _id: TOPIC_ID }]));
+    lessonFind.mockReturnValue(mongooseLeanArray([{ _id: LESSON_ID }, { _id: "lesson-2" }]));
+    progressCountDocuments.mockResolvedValue(1); // Chỉ 1/2 lesson completed.
+
+    await submitPracticeQuizAttemptService(LESSON_ID, QUIZ_BLOCK_ID, STUDENT_ID, {
+      answers: [
+        { questionId: "qa", selectedOptionIds: ["a1"] },
+        { questionId: "qb", selectedOptionIds: ["b2"] },
+      ],
+    });
+
+    expect(awardXpService).not.toHaveBeenCalledWith(
+      expect.objectContaining({ activityType: "Course Completed" })
+    );
+    expect(checkAndAwardConquerorBadge).not.toHaveBeenCalled();
+  });
+
+  it("Course không có Lesson PUBLISHED nào → không throw, không cộng", async () => {
+    completeLessonScenario();
+    topicFind.mockReturnValue(mongooseLeanArray([{ _id: TOPIC_ID }]));
+    lessonFind.mockReturnValue(mongooseLeanArray([]));
+
+    await expect(
+      submitPracticeQuizAttemptService(LESSON_ID, QUIZ_BLOCK_ID, STUDENT_ID, {
+        answers: [
+          { questionId: "qa", selectedOptionIds: ["a1"] },
+          { questionId: "qb", selectedOptionIds: ["b2"] },
+        ],
+      })
+    ).resolves.toBeTruthy();
+    expect(awardXpService).not.toHaveBeenCalledWith(
+      expect.objectContaining({ activityType: "Course Completed" })
     );
   });
 });

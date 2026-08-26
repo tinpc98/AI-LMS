@@ -4,6 +4,7 @@ import { runExamAutoClose } from "./examLifecycle.job.js";
 import { runExamAttemptAutoSubmit } from "./examAttemptAutoSubmit.job.js";
 import { runAssignmentAttemptAutoSubmit } from "./assignmentAttemptAutoSubmit.job.js";
 import { runAttendanceFinalize } from "./attendanceFinalize.job.js";
+import { runLearningStreakCheck } from "./learningStreak.job.js";
 import { runChatCleanup } from "./chatCleanup.job.js";
 import { runStudentExpiryCheck } from "./userLifecycle.job.js";
 import { runCohortEscalationLevel1 } from "./cohortEscalation.job.js";
@@ -291,4 +292,37 @@ export const initCronJobs = (runImmediately = false) => {
     { scheduled: true, timezone: "Asia/Ho_Chi_Minh" }
   );
   console.log("[CRON] 📅 Đã đăng ký job: Attendance Finalize (lịch: mỗi 5 phút)");
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // JOB 10: Kiểm streak học tập 7 ngày liên tục — TÍNH NĂNG MỚI (mục 5 "Learning Streak" 50 XP
+  // + mục 4 badge "Bền bỉ"). Đây là cột mốc DUY NHẤT trong 2 đặc tả không có 1 sự kiện đơn lẻ
+  // nào để hook — chỉ xác nhận được khi nhìn lại lịch sử, nên cần job hàng ngày (khác mọi
+  // badge/XP còn lại, đều chấm ngay lúc sự kiện xảy ra).
+  //
+  // Lịch: 00:30 sáng hàng ngày — sau khi ngày hôm trước đã chắc chắn kết thúc (job tính streak
+  // dựa trên "hôm qua" theo giờ UTC, xem streak.js#yesterdayUtc), không cần chạy dày vì kết quả
+  // chỉ đổi 1 lần/ngày.
+  // ──────────────────────────────────────────────────────────────────────────
+  cron.schedule(
+    "30 0 * * *",
+    async () => {
+      try {
+        const { checked, awarded, failed } = await runLearningStreakCheck();
+        if (awarded > 0) {
+          console.log(
+            `[CRON] 🔥 Learning Streak: ${awarded}/${checked} học sinh đạt streak 7 ngày, đã cộng XP + badge.`
+          );
+        }
+        if (failed > 0) {
+          console.warn(
+            `[CRON] ⚠️ Learning Streak: ${failed} học sinh KHÔNG kiểm được — xem log lỗi phía trên.`
+          );
+        }
+      } catch (error) {
+        console.error("[CRON ERROR] ❌ Learning Streak Check Failed:", error);
+      }
+    },
+    { scheduled: true, timezone: "Asia/Ho_Chi_Minh" }
+  );
+  console.log("[CRON] 📅 Đã đăng ký job: Learning Streak Check (lịch: 00:30 hàng ngày)");
 };

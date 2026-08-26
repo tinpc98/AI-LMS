@@ -8,6 +8,7 @@ import { computeAttendanceResult } from "./attendanceEvidence.js";
 // lessonProgress.service.js: tránh kéo theo learningRanking.service.js (nặng, không cần ở đây).
 import { awardXpService } from "../badge/xp.service.js";
 import { XP_TABLE } from "../badge/xp.js";
+import { checkAndAwardDiligentBadge } from "../badge/badgeAward.service.js";
 
 class AttendanceService {
   async getClassSessions(classId) {
@@ -356,6 +357,7 @@ class AttendanceService {
           sourceRef: `attendance:${record._id}`,
           xpAmount: XP_TABLE.ATTENDANCE_PRESENT,
         });
+        await checkAndAwardDiligentBadge(record.studentId);
       }
     }
 

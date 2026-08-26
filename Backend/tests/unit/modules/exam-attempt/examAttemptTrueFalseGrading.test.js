@@ -24,6 +24,10 @@ vi.mock("#modules/performance/performance.service.js", () => ({
   processAttemptPerformanceService: vi.fn().mockResolvedValue(undefined),
 }));
 vi.mock("#modules/badge/xp.service.js", () => ({ awardXpService: (...a) => awardXpService(...a) }));
+const checkAndAwardPerfectScoreBadge = vi.fn();
+vi.mock("#modules/badge/badgeAward.service.js", () => ({
+  checkAndAwardPerfectScoreBadge: (...a) => checkAndAwardPerfectScoreBadge(...a),
+}));
 
 const { gradeSubmission } = await import("#modules/exam-attempt/examAttempt.service.js");
 
@@ -130,6 +134,8 @@ describe("TÍNH NĂNG MỚI (mục 5) — cộng 30 XP 'Exam Finished' khi hoàn
       sourceRef: "exam-finish:attempt-1",
       xpAmount: 30,
     });
+    // TÍNH NĂNG MỚI (mục 4): buildAttempt() trả lời đúng câu duy nhất -> 5/5 điểm = 100%.
+    expect(checkAndAwardPerfectScoreBadge).toHaveBeenCalledWith("student-1");
   });
 
   it("Exam không tìm thấy classId → bỏ qua cộng XP, không throw", async () => {
@@ -139,5 +145,48 @@ describe("TÍNH NĂNG MỚI (mục 5) — cộng 30 XP 'Exam Finished' khi hoàn
 
     await expect(gradeSubmission("attempt-1")).resolves.toBeTruthy();
     expect(awardXpService).not.toHaveBeenCalled();
+  });
+
+  it("Điểm chưa tuyệt đối (trả lời sai) → không kiểm badge Điểm tuyệt đối", async () => {
+    const attempt = buildAttempt({
+      studentId: "student-1",
+      examId: "exam-1",
+      questions: [
+        {
+          questionId: { toString: () => "q-tf" },
+          points: 5,
+          answer: { selectedOptionIds: ["opt-false"] }, // Sai
+        },
+      ],
+    });
+    examAttemptFindById.mockResolvedValue(attempt);
+
+    await gradeSubmission("attempt-1");
+
+    expect(checkAndAwardPerfectScoreBadge).not.toHaveBeenCalled();
+  });
+
+  it("Còn câu tự luận chờ chấm (PARTIALLY_GRADED) → chưa kiểm badge Điểm tuyệt đối", async () => {
+    questionFind.mockReturnValue(
+      mongooseLean([TRUE_FALSE_Q, { _id: "q-essay", type: "ESSAY", options: [] }])
+    );
+    const attempt = buildAttempt({
+      studentId: "student-1",
+      examId: "exam-1",
+      questions: [
+        {
+          questionId: { toString: () => "q-tf" },
+          points: 5,
+          answer: { selectedOptionIds: ["opt-true"] },
+        },
+        { questionId: { toString: () => "q-essay" }, points: 5, answer: { text: "..." } },
+      ],
+    });
+    examAttemptFindById.mockResolvedValue(attempt);
+
+    await gradeSubmission("attempt-1");
+
+    expect(attempt.status).toBe("PARTIALLY_GRADED");
+    expect(checkAndAwardPerfectScoreBadge).not.toHaveBeenCalled();
   });
 });

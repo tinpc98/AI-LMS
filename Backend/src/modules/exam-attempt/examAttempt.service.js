@@ -8,6 +8,7 @@ import { compareAnswers } from "./answerScoring.js";
 // (cùng nguyên tắc "tránh over-eager barrel export" đã áp dụng ở lesson/attendance).
 import { awardXpService } from "../badge/xp.service.js";
 import { XP_TABLE } from "../badge/xp.js";
+import { checkAndAwardPerfectScoreBadge } from "../badge/badgeAward.service.js";
 
 // Hàm shuffle mảng (Fisher-Yates)
 const shuffleArray = (array) => {
@@ -211,6 +212,11 @@ export const submitExamService = async (attemptId, sessionToken, studentId) => {
   return attempt;
 };
 
+export const isPerfectScore = (attempt) => {
+  const maxScore = attempt.questions.reduce((sum, aq) => sum + (aq.points || 0), 0);
+  return maxScore > 0 && attempt.score >= maxScore;
+};
+
 /**
  * Chấm bài — dùng chung cho submitExamService và gradeSubmission (auto-submit).
  * Bulk-fetch Questions, tránh N+1.
@@ -275,6 +281,12 @@ const _gradeAttempt = async (attempt) => {
       sourceRef: `exam-finish:${attempt._id}`,
       xpAmount: XP_TABLE.EXAM_FINISHED,
     });
+  }
+
+  // TÍNH NĂNG MỚI (mục 4): "Điểm tuyệt đối" — chỉ kiểm được khi status=GRADED (điểm đã chốt
+  // xong hết, không còn câu tự luận chờ chấm tay).
+  if (attempt.status === "GRADED" && isPerfectScore(attempt)) {
+    await checkAndAwardPerfectScoreBadge(attempt.studentId);
   }
 
   if (attempt.status === "GRADED" && !attempt.performanceProcessedAt) {

@@ -33,6 +33,12 @@ vi.mock("#modules/badge/xp.service.js", () => ({
   awardXpService: (...a) => awardXpService(...a),
   resolveActiveClassIdForStudent: (...a) => resolveActiveClassIdForStudent(...a),
 }));
+const checkAndAwardOnTimeBadge = vi.fn();
+const checkAndAwardPerfectScoreBadge = vi.fn();
+vi.mock("#modules/badge/badgeAward.service.js", () => ({
+  checkAndAwardOnTimeBadge: (...a) => checkAndAwardOnTimeBadge(...a),
+  checkAndAwardPerfectScoreBadge: (...a) => checkAndAwardPerfectScoreBadge(...a),
+}));
 
 const { submitAttemptService, gradeEssayService } =
   await import("#modules/assignment/assignment.service.js");
@@ -98,9 +104,11 @@ describe("submitAttemptService → _gradeAttempt — cộng XP khi nộp bài", 
     expect(awardXpService).toHaveBeenCalledWith(
       expect.objectContaining({ sourceRef: "assignment-highscore:assign-1", xpAmount: 15 })
     );
+    expect(checkAndAwardOnTimeBadge).toHaveBeenCalledWith("student-1");
+    expect(checkAndAwardPerfectScoreBadge).toHaveBeenCalledWith("student-1");
   });
 
-  it("Nộp trễ hạn → KHÔNG cộng 10 XP đúng hạn, vẫn cộng 15 XP nộp bài", async () => {
+  it("Nộp trễ hạn → KHÔNG cộng 10 XP đúng hạn, vẫn cộng 15 XP nộp bài, KHÔNG kiểm badge đúng hạn", async () => {
     findAttemptById.mockResolvedValue(buildAttempt({ expiresAt: new Date(Date.now() - 999999) }));
 
     await submitAttemptService("attempt-1", "student-1");
@@ -108,6 +116,7 @@ describe("submitAttemptService → _gradeAttempt — cộng XP khi nộp bài", 
     expect(awardXpService).toHaveBeenCalledWith(
       expect.objectContaining({ sourceRef: "assignment:assign-1" })
     );
+    expect(checkAndAwardOnTimeBadge).not.toHaveBeenCalled();
     expect(awardXpService).not.toHaveBeenCalledWith(
       expect.objectContaining({ sourceRef: "assignment-ontime:assign-1" })
     );
@@ -214,6 +223,7 @@ describe("gradeEssayService — cộng XP điểm cao SAU KHI chấm xong hết 
         xpAmount: 15,
       })
     );
+    expect(checkAndAwardPerfectScoreBadge).toHaveBeenCalledWith("student-1"); // 20/20 = 100%
   });
 
   it("Chấm xong nhưng điểm dưới 80% → không cộng XP điểm cao", async () => {

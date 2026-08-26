@@ -23,6 +23,10 @@ vi.mock("#modules/classSession/classSession.model.js", () => ({
 }));
 const awardXpService = vi.fn();
 vi.mock("#modules/badge/xp.service.js", () => ({ awardXpService: (...a) => awardXpService(...a) }));
+const checkAndAwardDiligentBadge = vi.fn();
+vi.mock("#modules/badge/badgeAward.service.js", () => ({
+  checkAndAwardDiligentBadge: (...a) => checkAndAwardDiligentBadge(...a),
+}));
 
 const { default: attendanceService } = await import("#modules/attendance/attendance.service.js");
 
@@ -193,6 +197,7 @@ describe("finalizeSessionAttendance — TÍNH NĂNG MỚI (mục 7): chốt sổ
   beforeEach(() => {
     classSessionUpdateOne.mockResolvedValue({});
     awardXpService.mockResolvedValue({ _id: "xp-1" });
+    checkAndAwardDiligentBadge.mockResolvedValue(undefined);
   });
 
   it("Buổi chưa có actualStartAt/actualEndAt (chưa thực sự diễn ra) → không tính gì, updated=0", async () => {
@@ -245,6 +250,9 @@ describe("finalizeSessionAttendance — TÍNH NĂNG MỚI (mục 7): chốt sổ
         xpAmount: 10,
       })
     );
+    // TÍNH NĂNG MỚI (mục 4): kiểm badge "Chuyên cần" cho học sinh vừa PRESENT, không cho ABSENT.
+    expect(checkAndAwardDiligentBadge).toHaveBeenCalledTimes(1);
+    expect(checkAndAwardDiligentBadge).toHaveBeenCalledWith(presentRecord.studentId);
   });
 
   it("Không có bản ghi DRAFT nào (đã chốt hoặc giáo viên đã sửa tay hết) → updated=0, không đụng gì", async () => {
