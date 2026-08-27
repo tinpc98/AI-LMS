@@ -1,12 +1,21 @@
 import mongoose from "mongoose";
 import dotenv from "dotenv";
 import { v4 as uuidv4 } from "uuid";
+import { pathToFileURL } from "node:url";
 import Topic from "../topic/topic.model.js";
 import Video from "../video/video.model.js";
 import Document from "../document/document.model.js";
 
 dotenv.config();
 
+// CẢNH BÁO: script này đã LỖI THỜI — migrate sang videoIds/documentIds, là hình dạng Lesson
+// TRUNG GIAN trước khi Lesson được viết lại thành blocks[] (xem lesson.model.js hiện tại).
+// Chạy file này bây giờ sẽ đưa Lesson vào một shape SAI so với schema hiện tại. Giữ lại chỉ để
+// tham khảo lịch sử — đừng chạy trừ khi đã viết lại cho khớp blocks[].
+//
+// Guard chỉ-chạy-trực-tiếp bên dưới là vì bài học từ sự cố 2026-07-31: import() một file có
+// lệnh gọi trần ở cuối (như migrateLessons() từng ở đây) tức là THỰC THI nó, đã từng xóa sạch
+// database dev qua một bước "chỉ kiểm tra import". Xem feedback-destructive-script-incident.
 const migrateLessons = async () => {
   try {
     const mongoUri = process.env.MONGO_URI || "mongodb://localhost:27017/ai-lms";
@@ -132,4 +141,7 @@ const migrateLessons = async () => {
   }
 };
 
-migrateLessons();
+const isDirectRun = process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href;
+if (isDirectRun) {
+  migrateLessons();
+}

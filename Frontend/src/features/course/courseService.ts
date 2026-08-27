@@ -9,7 +9,7 @@ const mapCourse = (course: any): CourseRecord => ({
 export const courseService = {
   async getCourses(filters: CourseFilters): Promise<ApiResponse<CourseRecord[]>> {
     const params: Record<string, any> = { ...filters };
-    if (params.subject === "All") delete params.subject;
+    if (params.subjectId === "All") delete params.subjectId;
     if (params.status === "All") delete params.status;
     if (!params.search) delete params.search;
 
@@ -47,7 +47,7 @@ export const courseService = {
 
   async getTrashCourses(filters: CourseFilters): Promise<ApiResponse<CourseRecord[]>> {
     const params: Record<string, any> = { ...filters };
-    if (params.subject === "All") delete params.subject;
+    if (params.subjectId === "All") delete params.subjectId;
     if (params.status === "All") delete params.status;
     if (!params.search) delete params.search;
 

@@ -1,7 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Tabs, Skeleton, Empty, Button, Tag, Typography } from "antd";
-import { ClockCircleOutlined, CalendarOutlined, CheckCircleOutlined, BookOutlined } from "@ant-design/icons";
+import {
+  ClockCircleOutlined,
+  CalendarOutlined,
+  CheckCircleOutlined,
+  BookOutlined,
+} from "@ant-design/icons";
 import axiosClient from "../../../api/axiosClient";
 import PageContainer from "../../../shared/components/PageContainer";
 import type { IExam } from "../../../types/exam";
@@ -20,7 +25,7 @@ export default function StudentExamPage() {
   useEffect(() => {
     const fetchExams = async () => {
       try {
-        const response = await axiosClient.get("/exams");
+        const response = await axiosClient.get("/exams/my");
         setExams(response.data.data || []);
       } catch (error) {
         console.error("Lỗi khi lấy danh sách đề thi:", error);
@@ -34,7 +39,9 @@ export default function StudentExamPage() {
   // Phân loại exam theo status thực tế từ backend + thời gian
   const upcomingExams = exams.filter((exam) => {
     const displayStatus = resolveExamDisplayStatus(exam.status, exam.startAt, exam.endAt);
-    return displayStatus === "PUBLISHED" || displayStatus === "UPCOMING" || displayStatus === "ONGOING";
+    return (
+      displayStatus === "PUBLISHED" || displayStatus === "UPCOMING" || displayStatus === "ONGOING"
+    );
   });
 
   const historyExams = exams.filter((exam) => {
@@ -45,10 +52,10 @@ export default function StudentExamPage() {
   const handleStartAttempt = async (exam: IExam) => {
     try {
       // Correct route: POST /exams/:examId/start (không phải /exam-attempts/start)
-      const response = await axiosClient.post<{ success: boolean; data: { _id: string; sessionToken?: string } }>(
-        `/exams/${exam._id}/start`,
-        {}
-      );
+      const response = await axiosClient.post<{
+        success: boolean;
+        data: { _id: string; sessionToken?: string };
+      }>(`/exams/${exam._id}/start`, {});
       const attempt = response.data.data;
       const attemptId = attempt._id;
       if (attempt.sessionToken) {
@@ -121,21 +128,21 @@ export default function StudentExamPage() {
                       displayStatus === "ONGOING"
                         ? "green"
                         : displayStatus === "UPCOMING"
-                        ? "blue"
-                        : displayStatus === "COMPLETED" || displayStatus === "ARCHIVED"
-                        ? "default"
-                        : "orange"
+                          ? "blue"
+                          : displayStatus === "COMPLETED" || displayStatus === "ARCHIVED"
+                            ? "default"
+                            : "orange"
                     }
                   >
                     {displayStatus === "ONGOING"
                       ? "Đang diễn ra"
                       : displayStatus === "UPCOMING"
-                      ? "Sắp diễn ra"
-                      : displayStatus === "COMPLETED"
-                      ? "Đã kết thúc"
-                      : displayStatus === "ARCHIVED"
-                      ? "Đã lưu trữ"
-                      : "Mở thi"}
+                        ? "Sắp diễn ra"
+                        : displayStatus === "COMPLETED"
+                          ? "Đã kết thúc"
+                          : displayStatus === "ARCHIVED"
+                            ? "Đã lưu trữ"
+                            : "Mở thi"}
                   </Tag>
                   {!isHistory && (displayStatus === "ONGOING" || displayStatus === "PUBLISHED") && (
                     <Button type="primary" size="small" onClick={() => handleStartAttempt(exam)}>

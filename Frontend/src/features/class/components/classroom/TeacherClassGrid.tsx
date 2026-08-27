@@ -21,7 +21,7 @@ interface ClassItem {
   joinCode?: string;
   courseId?:
     | {
-        courseName?: string;
+        name?: string;
       }
     | string;
   students?: any[];
@@ -53,7 +53,7 @@ export const TeacherClassGrid: React.FC<TeacherClassGridProps> = React.memo(
           const studentCount = cls.currentStudents ?? 0;
           const max = cls.maxStudents || 30;
           const code = cls.joinCode || cls.classCode || "";
-          const courseName = typeof cls.courseId === "object" ? cls.courseId?.courseName : "";
+          const courseName = typeof cls.courseId === "object" ? cls.courseId?.name : "";
 
           return (
             <Col xs={24} sm={12} lg={8} key={cls._id}>
@@ -123,10 +123,16 @@ export const TeacherClassGrid: React.FC<TeacherClassGridProps> = React.memo(
                     >
                       <Space size={6}>
                         <KeyOutlined style={{ color: "var(--color-action-primary-bg-active)" }} />
-                        <Text style={{ fontSize: 12, color: "var(--color-text-body)" }}>Mã tham gia:</Text>
+                        <Text style={{ fontSize: 12, color: "var(--color-text-body)" }}>
+                          Mã tham gia:
+                        </Text>
                         <Text
                           strong
-                          style={{ fontSize: 13, color: "var(--color-action-primary-bg-active)", fontFamily: "monospace" }}
+                          style={{
+                            fontSize: 13,
+                            color: "var(--color-action-primary-bg-active)",
+                            fontFamily: "monospace",
+                          }}
                         >
                           {code}
                         </Text>

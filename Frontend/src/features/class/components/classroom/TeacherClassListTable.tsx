@@ -13,7 +13,7 @@ interface ClassItem {
   joinCode?: string;
   courseId?:
     | {
-        courseName?: string;
+        name?: string;
       }
     | string;
   students?: any[];
@@ -75,7 +75,7 @@ export const TeacherClassListTable: React.FC<TeacherClassListTableProps> = React
         dataIndex: "courseId",
         key: "courseId",
         render: (courseId) => {
-          const name = typeof courseId === "object" ? courseId?.courseName : "-";
+          const name = typeof courseId === "object" ? courseId?.name : "-";
           return (
             <Space>
               <BookOutlined style={{ color: "var(--color-action-primary-bg)" }} />

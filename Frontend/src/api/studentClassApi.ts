@@ -31,7 +31,7 @@ interface RawClassFromApi {
   joinCode?: string;
   subject?: string;
   subjectId?: { name?: string };
-  courseId?: { subject?: string; courseName?: string };
+  courseId?: { name?: string; subjectId?: { name?: string } };
   courseName?: string;
   semester?: string;
   status?: string;
@@ -77,10 +77,10 @@ export const mapToStudentClass = (item: RawClassFromApi): IStudentClass => {
     subject:
       item.subject ||
       item.subjectId?.name ||
-      item.courseId?.subject ||
-      item.courseId?.courseName ||
+      item.courseId?.subjectId?.name ||
+      item.courseId?.name ||
       "",
-    courseName: item.courseId?.courseName || item.courseName || "",
+    courseName: item.courseId?.name || item.courseName || "",
     semester: item.semester || "",
     teacher: item.teacherId
       ? {

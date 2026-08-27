@@ -22,12 +22,20 @@ export const createExam = asyncHandler(async (req, res) => {
   const userId = req.user.id || req.user._id;
 
   if (!classId || !title || !duration || !attemptsAllowed) {
-    return res.status(400).json({ success: false, message: "Thiếu dữ liệu bắt buộc: classId, title, duration, attemptsAllowed" });
+    return res
+      .status(400)
+      .json({
+        success: false,
+        message: "Thiếu dữ liệu bắt buộc: classId, title, duration, attemptsAllowed",
+      });
   }
 
   // Chỉ teacher sở hữu class mới được tạo exam
   const isAuthorized = await checkClassTeacherOwnership(classId, userId, req.user?.role);
-  if (!isAuthorized) return res.status(403).json({ success: false, message: "Không có quyền tạo bài thi cho lớp này" });
+  if (!isAuthorized)
+    return res
+      .status(403)
+      .json({ success: false, message: "Không có quyền tạo bài thi cho lớp này" });
 
   const exam = await examService.createExamService(req.body, userId);
   return res.status(201).json({ success: true, message: "Tạo bài thi thành công", data: exam });
@@ -48,18 +56,58 @@ export const getExamsByClass = asyncHandler(async (req, res) => {
 
   if (role === "teacher") {
     const isOwner = await checkClassTeacherOwnership(classId, userId, role);
-    if (!isOwner) return res.status(403).json({ success: false, message: "Không có quyền truy cập lớp này" });
+    if (!isOwner)
+      return res.status(403).json({ success: false, message: "Không có quyền truy cập lớp này" });
     // Teacher xem tất cả status
   } else if (role === "student") {
     // Kiểm tra enrollment
-    const enrollment = await ClassEnrollment.findOne({ studentId: userId, classId, status: "ACTIVE" });
-    if (!enrollment) return res.status(403).json({ success: false, message: "Bạn không đăng ký vào lớp này" });
+    const enrollment = await ClassEnrollment.findOne({
+      studentId: userId,
+      classId,
+      status: "ACTIVE",
+    });
+    if (!enrollment)
+      return res.status(403).json({ success: false, message: "Bạn không đăng ký vào lớp này" });
     // Student chỉ thấy PUBLISHED
     filter.status = "PUBLISHED";
   }
   // admin: không filter thêm
 
   const exams = await Exam.find(filter)
+    .select("-questions -instructions")
+    .sort({ createdAt: -1 })
+    .lean();
+
+  return res.status(200).json({ success: true, data: exams });
+});
+
+/**
+ * GET /api/exams/my
+ * Học sinh xem TẤT CẢ đề thi (PUBLISHED) thuộc mọi lớp mình đang tham gia — gộp từ
+ * getExamsByClass (vốn chỉ trả về đúng 1 lớp) vì trang "Kỳ thi của tôi" cần danh sách
+ * xuyên suốt các lớp, không có route nào trả được việc này trước đây (FE gọi thẳng
+ * GET /api/exams — route không tồn tại — luôn 404, trang luôn rỗng).
+ */
+export const getMyExams = asyncHandler(async (req, res) => {
+  const userId = req.user.id || req.user._id;
+  const role = (req.user?.role || "").toLowerCase();
+
+  if (role !== "student") {
+    return res
+      .status(403)
+      .json({ success: false, message: "Chỉ học sinh mới dùng được danh sách kỳ thi của tôi" });
+  }
+
+  const enrollments = await ClassEnrollment.find({ studentId: userId, status: "ACTIVE" })
+    .select("classId")
+    .lean();
+  const classIds = enrollments.map((e) => e.classId);
+
+  const exams = await Exam.find({
+    classId: { $in: classIds },
+    status: "PUBLISHED",
+    isDeleted: { $ne: true },
+  })
     .select("-questions -instructions")
     .sort({ createdAt: -1 })
     .lean();
@@ -87,11 +135,16 @@ export const getExamById = asyncHandler(async (req, res) => {
       status: "ACTIVE",
     });
     if (!isEnrolled) {
-      return res.status(403).json({ success: false, message: "Bạn không được phép truy cập bài thi này" });
+      return res
+        .status(403)
+        .json({ success: false, message: "Bạn không được phép truy cập bài thi này" });
     }
   } else if (role === "teacher") {
     const isOwner = await checkExamOwnership(exam, userId, req.user?.role);
-    if (!isOwner) return res.status(403).json({ success: false, message: "Không có quyền truy cập bài thi này" });
+    if (!isOwner)
+      return res
+        .status(403)
+        .json({ success: false, message: "Không có quyền truy cập bài thi này" });
   }
 
   return res.status(200).json({ success: true, data: exam });
