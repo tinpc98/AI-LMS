@@ -1,4 +1,11 @@
-import type { ILesson } from "../../../interface/lessonInterface";
+// Kiểu tối giản (cấu trúc, không phụ thuộc 1 định nghĩa Lesson cụ thể) — cả ILesson (giáo viên,
+// legacy) và Lesson (học sinh, mục 1 mới) đều có đủ 4 field này nên dùng chung được hàm sort/format.
+interface SortableLesson {
+  _id: string;
+  title: string;
+  order?: number;
+  createdAt?: string;
+}
 
 /**
  * Tách bỏ tiền tố 'Bài X:' hoặc 'Bài X -' khỏi chuỗi tiêu đề bài giảng nếu có
@@ -21,7 +28,7 @@ export function formatLessonDisplayTitle(index: number, rawTitle: string): strin
  * Ưu tiên trường 'order' tăng dần, nếu trùng thì xét theo 'createdAt' tăng dần.
  * Đồng thời kiểm tra cảnh báo console cho dev nếu phát hiện order trùng lặp trong CSDL.
  */
-export function sortLessons(lessons: ILesson[] = []): ILesson[] {
+export function sortLessons<T extends SortableLesson>(lessons: T[] = []): T[] {
   if (!Array.isArray(lessons) || lessons.length === 0) return [];
 
   // Tạo bản sao để sắp xếp

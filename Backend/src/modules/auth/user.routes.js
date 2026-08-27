@@ -7,6 +7,7 @@ import {
   getUserById,
   createUser,
   updateUser,
+  resetUserPassword,
   deleteUser,
   getUserTrash,
   restoreUser,
@@ -24,6 +25,7 @@ route.get("/", verifyUser, isAdmin, getAllUsers);
 route.post("/", verifyUser, isAdmin, createUser);
 route.get("/:id", verifyUser, isAdmin, getUserById);
 route.put("/:id", verifyUser, isAdmin, updateUser);
+route.post("/:id/reset-password", verifyUser, isAdmin, resetUserPassword);
 route.delete("/:id", verifyUser, isAdmin, deleteUser);
 route.patch("/:id/restore", verifyUser, isAdmin, restoreUser);
 route.delete("/:id/force", verifyUser, isAdmin, permanentDeleteUser);

@@ -13,6 +13,18 @@ export const findAssignmentsByTopic = (topicId, status) => {
   return Assignment.find(filter).sort({ createdAt: -1 }).lean();
 };
 
+// Assignment thuộc topicId (không thuộc classId trực tiếp) — caller phải tự resolve danh
+// sách assignmentId của một lớp trước (vd qua resolveClassContentIds ở #modules/class).
+export const findAssignmentsByIds = (assignmentIds, status) => {
+  if (!assignmentIds || assignmentIds.length === 0) return Promise.resolve([]);
+  const filter = { _id: { $in: assignmentIds } };
+  if (status) filter.status = status;
+  return Assignment.find(filter)
+    .select("title description status topicId createdAt duration startAt endAt")
+    .sort({ createdAt: -1 })
+    .lean();
+};
+
 export const createAssignment = (data) => new Assignment(data);
 
 export const softDeleteAssignment = (id, userId) => Assignment.softDelete(id, userId);

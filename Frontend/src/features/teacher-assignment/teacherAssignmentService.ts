@@ -42,17 +42,19 @@ export const teacherAssignmentService = {
   },
 
   getAllClasses: async (): Promise<ClassRecord[]> => {
-    const res = await axiosClient.get("/classes", { params: { limit: 1000 } });
+    // limit tối đa validatePagination cho phép là 100 (Backend/src/shared/middlewares/pagination.middleware.js) —
+    // limit:1000 cũ luôn bị chặn 400, khiến allClasses/teachingLoadMap luôn rỗng.
+    const res = await axiosClient.get("/classes", { params: { limit: 100 } });
     return res.data.data.map(mapClass);
   },
 
   getTeachers: async (): Promise<AccountRecord[]> => {
-    const res = await axiosClient.get("/users", { params: { role: "Teacher", limit: 1000 } });
+    const res = await axiosClient.get("/users", { params: { role: "Teacher", limit: 100 } });
     return res.data.data.map((u: any) => ({ ...u, id: u._id }));
   },
 
   getCourses: async (): Promise<CourseRecord[]> => {
-    const res = await axiosClient.get("/courses", { params: { limit: 1000 } });
+    const res = await axiosClient.get("/courses", { params: { limit: 100 } });
     return res.data.data.map((c: any) => ({ ...c, id: c._id }));
   },
 

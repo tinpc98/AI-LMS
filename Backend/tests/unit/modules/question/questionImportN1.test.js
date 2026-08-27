@@ -6,12 +6,22 @@
 //
 // Test này kiểm CẢ HAI mặt: số truy vấn (hiệu năng) và kết quả lọc (hành vi). Chỉ kiểm
 // một mặt là chưa đủ — tối ưu mà đổi kết quả thì vô nghĩa.
+//
+// Cập nhật theo model hiện tại: `content` là mảng ContentBlock ([{type, text, ...}]), không
+// còn là string phẳng — nên câu truy vấn trùng lặp dùng `$elemMatch` trên block TEXT, và mock
+// existingDocs phải trả về đúng hình dạng đó (khớp question.model.js#content: [contentBlockSchema]).
+// Hàm cũng gọi thêm `mongoose.connection.db.collection("topics")` để tìm/khởi tạo default topic
+// gán cho câu hỏi import — phải mock cùng, nếu không unit test crash vì không có kết nối DB thật.
 import { describe, it, expect, vi, afterEach } from "vitest";
 import xlsx from "xlsx";
+import mongoose from "mongoose";
 import questionService from "#modules/question/question.service.js";
 import Question from "#modules/question/question.model.js";
 
-afterEach(() => vi.restoreAllMocks());
+afterEach(() => {
+  vi.restoreAllMocks();
+  delete mongoose.connection.db;
+});
 
 /** Dựng buffer Excel thật từ danh sách nội dung câu hỏi. */
 const buildExcel = (contents) => {
@@ -29,12 +39,23 @@ const buildExcel = (contents) => {
   return xlsx.write(wb, { type: "buffer", bookType: "xlsx" });
 };
 
+/** Mock mongoose.connection.db.collection("topics").findOne — luôn "chưa có Legacy Topic". */
+const mockTopicsCollection = () => {
+  mongoose.connection.db = {
+    collection: () => ({ findOne: async () => null }),
+  };
+};
+
 describe("importQuestionsFromExcel — số truy vấn không phụ thuộc số dòng", () => {
-  const mockFind = (existing) => {
+  const mockFind = (existingContents) => {
+    const existingDocs = existingContents.map((c) => ({
+      content: [{ type: "TEXT", text: c }],
+    }));
     const spy = vi.spyOn(Question, "find").mockReturnValue({
-      select: () => ({ lean: async () => existing.map((c) => ({ content: c })) }),
+      lean: async () => existingDocs,
     });
     vi.spyOn(Question, "insertMany").mockImplementation(async (docs) => docs);
+    mockTopicsCollection();
     return spy;
   };
 
@@ -48,11 +69,13 @@ describe("importQuestionsFromExcel — số truy vấn không phụ thuộc số
     expect(result).toHaveLength(50);
   });
 
-  it("truy vấn dùng $in với đúng danh sách nội dung cần kiểm", async () => {
+  it("truy vấn dùng $elemMatch với đúng danh sách nội dung cần kiểm", async () => {
     const find = mockFind([]);
     await questionService.importQuestionsFromExcel(buildExcel(["A", "B", "C"]));
 
-    expect(find).toHaveBeenCalledWith({ content: { $in: ["A", "B", "C"] } });
+    expect(find).toHaveBeenCalledWith({
+      content: { $elemMatch: { type: "TEXT", text: { $in: ["A", "B", "C"] } } },
+    });
   });
 
   it("vẫn loại đúng câu đã có trong DB — hành vi không đổi", async () => {
@@ -63,7 +86,7 @@ describe("importQuestionsFromExcel — số truy vấn không phụ thuộc số
     );
 
     expect(result).toHaveLength(1);
-    expect(result[0].content).toBe("Câu mới");
+    expect(result[0].content[0].text).toBe("Câu mới");
   });
 
   it("vẫn khử trùng lặp NỘI BỘ trong file, giữ lần xuất hiện đầu", async () => {
@@ -73,7 +96,9 @@ describe("importQuestionsFromExcel — số truy vấn không phụ thuộc số
     );
 
     // Chỉ 2 nội dung duy nhất được đưa vào truy vấn
-    expect(find).toHaveBeenCalledWith({ content: { $in: ["Trùng", "Khác"] } });
+    expect(find).toHaveBeenCalledWith({
+      content: { $elemMatch: { type: "TEXT", text: { $in: ["Trùng", "Khác"] } } },
+    });
     expect(result).toHaveLength(2);
   });
 

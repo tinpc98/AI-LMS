@@ -20,12 +20,8 @@ export const ClassList = asyncHandler(async (req, res) => {
   const userRole = (req.user?.role || "").toLowerCase();
 
   // Dùng Service để build query
-  const { finalQuery, skip, limitNum, pageNum, sortOption } = await classService.buildClassQueryOptions(
-    req.query,
-    false,
-    userRole,
-    userId
-  );
+  const { finalQuery, skip, limitNum, pageNum, sortOption } =
+    await classService.buildClassQueryOptions(req.query, false, userRole, userId);
 
   const [classList, total] = await Promise.all([
     classRepo.findClassesPaginated(finalQuery, { skip, limit: limitNum, sort: sortOption }),
@@ -72,7 +68,7 @@ export const ClassListById = asyncHandler(async (req, res) => {
     const isEnrolled = await ClassEnrollment.exists({
       classId: id,
       studentId: userId,
-      status: "ACTIVE"
+      status: "ACTIVE",
     });
     if (!isEnrolled) {
       return res
@@ -128,7 +124,9 @@ export const AddNewClass = asyncHandler(async (req, res) => {
   } = req.body;
 
   if (!name || !courseId || !level) {
-    return res.status(400).json({ success: false, message: "Vui lòng nhập tên lớp, khóa học và level" });
+    return res
+      .status(400)
+      .json({ success: false, message: "Vui lòng nhập tên lớp, khóa học và level" });
   }
 
   if (!mongoose.Types.ObjectId.isValid(courseId)) {
@@ -260,7 +258,8 @@ export const AssignTeacher = asyncHandler(async (req, res) => {
 export const AssignStudent = asyncHandler(async (req, res) => {
   return res.status(410).json({
     success: false,
-    message: "Route này đã bị loại bỏ (Deprecated). Vui lòng sử dụng ClassEnrollment API (/api/class-enrollments) để thêm học sinh vào lớp.",
+    message:
+      "Route này đã bị loại bỏ (Deprecated). Vui lòng sử dụng ClassEnrollment API (/api/class-enrollments) để thêm học sinh vào lớp.",
   });
 });
 
@@ -269,7 +268,8 @@ export const AssignStudent = asyncHandler(async (req, res) => {
 export const RemoveStudent = asyncHandler(async (req, res) => {
   return res.status(410).json({
     success: false,
-    message: "Route này đã bị loại bỏ (Deprecated). Vui lòng sử dụng ClassEnrollment API (/api/class-enrollments) để quản lý học sinh trong lớp.",
+    message:
+      "Route này đã bị loại bỏ (Deprecated). Vui lòng sử dụng ClassEnrollment API (/api/class-enrollments) để quản lý học sinh trong lớp.",
   });
 });
 
@@ -404,12 +404,8 @@ export const ClassTrashList = asyncHandler(async (req, res) => {
   const userRole = (req.user?.role || "").toLowerCase();
 
   // Dùng Service để build query cho Trash (truyền isTrash = true)
-  const { finalQuery, skip, limitNum, pageNum, sortOption } = await classService.buildClassQueryOptions(
-    req.query,
-    true,
-    userRole,
-    userId
-  );
+  const { finalQuery, skip, limitNum, pageNum, sortOption } =
+    await classService.buildClassQueryOptions(req.query, true, userRole, userId);
 
   const [classList, total] = await Promise.all([
     classRepo.findClassesPaginated(finalQuery, {
@@ -498,7 +494,12 @@ export const UnassignTeacher = asyncHandler(async (req, res) => {
     return res.status(404).json({ success: false, message: "Lớp học không tồn tại" });
   }
 
-  const allowedStatuses = ["Draft", "Ready", "Ongoing"];
+  // BUG CŨ: danh sách này từng là ["Draft", "Ready", "Ongoing"] — không khớp bất kỳ giá trị
+  // nào trong Class.status enum thật (DRAFT/OPEN/FULL/CLOSED/ARCHIVED, xem class.model.js),
+  // nên allowedStatuses.includes() luôn false và endpoint này luôn trả 400 cho MỌI lớp học,
+  // bất kể trạng thái thật là gì — tính năng "Gỡ giáo viên" chưa từng hoạt động được. Sửa lại
+  // khớp đúng enum thật, đối xứng với danh sách AssignTeacher() dùng ở trên.
+  const allowedStatuses = ["DRAFT", "OPEN", "FULL"];
   if (!allowedStatuses.includes(targetClass.status)) {
     return res.status(400).json({
       success: false,
@@ -577,14 +578,10 @@ export const UploadResource = asyncHandler(async (req, res) => {
   // Upload lên Cloudinary
   let uploadResult;
   try {
-    uploadResult = await storageService.uploadFile(
-      req.file.buffer,
-      req.file.originalname,
-      {
-        folder: `eduspace/classes/${id}`,
-        resourceType: "raw",
-      }
-    );
+    uploadResult = await storageService.uploadFile(req.file.buffer, req.file.originalname, {
+      folder: `eduspace/classes/${id}`,
+      resourceType: "raw",
+    });
   } catch (uploadError) {
     throw uploadError; // Let asyncHandler handle it
   }
@@ -597,7 +594,8 @@ export const UploadResource = asyncHandler(async (req, res) => {
       req.file.originalname && req.file.originalname.includes(".")
         ? req.file.originalname.split(".").pop().toLowerCase()
         : "";
-    const resolvedFormat = (detectedExt || nameExt || uploadResult.format || "").toLowerCase() || null;
+    const resolvedFormat =
+      (detectedExt || nameExt || uploadResult.format || "").toLowerCase() || null;
 
     let resourceTypeLabel = "Document";
     if (validTypes.includes(type)) {
@@ -610,7 +608,7 @@ export const UploadResource = asyncHandler(async (req, res) => {
       title: title.trim(),
       description: description?.trim() || "",
       type: resourceTypeLabel,
-      url: null,               // Không có URL ngoài, dùng publicId
+      url: null, // Không có URL ngoài, dùng publicId
       publicId: uploadResult.publicId,
       storageType: "authenticated",
       resourceType: uploadResult.resourceType,
@@ -646,7 +644,10 @@ export const UploadResource = asyncHandler(async (req, res) => {
       try {
         await storageService.deleteFile(uploadResult.publicId, uploadResult.resourceType || "raw");
       } catch (cleanupError) {
-        console.error(`[UploadResource] Rollback Cloudinary failed for publicId: ${uploadResult.publicId}`, cleanupError);
+        console.error(
+          `[UploadResource] Rollback Cloudinary failed for publicId: ${uploadResult.publicId}`,
+          cleanupError
+        );
       }
     }
     throw error;
@@ -711,7 +712,7 @@ export const GetResourceAccessUrl = asyncHandler(async (req, res) => {
     isAuthorized = await ClassEnrollment.exists({
       classId,
       studentId: userId,
-      status: "ACTIVE"
+      status: "ACTIVE",
     });
   }
 
@@ -738,7 +739,8 @@ export const GetResourceAccessUrl = asyncHandler(async (req, res) => {
 export const GetClassStudents = asyncHandler(async (req, res) => {
   return res.status(410).json({
     success: false,
-    message: "Route này đã bị loại bỏ (Deprecated). Vui lòng lấy danh sách học sinh thông qua ClassEnrollment API (/api/class-enrollments).",
+    message:
+      "Route này đã bị loại bỏ (Deprecated). Vui lòng lấy danh sách học sinh thông qua ClassEnrollment API (/api/class-enrollments).",
   });
 });
 
@@ -758,7 +760,13 @@ const updateClassLifecycleStatus = async (req, res, targetStatus) => {
   targetClass.status = targetStatus;
   await targetClass.save();
 
-  return res.status(200).json({ success: true, message: `Cập nhật trạng thái thành ${targetStatus} thành công`, data: targetClass });
+  return res
+    .status(200)
+    .json({
+      success: true,
+      message: `Cập nhật trạng thái thành ${targetStatus} thành công`,
+      data: targetClass,
+    });
 };
 
 export const OpenClass = asyncHandler(async (req, res) => {

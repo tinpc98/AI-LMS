@@ -4,19 +4,23 @@ import { DatabaseOutlined, CheckCircleOutlined } from "@ant-design/icons";
 
 const { Text, Paragraph } = Typography;
 
+import { getQuestionTypeLabel, isChoiceQuestion } from "../../../shared/utils/questionTypeUtils";
+import { extractPlainText } from "../../question/contentText";
+import { getTopicName } from "../hooks/useQuestionBank";
+import type { Question } from "../../question/question.types";
+
 interface QuestionPreviewDrawerProps {
   open: boolean;
   onClose: () => void;
-  question: any | null;
+  question: Question | null;
 }
-
-import { getQuestionTypeLabel, isChoiceQuestion } from "../../../shared/utils/questionTypeUtils";
 
 export const QuestionPreviewDrawer: React.FC<QuestionPreviewDrawerProps> = React.memo(
   ({ open, onClose, question }) => {
     if (!question) return null;
 
     const isChoice = isChoiceQuestion(question.type);
+    const topicName = getTopicName(question);
 
     return (
       <Drawer
@@ -54,7 +58,7 @@ export const QuestionPreviewDrawer: React.FC<QuestionPreviewDrawerProps> = React
                   ? "Khó"
                   : "Vừa"}
             </Tag>
-            {question.topic && <Tag color="cyan">Chủ đề: {question.topic}</Tag>}
+            {topicName && <Tag color="cyan">Chủ đề: {topicName}</Tag>}
           </Space>
 
           {/* Question Content Box */}
@@ -72,7 +76,7 @@ export const QuestionPreviewDrawer: React.FC<QuestionPreviewDrawerProps> = React
                 margin: 0,
               }}
             >
-              {question.content}
+              {extractPlainText(question.content) || "(Chưa có nội dung)"}
             </Paragraph>
           </Card>
 
@@ -84,18 +88,22 @@ export const QuestionPreviewDrawer: React.FC<QuestionPreviewDrawerProps> = React
               styles={{ body: { padding: 16 } }}
             >
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                {question.options.map((opt: string, idx: number) => {
+                {question.options.map((opt, idx) => {
                   const label = String.fromCharCode(65 + idx); // A, B, C, D
-                  const isCorrect = opt.trim() === (question.correctAnswer || "").trim();
+                  const isCorrect = opt.isCorrect;
 
                   return (
                     <div
-                      key={idx}
+                      key={opt.id}
                       style={{
                         padding: "10px 14px",
                         borderRadius: 6,
-                        border: isCorrect ? "2px solid var(--color-success-base)" : "1px solid var(--color-border-default)",
-                        backgroundColor: isCorrect ? "var(--color-success-bg)" : "var(--color-surface)",
+                        border: isCorrect
+                          ? "2px solid var(--color-success-base)"
+                          : "1px solid var(--color-border-default)",
+                        backgroundColor: isCorrect
+                          ? "var(--color-success-bg)"
+                          : "var(--color-surface)",
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "space-between",
@@ -104,9 +112,14 @@ export const QuestionPreviewDrawer: React.FC<QuestionPreviewDrawerProps> = React
                       <Space size={10}>
                         <Text
                           strong
-                          style={{ color: isCorrect ? "var(--color-success-base)" : "var(--color-text-body)", fontSize: 14 }}
+                          style={{
+                            color: isCorrect
+                              ? "var(--color-success-base)"
+                              : "var(--color-text-body)",
+                            fontSize: 14,
+                          }}
                         >
-                          {label}. {opt}
+                          {label}. {extractPlainText(opt.content)}
                         </Text>
                       </Space>
                       {isCorrect && (
@@ -127,7 +140,7 @@ export const QuestionPreviewDrawer: React.FC<QuestionPreviewDrawerProps> = React
               <Text style={{ fontFamily: "monospace" }}>{question._id}</Text>
             </Descriptions.Item>
             <Descriptions.Item label="Chủ đề / Bài học">
-              {question.topic || "Chưa phân loại"}
+              {topicName || "Chưa phân loại"}
             </Descriptions.Item>
             <Descriptions.Item label="Ngày tạo">
               {question.createdAt ? new Date(question.createdAt).toLocaleString("vi-VN") : "N/A"}

@@ -17,6 +17,10 @@ const STATUS_TRANSITIONS = {
   PENDING_PAYMENT: ["PAYMENT_PENDING_CONFIRMATION", "CANCELLED"],
   PAYMENT_PENDING_CONFIRMATION: ["APPROVED", "PENDING_PAYMENT", "CANCELLED"],
   APPROVED: ["COMPLETED", "CANCELLED"],
+  // classEnrollment.service.js#assignClass set thẳng enrollment.status = "CLASS_ASSIGNED" (không
+  // qua transitionStatus) sau khi xếp lớp — thiếu key này khiến completeEnrollment() luôn lỗi
+  // 400 cho MỌI enrollment đã xếp lớp thật (đường duy nhất tới trạng thái CLASS_ASSIGNED).
+  CLASS_ASSIGNED: ["COMPLETED", "CANCELLED"],
   COMPLETED: [], // terminal
   CANCELLED: [], // terminal
   REJECTED: [], // (Not used as a main status for enrollment in normal flow, but just in case)
@@ -50,20 +54,25 @@ class EnrollmentService {
       const existing = await Enrollment.findOne({
         studentId,
         courseId,
-        status: { $in: ACTIVE_STATUSES }
+        status: { $in: ACTIVE_STATUSES },
       }).session(session);
       if (existing) {
         throw new ConflictError("Bạn đã có một đăng ký đang hoạt động cho khóa học này.");
       }
 
       // 4. Tạo enrollment
-      const enrollment = await Enrollment.create([{
-        studentId,
-        courseId,
-        level,
-        price,
-        status: "PENDING_PAYMENT",
-      }], { session });
+      const enrollment = await Enrollment.create(
+        [
+          {
+            studentId,
+            courseId,
+            level,
+            price,
+            status: "PENDING_PAYMENT",
+          },
+        ],
+        { session }
+      );
 
       const createdEnrollment = enrollment[0];
 
@@ -71,7 +80,7 @@ class EnrollmentService {
       // Dùng require dynamic hoặc import paymentConfig trực tiếp để tránh circular dependency
       const PaymentConfig = (await import("#modules/payment/paymentConfig.model.js")).default;
       const Payment = (await import("#modules/payment/payment.model.js")).default;
-      
+
       let config = await PaymentConfig.findOne().session(session);
       if (!config || !config.isActive) {
         throw new BusinessRuleError("Hệ thống thanh toán đang bảo trì.");
@@ -90,23 +99,28 @@ class EnrollmentService {
       const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
 
       // 8. Tạo Payment
-      await Payment.create([{
-        enrollmentId: createdEnrollment._id,
-        studentId,
-        courseId,
-        amount: price,
-        currency: "VND",
-        paymentMethod: "BANK_TRANSFER",
-        status: "PENDING",
-        transferInfo: {
-          bankName: config.bankName,
-          accountNumber: config.accountNumber,
-          accountName: config.accountName,
-          transferContent,
-          qrData,
-        },
-        expiresAt
-      }], { session });
+      await Payment.create(
+        [
+          {
+            enrollmentId: createdEnrollment._id,
+            studentId,
+            courseId,
+            amount: price,
+            currency: "VND",
+            paymentMethod: "BANK_TRANSFER",
+            status: "PENDING",
+            transferInfo: {
+              bankName: config.bankName,
+              accountNumber: config.accountNumber,
+              accountName: config.accountName,
+              transferContent,
+              qrData,
+            },
+            expiresAt,
+          },
+        ],
+        { session }
+      );
 
       // Update User firstEnrollmentAt if null
       const user = await User.findById(studentId).session(session);
@@ -139,9 +153,7 @@ class EnrollmentService {
       isDeleted: { $ne: true },
     });
     if (!student) {
-      throw new NotFoundError(
-        "Học sinh không tồn tại hoặc không có vai trò Student."
-      );
+      throw new NotFoundError("Học sinh không tồn tại hoặc không có vai trò Student.");
     }
 
     return this.createEnrollment(studentId, courseId);
@@ -159,8 +171,12 @@ class EnrollmentService {
     const skip = (Number(page) - 1) * Number(limit);
 
     const [items, total] = await Promise.all([
+      // BUG ĐÃ SỬA: select string liệt kê "level"/"pricing" — cả 2 field này KHÔNG tồn tại trên
+      // schema Course (course.model.js chỉ có `prices: Map`), nên Mongoose luôn bỏ qua chúng một
+      // cách âm thầm. level/price thật đã được snapshot ngay trên Enrollment lúc đăng ký (xem
+      // enrollment.model.js), không cần populate thêm từ Course.
       Enrollment.find(query)
-        .populate("courseId", "name code subject grade level duration pricing status")
+        .populate("courseId", "name code subject grade duration status")
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(Number(limit)),
@@ -192,7 +208,7 @@ class EnrollmentService {
     const [items, total] = await Promise.all([
       Enrollment.find(query)
         .populate("studentId", "fullName email")
-        .populate("courseId", "name code subject grade level pricing status")
+        .populate("courseId", "name code subject grade status")
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(Number(limit)),
@@ -216,7 +232,7 @@ class EnrollmentService {
   async getEnrollmentById(enrollmentId) {
     const enrollment = await Enrollment.findById(enrollmentId)
       .populate("studentId", "fullName email")
-      .populate("courseId", "name code subject grade level duration pricing status");
+      .populate("courseId", "name code subject grade duration status");
 
     if (!enrollment) {
       throw new NotFoundError("Enrollment không tồn tại.");
@@ -228,7 +244,7 @@ class EnrollmentService {
    * Chuyển trạng thái enrollment theo business rules.
    * Validate transition hợp lệ.
    */
-  async transitionStatus(enrollmentId, targetStatus) {
+  async transitionStatus(enrollmentId, targetStatus, adminId = null) {
     const enrollment = await Enrollment.findById(enrollmentId);
     if (!enrollment) {
       throw new NotFoundError("Enrollment không tồn tại.");
@@ -243,6 +259,26 @@ class EnrollmentService {
       );
     }
 
+    // BUG ĐÃ SỬA: chuyển Enrollment sang CANCELLED/COMPLETED trước đây không cascade sang
+    // ClassEnrollment — nếu Enrollment đã ở CLASS_ASSIGNED (tức có ClassEnrollment ACTIVE),
+    // ClassEnrollment đó bị BỎ QUÊN mãi mãi ở ACTIVE: Class.activeCount không được giải phóng
+    // (khóa sĩ số ảo), roster của giáo viên vẫn hiện học sinh đã hủy/hoàn thành, và Attendance
+    // DRAFT tương lai không được dọn. Cascade TRƯỚC khi cập nhật Enrollment (không phải sau):
+    // nếu cascade xong mà bước ghi Enrollment bên dưới thất bại, currentStatus vẫn là
+    // CLASS_ASSIGNED nên gọi lại được (cascade sẽ no-op vì không còn ClassEnrollment ACTIVE nào);
+    // ngược lại nếu ghi Enrollment trước mà cascade thất bại, CANCELLED/COMPLETED là trạng thái
+    // terminal (không có đường quay lại) nên ClassEnrollment sẽ orphan vĩnh viễn — đúng bug gốc.
+    if (targetStatus === "CANCELLED" || targetStatus === "COMPLETED") {
+      const classEnrollmentService = (
+        await import("#modules/classEnrollment/classEnrollment.service.js")
+      ).default;
+      if (targetStatus === "CANCELLED") {
+        await classEnrollmentService.cancelClassEnrollmentByEnrollmentId(enrollmentId, adminId);
+      } else {
+        await classEnrollmentService.completeClassEnrollmentByEnrollmentId(enrollmentId, adminId);
+      }
+    }
+
     // Atomic update to prevent race conditions
     const updatedEnrollment = await Enrollment.findOneAndUpdate(
       { _id: enrollmentId, status: currentStatus },
@@ -251,7 +287,9 @@ class EnrollmentService {
     );
 
     if (!updatedEnrollment) {
-      throw new BusinessRuleError("Trạng thái đã bị thay đổi bởi một tiến trình khác. Vui lòng thử lại.");
+      throw new BusinessRuleError(
+        "Trạng thái đã bị thay đổi bởi một tiến trình khác. Vui lòng thử lại."
+      );
     }
 
     return updatedEnrollment;
@@ -273,7 +311,9 @@ class EnrollmentService {
    * Admin phân công lớp cho học sinh
    */
   async assignClass(enrollmentId, classId, adminId) {
-    const classEnrollmentService = (await import("#modules/classEnrollment/classEnrollment.service.js")).default;
+    const classEnrollmentService = (
+      await import("#modules/classEnrollment/classEnrollment.service.js")
+    ).default;
     return await classEnrollmentService.assignClass({ enrollmentId, classId, adminId });
   }
 }

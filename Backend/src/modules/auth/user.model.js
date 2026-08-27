@@ -7,7 +7,11 @@ const dayAvailabilitySchema = new Schema(
   {
     startTime: { type: String, trim: true, default: "08:00" },
     endTime: { type: String, trim: true, default: "17:00" },
-    available: { type: Boolean, default: true },
+    // default false (không phải true): khi cập nhật lịch rảnh chỉ gửi một phần (vd chỉ bật
+    // Thứ 2/Thứ 3), Mongoose cast object thiếu field theo schema này cho từng ngày còn lại —
+    // default cũ là true khiến MỌI ngày không đụng tới đều bị lưu thành "available: true",
+    // xoá sạch ý nghĩa của việc chọn lọc ngày rảnh (đã xác nhận bằng dữ liệu thật trong DB).
+    available: { type: Boolean, default: false },
   },
   { _id: false }
 );
@@ -89,6 +93,59 @@ const userSchema = new Schema(
       type: availabilityScheduleSchema,
       default: null,
     },
+
+    // --- Cơ chế cam kết & xác minh giáo viên (EduSpace mechanism design — Phần A/C) ---
+    // L1: chỉ OTP xác thực, được nhận cohort dự bị. L2: Admin duyệt bằng cấp/video, được dạy
+    // chính lớp COMMUNITY. L3: tự động khi đủ điều kiện đo được (BR-20), được dạy SPONSORED/
+    // COMMERCIAL + quyền bảo lãnh người khác.
+    verificationTier: {
+      type: String,
+      enum: ["L1", "L2", "L3"],
+      default: "L1",
+    },
+    // Độ tin cậy (Reliability) — CHỈ đo hành vi giữ cam kết (có tới lớp không), KHÔNG đo chất
+    // lượng dạy. Xem CommitmentEvent để biết nguồn tính. [0,100], 100 = chưa từng vi phạm.
+    reliabilityScore: {
+      type: Number,
+      default: 100,
+      min: 0,
+      max: 100,
+    },
+    // Danh sách người đã bảo lãnh cho giáo viên này lên L3 (BR-22).
+    vouchedBy: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "User",
+      },
+    ],
+    // Số người L3 này đang được phép bảo lãnh cùng lúc còn lại (BR-23) — giảm 1 mỗi lần bảo
+    // lãnh ai đó đang chờ lên L3, cộng lại khi người được bảo lãnh hoàn tất hoặc bị từ chối.
+    vouchLimit: {
+      type: Number,
+      default: 2,
+      min: 0,
+    },
+    // Trạng thái được nhận cohort mới hay không (A.5) — tách khỏi `status` (Active/Inactive/
+    // Locked/Expired) vốn là khóa tài khoản toàn hệ thống; đây chỉ khóa riêng việc NHẬN COHORT
+    // MỚI, giáo viên vẫn đăng nhập/dạy nốt cohort đang ACTIVE bình thường.
+    poolStatus: {
+      type: String,
+      enum: ["ACTIVE", "LOCKED", "REMOVED"],
+      default: "ACTIVE",
+    },
+    // Chỉ có ý nghĩa khi poolStatus="LOCKED" — hết hạn thì transitionCommitment tự đưa về
+    // ACTIVE ở lần kiểm tra kế tiếp (xem commitment.service.js).
+    poolLockedUntil: {
+      type: Date,
+      default: null,
+    },
+    // BR-24: người bảo lãnh (voucher) tạm mất quyền bảo lãnh THÊM AI trong 3 tháng nếu người họ
+    // bảo lãnh gây sự cố nghiêm trọng — KHÔNG trừ reliabilityScore của voucher, KHÔNG ảnh hưởng
+    // vouchLimit hiện có (chỉ chặn dùng, không chặn số lượng còn lại).
+    vouchSuspendedUntil: {
+      type: Date,
+      default: null,
+    },
   },
   {
     timestamps: true,
@@ -108,10 +165,7 @@ const userSchema = new Schema(
 );
 
 // Indexes phục vụ tìm kiếm nhanh theo Email, Role và Status
-userSchema.index(
-  { email: 1 },
-  { unique: true, partialFilterExpression: { isDeleted: false } }
-);
+userSchema.index({ email: 1 }, { unique: true, partialFilterExpression: { isDeleted: false } });
 userSchema.index({ role: 1 });
 userSchema.index({ status: 1 });
 

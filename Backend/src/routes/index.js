@@ -20,6 +20,8 @@ import authRoutes from "#modules/auth/auth.routes.js";
 import userRoutes from "#modules/auth/user.routes.js";
 import classRoutes from "#modules/class/class.routes.js";
 import lessonRoutes from "#modules/lesson/lesson.routes.js";
+import topicRoutes from "#modules/topic/topic.routes.js";
+import skillRoutes from "#modules/skill/skill.routes.js";
 import assignmentRoutes from "#modules/assignment/assignment.routes.js";
 import assignmentAttemptRoutes from "#modules/assignment/assignmentAttempt.routes.js";
 import attendanceRoutes from "#modules/attendance/attendance.routes.js";
@@ -44,11 +46,17 @@ import paymentRoutes from "#modules/payment/payment.routes.js";
 import teacherAttendanceRoutes from "#modules/teacherAttendance/teacherAttendance.routes.js";
 import payrollRoutes from "#modules/payroll/payroll.routes.js";
 import performanceRoutes from "#modules/performance/performance.routes.js";
+import learnerNeedRoutes from "#modules/learnerNeed/learnerNeed.routes.js";
+import cohortMechanismRoutes from "#modules/class/cohortMechanism.routes.js";
+import verificationRoutes from "#modules/auth/verification.routes.js";
+import cohortFeedbackRoutes from "#modules/feedback/cohortFeedback.routes.js";
+import complaintRoutes from "#modules/complaint/complaint.routes.js";
 
 // Tầng đọc tổng hợp — KHÔNG phải module nghiệp vụ. Xem src/reporting/README.md.
 import analyticsRoutes from "../reporting/analytics.routes.js";
 import dashboardRoutes from "../reporting/dashboard.routes.js";
 import reportRoutes from "../reporting/report.routes.js";
+import contributionRoutes from "../reporting/contribution.routes.js";
 import { validatePagination } from "#shared/middlewares/pagination.middleware.js";
 
 const router = express.Router();
@@ -66,7 +74,12 @@ router.use("/classes/:classId/sessions", classSessionRoutes);
 router.use("/sessions", classSessionRoutes);
 
 router.use("/classes", classRoutes);
+router.use("/cohort-mechanism", cohortMechanismRoutes);
+router.use("/verification", verificationRoutes);
+router.use("/cohort-feedback", cohortFeedbackRoutes);
+router.use("/complaints", complaintRoutes);
 router.use("/subjects", subjectRoutes);
+router.use("/learner-needs", learnerNeedRoutes);
 router.use("/courses", courseRoutes);
 router.use("/enrollments", enrollmentRoutes);
 router.use("/class-enrollments", classEnrollmentRoutes);
@@ -74,6 +87,8 @@ router.use("/payments", paymentRoutes);
 router.use("/teacher-attendance", teacherAttendanceRoutes);
 router.use("/payrolls", payrollRoutes);
 router.use("/lessons", lessonRoutes);
+router.use("/topics", topicRoutes);
+router.use("/skills", skillRoutes);
 router.use("/assignments", assignmentRoutes);
 router.use("/assignment-attempts", assignmentAttemptRoutes);
 router.use("/attendances", attendanceRoutes);
@@ -93,6 +108,7 @@ router.use("/reports", reportRoutes);
 router.use("/learning", lessonProgressRoutes);
 router.use("/learning", badgeRoutes);
 router.use("/analytics", analyticsRoutes);
+router.use("/contribution", contributionRoutes);
 
 // ── Thi trực tuyến & lớp học trực tuyến ─────────────────────────────────────
 router.use("/questions", questionRoutes);

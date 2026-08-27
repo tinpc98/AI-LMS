@@ -15,13 +15,23 @@ const CourseDetailDrawer = ({ open, course, onClose }: CourseDetailDrawerProps) 
           <Descriptions.Item label="Course Name">{course.name}</Descriptions.Item>
           <Descriptions.Item label="Code">{course.code}</Descriptions.Item>
           <Descriptions.Item label="Subject">
-            {typeof course.subjectId === "object" ? (course.subjectId as any).name : course.subjectId}
+            {typeof course.subjectId === "object"
+              ? (course.subjectId as any).name
+              : course.subjectId}
           </Descriptions.Item>
           <Descriptions.Item label="Grade">{course.grade}</Descriptions.Item>
-          <Descriptions.Item label="Level">{course.level}</Descriptions.Item>
-          <Descriptions.Item label="Duration">{course.duration.value} {course.duration.unit.toLowerCase()}(s)</Descriptions.Item>
-          <Descriptions.Item label="Tuition Fee">
-            {course.pricing?.tuitionFee?.toLocaleString() || 0} VND
+          <Descriptions.Item label="Duration">
+            {course.duration.value} {course.duration.unit.toLowerCase()}(s)
+          </Descriptions.Item>
+          {/* BUG ĐÃ SỬA: khóa học có 3 mức giá theo level (prices: Map), không phải 1 giá duy nhất. */}
+          <Descriptions.Item label="Foundation Price">
+            {(course.prices?.FOUNDATION ?? 0).toLocaleString()} VND
+          </Descriptions.Item>
+          <Descriptions.Item label="Intermediate Price">
+            {(course.prices?.INTERMEDIATE ?? 0).toLocaleString()} VND
+          </Descriptions.Item>
+          <Descriptions.Item label="Advanced Price">
+            {(course.prices?.ADVANCED ?? 0).toLocaleString()} VND
           </Descriptions.Item>
           <Descriptions.Item label="Status">{course.status}</Descriptions.Item>
           <Descriptions.Item label="Description">{course.description || "—"}</Descriptions.Item>

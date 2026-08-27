@@ -28,6 +28,8 @@ const aiConfigSchema = new mongoose.Schema(
       // Lập chỉ mục kiến thức bài học cho RAG. Tốn kém nhất trong các tính năng AI: một
       // request sinh embedding cho TOÀN BỘ nội dung bài học, chia lô 3 chunk một lần gọi.
       knowledgeIndex: { type: Boolean, default: true },
+      // Đề xuất lộ trình ôn tập theo điểm yếu (Weakness) của học sinh.
+      recommendation: { type: Boolean, default: true },
     },
     roleQuotas: {
       teacherDailyQuota: { type: Number, default: 100 }, // Max AI calls / day

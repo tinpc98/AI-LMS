@@ -4,14 +4,24 @@ import { Schema, model } from "mongoose";
  * Enrollment — Đại diện cho một lần Student đăng ký một Course.
  *
  * Lifecycle:
- *   PENDING_PAYMENT → PAID → APPROVED → CLASS_ASSIGNED → COMPLETED
- *   PENDING_PAYMENT / PAID / APPROVED → CANCELLED
+ *   PENDING_PAYMENT → PAYMENT_PENDING_CONFIRMATION → APPROVED → CLASS_ASSIGNED → COMPLETED
+ *   PENDING_PAYMENT / PAYMENT_PENDING_CONFIRMATION / APPROVED → CANCELLED
+ *
+ * PAYMENT_PENDING_CONFIRMATION → APPROVED được set trực tiếp bởi
+ * payment.service.js#confirmPayment (không qua transitionStatus) khi admin duyệt
+ * thanh toán; enrollment.service.js#transitionStatus(id, "APPROVED") chỉ là đường
+ * duyệt thủ công dự phòng.
  *
  * Partial unique index đảm bảo không có 2 enrollment cùng active
  * cho cùng (studentId, courseId) — chống race condition ở tầng DB.
  */
 
-const ACTIVE_STATUSES = ["PENDING_PAYMENT", "PAYMENT_PENDING_CONFIRMATION", "APPROVED", "CLASS_ASSIGNED"];
+const ACTIVE_STATUSES = [
+  "PENDING_PAYMENT",
+  "PAYMENT_PENDING_CONFIRMATION",
+  "APPROVED",
+  "CLASS_ASSIGNED",
+];
 
 const ALL_STATUSES = [...ACTIVE_STATUSES, "REJECTED", "COMPLETED", "CANCELLED"];
 

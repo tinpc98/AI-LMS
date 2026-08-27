@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Card,
   Avatar,
@@ -6,12 +6,14 @@ import {
   Descriptions,
   Form,
   Input,
+  Select,
   Button,
   Tag,
   Table,
   Row,
   Col,
   Space,
+  Spin,
   message,
 } from "antd";
 import {
@@ -26,9 +28,14 @@ import {
   CheckCircleOutlined,
   GlobalOutlined,
   DesktopOutlined,
+  BookOutlined,
 } from "@ant-design/icons";
-import { mockAccounts } from "../../../features/account/mockAccounts";
-import type { AccountRecord } from "../../../features/account/account.types";
+import { useAuth } from "../../../shared/hooks/useAuth";
+import { authApi } from "../../../api/authApi";
+import { unwrapOrNull } from "../../../api/unwrap";
+import type User from "../../../interface/userInterface";
+import type { AvailabilitySchedule } from "../../../interface/userInterface";
+import { AvailabilityScheduleEditor } from "../components/AvailabilityScheduleEditor";
 import { ChangePasswordModal } from "../components/ChangePasswordModal";
 
 const { Title, Text, Paragraph } = Typography;
@@ -48,6 +55,10 @@ export interface LoginActivityRecord {
   status: "Success" | "Failed";
 }
 
+// TODO(EduSpace roadmap): đây vẫn là dữ liệu minh hoạ — hệ thống chưa có audit log đăng
+// nhập thật (không model, không API). Không xoá vì làm rõ trạng thái "chưa có" bằng UI
+// rỗng không phải trọng tâm của lượt sửa hồ sơ giáo viên này; chỉ ghi chú lại để không ai
+// nhầm đây là dữ liệu thật.
 const mockLoginActivity: LoginActivityRecord[] = [
   {
     id: "log-01",
@@ -73,57 +84,72 @@ const mockLoginActivity: LoginActivityRecord[] = [
     ipAddress: "113.161.42.12",
     status: "Success",
   },
-  {
-    id: "log-04",
-    time: "22/07/2026 18:20:05",
-    device: "Windows 11 PC",
-    browser: "Chrome 126.0",
-    ipAddress: "192.168.1.45",
-    status: "Success",
-  },
-  {
-    id: "log-05",
-    time: "20/07/2026 08:00:11",
-    device: "Ubuntu Workstation",
-    browser: "Firefox 128.0",
-    ipAddress: "14.226.12.89",
-    status: "Success",
-  },
 ];
 
-export const ProfilePage: React.FC = () => {
-  // Use existing mock user or fallback
-  const initialUser: AccountRecord = mockAccounts[0] || {
-    id: "1",
-    fullName: "Nguyen Van A",
-    email: "admin@ailms.vn",
-    phone: "0901234567",
-    role: "Admin",
-    status: "Active",
-    avatar: "",
-    createdAt: "2025-01-10T08:30:00.000Z",
-    updatedAt: "2025-01-10T08:30:00.000Z",
-  };
+const ROLE_LABELS: Record<string, string> = {
+  admin: "Quản trị viên",
+  teacher: "Giáo viên",
+  student: "Học sinh",
+};
 
-  const [adminUser, setAdminUser] = useState<AccountRecord>(initialUser);
+const roleLabel = (role?: string) => ROLE_LABELS[(role || "").toLowerCase()] || role || "—";
+
+export const ProfilePage: React.FC = () => {
+  const { user: authUser, updateUser } = useAuth();
+
+  const [profileUser, setProfileUser] = useState<User | null>(authUser);
+  const [loading, setLoading] = useState(true);
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState<boolean>(false);
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [form] = Form.useForm<EditProfileFormValues>();
 
-  const lastLoginTime = "26/07/2026 10:30";
+  const [teachingSubjects, setTeachingSubjects] = useState<string[]>([]);
+  const [availabilitySchedule, setAvailabilitySchedule] = useState<AvailabilitySchedule>({});
+
+  const isTeacher = (profileUser?.role || "").toLowerCase() === "teacher";
+
+  useEffect(() => {
+    let cancelled = false;
+    const loadProfile = async () => {
+      try {
+        setLoading(true);
+        const res = await authApi.getMe();
+        const fetched = unwrapOrNull(res.data);
+        if (!fetched || cancelled) return;
+        setProfileUser(fetched);
+        setTeachingSubjects(fetched.teachingSubjects || []);
+        setAvailabilitySchedule(fetched.availabilitySchedule || {});
+        // Không gọi form.setFieldsValue ở đây: <Form> chưa từng render lúc này (component
+        // đang ở nhánh loading/Spin), gọi vào sẽ chỉ gây cảnh báo "not connected to any Form
+        // element". initialValues bên dưới đã tự lấy đúng dữ liệu khi Form render lần đầu.
+      } catch (error) {
+        console.error("Không tải được hồ sơ cá nhân:", error);
+        message.error("Không tải được hồ sơ cá nhân. Vui lòng thử tải lại trang.");
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+    loadProfile();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleUpdateProfile = async (values: EditProfileFormValues) => {
     try {
       setIsSaving(true);
-      // Simulated future API call readiness
-      setAdminUser((prev) => ({
-        ...prev,
+      const res = await authApi.updateMe({
         fullName: values.fullName,
         phone: values.phone,
         avatar: values.avatar || "",
-        updatedAt: new Date().toISOString(),
-      }));
-
+        ...(isTeacher && { teachingSubjects, availabilitySchedule }),
+      });
+      const updated = unwrapOrNull(res.data);
+      if (updated) {
+        setProfileUser(updated);
+        updateUser(updated);
+      }
       message.success("Cập nhật thông tin cá nhân thành công!");
     } catch (error) {
       console.error("Update profile failed:", error);
@@ -184,7 +210,15 @@ export const ProfilePage: React.FC = () => {
     },
   ];
 
-  const firstLetter = adminUser.fullName ? adminUser.fullName.trim()[0].toUpperCase() : "A";
+  if (loading || !profileUser) {
+    return (
+      <div className="p-6 flex justify-center items-center min-h-[60vh]">
+        <Spin size="large" />
+      </div>
+    );
+  }
+
+  const firstLetter = profileUser.fullName ? profileUser.fullName.trim()[0].toUpperCase() : "U";
 
   return (
     <div className="p-6 bg-slate-50/50 min-h-screen space-y-6">
@@ -193,29 +227,31 @@ export const ProfilePage: React.FC = () => {
         <div className="flex items-center gap-4">
           <Avatar
             size={72}
-            src={adminUser.avatar || undefined}
+            src={profileUser.avatar || undefined}
             className="bg-indigo-600 font-bold text-2xl shadow-md border-2 border-indigo-100"
           >
-            {!adminUser.avatar && firstLetter}
+            {!profileUser.avatar && firstLetter}
           </Avatar>
-          <div>
-            <div className="flex items-center gap-3">
-              <Title level={3} className="!mb-0 font-bold text-gray-800">
-                {adminUser.fullName}
+          <div className="min-w-0">
+            <div className="flex items-center gap-3 flex-wrap">
+              <Title level={3} className="!mb-0 font-bold text-gray-800 break-words">
+                {profileUser.fullName}
               </Title>
               <Tag color="purple" className="rounded-full px-3 font-medium">
-                {adminUser.role === "Admin" ? "Super Admin" : adminUser.role}
+                {roleLabel(profileUser.role)}
               </Tag>
-              <Tag color="success" className="rounded-full px-3">
-                <CheckCircleOutlined /> {adminUser.status}
-              </Tag>
+              {profileUser.status && (
+                <Tag color="success" className="rounded-full px-3">
+                  <CheckCircleOutlined /> {profileUser.status}
+                </Tag>
+              )}
             </div>
             <Paragraph className="text-gray-500 !mb-0 mt-1 flex items-center gap-4 text-xs">
               <span>
-                <MailOutlined className="mr-1" /> {adminUser.email}
+                <MailOutlined className="mr-1" /> {profileUser.email}
               </span>
               <span>
-                <PhoneOutlined className="mr-1" /> {adminUser.phone}
+                <PhoneOutlined className="mr-1" /> {profileUser.phone}
               </span>
             </Paragraph>
           </div>
@@ -240,7 +276,7 @@ export const ProfilePage: React.FC = () => {
             title={
               <div className="flex items-center gap-2 font-semibold text-gray-800">
                 <UserOutlined className="text-indigo-600" />
-                <span>Thông tin quản trị viên</span>
+                <span>Thông tin tài khoản</span>
               </div>
             }
             className="rounded-2xl border border-gray-100 shadow-sm h-full"
@@ -248,37 +284,37 @@ export const ProfilePage: React.FC = () => {
           >
             <Descriptions column={1} size="middle" className="mt-2">
               <Descriptions.Item label={<span className="text-gray-500">Họ và tên</span>}>
-                <span className="font-semibold text-gray-800">{adminUser.fullName}</span>
+                <span className="font-semibold text-gray-800">{profileUser.fullName}</span>
               </Descriptions.Item>
               <Descriptions.Item label={<span className="text-gray-500">Email</span>}>
-                <span className="text-gray-800 font-mono text-xs">{adminUser.email}</span>
+                <span className="text-gray-800 font-mono text-xs">{profileUser.email}</span>
               </Descriptions.Item>
               <Descriptions.Item label={<span className="text-gray-500">Số điện thoại</span>}>
-                <span className="text-gray-800">{adminUser.phone}</span>
+                <span className="text-gray-800">{profileUser.phone}</span>
               </Descriptions.Item>
               <Descriptions.Item label={<span className="text-gray-500">Vai trò</span>}>
                 <Tag color="blue" className="rounded-full px-3">
                   <SafetyCertificateOutlined className="mr-1" />
-                  {adminUser.role === "Admin" ? "Super Admin" : adminUser.role}
+                  {roleLabel(profileUser.role)}
                 </Tag>
               </Descriptions.Item>
-              <Descriptions.Item label={<span className="text-gray-500">Trạng thái</span>}>
-                <Tag color="success" className="rounded-full px-3">
-                  {adminUser.status}
-                </Tag>
-              </Descriptions.Item>
-              <Descriptions.Item label={<span className="text-gray-500">Ngày tạo tài khoản</span>}>
-                <span className="text-gray-700">
-                  <CalendarOutlined className="mr-1 text-gray-400" />
-                  {new Date(adminUser.createdAt).toLocaleDateString("vi-VN")}
-                </span>
-              </Descriptions.Item>
-              <Descriptions.Item label={<span className="text-gray-500">Đăng nhập gần nhất</span>}>
-                <span className="text-gray-700 font-medium">
-                  <ClockCircleOutlined className="mr-1 text-indigo-500" />
-                  {lastLoginTime}
-                </span>
-              </Descriptions.Item>
+              {profileUser.status && (
+                <Descriptions.Item label={<span className="text-gray-500">Trạng thái</span>}>
+                  <Tag color="success" className="rounded-full px-3">
+                    {profileUser.status}
+                  </Tag>
+                </Descriptions.Item>
+              )}
+              {profileUser.createdAt && (
+                <Descriptions.Item
+                  label={<span className="text-gray-500">Ngày tạo tài khoản</span>}
+                >
+                  <span className="text-gray-700">
+                    <CalendarOutlined className="mr-1 text-gray-400" />
+                    {new Date(profileUser.createdAt).toLocaleDateString("vi-VN")}
+                  </span>
+                </Descriptions.Item>
+              )}
             </Descriptions>
           </Card>
         </Col>
@@ -299,9 +335,9 @@ export const ProfilePage: React.FC = () => {
               form={form}
               layout="vertical"
               initialValues={{
-                fullName: adminUser.fullName,
-                phone: adminUser.phone,
-                avatar: adminUser.avatar,
+                fullName: profileUser.fullName,
+                phone: profileUser.phone,
+                avatar: profileUser.avatar,
               }}
               onFinish={handleUpdateProfile}
               requiredMark="optional"
@@ -325,11 +361,8 @@ export const ProfilePage: React.FC = () => {
                 <Col xs={24} sm={12}>
                   <Form.Item
                     name="phone"
-                    label="Số điện thoại"
-                    rules={[
-                      { required: true, message: "Vui lòng nhập số điện thoại" },
-                      { pattern: /^[0-9+ ]{9,15}$/, message: "Số điện thoại không hợp lệ" },
-                    ]}
+                    label="Số điện thoại (optional)"
+                    rules={[{ pattern: /^[0-9+ ]{9,15}$/, message: "Số điện thoại không hợp lệ" }]}
                   >
                     <Input
                       prefix={<PhoneOutlined className="text-gray-400" />}
@@ -346,7 +379,7 @@ export const ProfilePage: React.FC = () => {
                   <Form.Item label="Email (Chỉ đọc)">
                     <Input
                       prefix={<MailOutlined className="text-gray-400" />}
-                      value={adminUser.email}
+                      value={profileUser.email}
                       disabled
                       size="large"
                       className="rounded-lg bg-gray-50 cursor-not-allowed"
@@ -358,7 +391,7 @@ export const ProfilePage: React.FC = () => {
                   <Form.Item label="Vai trò (Chỉ đọc)">
                     <Input
                       prefix={<SafetyCertificateOutlined className="text-gray-400" />}
-                      value={adminUser.role === "Admin" ? "Super Admin" : adminUser.role}
+                      value={roleLabel(profileUser.role)}
                       disabled
                       size="large"
                       className="rounded-lg bg-gray-50 cursor-not-allowed"
@@ -378,6 +411,40 @@ export const ProfilePage: React.FC = () => {
                   className="rounded-lg"
                 />
               </Form.Item>
+
+              {isTeacher && (
+                <>
+                  <Form.Item
+                    label="Chuyên môn giảng dạy"
+                    extra="Nhấn Enter sau mỗi môn để thêm — dùng để xếp lớp phù hợp với chuyên môn của bạn"
+                  >
+                    <Select
+                      mode="tags"
+                      size="large"
+                      className="rounded-lg"
+                      placeholder="VD: Toán, Vật lý, Tiếng Anh..."
+                      value={teachingSubjects}
+                      onChange={setTeachingSubjects}
+                      tokenSeparators={[","]}
+                    />
+                  </Form.Item>
+
+                  <Form.Item
+                    label={
+                      <span>
+                        <BookOutlined className="mr-1" />
+                        Lịch rảnh trong tuần
+                      </span>
+                    }
+                    extra="Dùng khi quản trị viên xếp bạn vào lớp có lịch học phù hợp"
+                  >
+                    <AvailabilityScheduleEditor
+                      value={availabilitySchedule}
+                      onChange={setAvailabilitySchedule}
+                    />
+                  </Form.Item>
+                </>
+              )}
 
               <div className="flex justify-end mt-4">
                 <Button
@@ -402,7 +469,7 @@ export const ProfilePage: React.FC = () => {
           <div className="flex items-center justify-between">
             <span className="font-semibold text-gray-800 text-base">Recent Login Activity</span>
             <Text className="text-xs text-gray-400 font-normal">
-              Lịch sử 5 lần truy cập hệ thống gần nhất
+              Lịch sử truy cập hệ thống gần nhất
             </Text>
           </div>
         }

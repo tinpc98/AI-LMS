@@ -42,9 +42,13 @@ export interface QuestionOption {
   order: number;
 }
 
+// topicId đến từ danh sách/chi tiết câu hỏi luôn đã populate('topicId', 'name courseId')
+// (xem question.controller.js) — object khi đọc, string khi client tự gửi lên lúc tạo/sửa.
+export type PopulatedTopicRef = { _id: string; name: string; courseId: string };
+
 export interface Question {
   _id: string;
-  topicId: string;
+  topicId: string | PopulatedTopicRef;
   type: QuestionType;
   selectionMode?: SelectionMode;
   content: ContentBlock[];
@@ -53,6 +57,8 @@ export interface Question {
   points: number;
   explanation?: ContentBlock[];
   tags?: string[];
+  // TÍNH NĂNG MỚI (mục 6): nhãn Skill — tùy chọn, chưa hiển thị cho học sinh.
+  primarySkillId?: string | { _id: string; name: string };
   createdBy: string;
   status: QuestionStatus;
   createdAt: string;

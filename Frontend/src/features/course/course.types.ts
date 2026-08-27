@@ -3,19 +3,20 @@ import type { Subject } from "../subject/subject.types";
 export type CourseStatus = "DRAFT" | "PUBLISHED" | "ARCHIVED";
 export type CourseLevel = "FOUNDATION" | "INTERMEDIATE" | "ADVANCED";
 
+// BUG ĐÃ SỬA: Course thật không có field `level` hay `pricing` — giá thật là `prices`, một Map
+// 3 mức theo level (xem course.model.js). Học sinh chọn level lúc đăng ký (EnrollCourseModal),
+// không phải khóa học "thuộc" 1 level cố định.
+export type CoursePrices = Partial<Record<CourseLevel, number>>;
+
 export interface CourseRecord {
   id: string;
   name: string;
   code: string;
   subjectId: Subject | string;
   grade: number;
-  level: CourseLevel;
+  prices?: CoursePrices;
   description: string;
   thumbnail: string;
-  pricing?: {
-    tuitionFee?: number;
-    [key: string]: any;
-  };
   duration: {
     value: number;
     unit: string;
@@ -59,12 +60,9 @@ export interface CourseFormValues {
   code: string;
   subjectId: string;
   grade: number;
-  level: CourseLevel;
+  prices: CoursePrices;
   description: string;
   thumbnail: string;
-  pricing?: {
-    tuitionFee?: number;
-  };
   duration: {
     value: number;
     unit: string;

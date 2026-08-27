@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import mongoose from "mongoose";
 
 // ── Mocks ────────────────────────────────────────────────────────────────────
 // Mock Course model
@@ -16,23 +17,40 @@ vi.mock("#modules/auth", () => ({
   verifyUser: vi.fn(),
 }));
 
+// transitionStatus() dynamic-import module classEnrollment để cascade CANCELLED/COMPLETED
+// (xem BUG ĐÃ SỬA trong enrollment.service.js) — phải mock để không chạm Mongoose thật.
+const cancelClassEnrollmentByEnrollmentId = vi.fn().mockResolvedValue(null);
+const completeClassEnrollmentByEnrollmentId = vi.fn().mockResolvedValue(null);
+vi.mock("#modules/classEnrollment/classEnrollment.service.js", () => ({
+  default: { cancelClassEnrollmentByEnrollmentId, completeClassEnrollmentByEnrollmentId },
+}));
+
 // Mock Enrollment model
 vi.mock("#modules/enrollment/enrollment.model.js", () => {
   const mockModel = {
     create: vi.fn(),
     find: vi.fn(),
     findById: vi.fn(),
+    findOneAndUpdate: vi.fn(),
     countDocuments: vi.fn(),
     exists: vi.fn(),
   };
   return {
     default: mockModel,
-    ACTIVE_STATUSES: ["PENDING_PAYMENT", "PAID", "APPROVED", "CLASS_ASSIGNED"],
-    ALL_STATUSES: [
+    // Khớp enrollment.model.js hiện tại: "PAID" đã bị bỏ (superseded bởi
+    // PAYMENT_PENDING_CONFIRMATION khi module Payment/QR thật ra đời — xem enrollment.model.js).
+    ACTIVE_STATUSES: [
       "PENDING_PAYMENT",
-      "PAID",
+      "PAYMENT_PENDING_CONFIRMATION",
       "APPROVED",
       "CLASS_ASSIGNED",
+    ],
+    ALL_STATUSES: [
+      "PENDING_PAYMENT",
+      "PAYMENT_PENDING_CONFIRMATION",
+      "APPROVED",
+      "CLASS_ASSIGNED",
+      "REJECTED",
       "COMPLETED",
       "CANCELLED",
     ],
@@ -72,6 +90,16 @@ const mockEnrollment = (overrides = {}) => ({
 describe("EnrollmentService", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // createEnrollment/createEnrollmentByAdmin dùng transaction thật (mongoose.startSession) —
+    // không mock thì mỗi test gọi tới đây sẽ cố kết nối MongoDB thật và treo tới khi hết
+    // testTimeout (đã xác nhận qua git stash: đây là flakiness có sẵn, phụ thuộc file test nào
+    // chạy trước đó trong cùng worker có mở sẵn kết nối thật hay không).
+    vi.spyOn(mongoose, "startSession").mockResolvedValue({
+      startTransaction: vi.fn(),
+      commitTransaction: vi.fn().mockResolvedValue(true),
+      abortTransaction: vi.fn().mockResolvedValue(true),
+      endSession: vi.fn(),
+    });
   });
 
   // ── CREATE ───────────────────────────────────────────────────────────────
@@ -93,25 +121,25 @@ describe("EnrollmentService", () => {
     it("2. Student tạo Enrollment với Draft Course → FAIL", async () => {
       Course.findById.mockResolvedValue(draftCourse);
 
-      await expect(
-        enrollmentService.createEnrollment(STUDENT_ID, COURSE_ID)
-      ).rejects.toThrow(/DRAFT/);
+      await expect(enrollmentService.createEnrollment(STUDENT_ID, COURSE_ID)).rejects.toThrow(
+        /DRAFT/
+      );
     });
 
     it("3. Student tạo Enrollment với Archived Course → FAIL", async () => {
       Course.findById.mockResolvedValue(archivedCourse);
 
-      await expect(
-        enrollmentService.createEnrollment(STUDENT_ID, COURSE_ID)
-      ).rejects.toThrow(/ARCHIVED/);
+      await expect(enrollmentService.createEnrollment(STUDENT_ID, COURSE_ID)).rejects.toThrow(
+        /ARCHIVED/
+      );
     });
 
     it("4. Student tạo Enrollment với Course không tồn tại → FAIL 404", async () => {
       Course.findById.mockResolvedValue(null);
 
-      await expect(
-        enrollmentService.createEnrollment(STUDENT_ID, COURSE_ID)
-      ).rejects.toThrow(/không tồn tại/);
+      await expect(enrollmentService.createEnrollment(STUDENT_ID, COURSE_ID)).rejects.toThrow(
+        /không tồn tại/
+      );
     });
 
     it("7. Duplicate active enrollment → CONFLICT (11000)", async () => {
@@ -120,17 +148,15 @@ describe("EnrollmentService", () => {
       duplicateError.code = 11000;
       Enrollment.create.mockRejectedValue(duplicateError);
 
-      await expect(
-        enrollmentService.createEnrollment(STUDENT_ID, COURSE_ID)
-      ).rejects.toThrow(/đang được xử lý/);
+      await expect(enrollmentService.createEnrollment(STUDENT_ID, COURSE_ID)).rejects.toThrow(
+        /đang được xử lý/
+      );
     });
 
     it("11. Student có COMPLETED → đăng ký lại → PASS", async () => {
       // Partial unique index cho phép — create sẽ thành công
       Course.findById.mockResolvedValue(publishedCourse);
-      Enrollment.create.mockResolvedValue(
-        mockEnrollment({ _id: "new-enrollment-id" })
-      );
+      Enrollment.create.mockResolvedValue(mockEnrollment({ _id: "new-enrollment-id" }));
 
       const result = await enrollmentService.createEnrollment(STUDENT_ID, COURSE_ID);
       expect(result._id).toBe("new-enrollment-id");
@@ -138,9 +164,7 @@ describe("EnrollmentService", () => {
 
     it("12. Student có CANCELLED → đăng ký lại → PASS", async () => {
       Course.findById.mockResolvedValue(publishedCourse);
-      Enrollment.create.mockResolvedValue(
-        mockEnrollment({ _id: "new-enrollment-id-2" })
-      );
+      Enrollment.create.mockResolvedValue(mockEnrollment({ _id: "new-enrollment-id-2" }));
 
       const result = await enrollmentService.createEnrollment(STUDENT_ID, COURSE_ID);
       expect(result._id).toBe("new-enrollment-id-2");
@@ -172,47 +196,86 @@ describe("EnrollmentService", () => {
   });
 
   // ── STATUS TRANSITIONS ───────────────────────────────────────────────────
-
+  // transitionStatus() dùng update atomic findOneAndUpdate({_id, status:currentStatus}, ...)
+  // để chống race condition (không mutate + .save() document đã fetch) — xem
+  // enrollment.service.js. "PAID" đã bị bỏ khỏi lifecycle thật, thay bằng
+  // PAYMENT_PENDING_CONFIRMATION (module Payment/QR). CLASS_ASSIGNED chỉ được set trực tiếp bởi
+  // classEnrollment.service.js#assignClass (bypass transitionStatus hoàn toàn, vì xếp lớp còn
+  // phải kiểm capacity/tạo ClassEnrollment) — nên APPROVED→CLASS_ASSIGNED qua transitionStatus
+  // PHẢI bị từ chối, không phải cho phép.
   describe("transitionStatus", () => {
-    it("13. PENDING_PAYMENT → PAID → PASS", async () => {
+    it("13. PENDING_PAYMENT → PAYMENT_PENDING_CONFIRMATION → PASS", async () => {
       const enrollment = mockEnrollment({ status: "PENDING_PAYMENT" });
       Enrollment.findById.mockResolvedValue(enrollment);
+      Enrollment.findOneAndUpdate.mockResolvedValue({
+        ...enrollment,
+        status: "PAYMENT_PENDING_CONFIRMATION",
+      });
 
-      const result = await enrollmentService.transitionStatus(ENROLLMENT_ID, "PAID");
-      expect(enrollment.status).toBe("PAID");
-      expect(enrollment.save).toHaveBeenCalled();
+      const result = await enrollmentService.transitionStatus(
+        ENROLLMENT_ID,
+        "PAYMENT_PENDING_CONFIRMATION"
+      );
+      expect(result.status).toBe("PAYMENT_PENDING_CONFIRMATION");
+      expect(Enrollment.findOneAndUpdate).toHaveBeenCalledWith(
+        { _id: ENROLLMENT_ID, status: "PENDING_PAYMENT" },
+        { status: "PAYMENT_PENDING_CONFIRMATION" },
+        { new: true }
+      );
     });
 
-    it("14. PAID → APPROVED → PASS", async () => {
-      const enrollment = mockEnrollment({ status: "PAID" });
+    it("14. PAYMENT_PENDING_CONFIRMATION → APPROVED → PASS", async () => {
+      const enrollment = mockEnrollment({ status: "PAYMENT_PENDING_CONFIRMATION" });
       Enrollment.findById.mockResolvedValue(enrollment);
+      Enrollment.findOneAndUpdate.mockResolvedValue({ ...enrollment, status: "APPROVED" });
 
-      await enrollmentService.transitionStatus(ENROLLMENT_ID, "APPROVED");
-      expect(enrollment.status).toBe("APPROVED");
+      const result = await enrollmentService.transitionStatus(ENROLLMENT_ID, "APPROVED");
+      expect(result.status).toBe("APPROVED");
     });
 
-    it("15. APPROVED → CLASS_ASSIGNED → PASS", async () => {
+    it("15. APPROVED → CLASS_ASSIGNED qua transitionStatus → FAIL (phải qua assignClass())", async () => {
       const enrollment = mockEnrollment({ status: "APPROVED" });
       Enrollment.findById.mockResolvedValue(enrollment);
 
-      await enrollmentService.transitionStatus(ENROLLMENT_ID, "CLASS_ASSIGNED");
-      expect(enrollment.status).toBe("CLASS_ASSIGNED");
+      await expect(
+        enrollmentService.transitionStatus(ENROLLMENT_ID, "CLASS_ASSIGNED")
+      ).rejects.toThrow(/Không thể chuyển/);
+      expect(Enrollment.findOneAndUpdate).not.toHaveBeenCalled();
     });
 
-    it("16. CLASS_ASSIGNED → COMPLETED → PASS", async () => {
+    it("16. CLASS_ASSIGNED → COMPLETED → PASS, cascade sang ClassEnrollment (BUG ĐÃ SỬA)", async () => {
       const enrollment = mockEnrollment({ status: "CLASS_ASSIGNED" });
       Enrollment.findById.mockResolvedValue(enrollment);
+      Enrollment.findOneAndUpdate.mockResolvedValue({ ...enrollment, status: "COMPLETED" });
 
-      await enrollmentService.transitionStatus(ENROLLMENT_ID, "COMPLETED");
-      expect(enrollment.status).toBe("COMPLETED");
+      const result = await enrollmentService.transitionStatus(ENROLLMENT_ID, "COMPLETED", "admin1");
+      expect(result.status).toBe("COMPLETED");
+      // BUG ĐÃ SỬA: trước đây transitionStatus không hề gọi classEnrollmentService, khiến
+      // ClassEnrollment ACTIVE bị bỏ quên mãi mãi khi Enrollment chuyển sang COMPLETED.
+      expect(completeClassEnrollmentByEnrollmentId).toHaveBeenCalledWith(ENROLLMENT_ID, "admin1");
+      expect(cancelClassEnrollmentByEnrollmentId).not.toHaveBeenCalled();
     });
 
-    it("17. PENDING_PAYMENT → CANCELLED → PASS", async () => {
+    it("CLASS_ASSIGNED → CANCELLED → PASS, cascade hủy ClassEnrollment (BUG ĐÃ SỬA)", async () => {
+      const enrollment = mockEnrollment({ status: "CLASS_ASSIGNED" });
+      Enrollment.findById.mockResolvedValue(enrollment);
+      Enrollment.findOneAndUpdate.mockResolvedValue({ ...enrollment, status: "CANCELLED" });
+
+      const result = await enrollmentService.transitionStatus(ENROLLMENT_ID, "CANCELLED", "admin1");
+      expect(result.status).toBe("CANCELLED");
+      expect(cancelClassEnrollmentByEnrollmentId).toHaveBeenCalledWith(ENROLLMENT_ID, "admin1");
+      expect(completeClassEnrollmentByEnrollmentId).not.toHaveBeenCalled();
+    });
+
+    it("17. PENDING_PAYMENT → CANCELLED → PASS (chưa xếp lớp, cascade no-op an toàn)", async () => {
       const enrollment = mockEnrollment({ status: "PENDING_PAYMENT" });
       Enrollment.findById.mockResolvedValue(enrollment);
+      Enrollment.findOneAndUpdate.mockResolvedValue({ ...enrollment, status: "CANCELLED" });
 
-      await enrollmentService.transitionStatus(ENROLLMENT_ID, "CANCELLED");
-      expect(enrollment.status).toBe("CANCELLED");
+      const result = await enrollmentService.transitionStatus(ENROLLMENT_ID, "CANCELLED");
+      expect(result.status).toBe("CANCELLED");
+      // Vẫn gọi cascade (an toàn vì classEnrollmentService tự tìm ACTIVE CE và no-op nếu không có).
+      expect(cancelClassEnrollmentByEnrollmentId).toHaveBeenCalledWith(ENROLLMENT_ID, null);
     });
 
     it("18. COMPLETED → PENDING_PAYMENT → FAIL", async () => {
@@ -224,30 +287,42 @@ describe("EnrollmentService", () => {
       ).rejects.toThrow(/Không thể chuyển/);
     });
 
-    it("19. CANCELLED → PAID → FAIL", async () => {
+    it("19. CANCELLED → APPROVED → FAIL (trạng thái kết thúc, không quay lại được)", async () => {
       const enrollment = mockEnrollment({ status: "CANCELLED" });
       Enrollment.findById.mockResolvedValue(enrollment);
 
-      await expect(
-        enrollmentService.transitionStatus(ENROLLMENT_ID, "PAID")
-      ).rejects.toThrow(/Không thể chuyển/);
+      await expect(enrollmentService.transitionStatus(ENROLLMENT_ID, "APPROVED")).rejects.toThrow(
+        /Không thể chuyển/
+      );
     });
 
     it("20. COMPLETED → APPROVED → FAIL", async () => {
       const enrollment = mockEnrollment({ status: "COMPLETED" });
       Enrollment.findById.mockResolvedValue(enrollment);
 
-      await expect(
-        enrollmentService.transitionStatus(ENROLLMENT_ID, "APPROVED")
-      ).rejects.toThrow(/Không thể chuyển/);
+      await expect(enrollmentService.transitionStatus(ENROLLMENT_ID, "APPROVED")).rejects.toThrow(
+        /Không thể chuyển/
+      );
     });
 
     it("Enrollment không tồn tại → FAIL 404", async () => {
       Enrollment.findById.mockResolvedValue(null);
 
-      await expect(
-        enrollmentService.transitionStatus("nonexistent", "PAID")
-      ).rejects.toThrow(/không tồn tại/);
+      await expect(enrollmentService.transitionStatus("nonexistent", "CANCELLED")).rejects.toThrow(
+        /không tồn tại/
+      );
+    });
+
+    it("Race condition: trạng thái đã đổi trước khi update atomic chạy → FAIL", async () => {
+      const enrollment = mockEnrollment({ status: "PENDING_PAYMENT" });
+      Enrollment.findById.mockResolvedValue(enrollment);
+      // findOneAndUpdate trả null khi filter {_id, status:currentStatus} không còn khớp nữa
+      // (tiến trình khác đã đổi status trước đó) — đúng hành vi chống race condition.
+      Enrollment.findOneAndUpdate.mockResolvedValue(null);
+
+      await expect(enrollmentService.transitionStatus(ENROLLMENT_ID, "CANCELLED")).rejects.toThrow(
+        /thay đổi bởi một tiến trình khác/
+      );
     });
   });
 
@@ -267,6 +342,23 @@ describe("EnrollmentService", () => {
       const result = await enrollmentService.getMyEnrollments(STUDENT_ID);
       expect(result.items).toHaveLength(1);
       expect(result.pagination.total).toBe(1);
+    });
+
+    it("BUG ĐÃ SỬA — populate courseId KHÔNG chọn field 'level'/'pricing' (không tồn tại trên schema Course, Mongoose âm thầm bỏ qua)", async () => {
+      const mockQuery = {
+        populate: vi.fn().mockReturnThis(),
+        sort: vi.fn().mockReturnThis(),
+        skip: vi.fn().mockReturnThis(),
+        limit: vi.fn().mockResolvedValue([]),
+      };
+      Enrollment.find.mockReturnValue(mockQuery);
+      Enrollment.countDocuments.mockResolvedValue(0);
+
+      await enrollmentService.getMyEnrollments(STUDENT_ID);
+
+      const selectArg = mockQuery.populate.mock.calls[0][1];
+      expect(selectArg).not.toMatch(/\blevel\b/);
+      expect(selectArg).not.toMatch(/\bpricing\b/);
     });
   });
 

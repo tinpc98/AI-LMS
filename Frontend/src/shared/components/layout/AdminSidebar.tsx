@@ -1,13 +1,17 @@
 import {
+  AimOutlined,
   ApartmentOutlined,
   BarChartOutlined,
   BookOutlined,
   DashboardOutlined,
   DollarOutlined,
   RobotOutlined,
+  SafetyCertificateOutlined,
   SettingOutlined,
+  SolutionOutlined,
   TeamOutlined,
   UsergroupAddOutlined,
+  WarningOutlined,
 } from "@ant-design/icons";
 import { Drawer, Layout, Menu } from "antd";
 import { useMemo } from "react";
@@ -43,6 +47,30 @@ const adminMenuItems: AdminMenuItem[] = [
     label: "Teacher Assignment",
     path: "/admin/teacher-assignment",
     icon: <TeamOutlined />,
+  },
+  {
+    key: "learner-needs",
+    label: "Nhu cầu học tập",
+    path: "/admin/learner-needs",
+    icon: <AimOutlined />,
+  },
+  {
+    key: "complaints",
+    label: "Khiếu nại cần xử lý",
+    path: "/admin/complaints",
+    icon: <WarningOutlined />,
+  },
+  {
+    key: "cohort-mechanism",
+    label: "Cam kết & Leo thang",
+    path: "/admin/cohort-mechanism",
+    icon: <SafetyCertificateOutlined />,
+  },
+  {
+    key: "teacher-trust",
+    label: "Hồ sơ tin cậy giáo viên",
+    path: "/admin/teacher-trust",
+    icon: <SolutionOutlined />,
   },
   { key: "ai", label: "AI Management", path: "/admin/ai-management", icon: <RobotOutlined /> },
   { key: "reports", label: "Reports", path: "/admin/reports", icon: <BarChartOutlined /> },

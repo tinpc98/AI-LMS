@@ -10,8 +10,10 @@ import { User } from "#modules/auth";
 import { Assignment } from "#modules/assignment";
 import { Exam } from "#modules/exam";
 import { Grade } from "#modules/grade";
-import { Submission } from "#modules/assignment";
+import { AssignmentAttempt } from "#modules/assignment";
 import { ExamAttempt } from "#modules/exam-attempt";
+import { ClassEnrollment } from "#modules/classEnrollment";
+import Topic from "../../../../src/modules/topic/topic.model.js";
 
 const CLASS_ID = "607f1f77bcf86cd799439111";
 const STUDENT_1 = "607f1f77bcf86cd799439222";
@@ -43,11 +45,28 @@ const mockClassAndSubs = ({
   attempts = [],
 }) => {
   vi.spyOn(classModel, "findById").mockReturnValue(mongooseQuery(classDoc));
+
+  // aggregateGradesMatrix hiện lấy danh sách học sinh qua ClassEnrollment.find({status:"ACTIVE"})
+  // (không còn đọc classDoc.students trực tiếp). Chỉ học sinh "Enrolled" trong fixture mới có
+  // ClassEnrollment ACTIVE tương ứng — mô phỏng đúng thực tế: học sinh Dropped không còn bản ghi
+  // ACTIVE nên không được DB trả về.
+  const activeEnrollments = (classDoc?.students || [])
+    .filter((s) => s.status === "Enrolled")
+    .map((s) => ({ studentId: s.studentId, classId: classDoc._id, status: "ACTIVE" }));
+  vi.spyOn(ClassEnrollment, "find").mockReturnValue(mongooseQuery(activeEnrollments));
+
+  // Topic chỉ dùng để tính topicIds trung gian rồi truyền vào Assignment.find — vốn đã được
+  // mock cứng theo fixture assignments bên dưới (không phụ thuộc topicIds thật), nên mảng rỗng
+  // là đủ, chỉ cần không hang vì gọi DB thật.
+  vi.spyOn(Topic, "find").mockReturnValue(mongooseQuery([]));
+
   vi.spyOn(User, "find").mockReturnValue(mongooseQuery(users));
   vi.spyOn(Assignment, "find").mockReturnValue(mongooseQuery(assignments));
   vi.spyOn(Exam, "find").mockReturnValue(mongooseQuery(exams));
   vi.spyOn(Grade, "find").mockReturnValue(mongooseQuery(manualGrades));
-  vi.spyOn(Submission, "find").mockReturnValue(mongooseQuery(submissions));
+  // grade.service.js đọc nguồn bài tập từ AssignmentAttempt (model Submission đã bị xoá khi
+  // module assignment viết lại) — biến "submissions" chỉ là tên tham số cũ, giữ nguyên cho gọn.
+  vi.spyOn(AssignmentAttempt, "find").mockReturnValue(mongooseQuery(submissions));
   vi.spyOn(ExamAttempt, "find").mockReturnValue(mongooseQuery(attempts));
 };
 
@@ -87,7 +106,7 @@ describe("aggregateGradesMatrix — characterization", () => {
     expect(s.grades["manual-Midterm"]).toMatchObject({ score: 6 });
   });
 
-  it("Có Assignment (Submission.grade) + Exam (ExamAttempt) → cộng vào catScores tương ứng và chuẩn hóa exam theo maxScore", async () => {
+  it("Có Assignment (AssignmentAttempt.score) + Exam (ExamAttempt) → cộng vào catScores tương ứng và chuẩn hóa exam theo maxScore", async () => {
     mockClassAndSubs({
       classDoc: {
         _id: CLASS_ID,
@@ -98,11 +117,12 @@ describe("aggregateGradesMatrix — characterization", () => {
       assignments: [{ _id: "a1", title: "BT1" }],
       exams: [{ _id: "e1", title: "Giữa kỳ", maxScore: 20, status: "Published" }],
       submissions: [
-        { _id: "s1", assignmentId: "a1", studentId: STUDENT_1, grade: 9, feedback: "Tốt" },
+        { _id: "s1", assignmentId: "a1", studentId: STUDENT_1, score: 9, feedback: "Tốt" },
       ],
-      attempts: [
-        { _id: "at1", examId: "e1", studentId: STUDENT_1, totalScore: 16, status: "GRADED" },
-      ],
+      // BUG ĐÃ SỬA: mock trước đây dùng `totalScore` — field KHÔNG tồn tại trên schema
+      // ExamAttempt thật (field thật là `score`). Code cũ cũng đọc nhầm field này nên test từng
+      // "pass" một cách vô nghĩa (cả 2 phía cùng sai nên khớp nhau).
+      attempts: [{ _id: "at1", examId: "e1", studentId: STUDENT_1, score: 16, status: "GRADED" }],
     });
 
     const result = await gradeService.aggregateGradesMatrix(CLASS_ID);

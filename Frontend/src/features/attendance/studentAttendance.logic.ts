@@ -55,12 +55,19 @@ export const extendRecords = (records: IAttendanceItem[]): IExtendedAttendanceRe
 export const computeAttendanceStats = (
   records: IExtendedAttendanceRecord[]
 ): StudentAttendanceStats => {
+  // BUG ĐÃ SỬA: khi sinh lịch buổi học, hệ thống tạo sẵn bản ghi DRAFT cho MỌI buổi TƯƠNG LAI
+  // của mọi học sinh. `total` trước đây tính cả những buổi này (records.length), trong khi
+  // DRAFT không góp gì vào tử số (weight 0) — lớp mới học vài buổi trong tổng số buổi cả kỳ bị
+  // tính tỉ lệ chuyên cần rất thấp dù học sinh có mặt đủ những buổi ĐÃ diễn ra. Loại DRAFT khỏi
+  // mẫu số ngay từ đầu — buổi chưa diễn ra thì chưa có gì để tính chuyên cần cả.
+  const countedRecords = records.filter((r) => r.status !== "DRAFT");
+
   const count = { PRESENT: 0, LATE: 0, ABSENT: 0, EXCUSED: 0, DRAFT: 0 };
   for (const item of records) {
     if (item.status in count) count[item.status as keyof typeof count] += 1;
   }
 
-  const total = records.length;
+  const total = countedRecords.length;
   const weighted =
     count.PRESENT * WEIGHT.PRESENT + count.LATE * WEIGHT.LATE + count.EXCUSED * WEIGHT.EXCUSED;
 

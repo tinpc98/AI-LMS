@@ -130,18 +130,21 @@ export const computeStudentGrade = ({
   submissions
     .filter((sub) => sub.studentId.toString() === uId)
     .forEach((sub) => {
-      if (sub.grade === null || sub.grade === undefined) return;
+      // AssignmentAttempt.score là field thật (model không có "grade") — trước đây đọc
+      // sub.grade luôn undefined, khiến MỌI điểm bài tập bị bỏ qua khỏi bảng điểm.
+      if (sub.score === null || sub.score === undefined) return;
 
-      const max = assignments.find((a) => a._id.toString() === sub.assignmentId.toString())?.maxScore || 10;
+      const max =
+        assignments.find((a) => a._id.toString() === sub.assignmentId.toString())?.maxScore || 10;
       if (max <= 0) {
         console.warn(`Bỏ qua bài nộp ${sub._id} vì maxScore của bài tập = 0`);
         return;
       }
 
-      const normalizedScore = (sub.grade / max) * 10;
+      const normalizedScore = (sub.score / max) * 10;
 
       gradesMap[`assign-${sub.assignmentId}`] = {
-        score: sub.grade,
+        score: sub.score,
         feedback: sub.feedback,
         rawId: sub._id,
       };
@@ -153,10 +156,13 @@ export const computeStudentGrade = ({
     .filter((att) => att.studentId.toString() === uId)
     .forEach((att) => {
       // Chuẩn hóa điểm thi về thang 10 để tính GPA khi maxScore khác 10.
+      // BUG ĐÃ SỬA: field thật trên ExamAttempt là `score`, không phải `totalScore` (không tồn
+      // tại trên schema) — trước đây luôn ra NaN, làm hỏng cả tổng GPA và khiến điểm thi hiện
+      // "Chưa nộp" ở giao diện (JSON.stringify bỏ field undefined).
       const max = exams.find((e) => e._id.toString() === att.examId.toString())?.maxScore || 10;
-      const normalizedScore = (att.totalScore / max) * 10;
+      const normalizedScore = (att.score / max) * 10;
 
-      gradesMap[`exam-${att.examId}`] = { score: att.totalScore, feedback: "", rawId: att._id };
+      gradesMap[`exam-${att.examId}`] = { score: att.score, feedback: "", rawId: att._id };
       catScores.Exam.sum += normalizedScore;
       catScores.Exam.count++;
     });

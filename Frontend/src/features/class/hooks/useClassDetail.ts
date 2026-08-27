@@ -13,12 +13,12 @@ import { useQuery } from "@tanstack/react-query";
 import { fetchClassDetail } from "../classDetail.service";
 import { queryKeys } from "../../../shared/api/queryKeys";
 import type { IClass } from "../../../interface/ClassInterface";
-import type { ILesson } from "../../../interface/lessonInterface";
+import type { Lesson } from "../../lesson/lesson.types";
 import type { IAssignment } from "../../../interface/assignmentInterface";
 
 interface UseClassDetailReturn {
   classInfo: IClass | null;
-  lessons: ILesson[];
+  lessons: Lesson[];
   assignments: IAssignment[];
   isLoading: boolean;
   errorMsg: string;

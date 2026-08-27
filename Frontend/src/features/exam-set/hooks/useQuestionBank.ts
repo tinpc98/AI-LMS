@@ -2,9 +2,16 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import axiosClient from "../../../api/axiosClient";
 import { toast } from "../../../utils/toast";
 import { getApiErrorMessage } from "../../../shared/utils/apiError";
+import { extractPlainText } from "../../question/contentText";
+import type { Question, PopulatedTopicRef } from "../../question/question.types";
+
+// topicId luôn được backend populate('topicId', 'name courseId') ở list/detail — lấy tên Topic
+// an toàn dù dữ liệu cũ/lỗi có thể còn để topicId là string trơ (Topic đã bị xóa chẳng hạn).
+export const getTopicName = (q: Question): string =>
+  typeof q.topicId === "object" ? (q.topicId as PopulatedTopicRef).name : "";
 
 export function useQuestionBank() {
-  const [questions, setQuestions] = useState<any[]>([]);
+  const [questions, setQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -61,8 +68,8 @@ export function useQuestionBank() {
       const q = searchQuery.toLowerCase().trim();
       result = result.filter(
         (item) =>
-          (item.content || "").toLowerCase().includes(q) ||
-          (item.topic || "").toLowerCase().includes(q)
+          extractPlainText(item.content).toLowerCase().includes(q) ||
+          getTopicName(item).toLowerCase().includes(q)
       );
     }
 
@@ -75,8 +82,9 @@ export function useQuestionBank() {
     }
 
     result.sort((a, b) => {
-      if (sortBy === "topic") return (a.topic || "").localeCompare(b.topic || "");
-      if (sortBy === "content") return (a.content || "").localeCompare(b.content || "");
+      if (sortBy === "topic") return getTopicName(a).localeCompare(getTopicName(b));
+      if (sortBy === "content")
+        return extractPlainText(a.content).localeCompare(extractPlainText(b.content));
       return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
     });
 

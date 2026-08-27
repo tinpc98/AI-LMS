@@ -2,6 +2,7 @@ import { Router } from "express";
 import {
   GetPaymentConfig,
   UpdatePaymentConfig,
+  CreatePayment,
   AdminCreatePayment,
   getMyPayments,
   getPendingPaymentsAdmin,
@@ -31,6 +32,10 @@ route.post("/:id/reject", verifyUser, isAdmin, rejectPayment);
 route.patch("/:id/refund", verifyUser, isAdmin, RefundPayment);
 
 // ── APIs dành cho Student ─────────────────────────────────────────────────────
+// BUG ĐÃ SỬA: controller CreatePayment (payment.controller.js) đã viết đầy đủ nhưng chưa từng
+// được gắn route — học sinh không có cách nào tự tạo payment cho enrollment của mình, chỉ admin
+// mới tạo hộ được (route /admin ở trên).
+route.post("/", verifyUser, isStudent, CreatePayment);
 route.post("/:id/submit", verifyUser, isStudent, submitPayment);
 route.get("/me", verifyUser, isStudent, getMyPayments);
 

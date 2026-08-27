@@ -1,10 +1,13 @@
 import cron from "node-cron";
-import cronService from "./cron.service.js";
 import { runAIPendingRecovery } from "./aiPendingRecovery.job.js";
 import { runExamAutoClose } from "./examLifecycle.job.js";
 import { runExamAttemptAutoSubmit } from "./examAttemptAutoSubmit.job.js";
+import { runAssignmentAttemptAutoSubmit } from "./assignmentAttemptAutoSubmit.job.js";
+import { runAttendanceFinalize } from "./attendanceFinalize.job.js";
+import { runLearningStreakCheck } from "./learningStreak.job.js";
 import { runChatCleanup } from "./chatCleanup.job.js";
 import { runStudentExpiryCheck } from "./userLifecycle.job.js";
+import { runCohortEscalationLevel1 } from "./cohortEscalation.job.js";
 
 /**
  * initCronJobs – Khởi tạo và đăng ký tất cả các cron job của hệ thống.
@@ -20,61 +23,21 @@ import { runStudentExpiryCheck } from "./userLifecycle.job.js";
  */
 export const initCronJobs = (runImmediately = false) => {
   // ──────────────────────────────────────────────────────────────────────────
-  // JOB 1: Tự động cập nhật trạng thái vòng đời lớp học
+  // JOB 1: Tự động cập nhật trạng thái vòng đời lớp học — TẠM TẮT, ĐANG HỎNG.
   //
-  // Lịch: Mỗi ngày lúc 00:00:00 (nửa đêm)
-  // Timezone: Asia/Ho_Chi_Minh (GMT+7)
+  // cron.service.js (runClassStatusUpdate/activateOngoingClasses/completeExpiredClasses)
+  // lọc/set theo enum trạng thái CŨ (Draft/Ready/Upcoming/Ongoing/Active/Completed),
+  // nhưng Class.status hiện tại (class.model.js) chỉ có DRAFT/OPEN/FULL/CLOSED/ARCHIVED —
+  // không còn "Ongoing"/"Completed" nào cả, và so sánh chuỗi lại phân biệt hoa/thường.
+  // Kết quả: filter $in không bao giờ khớp document nào — job này chạy mỗi đêm từ trước
+  // tới giờ nhưng CHƯA TỪNG cập nhật một lớp học nào (no-op câm lặng, không log lỗi vì
+  // updateMany() khớp 0 document vẫn "thành công").
   //
-  // Luồng xử lý:
-  //   Draft/Ready/Upcoming  → Ongoing  (nếu startDate đã qua, endDate chưa qua)
-  //   Ongoing/Active        → Completed (nếu endDate đã qua)
+  // Không tự sửa mapping ở đây: enum mới không có trạng thái nào tương đương "Ongoing",
+  // nên cần người nắm nghiệp vụ xác nhận đúng ánh xạ trước khi cho cron này ghi dữ liệu
+  // hàng loạt trở lại — đoán sai sẽ âm thầm đổi trạng thái nhiều lớp học mỗi đêm.
+  // Tắt hẳn việc đăng ký job (không xoá cron.service.js) cho tới khi có mapping đúng.
   // ──────────────────────────────────────────────────────────────────────────
-  cron.schedule(
-    "0 0 * * *",
-    async () => {
-      console.log("[CRON] ⏰ Bắt đầu job: Cập nhật trạng thái lớp học tự động...");
-
-      try {
-        const summary = await cronService.runClassStatusUpdate();
-
-        console.log(
-          `[CRON] ✅ Automated class status update executed successfully.` +
-            ` Activated → Ongoing: ${summary.activatedToOngoing} |` +
-            ` Completed: ${summary.completedExpired} |` +
-            ` Total modified: ${summary.totalModified} documents.`
-        );
-      } catch (error) {
-        // Log chi tiết lỗi nhưng KHÔNG throw hoặc process.exit()
-        // để cron scheduler tiếp tục chạy các lần sau.
-        console.error("[CRON ERROR] ❌ Class Status Update Failed:", error);
-      }
-    },
-    {
-      scheduled: true,
-      timezone: "Asia/Ho_Chi_Minh",
-    }
-  );
-
-  console.log("[CRON] 📅 Đã đăng ký job: Class Status Update (lịch: 00:00 hàng ngày | GMT+7)");
-
-  // ── Chạy ngay lập tức nếu được yêu cầu (VD: sau khi deploy) ──────────────
-  if (runImmediately) {
-    console.log("[CRON] 🔄 runImmediately=true — Thực thi ngay lần đầu khi khởi động...");
-
-    cronService
-      .runClassStatusUpdate()
-      .then((summary) => {
-        console.log(
-          `[CRON] ✅ Initial run complete.` +
-            ` Activated → Ongoing: ${summary.activatedToOngoing} |` +
-            ` Completed: ${summary.completedExpired} |` +
-            ` Total modified: ${summary.totalModified} documents.`
-        );
-      })
-      .catch((error) => {
-        console.error("[CRON ERROR] ❌ Initial Class Status Update Failed:", error);
-      });
-  }
 
   // ──────────────────────────────────────────────────────────────────────────
   // JOB 2: Tự động dọn dẹp AI Usage bị kẹt (Pending Recovery)
@@ -189,7 +152,9 @@ export const initCronJobs = (runImmediately = false) => {
           console.log(`[CRON] 🗑️ Chat Cleanup: Đã xóa vĩnh viễn ${deleted} tin nhắn chat cũ.`);
         }
         if (failedFiles > 0) {
-          console.warn(`[CRON] ⚠️ Chat Cleanup: Có ${failedFiles} file đính kèm lỗi khi xóa trên Cloudinary.`);
+          console.warn(
+            `[CRON] ⚠️ Chat Cleanup: Có ${failedFiles} file đính kèm lỗi khi xóa trên Cloudinary.`
+          );
         }
       } catch (error) {
         console.error("[CRON ERROR] ❌ Chat Cleanup Failed:", error);
@@ -209,7 +174,9 @@ export const initCronJobs = (runImmediately = false) => {
       try {
         const { expiredCount } = await runStudentExpiryCheck();
         if (expiredCount > 0) {
-          console.log(`[CRON] 🛑 Student Expiry: Đã vô hiệu hóa ${expiredCount} học sinh hết hạn 15 ngày.`);
+          console.log(
+            `[CRON] 🛑 Student Expiry: Đã vô hiệu hóa ${expiredCount} học sinh hết hạn 15 ngày.`
+          );
         }
       } catch (error) {
         console.error("[CRON ERROR] ❌ Student Expiry Check Failed:", error);
@@ -218,4 +185,144 @@ export const initCronJobs = (runImmediately = false) => {
     { scheduled: true, timezone: "Asia/Ho_Chi_Minh" }
   );
   console.log("[CRON] 📅 Đã đăng ký job: Student Expiry Check (lịch: 00:00 hàng ngày)");
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // JOB 7: Leo thang Mức 1 khi giáo viên vắng mặt — EduSpace mechanism design Phần B.1 (BR-13)
+  // Lịch: Mỗi 5 phút.
+  //
+  // Vì sao 5 phút: ngưỡng phát hiện là CHECKIN_GRACE_MINUTES=15 phút sau giờ học; quét mỗi 5
+  // phút nghĩa là độ trễ phát hiện tối đa cộng thêm chỉ ~5 phút — đủ nhanh để dự bị (nếu có)
+  // vào lớp trước khi học viên mất kiên nhẫn, không cần dày như job chấm thi (đây không chốt
+  // điểm số, chỉ điều phối con người).
+  //
+  // Mức 2/3 KHÔNG tự động — job chỉ đếm `needsAdminAttention` để log cảnh báo, đúng cùng
+  // nguyên tắc với Job 3 (Exam Auto-Close đếm `dangling` thay vì tự xử lý).
+  // ──────────────────────────────────────────────────────────────────────────
+  cron.schedule(
+    "*/5 * * * *",
+    async () => {
+      try {
+        const { checked, resolved, needsAdminAttention, needsAdminAttentionDetails } =
+          await runCohortEscalationLevel1();
+
+        if (checked > 0) {
+          console.log(
+            `[CRON] 👥 Cohort Escalation: ${checked} buổi quá giờ chưa check-in, ${resolved} đã tự kích hoạt dự bị.`
+          );
+        }
+        if (needsAdminAttention > 0) {
+          // Trước đây chỉ log ĐẾM số buổi — Admin đọc log thấy "N buổi cần can thiệp" nhưng
+          // không biết buổi nào/lý do gì, phải tự tra lại. needsAdminAttentionDetails đã có sẵn
+          // từ job (sessionId + reason từng buổi), chỉ là bị bỏ quên khi log — ghi ra để log
+          // thật sự hữu ích khi Admin cần tra cứu.
+          console.warn(
+            `[CRON] ⚠️ Cohort Escalation: ${needsAdminAttention} buổi KHÔNG có dự bị hoặc kích hoạt lỗi — cần Admin can thiệp (Mức 2/3).`,
+            needsAdminAttentionDetails
+          );
+        }
+      } catch (error) {
+        console.error("[CRON ERROR] ❌ Cohort Escalation Level 1 Failed:", error);
+      }
+    },
+    { scheduled: true, timezone: "Asia/Ho_Chi_Minh" }
+  );
+  console.log("[CRON] 📅 Đã đăng ký job: Cohort Escalation Level 1 (lịch: mỗi 5 phút)");
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // JOB 8: Tự động nộp bài Assignment đã hết giờ — TÍNH NĂNG MỚI, mirror đúng Job 4
+  // (Exam Attempt Auto-Submit). Assignment trước đây hoàn toàn không có deadline, xem
+  // assignment.model.js/assignmentDeadline.js.
+  //
+  // Lịch: mỗi phút, cùng lý do với Job 4 — phiên treo lâu là bài chưa nộp, điểm chưa có, học
+  // sinh không xuất hiện ở danh sách nào của giáo viên.
+  // ──────────────────────────────────────────────────────────────────────────
+  cron.schedule(
+    "* * * * *",
+    async () => {
+      try {
+        const { submitted, failed } = await runAssignmentAttemptAutoSubmit();
+
+        if (submitted > 0) {
+          console.log(
+            "[CRON] ⏱️ Assignment Auto-Submit: đã nộp tự động " + submitted + " bài tập hết giờ."
+          );
+        }
+        if (failed > 0) {
+          console.warn(
+            "[CRON] ⚠️ Assignment Auto-Submit: " +
+              failed +
+              " bài KHÔNG nộp được — xem log lỗi phía trên để truy id."
+          );
+        }
+      } catch (error) {
+        console.error("[CRON ERROR] ❌ Assignment Attempt Auto-Submit Failed:", error);
+      }
+    },
+    { scheduled: true, timezone: "Asia/Ho_Chi_Minh" }
+  );
+  console.log("[CRON] 📅 Đã đăng ký job: Assignment Attempt Auto-Submit (lịch: mỗi phút)");
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // JOB 9: Tự động chốt sổ điểm danh buổi học trực tuyến — TÍNH NĂNG MỚI (mục 7 đặc tả
+  // nghiệp vụ). Trước đây điểm danh online hoàn toàn thủ công dù dữ liệu join/leave thật đã
+  // được ghi sẵn qua live.socket.js (evidence.sessions), chỉ là chưa ai đọc lại để tính.
+  //
+  // Lịch: mỗi 5 phút — không cần dày như auto-submit bài thi (không có deadline cứng nào bị
+  // trễ nếu chốt sổ muộn vài phút, chỉ ảnh hưởng thời điểm hiển thị).
+  // ──────────────────────────────────────────────────────────────────────────
+  cron.schedule(
+    "*/5 * * * *",
+    async () => {
+      try {
+        const { finalized, failed } = await runAttendanceFinalize();
+        if (finalized > 0) {
+          console.log(
+            `[CRON] 📋 Attendance Finalize: đã chốt sổ ${finalized} buổi học trực tuyến.`
+          );
+        }
+        if (failed > 0) {
+          console.warn(
+            `[CRON] ⚠️ Attendance Finalize: ${failed} buổi KHÔNG chốt được — xem log lỗi phía trên để truy id.`
+          );
+        }
+      } catch (error) {
+        console.error("[CRON ERROR] ❌ Attendance Finalize Failed:", error);
+      }
+    },
+    { scheduled: true, timezone: "Asia/Ho_Chi_Minh" }
+  );
+  console.log("[CRON] 📅 Đã đăng ký job: Attendance Finalize (lịch: mỗi 5 phút)");
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // JOB 10: Kiểm streak học tập 7 ngày liên tục — TÍNH NĂNG MỚI (mục 5 "Learning Streak" 50 XP
+  // + mục 4 badge "Bền bỉ"). Đây là cột mốc DUY NHẤT trong 2 đặc tả không có 1 sự kiện đơn lẻ
+  // nào để hook — chỉ xác nhận được khi nhìn lại lịch sử, nên cần job hàng ngày (khác mọi
+  // badge/XP còn lại, đều chấm ngay lúc sự kiện xảy ra).
+  //
+  // Lịch: 00:30 sáng hàng ngày — sau khi ngày hôm trước đã chắc chắn kết thúc (job tính streak
+  // dựa trên "hôm qua" theo giờ UTC, xem streak.js#yesterdayUtc), không cần chạy dày vì kết quả
+  // chỉ đổi 1 lần/ngày.
+  // ──────────────────────────────────────────────────────────────────────────
+  cron.schedule(
+    "30 0 * * *",
+    async () => {
+      try {
+        const { checked, awarded, failed } = await runLearningStreakCheck();
+        if (awarded > 0) {
+          console.log(
+            `[CRON] 🔥 Learning Streak: ${awarded}/${checked} học sinh đạt streak 7 ngày, đã cộng XP + badge.`
+          );
+        }
+        if (failed > 0) {
+          console.warn(
+            `[CRON] ⚠️ Learning Streak: ${failed} học sinh KHÔNG kiểm được — xem log lỗi phía trên.`
+          );
+        }
+      } catch (error) {
+        console.error("[CRON ERROR] ❌ Learning Streak Check Failed:", error);
+      }
+    },
+    { scheduled: true, timezone: "Asia/Ho_Chi_Minh" }
+  );
+  console.log("[CRON] 📅 Đã đăng ký job: Learning Streak Check (lịch: 00:30 hàng ngày)");
 };

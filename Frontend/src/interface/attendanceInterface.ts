@@ -1,4 +1,6 @@
-export type AttendanceStatus = "DRAFT" | "PRESENT" | "ABSENT" | "LATE" | "EXCUSED";
+// TÍNH NĂNG MỚI: thêm PARTIAL (đặc tả nghiệp vụ mục 7.1) — vùng xám 40-70% thời lượng tham dự,
+// không tính PRESENT cũng không tính ABSENT.
+export type AttendanceStatus = "DRAFT" | "PRESENT" | "ABSENT" | "LATE" | "PARTIAL" | "EXCUSED";
 
 export interface IStudentAttendanceRecord {
   studentId: string;

@@ -19,7 +19,7 @@ beforeAll(async () => {
 
   const httpServer = createServer();
   io = new Server(httpServer);
-  
+
   // Set up socket handler manually for tests
   io.on("connection", (socket) => {
     socket.on("JOIN_CLASS_ROOM", async (payload, ack) => {
@@ -28,7 +28,7 @@ beforeAll(async () => {
         if (ack) ack({ success: false, message: "REJECT" });
         return;
       }
-      
+
       const roomName = `room_class_${payload.classId}`;
       socket.join(roomName);
 
@@ -41,15 +41,19 @@ beforeAll(async () => {
       if (activeSession) {
         socket.liveSessionId = activeSession._id;
       }
-      
+
       if (ack) ack({ success: true, roomName });
     });
 
     socket.on("disconnect", async () => {
+      // TÍNH NĂNG MỚI (mục 7): evidence giờ lưu evidence.sessions[] (khoảng join-leave thô) thay
+      // vì evidence.lastLeaveAt — xem attendance.model.js/live.socket.js. Stub test này chỉ cần
+      // xác nhận CÓ ghi nhận evidence khi disconnect, không cần đúng logic union chi tiết (đã có
+      // test riêng ở tests/unit/modules/live-session/live.socket.test.js).
       if (socket.liveSessionId && socket.user && socket.user.role === "student") {
         await Attendance.updateOne(
           { sessionId: socket.liveSessionId, studentId: socket.user.id },
-          { $set: { "evidence.lastLeaveAt": new Date() } }
+          { $push: { "evidence.sessions": { joinAt: new Date(), leaveAt: new Date() } } }
         );
       }
     });
@@ -82,7 +86,7 @@ const createClientSocket = (user) => {
       io.sockets.sockets.get(socket.id).user = {
         id: user._id.toString(),
         role: user.role.toLowerCase(),
-        fullName: user.fullName
+        fullName: user.fullName,
       };
       resolve(socket);
     });
@@ -106,8 +110,8 @@ describe("Domain 04.3 - Socket Security Tests", () => {
     });
 
     clientSocket = await createClientSocket(testData.users.STUDENT_A);
-    const response = await new Promise(r => clientSocket.emit("JOIN_CLASS_ROOM", { classId }, r));
-    
+    const response = await new Promise((r) => clientSocket.emit("JOIN_CLASS_ROOM", { classId }, r));
+
     expect(response.success).toBe(true);
     expect(response.roomName).toBe(`room_class_${classId}`);
   });
@@ -127,8 +131,8 @@ describe("Domain 04.3 - Socket Security Tests", () => {
     });
 
     clientSocket = await createClientSocket(testData.users.STUDENT_A);
-    const response = await new Promise(r => clientSocket.emit("JOIN_CLASS_ROOM", { classId }, r));
-    
+    const response = await new Promise((r) => clientSocket.emit("JOIN_CLASS_ROOM", { classId }, r));
+
     expect(response.success).toBe(false);
     expect(response.message).toBe("REJECT");
   });
@@ -142,8 +146,10 @@ describe("Domain 04.3 - Socket Security Tests", () => {
 
     clientSocket = await createClientSocket(testData.users.STUDENT_A);
     const classBId = testData.classes.CLASS_B._id;
-    const response = await new Promise(r => clientSocket.emit("JOIN_CLASS_ROOM", { classId: classBId }, r));
-    
+    const response = await new Promise((r) =>
+      clientSocket.emit("JOIN_CLASS_ROOM", { classId: classBId }, r)
+    );
+
     expect(response.success).toBe(false);
     expect(response.message).toBe("REJECT");
   });
@@ -151,23 +157,25 @@ describe("Domain 04.3 - Socket Security Tests", () => {
   it("Test 38: Student không enrollment connect -> REJECT", async () => {
     clientSocket = await createClientSocket(testData.users.STUDENT_A); // Not enrolled yet
     const classId = testData.classes.CLASS_ONLINE._id;
-    const response = await new Promise(r => clientSocket.emit("JOIN_CLASS_ROOM", { classId }, r));
-    
+    const response = await new Promise((r) => clientSocket.emit("JOIN_CLASS_ROOM", { classId }, r));
+
     expect(response.success).toBe(false);
     expect(response.message).toBe("REJECT");
   });
 
   it("Test 39: Student leave/disconnect -> Attendance.evidence updated, status DRAFT", async () => {
     const classId = testData.classes.CLASS_ONLINE._id;
-    
+
     // Create IN_PROGRESS session
     const session = await ClassSession.create({
-      title: 'Test', sessionNumber: 1, teacherId: testData.users.TEACHER_A._id,
+      title: "Test",
+      sessionNumber: 1,
+      teacherId: testData.users.TEACHER_A._id,
       classId,
       scheduledStartAt: new Date(Date.now() - 3600000),
       scheduledEndAt: new Date(Date.now() + 3600000),
       mode: "ONLINE",
-      status: "IN_PROGRESS"
+      status: "IN_PROGRESS",
     });
 
     await classEnrollmentService.assignClass({
@@ -181,22 +189,23 @@ describe("Domain 04.3 - Socket Security Tests", () => {
       sessionId: session._id,
       classId,
       studentId: testData.users.STUDENT_A._id,
-      status: "DRAFT"
+      status: "DRAFT",
     });
 
     clientSocket = await createClientSocket(testData.users.STUDENT_A);
-    await new Promise(r => clientSocket.emit("JOIN_CLASS_ROOM", { classId }, r));
-    
+    await new Promise((r) => clientSocket.emit("JOIN_CLASS_ROOM", { classId }, r));
+
     // Trigger disconnect
     clientSocket.disconnect();
-    
+
     // Wait for async disconnect handler in server to execute
-    await new Promise(r => setTimeout(r, 500));
+    await new Promise((r) => setTimeout(r, 500));
 
     const check = await Attendance.findById(att._id);
     expect(check.status).toBe("DRAFT");
-    expect(check.evidence.lastLeaveAt).toBeDefined();
-    
+    expect(check.evidence.sessions.length).toBeGreaterThan(0);
+    expect(check.evidence.sessions[0].leaveAt).toBeDefined();
+
     clientSocket = null;
   });
 });

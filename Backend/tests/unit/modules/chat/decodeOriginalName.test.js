@@ -1,0 +1,41 @@
+// Test này ban đầu import từ #modules/assignment/assignment.service.js — sai chỗ: module
+// assignment đã được viết lại hoàn toàn sang mô hình Attempt, không còn xử lý file upload nào
+// (không multer, không originalname) nên decodeOriginalName chưa từng tồn tại ở đó. Hàm thật
+// nằm ở chat.controller.js (dùng cho upload file đính kèm tin nhắn) — chuyển test về đúng chỗ
+// và export thêm để test được (trước đó chỉ là const nội bộ, không export).
+import { describe, it, expect } from "vitest";
+import { decodeOriginalName } from "#modules/chat/chat.controller.js";
+
+describe("decodeOriginalName — Sửa lỗi vỡ mã tên file tiếng Việt từ multer", () => {
+  it("Giải mã đúng tên file tiếng Việt bị multer đọc nhầm thành Latin-1 (mojibake)", () => {
+    const rawVietnamese = "Đề bài chương 1 - Cơ sở dữ liệu.pdf";
+    const multerMojibake = Buffer.from(rawVietnamese, "utf8").toString("latin1");
+
+    const decoded = decodeOriginalName(multerMojibake);
+    expect(decoded).toBe(rawVietnamese);
+  });
+
+  it("Giải mã đúng chuỗi mojibake thực tế ghi nhận trong database", () => {
+    const dbCorruptedName = "Thiáº¿t káº¿ chÆ°a cÃ³ tÃªn.png";
+    const decoded = decodeOriginalName(dbCorruptedName);
+    expect(decoded).toBe("Thiết kế chưa có tên.png");
+  });
+
+  it("Không bị double-decode nếu chuỗi đã là UTF-8 hợp lệ có ký tự tiếng Việt", () => {
+    const alreadyUtf8 = "Báo cáo thực tập tốt nghiệp.docx";
+    const decoded = decodeOriginalName(alreadyUtf8);
+    expect(decoded).toBe(alreadyUtf8);
+  });
+
+  it("Xử lý bình thường với tên file tiếng Anh / ASCII không dấu", () => {
+    const asciiName = "Final_Project_Report_v2.pdf";
+    const decoded = decodeOriginalName(asciiName);
+    expect(decoded).toBe(asciiName);
+  });
+
+  it("Xử lý an toàn với chuỗi rỗng, null hoặc undefined", () => {
+    expect(decodeOriginalName("")).toBe("");
+    expect(decodeOriginalName(null)).toBe("");
+    expect(decodeOriginalName(undefined)).toBe("");
+  });
+});

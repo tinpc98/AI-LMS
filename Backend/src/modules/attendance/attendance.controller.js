@@ -9,13 +9,17 @@ import ClassSession from "#modules/classSession/classSession.model.js";
 const verifyClassAccess = async (classId, req) => {
   const userId = req.user.id || req.user._id;
   const role = (req.user.role || "").toLowerCase();
-  
+
   if (role === "admin") return true;
   if (role === "teacher") {
     return await checkClassTeacherOwnership(classId, userId, role);
   }
   if (role === "student") {
-    const enrollment = await ClassEnrollment.findOne({ classId, studentId: userId, status: "ACTIVE" }).lean();
+    const enrollment = await ClassEnrollment.findOne({
+      classId,
+      studentId: userId,
+      status: "ACTIVE",
+    }).lean();
     return !!enrollment;
   }
   return false;
@@ -38,7 +42,12 @@ export const markAttendance = async (req, res) => {
       return sendError(res, "Bạn không có quyền điểm danh cho lớp học này!", 403);
     }
 
-    const result = await attendanceService.markAttendance({ sessionId, classId, records, teacherId });
+    const result = await attendanceService.markAttendance({
+      sessionId,
+      classId,
+      records,
+      teacherId,
+    });
     return sendSuccess(res, "Điểm danh thành công", result);
   } catch (error) {
     if (error.code === 11000 || error.name === "MongoServerError") {
@@ -56,9 +65,13 @@ export const confirmAttendance = async (req, res) => {
     }
     const session = await ClassSession.findById(sessionId).lean();
     if (!session) return sendError(res, "Buổi học không tồn tại!", 404);
-    
+
     const teacherId = req.user.id || req.user._id;
-    const isAuthorized = await checkClassTeacherOwnership(session.classId, teacherId, req.user?.role);
+    const isAuthorized = await checkClassTeacherOwnership(
+      session.classId,
+      teacherId,
+      req.user?.role
+    );
     if (!isAuthorized) {
       return sendError(res, "Bạn không có quyền xác nhận điểm danh cho lớp học này!", 403);
     }
@@ -82,13 +95,22 @@ export const updateAttendance = async (req, res) => {
     }
 
     const teacherId = req.user.id || req.user._id;
-    const isAuthorized = await checkClassTeacherOwnership(attendance.classId, teacherId, req.user?.role);
+    const isAuthorized = await checkClassTeacherOwnership(
+      attendance.classId,
+      teacherId,
+      req.user?.role
+    );
     if (!isAuthorized) {
       return sendError(res, "Bạn không có quyền điểm danh cho lớp học này!", 403);
     }
 
-    const { status, note } = req.body;
-    const result = await attendanceService.updateAttendance(id, { status, note });
+    const { status, note, reason } = req.body;
+    const result = await attendanceService.updateAttendance(
+      id,
+      { status, note, reason },
+      teacherId,
+      req.user?.role
+    );
     return sendSuccess(res, "Cập nhật điểm danh thành công", result);
   } catch (error) {
     return sendError(res, error.message || "Lỗi khi cập nhật điểm danh", error.status || 500);

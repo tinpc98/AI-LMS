@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import { Class } from "#modules/class";
+import { Class, resolveClassContentIds } from "#modules/class";
 import { LessonProgress } from "#modules/lesson";
 import { LearningActivity } from "#modules/badge";
 import { Attendance } from "#modules/attendance";
@@ -22,36 +22,16 @@ class AnalyticsService {
     const sid = new mongoose.Types.ObjectId(studentId);
 
     // 1. Tiến độ học tập đồng bộ theo chuẩn hệ thống (Hybrid 50/50: Bài giảng + Bài tập)
-    const [progressTotalsMap, progressStats] = await Promise.all([
-      collectProgressTotals(sid, [cid]),
-      LessonProgress.aggregate([
-        { $match: { classId: cid, studentId: sid } },
-        {
-          $group: {
-            _id: null,
-            totalProgress: { $sum: "$progress" },
-            totalLearningTime: { $sum: "$totalLearningTime" },
-            completedLessons: { $sum: { $cond: ["$completed", 1, 0] } },
-            totalLessons: { $sum: 1 },
-          },
-        },
-      ]),
-    ]);
+    const progressTotalsMap = await collectProgressTotals(sid, [cid]);
 
     const classTotals = progressTotalsMap[String(classId)] || {
       totalLessons: 0,
       lessonProgressSum: 0,
+      completedLessons: 0,
       totalAssignments: 0,
       submittedAssignments: 0,
     };
     const averageProgress = computeClassProgress(classTotals);
-
-    const progress = progressStats[0] || {
-      totalProgress: 0,
-      totalLearningTime: 0,
-      completedLessons: 0,
-      totalLessons: 0,
-    };
 
     // 2. Điểm danh
     const attendanceStats = await Attendance.aggregate([
@@ -91,13 +71,13 @@ class AnalyticsService {
     const classExams = await Exam.find({ classId: cid, isDeleted: false }).select("_id").lean();
     const examIds = classExams.map((e) => e._id);
     const examStats = await ExamAttempt.aggregate([
-      { 
-        $match: { 
-          examId: { $in: examIds }, 
-          studentId: sid, 
-          status: { $in: ["SUBMITTED", "GRADED", "PARTIALLY_GRADED"] }, 
-          isDeleted: false 
-        } 
+      {
+        $match: {
+          examId: { $in: examIds },
+          studentId: sid,
+          status: { $in: ["SUBMITTED", "GRADED", "PARTIALLY_GRADED"] },
+          isDeleted: false,
+        },
       },
       {
         $group: {
@@ -108,9 +88,7 @@ class AnalyticsService {
       },
     ]);
     const examAvg =
-      examStats[0]?.count > 0
-        ? (examStats[0].totalScore / examStats[0].count).toFixed(2)
-        : 0;
+      examStats[0]?.count > 0 ? (examStats[0].totalScore / examStats[0].count).toFixed(2) : 0;
 
     // 4. Learning Trend (Hoạt động 7 ngày gần nhất)
     const sevenDaysAgo = new Date();
@@ -130,8 +108,8 @@ class AnalyticsService {
     return {
       progress: {
         averageProgress: parseFloat(averageProgress),
-        totalLearningTime: progress.totalLearningTime, // seconds
-        completedLessons: progress.completedLessons,
+        completedLessons: classTotals.completedLessons,
+        totalLessons: classTotals.totalLessons,
       },
       attendance: {
         present: presentCount,
@@ -160,26 +138,34 @@ class AnalyticsService {
     // Tổng số học viên
     const totalStudents = await ClassEnrollment.countDocuments({
       classId: cid,
-      status: "ACTIVE"
+      status: "ACTIVE",
     });
 
     // 1. Tiến độ học tập trung bình của cả lớp
-    const progressStats = await LessonProgress.aggregate([
-      { $match: { classId: cid } },
-      {
-        $group: {
-          _id: "$studentId",
-          avgProgress: { $avg: "$progress" },
-        },
-      },
-      {
-        $group: {
-          _id: null,
-          classAverage: { $avg: "$avgProgress" },
-          studentsStarted: { $sum: 1 },
-        },
-      },
-    ]);
+    // Lesson không có field classId trực tiếp (thuộc courseId của Class qua Topic), nên phải
+    // resolve danh sách lessonId của lớp trước khi match LessonProgress theo lessonId.
+    const { lessonIds: classLessonIds } = (await resolveClassContentIds([cid]))[String(cid)] || {
+      lessonIds: [],
+    };
+
+    const progressStats = classLessonIds.length
+      ? await LessonProgress.aggregate([
+          { $match: { lessonId: { $in: classLessonIds } } },
+          {
+            $group: {
+              _id: "$studentId",
+              avgProgress: { $avg: "$progress" },
+            },
+          },
+          {
+            $group: {
+              _id: null,
+              classAverage: { $avg: "$avgProgress" },
+              studentsStarted: { $sum: 1 },
+            },
+          },
+        ])
+      : [];
     const classAvgProgress = progressStats[0]?.classAverage || 0;
 
     // 2. Tỉ lệ điểm danh trung bình
@@ -218,12 +204,12 @@ class AnalyticsService {
     const classExams = await Exam.find({ classId: cid, isDeleted: false }).select("_id").lean();
     const examIds = classExams.map((e) => e._id);
     const examStats = await ExamAttempt.aggregate([
-      { 
-        $match: { 
-          examId: { $in: examIds }, 
-          status: { $in: ["SUBMITTED", "GRADED", "PARTIALLY_GRADED"] }, 
-          isDeleted: false 
-        } 
+      {
+        $match: {
+          examId: { $in: examIds },
+          status: { $in: ["SUBMITTED", "GRADED", "PARTIALLY_GRADED"] },
+          isDeleted: false,
+        },
       },
       {
         $group: {
@@ -235,34 +221,36 @@ class AnalyticsService {
     ]);
 
     // 4. Low Progress Students (Dưới 30% tiến độ)
-    const lowProgressStudents = await LessonProgress.aggregate([
-      { $match: { classId: cid } },
-      {
-        $group: {
-          _id: "$studentId",
-          avgProgress: { $avg: "$progress" },
-        },
-      },
-      { $match: { avgProgress: { $lt: 30 } } },
-      {
-        $lookup: {
-          from: "users",
-          localField: "_id",
-          foreignField: "_id",
-          as: "userInfo",
-        },
-      },
-      { $unwind: "$userInfo" },
-      {
-        $project: {
-          studentId: "$_id",
-          fullName: "$userInfo.fullName",
-          email: "$userInfo.email",
-          avgProgress: { $round: ["$avgProgress", 1] },
-        },
-      },
-      { $limit: 10 },
-    ]);
+    const lowProgressStudents = classLessonIds.length
+      ? await LessonProgress.aggregate([
+          { $match: { lessonId: { $in: classLessonIds } } },
+          {
+            $group: {
+              _id: "$studentId",
+              avgProgress: { $avg: "$progress" },
+            },
+          },
+          { $match: { avgProgress: { $lt: 30 } } },
+          {
+            $lookup: {
+              from: "users",
+              localField: "_id",
+              foreignField: "_id",
+              as: "userInfo",
+            },
+          },
+          { $unwind: "$userInfo" },
+          {
+            $project: {
+              studentId: "$_id",
+              fullName: "$userInfo.fullName",
+              email: "$userInfo.email",
+              avgProgress: { $round: ["$avgProgress", 1] },
+            },
+          },
+          { $limit: 10 },
+        ])
+      : [];
 
     return {
       overview: {

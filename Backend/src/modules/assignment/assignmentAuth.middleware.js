@@ -1,5 +1,5 @@
 import Assignment from "./assignment.model.js";
-import Topic from "../topic/topic.model.js";
+import { Topic } from "#modules/topic";
 import Class from "../class/class.model.js";
 import ClassEnrollment from "../classEnrollment/classEnrollment.model.js";
 

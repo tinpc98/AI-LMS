@@ -4,7 +4,12 @@ import { ReloadOutlined, CloseCircleOutlined, CreditCardOutlined } from "@ant-de
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { enrollmentService } from "./enrollmentService";
 import { paymentApi } from "../../api/paymentApi";
-import type { EnrollmentRecord, EnrollmentCourse, EnrollmentStatus, EnrollmentFilters } from "./enrollment.types";
+import type {
+  EnrollmentRecord,
+  EnrollmentCourse,
+  EnrollmentStatus,
+  EnrollmentFilters,
+} from "./enrollment.types";
 import type { Payment } from "../../types/payment";
 import EnrollmentStatusTag from "../../shared/components/EnrollmentStatusTag";
 import QRPaymentModal from "./components/QRPaymentModal";
@@ -73,7 +78,8 @@ const MyEnrollmentsPage: React.FC = () => {
   const handleOpenPayment = (enrollmentId: string) => {
     if (!paymentsData?.data) return;
     const payment = paymentsData.data.find(
-      (p) => (typeof p.enrollmentId === "string" ? p.enrollmentId : p.enrollmentId?._id) === enrollmentId
+      (p) =>
+        (typeof p.enrollmentId === "string" ? p.enrollmentId : p.enrollmentId?._id) === enrollmentId
     );
     if (payment) {
       setSelectedPayment(payment);
@@ -110,23 +116,19 @@ const MyEnrollmentsPage: React.FC = () => {
       },
     },
     {
+      // BUG ĐÃ SỬA: level/học phí phải lấy từ chính Enrollment (đã chốt lúc đăng ký), không suy
+      // ra từ Course đã join — Course không có 1 level/giá cố định (3 mức giá theo level).
       title: "Cấp độ",
       key: "level",
       width: 120,
-      render: (_: unknown, record: EnrollmentRecord) => {
-        const course = getCourse(record);
-        return course ? course.level : "—";
-      },
+      render: (_: unknown, record: EnrollmentRecord) => record.level || "—",
     },
     {
       title: "Học phí",
       key: "tuitionFee",
       width: 140,
-      render: (_: unknown, record: EnrollmentRecord) => {
-        const course = getCourse(record);
-        const fee = course?.pricing?.tuitionFee;
-        return fee ? `${fee.toLocaleString()} VND` : "—";
-      },
+      render: (_: unknown, record: EnrollmentRecord) =>
+        record.price ? `${record.price.toLocaleString()} VND` : "—",
     },
     {
       title: "Trạng thái",
@@ -151,7 +153,9 @@ const MyEnrollmentsPage: React.FC = () => {
         let paymentStatus = "";
         if (paymentsData?.data) {
           const payment = paymentsData.data.find(
-            (p) => (typeof p.enrollmentId === "string" ? p.enrollmentId : p.enrollmentId?._id) === record._id
+            (p) =>
+              (typeof p.enrollmentId === "string" ? p.enrollmentId : p.enrollmentId?._id) ===
+              record._id
           );
           if (payment) paymentStatus = payment.status;
         }
@@ -159,27 +163,35 @@ const MyEnrollmentsPage: React.FC = () => {
         if (record.status === "PENDING_PAYMENT" && paymentStatus === "PENDING") {
           return (
             <Space>
-              <Button type="primary" size="small" icon={<CreditCardOutlined />} onClick={() => handleOpenPayment(record._id)}>
+              <Button
+                type="primary"
+                size="small"
+                icon={<CreditCardOutlined />}
+                onClick={() => handleOpenPayment(record._id)}
+              >
                 Thanh toán
               </Button>
               <Tooltip title="Hủy đăng ký">
-                <Button size="small" danger icon={<CloseCircleOutlined />} onClick={() => cancelMutation.mutate(record._id)} loading={cancelMutation.isPending} />
+                <Button
+                  size="small"
+                  danger
+                  icon={<CloseCircleOutlined />}
+                  onClick={() => cancelMutation.mutate(record._id)}
+                  loading={cancelMutation.isPending}
+                />
               </Tooltip>
             </Space>
           );
         }
-        
-        if (record.status === "PENDING_PAYMENT" && paymentStatus !== "PENDING") {
-           // Payment is submitted and waiting for admin confirmation, but Enrollment is still PENDING_PAYMENT
-           // Note: The Backend logic actually transitions payment to "PENDING" when submitted? Wait. 
-           // If payment submit changes payment status? Let's assume it stays PENDING or changes to SUBMITTED? 
-           // In payment.types.ts: status is "PENDING" | "PAID" | "CANCELLED" | "REFUNDED". So it stays PENDING or maybe there is no SUBMITTED. 
-           // Wait, backend `submitPayment` just sets `studentId` or something? No, it might just notify. 
-           // Let's just show "Đang chờ xác nhận".
-           return <Typography.Text type="secondary">Đang chờ xác nhận</Typography.Text>;
+
+        if (record.status === "PAYMENT_PENDING_CONFIRMATION") {
+          // payment.service.js#submitPayment chuyển Enrollment sang PAYMENT_PENDING_CONFIRMATION
+          // ngay khi học sinh bấm "Đã chuyển khoản" (payment.status vẫn giữ nguyên "PENDING"
+          // cho tới khi admin confirm/reject ở trang Thanh toán).
+          return <Typography.Text type="secondary">Đang chờ xác nhận</Typography.Text>;
         }
 
-        if (record.status === "APPROVED" || record.status === "CLASS_ASSIGNED" || record.status === "PAID") {
+        if (record.status === "APPROVED" || record.status === "CLASS_ASSIGNED") {
           return <Typography.Text type="success">Đã thanh toán</Typography.Text>;
         }
 
@@ -216,10 +228,13 @@ const MyEnrollmentsPage: React.FC = () => {
                 { label: "Đã hủy", value: "CANCELLED" },
               ]}
             />
-            <Button icon={<ReloadOutlined />} onClick={() => {
-              queryClient.invalidateQueries({ queryKey: ["enrollments", "me"] });
-              queryClient.invalidateQueries({ queryKey: ["payments", "me"] });
-            }}>
+            <Button
+              icon={<ReloadOutlined />}
+              onClick={() => {
+                queryClient.invalidateQueries({ queryKey: ["enrollments", "me"] });
+                queryClient.invalidateQueries({ queryKey: ["payments", "me"] });
+              }}
+            >
               Làm mới
             </Button>
           </div>
@@ -237,10 +252,14 @@ const MyEnrollmentsPage: React.FC = () => {
             current: enrollmentsData?.pagination?.page || 1,
             pageSize: enrollmentsData?.pagination?.limit || 10,
             total: enrollmentsData?.pagination?.total || 0,
-            onChange: (page, pageSize) => setFilters((prev) => ({ ...prev, page, limit: pageSize })),
+            onChange: (page, pageSize) =>
+              setFilters((prev) => ({ ...prev, page, limit: pageSize })),
           }}
           locale={{
-            emptyText: (enrollmentsLoading || paymentsLoading) ? null : <Empty description="Chưa có đăng ký nào" />,
+            emptyText:
+              enrollmentsLoading || paymentsLoading ? null : (
+                <Empty description="Chưa có đăng ký nào" />
+              ),
           }}
         />
       </Card>

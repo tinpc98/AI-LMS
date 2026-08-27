@@ -5,6 +5,7 @@ import { Lesson } from "#modules/lesson";
 import { Class } from "#modules/class";
 import { AIError, AIErrorCode } from "../aiError.js";
 import aiCoreService from "./aiCore.service.js";
+import aiVectorRetrieverService from "./aiVectorRetriever.service.js";
 import chatOutputValidator from "../validators/chatOutput.validator.js";
 import { AIInputBudget } from "../utils/aiInputBudget.js";
 import ClassEnrollment from "../../classEnrollment/classEnrollment.model.js";
@@ -79,7 +80,7 @@ class AIChatService {
       const isEnrolled = await ClassEnrollment.exists({
         classId: classDoc._id,
         studentId: userId,
-        status: "ACTIVE"
+        status: "ACTIVE",
       });
       if (!isEnrolled) {
         throw new AIError(

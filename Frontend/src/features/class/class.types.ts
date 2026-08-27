@@ -14,12 +14,7 @@ export interface ApiResponse<T> {
 }
 
 export type ClassLearningMode = "Offline" | "Online";
-export type ClassStatus =
-  | "DRAFT"
-  | "OPEN"
-  | "FULL"
-  | "CLOSED"
-  | "ARCHIVED";
+export type ClassStatus = "DRAFT" | "OPEN" | "FULL" | "CLOSED" | "ARCHIVED";
 
 export interface ClassRecord {
   id: string; // Mapped from _id
@@ -52,6 +47,11 @@ export interface ClassRecord {
   isDeleted?: boolean;
   createdAt: string;
   updatedAt: string;
+  // Cơ chế cam kết (EduSpace mechanism design Phần A) — field mới, tách khỏi `status` vận hành.
+  commitmentStatus?: string;
+  cohortSessionCount?: number | null;
+  backupTeacherId?: string | { _id: string; fullName: string } | null;
+  fundingType?: "COMMUNITY" | "SPONSORED" | "COMMERCIAL";
 }
 
 export interface ClassFilters {

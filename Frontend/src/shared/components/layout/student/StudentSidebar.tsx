@@ -11,6 +11,8 @@ import {
   NotificationOutlined,
   MessageOutlined,
   HomeOutlined,
+  AimOutlined,
+  WarningOutlined,
 } from "@ant-design/icons";
 import { useAuth } from "../../../hooks/useAuth";
 import { useMessagesStore } from "../../../../features/chat/store/useMessagesStore";
@@ -75,9 +77,7 @@ export const StudentSidebar: React.FC<StudentSidebarProps> = React.memo(
           label: (
             <Link to="/student/messages">
               Thảo luận
-              {totalUnread > 0 && (
-                <Badge count={totalUnread} offset={[10, 0]} size="small" />
-              )}
+              {totalUnread > 0 && <Badge count={totalUnread} offset={[10, 0]} size="small" />}
             </Link>
           ),
         },
@@ -85,6 +85,21 @@ export const StudentSidebar: React.FC<StudentSidebarProps> = React.memo(
           key: "/student/tuition",
           icon: <CreditCardOutlined />,
           label: <Link to="/student/tuition">Học phí</Link>,
+        },
+        {
+          key: "/student/learner-needs",
+          icon: <AimOutlined />,
+          label: <Link to="/student/learner-needs">Nhu cầu học tập</Link>,
+        },
+        {
+          key: "/student/report-issue",
+          icon: <WarningOutlined />,
+          label: <Link to="/student/report-issue">Báo cáo vấn đề</Link>,
+        },
+        {
+          key: "/student/profile",
+          icon: <UserOutlined />,
+          label: <Link to="/student/profile">Hồ sơ cá nhân</Link>,
         },
       ],
       [totalUnread]
@@ -124,7 +139,12 @@ export const StudentSidebar: React.FC<StudentSidebarProps> = React.memo(
             <div style={{ minWidth: 0, overflow: "hidden" }}>
               <Title
                 level={5}
-                style={{ color: tokens.color.text.inverse, margin: 0, fontSize: 24, fontWeight: 700 }}
+                style={{
+                  color: tokens.color.text.inverse,
+                  margin: 0,
+                  fontSize: 24,
+                  fontWeight: 700,
+                }}
                 ellipsis
               >
                 EduSpace
@@ -165,7 +185,11 @@ export const StudentSidebar: React.FC<StudentSidebarProps> = React.memo(
                   style={{ backgroundColor: tokens.color.action.primaryBg }}
                 />
                 <div style={{ minWidth: 0, overflow: "hidden" }}>
-                  <Text strong style={{ color: tokens.color.text.inverse, display: "block", fontSize: 13 }} ellipsis>
+                  <Text
+                    strong
+                    style={{ color: tokens.color.text.inverse, display: "block", fontSize: 13 }}
+                    ellipsis
+                  >
                     {user?.fullName || "Sinh viên"}
                   </Text>
                   <Text style={{ color: "rgba(255,255,255,0.65)", fontSize: 11 }} ellipsis>

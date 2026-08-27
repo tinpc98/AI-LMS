@@ -54,7 +54,7 @@ const EnrollmentManagementPage: React.FC = () => {
       if (variables.action === "approve") actionLabel = "duyệt";
       if (variables.action === "complete") actionLabel = "hoàn thành";
       if (variables.action === "cancel") actionLabel = "hủy";
-      
+
       message.success(`Đã ${actionLabel} thành công.`);
       queryClient.invalidateQueries({ queryKey: ["enrollments"] });
     },
@@ -158,14 +158,17 @@ const EnrollmentManagementPage: React.FC = () => {
         const s = record.status;
         return (
           <Space size={4}>
-            {s === "PAID" && (
-              <Tooltip title="Duyệt">
+            {s === "PAYMENT_PENDING_CONFIRMATION" && (
+              <Tooltip title="Duyệt thủ công (thường tự duyệt khi admin xác nhận thanh toán ở trang Thanh toán)">
                 <Button
                   size="small"
                   type="primary"
                   icon={<CheckCircleOutlined />}
                   onClick={() => handleAction(record._id, "approve")}
-                  loading={transitionMutation.isPending && transitionMutation.variables?.action === "approve"}
+                  loading={
+                    transitionMutation.isPending &&
+                    transitionMutation.variables?.action === "approve"
+                  }
                 />
               </Tooltip>
             )}
@@ -185,18 +188,24 @@ const EnrollmentManagementPage: React.FC = () => {
                   size="small"
                   icon={<TrophyOutlined />}
                   onClick={() => handleAction(record._id, "complete")}
-                  loading={transitionMutation.isPending && transitionMutation.variables?.action === "complete"}
+                  loading={
+                    transitionMutation.isPending &&
+                    transitionMutation.variables?.action === "complete"
+                  }
                 />
               </Tooltip>
             )}
-            {["PENDING_PAYMENT", "PAID", "APPROVED", "PAYMENT_PENDING_CONFIRMATION"].includes(s) && (
+            {["PENDING_PAYMENT", "PAYMENT_PENDING_CONFIRMATION", "APPROVED"].includes(s) && (
               <Tooltip title="Hủy">
                 <Button
                   size="small"
                   danger
                   icon={<CloseCircleOutlined />}
                   onClick={() => handleAction(record._id, "cancel")}
-                  loading={transitionMutation.isPending && transitionMutation.variables?.action === "cancel"}
+                  loading={
+                    transitionMutation.isPending &&
+                    transitionMutation.variables?.action === "cancel"
+                  }
                 />
               </Tooltip>
             )}
@@ -231,14 +240,16 @@ const EnrollmentManagementPage: React.FC = () => {
               { label: "Tất cả trạng thái", value: "All" },
               { label: "Chờ thanh toán", value: "PENDING_PAYMENT" },
               { label: "Đang chờ xác nhận", value: "PAYMENT_PENDING_CONFIRMATION" },
-              { label: "Đã thanh toán", value: "PAID" },
               { label: "Đã duyệt", value: "APPROVED" },
               { label: "Đã xếp lớp", value: "CLASS_ASSIGNED" },
               { label: "Hoàn thành", value: "COMPLETED" },
               { label: "Đã hủy", value: "CANCELLED" },
             ]}
           />
-          <Button icon={<ReloadOutlined />} onClick={() => queryClient.invalidateQueries({ queryKey: ["enrollments"] })}>
+          <Button
+            icon={<ReloadOutlined />}
+            onClick={() => queryClient.invalidateQueries({ queryKey: ["enrollments"] })}
+          >
             Làm mới
           </Button>
         </div>

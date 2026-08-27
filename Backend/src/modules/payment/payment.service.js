@@ -44,7 +44,9 @@ class PaymentService {
     }
 
     if (enrollment.status !== "PENDING_PAYMENT") {
-      throw new BusinessRuleError(`Không thể tạo thanh toán cho enrollment có trạng thái ${enrollment.status}.`);
+      throw new BusinessRuleError(
+        `Không thể tạo thanh toán cho enrollment có trạng thái ${enrollment.status}.`
+      );
     }
 
     const course = await Course.findById(enrollment.courseId);
@@ -67,8 +69,15 @@ class PaymentService {
       throw new BusinessRuleError("Tính năng thanh toán hiện đang bảo trì.");
     }
 
-    const tuitionFee = course.pricing?.tuitionFee || 0;
-    const currency = course.pricing?.currency || "VND";
+    // BUG ĐÃ SỬA: `course.pricing.tuitionFee`/`course.pricing.currency` không tồn tại trên schema
+    // Course (giá thật nằm ở `prices: Map` theo level, xem course.model.js) — luôn undefined nên
+    // MỌI payment tạo ra trước đây đều có amount=0đ và QR sinh ra với amount=0, bất kể giá khóa
+    // học thật là bao nhiêu. `enrollment.price` đã được chốt (snapshot) đúng theo level lúc tạo
+    // Enrollment (xem enrollment.service.js#createEnrollment: `course.prices?.get(level)`) — dùng
+    // lại giá trị đã chốt này, vừa đúng field vừa đúng nguyên tắc "Snapshot field: must not change
+    // if Course price changes" đã ghi chú sẵn ở amount trong payment.model.js.
+    const tuitionFee = enrollment.price;
+    const currency = "VND";
 
     // Sinh transferContent ví dụ: EDU ENR_ID
     const transferContent = `${config.transferPrefix} ${enrollment._id.toString().substring(18).toUpperCase()}`;
@@ -79,6 +88,12 @@ class PaymentService {
     const safeTransferContent = encodeURIComponent(transferContent);
     const qrData = `https://img.vietqr.io/image/${safeBankName}-${config.accountNumber}-compact2.png?amount=${tuitionFee}&addInfo=${safeTransferContent}&accountName=${safeAccountName}`;
 
+    // BUG ĐÃ SỬA: `expiresAt` là field required trên schema Payment (payment.model.js:88-91)
+    // nhưng trước đây KHÔNG được set ở đây → Payment.create() luôn ném ValidationError, tức
+    // hàm createPayment không bao giờ tạo được payment nào trong thực tế. Đặt hạn 24h, khớp với
+    // hạn dùng ở nơi khởi tạo Payment còn lại (enrollment.service.js#createEnrollment).
+    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
     const payment = await Payment.create({
       enrollmentId: enrollment._id,
       studentId: enrollment.studentId,
@@ -87,6 +102,7 @@ class PaymentService {
       currency,
       paymentMethod: "BANK_TRANSFER",
       status: "PENDING",
+      expiresAt,
       transferInfo: {
         bankName: config.bankName,
         accountNumber: config.accountNumber,
@@ -111,7 +127,9 @@ class PaymentService {
       if (!payment) throw new NotFoundError("Không tìm thấy thông tin thanh toán.");
 
       if (payment.status !== "PENDING") {
-        throw new BusinessRuleError(`Không thể xác nhận thanh toán đang ở trạng thái ${payment.status}.`);
+        throw new BusinessRuleError(
+          `Không thể xác nhận thanh toán đang ở trạng thái ${payment.status}.`
+        );
       }
       if (payment.expiresAt && payment.expiresAt < new Date()) {
         throw new BusinessRuleError("Thanh toán đã quá hạn, không thể xác nhận.");
@@ -121,7 +139,9 @@ class PaymentService {
       if (!enrollment) throw new NotFoundError("Ghi danh không tồn tại.");
 
       if (enrollment.status !== "PAYMENT_PENDING_CONFIRMATION") {
-        throw new BusinessRuleError(`Ghi danh đang ở trạng thái ${enrollment.status}, không thể cập nhật thanh toán.`);
+        throw new BusinessRuleError(
+          `Ghi danh đang ở trạng thái ${enrollment.status}, không thể cập nhật thanh toán.`
+        );
       }
 
       // Update Payment
@@ -251,7 +271,9 @@ class PaymentService {
       }
 
       if (payment.status !== "PENDING") {
-        throw new BusinessRuleError(`Chỉ thanh toán PENDING mới có thể hủy. Hiện tại: ${payment.status}.`);
+        throw new BusinessRuleError(
+          `Chỉ thanh toán PENDING mới có thể hủy. Hiện tại: ${payment.status}.`
+        );
       }
 
       const enrollment = await Enrollment.findById(payment.enrollmentId).session(session);
@@ -281,15 +303,20 @@ class PaymentService {
    * Refund payment
    * Admin hoàn tiền cho thanh toán đã PAID. Enrollment không đổi.
    */
-  async refundPayment(paymentId) {
+  async refundPayment(paymentId, adminId, reason = "") {
     const payment = await Payment.findById(paymentId);
     if (!payment) throw new NotFoundError("Không tìm thấy thông tin thanh toán.");
 
     if (payment.status !== "PAID") {
-      throw new BusinessRuleError(`Chỉ có thể hoàn tiền cho thanh toán PAID. Hiện tại: ${payment.status}.`);
+      throw new BusinessRuleError(
+        `Chỉ có thể hoàn tiền cho thanh toán PAID. Hiện tại: ${payment.status}.`
+      );
     }
 
     payment.status = "REFUNDED";
+    payment.refundedAt = new Date();
+    payment.refundedBy = adminId;
+    payment.refundReason = reason;
     await payment.save();
 
     // Theo spec: "Refund and Enrollment lifecycle must remain separate." -> Không đổi Enrollment.

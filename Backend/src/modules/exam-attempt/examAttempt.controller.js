@@ -6,6 +6,7 @@ import { checkClassTeacherOwnership } from "#modules/class";
 import { processAttemptPerformanceService } from "#modules/performance";
 import { buildAttemptStats } from "./attemptStats.js";
 import { BusinessRuleError, AuthorizationError, ValidationError } from "#shared/utils/appError.js";
+import { checkAndAwardPerfectScoreBadge } from "../badge/badgeAward.service.js";
 
 /**
  * Kiểm tra teacher có quyền với exam này (qua exam.classId).
@@ -73,9 +74,7 @@ export const getAttempt = asyncHandler(async (req, res) => {
   }
 
   // Trả về data với các field frontend cần
-  const exam = await Exam.findById(attempt.examId)
-    .select("title duration classId topicId")
-    .lean();
+  const exam = await Exam.findById(attempt.examId).select("title duration classId topicId").lean();
 
   return res.status(200).json({
     success: true,
@@ -235,9 +234,7 @@ export const getAttemptForReview = asyncHandler(async (req, res) => {
     .lean();
   if (!attempt) return res.status(404).json({ success: false, message: "Attempt not found" });
 
-  const exam = await Exam.findById(attempt.examId)
-    .select("classId title duration topicId")
-    .lean();
+  const exam = await Exam.findById(attempt.examId).select("classId title duration topicId").lean();
 
   const isOwner = await checkTeacherExamAccess(exam, userId, role);
   if (!isOwner) return res.status(403).json({ success: false, message: "Forbidden" });
@@ -300,54 +297,96 @@ export const gradeEssay = asyncHandler(async (req, res) => {
     return res.status(400).json({ success: false, message: "Thiếu dữ liệu chấm điểm" });
   }
 
-  const attempt = await ExamAttempt.findById(attemptId);
-  if (!attempt) return res.status(404).json({ success: false, message: "Attempt not found" });
+  // BUG ĐÃ SỬA (race condition): trước đây đọc CẢ document, sửa mảng questions[] trong bộ nhớ,
+  // rồi attempt.save() ghi đè NGUYÊN mảng đó. Nếu 2 giáo viên cùng chấm 1 attempt (chấm 2 câu
+  // essay khác nhau) gần như đồng thời, người ghi sau đè mất điểm người ghi trước vì bản trong
+  // bộ nhớ của họ vẫn còn là dữ liệu CŨ (đọc trước khi người kia lưu). Sửa bằng optimistic lock
+  // trên __v (Mongoose version key có sẵn, không cần field mới) + $set theo đúng index câu hỏi
+  // (không đụng câu khác) — nếu version lệch (ai đó vừa ghi), đọc lại và thử lại tối đa 5 lần
+  // thay vì âm thầm ghi đè.
+  const MAX_RETRIES = 5;
+  let updated = null;
 
-  if (!["PARTIALLY_GRADED", "SUBMITTED"].includes(attempt.status)) {
-    return res.status(409).json({ success: false, message: "Attempt không ở trạng thái cần chấm" });
+  for (let attemptNo = 0; attemptNo < MAX_RETRIES; attemptNo++) {
+    const attempt = await ExamAttempt.findById(attemptId);
+    if (!attempt) return res.status(404).json({ success: false, message: "Attempt not found" });
+
+    if (!["PARTIALLY_GRADED", "SUBMITTED"].includes(attempt.status)) {
+      return res
+        .status(409)
+        .json({ success: false, message: "Attempt không ở trạng thái cần chấm" });
+    }
+
+    const exam = await Exam.findById(attempt.examId).select("classId").lean();
+    const isOwner = await checkTeacherExamAccess(exam, userId, role);
+    if (!isOwner) return res.status(403).json({ success: false, message: "Forbidden" });
+
+    // Xây $set theo index — chỉ đụng đúng những câu essay được chấm trong request này.
+    const setOps = {};
+    for (const grade of essayGrades) {
+      const idx = attempt.questions.findIndex((q) => q.questionId.toString() === grade.questionId);
+      if (idx === -1) continue;
+
+      const aq = attempt.questions[idx];
+      const qType = (aq.questionSnapshot?.type || "").toUpperCase();
+      const isEssay = qType === "ESSAY" || qType === "SHORT_ANSWER";
+      if (!isEssay) continue; // Chỉ chấm essay
+
+      const awarded = Math.max(0, Math.min(aq.points, Number(grade.pointsEarned) || 0));
+      setOps[`questions.${idx}.score`] = awarded;
+      setOps[`questions.${idx}.isCorrect`] = awarded > 0;
+    }
+
+    if (Object.keys(setOps).length === 0) {
+      return res.status(400).json({ success: false, message: "Không có câu Essay hợp lệ để chấm" });
+    }
+
+    // Tính totalScore/stillPending trên bản CHIẾU (projection) = dữ liệu vừa đọc + thay đổi của
+    // request này — vẫn dựa trên đúng phiên bản đang giữ optimistic lock, không lẫn dữ liệu cũ.
+    const projected = attempt.questions.map((q, idx) => ({
+      score:
+        setOps[`questions.${idx}.score`] !== undefined ? setOps[`questions.${idx}.score`] : q.score,
+      isCorrect:
+        setOps[`questions.${idx}.isCorrect`] !== undefined
+          ? setOps[`questions.${idx}.isCorrect`]
+          : q.isCorrect,
+      type: (q.questionSnapshot?.type || "").toUpperCase(),
+    }));
+    const totalScore = projected.reduce((sum, q) => sum + (q.score || 0), 0);
+    const stillPending = projected.some(
+      (q) => q.type !== "MCQ" && q.type !== "MULTIPLE_CHOICE" && q.isCorrect === null
+    );
+
+    setOps.score = totalScore;
+    if (!stillPending) setOps.status = "GRADED";
+
+    updated = await ExamAttempt.findOneAndUpdate(
+      { _id: attemptId, __v: attempt.__v },
+      { $set: setOps, $inc: { __v: 1 } },
+      { new: true }
+    );
+
+    if (updated) break; // Ghi thành công, không ai chen vào giữa lúc tính toán.
+    // updated === null: __v đã đổi (giáo viên khác vừa ghi) — đọc lại bản mới nhất và thử lại.
   }
 
-  const exam = await Exam.findById(attempt.examId).select("classId").lean();
-  const isOwner = await checkTeacherExamAccess(exam, userId, role);
-  if (!isOwner) return res.status(403).json({ success: false, message: "Forbidden" });
-
-  // Áp điểm từng câu Essay
-  for (const grade of essayGrades) {
-    const aq = attempt.questions.find((q) => q.questionId.toString() === grade.questionId);
-    if (!aq) continue;
-
-    const qType = (aq.questionSnapshot?.type || "").toUpperCase();
-    const isEssay = qType === "ESSAY" || qType === "SHORT_ANSWER";
-    if (!isEssay) continue; // Chỉ chấm essay
-
-    const awarded = Math.max(0, Math.min(aq.points, Number(grade.pointsEarned) || 0));
-    aq.score = awarded;
-    aq.isCorrect = awarded > 0;
+  if (!updated) {
+    return res.status(409).json({
+      success: false,
+      message: "Có người khác vừa chấm bài này cùng lúc, vui lòng tải lại và thử lại.",
+    });
   }
 
-  // Tính lại tổng điểm
-  const totalScore = attempt.questions.reduce((sum, q) => sum + (q.score || 0), 0);
-  attempt.score = totalScore;
-
-  // Kiểm tra còn câu chưa chấm không
-  const stillPending = attempt.questions.some(
-    (q) =>
-      (q.questionSnapshot?.type || "").toUpperCase() !== "MCQ" &&
-      (q.questionSnapshot?.type || "").toUpperCase() !== "MULTIPLE_CHOICE" &&
-      q.isCorrect === null
-  );
-
-  if (!stillPending) {
-    attempt.status = "GRADED";
+  // TÍNH NĂNG MỚI (mục 4): "Điểm tuyệt đối" — chỉ kiểm được sau khi hết câu tự luận chờ chấm.
+  if (updated.status === "GRADED" && examAttemptService.isPerfectScore(updated)) {
+    await checkAndAwardPerfectScoreBadge(updated.studentId);
   }
-
-  await attempt.save();
 
   // Trigger Performance Engine nếu đã GRADED
-  if (attempt.status === "GRADED" && !attempt.performanceProcessedAt) {
-    processAttemptPerformanceService(attempt, "EXAM")
+  if (updated.status === "GRADED" && !updated.performanceProcessedAt) {
+    processAttemptPerformanceService(updated, "EXAM")
       .then(async () => {
-        await ExamAttempt.findByIdAndUpdate(attempt._id, {
+        await ExamAttempt.findByIdAndUpdate(updated._id, {
           performanceProcessedAt: new Date(),
         });
       })
@@ -357,7 +396,7 @@ export const gradeEssay = asyncHandler(async (req, res) => {
   return res.status(200).json({
     success: true,
     message: "Chấm điểm thành công",
-    data: attempt,
+    data: updated,
   });
 });
 

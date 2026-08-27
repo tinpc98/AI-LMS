@@ -2,26 +2,35 @@
 //
 // Đây là job có hậu quả nặng nhất hệ thống: nó CHỐT ĐIỂM của học sinh mà không ai bấm nút.
 // Sai ở đây nghĩa là nộp sớm bài đang làm, hoặc chấm rỗng bài đã làm xong.
+//
+// Cập nhật theo job hiện tại (xem examAttemptAutoSubmit.job.js): không còn dùng aggregate +
+// $lookup sang collection exams để tính hạn nộp động (startTime + exam.duration) — attempt giờ
+// có sẵn field `expiresAt` (canonical), nên chỉ cần find({status, expiresAt:{$lt:cutoff}}).
+// gradeSubmission cũng không còn nhận `answers` — nó tự đọc attempt.questions[].answer.
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-const aggregate = vi.fn();
+const find = vi.fn();
 const gradeSubmission = vi.fn();
 
+const mongooseQuery = (result) => ({
+  select: () => ({ lean: async () => result }),
+});
+
 vi.mock("#modules/exam-attempt/examAttempt.model.js", () => ({
-  default: { aggregate: (...a) => aggregate(...a) },
+  default: { find: (...a) => find(...a) },
 }));
 vi.mock("#modules/exam-attempt/examAttempt.service.js", () => ({
-  default: { gradeSubmission: (...a) => gradeSubmission(...a) },
+  gradeSubmission: (...a) => gradeSubmission(...a),
 }));
-vi.mock("#modules/exam", () => ({ Exam: { collection: { name: "exams" } } }));
 
 const { runExamAttemptAutoSubmit, findOverdueAttempts } =
   await import("#jobs/examAttemptAutoSubmit.job.js");
 
 const MOC = new Date("2026-08-01T10:00:00Z");
+const GRACE_PERIOD_MS = 2 * 60 * 1000;
 
 beforeEach(() => {
-  aggregate.mockReset().mockResolvedValue([]);
+  find.mockReset().mockReturnValue(mongooseQuery([]));
   gradeSubmission.mockReset().mockResolvedValue({});
 });
 
@@ -29,37 +38,28 @@ describe("findOverdueAttempts — điều kiện lọc", () => {
   it("chỉ lấy phiên đang IN_PROGRESS", async () => {
     await findOverdueAttempts(MOC);
 
-    const pipeline = aggregate.mock.calls[0][0];
-    expect(pipeline[0]).toEqual({ $match: { status: "IN_PROGRESS" } });
-  });
-
-  it("ghép sang collection kỳ thi để lấy thời lượng", async () => {
-    // Hạn nộp = startTime của phiên + duration của đề, nên phép so sánh cần dữ liệu hai bảng.
-    await findOverdueAttempts(MOC);
-
-    const pipeline = aggregate.mock.calls[0][0];
-    expect(pipeline[1].$lookup).toMatchObject({ from: "exams", localField: "examId" });
+    expect(find.mock.calls[0][0]).toMatchObject({ status: "IN_PROGRESS" });
   });
 
   it("CỘNG ÂN HẠN vào hạn nộp trước khi so sánh", async () => {
     // Thiếu ân hạn thì học sinh bấm nộp đúng giây cuối trên mạng chậm sẽ bị job cướp mất bài
-    // ngay trước đó. Chốt hình dạng biểu thức.
+    // ngay trước đó. cutoff = now - GRACE_PERIOD_MS, tương đương so sánh expiresAt < now sau khi
+    // đã lùi lại đúng khoảng ân hạn.
     await findOverdueAttempts(MOC);
 
-    const pipeline = aggregate.mock.calls[0][0];
-    const bieuThuc = pipeline[3].$match.$expr.$lt[0].$add;
-
-    expect(bieuThuc).toContain("$startTime");
-    expect(bieuThuc).toContainEqual({ $multiply: ["$exam.duration", 60000] });
-    expect(bieuThuc).toContain(2 * 60 * 1000); // ân hạn 2 phút
+    const filter = find.mock.calls[0][0];
+    const expectedCutoff = new Date(MOC.getTime() - GRACE_PERIOD_MS);
+    expect(filter.expiresAt.$lt.getTime()).toBe(expectedCutoff.getTime());
   });
 
-  it("so sánh theo chiều NHỎ HƠN thời điểm hiện tại", async () => {
-    // Đảo chiều nghĩa là nộp hộ đúng những phiên CHƯA hết giờ — hỏng ngược hoàn toàn mà vẫn
-    // "chạy được".
-    await findOverdueAttempts(MOC);
+  it("mặc định so với thời điểm hiện tại nếu không truyền", async () => {
+    const before = Date.now();
+    await findOverdueAttempts();
+    const after = Date.now();
 
-    expect(aggregate.mock.calls[0][0][3].$match.$expr.$lt[1]).toBe(MOC);
+    const cutoffMs = find.mock.calls[0][0].expiresAt.$lt.getTime();
+    expect(cutoffMs).toBeGreaterThanOrEqual(before - GRACE_PERIOD_MS);
+    expect(cutoffMs).toBeLessThanOrEqual(after - GRACE_PERIOD_MS);
   });
 });
 
@@ -69,29 +69,18 @@ describe("runExamAttemptAutoSubmit", () => {
     expect(gradeSubmission).not.toHaveBeenCalled();
   });
 
-  it("chấm bài theo ĐÚNG những gì đã lưu lên máy chủ", async () => {
-    // Điểm mấu chốt của cả chính sách: job không tự bịa bài làm, nó dùng bản nháp mà
-    // PATCH /:id/answers đã lưu.
-    const answers = [{ questionId: "q1", selectedOption: "A" }];
-    aggregate.mockResolvedValue([{ _id: "a1", answers }]);
+  it("chấm bài theo ĐÚNG những gì đã lưu lên máy chủ (attempt.questions[].answer, không truyền answers rời)", async () => {
+    // Điểm mấu chốt của cả chính sách: job không tự bịa bài làm, gradeSubmission tự đọc bản
+    // nháp đã lưu qua PATCH /:id/answers — job chỉ cần truyền đúng attemptId.
+    find.mockReturnValue(mongooseQuery([{ _id: "a1" }]));
 
     await runExamAttemptAutoSubmit(MOC);
 
-    expect(gradeSubmission).toHaveBeenCalledWith("a1", answers);
-  });
-
-  it("phiên chưa lưu câu nào vẫn được nộp với danh sách rỗng", async () => {
-    // Đó là kết quả trung thực của việc không làm bài — khác hẳn với mất bài do hệ thống
-    // không lưu, thứ mà bước tự lưu đã giải quyết.
-    aggregate.mockResolvedValue([{ _id: "a1" }]);
-
-    await runExamAttemptAutoSubmit(MOC);
-
-    expect(gradeSubmission).toHaveBeenCalledWith("a1", []);
+    expect(gradeSubmission).toHaveBeenCalledWith("a1");
   });
 
   it("MỘT phiên hỏng không chặn các phiên còn lại", async () => {
-    aggregate.mockResolvedValue([{ _id: "a1" }, { _id: "a2" }, { _id: "a3" }]);
+    find.mockReturnValue(mongooseQuery([{ _id: "a1" }, { _id: "a2" }, { _id: "a3" }]));
     gradeSubmission.mockImplementation(async (id) => {
       if (id === "a2") throw new Error("lỗi ghi DB");
       return {};
@@ -104,7 +93,7 @@ describe("runExamAttemptAutoSubmit", () => {
   });
 
   it("đếm đúng số phiên đã nộp", async () => {
-    aggregate.mockResolvedValue([{ _id: "a1" }, { _id: "a2" }]);
+    find.mockReturnValue(mongooseQuery([{ _id: "a1" }, { _id: "a2" }]));
 
     await expect(runExamAttemptAutoSubmit(MOC)).resolves.toEqual({ submitted: 2, failed: 0 });
   });

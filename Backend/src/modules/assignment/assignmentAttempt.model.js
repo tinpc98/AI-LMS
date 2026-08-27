@@ -89,9 +89,24 @@ const assignmentAttemptSchema = new Schema(
       type: Date,
       default: Date.now,
     },
+    // TÍNH NĂNG MỚI: mirror đúng examAttempt.model.js — expiresAt là nguồn sự thật DUY NHẤT cho
+    // hạn nộp của 1 lượt làm bài, tính 1 LẦN lúc bắt đầu (startAttemptService) từ
+    // assignment.duration, không tính lại nếu duration bị sửa sau khi học sinh đã bắt đầu làm.
+    expiresAt: {
+      type: Date,
+      required: true,
+    },
     submittedAt: {
       type: Date,
       default: null,
+    },
+    isLate: {
+      type: Boolean,
+      default: false,
+    },
+    lateBySeconds: {
+      type: Number,
+      default: 0,
     },
     performanceProcessedAt: {
       type: Date,
@@ -101,7 +116,10 @@ const assignmentAttemptSchema = new Schema(
   { timestamps: true }
 );
 
-assignmentAttemptSchema.index({ assignmentId: 1, studentId: 1, attemptNumber: 1 }, { unique: true });
+assignmentAttemptSchema.index(
+  { assignmentId: 1, studentId: 1, attemptNumber: 1 },
+  { unique: true }
+);
 assignmentAttemptSchema.index({ assignmentId: 1, studentId: 1, status: 1 });
 assignmentAttemptSchema.index({ startedAt: -1 });
 

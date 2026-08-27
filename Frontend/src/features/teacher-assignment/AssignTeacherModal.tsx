@@ -1,13 +1,15 @@
 import { useMemo, useState } from "react";
-import { Avatar, Descriptions, Modal, Select, Tag, Typography } from "antd";
-import { UserOutlined } from "@ant-design/icons";
+import { Descriptions, Modal, Select, Typography } from "antd";
 import type { AccountRecord, ClassRecord, CourseRecord } from "./teacherAssignment.types";
 import {
   checkScheduleConflict,
   formatScheduleDays,
   formatScheduleTime,
+  getCourseSubjectName,
+  buildTeacherOptionsData,
 } from "./teacherAssignmentUtils";
 import ConflictAlert from "./ConflictAlert";
+import TeacherOptionLabel from "./TeacherOptionLabel";
 
 interface AssignTeacherModalProps {
   open: boolean;
@@ -48,11 +50,13 @@ const AssignTeacherModal = ({
     if (open) setSelectedTeacherId(null);
   }
 
-  const courseName = useMemo(() => {
-    if (!classRecord) return "—";
-    const found = courses.find((c) => c.id === classRecord.courseId);
-    return found ? found.name : classRecord.courseId;
+  const course = useMemo(() => {
+    if (!classRecord) return undefined;
+    return courses.find((c) => c.id === classRecord.courseId);
   }, [classRecord, courses]);
+
+  const courseName = course?.name || classRecord?.courseId || "—";
+  const subjectName = getCourseSubjectName(course);
 
   const conflictResult = useMemo(() => {
     if (!classRecord || !selectedTeacherId) {
@@ -62,52 +66,13 @@ const AssignTeacherModal = ({
   }, [classRecord, selectedTeacherId, allClasses]);
 
   const teacherOptions = useMemo(() => {
-    return teachers.map((teacher) => {
-      const load = teachingLoadMap[teacher.id] || 0;
-      const statusText = load >= 3 ? "Busy" : "Available";
-
-      return {
-        value: teacher.id,
-        searchValue: `${teacher.fullName} ${teacher.email}`.toLowerCase(),
-        label: (
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              gap: 12,
-              padding: "4px 0",
-            }}
-          >
-            <div style={{ display: "flex", alignItems: "center", gap: 8, overflow: "hidden" }}>
-              <Avatar size="small" src={teacher.avatar} icon={<UserOutlined />}>
-                {teacher.fullName.charAt(0)}
-              </Avatar>
-              <div style={{ overflow: "hidden", textOverflow: "ellipsis" }}>
-                <Typography.Text strong style={{ display: "block", fontSize: 13, lineHeight: 1.2 }}>
-                  {teacher.fullName}
-                </Typography.Text>
-                <Typography.Text type="secondary" style={{ fontSize: 11, display: "block" }}>
-                  {teacher.email}
-                </Typography.Text>
-              </div>
-            </div>
-            <div style={{ display: "flex", gap: 4, flexShrink: 0 }}>
-              <Tag color="blue" style={{ margin: 0, fontSize: 11 }}>
-                {load} Classes
-              </Tag>
-              <Tag
-                color={statusText === "Available" ? "green" : "orange"}
-                style={{ margin: 0, fontSize: 11 }}
-              >
-                {statusText}
-              </Tag>
-            </div>
-          </div>
-        ),
-      };
-    });
-  }, [teachers, teachingLoadMap]);
+    const optionsData = buildTeacherOptionsData(teachers, teachingLoadMap, subjectName);
+    return optionsData.map((data) => ({
+      value: data.value,
+      searchValue: data.searchValue,
+      label: <TeacherOptionLabel data={data} />,
+    }));
+  }, [teachers, teachingLoadMap, subjectName]);
 
   const handleOk = async () => {
     if (!classRecord || !selectedTeacherId || conflictResult.hasConflict) return;

@@ -7,6 +7,7 @@ import { CheckCircleOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
 import TeacherAttendanceStatusTag from "./components/TeacherAttendanceStatusTag";
 import CountdownTimer from "./components/CountdownTimer";
+import ContributionSummaryCard from "./components/ContributionSummaryCard";
 
 export const TeacherAttendancePage: React.FC = () => {
   const [pagination, setPagination] = useState({ page: 1, limit: 10 });
@@ -27,6 +28,8 @@ export const TeacherAttendancePage: React.FC = () => {
     mutationFn: (id: string) => teacherAttendanceApi.confirmAttendance(id),
     onSuccess: () => {
       message.success("Xác nhận điểm danh thành công!");
+      // Khớp tiền tố "teacher-attendance" nên cũng tự invalidate luôn
+      // CONTRIBUTION_SUMMARY_QUERY_KEY ở dưới (cùng bắt đầu bằng "teacher-attendance").
       queryClient.invalidateQueries({ queryKey: ["teacher-attendance"] });
     },
     onError: (error: any) => {
@@ -48,7 +51,9 @@ export const TeacherAttendancePage: React.FC = () => {
       key: "title",
       render: (text: string, record: ITeacherAttendance) => (
         <Space direction="vertical" size={0}>
-          <Typography.Text strong>{text || `Buổi ${record.sessionId?.sessionNumber}`}</Typography.Text>
+          <Typography.Text strong>
+            {text || `Buổi ${record.sessionId?.sessionNumber}`}
+          </Typography.Text>
           <Typography.Text type="secondary" style={{ fontSize: 12 }}>
             ID: {record.sessionId?._id?.substring(0, 8)}
           </Typography.Text>
@@ -84,7 +89,9 @@ export const TeacherAttendancePage: React.FC = () => {
       key: "countdown",
       render: (_: any, record: ITeacherAttendance) => {
         const end = record.sessionId?.actualEndAt || record.sessionId?.scheduledEndAt;
-        return <CountdownTimer endAt={end || null} lockedAt={record.lockedAt} status={record.status} />;
+        return (
+          <CountdownTimer endAt={end || null} lockedAt={record.lockedAt} status={record.status} />
+        );
       },
     },
     {
@@ -131,9 +138,12 @@ export const TeacherAttendancePage: React.FC = () => {
           Điểm danh của tôi
         </Typography.Title>
         <Typography.Paragraph style={{ margin: 0, color: "var(--color-text-description)" }}>
-          Quản lý và xác nhận điểm danh các buổi dạy của bạn. Lưu ý: Bạn chỉ có 24 giờ để xác nhận kể từ khi buổi học kết thúc.
+          Quản lý và xác nhận điểm danh các buổi dạy của bạn. Lưu ý: Bạn chỉ có 24 giờ để xác nhận
+          kể từ khi buổi học kết thúc.
         </Typography.Paragraph>
       </div>
+
+      <ContributionSummaryCard />
 
       <Card bordered={false}>
         <div style={{ marginBottom: 16, display: "flex", justifyContent: "space-between" }}>
@@ -161,6 +171,7 @@ export const TeacherAttendancePage: React.FC = () => {
           dataSource={data?.data || []}
           rowKey="_id"
           loading={isLoading}
+          scroll={{ x: "max-content" }}
           pagination={{
             current: pagination.page,
             pageSize: pagination.limit,

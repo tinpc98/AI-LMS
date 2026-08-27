@@ -8,18 +8,45 @@ const router = express.Router();
 
 // Teacher routes
 router.post("/", verifyUser, isTeacher, assignmentController.createAssignment);
-router.get("/:id/teacher-attempts", verifyUser, isTeacher, checkAssignmentAccess, assignmentController.getAttemptsForTeacher);
-router.patch("/:id/publish", verifyUser, isTeacher, checkAssignmentAccess, assignmentController.publishAssignment);
+router.get(
+  "/:id/teacher-attempts",
+  verifyUser,
+  isTeacher,
+  checkAssignmentAccess,
+  assignmentController.getAttemptsForTeacher
+);
+router.patch(
+  "/:id/publish",
+  verifyUser,
+  isTeacher,
+  checkAssignmentAccess,
+  assignmentController.publishAssignment
+);
 
 // Shared/Student routes
+router.get("/class/:classId", verifyUser, assignmentController.getAssignmentsByClass);
 router.get("/:id", verifyUser, checkAssignmentAccess, assignmentController.getAssignmentById);
 router.post("/:id/attempts", verifyUser, checkAssignmentAccess, assignmentController.startAttempt);
-router.get("/:id/attempts", verifyUser, checkAssignmentAccess, assignmentController.getAttemptHistory);
+router.get(
+  "/:id/attempts",
+  verifyUser,
+  checkAssignmentAccess,
+  assignmentController.getAttemptHistory
+);
 
 // Attempt specific routes
 router.get("/attempts/:attemptId", verifyUser, assignmentController.getAttempt);
-router.patch("/attempts/:attemptId/questions/:questionId", verifyUser, assignmentController.saveAnswer);
+router.patch(
+  "/attempts/:attemptId/questions/:questionId",
+  verifyUser,
+  assignmentController.saveAnswer
+);
 router.post("/attempts/:attemptId/submit", verifyUser, assignmentController.submitAttempt);
-router.patch("/attempts/:attemptId/questions/:questionId/grade", verifyUser, isTeacher, assignmentController.gradeEssay);
+router.patch(
+  "/attempts/:attemptId/questions/:questionId/grade",
+  verifyUser,
+  isTeacher,
+  assignmentController.gradeEssay
+);
 
 export default router;

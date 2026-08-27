@@ -19,6 +19,9 @@ export { default as aiKnowledgeIndexingService } from "./services/aiKnowledgeInd
 // modules/exam gọi khi giáo viên sinh đề thi bằng AI.
 export { default as aiExamGenerationService } from "./services/aiExamGeneration.service.js";
 
+// modules/performance gọi khi học sinh yêu cầu đề xuất lộ trình ôn tập theo điểm yếu.
+export { default as aiRecommendationService } from "./services/aiRecommendation.service.js";
+
 // Lớp lỗi riêng của AI. modules/class dùng trong classAuth.helper để ném lỗi cùng khuôn
 // mẫu; cron job aiPendingRecovery cũng bắt theo loại này.
 export * from "./aiError.js";

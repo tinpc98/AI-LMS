@@ -1,6 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Spin, Alert, Button, Typography, Space, Divider } from "antd";
+import { Spin, Alert, Button, Typography, Space, Divider, Tag } from "antd";
+import { ClockCircleOutlined } from "@ant-design/icons";
 import { toast } from "../../../utils/toast";
 import assignmentApi from "../../../api/assignmentApi";
 import type { IAssignment, IAssignmentAttempt } from "../../../interface/assignmentInterface";
@@ -8,6 +9,44 @@ import { AssignmentQuestionRenderer } from "../components/AssignmentQuestionRend
 import { AttemptDetailView } from "../components/AttemptDetailView";
 
 const { Title, Text, Paragraph } = Typography;
+
+// TÍNH NĂNG MỚI: đếm ngược tới attempt.expiresAt — Assignment trước đây không có deadline nên
+// không có gì để đếm. Đơn giản hơn useExamTimer (không cần localStorage/khôi phục cuộn trang)
+// vì đây là trang mới hoàn toàn, không có hành vi cũ cần giữ nguyên.
+const useDeadlineCountdown = (expiresAt: string | undefined, onExpire: () => void) => {
+  const [remainingMs, setRemainingMs] = useState<number | null>(null);
+  const expiredRef = useRef(false);
+
+  useEffect(() => {
+    expiredRef.current = false;
+    if (!expiresAt) {
+      setRemainingMs(null);
+      return;
+    }
+    const deadline = new Date(expiresAt).getTime();
+    const tick = () => {
+      const remaining = deadline - Date.now();
+      setRemainingMs(remaining);
+      if (remaining <= 0 && !expiredRef.current) {
+        expiredRef.current = true;
+        onExpire();
+      }
+    };
+    tick();
+    const interval = setInterval(tick, 1000);
+    return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [expiresAt]);
+
+  return remainingMs;
+};
+
+const formatRemaining = (ms: number) => {
+  const totalSeconds = Math.max(0, Math.floor(ms / 1000));
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+};
 
 const StudentAssignmentContent = () => {
   const { assignmentId } = useParams<{ assignmentId: string }>();
@@ -28,15 +67,15 @@ const StudentAssignmentContent = () => {
     try {
       // Assuming getAssignment exists or we can just try to fetch the attempt directly if we only want that
       // But we probably need to fetch the assignment to see if we can start an attempt.
-      // assignmentApi.ts has getStudentAssignments but not getAssignmentById? 
+      // assignmentApi.ts has getStudentAssignments but not getAssignmentById?
       // Let's assume we can fetch getAttempts and assignment info.
       // Wait, in Phase 2F, the student gets attempts via getAttempts(assignmentId)
       const res = await assignmentApi.getAttemptHistory(assignmentId);
       if (res && res.length > 0) {
         setAttempt(res[0]);
       }
-      
-      const classId = localStorage.getItem("currentClassId"); 
+
+      const classId = localStorage.getItem("currentClassId");
       if (classId) {
         const assignmentsRes = await assignmentApi.getAssignmentsByClass(classId);
         const currentAssign = assignmentsRes.find((a: any) => a._id === assignmentId);
@@ -65,17 +104,21 @@ const StudentAssignmentContent = () => {
     }
   };
 
-  const handleAnswerChange = async (questionId: string, answer: { selectedOptionIds?: string[]; content?: string }) => {
+  const handleAnswerChange = async (
+    questionId: string,
+    answer: { selectedOptionIds?: string[]; content?: string }
+  ) => {
     if (!attempt) return;
-    
+
     const formattedAnswer: any = {};
     if (answer.selectedOptionIds) formattedAnswer.selectedOptionIds = answer.selectedOptionIds;
-    if (answer.content) formattedAnswer.content = [{ id: "ans", type: "TEXT", text: answer.content, order: 0 }];
+    if (answer.content)
+      formattedAnswer.content = [{ id: "ans", type: "TEXT", text: answer.content, order: 0 }];
 
     // Optimistic update
-    setAttempt(prev => {
+    setAttempt((prev) => {
       if (!prev) return prev;
-      const updatedQuestions = prev.questions.map(q => {
+      const updatedQuestions = prev.questions.map((q) => {
         if (q.questionId === questionId) {
           return { ...q, answer: { ...q.answer, ...formattedAnswer } };
         }
@@ -105,6 +148,17 @@ const StudentAssignmentContent = () => {
     }
   };
 
+  // TÍNH NĂNG MỚI: hết giờ thì tự nộp phía client cho trải nghiệm mượt — cron auto-submit phía
+  // server (assignmentAttemptAutoSubmit.job.js) vẫn là lưới an toàn cuối cùng nếu học sinh đóng
+  // tab/mất mạng trước khi kịp tự nộp ở đây.
+  const remainingMs = useDeadlineCountdown(
+    attempt?.status === "IN_PROGRESS" ? attempt.expiresAt : undefined,
+    () => {
+      toast.error("Đã hết giờ làm bài, hệ thống tự động nộp bài.");
+      submitAttempt();
+    }
+  );
+
   if (loading && !attempt) {
     return (
       <main className="ml-[280px] pt-16 h-screen flex items-center justify-center bg-surface">
@@ -121,7 +175,11 @@ const StudentAssignmentContent = () => {
           description={error}
           type="error"
           showIcon
-          action={<Button type="primary" onClick={fetchData}>Thử lại</Button>}
+          action={
+            <Button type="primary" onClick={fetchData}>
+              Thử lại
+            </Button>
+          }
         />
       </main>
     );
@@ -130,8 +188,10 @@ const StudentAssignmentContent = () => {
   return (
     <main className="ml-[280px] pt-16 min-h-screen bg-gray-50 flex">
       <div className="flex-1 max-w-4xl mx-auto p-8">
-        <Button onClick={() => navigate(-1)} className="mb-4">← Quay lại</Button>
-        
+        <Button onClick={() => navigate(-1)} className="mb-4">
+          ← Quay lại
+        </Button>
+
         <div className="bg-white rounded-lg shadow p-8 mb-6">
           <Title level={3}>{assignment?.title || "Bài tập"}</Title>
           <Paragraph type="secondary">{assignment?.description}</Paragraph>
@@ -149,6 +209,21 @@ const StudentAssignmentContent = () => {
               <Divider />
               <div className="flex justify-between items-center mb-6">
                 <Title level={4}>Bài làm của bạn</Title>
+                {remainingMs !== null && (
+                  <Tag
+                    icon={<ClockCircleOutlined />}
+                    color={
+                      remainingMs < 60000
+                        ? "error"
+                        : remainingMs < 5 * 60000
+                          ? "warning"
+                          : "processing"
+                    }
+                    style={{ fontSize: 14, padding: "4px 10px" }}
+                  >
+                    {formatRemaining(remainingMs)}
+                  </Tag>
+                )}
               </div>
 
               {attempt.questions.map((q, idx) => (

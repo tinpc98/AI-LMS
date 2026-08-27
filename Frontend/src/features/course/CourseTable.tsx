@@ -5,6 +5,7 @@ import {
   SyncOutlined,
   DeleteOutlined,
   UnlockOutlined,
+  UnorderedListOutlined,
 } from "@ant-design/icons";
 import type { CourseRecord } from "./course.types";
 
@@ -13,6 +14,7 @@ interface CourseTableProps {
   loading: boolean;
   onView: (course: CourseRecord) => void;
   onEdit: (course: CourseRecord) => void;
+  onManageTopics?: (course: CourseRecord) => void;
   onChangeStatus?: (course: CourseRecord) => void;
   onDelete?: (course: CourseRecord) => void;
   onRestore?: (course: CourseRecord) => void;
@@ -40,6 +42,7 @@ const CourseTable = ({
   loading,
   onView,
   onEdit,
+  onManageTopics,
   onChangeStatus,
   onDelete,
   onRestore,
@@ -72,11 +75,6 @@ const CourseTable = ({
       key: "code",
     },
     {
-      title: "Level",
-      dataIndex: "level",
-      key: "level",
-    },
-    {
       title: "Subject",
       dataIndex: "subjectId",
       key: "subjectId",
@@ -90,12 +88,17 @@ const CourseTable = ({
     {
       title: "Duration",
       key: "duration",
-      render: (_: unknown, record: CourseRecord) => `${record.duration.value} ${record.duration.unit.toLowerCase()}(s)`,
+      render: (_: unknown, record: CourseRecord) =>
+        `${record.duration.value} ${record.duration.unit.toLowerCase()}(s)`,
     },
     {
-      title: "Tuition Fee",
-      key: "tuitionFee",
-      render: (_: unknown, record: CourseRecord) => `${record.pricing?.tuitionFee?.toLocaleString() || 0} VND`,
+      // BUG ĐÃ SỬA: khóa học có 3 mức giá theo level (prices: Map), không phải 1 giá duy nhất.
+      title: "Prices (F / I / A)",
+      key: "prices",
+      render: (_: unknown, record: CourseRecord) =>
+        (["FOUNDATION", "INTERMEDIATE", "ADVANCED"] as const)
+          .map((lvl) => (record.prices?.[lvl] ?? 0).toLocaleString())
+          .join(" / ") + " VND",
     },
     {
       title: "Status",
@@ -146,6 +149,15 @@ const CourseTable = ({
               <Tooltip title="Edit">
                 <Button size="small" icon={<EditOutlined />} onClick={() => onEdit(record)} />
               </Tooltip>
+              {onManageTopics && (
+                <Tooltip title="Manage Topics">
+                  <Button
+                    size="small"
+                    icon={<UnorderedListOutlined />}
+                    onClick={() => onManageTopics(record)}
+                  />
+                </Tooltip>
+              )}
               {onChangeStatus && (
                 <Tooltip title="Change Status">
                   <Button

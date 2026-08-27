@@ -24,7 +24,7 @@ export async function migrateLiveSessionV2(options = {}) {
 
   const report = {
     timestamp: new Date().toISOString(),
-    database: process.env.MONGODB_URI?.split("@")?.pop() || "ai-lms",
+    database: process.env.MONGO_URI?.split("@")?.pop() || "ai-lms",
     mode,
     classesScanned: 0,
     sessionsScanned: 0,
@@ -36,7 +36,7 @@ export async function migrateLiveSessionV2(options = {}) {
   };
 
   try {
-    const mongoUri = process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/ai-lms";
+    const mongoUri = process.env.MONGO_URI || "mongodb://127.0.0.1:27017/ai-lms";
     if (mongoose.connection.readyState === 0) {
       await mongoose.connect(mongoUri);
       console.log("✅ [MIGRATION_V2] Đã kết nối MongoDB thành công.");

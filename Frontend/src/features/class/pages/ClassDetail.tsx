@@ -22,10 +22,7 @@ import LiveClassTab from "../components/classDetail/live/LiveClassTab";
 
 import { useJitsiLiveSession } from "../../live-session/hooks/useJitsiLiveSession";
 import { useStudentLive } from "../../live-session/hooks/useStudentLive";
-import {
-  sortLessons,
-  formatLessonDisplayTitle,
-} from "../../lesson/utils/lessonHelper";
+import { sortLessons, formatLessonDisplayTitle } from "../../lesson/utils/lessonHelper";
 import { useBreadcrumb } from "../../../shared/context/BreadcrumbContext";
 
 export default function ClassDetail() {
@@ -41,8 +38,7 @@ export default function ClassDetail() {
   const [searchQuery] = useState<string>("");
 
   // Custom hook for class details data
-  const { classInfo, lessons, assignments, isLoading, errorMsg } =
-    useClassDetail(classId);
+  const { classInfo, lessons, assignments, isLoading, errorMsg } = useClassDetail(classId);
 
   const { setBreadcrumbEntity } = useBreadcrumb();
 
@@ -52,7 +48,7 @@ export default function ClassDetail() {
     } else if (classInfo) {
       const title = classInfo.code
         ? `Lớp ${classInfo.code} - ${classInfo.name}`
-        : (classInfo.name || "Chi tiết lớp học");
+        : classInfo.name || "Chi tiết lớp học";
       setBreadcrumbEntity(title, false);
     }
     return () => {
@@ -61,22 +57,17 @@ export default function ClassDetail() {
   }, [isLoading, classInfo, setBreadcrumbEntity]);
 
   // Custom hook for Live Session
-  const {
-    activeSession: jitsiActiveSession,
-    handleJoinLiveClass,
-  } = useJitsiLiveSession({ classId, isTeacher: false });
-
-  const { refreshLiveSession } = useStudentLive(
+  const { activeSession: jitsiActiveSession, handleJoinLiveClass } = useJitsiLiveSession({
     classId,
-    jitsiActiveSession,
-    classInfo
-  );
+    isTeacher: false,
+  });
+
+  const { refreshLiveSession } = useStudentLive(classId, jitsiActiveSession, classInfo);
 
   // Sync state when Socket notifies useJitsiLiveSession that session started/ended
   useEffect(() => {
     refreshLiveSession();
   }, [jitsiActiveSession, refreshLiveSession]);
-
 
   if (isLoading) {
     return (
@@ -97,7 +88,9 @@ export default function ClassDetail() {
           showIcon
           action={
             <Link to="/student/myclasses">
-              <span style={{ color: "var(--color-action-primary-bg)", fontWeight: 700 }}>Quay lại danh sách lớp học</span>
+              <span style={{ color: "var(--color-action-primary-bg)", fontWeight: 700 }}>
+                Quay lại danh sách lớp học
+              </span>
             </Link>
           }
         />
@@ -158,7 +151,9 @@ export default function ClassDetail() {
                         className="material-symbols-outlined text-2xl"
                         style={{ fontVariationSettings: "'FILL' 1" }}
                       >
-                        {lesson.videoUrl ? "play_circle" : "picture_as_pdf"}
+                        {lesson.blocks?.some((b) => b.type === "VIDEO")
+                          ? "play_circle"
+                          : "menu_book"}
                       </span>
                     </div>
                     <div className="min-w-0">
@@ -171,33 +166,18 @@ export default function ClassDetail() {
                     </div>
                   </div>
                   <div className="flex items-center justify-end space-x-2 flex-shrink-0">
-                    {lesson.videoUrl && (
-                      <Link
-                        to={`/student/classdetail/${classId}/lecture/${lesson._id}`}
-                        className="px-4 py-2 text-xs font-bold text-primary bg-primary-container/20 hover:bg-primary hover:text-white rounded-lg transition-colors inline-flex items-center gap-1.5"
+                    <Link
+                      to={`/student/classdetail/${classId}/lecture/${lesson._id}`}
+                      className="px-4 py-2 text-xs font-bold text-primary bg-primary-container/20 hover:bg-primary hover:text-white rounded-lg transition-colors inline-flex items-center gap-1.5"
+                    >
+                      <span
+                        className="material-symbols-outlined text-sm"
+                        style={{ fontVariationSettings: "'FILL' 1" }}
                       >
-                        <span
-                          className="material-symbols-outlined text-sm"
-                          style={{ fontVariationSettings: "'FILL' 1" }}
-                        >
-                          play_circle
-                        </span>
-                        Xem video
-                      </Link>
-                    )}
-                    {lesson.attachments &&
-                      lesson.attachments.map((file) => (
-                        <a
-                          key={file.publicId}
-                          href={file.url}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="p-2 text-secondary hover:bg-surface-container-high rounded-lg transition-colors"
-                          title={file.name}
-                        >
-                          <span className="material-symbols-outlined text-xl">download</span>
-                        </a>
-                      ))}
+                        play_circle
+                      </span>
+                      Xem bài giảng
+                    </Link>
                   </div>
                 </div>
               );
@@ -215,11 +195,7 @@ export default function ClassDetail() {
         </Space>
       ),
       children: (
-        <LearningMaterialsTab
-          classId={classId}
-          resources={resourceList}
-          loading={isLoading}
-        />
+        <LearningMaterialsTab classId={classId} resources={resourceList} loading={isLoading} />
       ),
     },
     {
@@ -230,12 +206,7 @@ export default function ClassDetail() {
           <span>Bài tập ({assignments.length})</span>
         </Space>
       ),
-      children: (
-        <AssignmentsTab
-          assignments={assignments}
-          loading={isLoading}
-        />
-      ),
+      children: <AssignmentsTab assignments={assignments} loading={isLoading} />,
     },
     {
       key: "live",
@@ -272,29 +243,32 @@ export default function ClassDetail() {
         </Space>
       ),
       children: classId ? <AttendanceTab classId={classId} /> : null,
-    }
+    },
   ];
 
   return (
     <PageContainer maxWidth="1400px">
       {/* 1. MINIMALIST HEADER */}
       <div style={{ marginBottom: 16, display: "flex", alignItems: "center" }}>
-        <Link 
-          to="/student/myclasses" 
-          style={{ 
+        <Link
+          to="/student/myclasses"
+          style={{
             color: "#6b7280", // text-gray-500
-            fontSize: 15, 
-            display: "flex", 
+            fontSize: 15,
+            display: "flex",
             alignItems: "center",
             textDecoration: "none",
-            fontWeight: 500
+            fontWeight: 500,
           }}
           className="hover:text-primary transition-colors"
         >
           <ArrowLeftOutlined style={{ marginRight: 6 }} /> Quay lại
           <span style={{ margin: "0 10px", color: "#d1d5db" }}>|</span>
           <span>
-            {classInfo.name} {classInfo.teacherId ? `(Giảng viên: ${(classInfo.teacherId as any).fullName || classInfo.teacherId})` : ""}
+            {classInfo.name}{" "}
+            {classInfo.teacherId
+              ? `(Giảng viên: ${(classInfo.teacherId as any).fullName || classInfo.teacherId})`
+              : ""}
           </span>
         </Link>
       </div>

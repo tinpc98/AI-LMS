@@ -27,6 +27,14 @@ export const useAuth = () => {
     setUser(userData);
   };
 
+  // Đồng bộ user (vd: sau khi cập nhật hồ sơ cá nhân) mà không đụng tới accessToken —
+  // để header/sidebar và mọi nơi khác đọc useAuth().user thấy dữ liệu mới ngay, không cần
+  // đăng nhập lại hay tải lại trang.
+  const updateUser = useCallback((userData: User) => {
+    localStorage.setItem("user", JSON.stringify(userData));
+    setUser(userData);
+  }, []);
+
   useEffect(() => {
     const handleForceLogout = () => {
       logout();
@@ -50,6 +58,7 @@ export const useAuth = () => {
     isStudent,
     isAdmin,
     loginSuccess,
+    updateUser,
     logout,
   };
 };

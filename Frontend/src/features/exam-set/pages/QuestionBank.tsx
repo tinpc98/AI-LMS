@@ -32,13 +32,14 @@ import {
   MoreOutlined,
 } from "@ant-design/icons";
 
-import axiosClient from "../../../api/axiosClient";
-import { toast } from "../../../utils/toast";
 import { QuestionStatistic } from "../components/QuestionStatistic";
 import { QuestionFormDrawer } from "../components/QuestionFormDrawer";
 import { QuestionPreviewDrawer } from "../components/QuestionPreviewDrawer";
+import { extractPlainText } from "../../question/contentText";
+import { isChoiceQuestion, getQuestionTypeLabel } from "../../../shared/utils/questionTypeUtils";
 
-import { useQuestionBank } from "../hooks/useQuestionBank";
+import { useQuestionBank, getTopicName } from "../hooks/useQuestionBank";
+import type { Question } from "../../question/question.types";
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -64,12 +65,12 @@ export default function QuestionBank() {
 
   // Drawer states
   const [isFormDrawerOpen, setIsFormDrawerOpen] = useState(false);
-  const [editingQuestion, setEditingQuestion] = useState<any | null>(null);
+  const [editingQuestion, setEditingQuestion] = useState<Question | null>(null);
 
   const [isPreviewDrawerOpen, setIsPreviewDrawerOpen] = useState(false);
-  const [viewingQuestion, setViewingQuestion] = useState<any | null>(null);
+  const [viewingQuestion, setViewingQuestion] = useState<Question | null>(null);
 
-  const columns: ColumnsType<any> = [
+  const columns: ColumnsType<Question> = [
     {
       title: "#",
       key: "index",
@@ -79,18 +80,21 @@ export default function QuestionBank() {
     {
       title: "Nội dung câu hỏi",
       key: "content",
-      render: (_, record) => (
-        <div>
-          <Paragraph ellipsis={{ rows: 2 }} style={{ margin: 0, fontSize: 14, fontWeight: 500 }}>
-            {record.content}
-          </Paragraph>
-          {record.topic && (
-            <Text type="secondary" style={{ fontSize: 12, display: "block", marginTop: 2 }}>
-              Chủ đề: {record.topic}
-            </Text>
-          )}
-        </div>
-      ),
+      render: (_, record) => {
+        const topicName = getTopicName(record);
+        return (
+          <div>
+            <Paragraph ellipsis={{ rows: 2 }} style={{ margin: 0, fontSize: 14, fontWeight: 500 }}>
+              {extractPlainText(record.content) || <Text type="secondary">(Chưa có nội dung)</Text>}
+            </Paragraph>
+            {topicName && (
+              <Text type="secondary" style={{ fontSize: 12, display: "block", marginTop: 2 }}>
+                Chủ đề: {topicName}
+              </Text>
+            )}
+          </div>
+        );
+      },
     },
     {
       title: "Loại câu",
@@ -98,8 +102,9 @@ export default function QuestionBank() {
       key: "type",
       width: 140,
       render: (type) => (
-        <Tag color={type === "MCQ" ? "blue" : "purple"}>
-          {type === "MCQ" ? "🔵 Trắc nghiệm" : "🟣 Tự luận"}
+        <Tag color={isChoiceQuestion(type) ? "blue" : "purple"}>
+          {isChoiceQuestion(type) ? "🔵 " : "🟣 "}
+          {getQuestionTypeLabel(type)}
         </Tag>
       ),
     },
@@ -121,19 +126,22 @@ export default function QuestionBank() {
     },
     {
       title: "Đáp án đúng",
-      dataIndex: "correctAnswer",
       key: "correctAnswer",
       width: 180,
-      render: (answer, record) => {
-        if (record.type === "ESSAY")
+      render: (_, record) => {
+        if (!isChoiceQuestion(record.type))
           return (
             <Text type="secondary" style={{ fontStyle: "italic", fontSize: 12 }}>
-              Tự luận
+              Chấm tay
             </Text>
           );
-        return answer ? (
+        const correctText = (record.options || [])
+          .filter((o) => o.isCorrect)
+          .map((o) => extractPlainText(o.content))
+          .join(", ");
+        return correctText ? (
           <Text strong style={{ color: "var(--color-success-base)", fontSize: 13 }} ellipsis>
-            {answer}
+            {correctText}
           </Text>
         ) : (
           <Text type="secondary">-</Text>
@@ -225,7 +233,8 @@ export default function QuestionBank() {
       <Card
         style={{
           borderRadius: 16,
-          background: "linear-gradient(135deg, var(--color-sidebar-bg) 0%, var(--color-sidebar-hover) 100%)",
+          background:
+            "linear-gradient(135deg, var(--color-sidebar-bg) 0%, var(--color-sidebar-hover) 100%)",
           color: "var(--color-surface)",
           marginBottom: 24,
           boxShadow: "0 8px 24px rgba(0, 33, 64, 0.25)",
@@ -244,7 +253,10 @@ export default function QuestionBank() {
           <div>
             <Space size={12} align="center">
               <DatabaseOutlined style={{ fontSize: 28, color: "var(--color-surface)" }} />
-              <Title level={3} style={{ color: "var(--color-surface)", margin: 0, fontWeight: 700 }}>
+              <Title
+                level={3}
+                style={{ color: "var(--color-surface)", margin: 0, fontWeight: 700 }}
+              >
                 Ngân hàng câu hỏi Hệ thống (Question Bank)
               </Title>
             </Space>
@@ -332,6 +344,8 @@ export default function QuestionBank() {
                 options={[
                   { value: "all", label: "Tất cả loại câu" },
                   { value: "MCQ", label: "🔵 Trắc nghiệm" },
+                  { value: "TRUE_FALSE", label: "⚪ Đúng / Sai" },
+                  { value: "SHORT_ANSWER", label: "🟠 Điền khuyết" },
                   { value: "ESSAY", label: "🟣 Tự luận" },
                 ]}
               />
@@ -362,7 +376,10 @@ export default function QuestionBank() {
 
             <Space size={10} wrap>
               <Upload customRequest={handleCustomImport} showUploadList={false} accept=".xlsx,.xls">
-                <Button type="default" icon={<UploadOutlined style={{ color: "var(--color-success-base)" }} />}>
+                <Button
+                  type="default"
+                  icon={<UploadOutlined style={{ color: "var(--color-success-base)" }} />}
+                >
                   Import Excel
                 </Button>
               </Upload>

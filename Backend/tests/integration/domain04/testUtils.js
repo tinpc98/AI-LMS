@@ -8,7 +8,8 @@ import { Course } from "#modules/course";
 import { Enrollment } from "../../../src/modules/enrollment/index.js";
 
 const workerId = process.env.VITEST_WORKER_ID || Math.random().toString(36).substring(7);
-const TEST_URI = process.env.MONGO_TEST_URI || `mongodb://127.0.0.1:27017/ai_lms_test_domain04_${workerId}`;
+const TEST_URI =
+  process.env.MONGO_TEST_URI || `mongodb://127.0.0.1:27017/ai_lms_test_domain04_${workerId}`;
 
 // Mock Mongoose transactions for standalone test DB
 const originalStartSession = mongoose.startSession.bind(mongoose);
@@ -76,8 +77,8 @@ export async function seedBaseData() {
       level: "FOUNDATION",
       subjectId: new mongoose.Types.ObjectId(),
       code: "C101",
-      isDeleted: false
-    }
+      isDeleted: false,
+    },
   ]);
 
   // Create Classes
@@ -88,6 +89,7 @@ export async function seedBaseData() {
       courseId: COURSE_MAIN._id,
       teacherId: TEACHER_A._id,
       mode: "ONLINE",
+      level: "FOUNDATION",
       capacity: 30,
       activeCount: 0,
       status: "OPEN",
@@ -101,6 +103,7 @@ export async function seedBaseData() {
       courseId: COURSE_MAIN._id,
       teacherId: TEACHER_A._id,
       mode: "OFFLINE",
+      level: "FOUNDATION",
       capacity: 30,
       activeCount: 0,
       status: "OPEN",
@@ -114,20 +117,39 @@ export async function seedBaseData() {
       courseId: COURSE_MAIN._id,
       teacherId: TEACHER_B._id,
       mode: "ONLINE",
+      level: "FOUNDATION",
       capacity: 30,
       activeCount: 0,
       status: "OPEN",
       startDate: new Date(),
       endDate: new Date(Date.now() + 86400000 * 30),
       isDeleted: false,
-    }
+    },
   ]);
 
   // Create Enrollments (Approved)
   const [ENROLLMENT_A, ENROLLMENT_B, ENROLLMENT_C] = await Enrollment.insertMany([
-    { studentId: STUDENT_A._id, courseId: COURSE_MAIN._id, status: "APPROVED", amount: 1000 },
-    { studentId: STUDENT_B._id, courseId: COURSE_MAIN._id, status: "APPROVED", amount: 1000 },
-    { studentId: STUDENT_C._id, courseId: COURSE_MAIN._id, status: "APPROVED", amount: 1000 },
+    {
+      studentId: STUDENT_A._id,
+      courseId: COURSE_MAIN._id,
+      status: "APPROVED",
+      level: "FOUNDATION",
+      price: 1000,
+    },
+    {
+      studentId: STUDENT_B._id,
+      courseId: COURSE_MAIN._id,
+      status: "APPROVED",
+      level: "FOUNDATION",
+      price: 1000,
+    },
+    {
+      studentId: STUDENT_C._id,
+      courseId: COURSE_MAIN._id,
+      status: "APPROVED",
+      level: "FOUNDATION",
+      price: 1000,
+    },
   ]);
 
   return {
