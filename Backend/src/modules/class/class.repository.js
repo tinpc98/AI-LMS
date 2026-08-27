@@ -25,7 +25,11 @@ const applyFullPopulate = (query) =>
   query
     .populate("teacherId", "fullName email avatar phone teachingSubjects")
     .populate("assignedBy", "fullName email")
-    .populate("courseId", "courseName subject grade status description")
+    .populate({
+      path: "courseId",
+      select: "name subjectId grade status description",
+      populate: { path: "subjectId", select: "name" },
+    })
     .populate("students.studentId", "fullName email avatar phone")
     .populate("resources.uploadedBy", "fullName email");
 

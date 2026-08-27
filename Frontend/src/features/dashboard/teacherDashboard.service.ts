@@ -3,6 +3,7 @@
 // Component không được chứa logic gọi API/ghép dữ liệu.
 import { classApi } from "../../api/classApi";
 import axiosClient from "../../api/axiosClient";
+import { mapToStudentClass } from "../../api/studentClassApi";
 
 // Giới hạn số lớp được truy vấn bài tập / phiên live, giữ nguyên hành vi bản cũ.
 const MAX_CLASSES_TO_EXPAND = 5;
@@ -42,7 +43,7 @@ export const fetchTeacherDashboard = async (): Promise<TeacherDashboardData> => 
     }),
   ]);
 
-  const classes = unwrapList(classRes.data, "data", "classList");
+  const classes = unwrapList(classRes.data, "data", "classList").map(mapToStudentClass);
   const announcements = annRes ? unwrapList(annRes.data, "data", "items") : [];
 
   if (classes.length === 0) {

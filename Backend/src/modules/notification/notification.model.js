@@ -63,6 +63,7 @@ const notificationSchema = new Schema(
         "announcement",
         "exam",
         "LIVE_SESSION_CREATED",
+        "LIVE_SESSION_ENDED",
         "CLASS_ENROLLED",
       ],
       default: "system",

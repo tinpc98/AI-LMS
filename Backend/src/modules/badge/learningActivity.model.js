@@ -39,6 +39,9 @@ const learningActivitySchema = new Schema(
         "QA Post Pinned",
         "Learning Streak",
         "Course Completed",
+        // Legacy — không còn writer nào tạo giá trị này (đã xác nhận qua grep), giữ lại trong
+        // enum chỉ để 2 bản ghi lịch sử từ trước khi sổ cái XP này có writer thật vẫn hợp lệ.
+        "Lesson Viewed",
       ],
       required: true,
     },

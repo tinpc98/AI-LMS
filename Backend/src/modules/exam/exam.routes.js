@@ -13,6 +13,7 @@ router.delete("/:id", verifyUser, isTeacher, examController.deleteExam);
 
 // Phải đặt TRƯỚC /:id để tránh match sai
 router.get("/class/:classId", verifyUser, examController.getExamsByClass);
+router.get("/my", verifyUser, examController.getMyExams);
 
 router.get("/:id", verifyUser, examController.getExamById);
 
